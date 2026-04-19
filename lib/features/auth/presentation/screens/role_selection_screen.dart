@@ -33,7 +33,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
-            context.go('/kyc');
+            context.go('/auth/pin-setup');
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

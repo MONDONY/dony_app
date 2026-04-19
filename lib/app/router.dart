@@ -1,5 +1,7 @@
+import 'package:dony/features/auth/presentation/screens/local_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
+import 'package:dony/features/auth/presentation/screens/pin_setup_screen.dart';
 import 'package:dony/features/auth/presentation/screens/role_selection_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +27,14 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/auth/role',
       builder: (context, state) => const RoleSelectionScreen(),
+    ),
+    GoRoute(
+      path: '/auth/pin-setup',
+      builder: (context, state) => const PinSetupScreen(),
+    ),
+    GoRoute(
+      path: '/auth/local',
+      builder: (context, state) => const LocalAuthScreen(),
     ),
     GoRoute(
       path: '/home',

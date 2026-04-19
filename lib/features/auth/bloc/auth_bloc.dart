@@ -67,13 +67,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             emit(AuthError(_friendlyError(e)));
           }
         }
-        if (!completer.isCompleted) completer.complete();
+        if (!completer.isCompleted) {
+          completer.complete();
+        }
       },
       verificationFailed: (FirebaseAuthException e) {
         if (!emit.isDone) {
           emit(AuthError(_friendlyFirebaseError(e)));
         }
-        if (!completer.isCompleted) completer.complete();
+        if (!completer.isCompleted) {
+          completer.complete();
+        }
       },
       codeSent: (String verificationId, int? resendToken) {
         if (!emit.isDone) {
@@ -82,10 +86,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             phoneNumber: event.phoneNumber,
           ));
         }
-        if (!completer.isCompleted) completer.complete();
+        if (!completer.isCompleted) {
+          completer.complete();
+        }
       },
       codeAutoRetrievalTimeout: (_) {
-        if (!completer.isCompleted) completer.complete();
+        if (!completer.isCompleted) {
+          completer.complete();
+        }
       },
     );
 

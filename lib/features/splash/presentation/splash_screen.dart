@@ -67,12 +67,16 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _navigateNext() async {
     final firebaseUser = FirebaseAuth.instance.currentUser;
     if (firebaseUser == null) {
-      if (mounted) context.go('/auth/phone');
+      if (mounted) {
+        context.go('/auth/phone');
+      }
       return;
     }
 
     // Firebase user exists — check if registered in backend
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     final authBloc = context.read<AuthBloc>();
     authBloc.add(const AuthCheckRequested());
 
@@ -80,9 +84,11 @@ class _SplashScreenState extends State<SplashScreen> {
       (s) => s is AuthAuthenticated || s is AuthInitial || s is AuthError,
     );
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     if (result is AuthAuthenticated) {
-      context.go('/home');
+      context.go('/auth/local');
     } else {
       // Firebase auth done but not yet registered in backend
       context.go('/auth/role');

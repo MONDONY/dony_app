@@ -2,6 +2,7 @@ import 'package:dony/app/router.dart';
 import 'package:dony/app/theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -13,6 +14,9 @@ class DonyApp extends StatelessWidget {
         providers: [
           BlocProvider<AuthBloc>(
             create: (_) => getIt<AuthBloc>(),
+          ),
+          BlocProvider<LocalAuthBloc>(
+            create: (_) => getIt<LocalAuthBloc>(),
           ),
         ],
         child: MaterialApp.router(
