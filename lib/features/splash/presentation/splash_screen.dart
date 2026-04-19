@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart' show Options;
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -32,10 +34,21 @@ class _SplashScreenState extends State<SplashScreen> {
           );
       final backendStatus = response.data?['status'] as String? ?? 'UNKNOWN';
       if (mounted) {
-        setState(() {
-          _status = backendStatus == 'UP' ? _Status.ok : _Status.error;
-          _detail = 'Backend: $backendStatus';
-        });
+        if (backendStatus == 'UP') {
+          setState(() {
+            _status = _Status.ok;
+            _detail = 'Backend: $backendStatus';
+          });
+          await Future.delayed(const Duration(milliseconds: 800));
+          if (mounted) {
+            _navigateNext();
+          }
+        } else {
+          setState(() {
+            _status = _Status.error;
+            _detail = 'Backend: $backendStatus';
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -44,6 +57,15 @@ class _SplashScreenState extends State<SplashScreen> {
           _detail = e.toString().replaceAll(RegExp(r'DioException.*\['), '[');
         });
       }
+    }
+  }
+
+  void _navigateNext() {
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    if (firebaseUser != null) {
+      context.go('/home');
+    } else {
+      context.go('/auth/phone');
     }
   }
 

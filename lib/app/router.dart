@@ -1,3 +1,6 @@
+import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
+import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
+import 'package:dony/features/auth/presentation/screens/role_selection_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -13,42 +16,46 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/auth/phone',
-      builder: (context, state) => const _PlaceholderScreen(title: 'Phone Auth'),
+      builder: (context, state) => const PhoneAuthScreen(),
     ),
     GoRoute(
       path: '/auth/otp',
-      builder: (context, state) => const _PlaceholderScreen(title: 'OTP Verification'),
+      builder: (context, state) => const OtpVerificationScreen(),
+    ),
+    GoRoute(
+      path: '/auth/role',
+      builder: (context, state) => const RoleSelectionScreen(),
     ),
     GoRoute(
       path: '/home',
-      builder: (context, state) => const _PlaceholderScreen(title: 'Home'),
+      builder: (context, state) => const _PlaceholderScreen(title: 'Accueil'),
+    ),
+    GoRoute(
+      path: '/kyc',
+      builder: (context, state) => const _PlaceholderScreen(title: 'Vérification KYC'),
     ),
     GoRoute(
       path: '/announcements',
-      builder: (context, state) => const _PlaceholderScreen(title: 'Announcements'),
+      builder: (context, state) => const _PlaceholderScreen(title: 'Annonces'),
     ),
     GoRoute(
       path: '/announcements/:id',
       builder: (context, state) {
         final id = state.pathParameters['id']!;
-        return _PlaceholderScreen(title: 'Announcement $id');
+        return _PlaceholderScreen(title: 'Annonce $id');
       },
     ),
     GoRoute(
       path: '/tracking/scan',
-      builder: (context, state) => const _PlaceholderScreen(title: 'QR Scanner'),
+      builder: (context, state) => const _PlaceholderScreen(title: 'Scanner QR'),
     ),
     GoRoute(
       path: '/payment/confirm',
-      builder: (context, state) => const _PlaceholderScreen(title: 'Payment Confirm'),
-    ),
-    GoRoute(
-      path: '/kyc',
-      builder: (context, state) => const _PlaceholderScreen(title: 'KYC'),
+      builder: (context, state) => const _PlaceholderScreen(title: 'Confirmer paiement'),
     ),
     GoRoute(
       path: '/disputes',
-      builder: (context, state) => const _PlaceholderScreen(title: 'Disputes'),
+      builder: (context, state) => const _PlaceholderScreen(title: 'Litiges'),
     ),
     GoRoute(
       path: '/admin',
