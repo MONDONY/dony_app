@@ -1,9 +1,11 @@
 import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/splash',
+  observers: [SentryNavigatorObserver()],
   routes: [
     GoRoute(
       path: '/splash',
