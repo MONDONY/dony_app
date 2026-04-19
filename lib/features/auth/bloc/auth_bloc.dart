@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
@@ -34,7 +36,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = await _authRepository.getProfile();
       emit(AuthAuthenticated(user));
     } catch (_) {
-      // Not registered yet — treat as unauthenticated
+      // Not registered yet — keep phone number from Firebase for registration
+      _pendingPhoneNumber = firebaseUser.phoneNumber;
       emit(const AuthInitial());
     }
   }
@@ -46,36 +49,47 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(const AuthLoading());
     _pendingPhoneNumber = event.phoneNumber;
 
+    // verifyPhoneNumber() retourne immédiatement — les callbacks arrivent plus tard.
+    // Le Completer maintient ce handler en vie jusqu'au premier callback significatif.
+    final completer = Completer<void>();
+
     await _firebaseAuth.verifyPhoneNumber(
       phoneNumber: event.phoneNumber,
       verificationCompleted: (PhoneAuthCredential credential) async {
-        // Auto-verification on Android — skip OTP screen
+        // Auto-vérification Android — pas d'écran OTP
         try {
           await _firebaseAuth.signInWithCredential(credential);
           if (!isClosed) {
             add(const AuthRegisterRequested([]));
           }
         } catch (e) {
-          if (!isClosed) {
+          if (!isClosed && !emit.isDone) {
             emit(AuthError(_friendlyError(e)));
           }
         }
+        if (!completer.isCompleted) completer.complete();
       },
       verificationFailed: (FirebaseAuthException e) {
-        if (!isClosed) {
+        if (!emit.isDone) {
           emit(AuthError(_friendlyFirebaseError(e)));
         }
+        if (!completer.isCompleted) completer.complete();
       },
       codeSent: (String verificationId, int? resendToken) {
-        if (!isClosed) {
+        if (!emit.isDone) {
           emit(AuthOtpSent(
             verificationId: verificationId,
             phoneNumber: event.phoneNumber,
           ));
         }
+        if (!completer.isCompleted) completer.complete();
       },
-      codeAutoRetrievalTimeout: (_) {},
+      codeAutoRetrievalTimeout: (_) {
+        if (!completer.isCompleted) completer.complete();
+      },
     );
+
+    await completer.future;
   }
 
   Future<void> _onPhoneVerified(
