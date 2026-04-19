@@ -5,6 +5,8 @@ import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
+import 'package:dony/features/kyc/data/repositories/kyc_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:get_it/get_it.dart';
 
@@ -31,5 +33,13 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<LocalAuthService>(() => LocalAuthService());
   getIt.registerFactory<LocalAuthBloc>(
     () => LocalAuthBloc(getIt<LocalAuthService>()),
+  );
+
+  // KYC
+  getIt.registerLazySingleton<KycRepository>(
+    () => KycRepository(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<KycBloc>(
+    () => KycBloc(getIt<KycRepository>()),
   );
 }

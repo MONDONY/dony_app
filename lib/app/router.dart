@@ -3,6 +3,9 @@ import 'package:dony/features/auth/presentation/screens/otp_verification_screen.
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/pin_setup_screen.dart';
 import 'package:dony/features/auth/presentation/screens/role_selection_screen.dart';
+import 'package:dony/features/kyc/presentation/screens/kyc_onboarding_screen.dart';
+import 'package:dony/features/kyc/presentation/screens/kyc_status_screen.dart';
+import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -42,7 +45,18 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/kyc',
-      builder: (context, state) => const _PlaceholderScreen(title: 'Vérification KYC'),
+      builder: (context, state) => const KycOnboardingScreen(),
+    ),
+    GoRoute(
+      path: '/kyc/verify',
+      builder: (context, state) {
+        final stripeUrl = state.extra as String;
+        return KycWebViewScreen(stripeUrl: stripeUrl);
+      },
+    ),
+    GoRoute(
+      path: '/kyc/status',
+      builder: (context, state) => const KycStatusScreen(),
     ),
     GoRoute(
       path: '/announcements',
