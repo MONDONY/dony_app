@@ -19,7 +19,25 @@ const _environment = String.fromEnvironment(
   defaultValue: 'development',
 );
 
+Future<void> _bootstrap() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await setupDependencies(apiBaseUrl: _apiBaseUrl);
+
+  // Show UI immediately — splash screen handles loading state
+  runApp(const DonyApp());
+
+  // Heavy async init runs after UI is displayed (no ANR risk)
+  await getIt<HiveService>().init();
+  await getIt<NotificationService>().initialize();
+}
+
 Future<void> main() async {
+  if (_sentryDsn.isEmpty) {
+    await _bootstrap();
+    return;
+  }
+
   await SentryFlutter.init(
     (options) {
       options.dsn = _sentryDsn;
@@ -27,17 +45,6 @@ Future<void> main() async {
       options.environment = _environment;
       options.sendDefaultPii = false;
     },
-    appRunner: () async {
-      WidgetsFlutterBinding.ensureInitialized();
-
-      await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform);
-
-      await setupDependencies(apiBaseUrl: _apiBaseUrl);
-      await getIt<HiveService>().init();
-      await getIt<NotificationService>().initialize();
-
-      runApp(const DonyApp());
-    },
+    appRunner: _bootstrap,
   );
 }
