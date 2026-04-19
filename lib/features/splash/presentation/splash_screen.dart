@@ -1,7 +1,13 @@
 import 'package:dio/dio.dart' show Options;
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -32,10 +38,21 @@ class _SplashScreenState extends State<SplashScreen> {
           );
       final backendStatus = response.data?['status'] as String? ?? 'UNKNOWN';
       if (mounted) {
-        setState(() {
-          _status = backendStatus == 'UP' ? _Status.ok : _Status.error;
-          _detail = 'Backend: $backendStatus';
-        });
+        if (backendStatus == 'UP') {
+          setState(() {
+            _status = _Status.ok;
+            _detail = 'Backend: $backendStatus';
+          });
+          await Future.delayed(const Duration(milliseconds: 800));
+          if (mounted) {
+            await _navigateNext();
+          }
+        } else {
+          setState(() {
+            _status = _Status.error;
+            _detail = 'Backend: $backendStatus';
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -44,6 +61,31 @@ class _SplashScreenState extends State<SplashScreen> {
           _detail = e.toString().replaceAll(RegExp(r'DioException.*\['), '[');
         });
       }
+    }
+  }
+
+  Future<void> _navigateNext() async {
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    if (firebaseUser == null) {
+      if (mounted) context.go('/auth/phone');
+      return;
+    }
+
+    // Firebase user exists — check if registered in backend
+    if (!mounted) return;
+    final authBloc = context.read<AuthBloc>();
+    authBloc.add(const AuthCheckRequested());
+
+    final result = await authBloc.stream.firstWhere(
+      (s) => s is AuthAuthenticated || s is AuthInitial || s is AuthError,
+    );
+
+    if (!mounted) return;
+    if (result is AuthAuthenticated) {
+      context.go('/home');
+    } else {
+      // Firebase auth done but not yet registered in backend
+      context.go('/auth/role');
     }
   }
 
