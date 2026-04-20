@@ -23,6 +23,11 @@ class AnnouncementDetailRequested extends AnnouncementEvent {
   AnnouncementDetailRequested(this.id);
 }
 
+class AnnouncementDeleteRequested extends AnnouncementEvent {
+  final String id;
+  AnnouncementDeleteRequested(this.id);
+}
+
 class AnnouncementUpdateRequested extends AnnouncementEvent {
   final String id;
   final String departureCity;

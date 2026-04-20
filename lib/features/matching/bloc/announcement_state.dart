@@ -32,3 +32,5 @@ class AnnouncementUpdated extends AnnouncementState {
   final AnnouncementModel announcement;
   AnnouncementUpdated(this.announcement);
 }
+
+class AnnouncementDeleted extends AnnouncementState {}

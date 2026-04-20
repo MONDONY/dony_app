@@ -30,6 +30,10 @@ class AnnouncementRepository {
     return _remoteDatasource.getAnnouncementDetail(id);
   }
 
+  Future<void> deleteAnnouncement(String id) async {
+    return _remoteDatasource.deleteAnnouncement(id);
+  }
+
   Future<AnnouncementModel> updateAnnouncement({
     required String id,
     required String departureCity,

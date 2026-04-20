@@ -44,6 +44,10 @@ class AnnouncementRemoteDatasource {
     return AnnouncementModel.fromJson(response.data);
   }
 
+  Future<void> deleteAnnouncement(String id) async {
+    await _apiClient.dio.delete('/announcements/$id');
+  }
+
   Future<AnnouncementModel> updateAnnouncement({
     required String id,
     required String departureCity,

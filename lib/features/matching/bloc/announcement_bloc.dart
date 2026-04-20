@@ -12,6 +12,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     on<AnnouncementListRequested>(_onListRequested);
     on<AnnouncementDetailRequested>(_onDetailRequested);
     on<AnnouncementUpdateRequested>(_onUpdateRequested);
+    on<AnnouncementDeleteRequested>(_onDeleteRequested);
   }
 
   Future<void> _onCreateRequested(
@@ -54,6 +55,19 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     try {
       final announcement = await _repository.getAnnouncementDetail(event.id);
       emit(AnnouncementDetailLoaded(announcement));
+    } catch (e) {
+      emit(AnnouncementError(e.toString()));
+    }
+  }
+
+  Future<void> _onDeleteRequested(
+    AnnouncementDeleteRequested event,
+    Emitter<AnnouncementState> emit,
+  ) async {
+    emit(AnnouncementLoading());
+    try {
+      await _repository.deleteAnnouncement(event.id);
+      emit(AnnouncementDeleted());
     } catch (e) {
       emit(AnnouncementError(e.toString()));
     }
