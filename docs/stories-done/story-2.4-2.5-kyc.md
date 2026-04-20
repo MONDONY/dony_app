@@ -81,3 +81,10 @@ Le Timer est dans le widget et non dans le BLoC pour la même raison que le coun
 - **`webview_flutter` plutôt qu'un browser externe** : `url_launcher` ouvrirait le browser système, rendant le retour dans l'app incertain. La WebView in-app permet d'intercepter la navigation et d'assurer le retour fluide.
 - **Polling toutes les 30s plutôt que FCM push** : Les notifications push (Epic 8) ne sont pas encore implémentées. Le polling est le fallback MVP. Quand Epic 8 sera implémenté, le polling pourra être remplacé/complété par un push FCM → `KycStatusRefreshed`.
 - **Pas de `persistConnectionDuration` dans le polling** : le Timer s'arrête dès que l'écran est démonté (dispose) ou que le statut change. Pas de polling en arrière-plan.
+
+## ⚠️ À configurer avant la mise en production
+
+- [ ] **Remplacer le polling par FCM** (Epic 8) : quand les notifications push seront implémentées, envoyer un push FCM `kyc_status_changed` dès que le webhook Stripe est reçu. Le polling toutes les 30s est un fallback MVP acceptable mais consomme des appels API inutilement en production.
+- [ ] **`return_url` Stripe** : vérifier que `https://dony.app/kyc/complete` est bien le domaine de production. La WebView intercepte cette URL pour déclencher la navigation vers `/kyc/status` — si le domaine change, mettre à jour `KycWebViewScreen` et `KycService.java`.
+- [ ] **Tester le flow KYC sur un appareil physique** (pas émulateur) avant la mise en production : la WebView Stripe Identity peut se comporter différemment sur un vrai device (caméra, liveness check).
+- [ ] **Activer Stripe Identity en mode live** dans le Dashboard Stripe avant le premier utilisateur réel. En mode test, les vérifications sont simulées et n'ont aucune valeur légale.

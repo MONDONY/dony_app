@@ -6,8 +6,12 @@ import 'package:dony/features/auth/presentation/screens/role_selection_screen.da
 import 'package:dony/features/kyc/presentation/screens/kyc_onboarding_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_status_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
+import 'package:dony/features/matching/presentation/screens/create_announcement_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -61,6 +65,21 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/announcements',
       builder: (context, state) => const _PlaceholderScreen(title: 'Annonces'),
+    ),
+    GoRoute(
+      path: '/announcements/create',
+      redirect: (context, state) {
+        final authState = context.read<AuthBloc>().state;
+        if (authState is AuthAuthenticated) {
+          if (!authState.user.isKycVerified) {
+            // Can't show snackbar directly here, but redirecting to KYC is enough.
+            // A more complex app would pass an error message in state.extra.
+            return '/kyc';
+          }
+        }
+        return null;
+      },
+      builder: (context, state) => const CreateAnnouncementScreen(),
     ),
     GoRoute(
       path: '/announcements/:id',

@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(adb kill-server *)",
+      "Bash(adb version *)",
+      "Bash(ip route *)",
+      "Bash(awk '{print $3}')",
+      "Bash(nc -w 2 172.19.48.1 5555)",
+      "Bash(adb connect *)",
+      "Bash(/mnt/c/Users/abou5/AppData/Local/Android/Sdk/platform-tools/adb.exe devices *)",
+      "Bash(export ADB_SERVER_SOCKET=tcp:172.19.48.1:5037)",
+      "Bash(adb devices *)",
+      "Bash(adb -s emulator-5554 reverse tcp:8080 tcp:8080)",
+      "Bash(flutter devices *)",
+      "Bash(docker compose *)",
+      "Bash(curl -s http://localhost:8080/actuator/health)",
+      "Bash(./mvnw spring-boot:run -Dspring-boot.run.profiles=dev)",
+      "Bash(echo \"Backend PID: $!\")",
+      "Bash(flutter run *)",
+      "Bash(echo \"Flutter PID: $!\")",
+      "Bash(sudo apt-get *)",
+      "Bash(python3 -c \"import socket; print\\('python3 ok'\\)\")",
+      "Bash(adb -s emulator-5554 forward --list)",
+      "Bash(unset ADB_SERVER_SOCKET)",
+      "Bash(curl *)",
+      "Bash(adb -s emulator-5554 reverse --list)",
+      "Bash(adb *)"
+    ]
+  }
+}

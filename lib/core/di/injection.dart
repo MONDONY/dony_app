@@ -7,6 +7,10 @@ import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/data/repositories/kyc_repository.dart';
+import 'package:dony/features/kyc/data/repositories/kyc_repository.dart';
+import 'package:dony/features/matching/bloc/announcement_bloc.dart';
+import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
+import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:get_it/get_it.dart';
 
@@ -41,5 +45,16 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<KycBloc>(
     () => KycBloc(getIt<KycRepository>()),
+  );
+
+  // Matching
+  getIt.registerLazySingleton<AnnouncementRemoteDatasource>(
+    () => AnnouncementRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<AnnouncementRepository>(
+    () => AnnouncementRepository(getIt<AnnouncementRemoteDatasource>()),
+  );
+  getIt.registerFactory<AnnouncementBloc>(
+    () => AnnouncementBloc(getIt<AnnouncementRepository>()),
   );
 }
