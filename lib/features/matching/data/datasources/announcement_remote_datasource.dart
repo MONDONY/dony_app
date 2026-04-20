@@ -27,4 +27,42 @@ class AnnouncementRemoteDatasource {
 
     return AnnouncementModel.fromJson(response.data);
   }
+
+  Future<List<AnnouncementModel>> getMyAnnouncements({int page = 0}) async {
+    final response = await _apiClient.dio.get(
+      '/announcements/my',
+      queryParameters: {'page': page, 'size': 20},
+    );
+    
+    return (response.data['content'] as List)
+        .map((json) => AnnouncementModel.fromJson(json))
+        .toList();
+  }
+
+  Future<AnnouncementModel> getAnnouncementDetail(String id) async {
+    final response = await _apiClient.dio.get('/announcements/$id');
+    return AnnouncementModel.fromJson(response.data);
+  }
+
+  Future<AnnouncementModel> updateAnnouncement({
+    required String id,
+    required String departureCity,
+    required String arrivalCity,
+    required DateTime departureDate,
+    required double availableKg,
+    required double pricePerKg,
+  }) async {
+    final response = await _apiClient.dio.put(
+      '/announcements/$id',
+      data: {
+        'departureCity': departureCity,
+        'arrivalCity': arrivalCity,
+        'departureDate': DateFormat('yyyy-MM-dd').format(departureDate),
+        'availableKg': availableKg,
+        'pricePerKg': pricePerKg,
+      },
+    );
+
+    return AnnouncementModel.fromJson(response.data);
+  }
 }

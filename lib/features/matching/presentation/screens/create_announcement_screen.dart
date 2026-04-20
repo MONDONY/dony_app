@@ -1,6 +1,7 @@
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,7 +9,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class CreateAnnouncementScreen extends StatefulWidget {
-  const CreateAnnouncementScreen({Key? key}) : super(key: key);
+  final AnnouncementModel? announcement;
+
+  const CreateAnnouncementScreen({super.key, this.announcement});
 
   @override
   State<CreateAnnouncementScreen> createState() => _CreateAnnouncementScreenState();
@@ -27,6 +30,18 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     'Paris', 'Lyon', 'Marseille',
     'Dakar', 'Abidjan', 'Bamako', 'Douala'
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.announcement != null) {
+      _departureCity = widget.announcement!.departureCity;
+      _arrivalCity = widget.announcement!.arrivalCity;
+      _departureDate = widget.announcement!.departureDate;
+      _availableKg = widget.announcement!.availableKg;
+      _priceController.text = widget.announcement!.pricePerKg.toString();
+    }
+  }
 
   @override
   void dispose() {
@@ -81,35 +96,49 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
         return;
       }
 
-      context.read<AnnouncementBloc>().add(
-        AnnouncementCreateRequested(
-          departureCity: _departureCity!,
-          arrivalCity: _arrivalCity!,
-          departureDate: _departureDate!,
-          availableKg: _availableKg,
-          pricePerKg: price,
-        ),
-      );
+      if (widget.announcement == null) {
+        context.read<AnnouncementBloc>().add(
+          AnnouncementCreateRequested(
+            departureCity: _departureCity!,
+            arrivalCity: _arrivalCity!,
+            departureDate: _departureDate!,
+            availableKg: _availableKg,
+            pricePerKg: price,
+          ),
+        );
+      } else {
+        context.read<AnnouncementBloc>().add(
+          AnnouncementUpdateRequested(
+            id: widget.announcement!.id,
+            departureCity: _departureCity!,
+            arrivalCity: _arrivalCity!,
+            departureDate: _departureDate!,
+            availableKg: _availableKg,
+            pricePerKg: price,
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isEdit = widget.announcement != null;
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA), // kBackground
       appBar: AppBar(
-        title: const Text('Publier un trajet', style: TextStyle(color: Color(0xFF1A1A2E))),
+        title: Text(isEdit ? 'Modifier le trajet' : 'Publier un trajet', style: const TextStyle(color: Color(0xFF1A1A2E))),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF1A1A2E)),
       ),
       body: BlocConsumer<AnnouncementBloc, AnnouncementState>(
         listener: (context, state) {
-          if (state is AnnouncementCreated) {
+          if (state is AnnouncementCreated || state is AnnouncementUpdated) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Annonce publiée avec succès !'),
-                backgroundColor: Color(0xFF69F0AE),
+              SnackBar(
+                content: Text(isEdit ? 'Annonce modifiée avec succès !' : 'Annonce publiée avec succès !'),
+                backgroundColor: const Color(0xFF69F0AE),
               ),
             );
             context.go('/announcements');
@@ -214,8 +243,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                       value: _availableKg,
                       min: 1,
                       max: 30,
-                      divisions: 29,
-                      label: '${_availableKg.round()} kg',
+                      divisions: 58,
+                      label: '${_availableKg.toStringAsFixed(1)} kg',
                       activeColor: const Color(0xFF1A6B3C),
                       onChanged: (val) {
                         setState(() {
@@ -223,7 +252,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                         });
                       },
                     ),
-                    Center(child: Text('${_availableKg.round()} kg', style: const TextStyle(fontWeight: FontWeight.bold))),
+                    Center(child: Text('${_availableKg.toStringAsFixed(1)} kg', style: const TextStyle(fontWeight: FontWeight.bold))),
                     const SizedBox(height: 16),
                     
                     TextFormField(
@@ -240,8 +269,12 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                         suffixText: '€',
                       ),
                       validator: (val) {
-                        if (val == null || val.isEmpty) return 'Veuillez entrer un prix';
-                        if (double.tryParse(val) == null) return 'Prix invalide';
+                        if (val == null || val.isEmpty) {
+                          return 'Veuillez entrer un prix';
+                        }
+                        if (double.tryParse(val) == null) {
+                          return 'Prix invalide';
+                        }
                         return null;
                       },
                     ),
@@ -263,7 +296,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                                 width: 24,
                                 child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                               )
-                            : const Text('Publier mon trajet', style: TextStyle(fontSize: 16, color: Colors.white)),
+                            : Text(isEdit ? 'Enregistrer les modifications' : 'Publier mon trajet', style: const TextStyle(fontSize: 16, color: Colors.white)),
                       ),
                     ),
                   ],

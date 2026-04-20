@@ -1,17 +1,21 @@
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/presentation/screens/local_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/pin_setup_screen.dart';
 import 'package:dony/features/auth/presentation/screens/role_selection_screen.dart';
+import 'package:dony/features/home/presentation/home_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_onboarding_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_status_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/screens/announcement_detail_screen.dart';
+import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/create_announcement_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:dony/features/auth/bloc/auth_bloc.dart';
-import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -45,7 +49,7 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/home',
-      builder: (context, state) => const _PlaceholderScreen(title: 'Accueil'),
+      builder: (context, state) => const HomeScreen(),
     ),
     GoRoute(
       path: '/kyc',
@@ -64,7 +68,7 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/announcements',
-      builder: (context, state) => const _PlaceholderScreen(title: 'Annonces'),
+      builder: (context, state) => const AnnouncementListScreen(),
     ),
     GoRoute(
       path: '/announcements/create',
@@ -72,8 +76,6 @@ final appRouter = GoRouter(
         final authState = context.read<AuthBloc>().state;
         if (authState is AuthAuthenticated) {
           if (!authState.user.isKycVerified) {
-            // Can't show snackbar directly here, but redirecting to KYC is enough.
-            // A more complex app would pass an error message in state.extra.
             return '/kyc';
           }
         }
@@ -85,7 +87,14 @@ final appRouter = GoRouter(
       path: '/announcements/:id',
       builder: (context, state) {
         final id = state.pathParameters['id']!;
-        return _PlaceholderScreen(title: 'Annonce $id');
+        return AnnouncementDetailScreen(id: id);
+      },
+    ),
+    GoRoute(
+      path: '/announcements/:id/edit',
+      builder: (context, state) {
+        final announcement = state.extra as AnnouncementModel?;
+        return CreateAnnouncementScreen(announcement: announcement);
       },
     ),
     GoRoute(

@@ -24,7 +24,9 @@
       "Bash(unset ADB_SERVER_SOCKET)",
       "Bash(curl *)",
       "Bash(adb -s emulator-5554 reverse --list)",
-      "Bash(adb *)"
+      "Bash(adb *)",
+      "Bash(flutter analyze *)",
+      "Bash(dart analyze *)"
     ]
   }
 }

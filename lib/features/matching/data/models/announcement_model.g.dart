@@ -16,6 +16,7 @@ AnnouncementModel _$AnnouncementModelFromJson(Map<String, dynamic> json) =>
       availableKg: (json['availableKg'] as num).toDouble(),
       pricePerKg: (json['pricePerKg'] as num).toDouble(),
       status: json['status'] as String,
+      bidsCount: json['bidsCount'] as int?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
@@ -30,6 +31,7 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'availableKg': instance.availableKg,
       'pricePerKg': instance.pricePerKg,
       'status': instance.status,
+      if (instance.bidsCount != null) 'bidsCount': instance.bidsCount,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
     };

@@ -4,6 +4,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -21,6 +22,9 @@ class DonyApp extends StatelessWidget {
           ),
           BlocProvider<KycBloc>(
             create: (_) => getIt<KycBloc>(),
+          ),
+          BlocProvider<AnnouncementBloc>(
+            create: (_) => getIt<AnnouncementBloc>(),
           ),
         ],
         child: MaterialApp.router(

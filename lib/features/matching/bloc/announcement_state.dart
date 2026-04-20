@@ -17,3 +17,18 @@ class AnnouncementError extends AnnouncementState {
 
   AnnouncementError(this.message);
 }
+
+class AnnouncementListLoaded extends AnnouncementState {
+  final List<AnnouncementModel> announcements;
+  AnnouncementListLoaded(this.announcements);
+}
+
+class AnnouncementDetailLoaded extends AnnouncementState {
+  final AnnouncementModel announcement;
+  AnnouncementDetailLoaded(this.announcement);
+}
+
+class AnnouncementUpdated extends AnnouncementState {
+  final AnnouncementModel announcement;
+  AnnouncementUpdated(this.announcement);
+}

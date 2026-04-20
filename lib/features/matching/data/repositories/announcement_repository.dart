@@ -21,4 +21,30 @@ class AnnouncementRepository {
       pricePerKg: pricePerKg,
     );
   }
+
+  Future<List<AnnouncementModel>> getMyAnnouncements({int page = 0}) async {
+    return _remoteDatasource.getMyAnnouncements(page: page);
+  }
+
+  Future<AnnouncementModel> getAnnouncementDetail(String id) async {
+    return _remoteDatasource.getAnnouncementDetail(id);
+  }
+
+  Future<AnnouncementModel> updateAnnouncement({
+    required String id,
+    required String departureCity,
+    required String arrivalCity,
+    required DateTime departureDate,
+    required double availableKg,
+    required double pricePerKg,
+  }) async {
+    return _remoteDatasource.updateAnnouncement(
+      id: id,
+      departureCity: departureCity,
+      arrivalCity: arrivalCity,
+      departureDate: departureDate,
+      availableKg: availableKg,
+      pricePerKg: pricePerKg,
+    );
+  }
 }

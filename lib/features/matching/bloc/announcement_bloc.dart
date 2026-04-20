@@ -1,14 +1,17 @@
+import 'package:dio/dio.dart';
+import 'package:dony/features/matching/bloc/announcement_event.dart';
+import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import 'announcement_event.dart';
-import 'announcement_state.dart';
 
 class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
   final AnnouncementRepository _repository;
 
   AnnouncementBloc(this._repository) : super(AnnouncementInitial()) {
     on<AnnouncementCreateRequested>(_onCreateRequested);
+    on<AnnouncementListRequested>(_onListRequested);
+    on<AnnouncementDetailRequested>(_onDetailRequested);
+    on<AnnouncementUpdateRequested>(_onUpdateRequested);
   }
 
   Future<void> _onCreateRequested(
@@ -27,6 +30,58 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       emit(AnnouncementCreated(announcement));
     } catch (e) {
       emit(AnnouncementError(e.toString()));
+    }
+  }
+
+  Future<void> _onListRequested(
+    AnnouncementListRequested event,
+    Emitter<AnnouncementState> emit,
+  ) async {
+    emit(AnnouncementLoading());
+    try {
+      final announcements = await _repository.getMyAnnouncements();
+      emit(AnnouncementListLoaded(announcements));
+    } catch (e) {
+      emit(AnnouncementError(e.toString()));
+    }
+  }
+
+  Future<void> _onDetailRequested(
+    AnnouncementDetailRequested event,
+    Emitter<AnnouncementState> emit,
+  ) async {
+    emit(AnnouncementLoading());
+    try {
+      final announcement = await _repository.getAnnouncementDetail(event.id);
+      emit(AnnouncementDetailLoaded(announcement));
+    } catch (e) {
+      emit(AnnouncementError(e.toString()));
+    }
+  }
+
+  Future<void> _onUpdateRequested(
+    AnnouncementUpdateRequested event,
+    Emitter<AnnouncementState> emit,
+  ) async {
+    emit(AnnouncementLoading());
+    try {
+      final announcement = await _repository.updateAnnouncement(
+        id: event.id,
+        departureCity: event.departureCity,
+        arrivalCity: event.arrivalCity,
+        departureDate: event.departureDate,
+        availableKg: event.availableKg,
+        pricePerKg: event.pricePerKg,
+      );
+      emit(AnnouncementUpdated(announcement));
+    } catch (e) {
+      if (e is DioException && e.response?.statusCode == 409) {
+        emit(AnnouncementError(
+          'Modification impossible : des colis sont déjà acceptés pour ce trajet',
+        ));
+      } else {
+        emit(AnnouncementError(e.toString()));
+      }
     }
   }
 }

@@ -12,6 +12,7 @@ class AnnouncementModel {
   final double availableKg;
   final double pricePerKg;
   final String status;
+  final int? bidsCount;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -24,6 +25,7 @@ class AnnouncementModel {
     required this.availableKg,
     required this.pricePerKg,
     required this.status,
+    this.bidsCount,
     required this.createdAt,
     required this.updatedAt,
   });
