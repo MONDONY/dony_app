@@ -26,7 +26,8 @@
       "Bash(adb -s emulator-5554 reverse --list)",
       "Bash(adb *)",
       "Bash(flutter analyze *)",
-      "Bash(dart analyze *)"
+      "Bash(dart analyze *)",
+      "Bash(flutter pub *)"
     ]
   }
 }

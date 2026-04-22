@@ -10,6 +10,7 @@ import 'package:dony/features/kyc/presentation/screens/kyc_onboarding_screen.dar
 import 'package:dony/features/kyc/presentation/screens/kyc_status_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/screens/search_announcement_screen.dart';
 import 'package:dony/features/matching/presentation/screens/announcement_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/create_announcement_screen.dart';
@@ -69,6 +70,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/announcements',
       builder: (context, state) => const AnnouncementListScreen(),
+    ),
+    GoRoute(
+      path: '/search',
+      builder: (context, state) => const SearchAnnouncementScreen(),
     ),
     GoRoute(
       path: '/announcements/create',

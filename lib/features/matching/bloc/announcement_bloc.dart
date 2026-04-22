@@ -13,6 +13,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     on<AnnouncementDetailRequested>(_onDetailRequested);
     on<AnnouncementUpdateRequested>(_onUpdateRequested);
     on<AnnouncementDeleteRequested>(_onDeleteRequested);
+    on<AnnouncementSearchRequested>(_onSearchRequested);
   }
 
   Future<void> _onCreateRequested(
@@ -55,6 +56,27 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     try {
       final announcement = await _repository.getAnnouncementDetail(event.id);
       emit(AnnouncementDetailLoaded(announcement));
+    } catch (e) {
+      emit(AnnouncementError(e.toString()));
+    }
+  }
+
+  Future<void> _onSearchRequested(
+    AnnouncementSearchRequested event,
+    Emitter<AnnouncementState> emit,
+  ) async {
+    emit(AnnouncementLoading());
+    try {
+      final results = await _repository.searchAnnouncements(
+        departureCity: event.departureCity,
+        arrivalCity: event.arrivalCity,
+        departureDateFrom: event.departureDateFrom,
+        departureDateTo: event.departureDateTo,
+        minAvailableKg: event.minAvailableKg,
+        sortBy: event.sortBy,
+        sortDir: event.sortDir,
+      );
+      emit(AnnouncementSearchLoaded(results));
     } catch (e) {
       emit(AnnouncementError(e.toString()));
     }

@@ -30,6 +30,26 @@ class AnnouncementRepository {
     return _remoteDatasource.getAnnouncementDetail(id);
   }
 
+  Future<List<AnnouncementModel>> searchAnnouncements({
+    String? departureCity,
+    String? arrivalCity,
+    DateTime? departureDateFrom,
+    DateTime? departureDateTo,
+    double? minAvailableKg,
+    String sortBy = 'date',
+    String sortDir = 'asc',
+  }) {
+    return _remoteDatasource.searchAnnouncements(
+      departureCity: departureCity,
+      arrivalCity: arrivalCity,
+      departureDateFrom: departureDateFrom,
+      departureDateTo: departureDateTo,
+      minAvailableKg: minAvailableKg,
+      sortBy: sortBy,
+      sortDir: sortDir,
+    );
+  }
+
   Future<void> deleteAnnouncement(String id) async {
     return _remoteDatasource.deleteAnnouncement(id);
   }

@@ -6,6 +6,24 @@ part of 'announcement_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+TravelerProfile _$TravelerProfileFromJson(Map<String, dynamic> json) =>
+    TravelerProfile(
+      id: json['id'] as String,
+      displayName: json['displayName'] as String?,
+      averageRating: (json['averageRating'] as num?)?.toDouble(),
+      totalTrips: (json['totalTrips'] as num?)?.toInt(),
+      kiloPro: json['kiloPro'] as bool? ?? false,
+    );
+
+Map<String, dynamic> _$TravelerProfileToJson(TravelerProfile instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'displayName': instance.displayName,
+      'averageRating': instance.averageRating,
+      'totalTrips': instance.totalTrips,
+      'kiloPro': instance.kiloPro,
+    };
+
 AnnouncementModel _$AnnouncementModelFromJson(Map<String, dynamic> json) =>
     AnnouncementModel(
       id: json['id'] as String,
@@ -16,7 +34,10 @@ AnnouncementModel _$AnnouncementModelFromJson(Map<String, dynamic> json) =>
       availableKg: (json['availableKg'] as num).toDouble(),
       pricePerKg: (json['pricePerKg'] as num).toDouble(),
       status: json['status'] as String,
-      bidsCount: json['bidsCount'] as int?,
+      bidsCount: (json['bidsCount'] as num?)?.toInt(),
+      traveler: json['traveler'] == null
+          ? null
+          : TravelerProfile.fromJson(json['traveler'] as Map<String, dynamic>),
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
@@ -31,7 +52,8 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'availableKg': instance.availableKg,
       'pricePerKg': instance.pricePerKg,
       'status': instance.status,
-      if (instance.bidsCount != null) 'bidsCount': instance.bidsCount,
+      'bidsCount': instance.bidsCount,
+      'traveler': instance.traveler,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
     };

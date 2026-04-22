@@ -65,7 +65,7 @@ class HomeScreen extends StatelessWidget {
                       icon: Icons.search_rounded,
                       label: 'Trouver un trajet',
                       description: 'Recherchez un voyageur disponible',
-                      onTap: () => context.push('/announcements'),
+                      onTap: () => context.push('/search'),
                       delay: 200,
                     ),
                     const SizedBox(height: 12),

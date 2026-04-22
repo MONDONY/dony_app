@@ -3,6 +3,28 @@ import 'package:json_annotation/json_annotation.dart';
 part 'announcement_model.g.dart';
 
 @JsonSerializable()
+class TravelerProfile {
+  final String id;
+  final String? displayName;
+  final double? averageRating;
+  final int? totalTrips;
+  final bool kiloPro;
+
+  const TravelerProfile({
+    required this.id,
+    this.displayName,
+    this.averageRating,
+    this.totalTrips,
+    this.kiloPro = false,
+  });
+
+  factory TravelerProfile.fromJson(Map<String, dynamic> json) =>
+      _$TravelerProfileFromJson(json);
+
+  Map<String, dynamic> toJson() => _$TravelerProfileToJson(this);
+}
+
+@JsonSerializable()
 class AnnouncementModel {
   final String id;
   final String travelerId;
@@ -13,10 +35,11 @@ class AnnouncementModel {
   final double pricePerKg;
   final String status;
   final int? bidsCount;
+  final TravelerProfile? traveler;
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  AnnouncementModel({
+  const AnnouncementModel({
     required this.id,
     required this.travelerId,
     required this.departureCity,
@@ -26,6 +49,7 @@ class AnnouncementModel {
     required this.pricePerKg,
     required this.status,
     this.bidsCount,
+    this.traveler,
     required this.createdAt,
     required this.updatedAt,
   });

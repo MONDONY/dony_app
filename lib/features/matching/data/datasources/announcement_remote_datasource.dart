@@ -44,6 +44,35 @@ class AnnouncementRemoteDatasource {
     return AnnouncementModel.fromJson(response.data);
   }
 
+  Future<List<AnnouncementModel>> searchAnnouncements({
+    String? departureCity,
+    String? arrivalCity,
+    DateTime? departureDateFrom,
+    DateTime? departureDateTo,
+    double? minAvailableKg,
+    String sortBy = 'date',
+    String sortDir = 'asc',
+    int page = 0,
+  }) async {
+    final params = <String, dynamic>{
+      'page': page,
+      'size': 20,
+      'sortBy': sortBy,
+      'sortDir': sortDir,
+      if (departureCity != null) 'departureCity': departureCity,
+      if (arrivalCity != null) 'arrivalCity': arrivalCity,
+      if (departureDateFrom != null)
+        'departureDateFrom': DateFormat('yyyy-MM-dd').format(departureDateFrom),
+      if (departureDateTo != null)
+        'departureDateTo': DateFormat('yyyy-MM-dd').format(departureDateTo),
+      if (minAvailableKg != null) 'minAvailableKg': minAvailableKg,
+    };
+    final response = await _apiClient.dio.get('/announcements', queryParameters: params);
+    return (response.data['content'] as List)
+        .map((json) => AnnouncementModel.fromJson(json))
+        .toList();
+  }
+
   Future<void> deleteAnnouncement(String id) async {
     await _apiClient.dio.delete('/announcements/$id');
   }

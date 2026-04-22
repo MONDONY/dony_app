@@ -34,3 +34,9 @@ class AnnouncementUpdated extends AnnouncementState {
 }
 
 class AnnouncementDeleted extends AnnouncementState {}
+
+class AnnouncementSearchLoaded extends AnnouncementState {
+  final List<AnnouncementModel> results;
+  final bool isEmpty;
+  AnnouncementSearchLoaded(this.results) : isEmpty = results.isEmpty;
+}

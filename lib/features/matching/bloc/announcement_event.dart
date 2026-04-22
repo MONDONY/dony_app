@@ -23,6 +23,26 @@ class AnnouncementDetailRequested extends AnnouncementEvent {
   AnnouncementDetailRequested(this.id);
 }
 
+class AnnouncementSearchRequested extends AnnouncementEvent {
+  final String? departureCity;
+  final String? arrivalCity;
+  final DateTime? departureDateFrom;
+  final DateTime? departureDateTo;
+  final double? minAvailableKg;
+  final String sortBy; // date | price | rating
+  final String sortDir; // asc | desc
+
+  AnnouncementSearchRequested({
+    this.departureCity,
+    this.arrivalCity,
+    this.departureDateFrom,
+    this.departureDateTo,
+    this.minAvailableKg,
+    this.sortBy = 'date',
+    this.sortDir = 'asc',
+  });
+}
+
 class AnnouncementDeleteRequested extends AnnouncementEvent {
   final String id;
   AnnouncementDeleteRequested(this.id);
