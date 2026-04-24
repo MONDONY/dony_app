@@ -21,4 +21,8 @@ class AuthRemoteDatasource {
     final response = await _apiClient.dio.get<Map<String, dynamic>>('/auth/me');
     return UserModel.fromJson(response.data!);
   }
+
+  Future<void> deleteAccount() async {
+    await _apiClient.dio.delete<void>('/auth/me');
+  }
 }

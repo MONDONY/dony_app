@@ -13,4 +13,6 @@ class AuthRepository {
       _datasource.register(phoneNumber: phoneNumber, roles: roles);
 
   Future<UserModel> getProfile() => _datasource.getProfile();
+
+  Future<void> deleteAccount() => _datasource.deleteAccount();
 }

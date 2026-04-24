@@ -105,9 +105,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               _phoneNumber = state.phoneNumber;
             });
           } else if (state is AuthOtpVerified) {
+            // Nouveau numéro → créer un compte
             context.go('/auth/role');
           } else if (state is AuthAuthenticated) {
-            context.go('/home');
+            // Compte existant → demander le PIN pour déverrouiller
+            context.go('/auth/local');
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

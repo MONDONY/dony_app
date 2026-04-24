@@ -52,3 +52,13 @@ class AuthError extends AuthState {
   @override
   List<Object?> get props => [message];
 }
+
+class AuthAccountDeleted extends AuthState {
+  const AuthAccountDeleted();
+}
+
+/// L'utilisateur est toujours connecté Firebase mais l'app est verrouillée.
+/// L'écran PIN doit s'afficher pour déverrouiller.
+class AuthLocked extends AuthState {
+  const AuthLocked();
+}

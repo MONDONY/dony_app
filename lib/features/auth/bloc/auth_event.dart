@@ -19,11 +19,16 @@ class AuthSendOtpRequested extends AuthEvent {
 class AuthPhoneVerified extends AuthEvent {
   final String verificationId;
   final String smsCode;
+  final bool autoVerified;
 
-  const AuthPhoneVerified({required this.verificationId, required this.smsCode});
+  const AuthPhoneVerified({
+    required this.verificationId,
+    required this.smsCode,
+    this.autoVerified = false,
+  });
 
   @override
-  List<Object?> get props => [verificationId, smsCode];
+  List<Object?> get props => [verificationId, smsCode, autoVerified];
 }
 
 class AuthRegisterRequested extends AuthEvent {
@@ -41,4 +46,8 @@ class AuthCheckRequested extends AuthEvent {
 
 class AuthLogoutRequested extends AuthEvent {
   const AuthLogoutRequested();
+}
+
+class AuthDeleteAccountRequested extends AuthEvent {
+  const AuthDeleteAccountRequested();
 }

@@ -89,9 +89,15 @@ class _SplashScreenState extends State<SplashScreen> {
     }
     if (result is AuthAuthenticated) {
       context.go('/auth/local');
-    } else {
-      // Firebase auth done but not yet registered in backend
+    } else if (result is AuthInitial) {
+      // Firebase user existe mais pas inscrit en backend → inscription
       context.go('/auth/role');
+    } else {
+      // Erreur réseau/serveur → rester sur splash avec message d'erreur
+      setState(() {
+        _status = _Status.error;
+        _detail = (result as AuthError).message;
+      });
     }
   }
 

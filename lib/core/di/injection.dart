@@ -35,7 +35,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => AuthRepository(getIt<AuthRemoteDatasource>()),
   );
   getIt.registerFactory<AuthBloc>(
-    () => AuthBloc(getIt<AuthRepository>()),
+    () => AuthBloc(getIt<AuthRepository>(), getIt<LocalAuthService>()),
   );
 
   // Local auth (biometric + PIN)

@@ -19,6 +19,14 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
   Future<void> _onStarted(LocalAuthStarted event, Emitter<LocalAuthState> emit) async {
     emit(const LocalAuthChecking());
     _attemptsLeft = 3;
+
+    // Si aucun PIN n'est configuré → demander de le créer
+    final pinSet = await _service.isPinSet();
+    if (!pinSet) {
+      emit(const LocalAuthNoPinSet());
+      return;
+    }
+
     final biometricAvailable = await _service.isBiometricAvailable();
 
     if (biometricAvailable) {

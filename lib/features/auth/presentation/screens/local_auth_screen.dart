@@ -9,6 +9,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+
 class LocalAuthScreen extends StatefulWidget {
   const LocalAuthScreen({super.key});
 
@@ -87,7 +88,11 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
       body: BlocConsumer<LocalAuthBloc, LocalAuthState>(
         listener: (context, state) {
           if (state is LocalAuthSuccess) {
+            // PIN correct → accès accordé
             context.go('/home');
+          } else if (state is LocalAuthNoPinSet) {
+            // Aucun PIN configuré (ex: effacé par ancien logout) → écran de création
+            context.go('/auth/pin-setup');
           } else if (state is LocalAuthLocked) {
             _startLockCountdown(state.secondsLeft);
           } else if (state is LocalAuthPinRequired) {

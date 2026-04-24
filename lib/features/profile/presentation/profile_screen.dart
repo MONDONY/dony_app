@@ -5,6 +5,7 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -12,95 +13,108 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        final user = state is AuthAuthenticated ? state.user : null;
-        final phone = user?.phoneNumber ?? '';
-        final isKycVerified = user?.isKycVerified ?? false;
-        final isTraveler = user?.isTraveler ?? false;
-        final isSender = user?.isSender ?? false;
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthInitial || state is AuthAccountDeleted) {
+          // Logout ou suppression → retour à la saisie du numéro de téléphone
+          context.go('/auth/phone');
+        }
+      },
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          final user = state is AuthAuthenticated ? state.user : null;
+          final phone = user?.phoneNumber ?? '';
+          final isKycVerified = user?.isKycVerified ?? false;
+          final isTraveler = user?.isTraveler ?? false;
+          final isSender = user?.isSender ?? false;
 
-        return Scaffold(
-          backgroundColor: kBackground,
-          appBar: AppBar(
-            title: Text(
-              'Mon profil',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: kTextPrimary,
+          return Scaffold(
+            backgroundColor: kBackground,
+            appBar: AppBar(
+              title: Text(
+                'Mon profil',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: kTextPrimary,
+                ),
+              ),
+              backgroundColor: kSurface,
+              elevation: 0,
+              bottom: const PreferredSize(
+                preferredSize: Size.fromHeight(1),
+                child: Divider(height: 1),
               ),
             ),
-            backgroundColor: kSurface,
-            elevation: 0,
-            bottom: const PreferredSize(
-              preferredSize: Size.fromHeight(1),
-              child: Divider(height: 1),
+            body: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 28, 20, 40),
+              child: Column(
+                children: [
+                  _buildAvatar(phone, isKycVerified)
+                      .animate()
+                      .fadeIn(duration: 300.ms)
+                      .scale(begin: const Offset(0.85, 0.85), curve: Curves.easeOutBack),
+                  const SizedBox(height: 16),
+                  Text(
+                    phone,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: kTextPrimary,
+                    ),
+                  ).animate().fadeIn(delay: 80.ms),
+                  const SizedBox(height: 10),
+                  _buildRoleBadges(isTraveler, isSender)
+                      .animate()
+                      .fadeIn(delay: 120.ms),
+                  const SizedBox(height: 32),
+                  _buildSection(
+                    title: 'Vérification',
+                    children: [
+                      _buildInfoTile(
+                        icon: Icons.shield_outlined,
+                        label: 'Identité',
+                        value: isKycVerified ? 'Vérifiée' : 'Non vérifiée',
+                        valueColor: isKycVerified ? kSuccess : kWarning,
+                        trailing: isKycVerified
+                            ? const Icon(Icons.verified_rounded, color: kSuccess, size: 18)
+                            : null,
+                      ),
+                    ],
+                  ).animate().fadeIn(delay: 160.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                  const SizedBox(height: 16),
+                  _buildSection(
+                    title: 'Compte',
+                    children: [
+                      _buildInfoTile(
+                        icon: Icons.phone_outlined,
+                        label: 'Téléphone',
+                        value: phone,
+                      ),
+                      const Divider(height: 1, indent: 52),
+                      _buildInfoTile(
+                        icon: Icons.badge_outlined,
+                        label: 'Rôle',
+                        value: _roleLabel(isTraveler, isSender),
+                      ),
+                    ],
+                  ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                  const SizedBox(height: 32),
+                  _buildLogoutButton(context)
+                      .animate()
+                      .fadeIn(delay: 260.ms)
+                      .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                  const SizedBox(height: 12),
+                  _buildDeleteAccountButton(context)
+                      .animate()
+                      .fadeIn(delay: 300.ms)
+                      .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                ],
+              ),
             ),
-          ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 28, 20, 40),
-            child: Column(
-              children: [
-                _buildAvatar(phone, isKycVerified)
-                    .animate()
-                    .fadeIn(duration: 300.ms)
-                    .scale(begin: const Offset(0.85, 0.85), curve: Curves.easeOutBack),
-                const SizedBox(height: 16),
-                Text(
-                  phone,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: kTextPrimary,
-                  ),
-                ).animate().fadeIn(delay: 80.ms),
-                const SizedBox(height: 10),
-                _buildRoleBadges(isTraveler, isSender)
-                    .animate()
-                    .fadeIn(delay: 120.ms),
-                const SizedBox(height: 32),
-                _buildSection(
-                  title: 'Vérification',
-                  children: [
-                    _buildInfoTile(
-                      icon: Icons.shield_outlined,
-                      label: 'Identité',
-                      value: isKycVerified ? 'Vérifiée' : 'Non vérifiée',
-                      valueColor: isKycVerified ? kSuccess : kWarning,
-                      trailing: isKycVerified
-                          ? const Icon(Icons.verified_rounded, color: kSuccess, size: 18)
-                          : null,
-                    ),
-                  ],
-                ).animate().fadeIn(delay: 160.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
-                const SizedBox(height: 16),
-                _buildSection(
-                  title: 'Compte',
-                  children: [
-                    _buildInfoTile(
-                      icon: Icons.phone_outlined,
-                      label: 'Téléphone',
-                      value: phone,
-                    ),
-                    const Divider(height: 1, indent: 52),
-                    _buildInfoTile(
-                      icon: Icons.badge_outlined,
-                      label: 'Rôle',
-                      value: _roleLabel(isTraveler, isSender),
-                    ),
-                  ],
-                ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
-                const SizedBox(height: 32),
-                _buildLogoutButton(context)
-                    .animate()
-                    .fadeIn(delay: 260.ms)
-                    .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-              ],
-            ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
@@ -273,6 +287,89 @@ class ProfileScreen extends StatelessWidget {
           minimumSize: const Size.fromHeight(52),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
+      ),
+    );
+  }
+
+  Widget _buildDeleteAccountButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: TextButton.icon(
+        onPressed: () => _showDeleteConfirmDialog(context),
+        icon: const Icon(Icons.delete_forever_rounded, size: 18, color: Color(0xFF9E1C1C)),
+        label: Text(
+          'Supprimer mon compte',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF9E1C1C),
+          ),
+        ),
+        style: TextButton.styleFrom(
+          minimumSize: const Size.fromHeight(44),
+          foregroundColor: const Color(0xFF9E1C1C),
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmDialog(BuildContext context) {
+    final authBloc = context.read<AuthBloc>();
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: kSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: Color(0xFF9E1C1C), size: 24),
+            const SizedBox(width: 10),
+            Text(
+              'Supprimer le compte',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: kTextPrimary,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Cette action est irréversible. Votre compte, tous vos trajets et toutes vos données seront définitivement supprimés.',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 14,
+            color: kTextSecondary,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(
+              'Annuler',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w600,
+                color: kTextSecondary,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              authBloc.add(const AuthDeleteAccountRequested());
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF9E1C1C),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text(
+              'Supprimer définitivement',
+              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
       ),
     );
   }

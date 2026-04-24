@@ -32,3 +32,8 @@ class LocalAuthError extends LocalAuthState {
   const LocalAuthError(this.message);
   final String message;
 }
+
+/// Aucun PIN configuré — l'utilisateur doit en créer un (premier login ou PIN effacé)
+class LocalAuthNoPinSet extends LocalAuthState {
+  const LocalAuthNoPinSet();
+}
