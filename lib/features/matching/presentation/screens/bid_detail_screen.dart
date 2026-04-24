@@ -135,7 +135,12 @@ class _BidDetailViewState extends State<_BidDetailView> {
           ),
           bottomNavigationBar: _bid.status == 'PENDING' && !isSender
               ? _ActionBar(bid: _bid, isLoading: isLoading)
-              : _bid.status == 'ACCEPTED' && !_bid.voyageurConfirmed && !isSender
+              : _bid.status == 'ACCEPTED' && 
+                !_bid.voyageurConfirmed && 
+                !isSender &&
+                _bid.handoverWindowStart != null &&
+                DateTime.now().isAfter(_bid.handoverWindowStart!.subtract(const Duration(hours: 4))) &&
+                DateTime.now().isBefore(_bid.handoverWindowEnd ?? DateTime.now().add(const Duration(hours: 1)))
                   ? _ConfirmPresenceBar(bid: _bid, isLoading: isLoading)
                   : null,
         );
