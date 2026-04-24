@@ -6,6 +6,7 @@ import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class DonyApp extends StatelessWidget {
@@ -32,6 +33,15 @@ class DonyApp extends StatelessWidget {
           theme: appTheme,
           routerConfig: appRouter,
           debugShowCheckedModeBanner: false,
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('fr', 'FR'),
+            Locale('en', 'US'),
+          ],
         ),
       );
 }

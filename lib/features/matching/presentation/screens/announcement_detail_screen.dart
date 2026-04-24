@@ -148,7 +148,8 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        Row(
+                        Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             Text(
                               a.departureCity,
@@ -193,9 +194,14 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                   const SizedBox(height: 16),
 
                   // Stats row
-                  Row(
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
                     children: [
-                      Expanded(
+                      SizedBox(
+                        width: (MediaQuery.of(context).size.width - 40 - 24) / 3 > 100 
+                          ? (MediaQuery.of(context).size.width - 40 - 24) / 3 
+                          : double.infinity,
                         child: _StatCard(
                           icon: Icons.scale_rounded,
                           label: 'Capacité dispo.',
@@ -203,8 +209,10 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                           color: const Color(0xFF0F4C75),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
+                      SizedBox(
+                        width: (MediaQuery.of(context).size.width - 40 - 24) / 3 > 100 
+                          ? (MediaQuery.of(context).size.width - 40 - 24) / 3 
+                          : double.infinity,
                         child: _StatCard(
                           icon: Icons.euro_rounded,
                           label: 'Prix par kg',
@@ -212,8 +220,10 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                           color: kGreenPrimary,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
+                      SizedBox(
+                        width: (MediaQuery.of(context).size.width - 40 - 24) / 3 > 100 
+                          ? (MediaQuery.of(context).size.width - 40 - 24) / 3 
+                          : double.infinity,
                         child: _StatCard(
                           icon: Icons.inbox_rounded,
                           label: 'Demandes',

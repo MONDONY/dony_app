@@ -77,7 +77,10 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         sortDir: event.sortDir,
       );
       emit(AnnouncementSearchLoaded(results));
-    } catch (e) {
+    } catch (e, stacktrace) {
+      print('=== SEARCH ERROR ===');
+      print(e);
+      print(stacktrace);
       emit(AnnouncementError(e.toString()));
     }
   }

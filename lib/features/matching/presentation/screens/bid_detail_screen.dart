@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
@@ -86,6 +88,9 @@ class _BidDetailViewState extends State<_BidDetailView> {
       },
       builder: (context, state) {
         final isLoading = state is BidLoading;
+        final authState = context.read<AuthBloc>().state;
+        final isSender = authState is AuthAuthenticated && authState.user.id == _bid.senderId;
+        
         return Scaffold(
           backgroundColor: kBackground,
           appBar: AppBar(
@@ -128,9 +133,9 @@ class _BidDetailViewState extends State<_BidDetailView> {
               ],
             ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
           ),
-          bottomNavigationBar: _bid.status == 'PENDING'
+          bottomNavigationBar: _bid.status == 'PENDING' && !isSender
               ? _ActionBar(bid: _bid, isLoading: isLoading)
-              : _bid.status == 'ACCEPTED' && !_bid.voyageurConfirmed
+              : _bid.status == 'ACCEPTED' && !_bid.voyageurConfirmed && !isSender
                   ? _ConfirmPresenceBar(bid: _bid, isLoading: isLoading)
                   : null,
         );
@@ -211,19 +216,21 @@ class _SenderCard extends StatelessWidget {
             child: const Icon(Icons.person_rounded, color: kGreenPrimary, size: 24),
           ),
           const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                bid.senderName ?? 'Expéditeur anonyme',
-                style: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.w700, fontSize: 16, color: kTextPrimary),
-              ),
-              Text(
-                'Demande soumise le ${DateFormat('dd/MM/yyyy à HH:mm').format(bid.createdAt)}',
-                style: GoogleFonts.plusJakartaSans(fontSize: 12, color: kTextSecondary),
-              ),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  bid.senderName ?? 'Expéditeur anonyme',
+                  style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700, fontSize: 16, color: kTextPrimary),
+                ),
+                Text(
+                  'Demande soumise le ${DateFormat('dd/MM/yyyy à HH:mm').format(bid.createdAt)}',
+                  style: GoogleFonts.plusJakartaSans(fontSize: 12, color: kTextSecondary),
+                ),
+              ],
+            ),
           ),
         ],
       ),

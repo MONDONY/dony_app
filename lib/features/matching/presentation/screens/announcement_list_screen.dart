@@ -226,7 +226,8 @@ class _AnnouncementCard extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Row(
+                        child: Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             _CityChip(city: departureCity),
                             const Padding(
@@ -259,18 +260,18 @@ class _AnnouncementCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       _InfoChip(
                         icon: Icons.calendar_month_rounded,
                         label: DateFormat('dd MMM yyyy').format(departureDate),
                       ),
-                      const SizedBox(width: 8),
                       _InfoChip(
                         icon: Icons.scale_rounded,
                         label: '${availableKg.toStringAsFixed(1)} kg',
                       ),
-                      const SizedBox(width: 8),
                       _InfoChip(
                         icon: Icons.euro_rounded,
                         label: '${pricePerKg.toStringAsFixed(0)}/kg',

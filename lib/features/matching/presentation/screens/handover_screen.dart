@@ -3,6 +3,8 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/bloc/announcement_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -103,6 +105,7 @@ class _HandoverScreenState extends State<HandoverScreen> {
               behavior: SnackBarBehavior.floating,
             ),
           );
+          context.read<AnnouncementBloc>().add(AnnouncementListRequested());
           context.go('/announcements');
         } else if (state is BidError) {
           ScaffoldMessenger.of(context).showSnackBar(

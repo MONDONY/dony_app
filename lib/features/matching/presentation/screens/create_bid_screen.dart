@@ -192,12 +192,14 @@ class _FormPage extends StatelessWidget {
                 children: [
                   const Icon(Icons.flight_takeoff_rounded, color: kGreenPrimary, size: 18),
                   const SizedBox(width: 10),
-                  Text(
-                    '${announcement.departureCity} → ${announcement.arrivalCity}',
-                    style: GoogleFonts.plusJakartaSans(
-                        fontWeight: FontWeight.w700, color: kGreenDark, fontSize: 15),
+                  Expanded(
+                    child: Text(
+                      '${announcement.departureCity} → ${announcement.arrivalCity}',
+                      style: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w700, color: kGreenDark, fontSize: 15),
+                    ),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 8),
                   Text(
                     '${announcement.pricePerKg.toStringAsFixed(2)} €/kg',
                     style: GoogleFonts.plusJakartaSans(

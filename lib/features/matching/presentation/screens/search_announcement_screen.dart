@@ -123,28 +123,25 @@ class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
             ),
           ),
 
-          // Sticky filter bar
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _FilterBarDelegate(
-              child: _FilterBar(
-                departureCity: _departureCity,
-                arrivalCity: _arrivalCity,
-                dateFrom: _dateFrom,
-                dateTo: _dateTo,
-                minKg: _minKg,
-                sortBy: _sortBy,
-                onFilterTap: () => _showFilterSheet(),
-                onSortTap: () => _showSortSheet(),
-                hasActiveFilters: _hasActiveFilters,
-              ),
+          // Sticky filter bar removed to prevent layout crashes
+          SliverToBoxAdapter(
+            child: _FilterBar(
+              departureCity: _departureCity,
+              arrivalCity: _arrivalCity,
+              dateFrom: _dateFrom,
+              dateTo: _dateTo,
+              minKg: _minKg,
+              sortBy: _sortBy,
+              onFilterTap: () => _showFilterSheet(),
+              onSortTap: () => _showSortSheet(),
+              hasActiveFilters: _hasActiveFilters,
             ),
           ),
 
           // Results
           BlocBuilder<AnnouncementBloc, AnnouncementState>(
             builder: (context, state) {
-              if (state is AnnouncementLoading) {
+              if (state is AnnouncementLoading || state is AnnouncementInitial) {
                 return const SliverFillRemaining(
                   child: Center(child: CircularProgressIndicator(color: kGreenPrimary)),
                 );
@@ -538,27 +535,30 @@ class _TravelerCard extends StatelessWidget {
                         Row(
                           children: [
                             // Corridor
-                            Text(
-                              '${announcement.departureCity} → ${announcement.arrivalCity}',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: kGreenPrimary,
+                            Expanded(
+                              child: Text(
+                                '${announcement.departureCity} → ${announcement.arrivalCity}',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: kGreenPrimary,
+                                ),
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 6),
-                        Row(
+                        Wrap(
+                          spacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             if (trips > 0) ...[
                               const Icon(Icons.flight_rounded, size: 13, color: kTextHint),
-                              const SizedBox(width: 3),
                               Text(
                                 '$trips trajet${trips > 1 ? 's' : ''}',
                                 style: GoogleFonts.plusJakartaSans(fontSize: 12, color: kTextSecondary),
                               ),
-                              const SizedBox(width: 10),
+                              const SizedBox(width: 6),
                             ],
                             if (isKiloPro) ...[
                               Container(
@@ -592,55 +592,68 @@ class _TravelerCard extends StatelessWidget {
                 border: Border(top: BorderSide(color: kBorder)),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  _StatPill(
-                    icon: Icons.calendar_month_rounded,
-                    label: DateFormat('dd MMM', 'fr').format(announcement.departureDate),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      _StatPill(
+                        icon: Icons.calendar_month_rounded,
+                        label: DateFormat('dd MMM', 'fr').format(announcement.departureDate),
+                      ),
+                      _StatPill(
+                        icon: Icons.scale_rounded,
+                        label: '${announcement.availableKg.toStringAsFixed(1)} kg dispo',
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  _StatPill(
-                    icon: Icons.scale_rounded,
-                    label: '${announcement.availableKg.toStringAsFixed(1)} kg dispo',
-                  ),
-                  const Spacer(),
-                  RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: '${announcement.pricePerKg.toStringAsFixed(0)} €',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: kTextPrimary,
-                          ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: '${announcement.pricePerKg.toStringAsFixed(0)} €',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: kTextPrimary,
+                              ),
+                            ),
+                            TextSpan(
+                              text: '/kg',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: kTextSecondary,
+                              ),
+                            ),
+                          ],
                         ),
-                        TextSpan(
-                          text: '/kg',
+                      ),
+                      const SizedBox(width: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: kGreenPrimary,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          'Choisir',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: kTextSecondary,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: kGreenPrimary,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      'Choisir',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),
@@ -1049,9 +1062,9 @@ class _FilterBarDelegate extends SliverPersistentHeaderDelegate {
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) => child;
 
   @override
-  double get maxExtent => 57;
+  double get maxExtent => 72;
   @override
-  double get minExtent => 57;
+  double get minExtent => 72;
   @override
   bool shouldRebuild(_FilterBarDelegate old) => true;
 }
