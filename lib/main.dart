@@ -5,6 +5,7 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 const _apiBaseUrl = String.fromEnvironment(
@@ -21,6 +22,7 @@ const _environment = String.fromEnvironment(
 
 Future<void> _bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('fr');
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await setupDependencies(apiBaseUrl: _apiBaseUrl);
 

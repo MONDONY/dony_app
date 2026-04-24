@@ -100,9 +100,9 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFFEAF5EF) : Colors.white,
+          color: selected ? const Color(0xFFE3F2FD) : Colors.white,
           border: Border.all(
-            color: selected ? const Color(0xFF1A6B3C) : Colors.grey.shade300,
+            color: selected ? const Color(0xFF1E88E5) : Colors.grey.shade300,
             width: selected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(16),
@@ -120,7 +120,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: selected ? const Color(0xFF1A6B3C) : Colors.black87,
+                      color: selected ? const Color(0xFF1E88E5) : Colors.black87,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -132,7 +132,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
               ),
             ),
             if (selected)
-              const Icon(Icons.check_circle, color: Color(0xFF1A6B3C), size: 24),
+              const Icon(Icons.check_circle, color: Color(0xFF1E88E5), size: 24),
           ],
         ),
       ),
@@ -149,7 +149,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
           child: ElevatedButton(
             onPressed: (isLoading || !_canProceed) ? null : _register,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1A6B3C),
+              backgroundColor: const Color(0xFF1E88E5),
               foregroundColor: Colors.white,
               disabledBackgroundColor: Colors.grey.shade300,
               shape: RoundedRectangleBorder(

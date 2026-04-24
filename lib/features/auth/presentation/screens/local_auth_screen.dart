@@ -18,8 +18,8 @@ class LocalAuthScreen extends StatefulWidget {
 
 class _LocalAuthScreenState extends State<LocalAuthScreen> {
   static const _pinLength = 6;
-  static const _kGreen = Color(0xFF1A6B3C);
-  static const _kGreenLight = Color(0xFFEAF5EF);
+  static const _kGreen = Color(0xFF1E88E5);
+  static const _kGreenLight = Color(0xFFE3F2FD);
   static const _kBg = Color(0xFFF8F9FA);
 
   String _pin = '';
@@ -160,7 +160,7 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF1A6B3C),
+            color: Color(0xFF1E88E5),
             letterSpacing: 4,
           ),
         ),

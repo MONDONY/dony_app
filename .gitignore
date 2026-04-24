@@ -45,9 +45,12 @@ app.*.map.json
 /android/app/release
 /android/app/google-services.json
 
+.claude/
 # ios
 /ios/Runner/GoogleService-Info.plist
 
 # Environment files (secrets)
 env.dev.json
 env.prod.json
+
+CLAUDE.md

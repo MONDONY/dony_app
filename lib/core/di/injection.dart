@@ -5,11 +5,17 @@ import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
+import 'package:dony/features/cancellation/data/datasources/cancellation_remote_datasource.dart';
+import 'package:dony/features/cancellation/data/repositories/cancellation_repository.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/data/repositories/kyc_repository.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
+import 'package:dony/features/matching/data/datasources/bid_remote_datasource.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
+import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:get_it/get_it.dart';
 
@@ -46,7 +52,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => KycBloc(getIt<KycRepository>()),
   );
 
-  // Matching
+  // Matching — Announcements
   getIt.registerLazySingleton<AnnouncementRemoteDatasource>(
     () => AnnouncementRemoteDatasource(getIt<ApiClient>()),
   );
@@ -55,5 +61,27 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<AnnouncementBloc>(
     () => AnnouncementBloc(getIt<AnnouncementRepository>()),
+  );
+
+  // Matching — Bids
+  getIt.registerLazySingleton<BidRemoteDatasource>(
+    () => BidRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<BidRepository>(
+    () => BidRepository(getIt<BidRemoteDatasource>()),
+  );
+  getIt.registerFactory<BidBloc>(
+    () => BidBloc(getIt<BidRepository>()),
+  );
+
+  // Cancellation
+  getIt.registerLazySingleton<CancellationRemoteDatasource>(
+    () => CancellationRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<CancellationRepository>(
+    () => CancellationRepository(getIt<CancellationRemoteDatasource>()),
+  );
+  getIt.registerFactory<CancellationBloc>(
+    () => CancellationBloc(getIt<CancellationRepository>()),
   );
 }

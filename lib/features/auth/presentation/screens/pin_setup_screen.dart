@@ -14,8 +14,8 @@ class PinSetupScreen extends StatefulWidget {
 
 class _PinSetupScreenState extends State<PinSetupScreen> {
   static const _pinLength = 6;
-  static const _kGreen = Color(0xFF1A6B3C);
-  static const _kGreenLight = Color(0xFFEAF5EF);
+  static const _kGreen = Color(0xFF1E88E5);
+  static const _kGreenLight = Color(0xFFE3F2FD);
   static const _kBg = Color(0xFFF8F9FA);
 
   String _pin = '';
@@ -56,7 +56,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
       if (_pin == _firstPin) {
         await getIt<LocalAuthService>().savePin(_pin);
         if (mounted) {
-          context.go('/kyc');
+          context.go('/home');
         }
       } else {
         setState(() {
@@ -187,7 +187,7 @@ class _StepDot extends StatelessWidget {
       height: 32,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: active ? const Color(0xFF1A6B3C) : Colors.grey.shade200,
+        color: active ? const Color(0xFF1E88E5) : Colors.grey.shade200,
       ),
       child: Center(
         child: Text(

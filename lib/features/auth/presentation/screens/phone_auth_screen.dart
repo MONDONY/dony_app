@@ -83,7 +83,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF1A6B3C),
+                      color: Color(0xFF1E88E5),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -134,7 +134,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF1A6B3C), width: 2),
+                    borderSide: const BorderSide(color: Color(0xFF1E88E5), width: 2),
                   ),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
@@ -192,7 +192,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
           child: ElevatedButton(
             onPressed: isLoading ? null : _submit,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1A6B3C),
+              backgroundColor: const Color(0xFF1E88E5),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),

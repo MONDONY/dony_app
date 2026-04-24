@@ -169,7 +169,10 @@ class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
                     itemBuilder: (context, i) => _TravelerCard(
                       announcement: state.results[i],
                       index: i,
-                      onTap: () => context.push('/announcements/${state.results[i].id}'),
+                      onTap: () => context.push(
+                        '/search/${state.results[i].id}/bid',
+                        extra: state.results[i],
+                      ),
                     ),
                   ),
                 );
@@ -463,7 +466,7 @@ class _TravelerCard extends StatelessWidget {
                         height: 52,
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [Color(0xFF1A6B3C), Color(0xFF2E9E5B)],
+                            colors: [Color(0xFF1E88E5), Color(0xFF42A5F5)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),

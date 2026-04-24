@@ -170,7 +170,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFF1A6B3C), width: 2),
+                borderSide: const BorderSide(color: Color(0xFF1E88E5), width: 2),
               ),
               contentPadding: const EdgeInsets.symmetric(vertical: 14),
             ),
@@ -195,7 +195,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       child: ElevatedButton(
         onPressed: isLoading ? null : _verify,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF1A6B3C),
+          backgroundColor: const Color(0xFF1E88E5),
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
@@ -225,7 +225,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               child: const Text(
                 'Renvoyer le code',
                 style: TextStyle(
-                  color: Color(0xFF1A6B3C),
+                  color: Color(0xFF1E88E5),
                   fontWeight: FontWeight.w600,
                 ),
               ),

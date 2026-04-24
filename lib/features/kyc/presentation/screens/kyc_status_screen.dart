@@ -16,7 +16,7 @@ class KycStatusScreen extends StatefulWidget {
 }
 
 class _KycStatusScreenState extends State<KycStatusScreen> {
-  static const _kGreen = Color(0xFF1A6B3C);
+  static const _kGreen = Color(0xFF1E88E5);
   static const _kBg = Color(0xFFF8F9FA);
 
   Timer? _pollingTimer;
@@ -108,7 +108,7 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
           width: 96,
           height: 96,
           decoration: const BoxDecoration(
-            color: Color(0xFFEAF5EF),
+            color: Color(0xFFE3F2FD),
             shape: BoxShape.circle,
           ),
           child: const Icon(Icons.verified, color: _kGreen, size: 52),
@@ -119,7 +119,7 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
           style: TextStyle(
             fontSize: 26,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF1A6B3C),
+            color: Color(0xFF1E88E5),
           ),
           textAlign: TextAlign.center,
         ),

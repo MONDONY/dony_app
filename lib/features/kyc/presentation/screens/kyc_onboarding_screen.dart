@@ -9,8 +9,8 @@ import 'package:go_router/go_router.dart';
 class KycOnboardingScreen extends StatelessWidget {
   const KycOnboardingScreen({super.key});
 
-  static const _kGreen = Color(0xFF1A6B3C);
-  static const _kGreenLight = Color(0xFFEAF5EF);
+  static const _kGreen = Color(0xFF1E88E5);
+  static const _kGreenLight = Color(0xFFE3F2FD);
   static const _kBg = Color(0xFFF8F9FA);
 
   @override

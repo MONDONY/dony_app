@@ -85,7 +85,7 @@ class _KeypadKey extends StatelessWidget {
       child: InkWell(
         onTap: (enabled && onTap != null) ? onTap : null,
         borderRadius: BorderRadius.circular(40),
-        splashColor: const Color(0xFF1A6B3C).withValues(alpha: 0.15),
+        splashColor: const Color(0xFF1E88E5).withValues(alpha: 0.15),
         child: Container(
           width: 80,
           height: 80,

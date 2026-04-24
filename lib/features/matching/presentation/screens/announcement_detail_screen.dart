@@ -116,7 +116,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFF134F2D), Color(0xFF1A6B3C)],
+                        colors: [Color(0xFF1565C0), Color(0xFF1E88E5)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -227,15 +227,54 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                   const SizedBox(height: 28),
 
                   // Actions
-                  if (canEdit) ...[
+                  // Voir les demandes — toujours visible si le statut est ACTIVE
+                  if (a.status == 'ACTIVE') ...[
                     ElevatedButton.icon(
-                      icon: const Icon(Icons.edit_rounded, color: Colors.white, size: 18),
+                      icon: const Icon(Icons.inbox_rounded, color: Colors.white, size: 18),
+                      label: Text('Voir les demandes (${a.bidsCount ?? 0})'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kGreenPrimary,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        minimumSize: const Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      onPressed: () => context.push('/announcements/${a.id}/bids'),
+                    ).animate().fadeIn(delay: 150.ms),
+                    const SizedBox(height: 12),
+                  ],
+
+                  if (canEdit) ...[
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.edit_rounded, size: 18),
                       label: const Text('Modifier ce trajet'),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
                       onPressed: () => context.push(
                         '/announcements/${a.id}/edit',
                         extra: a,
                       ),
-                    ).animate().fadeIn(delay: 150.ms),
+                    ).animate().fadeIn(delay: 200.ms),
+                    const SizedBox(height: 12),
+                  ],
+
+                  if (a.status == 'ACTIVE') ...[
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.cancel_outlined, size: 18, color: kError),
+                      label: Text(
+                        'Annuler ce trajet',
+                        style: GoogleFonts.plusJakartaSans(color: kError, fontWeight: FontWeight.w600),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: kError),
+                        foregroundColor: kError,
+                        minimumSize: const Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      onPressed: () => context.push('/announcements/${a.id}/cancel'),
+                    ).animate().fadeIn(delay: 250.ms),
                     const SizedBox(height: 12),
                   ],
 
@@ -249,6 +288,8 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: kError),
                         foregroundColor: kError,
+                        minimumSize: const Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
                       onPressed: () async {
                         final confirmed = await _confirmDelete();
@@ -258,9 +299,9 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                           );
                         }
                       },
-                    ).animate().fadeIn(delay: 200.ms),
+                    ).animate().fadeIn(delay: 300.ms),
 
-                  if (!canEdit && !canDelete)
+                  if (!canEdit && a.status != 'ACTIVE')
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(

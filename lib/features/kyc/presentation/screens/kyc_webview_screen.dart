@@ -14,7 +14,7 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
   late final WebViewController _controller;
   bool _isLoading = true;
 
-  static const _kGreen = Color(0xFF1A6B3C);
+  static const _kGreen = Color(0xFF1E88E5);
 
   @override
   void initState() {

@@ -45,7 +45,7 @@ class HomeScreen extends StatelessWidget {
                     if (isTraveler)
                       _FeatureCard(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF1A6B3C), Color(0xFF2E9E5B)],
+                          colors: [Color(0xFF1E88E5), Color(0xFF42A5F5)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -132,18 +132,11 @@ class HomeScreen extends StatelessWidget {
       pinned: true,
       backgroundColor: kSurface,
       elevation: 0,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.logout_rounded, color: kTextSecondary),
-          onPressed: () => context.read<AuthBloc>().add(const AuthLogoutRequested()),
-        ),
-        const SizedBox(width: 8),
-      ],
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF134F2D), Color(0xFF1A6B3C)],
+              colors: [Color(0xFF1565C0), Color(0xFF1E88E5)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),

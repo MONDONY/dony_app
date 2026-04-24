@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 // Palette dony
-const kGreenPrimary  = Color(0xFF1A6B3C);
-const kGreenDark     = Color(0xFF134F2D);
-const kGreenAccent   = Color(0xFF4CAF7D);
-const kGreenLight    = Color(0xFFE8F5EE);
+const kGreenPrimary  = Color(0xFF1E88E5);
+const kGreenDark     = Color(0xFF1565C0);
+const kGreenAccent   = Color(0xFF64B5F6);
+const kGreenLight    = Color(0xFFE3F2FD);
 const kBackground    = Color(0xFFF4F6F8);
 const kSurface       = Color(0xFFFFFFFF);
 const kTextPrimary   = Color(0xFF0D1B2A);
