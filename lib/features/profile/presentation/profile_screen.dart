@@ -16,17 +16,15 @@ class ProfileScreen extends StatelessWidget {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthInitial || state is AuthAccountDeleted) {
-          // Logout ou suppression → retour à la saisie du numéro de téléphone
           context.go('/auth/phone');
         }
       },
       child: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
           final user = state is AuthAuthenticated ? state.user : null;
-          final phone = user?.phoneNumber ?? '';
+          final displayName = user?.phoneNumber ?? '';
           final isKycVerified = user?.isKycVerified ?? false;
           final isTraveler = user?.isTraveler ?? false;
-          final isSender = user?.isSender ?? false;
 
           return Scaffold(
             backgroundColor: kBackground,
@@ -34,29 +32,47 @@ class ProfileScreen extends StatelessWidget {
               title: Text(
                 'Mon profil',
                 style: GoogleFonts.plusJakartaSans(
-                  fontSize: 18,
+                  fontSize: 17,
                   fontWeight: FontWeight.w700,
                   color: kTextPrimary,
                 ),
               ),
+              centerTitle: true,
               backgroundColor: kSurface,
               elevation: 0,
+              scrolledUnderElevation: 0,
               bottom: const PreferredSize(
                 preferredSize: Size.fromHeight(1),
                 child: Divider(height: 1),
               ),
+              actions: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.notifications_outlined,
+                    color: kTextPrimary,
+                    size: 22,
+                  ),
+                  onPressed: () {},
+                ),
+                const SizedBox(width: 4),
+              ],
             ),
             body: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 28, 20, 40),
               child: Column(
                 children: [
-                  _buildAvatar(phone, isKycVerified)
+                  // Avatar
+                  _buildAvatar(displayName, isKycVerified)
                       .animate()
                       .fadeIn(duration: 300.ms)
-                      .scale(begin: const Offset(0.85, 0.85), curve: Curves.easeOutBack),
-                  const SizedBox(height: 16),
+                      .scale(
+                        begin: const Offset(0.85, 0.85),
+                        curve: Curves.easeOutBack,
+                      ),
+                  const SizedBox(height: 12),
+                  // Nom
                   Text(
-                    phone,
+                    displayName,
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
@@ -64,51 +80,126 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ).animate().fadeIn(delay: 80.ms),
                   const SizedBox(height: 10),
-                  _buildRoleBadges(isTraveler, isSender)
-                      .animate()
-                      .fadeIn(delay: 120.ms),
-                  const SizedBox(height: 32),
-                  _buildSection(
-                    title: 'Vérification',
+                  // Badges identité + rôle
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _buildInfoTile(
-                        icon: Icons.shield_outlined,
-                        label: 'Identité',
-                        value: isKycVerified ? 'Vérifiée' : 'Non vérifiée',
-                        valueColor: isKycVerified ? kSuccess : kWarning,
-                        trailing: isKycVerified
-                            ? const Icon(Icons.verified_rounded, color: kSuccess, size: 18)
-                            : null,
+                      if (isKycVerified) ...[
+                        _Badge(
+                          icon: Icons.verified_rounded,
+                          label: 'Identité vérifiée',
+                          color: kSuccess,
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      _Badge(
+                        icon: isTraveler
+                            ? Icons.flight_takeoff_rounded
+                            : Icons.send_rounded,
+                        label: isTraveler ? 'Voyageur' : 'Expéditeur',
+                        color: kGreenPrimary,
                       ),
                     ],
-                  ).animate().fadeIn(delay: 160.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
-                  const SizedBox(height: 16),
-                  _buildSection(
-                    title: 'Compte',
+                  ).animate().fadeIn(delay: 120.ms),
+                  const SizedBox(height: 24),
+                  // Stats
+                  _StatsRow().animate().fadeIn(delay: 160.ms),
+                  const SizedBox(height: 28),
+                  // Menu principal
+                  _MenuSection(
                     children: [
-                      _buildInfoTile(
-                        icon: Icons.phone_outlined,
-                        label: 'Téléphone',
-                        value: phone,
+                      _MenuItem(
+                        icon: Icons.inventory_2_outlined,
+                        iconColor: const Color(0xFFE67E22),
+                        label: 'Mes envois',
+                        trailing: '3 en cours',
+                        onTap: () => context.push('/announcements'),
                       ),
-                      const Divider(height: 1, indent: 52),
-                      _buildInfoTile(
+                      _MenuItem(
+                        icon: Icons.credit_card_outlined,
+                        iconColor: const Color(0xFF8E44AD),
+                        label: 'Paiements & factures',
+                        onTap: () {},
+                      ),
+                      _MenuItem(
                         icon: Icons.badge_outlined,
-                        label: 'Rôle',
-                        value: _roleLabel(isTraveler, isSender),
+                        iconColor: const Color(0xFF1E88E5),
+                        label: 'Documents KYC',
+                        trailing: isKycVerified ? 'Vérifié' : null,
+                        trailingColor: isKycVerified ? kSuccess : null,
+                        onTap: () => context.push('/kyc'),
+                      ),
+                      _MenuItem(
+                        icon: Icons.people_outline_rounded,
+                        iconColor: const Color(0xFF27AE60),
+                        label: 'Parrainages',
+                        trailing: '2 invités',
+                        isLast: true,
+                        onTap: () {},
                       ),
                     ],
-                  ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                  ).animate().fadeIn(delay: 200.ms).slideY(
+                    begin: 0.04,
+                    curve: Curves.easeOutCubic,
+                  ),
+                  const SizedBox(height: 16),
+                  // Menu settings
+                  _MenuSection(
+                    children: [
+                      _MenuItem(
+                        icon: Icons.notifications_outlined,
+                        iconColor: const Color(0xFFF59E0B),
+                        label: 'Notifications',
+                        onTap: () {},
+                      ),
+                      _MenuItem(
+                        icon: Icons.language_rounded,
+                        iconColor: const Color(0xFF1E88E5),
+                        label: 'Langue',
+                        trailing: 'Français',
+                        onTap: () {},
+                      ),
+                      _MenuItem(
+                        icon: Icons.lock_outline_rounded,
+                        iconColor: kTextSecondary,
+                        label: 'Sécurité & confidentialité',
+                        onTap: () {},
+                      ),
+                      _MenuItem(
+                        icon: Icons.help_outline_rounded,
+                        iconColor: kTextSecondary,
+                        label: 'Aide & support',
+                        isLast: true,
+                        onTap: () {},
+                      ),
+                    ],
+                  ).animate().fadeIn(delay: 240.ms).slideY(
+                    begin: 0.04,
+                    curve: Curves.easeOutCubic,
+                  ),
+                  const SizedBox(height: 28),
+                  // Déconnexion
+                  GestureDetector(
+                    onTap: () =>
+                        context.read<AuthBloc>().add(const AuthLogoutRequested()),
+                    child: Text(
+                      'Se déconnecter',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: kError,
+                      ),
+                    ),
+                  ).animate().fadeIn(delay: 280.ms),
                   const SizedBox(height: 32),
-                  _buildLogoutButton(context)
-                      .animate()
-                      .fadeIn(delay: 260.ms)
-                      .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-                  const SizedBox(height: 12),
-                  _buildDeleteAccountButton(context)
-                      .animate()
-                      .fadeIn(delay: 300.ms)
-                      .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                  // Footer
+                  Text(
+                    'dony v1.0.0 · Made with ❤️ in Paris',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      color: kTextHint,
+                    ),
+                  ).animate().fadeIn(delay: 320.ms),
                 ],
               ),
             ),
@@ -118,8 +209,10 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatar(String phone, bool isKycVerified) {
-    final initials = phone.isNotEmpty ? phone.replaceAll('+', '').substring(0, 2) : '??';
+  Widget _buildAvatar(String displayName, bool isKycVerified) {
+    final initials = displayName.isNotEmpty
+        ? displayName.replaceAll('+', '').substring(0, 2).toUpperCase()
+        : '??';
     return Stack(
       alignment: Alignment.bottomRight,
       children: [
@@ -164,226 +257,173 @@ class ProfileScreen extends StatelessWidget {
       ],
     );
   }
+}
 
-  Widget _buildRoleBadges(bool isTraveler, bool isSender) {
-    return Wrap(
-      spacing: 8,
-      children: [
-        if (isTraveler)
-          _Badge(
-            icon: Icons.flight_takeoff_rounded,
-            label: 'Voyageur',
-            color: kGreenPrimary,
-          ),
-        if (isSender)
-          _Badge(
-            icon: Icons.send_rounded,
-            label: 'Expéditeur',
-            color: const Color(0xFF0F4C75),
-          ),
-        if (!isTraveler && !isSender)
-          _Badge(
-            icon: Icons.person_outline_rounded,
-            label: 'Utilisateur',
-            color: kTextSecondary,
-          ),
-      ],
-    );
-  }
+// ── Stats row ────────────────────────────────────────────────────────────────
 
-  Widget _buildSection({required String title, required List<Widget> children}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 10),
-          child: Text(
-            title.toUpperCase(),
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: kTextSecondary,
-              letterSpacing: 1.1,
-            ),
-          ),
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: kSurface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: kBorder),
-          ),
-          child: Column(children: children),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInfoTile({
-    required IconData icon,
-    required String label,
-    required String value,
-    Color? valueColor,
-    Widget? trailing,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+class _StatsRow extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: kSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: kBorder),
+      ),
       child: Row(
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: kBackground,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: kTextSecondary, size: 18),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Text(
-              label,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: kTextSecondary,
-              ),
-            ),
-          ),
-          Text(
-            value,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: valueColor ?? kTextPrimary,
-            ),
-          ),
-          if (trailing != null) ...[
-            const SizedBox(width: 6),
-            trailing,
-          ],
+          Expanded(child: _StatItem(value: '12', label: 'Envois')),
+          Container(width: 1, height: 32, color: kBorder),
+          Expanded(child: _StatItem(value: '4.9', label: 'Ma note')),
+          Container(width: 1, height: 32, color: kBorder),
+          Expanded(child: _StatItem(value: '84€', label: 'Économisés')),
         ],
       ),
     );
-  }
-
-  Widget _buildLogoutButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: () => context.read<AuthBloc>().add(const AuthLogoutRequested()),
-        icon: const Icon(Icons.logout_rounded, size: 18, color: kError),
-        label: Text(
-          'Se déconnecter',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: kError,
-          ),
-        ),
-        style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: kError, width: 1.5),
-          foregroundColor: kError,
-          minimumSize: const Size.fromHeight(52),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDeleteAccountButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: TextButton.icon(
-        onPressed: () => _showDeleteConfirmDialog(context),
-        icon: const Icon(Icons.delete_forever_rounded, size: 18, color: Color(0xFF9E1C1C)),
-        label: Text(
-          'Supprimer mon compte',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: const Color(0xFF9E1C1C),
-          ),
-        ),
-        style: TextButton.styleFrom(
-          minimumSize: const Size.fromHeight(44),
-          foregroundColor: const Color(0xFF9E1C1C),
-        ),
-      ),
-    );
-  }
-
-  void _showDeleteConfirmDialog(BuildContext context) {
-    final authBloc = context.read<AuthBloc>();
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: kSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            const Icon(Icons.warning_amber_rounded, color: Color(0xFF9E1C1C), size: 24),
-            const SizedBox(width: 10),
-            Text(
-              'Supprimer le compte',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: kTextPrimary,
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          'Cette action est irréversible. Votre compte, tous vos trajets et toutes vos données seront définitivement supprimés.',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 14,
-            color: kTextSecondary,
-            height: 1.5,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(
-              'Annuler',
-              style: GoogleFonts.plusJakartaSans(
-                fontWeight: FontWeight.w600,
-                color: kTextSecondary,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              authBloc.add(const AuthDeleteAccountRequested());
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF9E1C1C),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: Text(
-              'Supprimer définitivement',
-              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _roleLabel(bool isTraveler, bool isSender) {
-    if (isTraveler && isSender) return 'Voyageur & Expéditeur';
-    if (isTraveler) return 'Voyageur';
-    if (isSender) return 'Expéditeur';
-    return 'Non défini';
   }
 }
 
+class _StatItem extends StatelessWidget {
+  const _StatItem({required this.value, required this.label});
+
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: kTextPrimary,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 12,
+            color: kTextSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Menu section ─────────────────────────────────────────────────────────────
+
+class _MenuSection extends StatelessWidget {
+  const _MenuSection({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: kSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: kBorder),
+      ),
+      child: Column(children: children),
+    );
+  }
+}
+
+class _MenuItem extends StatelessWidget {
+  const _MenuItem({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    this.trailing,
+    this.trailingColor,
+    this.isLast = false,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String? trailing;
+  final Color? trailingColor;
+  final bool isLast;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: iconColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: iconColor, size: 18),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: kTextPrimary,
+                    ),
+                  ),
+                ),
+                if (trailing != null) ...[
+                  Text(
+                    trailing!,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: trailingColor ?? kTextSecondary,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                ],
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18,
+                  color: kTextHint,
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (!isLast)
+          const Padding(
+            padding: EdgeInsets.only(left: 66),
+            child: Divider(height: 1),
+          ),
+      ],
+    );
+  }
+}
+
+// ── Badge ────────────────────────────────────────────────────────────────────
+
 class _Badge extends StatelessWidget {
-  const _Badge({required this.icon, required this.label, required this.color});
+  const _Badge({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
 
   final IconData icon;
   final String label;
@@ -392,21 +432,21 @@ class _Badge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 14),
-          const SizedBox(width: 6),
+          Icon(icon, color: color, size: 13),
+          const SizedBox(width: 5),
           Text(
             label,
             style: GoogleFonts.plusJakartaSans(
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
               color: color,
             ),

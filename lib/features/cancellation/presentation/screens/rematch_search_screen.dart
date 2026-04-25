@@ -1,5 +1,6 @@
 import 'package:dony/app/theme.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -171,6 +172,18 @@ class _SuggestionCard extends StatelessWidget {
             child: ElevatedButton(
               onPressed: () => context.push(
                 '/search/${suggestion.announcementId}/bid',
+                extra: AnnouncementModel(
+                  id: suggestion.announcementId,
+                  travelerId: 'temp',
+                  departureCity: suggestion.departureCity,
+                  arrivalCity: suggestion.arrivalCity,
+                  departureDate: suggestion.departureDate,
+                  availableKg: suggestion.availableKg,
+                  pricePerKg: suggestion.pricePerKg,
+                  status: 'ACTIVE',
+                  createdAt: DateTime.now(),
+                  updatedAt: DateTime.now(),
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: kGreenPrimary,

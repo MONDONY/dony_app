@@ -1,7 +1,5 @@
 import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/features/auth/bloc/auth_bloc.dart';
-import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/presentation/screens/local_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
@@ -15,6 +13,7 @@ import 'package:dony/features/home/presentation/home_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_onboarding_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_status_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
+import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -37,7 +36,7 @@ final appRouter = GoRouter(
   initialLocation: '/splash',
   observers: [SentryNavigatorObserver()],
   routes: [
-    // ── Flux d'authentification (hors shell) ──────────────────────────────
+    // ── Auth (hors shell) ─────────────────────────────────────────────────
     GoRoute(
       path: '/splash',
       builder: (context, state) => const SplashScreen(),
@@ -63,7 +62,7 @@ final appRouter = GoRouter(
       builder: (context, state) => const LocalAuthScreen(),
     ),
 
-    // ── KYC (hors shell) ──────────────────────────────────────────────────
+    // ── KYC (hors shell) ─────────────────────────────────────────────────
     GoRoute(
       path: '/kyc',
       builder: (context, state) => const KycOnboardingScreen(),
@@ -80,7 +79,7 @@ final appRouter = GoRouter(
       builder: (context, state) => const KycStatusScreen(),
     ),
 
-    // ── Bid detail + handover (hors shell) ───────────────────────────────
+    // ── Bid detail + handover (hors shell) ──────────────────────────────
     GoRoute(
       path: '/bids/:bidId',
       builder: (context, state) {
@@ -104,7 +103,7 @@ final appRouter = GoRouter(
       ],
     ),
 
-    // ── Cancellation (hors shell) ─────────────────────────────────────────
+    // ── Cancellation (hors shell) ────────────────────────────────────────
     GoRoute(
       path: '/cancellations/rematch',
       builder: (context, state) {
@@ -113,7 +112,7 @@ final appRouter = GoRouter(
       },
     ),
 
-    // ── Routes plein écran (hors shell) ───────────────────────────────────
+    // ── Routes plein écran (hors shell) ─────────────────────────────────
     GoRoute(
       path: '/tracking/scan',
       builder: (context, state) =>
@@ -131,10 +130,11 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/admin',
-      builder: (context, state) => const _PlaceholderScreen(title: 'Admin'),
+      builder: (context, state) =>
+          const _PlaceholderScreen(title: 'Admin'),
     ),
 
-    // ── Shell principal avec Bottom Navigation Bar ────────────────────────
+    // ── Shell principal avec Bottom Navigation ───────────────────────────
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
           MainShell(navigationShell: navigationShell),
@@ -144,12 +144,15 @@ final appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/home',
-              builder: (context, state) => const HomeScreen(),
+              builder: (context, state) => BlocProvider(
+                create: (_) => getIt<AnnouncementBloc>(),
+                child: const HomeScreen(),
+              ),
             ),
           ],
         ),
 
-        // Branch 1 — Annonces & Recherche
+        // Branch 1 — Envois (annonces + recherche)
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -158,7 +161,8 @@ final appRouter = GoRouter(
               routes: [
                 GoRoute(
                   path: 'create',
-                  builder: (context, state) => const CreateAnnouncementScreen(),
+                  builder: (context, state) =>
+                      const CreateAnnouncementScreen(),
                 ),
                 GoRoute(
                   path: ':id',
@@ -170,8 +174,11 @@ final appRouter = GoRouter(
                     GoRoute(
                       path: 'edit',
                       builder: (context, state) {
-                        final announcement = state.extra as AnnouncementModel?;
-                        return CreateAnnouncementScreen(announcement: announcement);
+                        final announcement =
+                            state.extra as AnnouncementModel?;
+                        return CreateAnnouncementScreen(
+                          announcement: announcement,
+                        );
                       },
                     ),
                     GoRoute(
@@ -197,7 +204,10 @@ final appRouter = GoRouter(
             ),
             GoRoute(
               path: '/search',
-              builder: (context, state) => const SearchAnnouncementScreen(),
+              builder: (context, state) => BlocProvider(
+                create: (_) => getIt<AnnouncementBloc>(),
+                child: const SearchAnnouncementScreen(),
+              ),
               routes: [
                 GoRoute(
                   path: ':id/bid',
@@ -214,7 +224,7 @@ final appRouter = GoRouter(
           ],
         ),
 
-        // Branch 2 — Suivi
+        // Branch 2 — Suivi (QR centre)
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -225,7 +235,18 @@ final appRouter = GoRouter(
           ],
         ),
 
-        // Branch 3 — Profil
+        // Branch 3 — Messages (placeholder)
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/messages',
+              builder: (context, state) =>
+                  const _PlaceholderScreen(title: 'Messages'),
+            ),
+          ],
+        ),
+
+        // Branch 4 — Profil
         StatefulShellBranch(
           routes: [
             GoRoute(

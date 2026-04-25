@@ -10,394 +10,565 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
-// Corridors MVP
-const _departureCities = ['Paris', 'Lyon', 'Marseille'];
-const _arrivalCities = ['Dakar', 'Abidjan', 'Bamako', 'Douala'];
-const _sortOptions = [
-  ('date', 'Date de départ'),
-  ('price', 'Prix au kg'),
-  ('rating', 'Meilleures notes'),
-];
+const _departureCities = ['Paris · CDG, ORY', 'Lyon · LYS', 'Marseille · MRS'];
+const _arrivalCities = ['Dakar · DKR', 'Abidjan · ABJ', 'Bamako · BKO', 'Douala · DLA'];
 
 class SearchAnnouncementScreen extends StatefulWidget {
   const SearchAnnouncementScreen({super.key});
 
   @override
-  State<SearchAnnouncementScreen> createState() => _SearchAnnouncementScreenState();
+  State<SearchAnnouncementScreen> createState() =>
+      _SearchAnnouncementScreenState();
 }
 
 class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
-  // Filters
-  String? _departureCity;
-  String? _arrivalCity;
-  DateTime? _dateFrom;
-  DateTime? _dateTo;
-  double _minKg = 1;
-  String _sortBy = 'date';
+  // Filtres
+  String _departureCity = _departureCities[0];
+  String _arrivalCity = _arrivalCities[0];
+  DateTime? _date;
+  double _weightKg = 6;
+  double _maxPricePerKg = 25;
 
-  bool get _hasActiveFilters =>
-      _departureCity != null ||
-      _arrivalCity != null ||
-      _dateFrom != null ||
-      _dateTo != null ||
-      _minKg > 1;
+  // Filtres rapides
+  bool _kiloProOnly = false;
+  bool _ratingFilter = false;
+  bool _weekendFilter = false;
+  bool _priceFilter = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _search();
-  }
+  // État
+  bool _showResults = false;
+
+  String get _departureCityShort =>
+      _departureCity.split(' ').first;
+  String get _arrivalCityShort =>
+      _arrivalCity.split(' ').first;
 
   void _search() {
     context.read<AnnouncementBloc>().add(AnnouncementSearchRequested(
-      departureCity: _departureCity,
-      arrivalCity: _arrivalCity,
-      departureDateFrom: _dateFrom,
-      departureDateTo: _dateTo,
-      minAvailableKg: _minKg > 1 ? _minKg : null,
-      sortBy: _sortBy,
+      departureCity: _departureCityShort,
+      arrivalCity: _arrivalCityShort,
+      departureDateFrom: _date,
+      minAvailableKg: _weightKg > 1 ? _weightKg : null,
+      sortBy: 'date',
     ));
+    setState(() => _showResults = true);
   }
 
-  void _resetFilters() {
-    setState(() {
-      _departureCity = null;
-      _arrivalCity = null;
-      _dateFrom = null;
-      _dateTo = null;
-      _minKg = 1;
-    });
-    _search();
+  void _resetSearch() {
+    setState(() => _showResults = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_showResults) {
+      return _ResultsView(
+        departureCity: _departureCityShort,
+        arrivalCity: _arrivalCityShort,
+        onBack: _resetSearch,
+      );
+    }
+
+    return _FilterFormView(
+      departureCity: _departureCity,
+      arrivalCity: _arrivalCity,
+      date: _date,
+      weightKg: _weightKg,
+      maxPricePerKg: _maxPricePerKg,
+      kiloProOnly: _kiloProOnly,
+      ratingFilter: _ratingFilter,
+      weekendFilter: _weekendFilter,
+      priceFilter: _priceFilter,
+      onDepartureChanged: (v) => setState(() => _departureCity = v),
+      onArrivalChanged: (v) => setState(() => _arrivalCity = v),
+      onDateChanged: (v) => setState(() => _date = v),
+      onWeightChanged: (v) => setState(() => _weightKg = v),
+      onMaxPriceChanged: (v) => setState(() => _maxPricePerKg = v),
+      onKiloProChanged: (v) => setState(() => _kiloProOnly = v),
+      onRatingChanged: (v) => setState(() => _ratingFilter = v),
+      onWeekendChanged: (v) => setState(() => _weekendFilter = v),
+      onPriceChanged: (v) => setState(() => _priceFilter = v),
+      onSearch: _search,
+    );
+  }
+}
+
+// ── Formulaire de filtres ────────────────────────────────────────────────────
+
+class _FilterFormView extends StatelessWidget {
+  const _FilterFormView({
+    required this.departureCity,
+    required this.arrivalCity,
+    required this.date,
+    required this.weightKg,
+    required this.maxPricePerKg,
+    required this.kiloProOnly,
+    required this.ratingFilter,
+    required this.weekendFilter,
+    required this.priceFilter,
+    required this.onDepartureChanged,
+    required this.onArrivalChanged,
+    required this.onDateChanged,
+    required this.onWeightChanged,
+    required this.onMaxPriceChanged,
+    required this.onKiloProChanged,
+    required this.onRatingChanged,
+    required this.onWeekendChanged,
+    required this.onPriceChanged,
+    required this.onSearch,
+  });
+
+  final String departureCity;
+  final String arrivalCity;
+  final DateTime? date;
+  final double weightKg;
+  final double maxPricePerKg;
+  final bool kiloProOnly;
+  final bool ratingFilter;
+  final bool weekendFilter;
+  final bool priceFilter;
+  final ValueChanged<String> onDepartureChanged;
+  final ValueChanged<String> onArrivalChanged;
+  final ValueChanged<DateTime?> onDateChanged;
+  final ValueChanged<double> onWeightChanged;
+  final ValueChanged<double> onMaxPriceChanged;
+  final ValueChanged<bool> onKiloProChanged;
+  final ValueChanged<bool> onRatingChanged;
+  final ValueChanged<bool> onWeekendChanged;
+  final ValueChanged<bool> onPriceChanged;
+  final VoidCallback onSearch;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: kBackground,
+      appBar: AppBar(
+        title: Text(
+          'Rechercher un trajet',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: kTextPrimary,
+          ),
+        ),
+        backgroundColor: kSurface,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_rounded,
+              size: 20, color: kGreenPrimary),
+          onPressed: () => context.pop(),
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Carte départ / arrivée
+            Container(
+              decoration: BoxDecoration(
+                color: kSurface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: kBorder),
+              ),
+              child: Column(
+                children: [
+                  _LocationRow(
+                    isDeparture: true,
+                    value: departureCity,
+                    cities: _departureCities,
+                    onChanged: onDepartureChanged,
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.only(left: 56),
+                    child: Divider(height: 1),
+                  ),
+                  _LocationRow(
+                    isDeparture: false,
+                    value: arrivalCity,
+                    cities: _arrivalCities,
+                    onChanged: onArrivalChanged,
+                  ),
+                ],
+              ),
+            ).animate().fadeIn(duration: 250.ms),
+            const SizedBox(height: 16),
+
+            // Date + Poids
+            Row(
+              children: [
+                Expanded(
+                  child: _DateField(
+                    date: date,
+                    onChanged: onDateChanged,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _WeightField(
+                    weightKg: weightKg,
+                    onChanged: onWeightChanged,
+                  ),
+                ),
+              ],
+            ).animate().fadeIn(delay: 60.ms),
+            const SizedBox(height: 24),
+
+            // Filtres rapides
+            Text(
+              'FILTRES RAPIDES',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: kTextSecondary,
+                letterSpacing: 0.8,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _QuickChip(
+                  label: 'Kilo Pro uniquement',
+                  active: kiloProOnly,
+                  onChanged: onKiloProChanged,
+                ),
+                _QuickChip(
+                  label: 'Note ≥ 4.5',
+                  active: ratingFilter,
+                  onChanged: onRatingChanged,
+                ),
+                _QuickChip(
+                  label: 'Arrivée ce week-end',
+                  active: weekendFilter,
+                  onChanged: onWeekendChanged,
+                ),
+                _QuickChip(
+                  label: 'Prix ≤ ${maxPricePerKg.toStringAsFixed(0)}€/kg',
+                  active: priceFilter,
+                  onChanged: onPriceChanged,
+                ),
+              ],
+            ).animate().fadeIn(delay: 100.ms),
+            const SizedBox(height: 28),
+
+            // Slider prix
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Prix max par kg',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kTextPrimary,
+                  ),
+                ),
+                Text(
+                  '${maxPricePerKg.toStringAsFixed(0)} €',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: kGreenPrimary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                activeTrackColor: kGreenPrimary,
+                inactiveTrackColor: kGreenLight,
+                thumbColor: kGreenPrimary,
+                overlayColor: kGreenPrimary.withValues(alpha: 0.1),
+                trackHeight: 4,
+              ),
+              child: Slider(
+                value: maxPricePerKg,
+                min: 5,
+                max: 25,
+                divisions: 20,
+                onChanged: onMaxPriceChanged,
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('5 €', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: kTextHint)),
+                Text('25 €', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: kTextHint)),
+              ],
+            ),
+          ],
+        ),
+      ),
+      bottomSheet: Container(
+        padding: EdgeInsets.fromLTRB(
+          20,
+          16,
+          20,
+          MediaQuery.of(context).padding.bottom + 16,
+        ),
+        decoration: const BoxDecoration(
+          color: kSurface,
+          border: Border(top: BorderSide(color: kBorder)),
+        ),
+        child: BlocBuilder<AnnouncementBloc, AnnouncementState>(
+          builder: (context, state) {
+            final isLoading = state is AnnouncementLoading;
+            final count = state is AnnouncementSearchLoaded
+                ? state.results.length
+                : null;
+            return SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: isLoading ? null : onSearch,
+                child: isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        count != null
+                            ? 'Voir $count trajet${count > 1 ? 's' : ''}'
+                            : 'Rechercher',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+// ── Vue des résultats ────────────────────────────────────────────────────────
+
+class _ResultsView extends StatefulWidget {
+  const _ResultsView({
+    required this.departureCity,
+    required this.arrivalCity,
+    required this.onBack,
+  });
+
+  final String departureCity;
+  final String arrivalCity;
+  final VoidCallback onBack;
+
+  @override
+  State<_ResultsView> createState() => _ResultsViewState();
+}
+
+class _ResultsViewState extends State<_ResultsView> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<AnnouncementBloc>().add(AnnouncementSearchRequested(
+      departureCity: widget.departureCity,
+      arrivalCity: widget.arrivalCity,
+      sortBy: 'date',
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kBackground,
-      body: CustomScrollView(
-        slivers: [
-          // Large title — Apple HIG
-          SliverAppBar(
-            pinned: true,
-            expandedHeight: 100,
-            backgroundColor: kSurface,
-            elevation: 0,
-            surfaceTintColor: Colors.transparent,
-            shadowColor: Colors.black12,
-            forceElevated: true,
-            flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              title: Text(
-                'Trouver un trajet',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  color: kTextPrimary,
-                ),
-              ),
-              expandedTitleScale: 1.4,
-            ),
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
-              color: kGreenPrimary,
-              onPressed: () => context.pop(),
-            ),
-            actions: [
-              if (_hasActiveFilters)
-                TextButton(
-                  onPressed: _resetFilters,
-                  child: Text(
-                    'Réinitialiser',
-                    style: GoogleFonts.plusJakartaSans(
-                      color: kError,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              const SizedBox(width: 4),
-            ],
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(1),
-              child: Container(color: kBorder, height: 1),
-            ),
+      appBar: AppBar(
+        title: Text(
+          '${widget.departureCity} → ${widget.arrivalCity}',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: kTextPrimary,
           ),
-
-          // Sticky filter bar removed to prevent layout crashes
-          SliverToBoxAdapter(
-            child: _FilterBar(
-              departureCity: _departureCity,
-              arrivalCity: _arrivalCity,
-              dateFrom: _dateFrom,
-              dateTo: _dateTo,
-              minKg: _minKg,
-              sortBy: _sortBy,
-              onFilterTap: () => _showFilterSheet(),
-              onSortTap: () => _showSortSheet(),
-              hasActiveFilters: _hasActiveFilters,
-            ),
-          ),
-
-          // Results
-          BlocBuilder<AnnouncementBloc, AnnouncementState>(
-            builder: (context, state) {
-              if (state is AnnouncementLoading || state is AnnouncementInitial) {
-                return const SliverFillRemaining(
-                  child: Center(child: CircularProgressIndicator(color: kGreenPrimary)),
-                );
-              }
-
-              if (state is AnnouncementError) {
-                return SliverFillRemaining(child: _ErrorView(message: state.message, onRetry: _search));
-              }
-
-              if (state is AnnouncementSearchLoaded) {
-                if (state.isEmpty) {
-                  return SliverFillRemaining(
-                    child: _EmptyView(onReset: _hasActiveFilters ? _resetFilters : null),
-                  );
-                }
-
-                return SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
-                  sliver: SliverList.separated(
-                    itemCount: state.results.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, i) => _TravelerCard(
-                      announcement: state.results[i],
-                      index: i,
-                      onTap: () => context.push(
-                        '/search/${state.results[i].id}/bid',
-                        extra: state.results[i],
-                      ),
-                    ),
-                  ),
-                );
-              }
-
-              return const SliverToBoxAdapter(child: SizedBox());
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Filter bottom sheet ─────────────────────────────────────────────────────
-
-  void _showFilterSheet() {
-    // Local mutable copies for the sheet
-    String? dept = _departureCity;
-    String? arr = _arrivalCity;
-    DateTime? from = _dateFrom;
-    DateTime? to = _dateTo;
-    double kg = _minKg;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetCtx) => StatefulBuilder(
-        builder: (sheetCtx, setSheetState) => _FilterSheet(
-          departureCity: dept,
-          arrivalCity: arr,
-          dateFrom: from,
-          dateTo: to,
-          minKg: kg,
-          onChanged: ({d, a, df, dt, mk}) {
-            setSheetState(() {
-              if (d != null) dept = d;
-              if (a != null) arr = a;
-              if (df != null) from = df;
-              if (dt != null) to = dt;
-              if (mk != null) kg = mk;
-            });
-          },
-          onApply: () {
-            setState(() {
-              _departureCity = dept;
-              _arrivalCity = arr;
-              _dateFrom = from;
-              _dateTo = to;
-              _minKg = kg;
-            });
-            Navigator.pop(sheetCtx);
-            _search();
-          },
-          onReset: () {
-            setSheetState(() {
-              dept = null;
-              arr = null;
-              from = null;
-              to = null;
-              kg = 1;
-            });
-          },
+        ),
+        backgroundColor: kSurface,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_rounded,
+              size: 20, color: kGreenPrimary),
+          onPressed: widget.onBack,
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1),
         ),
       ),
-    );
-  }
+      body: BlocBuilder<AnnouncementBloc, AnnouncementState>(
+        builder: (context, state) {
+          if (state is AnnouncementLoading || state is AnnouncementInitial) {
+            return const Center(
+              child: CircularProgressIndicator(color: kGreenPrimary),
+            );
+          }
 
-  // ── Sort bottom sheet ───────────────────────────────────────────────────────
+          if (state is AnnouncementError) {
+            return _ErrorView(
+              message: state.message,
+              onRetry: () => context
+                  .read<AnnouncementBloc>()
+                  .add(AnnouncementSearchRequested(
+                    departureCity: widget.departureCity,
+                    arrivalCity: widget.arrivalCity,
+                    sortBy: 'date',
+                  )),
+            );
+          }
 
-  void _showSortSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (sheetCtx) => _SortSheet(
-        current: _sortBy,
-        onSelect: (value) {
-          setState(() => _sortBy = value);
-          Navigator.pop(sheetCtx);
-          _search();
+          if (state is AnnouncementSearchLoaded) {
+            if (state.isEmpty) {
+              return _EmptyView(onBack: widget.onBack);
+            }
+
+            return ListView.separated(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+              itemCount: state.results.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, i) => _TravelerCard(
+                announcement: state.results[i],
+                index: i,
+                onTap: () => context.push(
+                  '/search/${state.results[i].id}/bid',
+                  extra: state.results[i],
+                ),
+              ),
+            );
+          }
+
+          return const SizedBox();
         },
       ),
     );
   }
 }
 
-// ── Filter bar (sticky) ─────────────────────────────────────────────────────
+// ── Composants partagés ──────────────────────────────────────────────────────
 
-class _FilterBar extends StatelessWidget {
-  final String? departureCity;
-  final String? arrivalCity;
-  final DateTime? dateFrom;
-  final DateTime? dateTo;
-  final double minKg;
-  final String sortBy;
-  final bool hasActiveFilters;
-  final VoidCallback onFilterTap;
-  final VoidCallback onSortTap;
-
-  const _FilterBar({
-    required this.departureCity,
-    required this.arrivalCity,
-    required this.dateFrom,
-    required this.dateTo,
-    required this.minKg,
-    required this.sortBy,
-    required this.hasActiveFilters,
-    required this.onFilterTap,
-    required this.onSortTap,
+class _LocationRow extends StatelessWidget {
+  const _LocationRow({
+    required this.isDeparture,
+    required this.value,
+    required this.cities,
+    required this.onChanged,
   });
 
-  String get _corridorLabel {
-    if (departureCity != null && arrivalCity != null) {
-      return '$departureCity → $arrivalCity';
-    }
-    if (departureCity != null) return 'De $departureCity';
-    if (arrivalCity != null) return 'Vers $arrivalCity';
-    return 'Corridor';
-  }
-
-  String get _sortLabel =>
-      _sortOptions.firstWhere((o) => o.$1 == sortBy, orElse: () => _sortOptions.first).$2;
+  final bool isDeparture;
+  final String value;
+  final List<String> cities;
+  final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: kSurface,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
-              children: [
-                _FilterChip(
-                  icon: Icons.tune_rounded,
-                  label: 'Filtres',
-                  active: hasActiveFilters,
-                  onTap: onFilterTap,
-                ),
-                const SizedBox(width: 8),
-                _FilterChip(
-                  icon: Icons.flight_takeoff_rounded,
-                  label: _corridorLabel,
-                  active: departureCity != null || arrivalCity != null,
-                  onTap: onFilterTap,
-                ),
-                const SizedBox(width: 8),
-                if (dateFrom != null || dateTo != null)
-                  _FilterChip(
-                    icon: Icons.calendar_today_rounded,
-                    label: dateFrom != null
-                        ? '${DateFormat('dd/MM').format(dateFrom!)}${dateTo != null ? ' – ${DateFormat('dd/MM').format(dateTo!)}' : ''}'
-                        : 'Dates',
-                    active: true,
-                    onTap: onFilterTap,
-                  ),
-                if (dateFrom != null || dateTo != null) const SizedBox(width: 8),
-                if (minKg > 1)
-                  _FilterChip(
-                    icon: Icons.scale_rounded,
-                    label: '≥ ${minKg.toStringAsFixed(0)} kg',
-                    active: true,
-                    onTap: onFilterTap,
-                  ),
-                if (minKg > 1) const SizedBox(width: 8),
-                _FilterChip(
-                  icon: Icons.sort_rounded,
-                  label: _sortLabel,
-                  active: false,
-                  onTap: onSortTap,
-                  trailingIcon: Icons.expand_more_rounded,
-                ),
-              ],
+    return InkWell(
+      onTap: () => _showPicker(context),
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isDeparture ? kGreenPrimary : const Color(0xFFE53935),
+              ),
             ),
-          ),
-          const Divider(height: 1),
-        ],
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isDeparture ? 'DÉPART' : 'ARRIVÉE',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: kTextSecondary,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: kTextPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded,
+                size: 18, color: kTextHint),
+          ],
+        ),
       ),
     );
   }
-}
 
-class _FilterChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-  final IconData? trailingIcon;
-
-  const _FilterChip({
-    required this.icon,
-    required this.label,
-    required this.active,
-    required this.onTap,
-    this.trailingIcon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: 200.ms,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: active ? kGreenPrimary : kSurface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: active ? kGreenPrimary : kBorder),
+  void _showPicker(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        decoration: const BoxDecoration(
+          color: kSurface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
-        child: Row(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 14, color: active ? Colors.white : kTextSecondary),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: active ? Colors.white : kTextPrimary,
+            Center(
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                    color: kBorder, borderRadius: BorderRadius.circular(2)),
               ),
             ),
-            if (trailingIcon != null) ...[
-              const SizedBox(width: 2),
-              Icon(trailingIcon, size: 14, color: kTextSecondary),
-            ],
+            Text(
+              isDeparture ? 'Ville de départ' : 'Ville d\'arrivée',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...cities.map((city) => ListTile(
+                  title: Text(
+                    city,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w500,
+                      color: value == city ? kGreenPrimary : kTextPrimary,
+                    ),
+                  ),
+                  trailing: value == city
+                      ? const Icon(Icons.check_rounded, color: kGreenPrimary)
+                      : null,
+                  onTap: () {
+                    onChanged(city);
+                    Navigator.pop(context);
+                  },
+                )),
           ],
         ),
       ),
@@ -405,18 +576,275 @@ class _FilterChip extends StatelessWidget {
   }
 }
 
-// ── Traveler card ───────────────────────────────────────────────────────────
+class _DateField extends StatelessWidget {
+  const _DateField({required this.date, required this.onChanged});
+
+  final DateTime? date;
+  final ValueChanged<DateTime?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () async {
+        final d = await showDatePicker(
+          context: context,
+          initialDate: date ?? DateTime.now(),
+          firstDate: DateTime.now(),
+          lastDate: DateTime.now().add(const Duration(days: 365)),
+          builder: (c, child) => Theme(
+            data: Theme.of(c).copyWith(
+              colorScheme:
+                  const ColorScheme.light(primary: kGreenPrimary),
+            ),
+            child: child!,
+          ),
+        );
+        onChanged(d);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: kSurface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: kBorder),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'DATE',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: kTextSecondary,
+                letterSpacing: 0.6,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.calendar_today_rounded,
+                    size: 14, color: kGreenPrimary),
+                const SizedBox(width: 6),
+                Text(
+                  date != null
+                      ? DateFormat('d MMM', 'fr').format(date!)
+                      : 'Choisir',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color:
+                        date != null ? kTextPrimary : kTextHint,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WeightField extends StatelessWidget {
+  const _WeightField({required this.weightKg, required this.onChanged});
+
+  final double weightKg;
+  final ValueChanged<double> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _showWeightPicker(context),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: kSurface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: kBorder),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'POIDS',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: kTextSecondary,
+                letterSpacing: 0.6,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.scale_rounded,
+                    size: 14, color: kGreenPrimary),
+                const SizedBox(width: 6),
+                Text(
+                  '${weightKg.toStringAsFixed(0)} kg',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kTextPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showWeightPicker(BuildContext context) {
+    double localWeight = weightKg;
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Container(
+          decoration: const BoxDecoration(
+            color: kSurface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: kBorder,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Text(
+                'Poids du colis',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '${localWeight.toStringAsFixed(0)}',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 40,
+                      fontWeight: FontWeight.w800,
+                      color: kGreenPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Text(
+                      'kg',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 20,
+                        color: kTextSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  activeTrackColor: kGreenPrimary,
+                  inactiveTrackColor: kGreenLight,
+                  thumbColor: kGreenPrimary,
+                  trackHeight: 4,
+                ),
+                child: Slider(
+                  value: localWeight,
+                  min: 1,
+                  max: 30,
+                  divisions: 29,
+                  onChanged: (v) => setSheetState(() => localWeight = v),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    onChanged(localWeight);
+                    Navigator.pop(ctx);
+                  },
+                  child: Text(
+                    'Confirmer',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickChip extends StatelessWidget {
+  const _QuickChip({
+    required this.label,
+    required this.active,
+    required this.onChanged,
+  });
+
+  final String label;
+  final bool active;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => onChanged(!active),
+      child: AnimatedContainer(
+        duration: 180.ms,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: active ? kTextPrimary : kSurface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: active ? kTextPrimary : kBorder,
+          ),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: active ? Colors.white : kTextPrimary,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Traveler card (résultats) ────────────────────────────────────────────────
 
 class _TravelerCard extends StatelessWidget {
-  final AnnouncementModel announcement;
-  final VoidCallback onTap;
-  final int index;
-
   const _TravelerCard({
     required this.announcement,
     required this.onTap,
     required this.index,
   });
+
+  final AnnouncementModel announcement;
+  final VoidCallback onTap;
+  final int index;
 
   String get _initials {
     final name = announcement.traveler?.displayName;
@@ -430,7 +858,6 @@ class _TravelerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final traveler = announcement.traveler;
     final rating = traveler?.averageRating;
-    final trips = traveler?.totalTrips ?? 0;
     final isKiloPro = traveler?.kiloPro ?? false;
 
     return GestureDetector(
@@ -448,683 +875,271 @@ class _TravelerCard extends StatelessWidget {
             ),
           ],
         ),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Avatar
-                  Stack(
-                    children: [
-                      Container(
-                        width: 52,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF1E88E5), Color(0xFF42A5F5)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Text(
-                            _initials,
-                            style: GoogleFonts.plusJakartaSans(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (isKiloPro)
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: const BoxDecoration(
-                              color: kSurface,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.verified_rounded, size: 16, color: Color(0xFFF59E0B)),
-                          ),
-                        ),
-                    ],
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Avatar
+              Container(
+                width: 48,
+                height: 48,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF1E88E5), Color(0xFF42A5F5)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  const SizedBox(width: 12),
-
-                  // Info voyageur
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    _initials,
+                    style: GoogleFonts.plusJakartaSans(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                traveler?.displayName ?? 'Voyageur',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                  color: kTextPrimary,
-                                ),
+                        Expanded(
+                          child: Text(
+                            traveler?.displayName ?? 'Voyageur',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: kTextPrimary,
+                            ),
+                          ),
+                        ),
+                        if (isKiloPro)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 7, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFEF3C7),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              'Kilo Pro',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFFB45309),
                               ),
                             ),
-                            if (rating != null)
-                              Row(
-                                children: [
-                                  const Icon(Icons.star_rounded, size: 14, color: Color(0xFFF59E0B)),
-                                  const SizedBox(width: 2),
-                                  Text(
-                                    rating.toStringAsFixed(1),
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w700,
-                                      color: kTextPrimary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            // Corridor
-                            Expanded(
-                              child: Text(
-                                '${announcement.departureCity} → ${announcement.arrivalCity}',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: kGreenPrimary,
-                                ),
-                              ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        if (rating != null) ...[
+                          const Icon(Icons.star_rounded,
+                              size: 13, color: Color(0xFFF59E0B)),
+                          const SizedBox(width: 3),
+                          Text(
+                            rating.toStringAsFixed(1),
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: kTextPrimary,
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Wrap(
-                          spacing: 4,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            if (trips > 0) ...[
-                              const Icon(Icons.flight_rounded, size: 13, color: kTextHint),
-                              Text(
-                                '$trips trajet${trips > 1 ? 's' : ''}',
-                                style: GoogleFonts.plusJakartaSans(fontSize: 12, color: kTextSecondary),
-                              ),
-                              const SizedBox(width: 6),
-                            ],
-                            if (isKiloPro) ...[
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFEF3C7),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  'Kilo Pro',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFFB45309),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ],
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        Text(
+                          '${announcement.departureCity} → ${announcement.arrivalCity}',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: kGreenPrimary,
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Stats bottom row
-            Container(
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: kBorder)),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: [
-                      _StatPill(
-                        icon: Icons.calendar_month_rounded,
-                        label: DateFormat('dd MMM', 'fr').format(announcement.departureDate),
-                      ),
-                      _StatPill(
-                        icon: Icons.scale_rounded,
-                        label: '${announcement.availableKg.toStringAsFixed(1)} kg dispo',
-                      ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: '${announcement.pricePerKg.toStringAsFixed(0)} €',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                color: kTextPrimary,
-                              ),
-                            ),
-                            TextSpan(
-                              text: '/kg',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: kTextSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: kGreenPrimary,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          'Choisir',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ).animate().fadeIn(delay: Duration(milliseconds: 60 * index)).slideY(begin: 0.04, curve: Curves.easeOutCubic),
-    );
-  }
-}
-
-class _StatPill extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const _StatPill({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      decoration: BoxDecoration(
-        color: kBackground,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 12, color: kTextSecondary),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: kTextSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Filter sheet ────────────────────────────────────────────────────────────
-
-class _FilterSheet extends StatelessWidget {
-  final String? departureCity;
-  final String? arrivalCity;
-  final DateTime? dateFrom;
-  final DateTime? dateTo;
-  final double minKg;
-  final void Function({String? d, String? a, DateTime? df, DateTime? dt, double? mk}) onChanged;
-  final VoidCallback onApply;
-  final VoidCallback onReset;
-
-  const _FilterSheet({
-    required this.departureCity,
-    required this.arrivalCity,
-    required this.dateFrom,
-    required this.dateTo,
-    required this.minKg,
-    required this.onChanged,
-    required this.onApply,
-    required this.onReset,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: kSurface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      padding: EdgeInsets.fromLTRB(20, 0, 20, MediaQuery.of(context).viewInsets.bottom + 32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Handle
-          Center(
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: kBorder,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Filtres',
-                style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w700),
-              ),
-              TextButton(
-                onPressed: onReset,
-                child: Text(
-                  'Réinitialiser',
-                  style: GoogleFonts.plusJakartaSans(color: kError, fontWeight: FontWeight.w600),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // Corridor
-          Text('Corridor', style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700, color: kTextSecondary)),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _SheetDropdown(
-                  label: 'Départ',
-                  value: departureCity,
-                  items: _departureCities,
-                  onChanged: (v) => onChanged(d: v),
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10),
-                child: Icon(Icons.arrow_forward_rounded, size: 16, color: kTextSecondary),
-              ),
-              Expanded(
-                child: _SheetDropdown(
-                  label: 'Arrivée',
-                  value: arrivalCity,
-                  items: _arrivalCities,
-                  onChanged: (v) => onChanged(a: v),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // Dates
-          Text('Plage de dates', style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700, color: kTextSecondary)),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _DateButton(
-                  label: 'Du',
-                  date: dateFrom,
-                  onTap: () async {
-                    final d = await showDatePicker(
-                      context: context,
-                      initialDate: dateFrom ?? DateTime.now(),
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                      builder: (c, child) => Theme(
-                        data: Theme.of(c).copyWith(colorScheme: const ColorScheme.light(primary: kGreenPrimary)),
-                        child: child!,
-                      ),
-                    );
-                    if (d != null) onChanged(df: d);
-                  },
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _DateButton(
-                  label: 'Au',
-                  date: dateTo,
-                  onTap: () async {
-                    final d = await showDatePicker(
-                      context: context,
-                      initialDate: dateTo ?? dateFrom ?? DateTime.now(),
-                      firstDate: dateFrom ?? DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                      builder: (c, child) => Theme(
-                        data: Theme.of(c).copyWith(colorScheme: const ColorScheme.light(primary: kGreenPrimary)),
-                        child: child!,
-                      ),
-                    );
-                    if (d != null) onChanged(dt: d);
-                  },
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // Poids min
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Poids minimum', style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w700, color: kTextSecondary)),
-              Text(
-                '${minKg.toStringAsFixed(0)} kg',
-                style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w700, color: kGreenPrimary),
-              ),
-            ],
-          ),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: kGreenPrimary,
-              inactiveTrackColor: kGreenLight,
-              thumbColor: kGreenPrimary,
-              overlayColor: kGreenPrimary.withValues(alpha: 0.1),
-              trackHeight: 4,
-            ),
-            child: Slider(
-              value: minKg,
-              min: 1,
-              max: 30,
-              divisions: 29,
-              onChanged: (v) => onChanged(mk: v),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Apply
-          ElevatedButton(
-            onPressed: onApply,
-            child: Text(
-              'Appliquer les filtres',
-              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 15),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Sort sheet ──────────────────────────────────────────────────────────────
-
-class _SortSheet extends StatelessWidget {
-  final String current;
-  final ValueChanged<String> onSelect;
-
-  const _SortSheet({required this.current, required this.onSelect});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: kSurface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Center(
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(color: kBorder, borderRadius: BorderRadius.circular(2)),
-            ),
-          ),
-          Text(
-            'Trier par',
-            style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 16),
-          ..._sortOptions.map((option) {
-            final isSelected = option.$1 == current;
-            return InkWell(
-              onTap: () => onSelect(option.$1),
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: isSelected ? kGreenLight : kBackground,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: isSelected ? kGreenPrimary : Colors.transparent),
-                ),
-                child: Row(
-                  children: [
+                    const SizedBox(height: 6),
                     Text(
-                      option.$2,
+                      DateFormat('EEE d MMM', 'fr')
+                          .format(announcement.departureDate),
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15,
-                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                        color: isSelected ? kGreenPrimary : kTextPrimary,
+                        fontSize: 12,
+                        color: kTextSecondary,
                       ),
                     ),
-                    const Spacer(),
-                    if (isSelected) const Icon(Icons.check_rounded, color: kGreenPrimary, size: 18),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        _Pill(
+                          label:
+                              '${announcement.availableKg.toStringAsFixed(0)} kg dispo',
+                        ),
+                        const SizedBox(width: 8),
+                        _Pill(
+                          label:
+                              '${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
+                          primary: true,
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: kGreenPrimary,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            'Voir →',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
-            );
-          }),
-        ],
+            ],
+          ),
+        ),
+      ).animate().fadeIn(delay: Duration(milliseconds: 60 * index)).slideY(
+            begin: 0.04,
+            curve: Curves.easeOutCubic,
+          ),
+    );
+  }
+}
+
+class _Pill extends StatelessWidget {
+  const _Pill({required this.label, this.primary = false});
+
+  final String label;
+  final bool primary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: primary ? kGreenLight : kBackground,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.plusJakartaSans(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: primary ? kGreenPrimary : kTextSecondary,
+        ),
       ),
     );
   }
 }
 
-// ── Empty state ─────────────────────────────────────────────────────────────
+// ── États vide + erreur ──────────────────────────────────────────────────────
 
 class _EmptyView extends StatelessWidget {
-  final VoidCallback? onReset;
-  const _EmptyView({this.onReset});
+  const _EmptyView({required this.onBack});
+
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(40),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: kGreenLight,
-              shape: BoxShape.circle,
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: const BoxDecoration(
+                color: kGreenLight,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.search_off_rounded,
+                  size: 48, color: kGreenPrimary),
             ),
-            child: const Icon(Icons.search_off_rounded, size: 48, color: kGreenPrimary),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            'Aucun voyageur disponible',
-            style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w700, color: kTextPrimary),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Aucun voyageur disponible sur ce corridor pour ces dates.',
-            style: GoogleFonts.plusJakartaSans(fontSize: 14, color: kTextSecondary),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 28),
-          if (onReset != null)
-            OutlinedButton.icon(
-              icon: const Icon(Icons.filter_alt_off_rounded),
-              label: const Text('Effacer les filtres'),
-              onPressed: onReset,
+            const SizedBox(height: 20),
+            Text(
+              'Aucun voyageur disponible',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: kTextPrimary,
+              ),
+              textAlign: TextAlign.center,
             ),
-          const SizedBox(height: 12),
-          // Placeholder V2
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: kBackground,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: kBorder),
+            const SizedBox(height: 8),
+            Text(
+              'Essayez avec d\'autres critères de recherche.',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 14,
+                color: kTextSecondary,
+              ),
+              textAlign: TextAlign.center,
             ),
-            child: Row(
-              children: [
-                const Icon(Icons.notifications_outlined, color: kTextSecondary, size: 20),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Créer une alerte — disponible en V2',
-                    style: GoogleFonts.plusJakartaSans(fontSize: 13, color: kTextSecondary),
-                  ),
-                ),
-              ],
+            const SizedBox(height: 24),
+            OutlinedButton(
+              onPressed: onBack,
+              child: const Text('Modifier la recherche'),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ).animate().fadeIn();
+    );
   }
 }
-
-// ── Error view ──────────────────────────────────────────────────────────────
 
 class _ErrorView extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
   const _ErrorView({required this.message, required this.onRetry});
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(40),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.wifi_off_rounded, size: 56, color: kTextHint),
-          const SizedBox(height: 16),
-          Text(
-            'Connexion impossible',
-            style: GoogleFonts.plusJakartaSans(fontSize: 17, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 8),
-          Text(message, style: GoogleFonts.plusJakartaSans(fontSize: 13, color: kTextSecondary), textAlign: TextAlign.center),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-            label: const Text('Réessayer'),
-            onPressed: onRetry,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Helpers ─────────────────────────────────────────────────────────────────
-
-class _FilterBarDelegate extends SliverPersistentHeaderDelegate {
-  final Widget child;
-  _FilterBarDelegate({required this.child});
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) => child;
-
-  @override
-  double get maxExtent => 72;
-  @override
-  double get minExtent => 72;
-  @override
-  bool shouldRebuild(_FilterBarDelegate old) => true;
-}
-
-class _SheetDropdown extends StatelessWidget {
-  final String label;
-  final String? value;
-  final List<String> items;
-  final ValueChanged<String?> onChanged;
-
-  const _SheetDropdown({
-    required this.label,
-    required this.value,
-    required this.items,
-    required this.onChanged,
-  });
+  final String message;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButtonFormField<String>(
-      value: value,
-      decoration: InputDecoration(labelText: label),
-      items: [
-        DropdownMenuItem(value: null, child: Text('Tous', style: GoogleFonts.plusJakartaSans(fontSize: 14))),
-        ...items.map((c) => DropdownMenuItem(value: c, child: Text(c, style: GoogleFonts.plusJakartaSans(fontSize: 14, fontWeight: FontWeight.w600)))),
-      ],
-      onChanged: onChanged,
-    );
-  }
-}
-
-class _DateButton extends StatelessWidget {
-  final String label;
-  final DateTime? date;
-  final VoidCallback onTap;
-
-  const _DateButton({required this.label, required this.date, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
-        decoration: BoxDecoration(
-          color: date != null ? kGreenLight : kSurface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: date != null ? kGreenPrimary : kBorder),
-        ),
-        child: Row(
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.calendar_today_rounded, size: 14, color: date != null ? kGreenPrimary : kTextHint),
-            const SizedBox(width: 6),
+            const Icon(Icons.wifi_off_rounded, size: 56, color: kTextHint),
+            const SizedBox(height: 16),
             Text(
-              date != null ? DateFormat('dd/MM/yy').format(date!) : label,
+              'Connexion impossible',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
-                fontWeight: date != null ? FontWeight.w600 : FontWeight.w400,
-                color: date != null ? kGreenPrimary : kTextHint,
+                color: kTextSecondary,
               ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+              label: const Text('Réessayer'),
+              onPressed: onRetry,
             ),
           ],
         ),

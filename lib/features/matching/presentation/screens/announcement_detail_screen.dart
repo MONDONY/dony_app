@@ -270,7 +270,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                     const SizedBox(height: 12),
                   ],
 
-                  if (a.status == 'ACTIVE') ...[
+                  if (!canDelete && a.status == 'ACTIVE') ...[
                     OutlinedButton.icon(
                       icon: const Icon(Icons.cancel_outlined, size: 18, color: kError),
                       label: Text(

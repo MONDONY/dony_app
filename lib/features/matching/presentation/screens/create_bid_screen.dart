@@ -11,11 +11,12 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 const _categories = [
-  'Médicaments',
   'Vêtements',
-  'Alimentation',
+  'Médicaments',
+  'Documents',
+  'Nourriture',
   'Électronique',
-  'Autre',
+  'Cadeaux',
 ];
 
 class CreateBidScreen extends StatefulWidget {
@@ -28,50 +29,73 @@ class CreateBidScreen extends StatefulWidget {
 }
 
 class _CreateBidScreenState extends State<CreateBidScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _weightCtrl = TextEditingController();
-  final _valueCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
+  final _valueCtrl = TextEditingController();
   final _recipientNameCtrl = TextEditingController();
   final _recipientPhoneCtrl = TextEditingController();
 
-  String _category = _categories.first;
+  double _weightKg = 6;
+  String _category = _categories[0];
   bool _disclaimerAccepted = false;
   bool _showDisclaimer = false;
-
-  @override
-  void dispose() {
-    _weightCtrl.dispose();
-    _valueCtrl.dispose();
-    _descCtrl.dispose();
-    _recipientNameCtrl.dispose();
-    _recipientPhoneCtrl.dispose();
-    super.dispose();
-  }
 
   double get _maxKg => widget.announcement.availableKg;
   double get _pricePerKg => widget.announcement.pricePerKg;
 
   double get _totalPrice {
-    final kg = double.tryParse(_weightCtrl.text) ?? 0;
-    return kg * _pricePerKg * 1.12; // +12% commission dony
+    return _weightKg * _pricePerKg * 1.12;
+  }
+
+  @override
+  void dispose() {
+    _descCtrl.dispose();
+    _valueCtrl.dispose();
+    _recipientNameCtrl.dispose();
+    _recipientPhoneCtrl.dispose();
+    super.dispose();
   }
 
   void _submit() {
-    if (!_formKey.currentState!.validate()) return;
+    if (_descCtrl.text.trim().isEmpty) {
+      _showError('Description obligatoire');
+      return;
+    }
+    final val = double.tryParse(_valueCtrl.text);
+    if (val == null || val <= 0) {
+      _showError('Valeur déclarée invalide');
+      return;
+    }
+    if (val > 500) {
+      _showError('Valeur maximum : 500 €');
+      return;
+    }
+    if (_recipientNameCtrl.text.trim().isEmpty) {
+      _showError('Nom du destinataire obligatoire');
+      return;
+    }
+    if (_recipientPhoneCtrl.text.trim().isEmpty) {
+      _showError('Téléphone du destinataire obligatoire');
+      return;
+    }
     if (!_disclaimerAccepted) {
       setState(() => _showDisclaimer = true);
       return;
     }
     context.read<BidBloc>().add(BidCreateRequested(
       announcementId: widget.announcement.id,
-      weightKg: double.parse(_weightCtrl.text),
-      declaredValueEur: double.parse(_valueCtrl.text),
+      weightKg: _weightKg,
+      declaredValueEur: val,
       description: _descCtrl.text.trim(),
       contentCategory: _category,
       recipientName: _recipientNameCtrl.text.trim(),
       recipientPhone: _recipientPhoneCtrl.text.trim(),
     ));
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: kError),
+    );
   }
 
   @override
@@ -86,305 +110,490 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           ));
           context.go('/home');
         } else if (state is BidError) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(state.message),
-            backgroundColor: kError,
-          ));
+          _showError(state.message);
         }
       },
       builder: (context, state) {
+        final isLoading = state is BidLoading;
+
+        if (_showDisclaimer) {
+          return _DisclaimerPage(
+            onAccept: () {
+              setState(() {
+                _disclaimerAccepted = true;
+                _showDisclaimer = false;
+              });
+              _submit();
+            },
+            onDecline: () => setState(() => _showDisclaimer = false),
+          );
+        }
+
         return Scaffold(
           backgroundColor: kBackground,
           appBar: AppBar(
-            title: Text('Envoyer un colis',
-                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 18)),
+            title: Text(
+              'Déclarer un colis',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w700,
+                fontSize: 17,
+              ),
+            ),
             backgroundColor: kSurface,
             elevation: 0,
-            bottom: const PreferredSize(
-              preferredSize: Size.fromHeight(1),
-              child: Divider(height: 1),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_rounded,
+                  size: 20, color: kGreenPrimary),
+              onPressed: () => context.pop(),
+            ),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(3),
+              child: LinearProgressIndicator(
+                value: 1 / 3,
+                backgroundColor: kBackground,
+                valueColor: const AlwaysStoppedAnimation<Color>(kGreenPrimary),
+                minHeight: 3,
+              ),
             ),
           ),
-          body: _showDisclaimer
-              ? _DisclaimerPage(
-                  onAccept: () {
-                    setState(() {
-                      _disclaimerAccepted = true;
-                      _showDisclaimer = false;
-                    });
-                    _submit();
-                  },
-                  onDecline: () => setState(() => _showDisclaimer = false),
-                )
-              : _FormPage(
-                  formKey: _formKey,
-                  weightCtrl: _weightCtrl,
-                  valueCtrl: _valueCtrl,
-                  descCtrl: _descCtrl,
-                  recipientNameCtrl: _recipientNameCtrl,
-                  recipientPhoneCtrl: _recipientPhoneCtrl,
-                  category: _category,
-                  onCategoryChanged: (v) => setState(() => _category = v!),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Indicateur étape
+                Text(
+                  'ÉTAPE 1/3 — LE COLIS',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: kGreenPrimary,
+                    letterSpacing: 0.8,
+                  ),
+                ).animate().fadeIn(),
+                const SizedBox(height: 20),
+
+                // Stepper poids
+                _WeightStepper(
+                  weightKg: _weightKg,
                   maxKg: _maxKg,
-                  totalPrice: _totalPrice,
-                  isLoading: state is BidLoading,
-                  onSubmit: _submit,
-                  onWeightChanged: (_) => setState(() {}),
-                  announcement: widget.announcement,
+                  onChanged: (v) => setState(() => _weightKg = v),
+                ).animate().fadeIn(delay: 60.ms),
+                const SizedBox(height: 24),
+
+                // Catégorie
+                Text(
+                  'Catégorie du contenu',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kTextPrimary,
+                  ),
                 ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _categories.map((cat) => _CategoryChip(
+                    label: cat,
+                    selected: _category == cat,
+                    onTap: () => setState(() => _category = cat),
+                  )).toList(),
+                ).animate().fadeIn(delay: 100.ms),
+                const SizedBox(height: 24),
+
+                // Description
+                Text(
+                  'Description détaillée',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _descCtrl,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    hintText: 'Médicaments pour diabète + 2 tee-shirts enfants',
+                    hintStyle: GoogleFonts.plusJakartaSans(
+                      color: kTextHint,
+                      fontSize: 14,
+                    ),
+                  ),
+                  style: GoogleFonts.plusJakartaSans(fontSize: 14),
+                ).animate().fadeIn(delay: 140.ms),
+                const SizedBox(height: 20),
+
+                // Valeur déclarée
+                Text(
+                  'Valeur déclarée (€)',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _valueCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                  ],
+                  decoration: InputDecoration(
+                    prefixIcon: const Padding(
+                      padding: EdgeInsets.only(left: 14, right: 8),
+                      child: Icon(Icons.euro_rounded, size: 18, color: kTextSecondary),
+                    ),
+                    prefixIconConstraints: const BoxConstraints(minWidth: 0),
+                    hintText: '120',
+                    helperText: 'Plafond : 500 € — couvre l\'assurance en cas de sinistre',
+                    helperStyle: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      color: kTextSecondary,
+                    ),
+                  ),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ).animate().fadeIn(delay: 160.ms),
+                const SizedBox(height: 20),
+
+                // Warning contenu interdit
+                _ContentWarning().animate().fadeIn(delay: 180.ms),
+                const SizedBox(height: 28),
+
+                // Destinataire
+                Text(
+                  'Destinataire',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: kTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                TextFormField(
+                  controller: _recipientNameCtrl,
+                  decoration: InputDecoration(
+                    labelText: 'Prénom et nom du destinataire',
+                    hintText: 'ex: Amadou Diallo',
+                  ),
+                  style: GoogleFonts.plusJakartaSans(fontSize: 14),
+                ).animate().fadeIn(delay: 200.ms),
+                const SizedBox(height: 14),
+                TextFormField(
+                  controller: _recipientPhoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  decoration: InputDecoration(
+                    labelText: 'Téléphone du destinataire',
+                    hintText: 'ex: +221 77 000 00 00',
+                  ),
+                  style: GoogleFonts.plusJakartaSans(fontSize: 14),
+                ).animate().fadeIn(delay: 220.ms),
+              ],
+            ),
+          ),
+          bottomSheet: _BottomBar(
+            totalPrice: _totalPrice,
+            isLoading: isLoading,
+            onSubmit: _submit,
+          ),
         );
       },
     );
   }
 }
 
-class _FormPage extends StatelessWidget {
-  final GlobalKey<FormState> formKey;
-  final TextEditingController weightCtrl;
-  final TextEditingController valueCtrl;
-  final TextEditingController descCtrl;
-  final TextEditingController recipientNameCtrl;
-  final TextEditingController recipientPhoneCtrl;
-  final String category;
-  final ValueChanged<String?> onCategoryChanged;
-  final double maxKg;
-  final double totalPrice;
-  final bool isLoading;
-  final VoidCallback onSubmit;
-  final ValueChanged<String> onWeightChanged;
-  final AnnouncementModel announcement;
+// ── Stepper poids ────────────────────────────────────────────────────────────
 
-  const _FormPage({
-    required this.formKey,
-    required this.weightCtrl,
-    required this.valueCtrl,
-    required this.descCtrl,
-    required this.recipientNameCtrl,
-    required this.recipientPhoneCtrl,
-    required this.category,
-    required this.onCategoryChanged,
+class _WeightStepper extends StatelessWidget {
+  const _WeightStepper({
+    required this.weightKg,
     required this.maxKg,
-    required this.totalPrice,
-    required this.isLoading,
-    required this.onSubmit,
-    required this.onWeightChanged,
-    required this.announcement,
+    required this.onChanged,
   });
+
+  final double weightKg;
+  final double maxKg;
+  final ValueChanged<double> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: formKey,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Résumé trajet
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: kGreenLight,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: kGreenPrimary.withValues(alpha: 0.3)),
+    return Center(
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _StepperButton(
+                icon: Icons.remove_rounded,
+                onTap: weightKg > 1
+                    ? () => onChanged((weightKg - 1).clamp(1, maxKg))
+                    : null,
               ),
-              child: Row(
-                children: [
-                  const Icon(Icons.flight_takeoff_rounded, color: kGreenPrimary, size: 18),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      '${announcement.departureCity} → ${announcement.arrivalCity}',
-                      style: GoogleFonts.plusJakartaSans(
-                          fontWeight: FontWeight.w700, color: kGreenDark, fontSize: 15),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${announcement.pricePerKg.toStringAsFixed(2)} €/kg',
-                    style: GoogleFonts.plusJakartaSans(
-                        fontWeight: FontWeight.w600, color: kGreenPrimary, fontSize: 14),
-                  ),
-                ],
-              ),
-            ).animate().fadeIn(),
-
-            const SizedBox(height: 24),
-            _SectionTitle('Votre colis'),
-            const SizedBox(height: 14),
-
-            // Poids
-            TextFormField(
-              controller: weightCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
-              onChanged: onWeightChanged,
-              decoration: _inputDeco('Poids du colis (kg)', 'ex: 3.5',
-                  suffix: 'kg',
-                  hint2: 'Max ${maxKg.toStringAsFixed(1)} kg dispo'),
-              validator: (v) {
-                if (v == null || v.isEmpty) return 'Poids obligatoire';
-                final kg = double.tryParse(v);
-                if (kg == null || kg <= 0) return 'Poids invalide';
-                if (kg > maxKg) return 'Max disponible : ${maxKg.toStringAsFixed(1)} kg';
-                return null;
-              },
-            ),
-            const SizedBox(height: 14),
-
-            // Catégorie
-            DropdownButtonFormField<String>(
-              value: category,
-              decoration: _inputDeco('Catégorie du contenu', ''),
-              items: _categories
-                  .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                  .toList(),
-              onChanged: onCategoryChanged,
-              validator: (v) => v == null ? 'Catégorie obligatoire' : null,
-            ),
-            const SizedBox(height: 14),
-
-            // Description
-            TextFormField(
-              controller: descCtrl,
-              maxLines: 3,
-              decoration: _inputDeco('Description du contenu', 'Ex: 2 boubous, médicaments homéopathiques...'),
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Description obligatoire' : null,
-            ),
-            const SizedBox(height: 14),
-
-            // Valeur déclarée
-            TextFormField(
-              controller: valueCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
-              decoration: _inputDeco('Valeur déclarée', 'ex: 120', suffix: '€'),
-              validator: (v) {
-                if (v == null || v.isEmpty) return 'Valeur obligatoire';
-                final val = double.tryParse(v);
-                if (val == null || val <= 0) return 'Valeur invalide';
-                if (val > 500) return 'Valeur maximum : 500 €';
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 24),
-            _SectionTitle('Destinataire'),
-            const SizedBox(height: 14),
-
-            TextFormField(
-              controller: recipientNameCtrl,
-              decoration: _inputDeco('Prénom et nom du destinataire', 'ex: Amadou Diallo'),
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Nom obligatoire' : null,
-            ),
-            const SizedBox(height: 14),
-
-            TextFormField(
-              controller: recipientPhoneCtrl,
-              keyboardType: TextInputType.phone,
-              decoration: _inputDeco('Téléphone du destinataire', 'ex: +221 77 000 00 00'),
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Téléphone obligatoire' : null,
-            ),
-
-            const SizedBox(height: 28),
-
-            // Récap prix
-            if (totalPrice > 0)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: kSurface,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: kBorder),
-                ),
-                child: Column(
+              const SizedBox(width: 28),
+              RichText(
+                text: TextSpan(
                   children: [
-                    _RecapRow('Transport (${weightCtrl.text} kg × ${announcement.pricePerKg.toStringAsFixed(2)} €)',
-                        '${((double.tryParse(weightCtrl.text) ?? 0) * announcement.pricePerKg).toStringAsFixed(2)} €'),
-                    const SizedBox(height: 6),
-                    _RecapRow('Commission dony (12%)',
-                        '${((double.tryParse(weightCtrl.text) ?? 0) * announcement.pricePerKg * 0.12).toStringAsFixed(2)} €'),
-                    const Divider(height: 20),
-                    _RecapRow('Total estimé', '${totalPrice.toStringAsFixed(2)} €',
-                        bold: true),
+                    TextSpan(
+                      text: weightKg.toStringAsFixed(0),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 52,
+                        fontWeight: FontWeight.w800,
+                        color: kTextPrimary,
+                      ),
+                    ),
+                    TextSpan(
+                      text: 'kg',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
+                        color: kTextSecondary,
+                      ),
+                    ),
                   ],
                 ),
-              ).animate().fadeIn(),
-
-            const SizedBox(height: 28),
-
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: isLoading ? null : onSubmit,
-                child: isLoading
-                    ? const SizedBox(
-                        width: 20, height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : Text('Continuer',
-                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 15)),
               ),
+              const SizedBox(width: 28),
+              _StepperButton(
+                icon: Icons.add_rounded,
+                onTap: weightKg < maxKg
+                    ? () => onChanged((weightKg + 1).clamp(1, maxKg))
+                    : null,
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Max ${maxKg.toStringAsFixed(0)} kg sur ce trajet',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              color: kTextSecondary,
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StepperButton extends StatelessWidget {
+  const _StepperButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: 150.ms,
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: onTap != null ? kSurface : kBackground,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: onTap != null ? kBorder : kBackground,
+          ),
+          boxShadow: onTap != null
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Icon(
+          icon,
+          size: 22,
+          color: onTap != null ? kTextPrimary : kTextHint,
         ),
       ),
     );
   }
-
-  InputDecoration _inputDeco(String label, String hint, {String? suffix, String? hint2}) =>
-      InputDecoration(
-        labelText: label,
-        hintText: hint,
-        helperText: hint2,
-        suffixText: suffix,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: kBorder)),
-        focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: kGreenPrimary, width: 1.5)),
-        filled: true,
-        fillColor: kSurface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      );
 }
 
-class _SectionTitle extends StatelessWidget {
-  final String title;
-  const _SectionTitle(this.title);
+// ── Chips catégorie ──────────────────────────────────────────────────────────
 
-  @override
-  Widget build(BuildContext context) => Text(
-        title,
-        style: GoogleFonts.plusJakartaSans(
-            fontWeight: FontWeight.w700, fontSize: 16, color: kTextPrimary),
-      );
-}
+class _CategoryChip extends StatelessWidget {
+  const _CategoryChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
-class _RecapRow extends StatelessWidget {
   final String label;
-  final String value;
-  final bool bold;
-  const _RecapRow(this.label, this.value, {this.bold = false});
+  final bool selected;
+  final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Text(label,
-                style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    color: bold ? kTextPrimary : kTextSecondary,
-                    fontWeight: bold ? FontWeight.w700 : FontWeight.w400)),
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: 150.ms,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+        decoration: BoxDecoration(
+          color: selected ? kTextPrimary : kSurface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? kTextPrimary : kBorder,
           ),
-          Text(value,
-              style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  color: bold ? kGreenPrimary : kTextPrimary,
-                  fontWeight: bold ? FontWeight.w800 : FontWeight.w600)),
-        ],
-      );
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: selected ? Colors.white : kTextPrimary,
+          ),
+        ),
+      ),
+    );
+  }
 }
+
+// ── Warning contenu interdit ─────────────────────────────────────────────────
+
+class _ContentWarning extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF8E6),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.shield_outlined,
+            size: 18,
+            color: Color(0xFFF59E0B),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Contenu interdit',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF92400E),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Pas d\'armes, drogues, liquides inflammables ou espèces. Le voyageur peut refuser au contrôle.',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    color: const Color(0xFF92400E),
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Barre de bas ─────────────────────────────────────────────────────────────
+
+class _BottomBar extends StatelessWidget {
+  const _BottomBar({
+    required this.totalPrice,
+    required this.isLoading,
+    required this.onSubmit,
+  });
+
+  final double totalPrice;
+  final bool isLoading;
+  final VoidCallback onSubmit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        20,
+        16,
+        20,
+        MediaQuery.of(context).padding.bottom + 16,
+      ),
+      decoration: const BoxDecoration(
+        color: kSurface,
+        border: Border(top: BorderSide(color: kBorder)),
+      ),
+      child: Row(
+        children: [
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Total estimé',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  color: kTextSecondary,
+                ),
+              ),
+              Text(
+                '${totalPrice.toStringAsFixed(0)} €',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: kTextPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: SizedBox(
+              height: 52,
+              child: ElevatedButton(
+                onPressed: isLoading ? null : onSubmit,
+                child: isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        'Continuer',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Page disclaimer ──────────────────────────────────────────────────────────
 
 class _DisclaimerPage extends StatefulWidget {
   final VoidCallback onAccept;
@@ -401,115 +610,152 @@ class _DisclaimerPageState extends State<_DisclaimerPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+    return Scaffold(
+      backgroundColor: kBackground,
+      appBar: AppBar(
+        title: Text(
+          'Conditions d\'envoi',
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w700,
+            fontSize: 17,
+          ),
+        ),
+        backgroundColor: kSurface,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_rounded,
+              size: 20, color: kGreenPrimary),
+          onPressed: widget.onDecline,
+        ),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF3E0),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFFDE68A)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.gavel_rounded, color: kWarning, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Disclaimer légal douanier',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF92400E),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ).animate().fadeIn(),
+                  const SizedBox(height: 20),
+                  _LegalSection('Produits interdits', [
+                    'Stupéfiants, drogues et substances psychotropes',
+                    'Armes, munitions et explosifs',
+                    'Contrefaçons et marchandises piratées',
+                    'Denrées périssables non déclarées',
+                    'Espèces animales protégées',
+                    'Matières radioactives ou dangereuses',
+                  ]),
+                  const SizedBox(height: 16),
+                  _LegalSection('Responsabilité de l\'expéditeur', [
+                    'Vous êtes seul responsable de la conformité du contenu avec la réglementation douanière.',
+                    'Toute fausse déclaration douanière est passible de poursuites pénales.',
+                    'dony décline toute responsabilité en cas de saisie ou de litige douanier.',
+                  ]),
+                  const SizedBox(height: 16),
+                  _LegalSection('Médicaments', [
+                    'Les médicaments soumis à ordonnance doivent être accompagnés des documents médicaux requis.',
+                  ]),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              16,
+              20,
+              MediaQuery.of(context).padding.bottom + 16,
+            ),
+            decoration: const BoxDecoration(
+              color: kSurface,
+              border: Border(top: BorderSide(color: kBorder)),
+            ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFF3E0),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFFDE68A)),
-                  ),
+                GestureDetector(
+                  onTap: () => setState(() => _checked = !_checked),
                   child: Row(
                     children: [
-                      const Icon(Icons.gavel_rounded, color: kWarning, size: 20),
-                      const SizedBox(width: 10),
+                      Checkbox(
+                        value: _checked,
+                        onChanged: (v) =>
+                            setState(() => _checked = v ?? false),
+                        activeColor: kGreenPrimary,
+                      ),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Disclaimer légal douanier',
+                          'J\'ai lu et j\'accepte les conditions d\'envoi et la réglementation douanière',
                           style: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.w700, color: const Color(0xFF92400E), fontSize: 14),
+                            fontSize: 13,
+                            color: kTextPrimary,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ).animate().fadeIn(),
-
-                const SizedBox(height: 20),
-                _LegalSection('Produits interdits', [
-                  'Stupéfiants, drogues et substances psychotropes',
-                  'Armes, munitions et explosifs',
-                  'Contrefaçons et marchandises piratées',
-                  'Denrées périssables non déclarées',
-                  'Espèces animales protégées',
-                  'Matières radioactives ou dangereuses',
-                ]),
-                const SizedBox(height: 16),
-                _LegalSection('Responsabilité de l\'expéditeur', [
-                  'Vous êtes seul responsable de la conformité du contenu avec la réglementation douanière des pays de départ et d\'arrivée.',
-                  'Toute fausse déclaration douanière est passible de poursuites pénales.',
-                  'dony décline toute responsabilité en cas de saisie ou de litige douanier lié à un contenu non déclaré ou interdit.',
-                  'En cas de litige, les données de signature (date, heure, adresse IP) seront transmises aux autorités compétentes.',
-                ]),
-                const SizedBox(height: 16),
-                _LegalSection('Médicaments', [
-                  'Les médicaments soumis à ordonnance doivent être accompagnés des documents médicaux requis.',
-                  'Le transport de médicaments contrôlés sans documentation peut entraîner une saisie à la douane.',
-                ]),
-                const SizedBox(height: 24),
-              ],
-            ),
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-          decoration: const BoxDecoration(
-            color: kSurface,
-            border: Border(top: BorderSide(color: kBorder)),
-          ),
-          child: Column(
-            children: [
-              GestureDetector(
-                onTap: () => setState(() => _checked = !_checked),
-                child: Row(
+                ),
+                const SizedBox(height: 12),
+                Row(
                   children: [
-                    Checkbox(
-                      value: _checked,
-                      onChanged: (v) => setState(() => _checked = v ?? false),
-                      activeColor: kGreenPrimary,
-                    ),
-                    const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        'J\'ai lu et j\'accepte les conditions d\'envoi et la réglementation douanière',
-                        style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13, color: kTextPrimary, fontWeight: FontWeight.w500),
+                      child: OutlinedButton(
+                        onPressed: widget.onDecline,
+                        child: Text(
+                          'Retour',
+                          style: GoogleFonts.plusJakartaSans(
+                            color: kTextSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _checked ? widget.onAccept : null,
+                        child: Text(
+                          'Confirmer',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: widget.onDecline,
-                      child: Text('Retour',
-                          style: GoogleFonts.plusJakartaSans(
-                              color: kTextSecondary, fontWeight: FontWeight.w600)),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _checked ? widget.onAccept : null,
-                      child: Text('Confirmer et envoyer',
-                          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -524,20 +770,36 @@ class _LegalSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title,
-            style: GoogleFonts.plusJakartaSans(
-                fontWeight: FontWeight.w700, fontSize: 14, color: kTextPrimary)),
+        Text(
+          title,
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+            color: kTextPrimary,
+          ),
+        ),
         const SizedBox(height: 8),
         ...items.map((item) => Padding(
               padding: const EdgeInsets.only(bottom: 6),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('• ', style: TextStyle(color: kGreenPrimary, fontWeight: FontWeight.w700)),
+                  const Text(
+                    '• ',
+                    style: TextStyle(
+                      color: kGreenPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   Expanded(
-                    child: Text(item,
-                        style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13, color: kTextSecondary, height: 1.5)),
+                    child: Text(
+                      item,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        color: kTextSecondary,
+                        height: 1.5,
+                      ),
+                    ),
                   ),
                 ],
               ),
