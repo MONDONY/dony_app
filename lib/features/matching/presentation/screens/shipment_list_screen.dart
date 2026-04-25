@@ -265,7 +265,12 @@ class _ActiveShipmentBanner extends StatelessWidget {
         : bid.description;
 
     return GestureDetector(
-      onTap: () => context.push('/bids/${bid.id}', extra: bid),
+      onTap: () async {
+        await context.push('/bids/${bid.id}', extra: bid);
+        if (context.mounted) {
+          context.read<BidBloc>().add(BidMyListRequested());
+        }
+      },
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(20),
@@ -497,7 +502,12 @@ class _ShipmentCard extends StatelessWidget {
     final (label, color) = _statusInfo;
 
     return GestureDetector(
-      onTap: () => context.push('/bids/${bid.id}', extra: bid),
+      onTap: () async {
+        await context.push('/bids/${bid.id}', extra: bid);
+        if (context.mounted) {
+          context.read<BidBloc>().add(BidMyListRequested());
+        }
+      },
       child: Container(
         decoration: BoxDecoration(
           color: kSurface,
