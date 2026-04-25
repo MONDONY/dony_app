@@ -18,6 +18,9 @@ import 'package:dony/features/matching/data/repositories/announcement_repository
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/data/services/saved_trips_service.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
+import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/features/payments/data/datasources/payment_remote_datasource.dart';
+import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:get_it/get_it.dart';
 
 final getIt = GetIt.instance;
@@ -76,6 +79,17 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<BidBloc>(
     () => BidBloc(getIt<BidRepository>()),
+  );
+
+  // Payments
+  getIt.registerLazySingleton<PaymentRemoteDatasource>(
+    () => PaymentRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<PaymentRepository>(
+    () => PaymentRepository(getIt<PaymentRemoteDatasource>()),
+  );
+  getIt.registerFactory<PaymentBloc>(
+    () => PaymentBloc(getIt<PaymentRepository>()),
   );
 
   // Cancellation

@@ -4,6 +4,8 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/payments/data/models/payment_model.dart';
+import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -37,13 +39,25 @@ class _BidDetailView extends StatefulWidget {
 
 class _BidDetailViewState extends State<_BidDetailView> {
   late BidModel _bid;
+  PaymentModel? _existingPayment;
+  bool _paymentLoaded = false;
 
   @override
   void initState() {
     super.initState();
     _bid = widget.initialBid;
-    // On demande le détail complet pour être sûr d'avoir les villes de destination
     context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+    _loadPaymentStatus();
+  }
+
+  Future<void> _loadPaymentStatus() async {
+    if (_bid.status != 'ACCEPTED') return;
+    try {
+      final payment = await getIt<PaymentRepository>().getPaymentForBid(_bid.id);
+      if (mounted) setState(() { _existingPayment = payment; _paymentLoaded = true; });
+    } catch (_) {
+      if (mounted) setState(() => _paymentLoaded = true);
+    }
   }
 
   @override
@@ -97,7 +111,19 @@ class _BidDetailViewState extends State<_BidDetailView> {
           );
           context.pop();
         } else if (state is BidDetailLoaded) {
-          setState(() => _bid = state.bid);
+          final previousBidId = _bid.id;
+          setState(() {
+            _bid = state.bid;
+            // Réinitialiser le statut paiement si c'est un bid différent
+            if (state.bid.id != previousBidId) {
+              _existingPayment = null;
+              _paymentLoaded = false;
+            }
+          });
+          // Recharger le statut paiement si le bid est ACCEPTED et pas encore chargé
+          if (state.bid.status == 'ACCEPTED' && !_paymentLoaded) {
+            _loadPaymentStatus();
+          }
         } else if (state is BidError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -162,7 +188,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
             ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
           ),
           bottomNavigationBar: (isSender && (_bid.status == 'PENDING' || _bid.status == 'ACCEPTED'))
-              ? _SenderActionBar(bid: _bid, isLoading: isLoading)
+              ? _SenderActionBar(bid: _bid, isLoading: isLoading, existingPayment: _existingPayment, paymentLoaded: _paymentLoaded)
               : !isSender && _bid.status == 'PENDING'
                   ? _ActionBar(bid: _bid, isLoading: isLoading)
                   : !isSender && _bid.status == 'REJECTED'
@@ -687,10 +713,41 @@ class _ConfirmPresenceBar extends StatelessWidget {
   }
 }
 
+class _EscrowBadge extends StatelessWidget {
+  final double amount;
+  const _EscrowBadge({required this.amount});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 52,
+      decoration: BoxDecoration(
+        color: kSuccess.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: kSuccess.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.lock_rounded, color: kSuccess, size: 18),
+          const SizedBox(width: 8),
+          Text(
+            'Paiement sécurisé — ${amount.toStringAsFixed(2)} €',
+            style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w600, fontSize: 14, color: kSuccess),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _SenderActionBar extends StatelessWidget {
   final BidModel bid;
   final bool isLoading;
-  const _SenderActionBar({required this.bid, required this.isLoading});
+  final PaymentModel? existingPayment;
+  final bool paymentLoaded;
+  const _SenderActionBar({required this.bid, required this.isLoading, this.existingPayment, this.paymentLoaded = false});
 
   void _openOptions(BuildContext context) {
     showModalBottomSheet<void>(
@@ -727,6 +784,48 @@ class _SenderActionBar extends StatelessWidget {
               child: const Icon(Icons.more_horiz_rounded, size: 22),
             ),
           ),
+
+          if (bid.status == 'ACCEPTED') ...[
+            const SizedBox(width: 12),
+            Expanded(
+              child: !paymentLoaded
+                  ? Container(
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: kBorder,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Center(
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: kTextSecondary),
+                        ),
+                      ),
+                    )
+                  : existingPayment != null &&
+                          existingPayment!.bidId == bid.id &&
+                          (existingPayment!.status == 'ESCROW' ||
+                              existingPayment!.status == 'PENDING')
+                      ? _EscrowBadge(amount: existingPayment!.amount)
+                      : ElevatedButton.icon(
+                          onPressed: () =>
+                              context.push('/payments/pay', extra: bid),
+                          icon: const Icon(Icons.lock_rounded, size: 18),
+                          label: const Text('Payer mon envoi'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: kGreenPrimary,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                          ),
+                        ),
+            ),
+          ],
 
           if (isPending) ...[
             const SizedBox(width: 12),

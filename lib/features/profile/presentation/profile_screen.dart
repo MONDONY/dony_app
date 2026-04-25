@@ -215,6 +215,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     onTap: () =>
                                         context.push('/announcements'),
                                   ),
+                                if (isTraveler)
+                                  _MenuItem(
+                                    icon: Icons.account_balance_wallet_rounded,
+                                    iconColor: const Color(0xFF16A34A),
+                                    label: 'Recevoir mes paiements',
+                                    onTap: () =>
+                                        context.push('/payments/onboarding'),
+                                  ),
                                 _MenuItem(
                                   icon: Icons.credit_card_outlined,
                                   iconColor: const Color(0xFF8E44AD),

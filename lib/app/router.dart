@@ -13,6 +13,9 @@ import 'package:dony/features/home/presentation/home_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_onboarding_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_status_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
+import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/features/payments/presentation/screens/payment_screen.dart';
+import 'package:dony/features/payments/presentation/screens/payout_onboarding_screen.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -122,6 +125,23 @@ final appRouter = GoRouter(
       path: '/tracking/scan',
       builder: (context, state) =>
           const _PlaceholderScreen(title: 'Scanner QR'),
+    ),
+    GoRoute(
+      path: '/payments/onboarding',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<PaymentBloc>(),
+        child: const PayoutOnboardingScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/payments/pay',
+      builder: (context, state) {
+        final bid = state.extra as BidModel;
+        return BlocProvider(
+          create: (_) => getIt<PaymentBloc>(),
+          child: PaymentScreen(bid: bid),
+        );
+      },
     ),
     GoRoute(
       path: '/payment/confirm',

@@ -5,6 +5,7 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -20,10 +21,17 @@ const _environment = String.fromEnvironment(
   defaultValue: 'development',
 );
 
+const _stripePublishableKey = String.fromEnvironment('STRIPE_PUBLISHABLE_KEY');
+
 Future<void> _bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('fr');
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Stripe doit être initialisé avant runApp
+  Stripe.publishableKey = _stripePublishableKey;
+  await Stripe.instance.applySettings();
+
   await setupDependencies(apiBaseUrl: _apiBaseUrl);
 
   // Show UI immediately — splash screen handles loading state
