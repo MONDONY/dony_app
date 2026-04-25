@@ -11,6 +11,10 @@ class AnnouncementRemoteDatasource {
     required String departureCity,
     required String arrivalCity,
     required DateTime departureDate,
+    String? departureTime,
+    String? arrivalTime,
+    String? departureLocation,
+    String? arrivalLocation,
     required double availableKg,
     required double pricePerKg,
   }) async {
@@ -20,6 +24,12 @@ class AnnouncementRemoteDatasource {
         'departureCity': departureCity,
         'arrivalCity': arrivalCity,
         'departureDate': DateFormat('yyyy-MM-dd').format(departureDate),
+        if (departureTime != null) 'departureTime': departureTime,
+        if (arrivalTime != null) 'arrivalTime': arrivalTime,
+        if (departureLocation != null && departureLocation.isNotEmpty)
+          'departureLocation': departureLocation,
+        if (arrivalLocation != null && arrivalLocation.isNotEmpty)
+          'arrivalLocation': arrivalLocation,
         'availableKg': availableKg,
         'pricePerKg': pricePerKg,
       },
@@ -33,7 +43,7 @@ class AnnouncementRemoteDatasource {
       '/announcements/my',
       queryParameters: {'page': page, 'size': 20},
     );
-    
+
     return (response.data['content'] as List)
         .map((json) => AnnouncementModel.fromJson(json))
         .toList();
@@ -67,7 +77,8 @@ class AnnouncementRemoteDatasource {
         'departureDateTo': DateFormat('yyyy-MM-dd').format(departureDateTo),
       if (minAvailableKg != null) 'minAvailableKg': minAvailableKg,
     };
-    final response = await _apiClient.dio.get('/announcements', queryParameters: params);
+    final response =
+        await _apiClient.dio.get('/announcements', queryParameters: params);
     return (response.data['content'] as List)
         .map((json) => AnnouncementModel.fromJson(json))
         .toList();
@@ -82,6 +93,10 @@ class AnnouncementRemoteDatasource {
     required String departureCity,
     required String arrivalCity,
     required DateTime departureDate,
+    String? departureTime,
+    String? arrivalTime,
+    String? departureLocation,
+    String? arrivalLocation,
     required double availableKg,
     required double pricePerKg,
   }) async {
@@ -91,6 +106,12 @@ class AnnouncementRemoteDatasource {
         'departureCity': departureCity,
         'arrivalCity': arrivalCity,
         'departureDate': DateFormat('yyyy-MM-dd').format(departureDate),
+        if (departureTime != null) 'departureTime': departureTime,
+        if (arrivalTime != null) 'arrivalTime': arrivalTime,
+        if (departureLocation != null && departureLocation.isNotEmpty)
+          'departureLocation': departureLocation,
+        if (arrivalLocation != null && arrivalLocation.isNotEmpty)
+          'arrivalLocation': arrivalLocation,
         'availableKg': availableKg,
         'pricePerKg': pricePerKg,
       },

@@ -24,7 +24,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
     context.read<AnnouncementBloc>().add(AnnouncementDetailRequested(widget.id));
   }
 
-  Future<bool> _confirmDelete() async {
+  Future<bool> _confirmDelete({bool isCancelled = false}) async {
     return await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
@@ -34,7 +34,9 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
               style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 17),
             ),
             content: Text(
-              'Cette action est irréversible. Le trajet ne sera plus visible pour les expéditeurs.',
+              isCancelled
+                  ? 'Cette action est irréversible. Le trajet annulé et toutes les demandes associées seront définitivement retirés de la plateforme.'
+                  : 'Cette action est irréversible. Le trajet ne sera plus visible pour les expéditeurs.',
               style: GoogleFonts.plusJakartaSans(fontSize: 14, color: kTextSecondary),
             ),
             actions: [
@@ -86,7 +88,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                 backgroundColor: kSuccess,
               ),
             );
-            context.go('/announcements');
+            context.pop();
           } else if (state is AnnouncementError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -104,7 +106,8 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
           if (state is AnnouncementDetailLoaded) {
             final a = state.announcement;
             final canEdit = a.status == 'ACTIVE' && (a.bidsCount ?? 0) == 0;
-            final canDelete = a.status == 'ACTIVE' && (a.bidsCount ?? 0) == 0;
+            final isCancelled = a.status == 'CANCELLED';
+            final canDelete = (a.status == 'ACTIVE' && (a.bidsCount ?? 0) == 0) || isCancelled;
 
             return SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
@@ -187,9 +190,115 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                             ),
                           ],
                         ),
+                        if (a.departureTime != null || a.arrivalTime != null) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              if (a.departureTime != null) ...[
+                                const Icon(Icons.flight_takeoff_rounded, color: Colors.white60, size: 13),
+                                const SizedBox(width: 4),
+                                Text(
+                                  a.departureTime!,
+                                  style: GoogleFonts.plusJakartaSans(
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                              if (a.departureTime != null && a.arrivalTime != null)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                                  child: Text(
+                                    '→',
+                                    style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 13),
+                                  ),
+                                ),
+                              if (a.arrivalTime != null) ...[
+                                const Icon(Icons.flight_land_rounded, color: Colors.white60, size: 13),
+                                const SizedBox(width: 4),
+                                Text(
+                                  a.arrivalTime!,
+                                  style: GoogleFonts.plusJakartaSans(
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ).animate().fadeIn().slideY(begin: 0.04, curve: Curves.easeOutCubic),
+
+                  // Lieux de remise
+                  if (a.departureLocation != null || a.arrivalLocation != null) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: kSurface,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: kBorder),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Lieux de remise',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: kTextSecondary,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          if (a.departureLocation != null) ...[
+                            const SizedBox(height: 10),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(Icons.location_on_rounded, size: 14, color: kGreenPrimary),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    a.departureLocation!,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: kTextPrimary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          if (a.arrivalLocation != null) ...[
+                            const SizedBox(height: 8),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(Icons.location_on_outlined, size: 14, color: kError),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    a.arrivalLocation!,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: kTextPrimary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ).animate().fadeIn(delay: 80.ms),
+                  ],
 
                   const SizedBox(height: 16),
 
@@ -302,7 +411,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
                       onPressed: () async {
-                        final confirmed = await _confirmDelete();
+                        final confirmed = await _confirmDelete(isCancelled: isCancelled);
                         if (confirmed && context.mounted) {
                           context.read<AnnouncementBloc>().add(
                             AnnouncementDeleteRequested(a.id),
@@ -311,7 +420,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                       },
                     ).animate().fadeIn(delay: 300.ms),
 
-                  if (!canEdit && a.status != 'ACTIVE')
+                  if (!canEdit && !canDelete && a.status != 'ACTIVE')
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
@@ -325,7 +434,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              'Ce trajet ne peut plus être modifié car des demandes ont été acceptées.',
+                              'Ce trajet ne peut plus être modifié.',
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 13, color: const Color(0xFF92400E),
                               ),

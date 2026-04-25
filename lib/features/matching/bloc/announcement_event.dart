@@ -4,6 +4,10 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
   final String departureCity;
   final String arrivalCity;
   final DateTime departureDate;
+  final String? departureTime;
+  final String? arrivalTime;
+  final String? departureLocation;
+  final String? arrivalLocation;
   final double availableKg;
   final double pricePerKg;
 
@@ -11,6 +15,10 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
     required this.departureCity,
     required this.arrivalCity,
     required this.departureDate,
+    this.departureTime,
+    this.arrivalTime,
+    this.departureLocation,
+    this.arrivalLocation,
     required this.availableKg,
     required this.pricePerKg,
   });
@@ -53,6 +61,10 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
   final String departureCity;
   final String arrivalCity;
   final DateTime departureDate;
+  final String? departureTime;
+  final String? arrivalTime;
+  final String? departureLocation;
+  final String? arrivalLocation;
   final double availableKg;
   final double pricePerKg;
 
@@ -61,6 +73,10 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
     required this.departureCity,
     required this.arrivalCity,
     required this.departureDate,
+    this.departureTime,
+    this.arrivalTime,
+    this.departureLocation,
+    this.arrivalLocation,
     required this.availableKg,
     required this.pricePerKg,
   });

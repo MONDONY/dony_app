@@ -455,7 +455,7 @@ class _ResultsViewState extends State<_ResultsView> {
                   onTap: isOwn
                       ? null
                       : () => context.push(
-                            '/search/${announcement.id}/bid',
+                            '/search/${announcement.id}',
                             extra: announcement,
                           ),
                 );

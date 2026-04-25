@@ -147,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 onTap: isOwn
                                     ? null
                                     : () => context.push(
-                                          '/search/${announcement.id}/bid',
+                                          '/search/${announcement.id}',
                                           extra: announcement,
                                         ),
                               );

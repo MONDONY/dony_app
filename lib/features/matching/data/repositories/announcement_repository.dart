@@ -10,6 +10,10 @@ class AnnouncementRepository {
     required String departureCity,
     required String arrivalCity,
     required DateTime departureDate,
+    String? departureTime,
+    String? arrivalTime,
+    String? departureLocation,
+    String? arrivalLocation,
     required double availableKg,
     required double pricePerKg,
   }) async {
@@ -17,6 +21,10 @@ class AnnouncementRepository {
       departureCity: departureCity,
       arrivalCity: arrivalCity,
       departureDate: departureDate,
+      departureTime: departureTime,
+      arrivalTime: arrivalTime,
+      departureLocation: departureLocation,
+      arrivalLocation: arrivalLocation,
       availableKg: availableKg,
       pricePerKg: pricePerKg,
     );
@@ -59,6 +67,10 @@ class AnnouncementRepository {
     required String departureCity,
     required String arrivalCity,
     required DateTime departureDate,
+    String? departureTime,
+    String? arrivalTime,
+    String? departureLocation,
+    String? arrivalLocation,
     required double availableKg,
     required double pricePerKg,
   }) async {
@@ -67,6 +79,10 @@ class AnnouncementRepository {
       departureCity: departureCity,
       arrivalCity: arrivalCity,
       departureDate: departureDate,
+      departureTime: departureTime,
+      arrivalTime: arrivalTime,
+      departureLocation: departureLocation,
+      arrivalLocation: arrivalLocation,
       availableKg: availableKg,
       pricePerKg: pricePerKg,
     );

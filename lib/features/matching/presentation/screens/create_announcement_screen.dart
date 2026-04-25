@@ -38,27 +38,46 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   String? _departureCity;
   String? _arrivalCity;
   DateTime? _departureDate;
-  String? _flightNumber;
+  TimeOfDay? _departureTime;
+  TimeOfDay? _arrivalTime;
+  final _departureLocationCtrl = TextEditingController();
+  final _arrivalLocationCtrl = TextEditingController();
   double _availableKg = 15;
-  // Prix en 3 paliers
   int _priceOption = 1; // 0=éco, 1=standard, 2=premium
   static const _priceOptions = [10.0, 12.0, 15.0];
   static const _priceLabels = ['Économique', 'Standard', 'Premium'];
 
   bool get _isEdit => widget.announcement != null;
-
   double get _pricePerKg => _priceOptions[_priceOption];
 
   @override
   void initState() {
     super.initState();
     if (_isEdit) {
-      _departureCity = widget.announcement!.departureCity;
-      _arrivalCity = widget.announcement!.arrivalCity;
-      _departureDate = widget.announcement!.departureDate;
-      _availableKg = widget.announcement!.availableKg;
-      // Trouver l'option de prix la plus proche
-      final price = widget.announcement!.pricePerKg;
+      final a = widget.announcement!;
+      _departureCity = a.departureCity;
+      _arrivalCity = a.arrivalCity;
+      _departureDate = a.departureDate;
+      _availableKg = a.availableKg;
+
+      if (a.departureTime != null) {
+        final parts = a.departureTime!.split(':');
+        _departureTime = TimeOfDay(
+          hour: int.parse(parts[0]),
+          minute: int.parse(parts[1]),
+        );
+      }
+      if (a.arrivalTime != null) {
+        final parts = a.arrivalTime!.split(':');
+        _arrivalTime = TimeOfDay(
+          hour: int.parse(parts[0]),
+          minute: int.parse(parts[1]),
+        );
+      }
+      _departureLocationCtrl.text = a.departureLocation ?? '';
+      _arrivalLocationCtrl.text = a.arrivalLocation ?? '';
+
+      final price = a.pricePerKg;
       int closest = 1;
       double minDiff = double.infinity;
       for (int i = 0; i < _priceOptions.length; i++) {
@@ -70,6 +89,19 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       }
       _priceOption = closest;
     }
+  }
+
+  @override
+  void dispose() {
+    _departureLocationCtrl.dispose();
+    _arrivalLocationCtrl.dispose();
+    super.dispose();
+  }
+
+  String _formatTime(TimeOfDay t) {
+    final h = t.hour.toString().padLeft(2, '0');
+    final m = t.minute.toString().padLeft(2, '0');
+    return '$h:$m';
   }
 
   void _submit() {
@@ -86,12 +118,25 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       return;
     }
 
+    final departureTime = _departureTime != null ? _formatTime(_departureTime!) : null;
+    final arrivalTime = _arrivalTime != null ? _formatTime(_arrivalTime!) : null;
+    final departureLocation = _departureLocationCtrl.text.trim().isEmpty
+        ? null
+        : _departureLocationCtrl.text.trim();
+    final arrivalLocation = _arrivalLocationCtrl.text.trim().isEmpty
+        ? null
+        : _arrivalLocationCtrl.text.trim();
+
     if (_isEdit) {
       context.read<AnnouncementBloc>().add(AnnouncementUpdateRequested(
         id: widget.announcement!.id,
         departureCity: _departureCity!,
         arrivalCity: _arrivalCity!,
         departureDate: _departureDate!,
+        departureTime: departureTime,
+        arrivalTime: arrivalTime,
+        departureLocation: departureLocation,
+        arrivalLocation: arrivalLocation,
         availableKg: _availableKg,
         pricePerKg: _pricePerKg,
       ));
@@ -100,6 +145,10 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
         departureCity: _departureCity!,
         arrivalCity: _arrivalCity!,
         departureDate: _departureDate!,
+        departureTime: departureTime,
+        arrivalTime: arrivalTime,
+        departureLocation: departureLocation,
+        arrivalLocation: arrivalLocation,
         availableKg: _availableKg,
         pricePerKg: _pricePerKg,
       ));
@@ -126,6 +175,34 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       ),
     );
     if (picked != null) setState(() => _departureDate = picked);
+  }
+
+  Future<void> _selectDepartureTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _departureTime ?? const TimeOfDay(hour: 8, minute: 0),
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(
+          colorScheme: const ColorScheme.light(primary: kGreenPrimary),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) setState(() => _departureTime = picked);
+  }
+
+  Future<void> _selectArrivalTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _arrivalTime ?? const TimeOfDay(hour: 12, minute: 0),
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(
+          colorScheme: const ColorScheme.light(primary: kGreenPrimary),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) setState(() => _arrivalTime = picked);
   }
 
   @override
@@ -206,7 +283,19 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                         onChanged: (v) => setState(() => _departureCity = v),
                       ),
                       const Padding(
-                        padding: EdgeInsets.only(left: 56),
+                        padding: EdgeInsets.only(left: 40),
+                        child: Divider(height: 1),
+                      ),
+                      _TimeRow(
+                        isDeparture: true,
+                        time: _departureTime,
+                        onTap: _selectDepartureTime,
+                        onClear: _departureTime != null
+                            ? () => setState(() => _departureTime = null)
+                            : null,
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.only(left: 40),
                         child: Divider(height: 1),
                       ),
                       _CityRow(
@@ -219,17 +308,72 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                         onChanged: (v) => setState(() => _arrivalCity = v),
                       ),
                       const Padding(
-                        padding: EdgeInsets.only(left: 56),
+                        padding: EdgeInsets.only(left: 40),
+                        child: Divider(height: 1),
+                      ),
+                      _TimeRow(
+                        isDeparture: false,
+                        time: _arrivalTime,
+                        onTap: _selectArrivalTime,
+                        onClear: _arrivalTime != null
+                            ? () => setState(() => _arrivalTime = null)
+                            : null,
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.only(left: 40),
                         child: Divider(height: 1),
                       ),
                       _DateRow(
                         date: _departureDate,
-                        flightNumber: _flightNumber,
                         onTap: _selectDate,
                       ),
                     ],
                   ),
                 ).animate().fadeIn(delay: 60.ms),
+                const SizedBox(height: 28),
+
+                // Section LIEUX DE REMISE
+                Text(
+                  'LIEUX DE REMISE (optionnel)',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: kTextSecondary,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Précisez l\'endroit exact de remise / récupération des colis',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    color: kTextHint,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: kSurface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: kBorder),
+                  ),
+                  child: Column(
+                    children: [
+                      _LocationField(
+                        isDeparture: true,
+                        controller: _departureLocationCtrl,
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.only(left: 40),
+                        child: Divider(height: 1),
+                      ),
+                      _LocationField(
+                        isDeparture: false,
+                        controller: _arrivalLocationCtrl,
+                      ),
+                    ],
+                  ),
+                ).animate().fadeIn(delay: 80.ms),
                 const SizedBox(height: 28),
 
                 // Capacité disponible
@@ -320,9 +464,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                           onTap: () => setState(() => _priceOption = i),
                           child: AnimatedContainer(
                             duration: 180.ms,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 14,
-                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                             decoration: BoxDecoration(
                               color: selected ? kTextPrimary : kSurface,
                               borderRadius: BorderRadius.circular(14),
@@ -500,9 +642,7 @@ class _CityRow extends StatelessWidget {
             Expanded(
               child: value == null
                   ? Text(
-                      isDeparture
-                          ? 'Ville de départ'
-                          : 'Ville d\'arrivée',
+                      isDeparture ? 'Ville de départ' : 'Ville d\'arrivée',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 15,
                         color: kTextHint,
@@ -530,8 +670,7 @@ class _CityRow extends StatelessWidget {
                       ],
                     ),
             ),
-            const Icon(Icons.chevron_right_rounded,
-                size: 18, color: kTextHint),
+            const Icon(Icons.chevron_right_rounded, size: 18, color: kTextHint),
           ],
         ),
       ),
@@ -594,17 +733,67 @@ class _CityRow extends StatelessWidget {
   }
 }
 
-// ── Rangée date & vol ────────────────────────────────────────────────────────
+// ── Rangée heure ─────────────────────────────────────────────────────────────
 
-class _DateRow extends StatelessWidget {
-  const _DateRow({
-    required this.date,
-    required this.flightNumber,
+class _TimeRow extends StatelessWidget {
+  const _TimeRow({
+    required this.isDeparture,
+    required this.time,
     required this.onTap,
+    this.onClear,
   });
 
+  final bool isDeparture;
+  final TimeOfDay? time;
+  final VoidCallback onTap;
+  final VoidCallback? onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isDeparture ? kGreenPrimary : kError;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+        child: Row(
+          children: [
+            Icon(Icons.access_time_rounded, size: 14, color: color.withValues(alpha: 0.7)),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                time == null
+                    ? isDeparture
+                        ? 'Heure de départ (optionnel)'
+                        : 'Heure d\'arrivée (optionnel)'
+                    : '${time!.hour.toString().padLeft(2, '0')}:${time!.minute.toString().padLeft(2, '0')}',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  fontWeight: time != null ? FontWeight.w700 : FontWeight.w400,
+                  color: time != null ? kTextPrimary : kTextHint,
+                ),
+              ),
+            ),
+            if (time != null && onClear != null)
+              GestureDetector(
+                onTap: onClear,
+                child: const Icon(Icons.close_rounded, size: 16, color: kTextHint),
+              )
+            else
+              const Icon(Icons.chevron_right_rounded, size: 18, color: kTextHint),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Rangée date ──────────────────────────────────────────────────────────────
+
+class _DateRow extends StatelessWidget {
+  const _DateRow({required this.date, required this.onTap});
+
   final DateTime? date;
-  final String? flightNumber;
   final VoidCallback onTap;
 
   @override
@@ -616,29 +805,74 @@ class _DateRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            const Icon(
-              Icons.calendar_today_rounded,
-              size: 14,
-              color: kTextSecondary,
-            ),
+            const Icon(Icons.calendar_today_rounded, size: 14, color: kTextSecondary),
             const SizedBox(width: 14),
             Expanded(
               child: Text(
                 date == null
-                    ? 'Date & Vol'
-                    : '${DateFormat('EEE d MMM', 'fr').format(date!)}${flightNumber != null ? ' · $flightNumber' : ''}',
+                    ? 'Date de départ'
+                    : DateFormat('EEE d MMM yyyy', 'fr').format(date!),
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 15,
-                  fontWeight:
-                      date != null ? FontWeight.w700 : FontWeight.w400,
+                  fontWeight: date != null ? FontWeight.w700 : FontWeight.w400,
                   color: date != null ? kTextPrimary : kTextHint,
                 ),
               ),
             ),
-            const Icon(Icons.chevron_right_rounded,
-                size: 18, color: kTextHint),
+            const Icon(Icons.chevron_right_rounded, size: 18, color: kTextHint),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Champ lieu ───────────────────────────────────────────────────────────────
+
+class _LocationField extends StatelessWidget {
+  const _LocationField({
+    required this.isDeparture,
+    required this.controller,
+  });
+
+  final bool isDeparture;
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(
+            isDeparture ? Icons.location_on_rounded : Icons.location_on_outlined,
+            size: 14,
+            color: isDeparture ? kGreenPrimary.withValues(alpha: 0.7) : kError.withValues(alpha: 0.7),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: kTextPrimary,
+              ),
+              decoration: InputDecoration(
+                hintText: isDeparture
+                    ? 'Lieu de départ (ex: Terminal 2E CDG)'
+                    : 'Lieu d\'arrivée (ex: AIBD Arrière Cour)',
+                hintStyle: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  color: kTextHint,
+                ),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

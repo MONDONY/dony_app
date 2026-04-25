@@ -13,7 +13,7 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
       senderName: json['senderName'] as String?,
       weightKg: (json['weightKg'] as num).toDouble(),
       declaredValueEur: (json['declaredValueEur'] as num).toDouble(),
-      description: json['description'] as String? ?? '',
+      description: json['description'] as String,
       contentCategory: json['contentCategory'] as String?,
       recipientName: json['recipientName'] as String?,
       recipientPhone: json['recipientPhone'] as String?,

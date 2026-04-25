@@ -2,6 +2,7 @@ import 'package:dony/app/theme.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,14 +18,58 @@ class AnnouncementListScreen extends StatefulWidget {
 }
 
 class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
+  List<AnnouncementModel> _lastList = [];
+  bool _tickerWasActive = false;
+
+  // Détecte l'activation du tab (StatefulShellRoute.indexedStack change
+  // TickerMode pour le branch inactif → actif, ce qui appelle didChangeDependencies).
   @override
-  void initState() {
-    super.initState();
-    context.read<AnnouncementBloc>().add(AnnouncementListRequested());
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final isActive = TickerMode.of(context);
+    if (isActive && !_tickerWasActive) {
+      context.read<AnnouncementBloc>().add(AnnouncementListRequested());
+    }
+    _tickerWasActive = isActive;
+  }
+
+  Future<bool?> _confirmDeleteDialog(BuildContext ctx) {
+    return showDialog<bool>(
+      context: ctx,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Supprimer ce trajet ?',
+          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 17),
+        ),
+        content: Text(
+          'Le trajet annulé et toutes les demandes associées seront définitivement retirés de la plateforme.',
+          style: GoogleFonts.plusJakartaSans(fontSize: 14, color: kTextSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, false),
+            child: Text(
+              'Annuler',
+              style: GoogleFonts.plusJakartaSans(color: kTextSecondary, fontWeight: FontWeight.w600),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, true),
+            child: Text(
+              'Supprimer',
+              style: GoogleFonts.plusJakartaSans(color: kError, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final hasAnnouncements = _lastList.isNotEmpty;
+
     return Scaffold(
       backgroundColor: kBackground,
       appBar: AppBar(
@@ -34,29 +79,69 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
         ),
         backgroundColor: kSurface,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        actions: hasAnnouncements
+            ? [
+                Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.add_rounded, size: 17, color: kGreenPrimary),
+                    label: Text(
+                      'Nouveau trajet',
+                      style: GoogleFonts.plusJakartaSans(
+                        color: kGreenPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                    onPressed: () => context.push('/announcements/create'),
+                  ),
+                ),
+              ]
+            : null,
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
           child: Divider(height: 1),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: kGreenPrimary,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: Text(
-          'Nouveau trajet',
-          style: GoogleFonts.plusJakartaSans(color: Colors.white, fontWeight: FontWeight.w600),
-        ),
-        onPressed: () => context.push('/announcements/create'),
-      ),
-      body: BlocBuilder<AnnouncementBloc, AnnouncementState>(
+      // FAB icône seule sur l'état vide pour permettre la création du premier trajet
+      floatingActionButton: hasAnnouncements
+          ? null
+          : FloatingActionButton(
+              backgroundColor: kGreenPrimary,
+              elevation: 2,
+              onPressed: () => context.push('/announcements/create'),
+              child: const Icon(Icons.add_rounded, color: Colors.white),
+            ),
+      body: BlocConsumer<AnnouncementBloc, AnnouncementState>(
+        listener: (context, state) {
+          if (state is AnnouncementDeleted) {
+            context.read<AnnouncementBloc>().add(AnnouncementListRequested());
+          } else if (state is AnnouncementError && _lastList.isNotEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: kError,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+            context.read<AnnouncementBloc>().add(AnnouncementListRequested());
+          }
+        },
         builder: (context, state) {
-          if (state is AnnouncementLoading || state is AnnouncementInitial) {
+          if (state is AnnouncementListLoaded) {
+            _lastList = state.announcements;
+          }
+
+          if ((state is AnnouncementLoading || state is AnnouncementInitial) &&
+              _lastList.isEmpty) {
             return const Center(
               child: CircularProgressIndicator(color: kGreenPrimary),
             );
           }
 
-          if (state is AnnouncementError) {
+          if (state is AnnouncementError && _lastList.isEmpty) {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(32),
@@ -82,7 +167,8 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
                     OutlinedButton.icon(
                       icon: const Icon(Icons.refresh_rounded),
                       label: const Text('Réessayer'),
-                      onPressed: () => context.read<AnnouncementBloc>().add(AnnouncementListRequested()),
+                      onPressed: () =>
+                          context.read<AnnouncementBloc>().add(AnnouncementListRequested()),
                     ),
                   ],
                 ),
@@ -90,60 +176,98 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
             );
           }
 
-          if (state is AnnouncementListLoaded) {
-            final list = state.announcements;
+          final list = _lastList;
 
-            if (list.isEmpty) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: kGreenLight,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.flight_takeoff_rounded, size: 48, color: kGreenPrimary),
+          if (list.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: const BoxDecoration(
+                        color: kGreenLight,
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Aucun trajet publié',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 18, fontWeight: FontWeight.w700, color: kTextPrimary,
-                        ),
+                      child: const Icon(
+                        Icons.flight_takeoff_rounded,
+                        size: 48,
+                        color: kGreenPrimary,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Publiez votre premier trajet et commencez à transporter des colis.',
-                        style: GoogleFonts.plusJakartaSans(fontSize: 14, color: kTextSecondary),
-                        textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Aucun trajet publié',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 18, fontWeight: FontWeight.w700, color: kTextPrimary,
                       ),
-                      const SizedBox(height: 28),
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.add_rounded, color: Colors.white),
-                        label: const Text('Publier un trajet'),
-                        onPressed: () => context.push('/announcements/create'),
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Publiez votre premier trajet et commencez à transporter des colis.',
+                      style: GoogleFonts.plusJakartaSans(fontSize: 14, color: kTextSecondary),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-              ).animate().fadeIn();
-            }
+              ),
+            ).animate().fadeIn();
+          }
 
-            return RefreshIndicator(
-              color: kGreenPrimary,
-              onRefresh: () async =>
-                  context.read<AnnouncementBloc>().add(AnnouncementListRequested()),
-              child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-                itemCount: list.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final item = list[index];
-                  return _AnnouncementCard(
+          return RefreshIndicator(
+            color: kGreenPrimary,
+            onRefresh: () async =>
+                context.read<AnnouncementBloc>().add(AnnouncementListRequested()),
+            child: ListView.separated(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+              itemCount: list.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final item = list[index];
+                final isCancelled = item.status == 'CANCELLED';
+
+                return Dismissible(
+                  key: ValueKey(item.id),
+                  direction: isCancelled
+                      ? DismissDirection.endToStart
+                      : DismissDirection.none,
+                  confirmDismiss: isCancelled
+                      ? (_) => _confirmDeleteDialog(context)
+                      : null,
+                  onDismissed: (_) {
+                    setState(() {
+                      _lastList = _lastList.where((a) => a.id != item.id).toList();
+                    });
+                    context
+                        .read<AnnouncementBloc>()
+                        .add(AnnouncementDeleteRequested(item.id));
+                  },
+                  background: Container(
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 24),
+                    decoration: BoxDecoration(
+                      color: kError,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.delete_rounded, color: Colors.white, size: 26),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Supprimer',
+                          style: GoogleFonts.plusJakartaSans(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  child: _AnnouncementCard(
                     departureCity: item.departureCity,
                     arrivalCity: item.arrivalCity,
                     departureDate: item.departureDate,
@@ -151,15 +275,20 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
                     pricePerKg: item.pricePerKg,
                     status: item.status,
                     bidsCount: item.bidsCount ?? 0,
-                    onTap: () => context.push('/announcements/${item.id}'),
+                    onTap: () async {
+                      await context.push('/announcements/${item.id}');
+                      if (context.mounted) {
+                        context
+                            .read<AnnouncementBloc>()
+                            .add(AnnouncementListRequested());
+                      }
+                    },
                     index: index,
-                  );
-                },
-              ),
-            );
-          }
-
-          return const SizedBox();
+                  ),
+                );
+              },
+            ),
+          );
         },
       ),
     );
@@ -232,7 +361,8 @@ class _AnnouncementCard extends StatelessWidget {
                             _CityChip(city: departureCity),
                             const Padding(
                               padding: EdgeInsets.symmetric(horizontal: 8),
-                              child: Icon(Icons.arrow_forward_rounded, size: 16, color: kTextSecondary),
+                              child: Icon(Icons.arrow_forward_rounded,
+                                  size: 16, color: kTextSecondary),
                             ),
                             _CityChip(city: arrivalCity),
                           ],
@@ -289,7 +419,7 @@ class _AnnouncementCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Row(
                 children: [
-                  Icon(Icons.inbox_rounded, size: 14, color: kTextSecondary),
+                  const Icon(Icons.inbox_rounded, size: 14, color: kTextSecondary),
                   const SizedBox(width: 6),
                   Text(
                     '$bidsCount demande${bidsCount != 1 ? 's' : ''} reçue${bidsCount != 1 ? 's' : ''}',
@@ -311,7 +441,9 @@ class _AnnouncementCard extends StatelessWidget {
             ),
           ],
         ),
-      ).animate().fadeIn(delay: Duration(milliseconds: 60 * index)).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+      ).animate().fadeIn(
+            delay: Duration(milliseconds: 60 * index),
+          ).slideY(begin: 0.04, curve: Curves.easeOutCubic),
     );
   }
 }

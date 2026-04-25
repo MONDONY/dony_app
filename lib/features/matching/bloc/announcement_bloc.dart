@@ -26,6 +26,10 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         departureCity: event.departureCity,
         arrivalCity: event.arrivalCity,
         departureDate: event.departureDate,
+        departureTime: event.departureTime,
+        arrivalTime: event.arrivalTime,
+        departureLocation: event.departureLocation,
+        arrivalLocation: event.arrivalLocation,
         availableKg: event.availableKg,
         pricePerKg: event.pricePerKg,
       );
@@ -109,6 +113,10 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         departureCity: event.departureCity,
         arrivalCity: event.arrivalCity,
         departureDate: event.departureDate,
+        departureTime: event.departureTime,
+        arrivalTime: event.arrivalTime,
+        departureLocation: event.departureLocation,
+        arrivalLocation: event.arrivalLocation,
         availableKg: event.availableKg,
         pricePerKg: event.pricePerKg,
       );

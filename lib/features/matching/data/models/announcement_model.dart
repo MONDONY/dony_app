@@ -31,6 +31,11 @@ class AnnouncementModel {
   final String departureCity;
   final String arrivalCity;
   final DateTime departureDate;
+  // "HH:mm" format, null if not set
+  final String? departureTime;
+  final String? arrivalTime;
+  final String? departureLocation;
+  final String? arrivalLocation;
   final double availableKg;
   final double pricePerKg;
   final String status;
@@ -45,6 +50,10 @@ class AnnouncementModel {
     required this.departureCity,
     required this.arrivalCity,
     required this.departureDate,
+    this.departureTime,
+    this.arrivalTime,
+    this.departureLocation,
+    this.arrivalLocation,
     required this.availableKg,
     required this.pricePerKg,
     required this.status,

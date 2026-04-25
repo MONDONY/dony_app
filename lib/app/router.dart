@@ -25,6 +25,7 @@ import 'package:dony/features/matching/presentation/screens/matching_management_
 import 'package:dony/features/matching/presentation/screens/create_bid_screen.dart';
 import 'package:dony/features/matching/presentation/screens/handover_screen.dart';
 import 'package:dony/features/matching/presentation/screens/search_announcement_screen.dart';
+import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:flutter/material.dart';
@@ -207,14 +208,23 @@ final appRouter = GoRouter(
               ),
               routes: [
                 GoRoute(
-                  path: ':id/bid',
+                  path: ':id',
                   builder: (context, state) {
                     final announcement = state.extra as AnnouncementModel;
-                    return BlocProvider(
-                      create: (_) => getIt<BidBloc>(),
-                      child: CreateBidScreen(announcement: announcement),
-                    );
+                    return TravelerProfileScreen(announcement: announcement);
                   },
+                  routes: [
+                    GoRoute(
+                      path: 'bid',
+                      builder: (context, state) {
+                        final announcement = state.extra as AnnouncementModel;
+                        return BlocProvider(
+                          create: (_) => getIt<BidBloc>(),
+                          child: CreateBidScreen(announcement: announcement),
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
