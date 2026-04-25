@@ -25,6 +25,10 @@ class BidModel {
   final DateTime updatedAt;
   final String? departureCity;
   final String? arrivalCity;
+  final DateTime? departureDate;
+  final String? departureTime;
+  final String? arrivalTime;
+  final double? pricePerKg;
 
   const BidModel({
     required this.id,
@@ -48,6 +52,10 @@ class BidModel {
     required this.updatedAt,
     this.departureCity,
     this.arrivalCity,
+    this.departureDate,
+    this.departureTime,
+    this.arrivalTime,
+    this.pricePerKg,
   });
 
   factory BidModel.fromJson(Map<String, dynamic> json) =>

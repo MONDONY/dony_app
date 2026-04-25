@@ -142,9 +142,13 @@ class _BidDetailViewState extends State<_BidDetailView> {
                 _StatusBanner(bid: _bid),
                 const SizedBox(height: 20),
                 _CorridorCard(bid: _bid),
+                if (isSender) ...[
+                  const SizedBox(height: 16),
+                  _TripDetailsCard(bid: _bid),
+                ],
                 const SizedBox(height: 16),
-                _SenderCard(bid: _bid),
-                const SizedBox(height: 16),
+                if (!isSender) _SenderCard(bid: _bid),
+                if (!isSender) const SizedBox(height: 16),
                 _PackageCard(bid: _bid),
                 const SizedBox(height: 16),
                 _RecipientCard(bid: _bid),
@@ -371,6 +375,58 @@ class _HandoverCard extends StatelessWidget {
             label: 'Présence confirmée',
             value: bid.voyageurConfirmed ? 'Oui ✓' : 'Non encore',
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TripDetailsCard extends StatelessWidget {
+  final BidModel bid;
+  const _TripDetailsCard({required this.bid});
+
+  String _formatDate(DateTime? d) {
+    if (d == null) return '—';
+    return DateFormat('EEE dd MMM yyyy', 'fr').format(d);
+  }
+
+  String _formatTime(String? t) {
+    if (t == null || t.isEmpty) return '—';
+    // LocalTime serializes as "HH:mm:ss", show only HH:mm
+    return t.length >= 5 ? t.substring(0, 5) : t;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _Card(
+      title: 'Détails du trajet',
+      child: Column(
+        children: [
+          _InfoRow(
+            label: 'Date de départ',
+            value: _formatDate(bid.departureDate),
+          ),
+          if (bid.departureTime != null) ...[
+            const SizedBox(height: 10),
+            _InfoRow(
+              label: 'Heure de départ',
+              value: _formatTime(bid.departureTime),
+            ),
+          ],
+          if (bid.arrivalTime != null) ...[
+            const SizedBox(height: 10),
+            _InfoRow(
+              label: 'Heure d\'arrivée',
+              value: _formatTime(bid.arrivalTime),
+            ),
+          ],
+          if (bid.pricePerKg != null) ...[
+            const SizedBox(height: 10),
+            _InfoRow(
+              label: 'Tarif par kg',
+              value: '${bid.pricePerKg!.toStringAsFixed(2)} €',
+            ),
+          ],
         ],
       ),
     );
@@ -641,16 +697,21 @@ class _SenderActionBar extends StatelessWidget {
       child: Row(
         children: [
           // Bouton "..." options — toujours visible
-          OutlinedButton(
-            onPressed: () => _openOptions(context),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: kTextSecondary,
-              side: const BorderSide(color: kBorder),
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14)),
+          SizedBox(
+            width: 52,
+            height: 52,
+            child: OutlinedButton(
+              onPressed: () => _openOptions(context),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: kTextSecondary,
+                side: const BorderSide(color: kBorder),
+                padding: EdgeInsets.zero,
+                minimumSize: Size.zero,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+              ),
+              child: const Icon(Icons.more_horiz_rounded, size: 22),
             ),
-            child: const Icon(Icons.more_horiz_rounded, size: 22),
           ),
 
           if (isPending) ...[
