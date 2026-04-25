@@ -714,27 +714,45 @@ class _ConfirmPresenceBar extends StatelessWidget {
 }
 
 class _EscrowBadge extends StatelessWidget {
-  final double amount;
-  const _EscrowBadge({required this.amount});
+  final PaymentModel payment;
+  const _EscrowBadge({required this.payment});
 
   @override
   Widget build(BuildContext context) {
+    final (IconData icon, Color color, String label) = switch (payment.status) {
+      'RELEASED' => (
+          Icons.check_circle_rounded,
+          kSuccess,
+          'Voyageur payé — ${payment.amount.toStringAsFixed(2)} €',
+        ),
+      'REFUNDED' => (
+          Icons.replay_rounded,
+          kTextSecondary,
+          'Remboursement en cours',
+        ),
+      _ => (
+          Icons.lock_rounded,
+          kSuccess,
+          'Paiement sécurisé — ${payment.amount.toStringAsFixed(2)} €',
+        ),
+    };
+
     return Container(
       height: 52,
       decoration: BoxDecoration(
-        color: kSuccess.withValues(alpha: 0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: kSuccess.withValues(alpha: 0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.lock_rounded, color: kSuccess, size: 18),
+          Icon(icon, color: color, size: 18),
           const SizedBox(width: 8),
           Text(
-            'Paiement sécurisé — ${amount.toStringAsFixed(2)} €',
+            label,
             style: GoogleFonts.plusJakartaSans(
-                fontWeight: FontWeight.w600, fontSize: 14, color: kSuccess),
+                fontWeight: FontWeight.w600, fontSize: 14, color: color),
           ),
         ],
       ),
@@ -807,8 +825,10 @@ class _SenderActionBar extends StatelessWidget {
                   : existingPayment != null &&
                           existingPayment!.bidId == bid.id &&
                           (existingPayment!.status == 'ESCROW' ||
-                              existingPayment!.status == 'PENDING')
-                      ? _EscrowBadge(amount: existingPayment!.amount)
+                              existingPayment!.status == 'PENDING' ||
+                              existingPayment!.status == 'RELEASED' ||
+                              existingPayment!.status == 'REFUNDED')
+                      ? _EscrowBadge(payment: existingPayment!)
                       : ElevatedButton.icon(
                           onPressed: () =>
                               context.push('/payments/pay', extra: bid),
