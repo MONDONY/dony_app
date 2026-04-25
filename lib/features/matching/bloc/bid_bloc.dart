@@ -18,6 +18,8 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     on<BidMyListRequested>(_onMyListRequested);
     on<BidCancelRequested>(_onCancelRequested);
     on<BidHideRequested>(_onHideRequested);
+    on<BidDeleteRequested>(_onDeleteRequested);
+    on<BidTravelerDismissRequested>(_onTravelerDismissRequested);
   }
 
   Future<void> _onCreateRequested(
@@ -187,6 +189,40 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     try {
       await _repository.hideBid(event.bidId);
       emit(BidHidden());
+    } on DioException catch (e) {
+      final detail =
+          e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
+      emit(BidError(detail));
+    } catch (e) {
+      emit(BidError(e.toString()));
+    }
+  }
+
+  Future<void> _onDeleteRequested(
+    BidDeleteRequested event,
+    Emitter<BidState> emit,
+  ) async {
+    emit(BidLoading());
+    try {
+      await _repository.hideBid(event.bidId);
+      emit(BidDeleted());
+    } on DioException catch (e) {
+      final detail =
+          e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
+      emit(BidError(detail));
+    } catch (e) {
+      emit(BidError(e.toString()));
+    }
+  }
+
+  Future<void> _onTravelerDismissRequested(
+    BidTravelerDismissRequested event,
+    Emitter<BidState> emit,
+  ) async {
+    emit(BidLoading());
+    try {
+      await _repository.dismissBidAsTraveler(event.bidId);
+      emit(BidDeleted());
     } on DioException catch (e) {
       final detail =
           e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';

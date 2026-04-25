@@ -48,6 +48,8 @@ class BidCancelled extends BidState {
 
 class BidHidden extends BidState {}
 
+class BidDeleted extends BidState {}
+
 class BidError extends BidState {
   final String message;
   BidError(this.message);

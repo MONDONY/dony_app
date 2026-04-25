@@ -46,6 +46,9 @@ class BidRepository {
   Future<void> hideBid(String bidId) =>
       _datasource.hideBid(bidId);
 
+  Future<void> dismissBidAsTraveler(String bidId) =>
+      _datasource.dismissBidAsTraveler(bidId);
+
   Future<BidModel> setHandover({
     required String bidId,
     required String location,

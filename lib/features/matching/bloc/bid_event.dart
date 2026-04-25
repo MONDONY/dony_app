@@ -71,3 +71,13 @@ class BidHideRequested extends BidEvent {
   final String bidId;
   BidHideRequested(this.bidId);
 }
+
+class BidDeleteRequested extends BidEvent {
+  final String bidId;
+  BidDeleteRequested(this.bidId);
+}
+
+class BidTravelerDismissRequested extends BidEvent {
+  final String bidId;
+  BidTravelerDismissRequested(this.bidId);
+}

@@ -86,6 +86,16 @@ class _BidDetailViewState extends State<_BidDetailView> {
               behavior: SnackBarBehavior.floating,
             ),
           );
+        } else if (state is BidDeleted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Demande supprimée.',
+                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500)),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+          context.pop();
         } else if (state is BidDetailLoaded) {
           setState(() => _bid = state.bid);
         } else if (state is BidError) {
@@ -149,16 +159,20 @@ class _BidDetailViewState extends State<_BidDetailView> {
           ),
           bottomNavigationBar: (isSender && (_bid.status == 'PENDING' || _bid.status == 'ACCEPTED'))
               ? _SenderActionBar(bid: _bid, isLoading: isLoading)
-              : _bid.status == 'PENDING' && !isSender
+              : !isSender && _bid.status == 'PENDING'
                   ? _ActionBar(bid: _bid, isLoading: isLoading)
-                  : _bid.status == 'ACCEPTED' && 
-                    !_bid.voyageurConfirmed && 
-                    !isSender &&
-                    _bid.handoverWindowStart != null &&
-                    DateTime.now().isAfter(_bid.handoverWindowStart!.subtract(const Duration(hours: 4))) &&
-                    DateTime.now().isBefore(_bid.handoverWindowEnd ?? DateTime.now().add(const Duration(hours: 1)))
-                      ? _ConfirmPresenceBar(bid: _bid, isLoading: isLoading)
-                      : null,
+                  : !isSender && _bid.status == 'REJECTED'
+                      ? _TravelerRejectedBar(bid: _bid, isLoading: isLoading)
+                      : _bid.status == 'ACCEPTED' &&
+                          !_bid.voyageurConfirmed &&
+                          !isSender &&
+                          _bid.handoverWindowStart != null &&
+                          DateTime.now().isAfter(_bid.handoverWindowStart!
+                              .subtract(const Duration(hours: 4))) &&
+                          DateTime.now().isBefore(_bid.handoverWindowEnd ??
+                              DateTime.now().add(const Duration(hours: 1)))
+                          ? _ConfirmPresenceBar(bid: _bid, isLoading: isLoading)
+                          : null,
         );
       },
     );
@@ -906,8 +920,81 @@ class _SenderOptionsSheet extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-              // TODO: implémenter BidDeleteRequested
-              context.pop();
+              context.read<BidBloc>().add(BidDeleteRequested(bid.id));
+            },
+            style: ElevatedButton.styleFrom(
+                backgroundColor: kError,
+                foregroundColor: Colors.white,
+                elevation: 0),
+            child: Text('Supprimer',
+                style:
+                    GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Barre voyageur — demande refusée ─────────────────────────────────────────
+
+class _TravelerRejectedBar extends StatelessWidget {
+  final BidModel bid;
+  final bool isLoading;
+  const _TravelerRejectedBar({required this.bid, required this.isLoading});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: kSurface,
+      padding: EdgeInsets.fromLTRB(
+          20, 16, 20, MediaQuery.of(context).padding.bottom + 16),
+      child: ElevatedButton.icon(
+        onPressed: isLoading ? null : () => _showDeleteDialog(context),
+        icon: isLoading
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white),
+              )
+            : const Icon(Icons.delete_outline_rounded, size: 18),
+        label: const Text('Supprimer cette demande'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: kError,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          minimumSize: const Size(double.infinity, 52),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Supprimer cette demande',
+            style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w700, fontSize: 17)),
+        content: Text(
+            'Cette demande refusée sera retirée définitivement de votre liste.',
+            style: GoogleFonts.plusJakartaSans(
+                fontSize: 14, color: kTextSecondary)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Annuler',
+                style: GoogleFonts.plusJakartaSans(
+                    color: kTextSecondary, fontWeight: FontWeight.w600)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<BidBloc>().add(BidTravelerDismissRequested(bid.id));
             },
             style: ElevatedButton.styleFrom(
                 backgroundColor: kError,

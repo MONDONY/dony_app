@@ -71,6 +71,10 @@ class BidRemoteDatasource {
     await _apiClient.dio.delete('/bids/$bidId/me');
   }
 
+  Future<void> dismissBidAsTraveler(String bidId) async {
+    await _apiClient.dio.delete('/bids/$bidId/traveler');
+  }
+
   Future<BidModel> setHandover({
     required String bidId,
     required String location,
