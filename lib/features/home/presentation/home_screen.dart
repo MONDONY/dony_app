@@ -133,13 +133,25 @@ class _HomeScreenState extends State<HomeScreen> {
                             itemCount: state.results.length,
                             separatorBuilder: (_, __) =>
                                 const SizedBox(width: 12),
-                            itemBuilder: (context, i) => _TravelerCard(
-                              announcement: state.results[i],
-                              onTap: () => context.push(
-                                '/search/${state.results[i].id}/bid',
-                                extra: state.results[i],
-                              ),
-                            ),
+                            itemBuilder: (context, i) {
+                              final announcement = state.results[i];
+                              final authState = context.read<AuthBloc>().state;
+                              final currentUserId = authState is AuthAuthenticated
+                                  ? authState.user.id
+                                  : null;
+                              final isOwn = currentUserId != null &&
+                                  announcement.travelerId == currentUserId;
+                              return _TravelerCard(
+                                announcement: announcement,
+                                isOwnAnnouncement: isOwn,
+                                onTap: isOwn
+                                    ? null
+                                    : () => context.push(
+                                          '/search/${announcement.id}/bid',
+                                          extra: announcement,
+                                        ),
+                              );
+                            },
                           ),
                         );
                       }
@@ -329,10 +341,12 @@ class _TravelerCard extends StatelessWidget {
   const _TravelerCard({
     required this.announcement,
     required this.onTap,
+    this.isOwnAnnouncement = false,
   });
 
   final AnnouncementModel announcement;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final bool isOwnAnnouncement;
 
   String get _initials {
     final name = announcement.traveler?.displayName;
@@ -355,7 +369,7 @@ class _TravelerCard extends StatelessWidget {
         width: 240,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: kSurface,
+          color: isOwnAnnouncement ? kBackground : kSurface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: kBorder),
           boxShadow: [
@@ -540,27 +554,36 @@ class _TravelerCard extends StatelessWidget {
                     vertical: 7,
                   ),
                   decoration: BoxDecoration(
-                    color: kGreenPrimary,
+                    color: isOwnAnnouncement ? kBorder : kGreenPrimary,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Row(
-                    children: [
-                      Text(
-                        'Voir',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                  child: isOwnAnnouncement
+                      ? Text(
+                          'Votre trajet',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: kTextSecondary,
+                          ),
+                        )
+                      : Row(
+                          children: [
+                            Text(
+                              'Voir',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 12,
+                              color: Colors.white,
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(
-                        Icons.arrow_forward_rounded,
-                        size: 12,
-                        color: Colors.white,
-                      ),
-                    ],
-                  ),
                 ),
               ],
             ),

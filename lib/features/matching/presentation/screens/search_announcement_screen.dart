@@ -1,4 +1,6 @@
 import 'package:dony/app/theme.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -438,14 +440,26 @@ class _ResultsViewState extends State<_ResultsView> {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
               itemCount: state.results.length,
               separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, i) => _TravelerCard(
-                announcement: state.results[i],
-                index: i,
-                onTap: () => context.push(
-                  '/search/${state.results[i].id}/bid',
-                  extra: state.results[i],
-                ),
-              ),
+              itemBuilder: (context, i) {
+                final announcement = state.results[i];
+                final authState = context.read<AuthBloc>().state;
+                final currentUserId = authState is AuthAuthenticated
+                    ? authState.user.id
+                    : null;
+                final isOwn = currentUserId != null &&
+                    announcement.travelerId == currentUserId;
+                return _TravelerCard(
+                  announcement: announcement,
+                  index: i,
+                  isOwnAnnouncement: isOwn,
+                  onTap: isOwn
+                      ? null
+                      : () => context.push(
+                            '/search/${announcement.id}/bid',
+                            extra: announcement,
+                          ),
+                );
+              },
             );
           }
 
@@ -838,13 +852,15 @@ class _QuickChip extends StatelessWidget {
 class _TravelerCard extends StatelessWidget {
   const _TravelerCard({
     required this.announcement,
-    required this.onTap,
     required this.index,
+    required this.isOwnAnnouncement,
+    required this.onTap,
   });
 
   final AnnouncementModel announcement;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final int index;
+  final bool isOwnAnnouncement;
 
   String get _initials {
     final name = announcement.traveler?.displayName;
@@ -864,9 +880,9 @@ class _TravelerCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: kSurface,
+          color: isOwnAnnouncement ? kBackground : kSurface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: kBorder),
+          border: Border.all(color: isOwnAnnouncement ? kBorder : kBorder),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
@@ -990,22 +1006,40 @@ class _TravelerCard extends StatelessWidget {
                           primary: true,
                         ),
                         const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: kGreenPrimary,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            'Voir →',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
+                        if (isOwnAnnouncement)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: kBorder,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              'Votre trajet',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: kTextSecondary,
+                              ),
+                            ),
+                          )
+                        else
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: kGreenPrimary,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              'Voir →',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
-                        ),
                       ],
                     ),
                   ],
