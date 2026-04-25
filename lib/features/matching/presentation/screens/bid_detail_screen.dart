@@ -42,6 +42,8 @@ class _BidDetailViewState extends State<_BidDetailView> {
   void initState() {
     super.initState();
     _bid = widget.initialBid;
+    // On demande le détail complet pour être sûr d'avoir les villes de destination
+    context.read<BidBloc>().add(BidDetailRequested(_bid.id));
   }
 
   @override
@@ -76,6 +78,25 @@ class _BidDetailViewState extends State<_BidDetailView> {
               behavior: SnackBarBehavior.floating,
             ),
           );
+        } else if (state is BidCancelled) {
+          setState(() => _bid = state.bid);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Demande annulée.'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        } else if (state is BidDetailLoaded) {
+          setState(() => _bid = state.bid);
+        } else if (state is BidHidden) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Envoi masqué de votre liste'),
+              backgroundColor: kTextSecondary,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          context.pop();
         } else if (state is BidError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -119,6 +140,8 @@ class _BidDetailViewState extends State<_BidDetailView> {
               children: [
                 _StatusBanner(bid: _bid),
                 const SizedBox(height: 20),
+                _CorridorCard(bid: _bid),
+                const SizedBox(height: 16),
                 _SenderCard(bid: _bid),
                 const SizedBox(height: 16),
                 _PackageCard(bid: _bid),
@@ -133,16 +156,18 @@ class _BidDetailViewState extends State<_BidDetailView> {
               ],
             ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
           ),
-          bottomNavigationBar: _bid.status == 'PENDING' && !isSender
-              ? _ActionBar(bid: _bid, isLoading: isLoading)
-              : _bid.status == 'ACCEPTED' && 
-                !_bid.voyageurConfirmed && 
-                !isSender &&
-                _bid.handoverWindowStart != null &&
-                DateTime.now().isAfter(_bid.handoverWindowStart!.subtract(const Duration(hours: 4))) &&
-                DateTime.now().isBefore(_bid.handoverWindowEnd ?? DateTime.now().add(const Duration(hours: 1)))
-                  ? _ConfirmPresenceBar(bid: _bid, isLoading: isLoading)
-                  : null,
+          bottomNavigationBar: (isSender && (_bid.status == 'PENDING' || _bid.status == 'ACCEPTED'))
+              ? _SenderActionBar(bid: _bid, isLoading: isLoading)
+              : _bid.status == 'PENDING' && !isSender
+                  ? _ActionBar(bid: _bid, isLoading: isLoading)
+                  : _bid.status == 'ACCEPTED' && 
+                    !_bid.voyageurConfirmed && 
+                    !isSender &&
+                    _bid.handoverWindowStart != null &&
+                    DateTime.now().isAfter(_bid.handoverWindowStart!.subtract(const Duration(hours: 4))) &&
+                    DateTime.now().isBefore(_bid.handoverWindowEnd ?? DateTime.now().add(const Duration(hours: 1)))
+                      ? _ConfirmPresenceBar(bid: _bid, isLoading: isLoading)
+                      : null,
         );
       },
     );
@@ -347,6 +372,56 @@ class _HandoverCard extends StatelessWidget {
   }
 }
 
+class _CorridorCard extends StatelessWidget {
+  final BidModel bid;
+  const _CorridorCard({required this.bid});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0F4C75), Color(0xFF3282B8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Text(
+              bid.departureCity ?? '—',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.plusJakartaSans(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800),
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Icon(Icons.arrow_forward_rounded,
+                color: Colors.white70, size: 24),
+          ),
+          Expanded(
+            child: Text(
+              bid.arrivalCity ?? '—',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.plusJakartaSans(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _Card extends StatelessWidget {
   final String title;
   final Widget child;
@@ -532,6 +607,123 @@ class _ConfirmPresenceBar extends StatelessWidget {
           minimumSize: const Size(double.infinity, 52),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
+      ),
+    );
+  }
+}
+
+class _SenderActionBar extends StatelessWidget {
+  final BidModel bid;
+  final bool isLoading;
+  const _SenderActionBar({required this.bid, required this.isLoading});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: kSurface,
+      padding: EdgeInsets.fromLTRB(
+          20, 16, 20, MediaQuery.of(context).padding.bottom + 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: isLoading ? null : () => _showDeleteDialog(context),
+              icon: const Icon(Icons.delete_outline_rounded),
+              label: const Text('Masquer'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: kTextSecondary,
+                side: const BorderSide(color: kBorder),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: isLoading ? null : () => _showCancelDialog(context),
+              icon: isLoading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Icon(Icons.block_rounded),
+              label: const Text('Annuler'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kError,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCancelDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Annuler l\'envoi',
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold)),
+        content: Text('Voulez-vous vraiment annuler votre demande d\'envoi ?',
+            style: GoogleFonts.plusJakartaSans(fontSize: 14)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Non',
+                style: GoogleFonts.plusJakartaSans(color: kTextSecondary)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<BidBloc>().add(BidCancelRequested(bid.id));
+            },
+            style: ElevatedButton.styleFrom(
+                backgroundColor: kError, foregroundColor: Colors.white),
+            child: Text('Oui, annuler',
+                style:
+                    GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Masquer cet envoi',
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold)),
+        content: Text(
+            'Cet envoi sera masqué de votre liste. Il restera visible pour le voyageur.',
+            style: GoogleFonts.plusJakartaSans(fontSize: 14)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Annuler',
+                style: GoogleFonts.plusJakartaSans(color: kTextSecondary)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<BidBloc>().add(BidHideRequested(bid.id));
+            },
+            style: ElevatedButton.styleFrom(
+                backgroundColor: kTextSecondary, foregroundColor: Colors.white),
+            child: Text('Masquer',
+                style:
+                    GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold)),
+          ),
+        ],
       ),
     );
   }

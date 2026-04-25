@@ -42,6 +42,13 @@ class BidRemoteDatasource {
     return BidModel.fromJson(response.data as Map<String, dynamic>);
   }
 
+  Future<List<BidModel>> getMyBids() async {
+    final response = await _apiClient.dio.get('/bids/me');
+    return (response.data as List)
+        .map((j) => BidModel.fromJson(j as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<BidModel> acceptBid(String bidId) async {
     final response = await _apiClient.dio.put('/bids/$bidId/accept');
     return BidModel.fromJson(response.data as Map<String, dynamic>);
@@ -53,6 +60,15 @@ class BidRemoteDatasource {
       data: reason != null ? {'reason': reason} : null,
     );
     return BidModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<BidModel> cancelBid(String bidId) async {
+    final response = await _apiClient.dio.put('/bids/$bidId/cancel');
+    return BidModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<void> hideBid(String bidId) async {
+    await _apiClient.dio.delete('/bids/$bidId/me');
   }
 
   Future<BidModel> setHandover({

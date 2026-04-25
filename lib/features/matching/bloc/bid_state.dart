@@ -41,6 +41,13 @@ class BidPresenceConfirmed extends BidState {
   BidPresenceConfirmed(this.bid);
 }
 
+class BidCancelled extends BidState {
+  final BidModel bid;
+  BidCancelled(this.bid);
+}
+
+class BidHidden extends BidState {}
+
 class BidError extends BidState {
   final String message;
   BidError(this.message);

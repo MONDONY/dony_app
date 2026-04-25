@@ -31,11 +31,20 @@ class BidRepository {
   Future<BidModel> getBidById(String bidId) =>
       _datasource.getBidById(bidId);
 
+  Future<List<BidModel>> getMyBids() =>
+      _datasource.getMyBids();
+
   Future<BidModel> acceptBid(String bidId) =>
       _datasource.acceptBid(bidId);
 
   Future<BidModel> rejectBid(String bidId, {String? reason}) =>
       _datasource.rejectBid(bidId, reason: reason);
+
+  Future<BidModel> cancelBid(String bidId) =>
+      _datasource.cancelBid(bidId);
+
+  Future<void> hideBid(String bidId) =>
+      _datasource.hideBid(bidId);
 
   Future<BidModel> setHandover({
     required String bidId,

@@ -18,10 +18,10 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/announcement_detail_screen.dart';
-import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/create_announcement_screen.dart';
+import 'package:dony/features/matching/presentation/screens/matching_management_screen.dart';
 import 'package:dony/features/matching/presentation/screens/create_bid_screen.dart';
 import 'package:dony/features/matching/presentation/screens/handover_screen.dart';
 import 'package:dony/features/matching/presentation/screens/search_announcement_screen.dart';
@@ -84,10 +84,7 @@ final appRouter = GoRouter(
       path: '/bids/:bidId',
       builder: (context, state) {
         final bid = state.extra as BidModel;
-        return BlocProvider(
-          create: (_) => getIt<BidBloc>(),
-          child: BidDetailScreen(bid: bid),
-        );
+        return BidDetailScreen(bid: bid);
       },
       routes: [
         GoRoute(
@@ -157,7 +154,7 @@ final appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/announcements',
-              builder: (context, state) => const AnnouncementListScreen(),
+              builder: (context, state) => const MatchingManagementScreen(),
               routes: [
                 GoRoute(
                   path: 'create',

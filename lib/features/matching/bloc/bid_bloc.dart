@@ -15,6 +15,9 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     on<BidRejectRequested>(_onRejectRequested);
     on<BidHandoverRequested>(_onHandoverRequested);
     on<BidConfirmPresenceRequested>(_onConfirmPresenceRequested);
+    on<BidMyListRequested>(_onMyListRequested);
+    on<BidCancelRequested>(_onCancelRequested);
+    on<BidHideRequested>(_onHideRequested);
   }
 
   Future<void> _onCreateRequested(
@@ -61,15 +64,15 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     BidDetailRequested event,
     Emitter<BidState> emit,
   ) async {
-    emit(BidLoading());
+    // Pas de BidLoading ici : c'est un refresh silencieux en arrière-plan.
+    // Émettre BidLoading désactiverait les boutons d'action pendant le fetch.
     try {
       final bid = await _repository.getBidById(event.bidId);
       emit(BidDetailLoaded(bid));
-    } on DioException catch (e) {
-      final detail = e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
-      emit(BidError(detail));
-    } catch (e) {
-      emit(BidError(e.toString()));
+    } on DioException catch (_) {
+      // On garde les données déjà affichées en cas d'erreur réseau
+    } catch (_) {
+      // idem
     }
   }
 
@@ -136,6 +139,57 @@ class BidBloc extends Bloc<BidEvent, BidState> {
       emit(BidPresenceConfirmed(bid));
     } on DioException catch (e) {
       final detail = e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
+      emit(BidError(detail));
+    } catch (e) {
+      emit(BidError(e.toString()));
+    }
+  }
+
+  Future<void> _onMyListRequested(
+    BidMyListRequested event,
+    Emitter<BidState> emit,
+  ) async {
+    emit(BidLoading());
+    try {
+      final bids = await _repository.getMyBids();
+      emit(BidListLoaded(bids));
+    } on DioException catch (e) {
+      final detail =
+          e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
+      emit(BidError(detail));
+    } catch (e) {
+      emit(BidError(e.toString()));
+    }
+  }
+
+  Future<void> _onCancelRequested(
+    BidCancelRequested event,
+    Emitter<BidState> emit,
+  ) async {
+    emit(BidLoading());
+    try {
+      final bid = await _repository.cancelBid(event.bidId);
+      emit(BidCancelled(bid));
+    } on DioException catch (e) {
+      final detail =
+          e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
+      emit(BidError(detail));
+    } catch (e) {
+      emit(BidError(e.toString()));
+    }
+  }
+
+  Future<void> _onHideRequested(
+    BidHideRequested event,
+    Emitter<BidState> emit,
+  ) async {
+    emit(BidLoading());
+    try {
+      await _repository.hideBid(event.bidId);
+      emit(BidHidden());
+    } on DioException catch (e) {
+      final detail =
+          e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
       emit(BidError(detail));
     } catch (e) {
       emit(BidError(e.toString()));

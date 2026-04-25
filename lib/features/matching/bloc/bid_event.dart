@@ -25,6 +25,8 @@ class BidListRequested extends BidEvent {
   BidListRequested(this.announcementId);
 }
 
+class BidMyListRequested extends BidEvent {}
+
 class BidDetailRequested extends BidEvent {
   final String bidId;
   BidDetailRequested(this.bidId);
@@ -58,4 +60,14 @@ class BidHandoverRequested extends BidEvent {
 class BidConfirmPresenceRequested extends BidEvent {
   final String bidId;
   BidConfirmPresenceRequested(this.bidId);
+}
+
+class BidCancelRequested extends BidEvent {
+  final String bidId;
+  BidCancelRequested(this.bidId);
+}
+
+class BidHideRequested extends BidEvent {
+  final String bidId;
+  BidHideRequested(this.bidId);
 }
