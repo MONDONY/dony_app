@@ -8,6 +8,7 @@ class BidModel {
   final String announcementId;
   final String senderId;
   final String? senderName;
+  final String? senderPhone;
   final double weightKg;
   final double declaredValueEur;
   final String description;
@@ -35,6 +36,7 @@ class BidModel {
     required this.announcementId,
     required this.senderId,
     this.senderName,
+    this.senderPhone,
     required this.weightKg,
     required this.declaredValueEur,
     required this.description,
@@ -62,4 +64,14 @@ class BidModel {
       _$BidModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$BidModelToJson(this);
+
+  /// Nom à afficher pour l'expéditeur (même logique que TravelerProfile.resolvedName).
+  /// Si le nom est défini → retourne le nom (le téléphone est géré séparément dans l'UI).
+  /// Si le nom est null → retourne le téléphone.
+  /// Si les deux sont null → retourne 'Expéditeur'.
+  String get resolvedSenderName {
+    if (senderName != null && senderName!.isNotEmpty) return senderName!;
+    if (senderPhone != null && senderPhone!.isNotEmpty) return senderPhone!;
+    return 'Expéditeur';
+  }
 }

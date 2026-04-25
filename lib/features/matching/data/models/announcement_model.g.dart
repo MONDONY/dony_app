@@ -10,6 +10,7 @@ TravelerProfile _$TravelerProfileFromJson(Map<String, dynamic> json) =>
     TravelerProfile(
       id: json['id'] as String,
       displayName: json['displayName'] as String?,
+      phoneNumber: json['phoneNumber'] as String?,
       averageRating: (json['averageRating'] as num?)?.toDouble(),
       totalTrips: (json['totalTrips'] as num?)?.toInt(),
       kiloPro: json['kiloPro'] as bool? ?? false,
@@ -19,6 +20,7 @@ Map<String, dynamic> _$TravelerProfileToJson(TravelerProfile instance) =>
     <String, dynamic>{
       'id': instance.id,
       'displayName': instance.displayName,
+      'phoneNumber': instance.phoneNumber,
       'averageRating': instance.averageRating,
       'totalTrips': instance.totalTrips,
       'kiloPro': instance.kiloPro,

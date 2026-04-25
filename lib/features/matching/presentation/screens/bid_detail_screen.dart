@@ -260,10 +260,24 @@ class _SenderCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  bid.senderName ?? 'Expéditeur anonyme',
+                  bid.resolvedSenderName,
                   style: GoogleFonts.plusJakartaSans(
                       fontWeight: FontWeight.w700, fontSize: 16, color: kTextPrimary),
                 ),
+                if (bid.senderName != null && bid.senderName!.isNotEmpty && bid.senderPhone != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.phone_rounded, size: 12, color: kTextSecondary),
+                        const SizedBox(width: 4),
+                        Text(
+                          bid.senderPhone!,
+                          style: GoogleFonts.plusJakartaSans(fontSize: 13, color: kTextSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
                 Text(
                   'Demande soumise le ${DateFormat('dd/MM/yyyy à HH:mm').format(bid.createdAt)}',
                   style: GoogleFonts.plusJakartaSans(fontSize: 12, color: kTextSecondary),

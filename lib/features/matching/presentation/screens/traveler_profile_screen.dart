@@ -26,17 +26,10 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
 
   AnnouncementModel get _announcement => widget.announcement;
 
-  String get _initials {
-    final name = _announcement.traveler?.displayName;
-    if (name == null || name.isEmpty) return '?';
-    final parts = name.trim().split(' ');
-    if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    return name[0].toUpperCase();
-  }
+  String get _initials => _announcement.traveler?.resolvedInitials ?? '?';
 
   String get _abbreviatedName {
-    final name = _announcement.traveler?.displayName;
-    if (name == null || name.isEmpty) return 'Voyageur';
+    final name = _announcement.traveler?.resolvedName ?? 'Voyageur';
     final parts = name.trim().split(' ');
     if (parts.length >= 2) return '${parts[0]} ${parts[1][0]}.';
     return parts[0];

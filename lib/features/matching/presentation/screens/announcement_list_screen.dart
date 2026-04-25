@@ -318,19 +318,31 @@ class _AnnouncementCard extends StatelessWidget {
     required this.index,
   });
 
-  ({Color bg, Color text, String label, IconData icon}) get _statusStyle {
-    return switch (status) {
-      'ACTIVE'    => (bg: kGreenLight, text: kSuccess, label: 'Actif', icon: Icons.circle),
-      'FULL'      => (bg: const Color(0xFFFFF3E0), text: kWarning, label: 'Complet', icon: Icons.circle),
-      'COMPLETED' => (bg: const Color(0xFFE3F2FD), text: const Color(0xFF1565C0), label: 'Terminé', icon: Icons.check_circle),
-      'CANCELLED' => (bg: const Color(0xFFFFEBEE), text: kError, label: 'Annulé', icon: Icons.cancel),
-      _           => (bg: kBackground, text: kTextSecondary, label: status, icon: Icons.circle),
-    };
-  }
+  ({Color bg, Color text, String label}) get _statusStyle => switch (status) {
+        'ACTIVE' => (bg: kGreenLight, text: kSuccess, label: 'Actif'),
+        'FULL' => (
+          bg: const Color(0xFFFFF3E0),
+          text: kWarning,
+          label: 'Complet'
+        ),
+        'COMPLETED' => (
+          bg: const Color(0xFFE3F2FD),
+          text: const Color(0xFF1565C0),
+          label: 'Terminé'
+        ),
+        'CANCELLED' => (
+          bg: const Color(0xFFFFEBEE),
+          text: kError,
+          label: 'Annulé'
+        ),
+        _ => (bg: kBackground, text: kTextSecondary, label: status),
+      };
 
   @override
   Widget build(BuildContext context) {
     final s = _statusStyle;
+    final dateStr = DateFormat('EEE d MMM yyyy', 'fr').format(departureDate);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -346,126 +358,166 @@ class _AnnouncementCard extends StatelessWidget {
             ),
           ],
         ),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Wrap(
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            _CityChip(city: departureCity),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 8),
-                              child: Icon(Icons.arrow_forward_rounded,
-                                  size: 16, color: kTextSecondary),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Icône trajet (remplace l'avatar dans la vue expéditeur)
+              Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF1565C0), Color(0xFF1E88E5)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.flight_takeoff_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Ligne 1 : route + badge statut
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '$departureCity → $arrivalCity',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: kTextPrimary,
                             ),
-                            _CityChip(city: arrivalCity),
-                          ],
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: s.bg,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            s.label,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: s.text,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 3),
+
+                    // Ligne 2 : date
+                    Text(
+                      dateStr,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        color: kTextSecondary,
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: s.bg,
-                          borderRadius: BorderRadius.circular(20),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Ligne 3 : capacité + prix + demandes + gérer
+                    Row(
+                      children: [
+                        // Chips à gauche : flexibles pour ne pas déborder
+                        Flexible(
+                          child: Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            children: [
+                              _InfoChip(
+                                icon: Icons.scale_rounded,
+                                label: '${availableKg.toStringAsFixed(0)} kg',
+                              ),
+                              _InfoChip(
+                                icon: Icons.euro_rounded,
+                                label: '${pricePerKg.toStringAsFixed(0)}/kg',
+                                highlight: true,
+                              ),
+                            ],
+                          ),
                         ),
-                        child: Row(
+                        const SizedBox(width: 8),
+                        // Badge demandes + bouton Gérer ancrés à droite
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(s.icon, size: 8, color: s.text),
-                            const SizedBox(width: 4),
-                            Text(
-                              s.label,
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 12, fontWeight: FontWeight.w600, color: s.text,
+                            if (bidsCount > 0) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 7, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEDE7F6),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.inbox_rounded,
+                                        size: 11, color: Color(0xFF7C3AED)),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      '$bidsCount',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: const Color(0xFF7C3AED),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                            ],
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: kSurface,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: kGreenPrimary),
+                              ),
+                              child: Text(
+                                'Gérer →',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: kGreenPrimary,
+                                ),
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _InfoChip(
-                        icon: Icons.calendar_month_rounded,
-                        label: DateFormat('dd MMM yyyy').format(departureDate),
-                      ),
-                      _InfoChip(
-                        icon: Icons.scale_rounded,
-                        label: '${availableKg.toStringAsFixed(1)} kg',
-                      ),
-                      _InfoChip(
-                        icon: Icons.euro_rounded,
-                        label: '${pricePerKg.toStringAsFixed(0)}/kg',
-                        highlight: true,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: kBorder)),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Row(
-                children: [
-                  const Icon(Icons.inbox_rounded, size: 14, color: kTextSecondary),
-                  const SizedBox(width: 6),
-                  Text(
-                    '$bidsCount demande${bidsCount != 1 ? 's' : ''} reçue${bidsCount != 1 ? 's' : ''}',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12, fontWeight: FontWeight.w500, color: kTextSecondary,
+                      ],
                     ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    'Voir le détail',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12, fontWeight: FontWeight.w600, color: kGreenPrimary,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.arrow_forward_ios_rounded, size: 11, color: kGreenPrimary),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ).animate().fadeIn(
             delay: Duration(milliseconds: 60 * index),
           ).slideY(begin: 0.04, curve: Curves.easeOutCubic),
-    );
-  }
-}
-
-class _CityChip extends StatelessWidget {
-  final String city;
-  const _CityChip({required this.city});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: kBackground,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        city,
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 13, fontWeight: FontWeight.w600, color: kTextPrimary,
-        ),
-      ),
     );
   }
 }

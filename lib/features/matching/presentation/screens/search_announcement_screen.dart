@@ -862,13 +862,9 @@ class _TravelerCard extends StatelessWidget {
   final int index;
   final bool isOwnAnnouncement;
 
-  String get _initials {
-    final name = announcement.traveler?.displayName;
-    if (name == null || name.isEmpty) return '?';
-    final parts = name.trim().split(' ');
-    if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    return name[0].toUpperCase();
-  }
+  String get _initials => announcement.traveler?.resolvedInitials ?? '?';
+
+  String get _displayName => announcement.traveler?.resolvedName ?? 'Voyageur';
 
   @override
   Widget build(BuildContext context) {
@@ -929,12 +925,12 @@ class _TravelerCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Ligne 1 : nom + badge Kilo Pro
+                    // Ligne 1 : nom (ou téléphone) + badge Kilo Pro
                     Row(
                       children: [
                         Expanded(
                           child: Text(
-                            traveler?.displayName ?? 'Voyageur',
+                            _displayName,
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,

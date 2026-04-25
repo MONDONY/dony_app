@@ -216,10 +216,15 @@ class _BidCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        bid.senderName ?? 'Expéditeur',
+                        bid.resolvedSenderName,
                         style: GoogleFonts.plusJakartaSans(
                             fontWeight: FontWeight.w600, fontSize: 14, color: kTextPrimary),
                       ),
+                      if (bid.senderName != null && bid.senderName!.isNotEmpty && bid.senderPhone != null)
+                        Text(
+                          bid.senderPhone!,
+                          style: GoogleFonts.plusJakartaSans(fontSize: 12, color: kTextSecondary),
+                        ),
                       Text(
                         DateFormat('dd MMM yyyy').format(bid.createdAt),
                         style: GoogleFonts.plusJakartaSans(fontSize: 12, color: kTextSecondary),
