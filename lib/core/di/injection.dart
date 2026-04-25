@@ -16,6 +16,7 @@ import 'package:dony/features/matching/data/datasources/announcement_remote_data
 import 'package:dony/features/matching/data/datasources/bid_remote_datasource.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
+import 'package:dony/features/matching/data/services/saved_trips_service.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:get_it/get_it.dart';
 
@@ -26,6 +27,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<HiveService>(() => HiveService());
   getIt.registerLazySingleton<ApiClient>(() => ApiClient(baseUrl: apiBaseUrl));
   getIt.registerLazySingleton<NotificationService>(() => NotificationService());
+  getIt.registerLazySingleton<SavedTripsService>(
+    () => SavedTripsService(getIt<HiveService>()),
+  );
 
   // Auth
   getIt.registerLazySingleton<AuthRemoteDatasource>(

@@ -1,10 +1,13 @@
 import 'package:dony/app/theme.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/services/saved_trips_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -132,7 +135,7 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
 
 // ── Header ───────────────────────────────────────────────────────────────────
 
-class _EnvoisHeader extends StatelessWidget {
+class _EnvoisHeader extends StatefulWidget {
   final int inProgressCount;
   final int upcomingCount;
   final BidModel? activeShipment;
@@ -144,7 +147,27 @@ class _EnvoisHeader extends StatelessWidget {
   });
 
   @override
+  State<_EnvoisHeader> createState() => _EnvoisHeaderState();
+}
+
+class _EnvoisHeaderState extends State<_EnvoisHeader> {
+  final _savedService = getIt<SavedTripsService>();
+
+  void _openSavedTrips() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _SavedTripsSheet(
+        savedService: _savedService,
+        onChanged: () => setState(() {}),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final savedCount = _savedService.getSavedTrips().length;
     final topPad = MediaQuery.of(context).padding.top;
     return Container(
       color: kSurface,
@@ -153,16 +176,71 @@ class _EnvoisHeader extends StatelessWidget {
         children: [
           SizedBox(height: topPad + 8),
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-            child: Text(
-              'Mes envois',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
-                color: kTextPrimary,
-                letterSpacing: -0.5,
-              ),
-            ).animate().fadeIn(duration: 300.ms),
+            padding: const EdgeInsets.fromLTRB(20, 8, 16, 0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Text(
+                    'Mes envois',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: kTextPrimary,
+                      letterSpacing: -0.5,
+                    ),
+                  ).animate().fadeIn(duration: 300.ms),
+                ),
+                // Icône trajets sauvegardés
+                GestureDetector(
+                  onTap: _openSavedTrips,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: savedCount > 0 ? kGreenLight : kBackground,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: kBorder),
+                        ),
+                        child: Icon(
+                          savedCount > 0
+                              ? Icons.bookmark_rounded
+                              : Icons.bookmark_border_rounded,
+                          color: savedCount > 0 ? kGreenPrimary : kTextSecondary,
+                          size: 20,
+                        ),
+                      ),
+                      if (savedCount > 0)
+                        Positioned(
+                          top: -4,
+                          right: -4,
+                          child: Container(
+                            width: 18,
+                            height: 18,
+                            decoration: const BoxDecoration(
+                              color: kGreenPrimary,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                '$savedCount',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ).animate().fadeIn(delay: 60.ms),
+              ],
+            ),
           ),
           const SizedBox(height: 14),
           Padding(
@@ -170,14 +248,14 @@ class _EnvoisHeader extends StatelessWidget {
             child: Row(
               children: [
                 _StatChip(
-                  count: inProgressCount,
+                  count: widget.inProgressCount,
                   label: 'en cours',
                   color: kSuccess,
                   bgColor: const Color(0xFFECFDF3),
                 ),
                 const SizedBox(width: 8),
                 _StatChip(
-                  count: upcomingCount,
+                  count: widget.upcomingCount,
                   label: 'en attente',
                   color: kWarning,
                   bgColor: const Color(0xFFFFF8E7),
@@ -185,11 +263,11 @@ class _EnvoisHeader extends StatelessWidget {
               ],
             ).animate().fadeIn(delay: 80.ms),
           ),
-          if (activeShipment != null) ...[
+          if (widget.activeShipment != null) ...[
             const SizedBox(height: 20),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-              child: _ActiveShipmentBanner(bid: activeShipment!),
+              child: _ActiveShipmentBanner(bid: widget.activeShipment!),
             )
                 .animate()
                 .fadeIn(delay: 120.ms)
@@ -986,6 +1064,240 @@ class _SendFab extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Bottom sheet trajets sauvegardés ─────────────────────────────────────────
+
+class _SavedTripsSheet extends StatefulWidget {
+  final SavedTripsService savedService;
+  final VoidCallback onChanged;
+
+  const _SavedTripsSheet({
+    required this.savedService,
+    required this.onChanged,
+  });
+
+  @override
+  State<_SavedTripsSheet> createState() => _SavedTripsSheetState();
+}
+
+class _SavedTripsSheetState extends State<_SavedTripsSheet> {
+  late List<AnnouncementModel> _trips;
+
+  @override
+  void initState() {
+    super.initState();
+    _trips = widget.savedService.getSavedTrips();
+  }
+
+  Future<void> _remove(String id) async {
+    await widget.savedService.removeTrip(id);
+    setState(() => _trips = widget.savedService.getSavedTrips());
+    widget.onChanged();
+  }
+
+  String _initials(AnnouncementModel a) {
+    final name = a.traveler?.displayName;
+    if (name == null || name.isEmpty) return '?';
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    return name[0].toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: kSurface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPad + 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Handle
+          Center(
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: kBorder,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          // Titre
+          Row(
+            children: [
+              const Icon(Icons.bookmark_rounded, color: kGreenPrimary, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Trajets sauvegardés',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: kTextPrimary,
+                ),
+              ),
+              const Spacer(),
+              if (_trips.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: kGreenLight,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '${_trips.length}',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: kGreenPrimary,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          if (_trips.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 32),
+              child: Center(
+                child: Column(
+                  children: [
+                    const Icon(Icons.bookmark_border_rounded,
+                        size: 48, color: kTextHint),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Aucun trajet sauvegardé',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: kTextSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Appuie sur 🔖 dans le profil d\'un voyageur pour sauvegarder.',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        color: kTextHint,
+                        height: 1.4,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.55,
+              ),
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: _trips.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                itemBuilder: (_, i) {
+                  final a = _trips[i];
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: kBackground,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: kBorder),
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.fromLTRB(14, 8, 8, 8),
+                      leading: Container(
+                        width: 42,
+                        height: 42,
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            _initials(a),
+                            style: GoogleFonts.plusJakartaSans(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                      title: Text(
+                        '${a.departureCity} → ${a.arrivalCity}',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: kTextPrimary,
+                        ),
+                      ),
+                      subtitle: Text(
+                        '${DateFormat('d MMM yyyy', 'fr').format(a.departureDate)} · '
+                        '${a.availableKg.toStringAsFixed(0)} kg · '
+                        '${a.pricePerKg.toStringAsFixed(0)} €/kg',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          color: kTextSecondary,
+                        ),
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Bouton voir
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pop(context);
+                              context.push('/search/${a.id}', extra: a);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: kGreenPrimary,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                'Voir',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          // Bouton supprimer
+                          IconButton(
+                            icon: const Icon(Icons.bookmark_remove_rounded,
+                                color: kTextHint, size: 20),
+                            onPressed: () => _remove(a.id),
+                            tooltip: 'Retirer',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ).animate().fadeIn(delay: Duration(milliseconds: 40 * i));
+                },
+              ),
+            ),
+        ],
       ),
     );
   }

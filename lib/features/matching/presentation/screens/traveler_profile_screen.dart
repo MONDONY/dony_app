@@ -1,18 +1,33 @@
+import 'dart:async';
+
 import 'package:dony/app/theme.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/services/saved_trips_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
-class TravelerProfileScreen extends StatelessWidget {
+class TravelerProfileScreen extends StatefulWidget {
   final AnnouncementModel announcement;
 
   const TravelerProfileScreen({super.key, required this.announcement});
 
+  @override
+  State<TravelerProfileScreen> createState() => _TravelerProfileScreenState();
+}
+
+class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
+  late bool _isSaved;
+  final _savedTripsService = getIt<SavedTripsService>();
+
+  AnnouncementModel get _announcement => widget.announcement;
+
   String get _initials {
-    final name = announcement.traveler?.displayName;
+    final name = _announcement.traveler?.displayName;
     if (name == null || name.isEmpty) return '?';
     final parts = name.trim().split(' ');
     if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
@@ -20,7 +35,7 @@ class TravelerProfileScreen extends StatelessWidget {
   }
 
   String get _abbreviatedName {
-    final name = announcement.traveler?.displayName;
+    final name = _announcement.traveler?.displayName;
     if (name == null || name.isEmpty) return 'Voyageur';
     final parts = name.trim().split(' ');
     if (parts.length >= 2) return '${parts[0]} ${parts[1][0]}.';
@@ -28,8 +43,39 @@ class TravelerProfileScreen extends StatelessWidget {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _isSaved = _savedTripsService.isSaved(_announcement.id);
+  }
+
+  Future<void> _toggleSave() async {
+    unawaited(HapticFeedback.lightImpact());
+    if (_isSaved) {
+      await _savedTripsService.removeTrip(_announcement.id);
+    } else {
+      await _savedTripsService.saveTrip(_announcement);
+    }
+    setState(() => _isSaved = !_isSaved);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _isSaved ? 'Trajet sauvegardé' : 'Trajet retiré des sauvegardes',
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500),
+          ),
+          backgroundColor: _isSaved ? kSuccess : kTextSecondary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final traveler = announcement.traveler;
+    final traveler = _announcement.traveler;
     final isKiloPro = traveler?.kiloPro ?? false;
 
     return Scaffold(
@@ -46,6 +92,15 @@ class TravelerProfileScreen extends StatelessWidget {
           onPressed: () => context.pop(),
         ),
         actions: [
+          IconButton(
+            icon: Icon(
+              _isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+              color: _isSaved ? kGreenPrimary : kTextSecondary,
+              size: 24,
+            ),
+            onPressed: _toggleSave,
+            tooltip: _isSaved ? 'Retirer des sauvegardes' : 'Sauvegarder ce trajet',
+          ),
           IconButton(
             icon: const Icon(Icons.chat_bubble_outline_rounded, color: kTextSecondary, size: 22),
             onPressed: () {}, // TODO: messagerie
@@ -170,7 +225,7 @@ class TravelerProfileScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                _TripCard(announcement: announcement).animate().fadeIn(delay: 80.ms),
+                _TripCard(announcement: _announcement).animate().fadeIn(delay: 80.ms),
 
                 const SizedBox(height: 20),
 
@@ -184,7 +239,7 @@ class TravelerProfileScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                _HandoverCard(announcement: announcement).animate().fadeIn(delay: 110.ms),
+                _HandoverCard(announcement: _announcement).animate().fadeIn(delay: 110.ms),
 
                 const SizedBox(height: 20),
 
@@ -198,7 +253,7 @@ class TravelerProfileScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                _TarifCard(announcement: announcement).animate().fadeIn(delay: 150.ms),
+                _TarifCard(announcement: _announcement).animate().fadeIn(delay: 150.ms),
               ],
             ),
           ),
@@ -223,8 +278,8 @@ class TravelerProfileScreen extends StatelessWidget {
                 height: 52,
                 child: ElevatedButton(
                   onPressed: () => context.push(
-                    '/search/${announcement.id}/bid',
-                    extra: announcement,
+                    '/search/${_announcement.id}/bid',
+                    extra: _announcement,
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: kGreenPrimary,
@@ -551,7 +606,7 @@ class _HandoverCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      hasDepLoc ? depLoc! : 'Non précisé par le voyageur',
+                      hasDepLoc ? depLoc : 'Non précisé par le voyageur',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 14,
                         fontWeight: hasDepLoc ? FontWeight.w600 : FontWeight.w400,
@@ -599,7 +654,7 @@ class _HandoverCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      hasArrLoc ? arrLoc! : 'Non précisé par le voyageur',
+                      hasArrLoc ? arrLoc : 'Non précisé par le voyageur',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 14,
                         fontWeight: hasArrLoc ? FontWeight.w600 : FontWeight.w400,

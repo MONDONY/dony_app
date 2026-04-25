@@ -88,15 +88,6 @@ class _BidDetailViewState extends State<_BidDetailView> {
           );
         } else if (state is BidDetailLoaded) {
           setState(() => _bid = state.bid);
-        } else if (state is BidHidden) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Envoi masqué de votre liste'),
-              backgroundColor: kTextSecondary,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-          context.pop();
         } else if (state is BidError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -617,51 +608,63 @@ class _SenderActionBar extends StatelessWidget {
   final bool isLoading;
   const _SenderActionBar({required this.bid, required this.isLoading});
 
+  void _openOptions(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _SenderOptionsSheet(bid: bid, outerContext: context),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isPending = bid.status == 'PENDING';
+
     return Container(
       color: kSurface,
       padding: EdgeInsets.fromLTRB(
           20, 16, 20, MediaQuery.of(context).padding.bottom + 16),
       child: Row(
         children: [
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: isLoading ? null : () => _showDeleteDialog(context),
-              icon: const Icon(Icons.delete_outline_rounded),
-              label: const Text('Masquer'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: kTextSecondary,
-                side: const BorderSide(color: kBorder),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
+          // Bouton "..." options — toujours visible
+          OutlinedButton(
+            onPressed: () => _openOptions(context),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: kTextSecondary,
+              side: const BorderSide(color: kBorder),
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14)),
+            ),
+            child: const Icon(Icons.more_horiz_rounded, size: 22),
+          ),
+
+          if (isPending) ...[
+            const SizedBox(width: 12),
+            // Annuler la demande — seulement pour PENDING
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: isLoading ? null : () => _showCancelDialog(context),
+                icon: isLoading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.block_rounded, size: 18),
+                label: const Text('Annuler la demande'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kError,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: ElevatedButton.icon(
-              onPressed: isLoading ? null : () => _showCancelDialog(context),
-              icon: isLoading
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
-                    )
-                  : const Icon(Icons.block_rounded),
-              label: const Text('Annuler'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kError,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
-              ),
-            ),
-          ),
+          ],
         ],
       ),
     );
@@ -671,15 +674,17 @@ class _SenderActionBar extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Annuler l\'envoi',
-            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold)),
-        content: Text('Voulez-vous vraiment annuler votre demande d\'envoi ?',
-            style: GoogleFonts.plusJakartaSans(fontSize: 14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Annuler la demande',
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 17)),
+        content: Text(
+            'Voulez-vous vraiment annuler votre demande d\'envoi ? Cette action est définitive.',
+            style: GoogleFonts.plusJakartaSans(fontSize: 14, color: kTextSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text('Non',
-                style: GoogleFonts.plusJakartaSans(color: kTextSecondary)),
+                style: GoogleFonts.plusJakartaSans(color: kTextSecondary, fontWeight: FontWeight.w600)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -687,12 +692,194 @@ class _SenderActionBar extends StatelessWidget {
               context.read<BidBloc>().add(BidCancelRequested(bid.id));
             },
             style: ElevatedButton.styleFrom(
-                backgroundColor: kError, foregroundColor: Colors.white),
+                backgroundColor: kError, foregroundColor: Colors.white, elevation: 0),
             child: Text('Oui, annuler',
-                style:
-                    GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold)),
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Options bottom sheet (expéditeur) ────────────────────────────────────────
+
+class _SenderOptionsSheet extends StatelessWidget {
+  final BidModel bid;
+  final BuildContext outerContext;
+
+  const _SenderOptionsSheet({required this.bid, required this.outerContext});
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: kSurface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPad + 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Handle
+          Center(
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                  color: kBorder, borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          Text(
+            'Options',
+            style: GoogleFonts.plusJakartaSans(
+                fontSize: 18, fontWeight: FontWeight.w700, color: kTextPrimary),
+          ),
+          const SizedBox(height: 16),
+
+          // Signaler
+          _OptionTile(
+            icon: Icons.flag_outlined,
+            iconColor: kError,
+            iconBg: const Color(0xFFFFEBEE),
+            label: 'Signaler ce trajet',
+            subtitle: 'Signaler un problème au support Dony',
+            onTap: () {
+              Navigator.pop(context);
+              _showReportSheet(outerContext);
+            },
+          ),
+
+          const SizedBox(height: 8),
+
+          // Contacter le voyageur (bientôt)
+          _OptionTile(
+            icon: Icons.chat_bubble_outline_rounded,
+            iconColor: kGreenPrimary,
+            iconBg: kGreenLight,
+            label: 'Contacter le voyageur',
+            subtitle: 'Messagerie — bientôt disponible',
+            disabled: true,
+            onTap: null,
+          ),
+
+          const SizedBox(height: 8),
+
+          // Supprimer (seulement si terminé / refusé / annulé)
+          if (bid.status == 'COMPLETED' ||
+              bid.status == 'REJECTED' ||
+              bid.status == 'CANCELLED') ...[
+            _OptionTile(
+              icon: Icons.delete_outline_rounded,
+              iconColor: kError,
+              iconBg: const Color(0xFFFFEBEE),
+              label: 'Supprimer cette demande',
+              subtitle: 'Retirer définitivement de votre historique',
+              onTap: () {
+                Navigator.pop(context);
+                _showDeleteDialog(outerContext);
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _showReportSheet(BuildContext context) {
+    final reasons = [
+      'Informations fausses sur le trajet',
+      'Comportement inapproprié',
+      'Tentative d\'arnaque',
+      'Autre',
+    ];
+    String? selected;
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Container(
+          decoration: const BoxDecoration(
+            color: kSurface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: EdgeInsets.fromLTRB(
+              20, 0, 20, MediaQuery.of(ctx).padding.bottom + 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                      color: kBorder, borderRadius: BorderRadius.circular(2)),
+                ),
+              ),
+              Text('Signaler ce trajet',
+                  style: GoogleFonts.plusJakartaSans(
+                      fontSize: 18, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 4),
+              Text('Votre signalement sera traité par l\'équipe Dony.',
+                  style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13, color: kTextSecondary)),
+              const SizedBox(height: 16),
+              ...reasons.map((r) => RadioListTile<String>(
+                    value: r,
+                    groupValue: selected,
+                    onChanged: (v) => setSheetState(() => selected = v),
+                    title: Text(r,
+                        style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14, fontWeight: FontWeight.w500)),
+                    activeColor: kGreenPrimary,
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                  )),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: selected == null
+                      ? null
+                      : () {
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Signalement envoyé. Merci !',
+                                  style: GoogleFonts.plusJakartaSans(
+                                      fontWeight: FontWeight.w500)),
+                              backgroundColor: kSuccess,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                          );
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kError,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: Text('Envoyer le signalement',
+                      style: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -701,29 +888,123 @@ class _SenderActionBar extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Masquer cet envoi',
-            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Supprimer cette demande',
+            style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w700, fontSize: 17)),
         content: Text(
-            'Cet envoi sera masqué de votre liste. Il restera visible pour le voyageur.',
-            style: GoogleFonts.plusJakartaSans(fontSize: 14)),
+            'Cette demande sera définitivement supprimée de votre historique.',
+            style: GoogleFonts.plusJakartaSans(
+                fontSize: 14, color: kTextSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text('Annuler',
-                style: GoogleFonts.plusJakartaSans(color: kTextSecondary)),
+                style: GoogleFonts.plusJakartaSans(
+                    color: kTextSecondary, fontWeight: FontWeight.w600)),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-              context.read<BidBloc>().add(BidHideRequested(bid.id));
+              // TODO: implémenter BidDeleteRequested
+              context.pop();
             },
             style: ElevatedButton.styleFrom(
-                backgroundColor: kTextSecondary, foregroundColor: Colors.white),
-            child: Text('Masquer',
+                backgroundColor: kError,
+                foregroundColor: Colors.white,
+                elevation: 0),
+            child: Text('Supprimer',
                 style:
-                    GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold)),
+                    GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _OptionTile extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final Color iconBg;
+  final String label;
+  final String subtitle;
+  final VoidCallback? onTap;
+  final bool disabled;
+
+  const _OptionTile({
+    required this.icon,
+    required this.iconColor,
+    required this.iconBg,
+    required this.label,
+    required this.subtitle,
+    required this.onTap,
+    this.disabled = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: disabled ? 0.45 : 1.0,
+      child: GestureDetector(
+        onTap: disabled ? null : onTap,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: kBackground,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: kBorder),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                    color: iconBg, borderRadius: BorderRadius.circular(10)),
+                child: Icon(icon, color: iconColor, size: 18),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: kTextPrimary),
+                    ),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12, color: kTextSecondary),
+                    ),
+                  ],
+                ),
+              ),
+              if (!disabled)
+                const Icon(Icons.chevron_right_rounded,
+                    color: kTextHint, size: 18),
+              if (disabled)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: kBorder,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Bientôt',
+                    style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: kTextSecondary),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
