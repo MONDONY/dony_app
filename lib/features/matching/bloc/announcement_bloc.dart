@@ -45,8 +45,11 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
   ) async {
     emit(AnnouncementLoading());
     try {
-      final announcements = await _repository.getMyAnnouncements();
-      emit(AnnouncementListLoaded(announcements));
+      final result = await _repository.getMyAnnouncements();
+      emit(AnnouncementListLoaded(
+        result.announcements,
+        totalElements: result.totalElements,
+      ));
     } catch (e) {
       emit(AnnouncementError(e.toString()));
     }

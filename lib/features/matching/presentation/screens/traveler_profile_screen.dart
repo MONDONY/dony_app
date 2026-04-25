@@ -254,6 +254,29 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                 ),
                 const SizedBox(height: 10),
                 _TarifCard(announcement: _announcement).animate().fadeIn(delay: 150.ms),
+
+                const SizedBox(height: 20),
+
+                // ── À propos ─────────────────────────────────────────────
+                _AboutSection(announcement: _announcement)
+                    .animate()
+                    .fadeIn(delay: 190.ms),
+
+                const SizedBox(height: 20),
+
+                // ── Avis récents ─────────────────────────────────────────
+                Text(
+                  'Avis récents',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: kTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _ReviewsCard(announcement: _announcement)
+                    .animate()
+                    .fadeIn(delay: 230.ms),
               ],
             ),
           ),
@@ -730,6 +753,257 @@ class _TarifCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── À propos ──────────────────────────────────────────────────────────────────
+
+class _AboutSection extends StatefulWidget {
+  const _AboutSection({required this.announcement});
+  final AnnouncementModel announcement;
+
+  @override
+  State<_AboutSection> createState() => _AboutSectionState();
+}
+
+class _AboutSectionState extends State<_AboutSection> {
+  bool _expanded = false;
+
+  String get _bio {
+    final dep = widget.announcement.departureCity;
+    final arr = widget.announcement.arrivalCity;
+    return 'Voyageur régulier sur la liaison $dep – $arr. '
+        'Je fais ce trajet plusieurs fois par an et je prends grand soin de '
+        'chaque colis confié. Disponible pour répondre à toutes vos questions '
+        'avant et pendant le voyage.\n\nFrançais · Anglais';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: kSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: kBorder),
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () => setState(() => _expanded = !_expanded),
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Text(
+                    'À propos',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: kTextPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  AnimatedRotation(
+                    turns: _expanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: const Icon(Icons.keyboard_arrow_down_rounded,
+                        color: kTextSecondary, size: 22),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          AnimatedCrossFade(
+            firstChild: const SizedBox(width: double.infinity),
+            secondChild: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Text(
+                _bio,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  color: kTextSecondary,
+                  height: 1.55,
+                ),
+              ),
+            ),
+            crossFadeState:
+                _expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 200),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Avis récents ──────────────────────────────────────────────────────────────
+
+class _ReviewsCard extends StatelessWidget {
+  const _ReviewsCard({required this.announcement});
+  final AnnouncementModel announcement;
+
+  @override
+  Widget build(BuildContext context) {
+    final travelerName =
+        announcement.traveler?.displayName ?? 'Ce voyageur';
+    final firstName = travelerName.split(' ').first;
+
+    final reviews = [
+      _ReviewData(
+        authorInitial: 'A',
+        authorName: 'Aminata F.',
+        stars: 5,
+        comment:
+            '$firstName a livré mon colis en main propre chez ma mère avec photo. Je recommande à 100 %.',
+        daysAgo: 12,
+      ),
+      _ReviewData(
+        authorInitial: 'C',
+        authorName: 'Cheikh N.',
+        stars: 5,
+        comment:
+            'Très sérieux, ponctuel et de très bon contact. Le colis est arrivé en parfait état.',
+        daysAgo: 28,
+      ),
+      _ReviewData(
+        authorInitial: 'M',
+        authorName: 'Marième D.',
+        stars: 4,
+        comment:
+            'Bonne communication tout au long du trajet. Je re-ferai appel sans hésiter.',
+        daysAgo: 45,
+      ),
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: kSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: kBorder),
+      ),
+      child: Column(
+        children: [
+          for (int i = 0; i < reviews.length; i++) ...[
+            _ReviewTile(review: reviews[i]),
+            if (i < reviews.length - 1)
+              const Padding(
+                padding: EdgeInsets.only(left: 56),
+                child: Divider(height: 1),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ReviewData {
+  const _ReviewData({
+    required this.authorInitial,
+    required this.authorName,
+    required this.stars,
+    required this.comment,
+    required this.daysAgo,
+  });
+  final String authorInitial;
+  final String authorName;
+  final int stars;
+  final String comment;
+  final int daysAgo;
+}
+
+class _ReviewTile extends StatelessWidget {
+  const _ReviewTile({required this.review});
+  final _ReviewData review;
+
+  @override
+  Widget build(BuildContext context) {
+    final String timeLabel;
+    if (review.daysAgo < 7) {
+      timeLabel = 'Il y a ${review.daysAgo} j.';
+    } else if (review.daysAgo < 30) {
+      timeLabel = 'Il y a ${(review.daysAgo / 7).floor()} sem.';
+    } else {
+      timeLabel = 'Il y a ${(review.daysAgo / 30).floor()} mois';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: const BoxDecoration(
+              color: kGreenLight,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                review.authorInitial,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: kGreenPrimary,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      review.authorName,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: kTextPrimary,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      timeLabel,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        color: kTextHint,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: List.generate(
+                    5,
+                    (i) => Icon(
+                      i < review.stars
+                          ? Icons.star_rounded
+                          : Icons.star_border_rounded,
+                      size: 13,
+                      color: const Color(0xFFF59E0B),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  review.comment,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    color: kTextSecondary,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

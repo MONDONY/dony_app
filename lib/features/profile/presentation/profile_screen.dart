@@ -2,14 +2,51 @@ import 'package:dony/app/theme.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/matching/bloc/announcement_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_event.dart';
+import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<BidBloc>().add(BidMyListRequested());
+    context.read<AnnouncementBloc>().add(AnnouncementListRequested());
+  }
+
+  String _initials(String? phoneNumber, String? email) {
+    if (email != null && email.isNotEmpty) {
+      return email[0].toUpperCase();
+    }
+    if (phoneNumber != null && phoneNumber.isNotEmpty) {
+      final digits = phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
+      if (digits.length >= 2) return digits.substring(digits.length - 2);
+      return digits;
+    }
+    return '?';
+  }
+
+  String _displayName(String? phoneNumber, String? email) {
+    if (phoneNumber != null && phoneNumber.isNotEmpty) return phoneNumber;
+    if (email != null && email.isNotEmpty) return email;
+    return 'Utilisateur';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,199 +57,281 @@ class ProfileScreen extends StatelessWidget {
         }
       },
       child: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          final user = state is AuthAuthenticated ? state.user : null;
-          final displayName = user?.phoneNumber ?? '';
-          final isKycVerified = user?.isKycVerified ?? false;
+        builder: (context, authState) {
+          final user =
+              authState is AuthAuthenticated ? authState.user : null;
           final isTraveler = user?.isTraveler ?? false;
+          final isSender = user?.isSender ?? false;
+          final isKycVerified = user?.isKycVerified ?? false;
+          final displayName =
+              _displayName(user?.phoneNumber, user?.email);
+          final initials = _initials(user?.phoneNumber, user?.email);
 
-          return Scaffold(
-            backgroundColor: kBackground,
-            appBar: AppBar(
-              title: Text(
-                'Mon profil',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  color: kTextPrimary,
-                ),
-              ),
-              centerTitle: true,
-              backgroundColor: kSurface,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              bottom: const PreferredSize(
-                preferredSize: Size.fromHeight(1),
-                child: Divider(height: 1),
-              ),
-              actions: [
-                IconButton(
-                  icon: const Icon(
-                    Icons.notifications_outlined,
-                    color: kTextPrimary,
-                    size: 22,
-                  ),
-                  onPressed: () {},
-                ),
-                const SizedBox(width: 4),
-              ],
-            ),
-            body: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 28, 20, 40),
-              child: Column(
-                children: [
-                  // Avatar
-                  _buildAvatar(displayName, isKycVerified)
-                      .animate()
-                      .fadeIn(duration: 300.ms)
-                      .scale(
-                        begin: const Offset(0.85, 0.85),
-                        curve: Curves.easeOutBack,
-                      ),
-                  const SizedBox(height: 12),
-                  // Nom
-                  Text(
-                    displayName,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: kTextPrimary,
-                    ),
-                  ).animate().fadeIn(delay: 80.ms),
-                  const SizedBox(height: 10),
-                  // Badges identité + rôle
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (isKycVerified) ...[
-                        _Badge(
-                          icon: Icons.verified_rounded,
-                          label: 'Identité vérifiée',
-                          color: kSuccess,
+          return BlocBuilder<BidBloc, BidState>(
+            builder: (context, bidState) {
+              return BlocBuilder<AnnouncementBloc, AnnouncementState>(
+                builder: (context, announcementState) {
+                  // Bid stats (sender)
+                  final bids = bidState is BidListLoaded ? bidState.bids : <dynamic>[];
+                  final totalBids = bids.length;
+                  final activeBids =
+                      bids.where((b) => b.status == 'ACCEPTED').length;
+
+                  // Announcement stats (traveler)
+                  final announcements = announcementState is AnnouncementListLoaded
+                      ? announcementState.announcements
+                      : <AnnouncementModel>[];
+                  // totalElements = total from backend pagination (tous statuts)
+                  final totalAnnouncements = announcementState is AnnouncementListLoaded
+                      ? announcementState.totalElements
+                      : 0;
+                  // Trajets en cours ou à venir = ACTIVE + FULL
+                  final upcomingAnnouncements = announcements
+                      .where((a) => a.status == 'ACTIVE' || a.status == 'FULL')
+                      .length;
+
+                  return Scaffold(
+                    backgroundColor: kBackground,
+                    appBar: AppBar(
+                      title: Text(
+                        'Mon profil',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: kTextPrimary,
                         ),
-                        const SizedBox(width: 8),
+                      ),
+                      centerTitle: true,
+                      backgroundColor: kSurface,
+                      elevation: 0,
+                      scrolledUnderElevation: 0,
+                      bottom: const PreferredSize(
+                        preferredSize: Size.fromHeight(1),
+                        child: Divider(height: 1),
+                      ),
+                      actions: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.notifications_outlined,
+                            color: kTextPrimary,
+                            size: 22,
+                          ),
+                          onPressed: () {},
+                        ),
+                        const SizedBox(width: 4),
                       ],
-                      _Badge(
-                        icon: isTraveler
-                            ? Icons.flight_takeoff_rounded
-                            : Icons.send_rounded,
-                        label: isTraveler ? 'Voyageur' : 'Expéditeur',
-                        color: kGreenPrimary,
-                      ),
-                    ],
-                  ).animate().fadeIn(delay: 120.ms),
-                  const SizedBox(height: 24),
-                  // Stats
-                  _StatsRow().animate().fadeIn(delay: 160.ms),
-                  const SizedBox(height: 28),
-                  // Menu principal
-                  _MenuSection(
-                    children: [
-                      _MenuItem(
-                        icon: Icons.inventory_2_outlined,
-                        iconColor: const Color(0xFFE67E22),
-                        label: 'Mes envois',
-                        trailing: '3 en cours',
-                        onTap: () => context.push('/announcements'),
-                      ),
-                      _MenuItem(
-                        icon: Icons.credit_card_outlined,
-                        iconColor: const Color(0xFF8E44AD),
-                        label: 'Paiements & factures',
-                        onTap: () {},
-                      ),
-                      _MenuItem(
-                        icon: Icons.badge_outlined,
-                        iconColor: const Color(0xFF1E88E5),
-                        label: 'Documents KYC',
-                        trailing: isKycVerified ? 'Vérifié' : null,
-                        trailingColor: isKycVerified ? kSuccess : null,
-                        onTap: () => context.push('/kyc'),
-                      ),
-                      _MenuItem(
-                        icon: Icons.people_outline_rounded,
-                        iconColor: const Color(0xFF27AE60),
-                        label: 'Parrainages',
-                        trailing: '2 invités',
-                        isLast: true,
-                        onTap: () {},
-                      ),
-                    ],
-                  ).animate().fadeIn(delay: 200.ms).slideY(
-                    begin: 0.04,
-                    curve: Curves.easeOutCubic,
-                  ),
-                  const SizedBox(height: 16),
-                  // Menu settings
-                  _MenuSection(
-                    children: [
-                      _MenuItem(
-                        icon: Icons.notifications_outlined,
-                        iconColor: const Color(0xFFF59E0B),
-                        label: 'Notifications',
-                        onTap: () {},
-                      ),
-                      _MenuItem(
-                        icon: Icons.language_rounded,
-                        iconColor: const Color(0xFF1E88E5),
-                        label: 'Langue',
-                        trailing: 'Français',
-                        onTap: () {},
-                      ),
-                      _MenuItem(
-                        icon: Icons.lock_outline_rounded,
-                        iconColor: kTextSecondary,
-                        label: 'Sécurité & confidentialité',
-                        onTap: () {},
-                      ),
-                      _MenuItem(
-                        icon: Icons.help_outline_rounded,
-                        iconColor: kTextSecondary,
-                        label: 'Aide & support',
-                        isLast: true,
-                        onTap: () {},
-                      ),
-                    ],
-                  ).animate().fadeIn(delay: 240.ms).slideY(
-                    begin: 0.04,
-                    curve: Curves.easeOutCubic,
-                  ),
-                  const SizedBox(height: 28),
-                  // Déconnexion
-                  GestureDetector(
-                    onTap: () =>
-                        context.read<AuthBloc>().add(const AuthLogoutRequested()),
-                    child: Text(
-                      'Se déconnecter',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: kError,
+                    ),
+                    body: RefreshIndicator(
+                      color: kGreenPrimary,
+                      onRefresh: () async {
+                        context.read<BidBloc>().add(BidMyListRequested());
+                        context
+                            .read<AnnouncementBloc>()
+                            .add(AnnouncementListRequested());
+                      },
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding:
+                            const EdgeInsets.fromLTRB(20, 28, 20, 40),
+                        child: Column(
+                          children: [
+                            // ── Avatar ─────────────────────────────────
+                            _buildAvatar(initials, isKycVerified)
+                                .animate()
+                                .fadeIn(duration: 300.ms)
+                                .scale(
+                                  begin: const Offset(0.85, 0.85),
+                                  curve: Curves.easeOutBack,
+                                ),
+                            const SizedBox(height: 12),
+
+                            // ── Nom / identifiant ───────────────────────
+                            Text(
+                              displayName,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: kTextPrimary,
+                              ),
+                              textAlign: TextAlign.center,
+                            ).animate().fadeIn(delay: 80.ms),
+                            const SizedBox(height: 10),
+
+                            // ── Badges ──────────────────────────────────
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (isKycVerified) ...[
+                                  _Badge(
+                                    icon: Icons.verified_rounded,
+                                    label: 'Identité vérifiée',
+                                    color: kSuccess,
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                                if (isTraveler)
+                                  _Badge(
+                                    icon: Icons.flight_takeoff_rounded,
+                                    label: 'Voyageur',
+                                    color: kGreenPrimary,
+                                  ),
+                                if (isTraveler && isSender)
+                                  const SizedBox(width: 8),
+                                if (isSender)
+                                  _Badge(
+                                    icon: Icons.send_rounded,
+                                    label: 'Expéditeur',
+                                    color: const Color(0xFFE67E22),
+                                  ),
+                              ],
+                            ).animate().fadeIn(delay: 120.ms),
+                            const SizedBox(height: 24),
+
+                            // ── Stats ───────────────────────────────────
+                            _StatsRow(
+                              isTraveler: isTraveler,
+                              totalBids: totalBids,
+                              totalAnnouncements: totalAnnouncements,
+                              isLoading: bidState is BidLoading ||
+                                  announcementState is AnnouncementLoading,
+                            ).animate().fadeIn(delay: 160.ms),
+                            const SizedBox(height: 28),
+
+                            // ── Menu principal ──────────────────────────
+                            _MenuSection(
+                              children: [
+                                if (isTraveler)
+                                  _MenuItem(
+                                    icon: Icons.flight_takeoff_rounded,
+                                    iconColor: kGreenPrimary,
+                                    label: 'Mes trajets',
+                                    trailing: upcomingAnnouncements > 0
+                                        ? '$upcomingAnnouncements à venir'
+                                        : null,
+                                    onTap: () =>
+                                        context.push('/announcements'),
+                                  ),
+                                if (isSender)
+                                  _MenuItem(
+                                    icon: Icons.inventory_2_outlined,
+                                    iconColor: const Color(0xFFE67E22),
+                                    label: 'Mes envois',
+                                    trailing: activeBids > 0
+                                        ? '$activeBids en cours'
+                                        : null,
+                                    onTap: () =>
+                                        context.push('/announcements'),
+                                  ),
+                                _MenuItem(
+                                  icon: Icons.credit_card_outlined,
+                                  iconColor: const Color(0xFF8E44AD),
+                                  label: 'Paiements & factures',
+                                  onTap: () {},
+                                ),
+                                _MenuItem(
+                                  icon: Icons.badge_outlined,
+                                  iconColor: const Color(0xFF1E88E5),
+                                  label: 'Documents KYC',
+                                  trailing:
+                                      isKycVerified ? 'Vérifié' : null,
+                                  trailingColor:
+                                      isKycVerified ? kSuccess : null,
+                                  onTap: () => context.push('/kyc'),
+                                ),
+                                _MenuItem(
+                                  icon: Icons.people_outline_rounded,
+                                  iconColor: const Color(0xFF27AE60),
+                                  label: 'Parrainages',
+                                  trailing: '0 invité',
+                                  isLast: true,
+                                  onTap: () {},
+                                ),
+                              ],
+                            )
+                                .animate()
+                                .fadeIn(delay: 200.ms)
+                                .slideY(
+                                    begin: 0.04,
+                                    curve: Curves.easeOutCubic),
+                            const SizedBox(height: 16),
+
+                            // ── Menu settings ───────────────────────────
+                            _MenuSection(
+                              children: [
+                                _MenuItem(
+                                  icon: Icons.notifications_outlined,
+                                  iconColor: const Color(0xFFF59E0B),
+                                  label: 'Notifications',
+                                  onTap: () {},
+                                ),
+                                _MenuItem(
+                                  icon: Icons.language_rounded,
+                                  iconColor: const Color(0xFF1E88E5),
+                                  label: 'Langue',
+                                  trailing: 'Français',
+                                  onTap: () {},
+                                ),
+                                _MenuItem(
+                                  icon: Icons.lock_outline_rounded,
+                                  iconColor: kTextSecondary,
+                                  label: 'Sécurité & confidentialité',
+                                  onTap: () {},
+                                ),
+                                _MenuItem(
+                                  icon: Icons.help_outline_rounded,
+                                  iconColor: kTextSecondary,
+                                  label: 'Aide & support',
+                                  isLast: true,
+                                  onTap: () {},
+                                ),
+                              ],
+                            )
+                                .animate()
+                                .fadeIn(delay: 240.ms)
+                                .slideY(
+                                    begin: 0.04,
+                                    curve: Curves.easeOutCubic),
+                            const SizedBox(height: 28),
+
+                            // ── Déconnexion ─────────────────────────────
+                            GestureDetector(
+                              onTap: () => context
+                                  .read<AuthBloc>()
+                                  .add(const AuthLogoutRequested()),
+                              child: Text(
+                                'Se déconnecter',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: kError,
+                                ),
+                              ),
+                            ).animate().fadeIn(delay: 280.ms),
+                            const SizedBox(height: 32),
+
+                            // ── Footer ──────────────────────────────────
+                            Text(
+                              'dony v1.0.0 · Made with ❤️ in Paris',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12,
+                                color: kTextHint,
+                              ),
+                            ).animate().fadeIn(delay: 320.ms),
+                          ],
+                        ),
                       ),
                     ),
-                  ).animate().fadeIn(delay: 280.ms),
-                  const SizedBox(height: 32),
-                  // Footer
-                  Text(
-                    'dony v1.0.0 · Made with ❤️ in Paris',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      color: kTextHint,
-                    ),
-                  ).animate().fadeIn(delay: 320.ms),
-                ],
-              ),
-            ),
+                  );
+                },
+              );
+            },
           );
         },
       ),
     );
   }
 
-  Widget _buildAvatar(String displayName, bool isKycVerified) {
-    final initials = displayName.isNotEmpty
-        ? displayName.replaceAll('+', '').substring(0, 2).toUpperCase()
-        : '??';
+  Widget _buildAvatar(String initials, bool isKycVerified) {
     return Stack(
       alignment: Alignment.bottomRight,
       children: [
@@ -239,7 +358,7 @@ class ProfileScreen extends StatelessWidget {
               initials,
               style: GoogleFonts.plusJakartaSans(
                 color: Colors.white,
-                fontSize: 28,
+                fontSize: 26,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -252,18 +371,48 @@ class ProfileScreen extends StatelessWidget {
               color: kSurface,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.verified_rounded, color: kSuccess, size: 20),
+            child: const Icon(Icons.verified_rounded,
+                color: kSuccess, size: 20),
           ),
       ],
     );
   }
 }
 
-// ── Stats row ────────────────────────────────────────────────────────────────
+// ── Stats row ─────────────────────────────────────────────────────────────────
 
 class _StatsRow extends StatelessWidget {
+  const _StatsRow({
+    required this.isTraveler,
+    required this.totalBids,
+    required this.totalAnnouncements,
+    required this.isLoading,
+  });
+
+  final bool isTraveler;
+  final int totalBids;
+  final int totalAnnouncements;
+  final bool isLoading;
+
   @override
   Widget build(BuildContext context) {
+    final String stat1Value;
+    final String stat1Label;
+    final String stat3Value;
+    final String stat3Label;
+
+    if (isTraveler) {
+      stat1Value = isLoading ? '—' : '$totalAnnouncements';
+      stat1Label = 'Trajets';
+      stat3Value = '98%';
+      stat3Label = 'Livraison';
+    } else {
+      stat1Value = isLoading ? '—' : '$totalBids';
+      stat1Label = 'Envois';
+      stat3Value = '0€';
+      stat3Label = 'Économisés';
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
@@ -273,11 +422,14 @@ class _StatsRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(child: _StatItem(value: '12', label: 'Envois')),
+          Expanded(
+              child: _StatItem(value: stat1Value, label: stat1Label)),
           Container(width: 1, height: 32, color: kBorder),
-          Expanded(child: _StatItem(value: '4.9', label: 'Ma note')),
+          const Expanded(
+              child: _StatItem(value: '4.9', label: 'Ma note')),
           Container(width: 1, height: 32, color: kBorder),
-          Expanded(child: _StatItem(value: '84€', label: 'Économisés')),
+          Expanded(
+              child: _StatItem(value: stat3Value, label: stat3Label)),
         ],
       ),
     );
@@ -315,7 +467,7 @@ class _StatItem extends StatelessWidget {
   }
 }
 
-// ── Menu section ─────────────────────────────────────────────────────────────
+// ── Menu section ──────────────────────────────────────────────────────────────
 
 class _MenuSection extends StatelessWidget {
   const _MenuSection({required this.children});
@@ -363,7 +515,8 @@ class _MenuItem extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 16, vertical: 14),
             child: Row(
               children: [
                 Container(
@@ -416,7 +569,7 @@ class _MenuItem extends StatelessWidget {
   }
 }
 
-// ── Badge ────────────────────────────────────────────────────────────────────
+// ── Badge ─────────────────────────────────────────────────────────────────────
 
 class _Badge extends StatelessWidget {
   const _Badge({

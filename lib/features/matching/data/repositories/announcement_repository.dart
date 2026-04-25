@@ -30,7 +30,8 @@ class AnnouncementRepository {
     );
   }
 
-  Future<List<AnnouncementModel>> getMyAnnouncements({int page = 0}) async {
+  Future<({List<AnnouncementModel> announcements, int totalElements})>
+      getMyAnnouncements({int page = 0}) async {
     return _remoteDatasource.getMyAnnouncements(page: page);
   }
 

@@ -258,7 +258,10 @@ final appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/profile',
-              builder: (context, state) => const ProfileScreen(),
+              builder: (context, state) => BlocProvider(
+                create: (_) => getIt<BidBloc>(),
+                child: const ProfileScreen(),
+              ),
             ),
           ],
         ),

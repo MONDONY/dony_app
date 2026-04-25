@@ -20,7 +20,8 @@ class AnnouncementError extends AnnouncementState {
 
 class AnnouncementListLoaded extends AnnouncementState {
   final List<AnnouncementModel> announcements;
-  AnnouncementListLoaded(this.announcements);
+  final int totalElements;
+  AnnouncementListLoaded(this.announcements, {this.totalElements = 0});
 }
 
 class AnnouncementDetailLoaded extends AnnouncementState {

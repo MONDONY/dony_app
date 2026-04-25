@@ -38,15 +38,18 @@ class AnnouncementRemoteDatasource {
     return AnnouncementModel.fromJson(response.data);
   }
 
-  Future<List<AnnouncementModel>> getMyAnnouncements({int page = 0}) async {
+  Future<({List<AnnouncementModel> announcements, int totalElements})>
+      getMyAnnouncements({int page = 0}) async {
     final response = await _apiClient.dio.get(
       '/announcements/my',
-      queryParameters: {'page': page, 'size': 20},
+      queryParameters: {'page': page, 'size': 50},
     );
-
-    return (response.data['content'] as List)
-        .map((json) => AnnouncementModel.fromJson(json))
+    final data = response.data as Map<String, dynamic>;
+    final announcements = (data['content'] as List)
+        .map((json) => AnnouncementModel.fromJson(json as Map<String, dynamic>))
         .toList();
+    final totalElements = (data['totalElements'] as num?)?.toInt() ?? announcements.length;
+    return (announcements: announcements, totalElements: totalElements);
   }
 
   Future<AnnouncementModel> getAnnouncementDetail(String id) async {
