@@ -15,4 +15,19 @@ class AuthRepository {
   Future<UserModel> getProfile() => _datasource.getProfile();
 
   Future<void> deleteAccount() => _datasource.deleteAccount();
+
+  Future<UserModel> updateProfile({
+    String? firstName,
+    String? lastName,
+    String? email,
+    DateTime? birthDate,
+    String? city,
+  }) =>
+      _datasource.updateProfile(
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        birthDate: birthDate,
+        city: city,
+      );
 }

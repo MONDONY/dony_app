@@ -62,3 +62,14 @@ class AuthAccountDeleted extends AuthState {
 class AuthLocked extends AuthState {
   const AuthLocked();
 }
+
+/// Émis après une mise à jour de profil réussie.
+/// Remplace temporairement AuthAuthenticated jusqu'au prochain check.
+class AuthProfileUpdated extends AuthState {
+  final UserModel user;
+
+  const AuthProfileUpdated(this.user);
+
+  @override
+  List<Object?> get props => [user];
+}

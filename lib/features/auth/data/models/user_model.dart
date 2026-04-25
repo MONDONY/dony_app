@@ -4,6 +4,10 @@ class UserModel extends Equatable {
   final String id;
   final String? phoneNumber;
   final String? email;
+  final String? firstName;
+  final String? lastName;
+  final DateTime? birthDate;
+  final String? city;
   final List<String> roles;
   final String kycStatus;
   final String status;
@@ -12,6 +16,10 @@ class UserModel extends Equatable {
     required this.id,
     this.phoneNumber,
     this.email,
+    this.firstName,
+    this.lastName,
+    this.birthDate,
+    this.city,
     required this.roles,
     required this.kycStatus,
     required this.status,
@@ -21,15 +29,87 @@ class UserModel extends Equatable {
         id: json['id'] as String,
         phoneNumber: json['phoneNumber'] as String?,
         email: json['email'] as String?,
+        firstName: json['firstName'] as String?,
+        lastName: json['lastName'] as String?,
+        birthDate: json['birthDate'] != null
+            ? DateTime.tryParse(json['birthDate'] as String)
+            : null,
+        city: json['city'] as String?,
         roles: List<String>.from(json['roles'] as List? ?? []),
         kycStatus: json['kycStatus'] as String? ?? 'PENDING',
         status: json['status'] as String? ?? 'ACTIVE',
       );
+
+  String get displayName {
+    final parts = [firstName, lastName]
+        .where((p) => p != null && p.isNotEmpty)
+        .join(' ');
+    if (parts.isNotEmpty) return parts;
+    if (phoneNumber != null && phoneNumber!.isNotEmpty) return phoneNumber!;
+    if (email != null && email!.isNotEmpty) return email!;
+    return 'Utilisateur';
+  }
+
+  String get initials {
+    if ((firstName?.isNotEmpty ?? false) && (lastName?.isNotEmpty ?? false)) {
+      return '${firstName![0]}${lastName![0]}'.toUpperCase();
+    }
+    if (firstName?.isNotEmpty ?? false) return firstName![0].toUpperCase();
+    if (lastName?.isNotEmpty ?? false) return lastName![0].toUpperCase();
+    if (email?.isNotEmpty ?? false) return email![0].toUpperCase();
+    if (phoneNumber?.isNotEmpty ?? false) {
+      final digits = phoneNumber!.replaceAll(RegExp(r'[^\d]'), '');
+      if (digits.length >= 2) return digits.substring(digits.length - 2);
+      return digits;
+    }
+    return '?';
+  }
+
+  int? get age {
+    if (birthDate == null) return null;
+    final now = DateTime.now();
+    int a = now.year - birthDate!.year;
+    if (now.month < birthDate!.month ||
+        (now.month == birthDate!.month && now.day < birthDate!.day)) {
+      a--;
+    }
+    return a;
+  }
+
+  bool get isProfileComplete {
+    final hasName =
+        (firstName?.isNotEmpty ?? false) || (lastName?.isNotEmpty ?? false);
+    return hasName && birthDate != null && (city?.isNotEmpty ?? false);
+  }
+
+  // Number of required profile fields completed (max = profileTotalSteps).
+  int get profileCompletionSteps {
+    int steps = 0;
+    if ((firstName?.isNotEmpty ?? false) || (lastName?.isNotEmpty ?? false)) {
+      steps++;
+    }
+    if (birthDate != null) steps++;
+    if (city?.isNotEmpty ?? false) steps++;
+    return steps;
+  }
+
+  static const int profileTotalSteps = 3;
 
   bool get isKycVerified => kycStatus == 'VERIFIED';
   bool get isSender => roles.contains('SENDER');
   bool get isTraveler => roles.contains('TRAVELER');
 
   @override
-  List<Object?> get props => [id, phoneNumber, email, roles, kycStatus, status];
+  List<Object?> get props => [
+        id,
+        phoneNumber,
+        email,
+        firstName,
+        lastName,
+        birthDate,
+        city,
+        roles,
+        kycStatus,
+        status,
+      ];
 }

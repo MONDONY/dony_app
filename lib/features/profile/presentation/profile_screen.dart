@@ -2,13 +2,14 @@ import 'package:dony/app/theme.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
-import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,24 +31,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     context.read<AnnouncementBloc>().add(AnnouncementListRequested());
   }
 
-  String _initials(String? phoneNumber, String? email) {
-    if (email != null && email.isNotEmpty) {
-      return email[0].toUpperCase();
-    }
-    if (phoneNumber != null && phoneNumber.isNotEmpty) {
-      final digits = phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
-      if (digits.length >= 2) return digits.substring(digits.length - 2);
-      return digits;
-    }
-    return '?';
-  }
-
-  String _displayName(String? phoneNumber, String? email) {
-    if (phoneNumber != null && phoneNumber.isNotEmpty) return phoneNumber;
-    if (email != null && email.isNotEmpty) return email;
-    return 'Utilisateur';
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
@@ -58,14 +41,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       },
       child: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, authState) {
-          final user =
-              authState is AuthAuthenticated ? authState.user : null;
+          UserModel? user;
+          if (authState is AuthAuthenticated) user = authState.user;
+          if (authState is AuthProfileUpdated) user = authState.user;
           final isTraveler = user?.isTraveler ?? false;
           final isSender = user?.isSender ?? false;
           final isKycVerified = user?.isKycVerified ?? false;
-          final displayName =
-              _displayName(user?.phoneNumber, user?.email);
-          final initials = _initials(user?.phoneNumber, user?.email);
+          final displayName = user?.displayName ?? 'Utilisateur';
+          final initials = user?.initials ?? '?';
 
           return BlocBuilder<BidBloc, BidState>(
             builder: (context, bidState) {
@@ -195,7 +178,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               isLoading: bidState is BidLoading ||
                                   announcementState is AnnouncementLoading,
                             ).animate().fadeIn(delay: 160.ms),
-                            const SizedBox(height: 28),
+                            const SizedBox(height: 20),
+
+                            // ── Bannière complétion profil ───────────────
+                            if (user != null && !user.isProfileComplete) ...[
+                              _ProfileCompletionBanner(
+                                user: user,
+                                onTap: () =>
+                                    context.push('/profile/edit'),
+                              ).animate().fadeIn(delay: 180.ms),
+                              const SizedBox(height: 20),
+                            ],
 
                             // ── Menu principal ──────────────────────────
                             _MenuSection(
@@ -375,6 +368,139 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 color: kSuccess, size: 20),
           ),
       ],
+    );
+  }
+}
+
+// ── Profile completion banner ─────────────────────────────────────────────────
+
+class _ProfileCompletionBanner extends StatelessWidget {
+  const _ProfileCompletionBanner({
+    required this.user,
+    required this.onTap,
+  });
+
+  final UserModel user;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final completed = user.profileCompletionSteps;
+    final total = UserModel.profileTotalSteps;
+
+    final missing = <String>[];
+    if (!(user.firstName?.isNotEmpty ?? false) &&
+        !(user.lastName?.isNotEmpty ?? false)) {
+      missing.add('Votre nom');
+    }
+    if (user.birthDate == null) missing.add('Date de naissance');
+    if (!(user.city?.isNotEmpty ?? false)) missing.add("Lieu d'habitation");
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: kWarning.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: kWarning.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    color: kWarning.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.edit_note_rounded,
+                      color: kWarning, size: 18),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Profil incomplet',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: kTextPrimary,
+                        ),
+                      ),
+                      Text(
+                        '${(completed / total * 100).round()}% complété · Compléter maintenant',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          color: kWarning,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded,
+                    color: kTextHint, size: 18),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: completed / total,
+                backgroundColor: kBorder,
+                valueColor: const AlwaysStoppedAnimation<Color>(kWarning),
+                minHeight: 5,
+              ),
+            ),
+            if (missing.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children:
+                    missing.map((m) => _MissingChip(label: m)).toList(),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MissingChip extends StatelessWidget {
+  const _MissingChip({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: kWarning.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: kWarning.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.add_rounded, color: kWarning, size: 12),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: kWarning,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

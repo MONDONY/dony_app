@@ -1,5 +1,6 @@
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:intl/intl.dart';
 
 class AuthRemoteDatasource {
   final ApiClient _apiClient;
@@ -24,5 +25,26 @@ class AuthRemoteDatasource {
 
   Future<void> deleteAccount() async {
     await _apiClient.dio.delete<void>('/auth/me');
+  }
+
+  Future<UserModel> updateProfile({
+    String? firstName,
+    String? lastName,
+    String? email,
+    DateTime? birthDate,
+    String? city,
+  }) async {
+    final response = await _apiClient.dio.patch<Map<String, dynamic>>(
+      '/auth/me',
+      data: {
+        if (firstName != null) 'firstName': firstName,
+        if (lastName != null) 'lastName': lastName,
+        if (email != null) 'email': email,
+        if (birthDate != null)
+          'birthDate': DateFormat('yyyy-MM-dd').format(birthDate),
+        if (city != null) 'city': city,
+      },
+    );
+    return UserModel.fromJson(response.data!);
   }
 }

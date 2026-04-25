@@ -26,6 +26,7 @@ import 'package:dony/features/matching/presentation/screens/create_bid_screen.da
 import 'package:dony/features/matching/presentation/screens/handover_screen.dart';
 import 'package:dony/features/matching/presentation/screens/search_announcement_screen.dart';
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
+import 'package:dony/features/profile/presentation/edit_profile_screen.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:flutter/material.dart';
@@ -108,6 +109,12 @@ final appRouter = GoRouter(
         final cancellation = state.extra as CancellationModel;
         return RematchSearchScreen(cancellation: cancellation);
       },
+    ),
+
+    // ── Édition profil (hors shell, plein écran) ─────────────────────────
+    GoRoute(
+      path: '/profile/edit',
+      builder: (context, state) => const EditProfileScreen(),
     ),
 
     // ── Routes plein écran (hors shell) ─────────────────────────────────

@@ -23,16 +23,25 @@ class _MatchingManagementScreenState extends State<MatchingManagementScreen> {
   @override
   void initState() {
     super.initState();
-    final user = (context.read<AuthBloc>().state as AuthAuthenticated).user;
-    _showSendersView = user.isSender;
+    final s = context.read<AuthBloc>().state;
+    final user = s is AuthAuthenticated
+        ? s.user
+        : s is AuthProfileUpdated
+            ? s.user
+            : null;
+    _showSendersView = user?.isSender ?? true;
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
-        if (state is! AuthAuthenticated) return const SizedBox();
-        final user = state.user;
+        final user = state is AuthAuthenticated
+            ? state.user
+            : state is AuthProfileUpdated
+                ? state.user
+                : null;
+        if (user == null) return const SizedBox();
 
         // Si l'utilisateur n'a qu'un rôle, on impose la vue
         if (user.isSender && !user.isTraveler) {

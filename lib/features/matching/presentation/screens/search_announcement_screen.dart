@@ -874,15 +874,18 @@ class _TravelerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final traveler = announcement.traveler;
     final rating = traveler?.averageRating;
+    final totalTrips = traveler?.totalTrips;
     final isKiloPro = traveler?.kiloPro ?? false;
+    final dateStr =
+        DateFormat('EEE d MMM', 'fr').format(announcement.departureDate);
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: isOwnAnnouncement ? kBackground : kSurface,
+          color: kSurface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isOwnAnnouncement ? kBorder : kBorder),
+          border: Border.all(color: kBorder),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
@@ -892,14 +895,14 @@ class _TravelerCard extends StatelessWidget {
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(14),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Avatar
+              // ── Avatar ─────────────────────────────────────────
               Container(
-                width: 48,
-                height: 48,
+                width: 44,
+                height: 44,
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     colors: [Color(0xFF1E88E5), Color(0xFF42A5F5)],
@@ -913,28 +916,31 @@ class _TravelerCard extends StatelessWidget {
                     _initials,
                     style: GoogleFonts.plusJakartaSans(
                       color: Colors.white,
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
               ),
               const SizedBox(width: 12),
-              // Info
+
+              // ── Contenu ────────────────────────────────────────
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Ligne 1 : nom + badge Kilo Pro
                     Row(
                       children: [
                         Expanded(
                           child: Text(
                             traveler?.displayName ?? 'Voyageur',
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: 15,
+                              fontSize: 14,
                               fontWeight: FontWeight.w700,
                               color: kTextPrimary,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         if (isKiloPro)
@@ -944,11 +950,14 @@ class _TravelerCard extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: const Color(0xFFFEF3C7),
                               borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                  color: const Color(0xFFF59E0B)
+                                      .withValues(alpha: 0.4)),
                             ),
                             child: Text(
                               'Kilo Pro',
                               style: GoogleFonts.plusJakartaSans(
-                                fontSize: 11,
+                                fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 color: const Color(0xFFB45309),
                               ),
@@ -956,50 +965,73 @@ class _TravelerCard extends StatelessWidget {
                           ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        if (rating != null) ...[
+                    const SizedBox(height: 3),
+
+                    // Ligne 2 : note + nombre de trajets
+                    if (rating != null)
+                      Row(
+                        children: [
                           const Icon(Icons.star_rounded,
                               size: 13, color: Color(0xFFF59E0B)),
                           const SizedBox(width: 3),
                           Text(
                             rating.toStringAsFixed(1),
                             style: GoogleFonts.plusJakartaSans(
-                              fontSize: 13,
+                              fontSize: 12,
                               fontWeight: FontWeight.w700,
                               color: kTextPrimary,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          if (totalTrips != null && totalTrips > 0) ...[
+                            Text(
+                              ' · $totalTrips trajet${totalTrips > 1 ? 's' : ''}',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12,
+                                color: kTextSecondary,
+                              ),
+                            ),
+                          ],
                         ],
+                      ),
+                    const SizedBox(height: 8),
+
+                    // Ligne 3 : route + date
+                    Row(
+                      children: [
+                        const Icon(Icons.flight_takeoff_rounded,
+                            size: 13, color: kGreenPrimary),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: Text(
+                            '${announcement.departureCity} → ${announcement.arrivalCity}',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: kTextPrimary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                         Text(
-                          '${announcement.departureCity} → ${announcement.arrivalCity}',
+                          dateStr,
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: kGreenPrimary,
+                            fontSize: 11,
+                            color: kTextSecondary,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      DateFormat('EEE d MMM', 'fr')
-                          .format(announcement.departureDate),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12,
-                        color: kTextSecondary,
-                      ),
-                    ),
                     const SizedBox(height: 10),
+
+                    // Ligne 4 : capacité + prix + bouton
                     Row(
                       children: [
                         _Pill(
                           label:
                               '${announcement.availableKg.toStringAsFixed(0)} kg dispo',
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         _Pill(
                           label:
                               '${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
@@ -1009,10 +1041,11 @@ class _TravelerCard extends StatelessWidget {
                         if (isOwnAnnouncement)
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 6),
+                                horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
-                              color: kBorder,
-                              borderRadius: BorderRadius.circular(10),
+                              color: kBackground,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: kBorder),
                             ),
                             child: Text(
                               'Votre trajet',
@@ -1026,17 +1059,18 @@ class _TravelerCard extends StatelessWidget {
                         else
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 8),
+                                horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: kGreenPrimary,
-                              borderRadius: BorderRadius.circular(10),
+                              color: kSurface,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: kGreenPrimary),
                             ),
                             child: Text(
                               'Voir →',
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                                color: kGreenPrimary,
                               ),
                             ),
                           ),

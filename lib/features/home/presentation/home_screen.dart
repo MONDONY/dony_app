@@ -32,9 +32,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, authState) {
-        final user =
-            authState is AuthAuthenticated ? authState.user : null;
-        final displayName = user?.phoneNumber ?? 'vous';
+        final user = authState is AuthAuthenticated
+            ? authState.user
+            : authState is AuthProfileUpdated
+                ? authState.user
+                : null;
+        final displayName = user?.displayName ?? 'vous';
 
         return Scaffold(
           backgroundColor: kBackground,
@@ -138,7 +141,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               final authState = context.read<AuthBloc>().state;
                               final currentUserId = authState is AuthAuthenticated
                                   ? authState.user.id
-                                  : null;
+                                  : authState is AuthProfileUpdated
+                                      ? authState.user.id
+                                      : null;
                               final isOwn = currentUserId != null &&
                                   announcement.travelerId == currentUserId;
                               return _TravelerCard(

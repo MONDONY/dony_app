@@ -27,6 +27,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthRegisterRequested>(_onRegisterRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
     on<AuthDeleteAccountRequested>(_onDeleteAccountRequested);
+    on<AuthUpdateProfileRequested>(_onUpdateProfileRequested);
   }
 
   // ─── Vérification au démarrage (splash) ────────────────────────────────────
@@ -192,6 +193,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await _firebaseAuth.signOut();
       _pendingPhoneNumber = null;
       emit(const AuthAccountDeleted());
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
+    }
+  }
+
+  // ─── Mise à jour du profil ────────────────────────────────────────────────
+
+  Future<void> _onUpdateProfileRequested(
+    AuthUpdateProfileRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      final updatedUser = await _authRepository.updateProfile(
+        firstName: event.firstName,
+        lastName: event.lastName,
+        email: event.email,
+        birthDate: event.birthDate,
+        city: event.city,
+      );
+      emit(AuthProfileUpdated(updatedUser));
     } catch (e) {
       emit(AuthError(_friendlyError(e)));
     }
