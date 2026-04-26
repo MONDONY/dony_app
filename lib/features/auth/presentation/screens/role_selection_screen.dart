@@ -1,3 +1,4 @@
+import 'package:dony/core/constants/app_assets.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -49,7 +50,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 48),
+                Image.asset(AppAssets.logo, height: 48),
+                const SizedBox(height: 32),
                 const Text(
                   'Je suis...',
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),

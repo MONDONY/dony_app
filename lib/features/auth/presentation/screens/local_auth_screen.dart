@@ -4,6 +4,7 @@ import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/auth/bloc/local_auth_event.dart';
 import 'package:dony/features/auth/bloc/local_auth_state.dart';
+import 'package:dony/core/constants/app_assets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -158,19 +159,11 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
   }
 
   Widget _buildTitle() {
-    return const Column(
+    return Column(
       children: [
-        Text(
-          'dony',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1E88E5),
-            letterSpacing: 4,
-          ),
-        ),
-        SizedBox(height: 6),
-        Text(
+        Image.asset(AppAssets.logo, height: 70),
+        const SizedBox(height: 14),
+        const Text(
           'Saisissez votre code PIN',
           style: TextStyle(
             fontSize: 16,

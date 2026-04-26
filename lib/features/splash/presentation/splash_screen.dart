@@ -5,6 +5,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:dony/core/constants/app_assets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -109,16 +110,8 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              'dony',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 56,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 6,
-              ),
-            ),
-            const SizedBox(height: 8),
+            Image.asset(AppAssets.logoWhite, height: 120),
+            const SizedBox(height: 16),
             const Text(
               'P2P · Afrique',
               style: TextStyle(color: Colors.white54, fontSize: 14, letterSpacing: 2),
