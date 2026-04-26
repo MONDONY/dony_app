@@ -6,7 +6,10 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
+import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:dony/features/tracking/presentation/widgets/qr_code_card.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -22,8 +25,11 @@ class BidDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => getIt<BidBloc>(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => getIt<BidBloc>()),
+        BlocProvider(create: (_) => getIt<TrackingBloc>()),
+      ],
       child: _BidDetailView(initialBid: bid),
     );
   }
@@ -168,6 +174,10 @@ class _BidDetailViewState extends State<_BidDetailView> {
                 _StatusBanner(bid: _bid),
                 const SizedBox(height: 20),
                 _CorridorCard(bid: _bid),
+                if (_bid.trackingNumber != null) ...[
+                  const SizedBox(height: 16),
+                  _TrackingNumberCard(trackingNumber: _bid.trackingNumber!),
+                ],
                 if (isSender) ...[
                   const SizedBox(height: 16),
                   _TripDetailsCard(bid: _bid),
@@ -183,6 +193,10 @@ class _BidDetailViewState extends State<_BidDetailView> {
                 if (_bid.handoverLocation != null) ...[
                   const SizedBox(height: 16),
                   _HandoverCard(bid: _bid),
+                ],
+                if (isSender && _bid.status == 'ACCEPTED' && _bid.trackingNumber != null) ...[
+                  const SizedBox(height: 16),
+                  QrCodeCard(bidId: _bid.id),
                 ],
               ],
             ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
@@ -1197,6 +1211,83 @@ class _TravelerRejectedBar extends StatelessWidget {
             child: Text('Supprimer',
                 style:
                     GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrackingNumberCard extends StatelessWidget {
+  final String trackingNumber;
+  const _TrackingNumberCard({required this.trackingNumber});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: kSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: kBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'NUMÉRO DE SUIVI',
+            style: GoogleFonts.plusJakartaSans(
+                fontSize: 11, fontWeight: FontWeight.w700,
+                color: kTextSecondary, letterSpacing: 0.8),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: kGreenLight,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.local_shipping_outlined,
+                    color: kGreenPrimary, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  trackingNumber,
+                  style: GoogleFonts.plusJakartaSans(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: kTextPrimary,
+                      letterSpacing: 2),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.copy_rounded, color: kGreenPrimary, size: 20),
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: trackingNumber));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Numéro copié !',
+                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500),
+                      ),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+                tooltip: 'Copier',
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Partagez ce numéro avec votre destinataire pour qu\'il puisse suivre le colis.',
+            style: GoogleFonts.plusJakartaSans(
+                fontSize: 12, color: kTextSecondary, height: 1.4),
           ),
         ],
       ),

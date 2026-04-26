@@ -19,6 +19,8 @@ import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/data/services/saved_trips_service.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:dony/features/payments/data/datasources/payment_remote_datasource.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:get_it/get_it.dart';
@@ -101,5 +103,13 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<CancellationBloc>(
     () => CancellationBloc(getIt<CancellationRepository>()),
+  );
+
+  // Tracking
+  getIt.registerLazySingleton<TrackingRepository>(
+    () => TrackingRepository(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<TrackingBloc>(
+    () => TrackingBloc(getIt<TrackingRepository>()),
   );
 }

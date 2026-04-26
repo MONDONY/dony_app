@@ -5,6 +5,8 @@ import 'package:dony/features/auth/presentation/screens/otp_verification_screen.
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/pin_setup_screen.dart';
 import 'package:dony/features/auth/presentation/screens/role_selection_screen.dart';
+import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:dony/features/tracking/presentation/screens/tracking_search_screen.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/presentation/screens/cancellation_screen.dart';
@@ -125,6 +127,13 @@ final appRouter = GoRouter(
       path: '/tracking/scan',
       builder: (context, state) =>
           const _PlaceholderScreen(title: 'Scanner QR'),
+    ),
+    GoRoute(
+      path: '/tracking/search',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<TrackingBloc>(),
+        child: const TrackingSearchScreen(),
+      ),
     ),
     GoRoute(
       path: '/payments/onboarding',
@@ -263,8 +272,7 @@ final appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/tracking',
-              builder: (context, state) =>
-                  const _PlaceholderScreen(title: 'Suivi des colis'),
+              builder: (context, state) => const _TrackingHubScreen(),
             ),
           ],
         ),
@@ -296,6 +304,81 @@ final appRouter = GoRouter(
     ),
   ],
 );
+
+class _TrackingHubScreen extends StatelessWidget {
+  const _TrackingHubScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF4F6F8),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: const Text(
+          'Suivi des colis',
+          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18, color: Color(0xFF0D1B2A)),
+        ),
+        centerTitle: false,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, color: Color(0xFFE9ECEF)),
+        ),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE3F2FD),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Icon(Icons.local_shipping_outlined,
+                    color: Color(0xFF1E88E5), size: 48),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Suivre un colis',
+                style: TextStyle(
+                    fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFF0D1B2A)),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Entrez votre numéro de suivi DON-XXXXXX\npour connaître le statut de votre colis.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Color(0xFF6B7A8D), height: 1.5),
+              ),
+              const SizedBox(height: 28),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton.icon(
+                  onPressed: () => context.push('/tracking/search'),
+                  icon: const Icon(Icons.search_rounded),
+                  label: const Text(
+                    'Rechercher par numéro',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1E88E5),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class _PlaceholderScreen extends StatelessWidget {
   const _PlaceholderScreen({required this.title});
