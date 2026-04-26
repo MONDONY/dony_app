@@ -1,13 +1,15 @@
 import 'package:dio/dio.dart' show Options;
+import 'package:dony/core/constants/app_assets.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:dony/core/constants/app_assets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:go_router/go_router.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -18,49 +20,36 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  _Status _status = _Status.checking;
-  String _detail = '';
+  bool _hasError = false;
 
   @override
   void initState() {
     super.initState();
-    _checkBackend();
+    // Retire le splash natif dès que Flutter a dessiné son premier frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FlutterNativeSplash.remove();
+      _checkAndNavigate();
+    });
   }
 
-  Future<void> _checkBackend() async {
-    setState(() {
-      _status = _Status.checking;
-      _detail = '';
-    });
+  Future<void> _checkAndNavigate() async {
     try {
       final response = await getIt<ApiClient>().dio.get<Map<String, dynamic>>(
             '/actuator/health',
             options: Options(extra: {'skipAuth': true}),
           );
-      final backendStatus = response.data?['status'] as String? ?? 'UNKNOWN';
-      if (mounted) {
-        if (backendStatus == 'UP') {
-          setState(() {
-            _status = _Status.ok;
-            _detail = 'Backend: $backendStatus';
-          });
-          await Future.delayed(const Duration(milliseconds: 800));
-          if (mounted) {
-            await _navigateNext();
-          }
-        } else {
-          setState(() {
-            _status = _Status.error;
-            _detail = 'Backend: $backendStatus';
-          });
-        }
+      final status = response.data?['status'] as String? ?? '';
+      if (!mounted) {
+        return;
       }
-    } catch (e) {
+      if (status == 'UP') {
+        await _navigateNext();
+      } else {
+        setState(() => _hasError = true);
+      }
+    } catch (_) {
       if (mounted) {
-        setState(() {
-          _status = _Status.error;
-          _detail = e.toString().replaceAll(RegExp(r'DioException.*\['), '[');
-        });
+        setState(() => _hasError = true);
       }
     }
   }
@@ -74,7 +63,6 @@ class _SplashScreenState extends State<SplashScreen> {
       return;
     }
 
-    // Firebase user exists — check if registered in backend
     if (!mounted) {
       return;
     }
@@ -91,92 +79,126 @@ class _SplashScreenState extends State<SplashScreen> {
     if (result is AuthAuthenticated) {
       context.go('/auth/local');
     } else if (result is AuthInitial) {
-      // Firebase user existe mais pas inscrit en backend → inscription
       context.go('/auth/role');
     } else {
-      // Erreur réseau/serveur → rester sur splash avec message d'erreur
-      setState(() {
-        _status = _Status.error;
-        _detail = (result as AuthError).message;
-      });
+      setState(() => _hasError = true);
     }
+  }
+
+  void _retry() {
+    setState(() => _hasError = false);
+    _checkAndNavigate();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1E88E5),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(AppAssets.logoWhite, height: 120),
-            const SizedBox(height: 16),
-            const Text(
-              'P2P · Afrique',
-              style: TextStyle(color: Colors.white54, fontSize: 14, letterSpacing: 2),
-            ),
-            const SizedBox(height: 56),
-            _buildStatusWidget(),
-            if (_detail.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Text(
-                  _detail,
-                  style: const TextStyle(color: Colors.white54, fontSize: 11),
-                  textAlign: TextAlign.center,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
+      body: Stack(
+        children: [
+          // Contenu statique — identique à l'image native splash_full.png
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Grand logo sans animation — même position que sur l'écran natif
+                Image.asset(AppAssets.logoWhite, height: 160),
+                const SizedBox(height: 28),
+                const Text(
+                  'Livrez en confiance',
+                  style: TextStyle(
+                    color: Color(0xB3FFFFFF),
+                    fontSize: 18,
+                    letterSpacing: 0.4,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
-              ),
-            ],
-            if (_status == _Status.error) ...[
-              const SizedBox(height: 20),
-              OutlinedButton.icon(
-                onPressed: _checkBackend,
-                icon: const Icon(Icons.refresh, color: Colors.white),
-                label: const Text('Réessayer', style: TextStyle(color: Colors.white)),
-                style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.white38)),
-              ),
-            ],
-          ],
-        ),
+                const SizedBox(height: 10),
+                const Text(
+                  'v1.0.0',
+                  style: TextStyle(
+                    color: Color(0x5DFFFFFF),
+                    fontSize: 13,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Points de chargement animés en bas
+          if (!_hasError)
+            Positioned(
+              bottom: 64,
+              left: 0,
+              right: 0,
+              child: _LoadingDots(),
+            ),
+          // Erreur réseau
+          if (_hasError)
+            Positioned(
+              bottom: 48,
+              left: 24,
+              right: 24,
+              child: Column(
+                children: [
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.wifi_off_rounded, color: Colors.white54, size: 16),
+                      SizedBox(width: 8),
+                      Text(
+                        'Impossible de se connecter',
+                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  OutlinedButton.icon(
+                    onPressed: _retry,
+                    icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 16),
+                    label: const Text(
+                      'Réessayer',
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.white38),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                  ),
+                ],
+              ).animate().fadeIn(duration: 300.ms),
+            ),
+        ],
       ),
     );
   }
-
-  Widget _buildStatusWidget() => switch (_status) {
-        _Status.checking => const Column(
-            children: [
-              CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-              SizedBox(height: 12),
-              Text('Connexion au serveur...', style: TextStyle(color: Colors.white70)),
-            ],
-          ),
-        _Status.ok => const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.check_circle_outline, color: Color(0xFF69F0AE), size: 26),
-              SizedBox(width: 8),
-              Text(
-                'Serveur connecté ✓',
-                style: TextStyle(color: Color(0xFF69F0AE), fontSize: 15, fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-        _Status.error => const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.wifi_off, color: Color(0xFFFF5252), size: 26),
-              SizedBox(width: 8),
-              Text(
-                'Serveur inaccessible',
-                style: TextStyle(color: Color(0xFFFF5252), fontSize: 15, fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-      };
 }
 
-enum _Status { checking, ok, error }
+class _LoadingDots extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(3, (i) {
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 5),
+          width: 7,
+          height: 7,
+          decoration: const BoxDecoration(
+            color: Colors.white54,
+            shape: BoxShape.circle,
+          ),
+        )
+            .animate(
+              onPlay: (c) => c.repeat(reverse: true),
+              delay: Duration(milliseconds: i * 180),
+            )
+            .scaleXY(begin: 0.3, end: 1.0, duration: 500.ms, curve: Curves.easeInOut)
+            .fadeIn(begin: 0.2, duration: 500.ms);
+      }),
+    );
+  }
+}

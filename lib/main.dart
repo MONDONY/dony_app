@@ -6,6 +6,7 @@ import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -25,7 +26,9 @@ const _environment = String.fromEnvironment(
 const _stripePublishableKey = String.fromEnvironment('STRIPE_PUBLISHABLE_KEY');
 
 Future<void> _bootstrap() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  // Maintient la native splash visible jusqu'à ce que Flutter soit prêt
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await initializeDateFormatting('fr');
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
