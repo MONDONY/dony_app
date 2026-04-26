@@ -2,6 +2,7 @@ import 'package:dony/core/constants/app_assets.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -78,7 +79,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
               child: Text(
                 'Indicatif pays',
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.sora(
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF0D1B2A),
@@ -89,13 +90,13 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                   leading: Text(c.$2, style: const TextStyle(fontSize: 22)),
                   title: Text(
                     '${c.$3} (${c.$1})',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.sora(
                       fontWeight: FontWeight.w500,
                       fontSize: 15,
                     ),
                   ),
                   trailing: _selectedCode == c.$1
-                      ? const Icon(Icons.check_rounded, color: Color(0xFF1E88E5))
+                      ? const Icon(Icons.check_rounded, color: DonyColors.blue400)
                       : null,
                   onTap: () {
                     setState(() {
@@ -145,7 +146,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Text(
                     'Bienvenue',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.sora(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
                       color: const Color(0xFF0D1B2A),
@@ -158,7 +159,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Text(
                     'Entrez votre numéro pour continuer. Nous vous enverrons un code par SMS.',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.sora(
                       fontSize: 14,
                       color: const Color(0xFF6B7A8D),
                       height: 1.5,
@@ -174,7 +175,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                     children: [
                       Text(
                         'NUMÉRO DE TÉLÉPHONE',
-                        style: GoogleFonts.plusJakartaSans(
+                        style: GoogleFonts.sora(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color: const Color(0xFF6B7A8D),
@@ -206,7 +207,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                     const SizedBox(width: 8),
                                     Text(
                                       _selectedCode,
-                                      style: GoogleFonts.plusJakartaSans(
+                                      style: GoogleFonts.sora(
                                         fontWeight: FontWeight.w600,
                                         fontSize: 15,
                                         color: const Color(0xFF0D1B2A),
@@ -234,14 +235,14 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                 inputFormatters: [
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
-                                style: GoogleFonts.plusJakartaSans(
+                                style: GoogleFonts.sora(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w500,
                                   color: const Color(0xFF0D1B2A),
                                 ),
                                 decoration: InputDecoration(
                                   hintText: '06 12 34 56 78',
-                                  hintStyle: GoogleFonts.plusJakartaSans(
+                                  hintStyle: GoogleFonts.sora(
                                     color: const Color(0xFFADB5BD),
                                     fontSize: 15,
                                   ),
@@ -288,7 +289,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                         child: ElevatedButton(
                           onPressed: isLoading ? null : _submit,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF1E88E5),
+                            backgroundColor: DonyColors.blue400,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
@@ -306,7 +307,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                 )
                               : Text(
                                   'Recevoir le code',
-                                  style: GoogleFonts.plusJakartaSans(
+                                  style: GoogleFonts.sora(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -323,7 +324,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                     child: RichText(
                       textAlign: TextAlign.center,
                       text: TextSpan(
-                        style: GoogleFonts.plusJakartaSans(
+                        style: GoogleFonts.sora(
                           fontSize: 12,
                           color: const Color(0xFF6B7A8D),
                           height: 1.6,
@@ -333,18 +334,18 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                               text: 'En continuant, vous acceptez les\n'),
                           TextSpan(
                             text: 'Conditions',
-                            style: GoogleFonts.plusJakartaSans(
+                            style: GoogleFonts.sora(
                               fontSize: 12,
-                              color: const Color(0xFF1E88E5),
+                              color: DonyColors.blue400,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           const TextSpan(text: ' et la '),
                           TextSpan(
                             text: 'Politique de confidentialité',
-                            style: GoogleFonts.plusJakartaSans(
+                            style: GoogleFonts.sora(
                               fontSize: 12,
-                              color: const Color(0xFF1E88E5),
+                              color: DonyColors.blue400,
                               fontWeight: FontWeight.w600,
                             ),
                           ),

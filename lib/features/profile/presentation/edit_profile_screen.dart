@@ -1,8 +1,8 @@
-import 'package:dony/app/theme.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -53,7 +53,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       lastDate: DateTime(now.year - 16),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(primary: kGreenPrimary),
+          colorScheme: const ColorScheme.light(primary: DonyColors.blue400),
         ),
         child: child!,
       ),
@@ -88,9 +88,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             SnackBar(
               content: Text(
                 'Profil mis à jour avec succès',
-                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500),
+                style: GoogleFonts.sora(fontWeight: FontWeight.w500),
               ),
-              backgroundColor: kSuccess,
+              backgroundColor: DonyColors.success,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
@@ -102,9 +102,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             SnackBar(
               content: Text(
                 state.message,
-                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500),
+                style: GoogleFonts.sora(fontWeight: FontWeight.w500),
               ),
-              backgroundColor: kError,
+              backgroundColor: DonyColors.error,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
@@ -121,23 +121,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         final isLoading = state is AuthLoading;
 
         return Scaffold(
-          backgroundColor: kBackground,
+          backgroundColor: DonyColors.grey50,
           appBar: AppBar(
             title: Text(
               'Compléter mon profil',
-              style: GoogleFonts.plusJakartaSans(
+              style: GoogleFonts.sora(
                 fontWeight: FontWeight.w700,
                 fontSize: 18,
-                color: kTextPrimary,
+                color: DonyColors.dark900,
               ),
             ),
             centerTitle: false,
-            backgroundColor: kSurface,
+            backgroundColor: DonyColors.white,
             elevation: 0,
             scrolledUnderElevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_rounded,
-                  size: 20, color: kGreenPrimary),
+                  size: 20, color: DonyColors.blue400),
               onPressed: () => context.pop(),
             ),
             bottom: const PreferredSize(
@@ -154,22 +154,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: kGreenPrimary.withValues(alpha: 0.06),
+                    color: DonyColors.blue400.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                        color: kGreenPrimary.withValues(alpha: 0.2)),
+                        color: DonyColors.blue400.withValues(alpha: 0.2)),
                   ),
                   child: Row(
                     children: [
                       const Icon(Icons.info_outline_rounded,
-                          color: kGreenPrimary, size: 18),
+                          color: DonyColors.blue400, size: 18),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           'Ces informations inspirent confiance aux autres membres de la communauté.',
-                          style: GoogleFonts.plusJakartaSans(
+                          style: GoogleFonts.sora(
                             fontSize: 13,
-                            color: kGreenPrimary,
+                            color: DonyColors.blue400,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -218,14 +218,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 16),
                     decoration: BoxDecoration(
-                      color: kSurface,
+                      color: DonyColors.white,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: kBorder),
+                      border: Border.all(color: DonyColors.grey100),
                     ),
                     child: Row(
                       children: [
                         const Icon(Icons.cake_outlined,
-                            color: kTextSecondary, size: 20),
+                            color: DonyColors.grey400, size: 20),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
@@ -233,11 +233,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 ? DateFormat('dd/MM/yyyy')
                                     .format(_birthDate!)
                                 : 'Date de naissance',
-                            style: GoogleFonts.plusJakartaSans(
+                            style: GoogleFonts.sora(
                               fontSize: 15,
                               color: _birthDate != null
-                                  ? kTextPrimary
-                                  : kTextHint,
+                                  ? DonyColors.dark900
+                                  : DonyColors.grey200,
                               fontWeight: _birthDate != null
                                   ? FontWeight.w500
                                   : FontWeight.w400,
@@ -245,7 +245,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           ),
                         ),
                         const Icon(Icons.chevron_right_rounded,
-                            color: kTextHint, size: 18),
+                            color: DonyColors.grey200, size: 18),
                       ],
                     ),
                   ),
@@ -265,10 +265,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   child: ElevatedButton(
                     onPressed: isLoading ? null : _save,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: kGreenPrimary,
+                      backgroundColor: DonyColors.blue400,
                       foregroundColor: Colors.white,
                       disabledBackgroundColor:
-                          kGreenPrimary.withValues(alpha: 0.5),
+                          DonyColors.blue400.withValues(alpha: 0.5),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14)),
@@ -285,7 +285,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           )
                         : Text(
                             'Enregistrer',
-                            style: GoogleFonts.plusJakartaSans(
+                            style: GoogleFonts.sora(
                               fontWeight: FontWeight.w700,
                               fontSize: 16,
                             ),
@@ -314,29 +314,29 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       controller: controller,
       enabled: enabled,
       keyboardType: keyboardType,
-      style: GoogleFonts.plusJakartaSans(fontSize: 15, color: kTextPrimary),
+      style: GoogleFonts.sora(fontSize: 15, color: DonyColors.dark900),
       decoration: InputDecoration(
         labelText: label,
         labelStyle:
-            GoogleFonts.plusJakartaSans(color: kTextSecondary, fontSize: 14),
-        prefixIcon: Icon(prefixIcon, color: kTextSecondary, size: 20),
+            GoogleFonts.sora(color: DonyColors.grey400, fontSize: 14),
+        prefixIcon: Icon(prefixIcon, color: DonyColors.grey400, size: 20),
         filled: true,
-        fillColor: kSurface,
+        fillColor: DonyColors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: kBorder),
+          borderSide: const BorderSide(color: DonyColors.grey100),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: kBorder),
+          borderSide: const BorderSide(color: DonyColors.grey100),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: kGreenPrimary, width: 1.5),
+          borderSide: const BorderSide(color: DonyColors.blue400, width: 1.5),
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: kBorder.withValues(alpha: 0.5)),
+          borderSide: BorderSide(color: DonyColors.grey100.withValues(alpha: 0.5)),
         ),
       ),
     );
@@ -351,10 +351,10 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       label.toUpperCase(),
-      style: GoogleFonts.plusJakartaSans(
+      style: GoogleFonts.sora(
         fontSize: 11,
         fontWeight: FontWeight.w700,
-        color: kTextSecondary,
+        color: DonyColors.grey400,
         letterSpacing: 0.8,
       ),
     );

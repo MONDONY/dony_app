@@ -1,6 +1,7 @@
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,9 +10,9 @@ import 'package:go_router/go_router.dart';
 class KycOnboardingScreen extends StatelessWidget {
   const KycOnboardingScreen({super.key});
 
-  static const _kGreen = Color(0xFF1E88E5);
-  static const _kGreenLight = Color(0xFFE3F2FD);
-  static const _kBg = Color(0xFFF8F9FA);
+  static const _kGreen = DonyColors.blue400;
+  static const _kGreenLight = DonyColors.blue100;
+  static const _kBg = DonyColors.grey50;
 
   @override
   Widget build(BuildContext context) {

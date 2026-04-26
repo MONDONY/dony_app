@@ -1,6 +1,6 @@
-import 'package:dony/app/theme.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -17,21 +17,21 @@ class RematchSearchScreen extends StatelessWidget {
     final suggestions = cancellation.rematchSuggestions;
 
     return Scaffold(
-      backgroundColor: kBackground,
+      backgroundColor: DonyColors.grey50,
       appBar: AppBar(
-        backgroundColor: kSurface,
+        backgroundColor: DonyColors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
         automaticallyImplyLeading: false,
         title: Text(
           'Alternatives disponibles',
-          style: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.w700, fontSize: 18, color: kTextPrimary),
+          style: GoogleFonts.sora(
+              fontWeight: FontWeight.w700, fontSize: 18, color: DonyColors.dark900),
         ),
         centerTitle: false,
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: kBorder),
+          child: Divider(height: 1, color: DonyColors.grey100),
         ),
       ),
       body: SingleChildScrollView(
@@ -46,8 +46,8 @@ class RematchSearchScreen extends StatelessWidget {
             else ...[
               Text(
                 '${suggestions.length} voyageur${suggestions.length > 1 ? 's' : ''} disponible${suggestions.length > 1 ? 's' : ''}',
-                style: GoogleFonts.plusJakartaSans(
-                    fontSize: 16, fontWeight: FontWeight.w700, color: kTextPrimary),
+                style: GoogleFonts.sora(
+                    fontSize: 16, fontWeight: FontWeight.w700, color: DonyColors.dark900),
               ),
               const SizedBox(height: 14),
               ...suggestions.asMap().entries.map((e) => _SuggestionCard(
@@ -61,8 +61,8 @@ class RematchSearchScreen extends StatelessWidget {
               child: TextButton(
                 onPressed: () => context.go('/home'),
                 child: Text('Retour à l\'accueil',
-                    style: GoogleFonts.plusJakartaSans(
-                        color: kTextSecondary, fontWeight: FontWeight.w600)),
+                    style: GoogleFonts.sora(
+                        color: DonyColors.grey400, fontWeight: FontWeight.w600)),
               ),
             ),
           ],
@@ -81,26 +81,26 @@ class _ConfirmationBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: kSuccess.withOpacity(0.08),
+        color: DonyColors.success.withOpacity(0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kSuccess.withOpacity(0.3)),
+        border: Border.all(color: DonyColors.success.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.check_circle_outline_rounded, color: kSuccess, size: 20),
+              const Icon(Icons.check_circle_outline_rounded, color: DonyColors.success, size: 20),
               const SizedBox(width: 8),
               Text('Trajet annulé',
-                  style: GoogleFonts.plusJakartaSans(
-                      fontWeight: FontWeight.w700, fontSize: 14, color: kSuccess)),
+                  style: GoogleFonts.sora(
+                      fontWeight: FontWeight.w700, fontSize: 14, color: DonyColors.success)),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             '$affectedCount expéditeur${affectedCount > 1 ? 's' : ''} remboursé${affectedCount > 1 ? 's' : ''} automatiquement.',
-            style: GoogleFonts.plusJakartaSans(fontSize: 13, color: kTextSecondary),
+            style: GoogleFonts.sora(fontSize: 13, color: DonyColors.grey400),
           ),
         ],
       ),
@@ -118,9 +118,9 @@ class _SuggestionCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: kSurface,
+        color: DonyColors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kBorder),
+        border: Border.all(color: DonyColors.grey100),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -132,21 +132,21 @@ class _SuggestionCard extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                    color: kGreenLight, borderRadius: BorderRadius.circular(10)),
-                child: const Icon(Icons.flight_takeoff_rounded, color: kGreenPrimary, size: 18),
+                    color: DonyColors.blue100, borderRadius: BorderRadius.circular(10)),
+                child: const Icon(Icons.flight_takeoff_rounded, color: DonyColors.blue400, size: 18),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   '${suggestion.departureCity} → ${suggestion.arrivalCity}',
-                  style: GoogleFonts.plusJakartaSans(
-                      fontWeight: FontWeight.w700, fontSize: 15, color: kTextPrimary),
+                  style: GoogleFonts.sora(
+                      fontWeight: FontWeight.w700, fontSize: 15, color: DonyColors.dark900),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          const Divider(color: kBorder, height: 1),
+          const Divider(color: DonyColors.grey100, height: 1),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -186,14 +186,14 @@ class _SuggestionCard extends StatelessWidget {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: kGreenPrimary,
+                backgroundColor: DonyColors.blue400,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               child: Text('Envoyer une demande',
-                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 14)),
+                  style: GoogleFonts.sora(fontWeight: FontWeight.w600, fontSize: 14)),
             ),
           ),
         ],
@@ -212,10 +212,10 @@ class _Chip extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: kTextSecondary),
+        Icon(icon, size: 14, color: DonyColors.grey400),
         const SizedBox(width: 4),
         Text(label,
-            style: GoogleFonts.plusJakartaSans(fontSize: 12, color: kTextSecondary)),
+            style: GoogleFonts.sora(fontSize: 12, color: DonyColors.grey400)),
       ],
     );
   }
@@ -233,20 +233,20 @@ class _NoAlternatives extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: kWarning.withOpacity(0.1),
+                color: DonyColors.warning.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(18),
               ),
-              child: const Icon(Icons.search_off_rounded, color: kWarning, size: 32),
+              child: const Icon(Icons.search_off_rounded, color: DonyColors.warning, size: 32),
             ),
             const SizedBox(height: 16),
             Text('Aucun voyageur disponible',
-                style: GoogleFonts.plusJakartaSans(
-                    fontSize: 16, fontWeight: FontWeight.w700, color: kTextPrimary)),
+                style: GoogleFonts.sora(
+                    fontSize: 16, fontWeight: FontWeight.w700, color: DonyColors.dark900)),
             const SizedBox(height: 8),
             Text(
               'Aucun voyageur alternatif disponible dans les 72h sur ce corridor.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(fontSize: 14, color: kTextSecondary),
+              style: GoogleFonts.sora(fontSize: 14, color: DonyColors.grey400),
             ),
           ],
         ),

@@ -1,8 +1,8 @@
-import 'package:dony/app/theme.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -157,7 +157,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: kError),
+      SnackBar(content: Text(message), backgroundColor: DonyColors.error),
     );
   }
 
@@ -169,7 +169,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.light(primary: kGreenPrimary),
+          colorScheme: const ColorScheme.light(primary: DonyColors.blue400),
         ),
         child: child!,
       ),
@@ -183,7 +183,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       initialTime: _departureTime ?? const TimeOfDay(hour: 8, minute: 0),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.light(primary: kGreenPrimary),
+          colorScheme: const ColorScheme.light(primary: DonyColors.blue400),
         ),
         child: child!,
       ),
@@ -197,7 +197,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       initialTime: _arrivalTime ?? const TimeOfDay(hour: 12, minute: 0),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.light(primary: kGreenPrimary),
+          colorScheme: const ColorScheme.light(primary: DonyColors.blue400),
         ),
         child: child!,
       ),
@@ -212,7 +212,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
         if (state is AnnouncementCreated || state is AnnouncementUpdated) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(_isEdit ? 'Trajet modifié !' : 'Trajet publié !'),
-            backgroundColor: kSuccess,
+            backgroundColor: DonyColors.success,
           ));
           context.go('/announcements');
         } else if (state is AnnouncementError) {
@@ -223,20 +223,20 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
         final isLoading = state is AnnouncementLoading;
 
         return Scaffold(
-          backgroundColor: kBackground,
+          backgroundColor: DonyColors.grey50,
           appBar: AppBar(
             title: Text(
               _isEdit ? 'Modifier le trajet' : 'Publier un trajet',
-              style: GoogleFonts.plusJakartaSans(
+              style: GoogleFonts.sora(
                 fontWeight: FontWeight.w700,
                 fontSize: 17,
               ),
             ),
-            backgroundColor: kSurface,
+            backgroundColor: DonyColors.white,
             elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_rounded,
-                  size: 20, color: kGreenPrimary),
+                  size: 20, color: DonyColors.blue400),
               onPressed: () => context.pop(),
             ),
             bottom: const PreferredSize(
@@ -257,19 +257,19 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 // Section TRAJET
                 Text(
                   'TRAJET',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.sora(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: kTextSecondary,
+                    color: DonyColors.grey400,
                     letterSpacing: 0.8,
                   ),
                 ),
                 const SizedBox(height: 12),
                 Container(
                   decoration: BoxDecoration(
-                    color: kSurface,
+                    color: DonyColors.white,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: kBorder),
+                    border: Border.all(color: DonyColors.grey100),
                   ),
                   child: Column(
                     children: [
@@ -335,27 +335,27 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 // Section LIEUX DE REMISE
                 Text(
                   'LIEUX DE REMISE (optionnel)',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.sora(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: kTextSecondary,
+                    color: DonyColors.grey400,
                     letterSpacing: 0.8,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Précisez l\'endroit exact de remise / récupération des colis',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.sora(
                     fontSize: 12,
-                    color: kTextHint,
+                    color: DonyColors.grey200,
                   ),
                 ),
                 const SizedBox(height: 12),
                 Container(
                   decoration: BoxDecoration(
-                    color: kSurface,
+                    color: DonyColors.white,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: kBorder),
+                    border: Border.all(color: DonyColors.grey100),
                   ),
                   child: Column(
                     children: [
@@ -379,10 +379,10 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 // Capacité disponible
                 Text(
                   'CAPACITÉ DISPONIBLE',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.sora(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: kTextSecondary,
+                    color: DonyColors.grey400,
                     letterSpacing: 0.8,
                   ),
                 ),
@@ -393,18 +393,18 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                       children: [
                         TextSpan(
                           text: '${_availableKg.toStringAsFixed(0)}',
-                          style: GoogleFonts.plusJakartaSans(
+                          style: GoogleFonts.sora(
                             fontSize: 52,
                             fontWeight: FontWeight.w800,
-                            color: kTextPrimary,
+                            color: DonyColors.dark900,
                           ),
                         ),
                         TextSpan(
                           text: 'kg',
-                          style: GoogleFonts.plusJakartaSans(
+                          style: GoogleFonts.sora(
                             fontSize: 22,
                             fontWeight: FontWeight.w600,
-                            color: kTextSecondary,
+                            color: DonyColors.grey400,
                           ),
                         ),
                       ],
@@ -413,10 +413,10 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 ),
                 SliderTheme(
                   data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: kGreenPrimary,
-                    inactiveTrackColor: kGreenLight,
-                    thumbColor: kGreenPrimary,
-                    overlayColor: kGreenPrimary.withValues(alpha: 0.1),
+                    activeTrackColor: DonyColors.blue400,
+                    inactiveTrackColor: DonyColors.blue100,
+                    thumbColor: DonyColors.blue400,
+                    overlayColor: DonyColors.blue400.withValues(alpha: 0.1),
                     trackHeight: 6,
                   ),
                   child: Slider(
@@ -431,11 +431,11 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('1 kg',
-                        style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12, color: kTextHint)),
+                        style: GoogleFonts.sora(
+                            fontSize: 12, color: DonyColors.grey200)),
                     Text('23 kg max',
-                        style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12, color: kTextHint)),
+                        style: GoogleFonts.sora(
+                            fontSize: 12, color: DonyColors.grey200)),
                   ],
                 ),
                 const SizedBox(height: 28),
@@ -443,10 +443,10 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 // Prix par kg
                 Text(
                   'PRIX PAR KG',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.sora(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: kTextSecondary,
+                    color: DonyColors.grey400,
                     letterSpacing: 0.8,
                   ),
                 ),
@@ -466,32 +466,32 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                             duration: 180.ms,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             decoration: BoxDecoration(
-                              color: selected ? kTextPrimary : kSurface,
+                              color: selected ? DonyColors.dark900 : DonyColors.white,
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: selected ? kTextPrimary : kBorder,
+                                color: selected ? DonyColors.dark900 : DonyColors.grey100,
                               ),
                             ),
                             child: Column(
                               children: [
                                 Text(
                                   '${_priceOptions[i].toStringAsFixed(0)} €',
-                                  style: GoogleFonts.plusJakartaSans(
+                                  style: GoogleFonts.sora(
                                     fontSize: 20,
                                     fontWeight: FontWeight.w800,
                                     color: selected
                                         ? Colors.white
-                                        : kTextPrimary,
+                                        : DonyColors.dark900,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   _priceLabels[i],
-                                  style: GoogleFonts.plusJakartaSans(
+                                  style: GoogleFonts.sora(
                                     fontSize: 12,
                                     color: selected
                                         ? Colors.white70
-                                        : kTextSecondary,
+                                        : DonyColors.grey400,
                                   ),
                                 ),
                               ],
@@ -513,8 +513,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
               MediaQuery.of(context).padding.bottom + 16,
             ),
             decoration: const BoxDecoration(
-              color: kSurface,
-              border: Border(top: BorderSide(color: kBorder)),
+              color: DonyColors.white,
+              border: Border(top: BorderSide(color: DonyColors.grey100)),
             ),
             child: SizedBox(
               width: double.infinity,
@@ -534,7 +534,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                         _isEdit
                             ? 'Enregistrer les modifications'
                             : 'Publier mon trajet',
-                        style: GoogleFonts.plusJakartaSans(
+                        style: GoogleFonts.sora(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
@@ -582,7 +582,7 @@ class _MotivationBanner extends StatelessWidget {
               children: [
                 Text(
                   'Gagnez avec vos kilos libres',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.sora(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF92400E),
@@ -590,7 +590,7 @@ class _MotivationBanner extends StatelessWidget {
                 ),
                 Text(
                   'Moyenne : 180€ par trajet · paiement en 24h',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.sora(
                     fontSize: 12,
                     color: const Color(0xFFB45309),
                   ),
@@ -635,7 +635,7 @@ class _CityRow extends StatelessWidget {
               height: 10,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isDeparture ? kGreenPrimary : kError,
+                color: isDeparture ? DonyColors.blue400 : DonyColors.error,
               ),
             ),
             const SizedBox(width: 14),
@@ -643,9 +643,9 @@ class _CityRow extends StatelessWidget {
               child: value == null
                   ? Text(
                       isDeparture ? 'Ville de départ' : 'Ville d\'arrivée',
-                      style: GoogleFonts.plusJakartaSans(
+                      style: GoogleFonts.sora(
                         fontSize: 15,
-                        color: kTextHint,
+                        color: DonyColors.grey200,
                       ),
                     )
                   : Column(
@@ -653,24 +653,24 @@ class _CityRow extends StatelessWidget {
                       children: [
                         Text(
                           value!,
-                          style: GoogleFonts.plusJakartaSans(
+                          style: GoogleFonts.sora(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
-                            color: kTextPrimary,
+                            color: DonyColors.dark900,
                           ),
                         ),
                         if (airport != null)
                           Text(
                             airport!,
-                            style: GoogleFonts.plusJakartaSans(
+                            style: GoogleFonts.sora(
                               fontSize: 12,
-                              color: kTextSecondary,
+                              color: DonyColors.grey400,
                             ),
                           ),
                       ],
                     ),
             ),
-            const Icon(Icons.chevron_right_rounded, size: 18, color: kTextHint),
+            const Icon(Icons.chevron_right_rounded, size: 18, color: DonyColors.grey200),
           ],
         ),
       ),
@@ -683,7 +683,7 @@ class _CityRow extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         decoration: const BoxDecoration(
-          color: kSurface,
+          color: DonyColors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
@@ -697,14 +697,14 @@ class _CityRow extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: kBorder,
+                  color: DonyColors.grey100,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             Text(
               isDeparture ? 'Ville de départ' : 'Ville d\'arrivée',
-              style: GoogleFonts.plusJakartaSans(
+              style: GoogleFonts.sora(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
               ),
@@ -713,13 +713,13 @@ class _CityRow extends StatelessWidget {
             ...cities.map((city) => ListTile(
                   title: Text(
                     city,
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.sora(
                       fontWeight: FontWeight.w500,
-                      color: value == city ? kGreenPrimary : kTextPrimary,
+                      color: value == city ? DonyColors.blue400 : DonyColors.dark900,
                     ),
                   ),
                   trailing: value == city
-                      ? const Icon(Icons.check_rounded, color: kGreenPrimary)
+                      ? const Icon(Icons.check_rounded, color: DonyColors.blue400)
                       : null,
                   onTap: () {
                     onChanged(city);
@@ -750,7 +750,7 @@ class _TimeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isDeparture ? kGreenPrimary : kError;
+    final color = isDeparture ? DonyColors.blue400 : DonyColors.error;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -767,20 +767,20 @@ class _TimeRow extends StatelessWidget {
                         ? 'Heure de départ (optionnel)'
                         : 'Heure d\'arrivée (optionnel)'
                     : '${time!.hour.toString().padLeft(2, '0')}:${time!.minute.toString().padLeft(2, '0')}',
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.sora(
                   fontSize: 14,
                   fontWeight: time != null ? FontWeight.w700 : FontWeight.w400,
-                  color: time != null ? kTextPrimary : kTextHint,
+                  color: time != null ? DonyColors.dark900 : DonyColors.grey200,
                 ),
               ),
             ),
             if (time != null && onClear != null)
               GestureDetector(
                 onTap: onClear,
-                child: const Icon(Icons.close_rounded, size: 16, color: kTextHint),
+                child: const Icon(Icons.close_rounded, size: 16, color: DonyColors.grey200),
               )
             else
-              const Icon(Icons.chevron_right_rounded, size: 18, color: kTextHint),
+              const Icon(Icons.chevron_right_rounded, size: 18, color: DonyColors.grey200),
           ],
         ),
       ),
@@ -805,21 +805,21 @@ class _DateRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            const Icon(Icons.calendar_today_rounded, size: 14, color: kTextSecondary),
+            const Icon(Icons.calendar_today_rounded, size: 14, color: DonyColors.grey400),
             const SizedBox(width: 14),
             Expanded(
               child: Text(
                 date == null
                     ? 'Date de départ'
                     : DateFormat('EEE d MMM yyyy', 'fr').format(date!),
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.sora(
                   fontSize: 15,
                   fontWeight: date != null ? FontWeight.w700 : FontWeight.w400,
-                  color: date != null ? kTextPrimary : kTextHint,
+                  color: date != null ? DonyColors.dark900 : DonyColors.grey200,
                 ),
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, size: 18, color: kTextHint),
+            const Icon(Icons.chevron_right_rounded, size: 18, color: DonyColors.grey200),
           ],
         ),
       ),
@@ -848,24 +848,24 @@ class _LocationField extends StatelessWidget {
           Icon(
             isDeparture ? Icons.location_on_rounded : Icons.location_on_outlined,
             size: 14,
-            color: isDeparture ? kGreenPrimary.withValues(alpha: 0.7) : kError.withValues(alpha: 0.7),
+            color: isDeparture ? DonyColors.blue400.withValues(alpha: 0.7) : DonyColors.error.withValues(alpha: 0.7),
           ),
           const SizedBox(width: 14),
           Expanded(
             child: TextField(
               controller: controller,
-              style: GoogleFonts.plusJakartaSans(
+              style: GoogleFonts.sora(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: kTextPrimary,
+                color: DonyColors.dark900,
               ),
               decoration: InputDecoration(
                 hintText: isDeparture
                     ? 'Lieu de départ (ex: Terminal 2E CDG)'
                     : 'Lieu d\'arrivée (ex: AIBD Arrière Cour)',
-                hintStyle: GoogleFonts.plusJakartaSans(
+                hintStyle: GoogleFonts.sora(
                   fontSize: 14,
-                  color: kTextHint,
+                  color: DonyColors.grey200,
                 ),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 14),

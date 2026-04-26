@@ -1,8 +1,8 @@
-import 'package:dony/app/theme.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -94,7 +94,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: kError),
+      SnackBar(content: Text(message), backgroundColor: DonyColors.error),
     );
   }
 
@@ -127,28 +127,28 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
         }
 
         return Scaffold(
-          backgroundColor: kBackground,
+          backgroundColor: DonyColors.grey50,
           appBar: AppBar(
             title: Text(
               'Déclarer un colis',
-              style: GoogleFonts.plusJakartaSans(
+              style: GoogleFonts.sora(
                 fontWeight: FontWeight.w700,
                 fontSize: 17,
               ),
             ),
-            backgroundColor: kSurface,
+            backgroundColor: DonyColors.white,
             elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_rounded,
-                  size: 20, color: kGreenPrimary),
+                  size: 20, color: DonyColors.blue400),
               onPressed: () => context.pop(),
             ),
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(3),
               child: LinearProgressIndicator(
                 value: 1 / 3,
-                backgroundColor: kBackground,
-                valueColor: const AlwaysStoppedAnimation<Color>(kGreenPrimary),
+                backgroundColor: DonyColors.grey50,
+                valueColor: const AlwaysStoppedAnimation<Color>(DonyColors.blue400),
                 minHeight: 3,
               ),
             ),
@@ -161,10 +161,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 // Indicateur étape
                 Text(
                   'ÉTAPE 1/3 — LE COLIS',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.sora(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: kGreenPrimary,
+                    color: DonyColors.blue400,
                     letterSpacing: 0.8,
                   ),
                 ).animate().fadeIn(),
@@ -181,10 +181,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 // Catégorie
                 Text(
                   'Catégorie du contenu',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.sora(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: kTextPrimary,
+                    color: DonyColors.dark900,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -202,10 +202,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 // Description
                 Text(
                   'Description détaillée',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.sora(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: kTextPrimary,
+                    color: DonyColors.dark900,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -214,22 +214,22 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   maxLines: 3,
                   decoration: InputDecoration(
                     hintText: 'Médicaments pour diabète + 2 tee-shirts enfants',
-                    hintStyle: GoogleFonts.plusJakartaSans(
-                      color: kTextHint,
+                    hintStyle: GoogleFonts.sora(
+                      color: DonyColors.grey200,
                       fontSize: 14,
                     ),
                   ),
-                  style: GoogleFonts.plusJakartaSans(fontSize: 14),
+                  style: GoogleFonts.sora(fontSize: 14),
                 ).animate().fadeIn(delay: 140.ms),
                 const SizedBox(height: 20),
 
                 // Valeur déclarée
                 Text(
                   'Valeur déclarée (€)',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.sora(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: kTextPrimary,
+                    color: DonyColors.dark900,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -242,17 +242,17 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   decoration: InputDecoration(
                     prefixIcon: const Padding(
                       padding: EdgeInsets.only(left: 14, right: 8),
-                      child: Icon(Icons.euro_rounded, size: 18, color: kTextSecondary),
+                      child: Icon(Icons.euro_rounded, size: 18, color: DonyColors.grey400),
                     ),
                     prefixIconConstraints: const BoxConstraints(minWidth: 0),
                     hintText: '120',
                     helperText: 'Plafond : 500 € — couvre l\'assurance en cas de sinistre',
-                    helperStyle: GoogleFonts.plusJakartaSans(
+                    helperStyle: GoogleFonts.sora(
                       fontSize: 12,
-                      color: kTextSecondary,
+                      color: DonyColors.grey400,
                     ),
                   ),
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.sora(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -266,10 +266,10 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 // Destinataire
                 Text(
                   'Destinataire',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.sora(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: kTextPrimary,
+                    color: DonyColors.dark900,
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -279,7 +279,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                     labelText: 'Prénom et nom du destinataire',
                     hintText: 'ex: Amadou Diallo',
                   ),
-                  style: GoogleFonts.plusJakartaSans(fontSize: 14),
+                  style: GoogleFonts.sora(fontSize: 14),
                 ).animate().fadeIn(delay: 200.ms),
                 const SizedBox(height: 14),
                 TextFormField(
@@ -289,7 +289,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                     labelText: 'Téléphone du destinataire',
                     hintText: 'ex: +221 77 000 00 00',
                   ),
-                  style: GoogleFonts.plusJakartaSans(fontSize: 14),
+                  style: GoogleFonts.sora(fontSize: 14),
                 ).animate().fadeIn(delay: 220.ms),
               ],
             ),
@@ -338,18 +338,18 @@ class _WeightStepper extends StatelessWidget {
                   children: [
                     TextSpan(
                       text: weightKg.toStringAsFixed(0),
-                      style: GoogleFonts.plusJakartaSans(
+                      style: GoogleFonts.sora(
                         fontSize: 52,
                         fontWeight: FontWeight.w800,
-                        color: kTextPrimary,
+                        color: DonyColors.dark900,
                       ),
                     ),
                     TextSpan(
                       text: 'kg',
-                      style: GoogleFonts.plusJakartaSans(
+                      style: GoogleFonts.sora(
                         fontSize: 22,
                         fontWeight: FontWeight.w600,
-                        color: kTextSecondary,
+                        color: DonyColors.grey400,
                       ),
                     ),
                   ],
@@ -367,9 +367,9 @@ class _WeightStepper extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             'Max ${maxKg.toStringAsFixed(0)} kg sur ce trajet',
-            style: GoogleFonts.plusJakartaSans(
+            style: GoogleFonts.sora(
               fontSize: 13,
-              color: kTextSecondary,
+              color: DonyColors.grey400,
             ),
           ),
         ],
@@ -393,10 +393,10 @@ class _StepperButton extends StatelessWidget {
         width: 48,
         height: 48,
         decoration: BoxDecoration(
-          color: onTap != null ? kSurface : kBackground,
+          color: onTap != null ? DonyColors.white : DonyColors.grey50,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: onTap != null ? kBorder : kBackground,
+            color: onTap != null ? DonyColors.grey100 : DonyColors.grey50,
           ),
           boxShadow: onTap != null
               ? [
@@ -411,7 +411,7 @@ class _StepperButton extends StatelessWidget {
         child: Icon(
           icon,
           size: 22,
-          color: onTap != null ? kTextPrimary : kTextHint,
+          color: onTap != null ? DonyColors.dark900 : DonyColors.grey200,
         ),
       ),
     );
@@ -439,18 +439,18 @@ class _CategoryChip extends StatelessWidget {
         duration: 150.ms,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
         decoration: BoxDecoration(
-          color: selected ? kTextPrimary : kSurface,
+          color: selected ? DonyColors.dark900 : DonyColors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected ? kTextPrimary : kBorder,
+            color: selected ? DonyColors.dark900 : DonyColors.grey100,
           ),
         ),
         child: Text(
           label,
-          style: GoogleFonts.plusJakartaSans(
+          style: GoogleFonts.sora(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: selected ? Colors.white : kTextPrimary,
+            color: selected ? Colors.white : DonyColors.dark900,
           ),
         ),
       ),
@@ -485,7 +485,7 @@ class _ContentWarning extends StatelessWidget {
               children: [
                 Text(
                   'Contenu interdit',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.sora(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF92400E),
@@ -494,7 +494,7 @@ class _ContentWarning extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   'Pas d\'armes, drogues, liquides inflammables ou espèces. Le voyageur peut refuser au contrôle.',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.sora(
                     fontSize: 12,
                     color: const Color(0xFF92400E),
                     height: 1.4,
@@ -532,8 +532,8 @@ class _BottomBar extends StatelessWidget {
         MediaQuery.of(context).padding.bottom + 16,
       ),
       decoration: const BoxDecoration(
-        color: kSurface,
-        border: Border(top: BorderSide(color: kBorder)),
+        color: DonyColors.white,
+        border: Border(top: BorderSide(color: DonyColors.grey100)),
       ),
       child: Row(
         children: [
@@ -543,17 +543,17 @@ class _BottomBar extends StatelessWidget {
             children: [
               Text(
                 'Total estimé',
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.sora(
                   fontSize: 12,
-                  color: kTextSecondary,
+                  color: DonyColors.grey400,
                 ),
               ),
               Text(
                 '${totalPrice.toStringAsFixed(0)} €',
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.sora(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
-                  color: kTextPrimary,
+                  color: DonyColors.dark900,
                 ),
               ),
             ],
@@ -575,7 +575,7 @@ class _BottomBar extends StatelessWidget {
                       )
                     : Text(
                         'Continuer',
-                        style: GoogleFonts.plusJakartaSans(
+                        style: GoogleFonts.sora(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
@@ -608,20 +608,20 @@ class _DisclaimerPageState extends State<_DisclaimerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBackground,
+      backgroundColor: DonyColors.grey50,
       appBar: AppBar(
         title: Text(
           'Conditions d\'envoi',
-          style: GoogleFonts.plusJakartaSans(
+          style: GoogleFonts.sora(
             fontWeight: FontWeight.w700,
             fontSize: 17,
           ),
         ),
-        backgroundColor: kSurface,
+        backgroundColor: DonyColors.white,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_rounded,
-              size: 20, color: kGreenPrimary),
+              size: 20, color: DonyColors.blue400),
           onPressed: widget.onDecline,
         ),
       ),
@@ -642,12 +642,12 @@ class _DisclaimerPageState extends State<_DisclaimerPage> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.gavel_rounded, color: kWarning, size: 20),
+                        const Icon(Icons.gavel_rounded, color: DonyColors.warning, size: 20),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
                             'Disclaimer légal douanier',
-                            style: GoogleFonts.plusJakartaSans(
+                            style: GoogleFonts.sora(
                               fontWeight: FontWeight.w700,
                               color: const Color(0xFF92400E),
                               fontSize: 14,
@@ -689,8 +689,8 @@ class _DisclaimerPageState extends State<_DisclaimerPage> {
               MediaQuery.of(context).padding.bottom + 16,
             ),
             decoration: const BoxDecoration(
-              color: kSurface,
-              border: Border(top: BorderSide(color: kBorder)),
+              color: DonyColors.white,
+              border: Border(top: BorderSide(color: DonyColors.grey100)),
             ),
             child: Column(
               children: [
@@ -702,15 +702,15 @@ class _DisclaimerPageState extends State<_DisclaimerPage> {
                         value: _checked,
                         onChanged: (v) =>
                             setState(() => _checked = v ?? false),
-                        activeColor: kGreenPrimary,
+                        activeColor: DonyColors.blue400,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'J\'ai lu et j\'accepte les conditions d\'envoi et la réglementation douanière',
-                          style: GoogleFonts.plusJakartaSans(
+                          style: GoogleFonts.sora(
                             fontSize: 13,
-                            color: kTextPrimary,
+                            color: DonyColors.dark900,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -726,8 +726,8 @@ class _DisclaimerPageState extends State<_DisclaimerPage> {
                         onPressed: widget.onDecline,
                         child: Text(
                           'Retour',
-                          style: GoogleFonts.plusJakartaSans(
-                            color: kTextSecondary,
+                          style: GoogleFonts.sora(
+                            color: DonyColors.grey400,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -739,7 +739,7 @@ class _DisclaimerPageState extends State<_DisclaimerPage> {
                         onPressed: _checked ? widget.onAccept : null,
                         child: Text(
                           'Confirmer',
-                          style: GoogleFonts.plusJakartaSans(
+                          style: GoogleFonts.sora(
                             fontWeight: FontWeight.w700,
                             color: Colors.white,
                           ),
@@ -769,10 +769,10 @@ class _LegalSection extends StatelessWidget {
       children: [
         Text(
           title,
-          style: GoogleFonts.plusJakartaSans(
+          style: GoogleFonts.sora(
             fontWeight: FontWeight.w700,
             fontSize: 14,
-            color: kTextPrimary,
+            color: DonyColors.dark900,
           ),
         ),
         const SizedBox(height: 8),
@@ -784,16 +784,16 @@ class _LegalSection extends StatelessWidget {
                   const Text(
                     '• ',
                     style: TextStyle(
-                      color: kGreenPrimary,
+                      color: DonyColors.blue400,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   Expanded(
                     child: Text(
                       item,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: GoogleFonts.sora(
                         fontSize: 13,
-                        color: kTextSecondary,
+                        color: DonyColors.grey400,
                         height: 1.5,
                       ),
                     ),

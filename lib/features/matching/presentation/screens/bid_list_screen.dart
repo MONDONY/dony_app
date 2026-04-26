@@ -1,9 +1,9 @@
-import 'package:dony/app/theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -33,23 +33,23 @@ class _BidListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBackground,
+      backgroundColor: DonyColors.grey50,
       appBar: AppBar(
-        backgroundColor: kSurface,
+        backgroundColor: DonyColors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: kGreenPrimary),
+          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: DonyColors.blue400),
           onPressed: () => context.pop(),
         ),
         title: Text(
           'Demandes reçues',
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 18, color: kTextPrimary),
+          style: GoogleFonts.sora(fontWeight: FontWeight.w700, fontSize: 18, color: DonyColors.dark900),
         ),
         centerTitle: false,
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: kBorder),
+          child: Divider(height: 1, color: DonyColors.grey100),
         ),
       ),
       body: BlocConsumer<BidBloc, BidState>(
@@ -57,7 +57,7 @@ class _BidListView extends StatelessWidget {
           if (state is BidDeleted) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text('Demande supprimée.',
-                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500)),
+                  style: GoogleFonts.sora(fontWeight: FontWeight.w500)),
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ));
@@ -65,8 +65,8 @@ class _BidListView extends StatelessWidget {
           } else if (state is BidError) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text(state.message,
-                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500)),
-              backgroundColor: kError,
+                  style: GoogleFonts.sora(fontWeight: FontWeight.w500)),
+              backgroundColor: DonyColors.error,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ));
@@ -75,7 +75,7 @@ class _BidListView extends StatelessWidget {
         },
         builder: (context, state) {
           if (state is BidLoading) {
-            return const Center(child: CircularProgressIndicator(color: kGreenPrimary));
+            return const Center(child: CircularProgressIndicator(color: DonyColors.blue400));
           }
           if (state is BidListLoaded) {
             if (state.bids.isEmpty) {
@@ -88,11 +88,11 @@ class _BidListView extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.error_outline_rounded, size: 48, color: kTextHint),
+                  const Icon(Icons.error_outline_rounded, size: 48, color: DonyColors.grey200),
                   const SizedBox(height: 12),
                   Text(state.message,
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.plusJakartaSans(fontSize: 14, color: kTextSecondary)),
+                      style: GoogleFonts.sora(fontSize: 14, color: DonyColors.grey400)),
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () =>
@@ -136,7 +136,7 @@ class _BidList extends StatelessWidget {
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.only(right: 24),
             decoration: BoxDecoration(
-              color: kError,
+              color: DonyColors.error,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -146,7 +146,7 @@ class _BidList extends StatelessWidget {
                     color: Colors.white, size: 28),
                 const SizedBox(height: 4),
                 Text('Supprimer',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.sora(
                         color: Colors.white,
                         fontSize: 12,
                         fontWeight: FontWeight.w600)),
@@ -160,28 +160,28 @@ class _BidList extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20)),
                 title: Text('Supprimer cette demande',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.sora(
                         fontWeight: FontWeight.w700, fontSize: 17)),
                 content: Text(
                     'Cette demande refusée sera retirée définitivement de votre liste.',
-                    style: GoogleFonts.plusJakartaSans(
-                        fontSize: 14, color: kTextSecondary)),
+                    style: GoogleFonts.sora(
+                        fontSize: 14, color: DonyColors.grey400)),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(ctx, false),
                     child: Text('Annuler',
-                        style: GoogleFonts.plusJakartaSans(
-                            color: kTextSecondary,
+                        style: GoogleFonts.sora(
+                            color: DonyColors.grey400,
                             fontWeight: FontWeight.w600)),
                   ),
                   ElevatedButton(
                     onPressed: () => Navigator.pop(ctx, true),
                     style: ElevatedButton.styleFrom(
-                        backgroundColor: kError,
+                        backgroundColor: DonyColors.error,
                         foregroundColor: Colors.white,
                         elevation: 0),
                     child: Text('Supprimer',
-                        style: GoogleFonts.plusJakartaSans(
+                        style: GoogleFonts.sora(
                             fontWeight: FontWeight.w700)),
                   ),
                 ],
@@ -211,9 +211,9 @@ class _BidCard extends StatelessWidget {
       onTap: () => context.push('/bids/${bid.id}', extra: bid),
       child: Container(
         decoration: BoxDecoration(
-          color: kSurface,
+          color: DonyColors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: kBorder),
+          border: Border.all(color: DonyColors.grey100),
         ),
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -225,10 +225,10 @@ class _BidCard extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: kGreenLight,
+                    color: DonyColors.blue100,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.person_outline_rounded, color: kGreenPrimary, size: 20),
+                  child: const Icon(Icons.person_outline_rounded, color: DonyColors.blue400, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -237,17 +237,17 @@ class _BidCard extends StatelessWidget {
                     children: [
                       Text(
                         bid.resolvedSenderName,
-                        style: GoogleFonts.plusJakartaSans(
-                            fontWeight: FontWeight.w600, fontSize: 14, color: kTextPrimary),
+                        style: GoogleFonts.sora(
+                            fontWeight: FontWeight.w600, fontSize: 14, color: DonyColors.dark900),
                       ),
                       if (bid.senderName != null && bid.senderName!.isNotEmpty && bid.senderPhone != null)
                         Text(
                           bid.senderPhone!,
-                          style: GoogleFonts.plusJakartaSans(fontSize: 12, color: kTextSecondary),
+                          style: GoogleFonts.sora(fontSize: 12, color: DonyColors.grey400),
                         ),
                       Text(
                         DateFormat('dd MMM yyyy').format(bid.createdAt),
-                        style: GoogleFonts.plusJakartaSans(fontSize: 12, color: kTextSecondary),
+                        style: GoogleFonts.sora(fontSize: 12, color: DonyColors.grey400),
                       ),
                     ],
                   ),
@@ -260,14 +260,14 @@ class _BidCard extends StatelessWidget {
                   ),
                   child: Text(
                     statusLabel,
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.sora(
                         fontSize: 12, fontWeight: FontWeight.w600, color: statusColor),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            const Divider(color: kBorder, height: 1),
+            const Divider(color: DonyColors.grey100, height: 1),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -282,12 +282,12 @@ class _BidCard extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: kTextHint),
+                  const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: DonyColors.grey200),
                   const SizedBox(width: 4),
                   Text(
                     'Voir le détail et répondre',
-                    style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12, color: kGreenPrimary, fontWeight: FontWeight.w600),
+                    style: GoogleFonts.sora(
+                        fontSize: 12, color: DonyColors.blue400, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -301,13 +301,13 @@ class _BidCard extends StatelessWidget {
   Color _statusColor(String status) {
     switch (status) {
       case 'ACCEPTED':
-        return kSuccess;
+        return DonyColors.success;
       case 'REJECTED':
-        return kError;
+        return DonyColors.error;
       case 'CANCELLED':
-        return kTextSecondary;
+        return DonyColors.grey400;
       default:
-        return kWarning;
+        return DonyColors.warning;
     }
   }
 
@@ -338,10 +338,10 @@ class _Stat extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: GoogleFonts.plusJakartaSans(fontSize: 11, color: kTextHint, fontWeight: FontWeight.w500)),
+            style: GoogleFonts.sora(fontSize: 11, color: DonyColors.grey200, fontWeight: FontWeight.w500)),
         const SizedBox(height: 2),
         Text(value,
-            style: GoogleFonts.plusJakartaSans(fontSize: 13, color: kTextPrimary, fontWeight: FontWeight.w600)),
+            style: GoogleFonts.sora(fontSize: 13, color: DonyColors.dark900, fontWeight: FontWeight.w600)),
       ],
     );
   }
@@ -359,17 +359,17 @@ class _EmptyView extends StatelessWidget {
             Container(
               width: 72,
               height: 72,
-              decoration: BoxDecoration(color: kGreenLight, borderRadius: BorderRadius.circular(20)),
-              child: const Icon(Icons.inbox_outlined, color: kGreenPrimary, size: 36),
+              decoration: BoxDecoration(color: DonyColors.blue100, borderRadius: BorderRadius.circular(20)),
+              child: const Icon(Icons.inbox_outlined, color: DonyColors.blue400, size: 36),
             ),
             const SizedBox(height: 16),
             Text('Aucune demande',
-                style: GoogleFonts.plusJakartaSans(
-                    fontSize: 18, fontWeight: FontWeight.w700, color: kTextPrimary)),
+                style: GoogleFonts.sora(
+                    fontSize: 18, fontWeight: FontWeight.w700, color: DonyColors.dark900)),
             const SizedBox(height: 8),
             Text('Partagez votre annonce pour recevoir des demandes d\'expéditeurs.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.plusJakartaSans(fontSize: 14, color: kTextSecondary)),
+                style: GoogleFonts.sora(fontSize: 14, color: DonyColors.grey400)),
           ],
         ),
       ),

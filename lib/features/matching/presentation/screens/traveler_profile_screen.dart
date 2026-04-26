@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:dony/app/theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/data/services/saved_trips_service.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -63,9 +63,9 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
         SnackBar(
           content: Text(
             _isSaved ? 'Trajet sauvegardé' : 'Trajet retiré des sauvegardes',
-            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500),
+            style: GoogleFonts.sora(fontWeight: FontWeight.w500),
           ),
-          backgroundColor: _isSaved ? kSuccess : kTextSecondary,
+          backgroundColor: _isSaved ? DonyColors.success : DonyColors.grey400,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           duration: const Duration(seconds: 2),
@@ -81,16 +81,16 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
     final consultOnly = widget.consultOnly;
 
     return Scaffold(
-      backgroundColor: kBackground,
+      backgroundColor: DonyColors.grey50,
       appBar: AppBar(
         title: Text(
           'Profil voyageur',
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 18),
+          style: GoogleFonts.sora(fontWeight: FontWeight.w700, fontSize: 18),
         ),
-        backgroundColor: kSurface,
+        backgroundColor: DonyColors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: kGreenPrimary),
+          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: DonyColors.blue400),
           onPressed: () => context.pop(),
         ),
         actions: [
@@ -98,14 +98,14 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
             IconButton(
               icon: Icon(
                 _isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                color: _isSaved ? kGreenPrimary : kTextSecondary,
+                color: _isSaved ? DonyColors.blue400 : DonyColors.grey400,
                 size: 24,
               ),
               onPressed: _toggleSave,
               tooltip: _isSaved ? 'Retirer des sauvegardes' : 'Sauvegarder ce trajet',
             ),
             IconButton(
-              icon: const Icon(Icons.chat_bubble_outline_rounded, color: kTextSecondary, size: 22),
+              icon: const Icon(Icons.chat_bubble_outline_rounded, color: DonyColors.grey400, size: 22),
               onPressed: () {}, // TODO: messagerie
               tooltip: 'Contacter',
             ),
@@ -131,7 +131,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                       height: 84,
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
+                          colors: [DonyColors.blue600, DonyColors.blue300],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -140,7 +140,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                       child: Center(
                         child: Text(
                           _initials,
-                          style: GoogleFonts.plusJakartaSans(
+                          style: GoogleFonts.sora(
                             color: Colors.white,
                             fontSize: 30,
                             fontWeight: FontWeight.w700,
@@ -151,10 +151,10 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                     const SizedBox(height: 14),
                     Text(
                       _abbreviatedName,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: GoogleFonts.sora(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
-                        color: kTextPrimary,
+                        color: DonyColors.dark900,
                         letterSpacing: -0.3,
                       ),
                     ),
@@ -163,13 +163,13 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.phone_rounded, size: 13, color: kTextSecondary),
+                          const Icon(Icons.phone_rounded, size: 13, color: DonyColors.grey400),
                           const SizedBox(width: 5),
                           Text(
                             traveler!.phoneNumber!,
-                            style: GoogleFonts.plusJakartaSans(
+                            style: GoogleFonts.sora(
                               fontSize: 14,
-                              color: kTextSecondary,
+                              color: DonyColors.grey400,
                             ),
                           ),
                         ],
@@ -192,9 +192,9 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                         _Badge(
                           icon: Icons.verified_rounded,
                           label: 'Identité vérifiée',
-                          iconColor: kGreenPrimary,
-                          bgColor: kGreenLight,
-                          textColor: kGreenPrimary,
+                          iconColor: DonyColors.blue400,
+                          bgColor: DonyColors.blue100,
+                          textColor: DonyColors.blue400,
                         ),
                       ],
                     ),
@@ -203,9 +203,9 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       decoration: BoxDecoration(
-                        color: kSurface,
+                        color: DonyColors.white,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: kBorder),
+                        border: Border.all(color: DonyColors.grey100),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -216,14 +216,14 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                                 : '–',
                             label: 'Note',
                           ),
-                          Container(width: 1, height: 36, color: kBorder),
+                          Container(width: 1, height: 36, color: DonyColors.grey100),
                           _StatItem(
                             value: traveler?.totalTrips != null
                                 ? '${traveler!.totalTrips}'
                                 : '–',
                             label: 'Trajets',
                           ),
-                          Container(width: 1, height: 36, color: kBorder),
+                          Container(width: 1, height: 36, color: DonyColors.grey100),
                           _StatItem(
                             value: '–',
                             label: 'Livraison',
@@ -240,10 +240,10 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                   // ── Trajet proposé ─────────────────────────────────────
                   Text(
                     'Trajet proposé',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.sora(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: kTextPrimary,
+                      color: DonyColors.dark900,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -254,10 +254,10 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                   // ── Lieux de remise ────────────────────────────────────
                   Text(
                     'Lieux de remise',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.sora(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: kTextPrimary,
+                      color: DonyColors.dark900,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -268,10 +268,10 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                   // ── Tarif ──────────────────────────────────────────────
                   Text(
                     'Tarif',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.sora(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: kTextPrimary,
+                      color: DonyColors.dark900,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -290,10 +290,10 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                 // ── Avis récents ─────────────────────────────────────────
                 Text(
                   'Avis récents',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.sora(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: kTextPrimary,
+                    color: DonyColors.dark900,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -318,8 +318,8 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                   MediaQuery.of(context).padding.bottom + 16,
                 ),
                 decoration: const BoxDecoration(
-                  color: kSurface,
-                  border: Border(top: BorderSide(color: kBorder)),
+                  color: DonyColors.white,
+                  border: Border(top: BorderSide(color: DonyColors.grey100)),
                 ),
                 child: SizedBox(
                   height: 52,
@@ -329,7 +329,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                       extra: _announcement,
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: kGreenPrimary,
+                      backgroundColor: DonyColors.blue400,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -337,7 +337,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                     ),
                     child: Text(
                       'Envoyer un colis',
-                      style: GoogleFonts.plusJakartaSans(
+                      style: GoogleFonts.sora(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                         color: Colors.white,
@@ -385,7 +385,7 @@ class _Badge extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: GoogleFonts.plusJakartaSans(
+            style: GoogleFonts.sora(
               fontSize: 12,
               fontWeight: FontWeight.w700,
               color: textColor,
@@ -409,18 +409,18 @@ class _StatItem extends StatelessWidget {
       children: [
         Text(
           value,
-          style: GoogleFonts.plusJakartaSans(
+          style: GoogleFonts.sora(
             fontSize: 22,
             fontWeight: FontWeight.w800,
-            color: kTextPrimary,
+            color: DonyColors.dark900,
           ),
         ),
         const SizedBox(height: 2),
         Text(
           label,
-          style: GoogleFonts.plusJakartaSans(
+          style: GoogleFonts.sora(
             fontSize: 12,
-            color: kTextSecondary,
+            color: DonyColors.grey400,
           ),
         ),
       ],
@@ -437,9 +437,9 @@ class _TripCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: kSurface,
+        color: DonyColors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kBorder),
+        border: Border.all(color: DonyColors.grey100),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -450,15 +450,15 @@ class _TripCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: kGreenLight,
+                color: DonyColors.blue100,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 '${announcement.availableKg.toStringAsFixed(0)} kg dispo',
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.sora(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  color: kGreenPrimary,
+                  color: DonyColors.blue400,
                 ),
               ),
             ),
@@ -477,7 +477,7 @@ class _TripCard extends StatelessWidget {
                       width: 10,
                       height: 10,
                       decoration: const BoxDecoration(
-                        color: kGreenPrimary,
+                        color: DonyColors.blue400,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -486,7 +486,7 @@ class _TripCard extends StatelessWidget {
                         child: Container(
                           width: 2,
                           decoration: BoxDecoration(
-                            color: kBorder,
+                            color: DonyColors.grey100,
                             borderRadius: BorderRadius.circular(1),
                           ),
                         ),
@@ -496,7 +496,7 @@ class _TripCard extends StatelessWidget {
                       width: 10,
                       height: 10,
                       decoration: const BoxDecoration(
-                        color: kError,
+                        color: DonyColors.error,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -560,20 +560,20 @@ class _RouteStop extends StatelessWidget {
       children: [
         Text(
           timeLabel,
-          style: GoogleFonts.plusJakartaSans(
+          style: GoogleFonts.sora(
             fontSize: 11,
             fontWeight: FontWeight.w600,
-            color: kTextSecondary,
+            color: DonyColors.grey400,
             letterSpacing: 0.2,
           ),
         ),
         const SizedBox(height: 3),
         Text(
           city,
-          style: GoogleFonts.plusJakartaSans(
+          style: GoogleFonts.sora(
             fontSize: 15,
             fontWeight: FontWeight.w700,
-            color: kTextPrimary,
+            color: DonyColors.dark900,
           ),
         ),
         const SizedBox(height: 3),
@@ -583,16 +583,16 @@ class _RouteStop extends StatelessWidget {
               isArrival ? Icons.location_on_rounded : Icons.location_on_outlined,
               size: 12,
               color: hasLocation
-                  ? (isArrival ? kError : kGreenPrimary)
-                  : kTextHint,
+                  ? (isArrival ? DonyColors.error : DonyColors.blue400)
+                  : DonyColors.grey200,
             ),
             const SizedBox(width: 4),
             Expanded(
               child: Text(
                 hasLocation ? location! : 'Lieu non précisé',
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.sora(
                   fontSize: 12,
-                  color: hasLocation ? kTextSecondary : kTextHint,
+                  color: hasLocation ? DonyColors.grey400 : DonyColors.grey200,
                   fontStyle: hasLocation ? FontStyle.normal : FontStyle.italic,
                 ),
               ),
@@ -618,9 +618,9 @@ class _HandoverCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: kSurface,
+        color: DonyColors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kBorder),
+        border: Border.all(color: DonyColors.grey100),
       ),
       child: Column(
         children: [
@@ -632,10 +632,10 @@ class _HandoverCard extends StatelessWidget {
                 margin: const EdgeInsets.only(top: 2),
                 padding: const EdgeInsets.all(7),
                 decoration: BoxDecoration(
-                  color: kGreenLight,
+                  color: DonyColors.blue100,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.location_on_rounded, size: 14, color: kGreenPrimary),
+                child: const Icon(Icons.location_on_rounded, size: 14, color: DonyColors.blue400),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -644,20 +644,20 @@ class _HandoverCard extends StatelessWidget {
                   children: [
                     Text(
                       'Lieu de remise (départ)',
-                      style: GoogleFonts.plusJakartaSans(
+                      style: GoogleFonts.sora(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: kTextSecondary,
+                        color: DonyColors.grey400,
                         letterSpacing: 0.3,
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       hasDepLoc ? depLoc : 'Non précisé par le voyageur',
-                      style: GoogleFonts.plusJakartaSans(
+                      style: GoogleFonts.sora(
                         fontSize: 14,
                         fontWeight: hasDepLoc ? FontWeight.w600 : FontWeight.w400,
-                        color: hasDepLoc ? kTextPrimary : kTextHint,
+                        color: hasDepLoc ? DonyColors.dark900 : DonyColors.grey200,
                         fontStyle: hasDepLoc ? FontStyle.normal : FontStyle.italic,
                       ),
                     ),
@@ -683,7 +683,7 @@ class _HandoverCard extends StatelessWidget {
                   color: const Color(0xFFFFEBEE),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.location_on_rounded, size: 14, color: kError),
+                child: const Icon(Icons.location_on_rounded, size: 14, color: DonyColors.error),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -692,20 +692,20 @@ class _HandoverCard extends StatelessWidget {
                   children: [
                     Text(
                       'Lieu de récupération (arrivée)',
-                      style: GoogleFonts.plusJakartaSans(
+                      style: GoogleFonts.sora(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: kTextSecondary,
+                        color: DonyColors.grey400,
                         letterSpacing: 0.3,
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       hasArrLoc ? arrLoc : 'Non précisé par le voyageur',
-                      style: GoogleFonts.plusJakartaSans(
+                      style: GoogleFonts.sora(
                         fontSize: 14,
                         fontWeight: hasArrLoc ? FontWeight.w600 : FontWeight.w400,
-                        color: hasArrLoc ? kTextPrimary : kTextHint,
+                        color: hasArrLoc ? DonyColors.dark900 : DonyColors.grey200,
                         fontStyle: hasArrLoc ? FontStyle.normal : FontStyle.italic,
                       ),
                     ),
@@ -729,9 +729,9 @@ class _TarifCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: kSurface,
+        color: DonyColors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kBorder),
+        border: Border.all(color: DonyColors.grey100),
       ),
       child: Column(
         children: [
@@ -740,17 +740,17 @@ class _TarifCard extends StatelessWidget {
             children: [
               Text(
                 'Prix par kilo',
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.sora(
                   fontSize: 14,
-                  color: kTextSecondary,
+                  color: DonyColors.grey400,
                 ),
               ),
               Text(
                 '${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.sora(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
-                  color: kTextPrimary,
+                  color: DonyColors.dark900,
                 ),
               ),
             ],
@@ -763,17 +763,17 @@ class _TarifCard extends StatelessWidget {
             children: [
               Text(
                 'Capacité restante',
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.sora(
                   fontSize: 14,
-                  color: kTextSecondary,
+                  color: DonyColors.grey400,
                 ),
               ),
               Text(
                 '${announcement.availableKg.toStringAsFixed(0)} kg',
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.sora(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: kTextPrimary,
+                  color: DonyColors.dark900,
                 ),
               ),
             ],
@@ -810,9 +810,9 @@ class _AboutSectionState extends State<_AboutSection> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: kSurface,
+        color: DonyColors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kBorder),
+        border: Border.all(color: DonyColors.grey100),
       ),
       child: Column(
         children: [
@@ -825,10 +825,10 @@ class _AboutSectionState extends State<_AboutSection> {
                 children: [
                   Text(
                     'À propos',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.sora(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: kTextPrimary,
+                      color: DonyColors.dark900,
                     ),
                   ),
                   const Spacer(),
@@ -836,7 +836,7 @@ class _AboutSectionState extends State<_AboutSection> {
                     turns: _expanded ? 0.5 : 0,
                     duration: const Duration(milliseconds: 200),
                     child: const Icon(Icons.keyboard_arrow_down_rounded,
-                        color: kTextSecondary, size: 22),
+                        color: DonyColors.grey400, size: 22),
                   ),
                 ],
               ),
@@ -848,9 +848,9 @@ class _AboutSectionState extends State<_AboutSection> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Text(
                 _bio,
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.sora(
                   fontSize: 14,
-                  color: kTextSecondary,
+                  color: DonyColors.grey400,
                   height: 1.55,
                 ),
               ),
@@ -906,9 +906,9 @@ class _ReviewsCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: kSurface,
+        color: DonyColors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kBorder),
+        border: Border.all(color: DonyColors.grey100),
       ),
       child: Column(
         children: [
@@ -965,16 +965,16 @@ class _ReviewTile extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: const BoxDecoration(
-              color: kGreenLight,
+              color: DonyColors.blue100,
               shape: BoxShape.circle,
             ),
             child: Center(
               child: Text(
                 review.authorInitial,
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.sora(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: kGreenPrimary,
+                  color: DonyColors.blue400,
                 ),
               ),
             ),
@@ -988,18 +988,18 @@ class _ReviewTile extends StatelessWidget {
                   children: [
                     Text(
                       review.authorName,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: GoogleFonts.sora(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: kTextPrimary,
+                        color: DonyColors.dark900,
                       ),
                     ),
                     const Spacer(),
                     Text(
                       timeLabel,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: GoogleFonts.sora(
                         fontSize: 11,
-                        color: kTextHint,
+                        color: DonyColors.grey200,
                       ),
                     ),
                   ],
@@ -1020,9 +1020,9 @@ class _ReviewTile extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   review.comment,
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.sora(
                     fontSize: 13,
-                    color: kTextSecondary,
+                    color: DonyColors.grey400,
                     height: 1.4,
                   ),
                 ),
@@ -1078,7 +1078,7 @@ class _TravelerProfileLoaderScreenState
           scrolledUnderElevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_rounded,
-                size: 20, color: Color(0xFF1E88E5)),
+                size: 20, color: DonyColors.blue400),
             onPressed: () => context.pop(),
           ),
         ),
@@ -1091,7 +1091,7 @@ class _TravelerProfileLoaderScreenState
               const SizedBox(height: 12),
               Text(
                 'Impossible de charger le profil',
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.sora(
                     fontSize: 15, color: const Color(0xFF6B7A8D)),
               ),
               const SizedBox(height: 16),
@@ -1120,12 +1120,12 @@ class _TravelerProfileLoaderScreenState
           scrolledUnderElevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_rounded,
-                size: 20, color: Color(0xFF1E88E5)),
+                size: 20, color: DonyColors.blue400),
             onPressed: () => context.pop(),
           ),
         ),
         body: const Center(
-          child: CircularProgressIndicator(color: Color(0xFF1E88E5)),
+          child: CircularProgressIndicator(color: DonyColors.blue400),
         ),
       );
     }

@@ -1,6 +1,6 @@
-import 'package:dony/app/theme.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -46,8 +46,8 @@ class _DonyBottomNav extends StatelessWidget {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     return Container(
       decoration: const BoxDecoration(
-        color: kSurface,
-        border: Border(top: BorderSide(color: kBorder, width: 1)),
+        color: DonyColors.white,
+        border: Border(top: BorderSide(color: DonyColors.grey100, width: 1)),
         boxShadow: [
           BoxShadow(
             color: Color(0x08000000),
@@ -153,22 +153,22 @@ class _NavItem extends StatelessWidget {
             curve: Curves.easeOutCubic,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: _active ? kGreenLight : Colors.transparent,
+              color: _active ? DonyColors.blue100 : Colors.transparent,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(
               _active ? icon : outlinedIcon,
               size: 22,
-              color: _active ? kGreenPrimary : kTextSecondary,
+              color: _active ? DonyColors.blue400 : DonyColors.grey400,
             ),
           ),
           const SizedBox(height: 2),
           AnimatedDefaultTextStyle(
             duration: const Duration(milliseconds: 200),
-            style: GoogleFonts.plusJakartaSans(
+            style: GoogleFonts.sora(
               fontSize: 11,
               fontWeight: _active ? FontWeight.w700 : FontWeight.w500,
-              color: _active ? kGreenPrimary : kTextSecondary,
+              color: _active ? DonyColors.blue400 : DonyColors.grey400,
             ),
             child: Text(label),
           ),
@@ -199,19 +199,19 @@ class _QrCenterItem extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: isActive
                   ? const LinearGradient(
-                      colors: [Color(0xFF1565C0), Color(0xFF1E88E5)],
+                      colors: [DonyColors.blue600, DonyColors.blue400],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     )
                   : const LinearGradient(
-                      colors: [Color(0xFF1E88E5), Color(0xFF42A5F5)],
+                      colors: [DonyColors.blue400, DonyColors.blue300],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: kGreenPrimary.withValues(alpha: isActive ? 0.4 : 0.25),
+                  color: DonyColors.blue400.withValues(alpha: isActive ? 0.4 : 0.25),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),

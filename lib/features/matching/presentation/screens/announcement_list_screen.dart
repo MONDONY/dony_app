@@ -1,8 +1,8 @@
-import 'package:dony/app/theme.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -40,25 +40,25 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           'Supprimer ce trajet ?',
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 17),
+          style: GoogleFonts.sora(fontWeight: FontWeight.w700, fontSize: 17),
         ),
         content: Text(
           'Le trajet annulé et toutes les demandes associées seront définitivement retirés de la plateforme.',
-          style: GoogleFonts.plusJakartaSans(fontSize: 14, color: kTextSecondary),
+          style: GoogleFonts.sora(fontSize: 14, color: DonyColors.grey400),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx, false),
             child: Text(
               'Annuler',
-              style: GoogleFonts.plusJakartaSans(color: kTextSecondary, fontWeight: FontWeight.w600),
+              style: GoogleFonts.sora(color: DonyColors.grey400, fontWeight: FontWeight.w600),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx, true),
             child: Text(
               'Supprimer',
-              style: GoogleFonts.plusJakartaSans(color: kError, fontWeight: FontWeight.w700),
+              style: GoogleFonts.sora(color: DonyColors.error, fontWeight: FontWeight.w700),
             ),
           ),
         ],
@@ -71,13 +71,13 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
     final hasAnnouncements = _lastList.isNotEmpty;
 
     return Scaffold(
-      backgroundColor: kBackground,
+      backgroundColor: DonyColors.grey50,
       appBar: AppBar(
         title: Text(
           'Mes trajets',
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 18),
+          style: GoogleFonts.sora(fontWeight: FontWeight.w700, fontSize: 18),
         ),
-        backgroundColor: kSurface,
+        backgroundColor: DonyColors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
@@ -86,11 +86,11 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
                 Padding(
                   padding: const EdgeInsets.only(right: 12),
                   child: TextButton.icon(
-                    icon: const Icon(Icons.add_rounded, size: 17, color: kGreenPrimary),
+                    icon: const Icon(Icons.add_rounded, size: 17, color: DonyColors.blue400),
                     label: Text(
                       'Nouveau trajet',
-                      style: GoogleFonts.plusJakartaSans(
-                        color: kGreenPrimary,
+                      style: GoogleFonts.sora(
+                        color: DonyColors.blue400,
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
                       ),
@@ -109,7 +109,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
       floatingActionButton: hasAnnouncements
           ? null
           : FloatingActionButton(
-              backgroundColor: kGreenPrimary,
+              backgroundColor: DonyColors.blue400,
               elevation: 2,
               onPressed: () => context.push('/announcements/create'),
               child: const Icon(Icons.add_rounded, color: Colors.white),
@@ -122,7 +122,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: kError,
+                backgroundColor: DonyColors.error,
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -137,7 +137,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
           if ((state is AnnouncementLoading || state is AnnouncementInitial) &&
               _lastList.isEmpty) {
             return const Center(
-              child: CircularProgressIndicator(color: kGreenPrimary),
+              child: CircularProgressIndicator(color: DonyColors.blue400),
             );
           }
 
@@ -148,19 +148,19 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.wifi_off_rounded, size: 56, color: kTextHint),
+                    const Icon(Icons.wifi_off_rounded, size: 56, color: DonyColors.grey200),
                     const SizedBox(height: 16),
                     Text(
                       'Impossible de charger vos trajets',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 16, fontWeight: FontWeight.w600, color: kTextPrimary,
+                      style: GoogleFonts.sora(
+                        fontSize: 16, fontWeight: FontWeight.w600, color: DonyColors.dark900,
                       ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       state.message,
-                      style: GoogleFonts.plusJakartaSans(fontSize: 13, color: kTextSecondary),
+                      style: GoogleFonts.sora(fontSize: 13, color: DonyColors.grey400),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 24),
@@ -188,26 +188,26 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: const BoxDecoration(
-                        color: kGreenLight,
+                        color: DonyColors.blue100,
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.flight_takeoff_rounded,
                         size: 48,
-                        color: kGreenPrimary,
+                        color: DonyColors.blue400,
                       ),
                     ),
                     const SizedBox(height: 20),
                     Text(
                       'Aucun trajet publié',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 18, fontWeight: FontWeight.w700, color: kTextPrimary,
+                      style: GoogleFonts.sora(
+                        fontSize: 18, fontWeight: FontWeight.w700, color: DonyColors.dark900,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Publiez votre premier trajet et commencez à transporter des colis.',
-                      style: GoogleFonts.plusJakartaSans(fontSize: 14, color: kTextSecondary),
+                      style: GoogleFonts.sora(fontSize: 14, color: DonyColors.grey400),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -217,7 +217,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
           }
 
           return RefreshIndicator(
-            color: kGreenPrimary,
+            color: DonyColors.blue400,
             onRefresh: () async =>
                 context.read<AnnouncementBloc>().add(AnnouncementListRequested()),
             child: ListView.separated(
@@ -248,7 +248,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
                     alignment: Alignment.centerRight,
                     padding: const EdgeInsets.only(right: 24),
                     decoration: BoxDecoration(
-                      color: kError,
+                      color: DonyColors.error,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Column(
@@ -258,7 +258,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
                         const SizedBox(height: 4),
                         Text(
                           'Supprimer',
-                          style: GoogleFonts.plusJakartaSans(
+                          style: GoogleFonts.sora(
                             color: Colors.white,
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -319,23 +319,23 @@ class _AnnouncementCard extends StatelessWidget {
   });
 
   ({Color bg, Color text, String label}) get _statusStyle => switch (status) {
-        'ACTIVE' => (bg: kGreenLight, text: kSuccess, label: 'Actif'),
+        'ACTIVE' => (bg: DonyColors.blue100, text: DonyColors.success, label: 'Actif'),
         'FULL' => (
           bg: const Color(0xFFFFF3E0),
-          text: kWarning,
+          text: DonyColors.warning,
           label: 'Complet'
         ),
         'COMPLETED' => (
           bg: const Color(0xFFE3F2FD),
-          text: const Color(0xFF1565C0),
+          text: DonyColors.blue600,
           label: 'Terminé'
         ),
         'CANCELLED' => (
           bg: const Color(0xFFFFEBEE),
-          text: kError,
+          text: DonyColors.error,
           label: 'Annulé'
         ),
-        _ => (bg: kBackground, text: kTextSecondary, label: status),
+        _ => (bg: DonyColors.grey50, text: DonyColors.grey400, label: status),
       };
 
   @override
@@ -347,9 +347,9 @@ class _AnnouncementCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: kSurface,
+          color: DonyColors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: kBorder),
+          border: Border.all(color: DonyColors.grey100),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
@@ -369,7 +369,7 @@ class _AnnouncementCard extends StatelessWidget {
                 height: 44,
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFF1565C0), Color(0xFF1E88E5)],
+                    colors: [DonyColors.blue600, DonyColors.blue400],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -396,10 +396,10 @@ class _AnnouncementCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             '$departureCity → $arrivalCity',
-                            style: GoogleFonts.plusJakartaSans(
+                            style: GoogleFonts.sora(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
-                              color: kTextPrimary,
+                              color: DonyColors.dark900,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -414,7 +414,7 @@ class _AnnouncementCard extends StatelessWidget {
                           ),
                           child: Text(
                             s.label,
-                            style: GoogleFonts.plusJakartaSans(
+                            style: GoogleFonts.sora(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               color: s.text,
@@ -428,9 +428,9 @@ class _AnnouncementCard extends StatelessWidget {
                     // Ligne 2 : date
                     Text(
                       dateStr,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: GoogleFonts.sora(
                         fontSize: 12,
-                        color: kTextSecondary,
+                        color: DonyColors.grey400,
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -477,7 +477,7 @@ class _AnnouncementCard extends StatelessWidget {
                                     const SizedBox(width: 3),
                                     Text(
                                       '$bidsCount',
-                                      style: GoogleFonts.plusJakartaSans(
+                                      style: GoogleFonts.sora(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w700,
                                         color: const Color(0xFF7C3AED),
@@ -492,16 +492,16 @@ class _AnnouncementCard extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 5),
                               decoration: BoxDecoration(
-                                color: kSurface,
+                                color: DonyColors.white,
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: kGreenPrimary),
+                                border: Border.all(color: DonyColors.blue400),
                               ),
                               child: Text(
                                 'Gérer →',
-                                style: GoogleFonts.plusJakartaSans(
+                                style: GoogleFonts.sora(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
-                                  color: kGreenPrimary,
+                                  color: DonyColors.blue400,
                                 ),
                               ),
                             ),
@@ -534,19 +534,19 @@ class _InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        color: highlight ? kGreenLight : kBackground,
+        color: highlight ? DonyColors.blue100 : DonyColors.grey50,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 13, color: highlight ? kGreenPrimary : kTextSecondary),
+          Icon(icon, size: 13, color: highlight ? DonyColors.blue400 : DonyColors.grey400),
           const SizedBox(width: 4),
           Text(
             label,
-            style: GoogleFonts.plusJakartaSans(
+            style: GoogleFonts.sora(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: highlight ? kGreenPrimary : kTextSecondary,
+              color: highlight ? DonyColors.blue400 : DonyColors.grey400,
             ),
           ),
         ],

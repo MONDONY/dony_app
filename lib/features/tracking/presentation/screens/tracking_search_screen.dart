@@ -1,8 +1,8 @@
-import 'package:dony/app/theme.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/tracking_search_model.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -39,24 +39,24 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBackground,
+      backgroundColor: DonyColors.grey50,
       appBar: AppBar(
-        backgroundColor: kSurface,
+        backgroundColor: DonyColors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: kGreenPrimary),
+          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: DonyColors.blue400),
           onPressed: () => context.pop(),
         ),
         title: Text(
           'Suivre un colis',
-          style: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.w700, fontSize: 18, color: kTextPrimary),
+          style: GoogleFonts.sora(
+              fontWeight: FontWeight.w700, fontSize: 18, color: DonyColors.dark900),
         ),
         centerTitle: false,
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: kBorder),
+          child: Divider(height: 1, color: DonyColors.grey100),
         ),
       ),
       body: SingleChildScrollView(
@@ -76,7 +76,7 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
                   return const Center(
                     child: Padding(
                       padding: EdgeInsets.symmetric(vertical: 40),
-                      child: CircularProgressIndicator(color: kGreenPrimary),
+                      child: CircularProgressIndicator(color: DonyColors.blue400),
                     ),
                   );
                 }
@@ -102,21 +102,21 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: kGreenLight,
+            color: DonyColors.blue100,
             borderRadius: BorderRadius.circular(14),
           ),
-          child: const Icon(Icons.local_shipping_outlined, color: kGreenPrimary, size: 28),
+          child: const Icon(Icons.local_shipping_outlined, color: DonyColors.blue400, size: 28),
         ),
         const SizedBox(height: 16),
         Text(
           'Numéro de suivi',
-          style: GoogleFonts.plusJakartaSans(
-              fontSize: 22, fontWeight: FontWeight.w800, color: kTextPrimary),
+          style: GoogleFonts.sora(
+              fontSize: 22, fontWeight: FontWeight.w800, color: DonyColors.dark900),
         ),
         const SizedBox(height: 6),
         Text(
           'Entrez le numéro DON-XXXXXX pour suivre votre colis en temps réel.',
-          style: GoogleFonts.plusJakartaSans(fontSize: 14, color: kTextSecondary, height: 1.5),
+          style: GoogleFonts.sora(fontSize: 14, color: DonyColors.grey400, height: 1.5),
         ),
       ],
     );
@@ -127,28 +127,28 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
       controller: _controller,
       focusNode: _focusNode,
       textCapitalization: TextCapitalization.characters,
-      style: GoogleFonts.plusJakartaSans(
+      style: GoogleFonts.sora(
           fontSize: 18, fontWeight: FontWeight.w700,
-          letterSpacing: 2, color: kTextPrimary),
+          letterSpacing: 2, color: DonyColors.dark900),
       decoration: InputDecoration(
         labelText: 'Numéro de suivi',
         hintText: 'DON-XXXXXX',
-        hintStyle: GoogleFonts.plusJakartaSans(
-            fontSize: 16, color: kTextHint, letterSpacing: 1.5),
-        prefixIcon: const Icon(Icons.qr_code_rounded, color: kGreenPrimary),
+        hintStyle: GoogleFonts.sora(
+            fontSize: 16, color: DonyColors.grey200, letterSpacing: 1.5),
+        prefixIcon: const Icon(Icons.qr_code_rounded, color: DonyColors.blue400),
         filled: true,
-        fillColor: kSurface,
+        fillColor: DonyColors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: kBorder),
+          borderSide: const BorderSide(color: DonyColors.grey100),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: kBorder),
+          borderSide: const BorderSide(color: DonyColors.grey100),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: kGreenPrimary, width: 2),
+          borderSide: const BorderSide(color: DonyColors.blue400, width: 2),
         ),
       ),
       onSubmitted: (_) => _search(context),
@@ -164,10 +164,10 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
         icon: const Icon(Icons.search_rounded),
         label: Text(
           'Rechercher',
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 15),
+          style: GoogleFonts.sora(fontWeight: FontWeight.w700, fontSize: 15),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: kGreenPrimary,
+          backgroundColor: DonyColors.blue400,
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -180,19 +180,19 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: kError.withValues(alpha:0.08),
+        color: DonyColors.error.withValues(alpha:0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kError.withValues(alpha:0.3)),
+        border: Border.all(color: DonyColors.error.withValues(alpha:0.3)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline_rounded, color: kError, size: 22),
+          const Icon(Icons.error_outline_rounded, color: DonyColors.error, size: 22),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               message,
-              style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13, fontWeight: FontWeight.w500, color: kError),
+              style: GoogleFonts.sora(
+                  fontSize: 13, fontWeight: FontWeight.w500, color: DonyColors.error),
             ),
           ),
         ],
@@ -211,9 +211,9 @@ class _TrackingResultCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: kSurface,
+        color: DonyColors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kBorder),
+        border: Border.all(color: DonyColors.grey100),
       ),
       child: Column(
         children: [
@@ -241,7 +241,7 @@ class _TrackingResultCard extends StatelessWidget {
                       ),
                       child: Text(
                         result.trackingNumber,
-                        style: GoogleFonts.plusJakartaSans(
+                        style: GoogleFonts.sora(
                             color: Colors.white,
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
@@ -258,7 +258,7 @@ class _TrackingResultCard extends StatelessWidget {
                       child: Text(
                         result.departureCity,
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.plusJakartaSans(
+                        style: GoogleFonts.sora(
                             color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800),
                       ),
                     ),
@@ -270,7 +270,7 @@ class _TrackingResultCard extends StatelessWidget {
                       child: Text(
                         result.arrivalCity,
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.plusJakartaSans(
+                        style: GoogleFonts.sora(
                             color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800),
                       ),
                     ),
@@ -299,7 +299,7 @@ class _TrackingResultCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           result.stepLabel,
-                          style: GoogleFonts.plusJakartaSans(
+                          style: GoogleFonts.sora(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
                               color: color),
@@ -325,12 +325,12 @@ class _TrackingResultCard extends StatelessWidget {
                     icon: const Icon(Icons.timeline_rounded, size: 18),
                     label: Text(
                       'Voir le suivi détaillé',
-                      style: GoogleFonts.plusJakartaSans(
+                      style: GoogleFonts.sora(
                           fontWeight: FontWeight.w700, fontSize: 14),
                     ),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: kGreenPrimary,
-                      side: const BorderSide(color: kGreenPrimary),
+                      foregroundColor: DonyColors.blue400,
+                      side: const BorderSide(color: DonyColors.blue400),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                     ),
@@ -346,14 +346,14 @@ class _TrackingResultCard extends StatelessWidget {
 
   (IconData, Color, String) _stepVisuals(String step) {
     return switch (step) {
-      'DELIVERED'       => (Icons.check_circle_rounded, kSuccess, step),
-      'IN_TRANSIT'      => (Icons.local_shipping_rounded, kGreenPrimary, step),
-      'DEPARTED'        => (Icons.flight_takeoff_rounded, kGreenPrimary, step),
-      'PAYMENT_SECURED' => (Icons.lock_rounded, kGreenPrimary, step),
-      'ACCEPTED'        => (Icons.handshake_outlined, kWarning, step),
-      'REJECTED'        => (Icons.cancel_outlined, kError, step),
-      'CANCELLED'       => (Icons.block_outlined, kTextSecondary, step),
-      _                 => (Icons.hourglass_empty_rounded, kWarning, step),
+      'DELIVERED'       => (Icons.check_circle_rounded, DonyColors.success, step),
+      'IN_TRANSIT'      => (Icons.local_shipping_rounded, DonyColors.blue400, step),
+      'DEPARTED'        => (Icons.flight_takeoff_rounded, DonyColors.blue400, step),
+      'PAYMENT_SECURED' => (Icons.lock_rounded, DonyColors.blue400, step),
+      'ACCEPTED'        => (Icons.handshake_outlined, DonyColors.warning, step),
+      'REJECTED'        => (Icons.cancel_outlined, DonyColors.error, step),
+      'CANCELLED'       => (Icons.block_outlined, DonyColors.grey400, step),
+      _                 => (Icons.hourglass_empty_rounded, DonyColors.warning, step),
     };
   }
 }
@@ -391,7 +391,7 @@ class _StepTimeline extends StatelessWidget {
           return Expanded(
             child: Container(
               height: 2,
-              color: isActive ? kGreenPrimary : kBorder,
+              color: isActive ? DonyColors.blue400 : DonyColors.grey100,
             ),
           );
         }
@@ -401,11 +401,11 @@ class _StepTimeline extends StatelessWidget {
 
         Color dotColor;
         if (isDone) {
-          dotColor = kGreenPrimary;
+          dotColor = DonyColors.blue400;
         } else if (isActive) {
-          dotColor = kGreenPrimary;
+          dotColor = DonyColors.blue400;
         } else {
-          dotColor = kBorder;
+          dotColor = DonyColors.grey100;
         }
 
         return Column(
@@ -417,17 +417,17 @@ class _StepTimeline extends StatelessWidget {
                 shape: BoxShape.circle,
                 color: dotColor,
                 border: isActive
-                    ? Border.all(color: kGreenPrimary, width: 2)
+                    ? Border.all(color: DonyColors.blue400, width: 2)
                     : null,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               _steps[stepIdx].$2,
-              style: GoogleFonts.plusJakartaSans(
+              style: GoogleFonts.sora(
                   fontSize: 9,
                   fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
-                  color: isActive ? kGreenPrimary : kTextHint),
+                  color: isActive ? DonyColors.blue400 : DonyColors.grey200),
             ),
           ],
         );

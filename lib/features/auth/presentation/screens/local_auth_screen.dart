@@ -5,6 +5,7 @@ import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/auth/bloc/local_auth_event.dart';
 import 'package:dony/features/auth/bloc/local_auth_state.dart';
 import 'package:dony/core/constants/app_assets.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -20,9 +21,9 @@ class LocalAuthScreen extends StatefulWidget {
 
 class _LocalAuthScreenState extends State<LocalAuthScreen> {
   static const _pinLength = 6;
-  static const _kGreen = Color(0xFF1E88E5);
-  static const _kGreenLight = Color(0xFFE3F2FD);
-  static const _kBg = Color(0xFFF8F9FA);
+  static const _kGreen = DonyColors.blue400;
+  static const _kGreenLight = DonyColors.blue100;
+  static const _kBg = DonyColors.grey50;
 
   String _pin = '';
   int _lockSecondsLeft = 30;

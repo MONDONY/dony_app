@@ -1,4 +1,3 @@
-import 'package:dony/app/theme.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -12,6 +11,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -76,18 +76,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       .length;
 
                   return Scaffold(
-                    backgroundColor: kBackground,
+                    backgroundColor: DonyColors.grey50,
                     appBar: AppBar(
                       title: Text(
                         'Mon profil',
-                        style: GoogleFonts.plusJakartaSans(
+                        style: GoogleFonts.sora(
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
-                          color: kTextPrimary,
+                          color: DonyColors.dark900,
                         ),
                       ),
                       centerTitle: true,
-                      backgroundColor: kSurface,
+                      backgroundColor: DonyColors.white,
                       elevation: 0,
                       scrolledUnderElevation: 0,
                       bottom: const PreferredSize(
@@ -106,7 +106,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 IconButton(
                                   icon: const Icon(
                                     Icons.notifications_outlined,
-                                    color: kTextPrimary,
+                                    color: DonyColors.dark900,
                                     size: 22,
                                   ),
                                   onPressed: () => context.go('/messages'),
@@ -119,7 +119,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       width: 8,
                                       height: 8,
                                       decoration: const BoxDecoration(
-                                        color: kError,
+                                        color: DonyColors.error,
                                         shape: BoxShape.circle,
                                       ),
                                     ),
@@ -132,7 +132,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ],
                     ),
                     body: RefreshIndicator(
-                      color: kGreenPrimary,
+                      color: DonyColors.blue400,
                       onRefresh: () async {
                         context.read<BidBloc>().add(BidMyListRequested());
                         context
@@ -158,10 +158,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             // ── Nom / identifiant ───────────────────────
                             Text(
                               displayName,
-                              style: GoogleFonts.plusJakartaSans(
+                              style: GoogleFonts.sora(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w700,
-                                color: kTextPrimary,
+                                color: DonyColors.dark900,
                               ),
                               textAlign: TextAlign.center,
                             ).animate().fadeIn(delay: 80.ms),
@@ -175,7 +175,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   _Badge(
                                     icon: Icons.verified_rounded,
                                     label: 'Identité vérifiée',
-                                    color: kSuccess,
+                                    color: DonyColors.success,
                                   ),
                                   const SizedBox(width: 8),
                                 ],
@@ -183,7 +183,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   _Badge(
                                     icon: Icons.flight_takeoff_rounded,
                                     label: 'Voyageur',
-                                    color: kGreenPrimary,
+                                    color: DonyColors.blue400,
                                   ),
                                 if (isTraveler && isSender)
                                   const SizedBox(width: 8),
@@ -223,7 +223,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 if (isTraveler)
                                   _MenuItem(
                                     icon: Icons.flight_takeoff_rounded,
-                                    iconColor: kGreenPrimary,
+                                    iconColor: DonyColors.blue400,
                                     label: 'Mes trajets',
                                     trailing: upcomingAnnouncements > 0
                                         ? '$upcomingAnnouncements à venir'
@@ -258,12 +258,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                                 _MenuItem(
                                   icon: Icons.badge_outlined,
-                                  iconColor: const Color(0xFF1E88E5),
+                                  iconColor: DonyColors.blue400,
                                   label: 'Documents KYC',
                                   trailing:
                                       isKycVerified ? 'Vérifié' : null,
                                   trailingColor:
-                                      isKycVerified ? kSuccess : null,
+                                      isKycVerified ? DonyColors.success : null,
                                   onTap: () => context.push('/kyc'),
                                 ),
                                 _MenuItem(
@@ -294,20 +294,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                                 _MenuItem(
                                   icon: Icons.language_rounded,
-                                  iconColor: const Color(0xFF1E88E5),
+                                  iconColor: DonyColors.blue400,
                                   label: 'Langue',
                                   trailing: 'Français',
                                   onTap: () {},
                                 ),
                                 _MenuItem(
                                   icon: Icons.lock_outline_rounded,
-                                  iconColor: kTextSecondary,
+                                  iconColor: DonyColors.grey400,
                                   label: 'Sécurité & confidentialité',
                                   onTap: () {},
                                 ),
                                 _MenuItem(
                                   icon: Icons.help_outline_rounded,
-                                  iconColor: kTextSecondary,
+                                  iconColor: DonyColors.grey400,
                                   label: 'Aide & support',
                                   isLast: true,
                                   onTap: () {},
@@ -328,10 +328,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   .add(const AuthLogoutRequested()),
                               child: Text(
                                 'Se déconnecter',
-                                style: GoogleFonts.plusJakartaSans(
+                                style: GoogleFonts.sora(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
-                                  color: kError,
+                                  color: DonyColors.error,
                                 ),
                               ),
                             ).animate().fadeIn(delay: 280.ms),
@@ -340,9 +340,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             // ── Footer ──────────────────────────────────
                             Text(
                               'dony v1.0.0 · Made with ❤️ in Paris',
-                              style: GoogleFonts.plusJakartaSans(
+                              style: GoogleFonts.sora(
                                 fontSize: 12,
-                                color: kTextHint,
+                                color: DonyColors.grey200,
                               ),
                             ).animate().fadeIn(delay: 320.ms),
                           ],
@@ -368,14 +368,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           height: 88,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF1565C0), Color(0xFF1E88E5)],
+              colors: [DonyColors.blue600, DonyColors.blue400],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: kGreenPrimary.withValues(alpha: 0.3),
+                color: DonyColors.blue400.withValues(alpha: 0.3),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),
@@ -384,7 +384,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Center(
             child: Text(
               initials,
-              style: GoogleFonts.plusJakartaSans(
+              style: GoogleFonts.sora(
                 color: Colors.white,
                 fontSize: 26,
                 fontWeight: FontWeight.w800,
@@ -396,11 +396,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Container(
             padding: const EdgeInsets.all(3),
             decoration: const BoxDecoration(
-              color: kSurface,
+              color: DonyColors.white,
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.verified_rounded,
-                color: kSuccess, size: 20),
+                color: DonyColors.success, size: 20),
           ),
       ],
     );
@@ -436,9 +436,9 @@ class _ProfileCompletionBanner extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: kWarning.withValues(alpha: 0.06),
+          color: DonyColors.warning.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: kWarning.withValues(alpha: 0.3)),
+          border: Border.all(color: DonyColors.warning.withValues(alpha: 0.3)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -448,11 +448,11 @@ class _ProfileCompletionBanner extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(7),
                   decoration: BoxDecoration(
-                    color: kWarning.withValues(alpha: 0.12),
+                    color: DonyColors.warning.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.edit_note_rounded,
-                      color: kWarning, size: 18),
+                      color: DonyColors.warning, size: 18),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -461,17 +461,17 @@ class _ProfileCompletionBanner extends StatelessWidget {
                     children: [
                       Text(
                         'Profil incomplet',
-                        style: GoogleFonts.plusJakartaSans(
+                        style: GoogleFonts.sora(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: kTextPrimary,
+                          color: DonyColors.dark900,
                         ),
                       ),
                       Text(
                         '${(completed / total * 100).round()}% complété · Compléter maintenant',
-                        style: GoogleFonts.plusJakartaSans(
+                        style: GoogleFonts.sora(
                           fontSize: 12,
-                          color: kWarning,
+                          color: DonyColors.warning,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -479,7 +479,7 @@ class _ProfileCompletionBanner extends StatelessWidget {
                   ),
                 ),
                 const Icon(Icons.chevron_right_rounded,
-                    color: kTextHint, size: 18),
+                    color: DonyColors.grey200, size: 18),
               ],
             ),
             const SizedBox(height: 12),
@@ -487,8 +487,8 @@ class _ProfileCompletionBanner extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: completed / total,
-                backgroundColor: kBorder,
-                valueColor: const AlwaysStoppedAnimation<Color>(kWarning),
+                backgroundColor: DonyColors.grey100,
+                valueColor: const AlwaysStoppedAnimation<Color>(DonyColors.warning),
                 minHeight: 5,
               ),
             ),
@@ -517,21 +517,21 @@ class _MissingChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: kWarning.withValues(alpha: 0.1),
+        color: DonyColors.warning.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: kWarning.withValues(alpha: 0.3)),
+        border: Border.all(color: DonyColors.warning.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.add_rounded, color: kWarning, size: 12),
+          const Icon(Icons.add_rounded, color: DonyColors.warning, size: 12),
           const SizedBox(width: 3),
           Text(
             label,
-            style: GoogleFonts.plusJakartaSans(
+            style: GoogleFonts.sora(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: kWarning,
+              color: DonyColors.warning,
             ),
           ),
         ],
@@ -577,18 +577,18 @@ class _StatsRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        color: kSurface,
+        color: DonyColors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kBorder),
+        border: Border.all(color: DonyColors.grey100),
       ),
       child: Row(
         children: [
           Expanded(
               child: _StatItem(value: stat1Value, label: stat1Label)),
-          Container(width: 1, height: 32, color: kBorder),
+          Container(width: 1, height: 32, color: DonyColors.grey100),
           const Expanded(
               child: _StatItem(value: '4.9', label: 'Ma note')),
-          Container(width: 1, height: 32, color: kBorder),
+          Container(width: 1, height: 32, color: DonyColors.grey100),
           Expanded(
               child: _StatItem(value: stat3Value, label: stat3Label)),
         ],
@@ -609,18 +609,18 @@ class _StatItem extends StatelessWidget {
       children: [
         Text(
           value,
-          style: GoogleFonts.plusJakartaSans(
+          style: GoogleFonts.sora(
             fontSize: 18,
             fontWeight: FontWeight.w800,
-            color: kTextPrimary,
+            color: DonyColors.dark900,
           ),
         ),
         const SizedBox(height: 2),
         Text(
           label,
-          style: GoogleFonts.plusJakartaSans(
+          style: GoogleFonts.sora(
             fontSize: 12,
-            color: kTextSecondary,
+            color: DonyColors.grey400,
           ),
         ),
       ],
@@ -640,9 +640,9 @@ class _MenuSection extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: kSurface,
+        color: DonyColors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kBorder),
+        border: Border.all(color: DonyColors.grey100),
       ),
       child: Column(children: children),
     );
@@ -693,20 +693,20 @@ class _MenuItem extends StatelessWidget {
                 Expanded(
                   child: Text(
                     label,
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.sora(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: kTextPrimary,
+                      color: DonyColors.dark900,
                     ),
                   ),
                 ),
                 if (trailing != null) ...[
                   Text(
                     trailing!,
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.sora(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: trailingColor ?? kTextSecondary,
+                      color: trailingColor ?? DonyColors.grey400,
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -714,7 +714,7 @@ class _MenuItem extends StatelessWidget {
                 const Icon(
                   Icons.chevron_right_rounded,
                   size: 18,
-                  color: kTextHint,
+                  color: DonyColors.grey200,
                 ),
               ],
             ),
@@ -759,7 +759,7 @@ class _Badge extends StatelessWidget {
           const SizedBox(width: 5),
           Text(
             label,
-            style: GoogleFonts.plusJakartaSans(
+            style: GoogleFonts.sora(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: color,

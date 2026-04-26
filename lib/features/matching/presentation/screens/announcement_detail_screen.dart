@@ -1,7 +1,7 @@
-import 'package:dony/app/theme.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,27 +31,27 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: Text(
               'Supprimer ce trajet ?',
-              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 17),
+              style: GoogleFonts.sora(fontWeight: FontWeight.w700, fontSize: 17),
             ),
             content: Text(
               isCancelled
                   ? 'Cette action est irréversible. Le trajet annulé et toutes les demandes associées seront définitivement retirés de la plateforme.'
                   : 'Cette action est irréversible. Le trajet ne sera plus visible pour les expéditeurs.',
-              style: GoogleFonts.plusJakartaSans(fontSize: 14, color: kTextSecondary),
+              style: GoogleFonts.sora(fontSize: 14, color: DonyColors.grey400),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
                 child: Text(
                   'Annuler',
-                  style: GoogleFonts.plusJakartaSans(color: kTextSecondary, fontWeight: FontWeight.w600),
+                  style: GoogleFonts.sora(color: DonyColors.grey400, fontWeight: FontWeight.w600),
                 ),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx, true),
                 child: Text(
                   'Supprimer',
-                  style: GoogleFonts.plusJakartaSans(color: kError, fontWeight: FontWeight.w700),
+                  style: GoogleFonts.sora(color: DonyColors.error, fontWeight: FontWeight.w700),
                 ),
               ),
             ],
@@ -63,13 +63,13 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBackground,
+      backgroundColor: DonyColors.grey50,
       appBar: AppBar(
         title: Text(
           'Détail du trajet',
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 18),
+          style: GoogleFonts.sora(fontWeight: FontWeight.w700, fontSize: 18),
         ),
-        backgroundColor: kSurface,
+        backgroundColor: DonyColors.white,
         elevation: 0,
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
@@ -83,9 +83,9 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
               SnackBar(
                 content: Text(
                   'Trajet supprimé',
-                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500),
+                  style: GoogleFonts.sora(fontWeight: FontWeight.w500),
                 ),
-                backgroundColor: kSuccess,
+                backgroundColor: DonyColors.success,
               ),
             );
             context.pop();
@@ -93,14 +93,14 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: kError,
+                backgroundColor: DonyColors.error,
               ),
             );
           }
         },
         builder: (context, state) {
           if (state is AnnouncementLoading || state is AnnouncementInitial) {
-            return const Center(child: CircularProgressIndicator(color: kGreenPrimary));
+            return const Center(child: CircularProgressIndicator(color: DonyColors.blue400));
           }
 
           if (state is AnnouncementDetailLoaded) {
@@ -119,14 +119,14 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFF1565C0), Color(0xFF1E88E5)],
+                        colors: [DonyColors.blue600, DonyColors.blue400],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: kGreenPrimary.withValues(alpha: 0.3),
+                          color: DonyColors.blue400.withValues(alpha: 0.3),
                           blurRadius: 16,
                           offset: const Offset(0, 6),
                         ),
@@ -141,7 +141,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                             const SizedBox(width: 8),
                             Text(
                               'Trajet',
-                              style: GoogleFonts.plusJakartaSans(
+                              style: GoogleFonts.sora(
                                 color: Colors.white.withValues(alpha: 0.7),
                                 fontSize: 13,
                               ),
@@ -156,7 +156,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                           children: [
                             Text(
                               a.departureCity,
-                              style: GoogleFonts.plusJakartaSans(
+                              style: GoogleFonts.sora(
                                 color: Colors.white,
                                 fontSize: 22,
                                 fontWeight: FontWeight.w800,
@@ -168,7 +168,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                             ),
                             Text(
                               a.arrivalCity,
-                              style: GoogleFonts.plusJakartaSans(
+                              style: GoogleFonts.sora(
                                 color: Colors.white,
                                 fontSize: 22,
                                 fontWeight: FontWeight.w800,
@@ -183,7 +183,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                             const SizedBox(width: 6),
                             Text(
                               DateFormat('EEEE d MMMM yyyy', 'fr').format(a.departureDate),
-                              style: GoogleFonts.plusJakartaSans(
+                              style: GoogleFonts.sora(
                                 color: Colors.white.withValues(alpha: 0.85),
                                 fontSize: 13,
                               ),
@@ -199,7 +199,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                                 const SizedBox(width: 4),
                                 Text(
                                   a.departureTime!,
-                                  style: GoogleFonts.plusJakartaSans(
+                                  style: GoogleFonts.sora(
                                     color: Colors.white.withValues(alpha: 0.85),
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
@@ -219,7 +219,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                                 const SizedBox(width: 4),
                                 Text(
                                   a.arrivalTime!,
-                                  style: GoogleFonts.plusJakartaSans(
+                                  style: GoogleFonts.sora(
                                     color: Colors.white.withValues(alpha: 0.85),
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
@@ -239,19 +239,19 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: kSurface,
+                        color: DonyColors.white,
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: kBorder),
+                        border: Border.all(color: DonyColors.grey100),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'Lieux de remise',
-                            style: GoogleFonts.plusJakartaSans(
+                            style: GoogleFonts.sora(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
-                              color: kTextSecondary,
+                              color: DonyColors.grey400,
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -260,15 +260,15 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Icon(Icons.location_on_rounded, size: 14, color: kGreenPrimary),
+                                const Icon(Icons.location_on_rounded, size: 14, color: DonyColors.blue400),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     a.departureLocation!,
-                                    style: GoogleFonts.plusJakartaSans(
+                                    style: GoogleFonts.sora(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
-                                      color: kTextPrimary,
+                                      color: DonyColors.dark900,
                                     ),
                                   ),
                                 ),
@@ -280,15 +280,15 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Icon(Icons.location_on_outlined, size: 14, color: kError),
+                                const Icon(Icons.location_on_outlined, size: 14, color: DonyColors.error),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     a.arrivalLocation!,
-                                    style: GoogleFonts.plusJakartaSans(
+                                    style: GoogleFonts.sora(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
-                                      color: kTextPrimary,
+                                      color: DonyColors.dark900,
                                     ),
                                   ),
                                 ),
@@ -326,7 +326,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                           icon: Icons.euro_rounded,
                           label: 'Prix par kg',
                           value: '${a.pricePerKg.toStringAsFixed(2)} €',
-                          color: kGreenPrimary,
+                          color: DonyColors.blue400,
                         ),
                       ),
                       SizedBox(
@@ -352,7 +352,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                       icon: const Icon(Icons.inbox_rounded, color: Colors.white, size: 18),
                       label: Text('Voir les demandes (${a.bidsCount ?? 0})'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: kGreenPrimary,
+                        backgroundColor: DonyColors.blue400,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         minimumSize: const Size(double.infinity, 50),
@@ -381,14 +381,14 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
 
                   if (!canDelete && a.status == 'ACTIVE') ...[
                     OutlinedButton.icon(
-                      icon: const Icon(Icons.cancel_outlined, size: 18, color: kError),
+                      icon: const Icon(Icons.cancel_outlined, size: 18, color: DonyColors.error),
                       label: Text(
                         'Annuler ce trajet',
-                        style: GoogleFonts.plusJakartaSans(color: kError, fontWeight: FontWeight.w600),
+                        style: GoogleFonts.sora(color: DonyColors.error, fontWeight: FontWeight.w600),
                       ),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: kError),
-                        foregroundColor: kError,
+                        side: const BorderSide(color: DonyColors.error),
+                        foregroundColor: DonyColors.error,
                         minimumSize: const Size(double.infinity, 50),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
@@ -399,14 +399,14 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
 
                   if (canDelete)
                     OutlinedButton.icon(
-                      icon: const Icon(Icons.delete_outline_rounded, size: 18, color: kError),
+                      icon: const Icon(Icons.delete_outline_rounded, size: 18, color: DonyColors.error),
                       label: Text(
                         'Supprimer ce trajet',
-                        style: GoogleFonts.plusJakartaSans(color: kError, fontWeight: FontWeight.w600),
+                        style: GoogleFonts.sora(color: DonyColors.error, fontWeight: FontWeight.w600),
                       ),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: kError),
-                        foregroundColor: kError,
+                        side: const BorderSide(color: DonyColors.error),
+                        foregroundColor: DonyColors.error,
                         minimumSize: const Size(double.infinity, 50),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
@@ -430,12 +430,12 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.info_outline_rounded, color: kWarning, size: 18),
+                          const Icon(Icons.info_outline_rounded, color: DonyColors.warning, size: 18),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
                               'Ce trajet ne peut plus être modifié.',
-                              style: GoogleFonts.plusJakartaSans(
+                              style: GoogleFonts.sora(
                                 fontSize: 13, color: const Color(0xFF92400E),
                               ),
                             ),
@@ -462,11 +462,11 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, label) = switch (status) {
-      'ACTIVE'    => (kSuccess, 'Actif'),
-      'FULL'      => (kWarning, 'Complet'),
-      'COMPLETED' => (const Color(0xFF1565C0), 'Terminé'),
-      'CANCELLED' => (kError, 'Annulé'),
-      _           => (kTextSecondary, status),
+      'ACTIVE'    => (DonyColors.success, 'Actif'),
+      'FULL'      => (DonyColors.warning, 'Complet'),
+      'COMPLETED' => (DonyColors.blue600, 'Terminé'),
+      'CANCELLED' => (DonyColors.error, 'Annulé'),
+      _           => (DonyColors.grey400, status),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -477,7 +477,7 @@ class _StatusBadge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: GoogleFonts.plusJakartaSans(
+        style: GoogleFonts.sora(
           fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white,
         ),
       ),
@@ -503,9 +503,9 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: kSurface,
+        color: DonyColors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: kBorder),
+        border: Border.all(color: DonyColors.grey100),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -521,13 +521,13 @@ class _StatCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             value,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 16, fontWeight: FontWeight.w700, color: kTextPrimary,
+            style: GoogleFonts.sora(
+              fontSize: 16, fontWeight: FontWeight.w700, color: DonyColors.dark900,
             ),
           ),
           Text(
             label,
-            style: GoogleFonts.plusJakartaSans(fontSize: 11, color: kTextSecondary),
+            style: GoogleFonts.sora(fontSize: 11, color: DonyColors.grey400),
           ),
         ],
       ),

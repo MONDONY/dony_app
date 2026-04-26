@@ -1,6 +1,6 @@
-import 'package:dony/app/theme.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -77,14 +77,14 @@ class _PaymentSummaryView extends StatelessWidget {
     final error = state is PaymentError ? (state as PaymentError).message : null;
 
     return Scaffold(
-      backgroundColor: kBackground,
+      backgroundColor: DonyColors.grey50,
       appBar: AppBar(
         title: Text(
           'Payer mon envoi',
-          style: GoogleFonts.plusJakartaSans(
+          style: GoogleFonts.sora(
               fontWeight: FontWeight.w700, fontSize: 18),
         ),
-        backgroundColor: kSurface,
+        backgroundColor: DonyColors.white,
         elevation: 0,
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
@@ -130,9 +130,9 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: kSurface,
+        color: DonyColors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kBorder),
+        border: Border.all(color: DonyColors.grey100),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,10 +141,10 @@ class _SummaryCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
             child: Text(
               'Récapitulatif',
-              style: GoogleFonts.plusJakartaSans(
+              style: GoogleFonts.sora(
                   fontWeight: FontWeight.w700,
                   fontSize: 15,
-                  color: kTextPrimary),
+                  color: DonyColors.dark900),
             ),
           ),
           const Divider(height: 1),
@@ -156,20 +156,20 @@ class _SummaryCard extends StatelessWidget {
           _SummaryRow(
             'Montant',
             '${amount.toStringAsFixed(2)} €',
-            valueStyle: GoogleFonts.plusJakartaSans(
+            valueStyle: GoogleFonts.sora(
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
-                color: kTextPrimary),
+                color: DonyColors.dark900),
           ),
           const Divider(height: 1, indent: 16),
           _SummaryRow(
             'Commission dony (12%)',
             '− ${commission.toStringAsFixed(2)} €',
             subtitle: 'Déduite du paiement voyageur',
-            valueStyle: GoogleFonts.plusJakartaSans(
+            valueStyle: GoogleFonts.sora(
                 fontWeight: FontWeight.w500,
                 fontSize: 14,
-                color: kTextSecondary),
+                color: DonyColors.grey400),
           ),
           const Divider(height: 1),
           Padding(
@@ -179,17 +179,17 @@ class _SummaryCard extends StatelessWidget {
               children: [
                 Text(
                   'Vous payez',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.sora(
                       fontWeight: FontWeight.w700,
                       fontSize: 16,
-                      color: kTextPrimary),
+                      color: DonyColors.dark900),
                 ),
                 Text(
                   '${amount.toStringAsFixed(2)} €',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.sora(
                       fontWeight: FontWeight.w800,
                       fontSize: 18,
-                      color: kGreenPrimary),
+                      color: DonyColors.blue400),
                 ),
               ],
             ),
@@ -220,13 +220,13 @@ class _SummaryRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label,
-                    style: GoogleFonts.plusJakartaSans(
-                        fontSize: 14, color: kTextSecondary)),
+                    style: GoogleFonts.sora(
+                        fontSize: 14, color: DonyColors.grey400)),
                 if (subtitle != null) ...[
                   const SizedBox(height: 2),
                   Text(subtitle!,
-                      style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11, color: kTextHint)),
+                      style: GoogleFonts.sora(
+                          fontSize: 11, color: DonyColors.grey200)),
                 ],
               ],
             ),
@@ -234,10 +234,10 @@ class _SummaryRow extends StatelessWidget {
           Text(
             value,
             style: valueStyle ??
-                GoogleFonts.plusJakartaSans(
+                GoogleFonts.sora(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: kTextPrimary),
+                    color: DonyColors.dark900),
           ),
         ],
       ),
@@ -251,20 +251,20 @@ class _EscrowInfoBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: kGreenLight,
+        color: DonyColors.blue100,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kGreenPrimary.withValues(alpha: 0.2)),
+        border: Border.all(color: DonyColors.blue400.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.lock_rounded, color: kGreenPrimary, size: 20),
+          const Icon(Icons.lock_rounded, color: DonyColors.blue400, size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               'Votre paiement est sécurisé — libéré uniquement après confirmation de livraison par le destinataire.',
-              style: GoogleFonts.plusJakartaSans(
+              style: GoogleFonts.sora(
                   fontSize: 13,
-                  color: kGreenDark,
+                  color: DonyColors.blue600,
                   fontWeight: FontWeight.w500,
                   height: 1.4),
             ),
@@ -297,7 +297,7 @@ class _PayButton extends StatelessWidget {
             : () =>
                 context.read<PaymentBloc>().add(PaymentInitiated(bidId)),
         style: ElevatedButton.styleFrom(
-          backgroundColor: kGreenPrimary,
+          backgroundColor: DonyColors.blue400,
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
@@ -312,7 +312,7 @@ class _PayButton extends StatelessWidget {
               )
             : Text(
                 'Payer ${amount.toStringAsFixed(2)} €',
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.sora(
                     fontWeight: FontWeight.w700, fontSize: 16),
               ),
       ),
@@ -329,20 +329,20 @@ class _ErrorBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: kError.withValues(alpha: 0.08),
+        color: DonyColors.error.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kError.withValues(alpha: 0.3)),
+        border: Border.all(color: DonyColors.error.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline_rounded, color: kError, size: 20),
+          Icon(Icons.error_outline_rounded, color: DonyColors.error, size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               message,
-              style: GoogleFonts.plusJakartaSans(
+              style: GoogleFonts.sora(
                   fontSize: 13,
-                  color: kError,
+                  color: DonyColors.error,
                   fontWeight: FontWeight.w500),
             ),
           ),
@@ -361,12 +361,12 @@ class _EscrowConfirmedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBackground,
+      backgroundColor: DonyColors.grey50,
       appBar: AppBar(
         title: Text('Paiement confirmé',
-            style: GoogleFonts.plusJakartaSans(
+            style: GoogleFonts.sora(
                 fontWeight: FontWeight.w700, fontSize: 18)),
-        backgroundColor: kSurface,
+        backgroundColor: DonyColors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
         bottom: const PreferredSize(
@@ -381,27 +381,27 @@ class _EscrowConfirmedView extends StatelessWidget {
               width: 84,
               height: 84,
               decoration: BoxDecoration(
-                color: kSuccess.withValues(alpha: 0.1),
+                color: DonyColors.success.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.check_circle_rounded,
-                  color: kSuccess, size: 48),
+                  color: DonyColors.success, size: 48),
             ),
             const SizedBox(height: 24),
             Text(
               'Envoi réservé !',
-              style: GoogleFonts.plusJakartaSans(
+              style: GoogleFonts.sora(
                 fontSize: 26,
                 fontWeight: FontWeight.w800,
-                color: kTextPrimary,
+                color: DonyColors.dark900,
               ),
             ),
             const SizedBox(height: 12),
             Text(
               '${amount.toStringAsFixed(2)} € sont retenus en escrow et seront versés au voyageur après confirmation de livraison par le destinataire.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(
-                  fontSize: 15, color: kTextSecondary, height: 1.5),
+              style: GoogleFonts.sora(
+                  fontSize: 15, color: DonyColors.grey400, height: 1.5),
             ),
             const SizedBox(height: 32),
             SizedBox(
@@ -410,14 +410,14 @@ class _EscrowConfirmedView extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () => context.go('/home'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: kGreenPrimary,
+                  backgroundColor: DonyColors.blue400,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14)),
                 ),
                 child: Text(
                   'Voir mes envois',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.sora(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: Colors.white),

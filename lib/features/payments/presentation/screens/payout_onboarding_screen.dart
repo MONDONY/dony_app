@@ -1,5 +1,5 @@
-import 'package:dony/app/theme.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -47,14 +47,14 @@ class _OnboardingView extends StatelessWidget {
     final error = state is PaymentError ? (state as PaymentError).message : null;
 
     return Scaffold(
-      backgroundColor: kBackground,
+      backgroundColor: DonyColors.grey50,
       appBar: AppBar(
         title: Text(
           'Recevoir mes paiements',
-          style: GoogleFonts.plusJakartaSans(
+          style: GoogleFonts.sora(
               fontWeight: FontWeight.w700, fontSize: 18),
         ),
-        backgroundColor: kSurface,
+        backgroundColor: DonyColors.white,
         elevation: 0,
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
@@ -99,19 +99,19 @@ class _HeroSection extends StatelessWidget {
           width: 64,
           height: 64,
           decoration: BoxDecoration(
-            color: kGreenLight,
+            color: DonyColors.blue100,
             borderRadius: BorderRadius.circular(18),
           ),
           child: const Icon(Icons.account_balance_wallet_rounded,
-              color: kGreenPrimary, size: 32),
+              color: DonyColors.blue400, size: 32),
         ),
         const SizedBox(height: 20),
         Text(
           'Connectez votre\ncompte bancaire',
-          style: GoogleFonts.plusJakartaSans(
+          style: GoogleFonts.sora(
             fontSize: 28,
             fontWeight: FontWeight.w800,
-            color: kTextPrimary,
+            color: DonyColors.dark900,
             letterSpacing: -0.5,
             height: 1.2,
           ),
@@ -119,8 +119,8 @@ class _HeroSection extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           'Recevez automatiquement votre paiement dans les 24h après chaque livraison confirmée.',
-          style: GoogleFonts.plusJakartaSans(
-              fontSize: 15, color: kTextSecondary, height: 1.5),
+          style: GoogleFonts.sora(
+              fontSize: 15, color: DonyColors.grey400, height: 1.5),
         ),
       ],
     );
@@ -141,9 +141,9 @@ class _BenefitsSection extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: kSurface,
+        color: DonyColors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kBorder),
+        border: Border.all(color: DonyColors.grey100),
       ),
       child: Column(
         children: items.indexed.map((entry) {
@@ -159,10 +159,10 @@ class _BenefitsSection extends StatelessWidget {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: kGreenLight,
+                        color: DonyColors.blue100,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(icon, color: kGreenPrimary, size: 20),
+                      child: Icon(icon, color: DonyColors.blue400, size: 20),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -170,15 +170,15 @@ class _BenefitsSection extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(title,
-                              style: GoogleFonts.plusJakartaSans(
+                              style: GoogleFonts.sora(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 14,
-                                  color: kTextPrimary)),
+                                  color: DonyColors.dark900)),
                           const SizedBox(height: 2),
                           Text(subtitle,
-                              style: GoogleFonts.plusJakartaSans(
+                              style: GoogleFonts.sora(
                                   fontSize: 12,
-                                  color: kTextSecondary,
+                                  color: DonyColors.grey400,
                                   height: 1.4)),
                         ],
                       ),
@@ -212,7 +212,7 @@ class _ConnectButton extends StatelessWidget {
                 .read<PaymentBloc>()
                 .add(const PaymentConnectAccountRequested()),
         style: ElevatedButton.styleFrom(
-          backgroundColor: kGreenPrimary,
+          backgroundColor: DonyColors.blue400,
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
@@ -227,7 +227,7 @@ class _ConnectButton extends StatelessWidget {
               )
             : Text(
                 'Connecter mon compte bancaire',
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.sora(
                     fontWeight: FontWeight.w700, fontSize: 16),
               ),
       ),
@@ -253,7 +253,7 @@ class _PendingBanner extends StatelessWidget {
           Expanded(
             child: Text(
               'Vérification en cours — Stripe finalise votre compte. Revenez dans quelques minutes.',
-              style: GoogleFonts.plusJakartaSans(
+              style: GoogleFonts.sora(
                   fontSize: 13,
                   color: const Color(0xFFB45309),
                   fontWeight: FontWeight.w500),
@@ -274,19 +274,19 @@ class _ErrorBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: kError.withValues(alpha: 0.08),
+        color: DonyColors.error.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kError.withValues(alpha: 0.3)),
+        border: Border.all(color: DonyColors.error.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline_rounded, color: kError, size: 20),
+          Icon(Icons.error_outline_rounded, color: DonyColors.error, size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               message,
-              style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13, color: kError, fontWeight: FontWeight.w500),
+              style: GoogleFonts.sora(
+                  fontSize: 13, color: DonyColors.error, fontWeight: FontWeight.w500),
             ),
           ),
         ],
@@ -303,12 +303,12 @@ class _SuccessView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBackground,
+      backgroundColor: DonyColors.grey50,
       appBar: AppBar(
         title: Text('Recevoir mes paiements',
-            style: GoogleFonts.plusJakartaSans(
+            style: GoogleFonts.sora(
                 fontWeight: FontWeight.w700, fontSize: 18)),
-        backgroundColor: kSurface,
+        backgroundColor: DonyColors.white,
         elevation: 0,
         bottom: const PreferredSize(
             preferredSize: Size.fromHeight(1), child: Divider(height: 1)),
@@ -323,27 +323,27 @@ class _SuccessView extends StatelessWidget {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: kSuccess.withValues(alpha: 0.1),
+                  color: DonyColors.success.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.check_circle_rounded,
-                    color: kSuccess, size: 44),
+                    color: DonyColors.success, size: 44),
               ),
               const SizedBox(height: 24),
               Text(
                 'Paiements activés ✓',
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.sora(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
-                  color: kTextPrimary,
+                  color: DonyColors.dark900,
                 ),
               ),
               const SizedBox(height: 12),
               Text(
                 'Votre compte bancaire est connecté. Vous recevrez vos paiements automatiquement après chaque livraison.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.plusJakartaSans(
-                    fontSize: 15, color: kTextSecondary, height: 1.5),
+                style: GoogleFonts.sora(
+                    fontSize: 15, color: DonyColors.grey400, height: 1.5),
               ),
             ],
           )
@@ -401,11 +401,11 @@ class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: kSurface,
+        backgroundColor: DonyColors.white,
         elevation: 0,
         title: Text(
           'Configuration du compte',
-          style: GoogleFonts.plusJakartaSans(
+          style: GoogleFonts.sora(
               fontWeight: FontWeight.w600, fontSize: 17),
         ),
         leading: IconButton(
@@ -423,7 +423,7 @@ class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
           WebViewWidget(controller: _controller),
           if (_isLoading)
             const Center(
-              child: CircularProgressIndicator(color: kGreenPrimary),
+              child: CircularProgressIndicator(color: DonyColors.blue400),
             ),
         ],
       ),

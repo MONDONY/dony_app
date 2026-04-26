@@ -5,9 +5,9 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/shipment_list_screen.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:dony/app/theme.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class MatchingManagementScreen extends StatefulWidget {
@@ -85,7 +85,7 @@ class _MatchingManagementScreenState extends State<MatchingManagementScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: kGreenPrimary.withValues(alpha: 0.9),
+                        color: DonyColors.blue400.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))
@@ -102,7 +102,7 @@ class _MatchingManagementScreenState extends State<MatchingManagementScreen> {
                           const SizedBox(width: 6),
                           Text(
                             _showSendersView ? 'Mode Voyageur' : 'Mode Expéditeur',
-                            style: GoogleFonts.plusJakartaSans(
+                            style: GoogleFonts.sora(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                               color: Colors.white,

@@ -1,6 +1,7 @@
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -14,9 +15,9 @@ class PinSetupScreen extends StatefulWidget {
 
 class _PinSetupScreenState extends State<PinSetupScreen> {
   static const _pinLength = 6;
-  static const _kGreen = Color(0xFF1E88E5);
-  static const _kGreenLight = Color(0xFFE3F2FD);
-  static const _kBg = Color(0xFFF8F9FA);
+  static const _kGreen = DonyColors.blue400;
+  static const _kGreenLight = DonyColors.blue100;
+  static const _kBg = DonyColors.grey50;
 
   String _pin = '';
   String? _firstPin;
@@ -187,7 +188,7 @@ class _StepDot extends StatelessWidget {
       height: 32,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: active ? const Color(0xFF1E88E5) : Colors.grey.shade200,
+        color: active ? DonyColors.blue400 : Colors.grey.shade200,
       ),
       child: Center(
         child: Text(

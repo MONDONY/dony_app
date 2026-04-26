@@ -1,11 +1,11 @@
 import 'dart:io';
 
-import 'package:dony/app/theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -103,7 +103,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
           ),
           title: Text(
             'Scanner le QR code',
-            style: GoogleFonts.plusJakartaSans(
+            style: GoogleFonts.sora(
                 color: Colors.white, fontWeight: FontWeight.w700, fontSize: 18),
           ),
           actions: [
@@ -134,7 +134,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                   Text(
                     'Pointez la caméra vers le QR code du colis',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.sora(
                         color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(height: 12),
@@ -154,7 +154,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                           const SizedBox(width: 6),
                           Text(
                             'Saisir le numéro manuellement',
-                            style: GoogleFonts.plusJakartaSans(
+                            style: GoogleFonts.sora(
                                 color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
                           ),
                         ],
@@ -182,7 +182,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
             'Numéro de suivi',
-            style: GoogleFonts.plusJakartaSans(fontSize: 17, fontWeight: FontWeight.w700),
+            style: GoogleFonts.sora(fontSize: 17, fontWeight: FontWeight.w700),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -190,7 +190,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             children: [
               Text(
                 'Entrez le numéro DON-XXXXXX du colis à scanner.',
-                style: GoogleFonts.plusJakartaSans(fontSize: 13, color: kTextSecondary),
+                style: GoogleFonts.sora(fontSize: 13, color: DonyColors.grey400),
               ),
               const SizedBox(height: 14),
               TextField(
@@ -198,19 +198,19 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 textCapitalization: TextCapitalization.characters,
                 decoration: InputDecoration(
                   hintText: 'DON-XXXXXX',
-                  hintStyle: GoogleFonts.plusJakartaSans(color: kTextHint),
-                  prefixIcon: const Icon(Icons.local_shipping_outlined, color: kGreenPrimary),
+                  hintStyle: GoogleFonts.sora(color: DonyColors.grey200),
+                  prefixIcon: const Icon(Icons.local_shipping_outlined, color: DonyColors.blue400),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: kBorder),
+                    borderSide: const BorderSide(color: DonyColors.grey100),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: kGreenPrimary, width: 2),
+                    borderSide: const BorderSide(color: DonyColors.blue400, width: 2),
                   ),
                 ),
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.sora(
                     fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 1.5),
               ),
             ],
@@ -224,7 +224,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       _scanner.start();
                     },
               child: Text('Annuler',
-                  style: GoogleFonts.plusJakartaSans(color: kTextSecondary)),
+                  style: GoogleFonts.sora(color: DonyColors.grey400)),
             ),
             ElevatedButton(
               onPressed: loading
@@ -248,9 +248,9 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                             SnackBar(
                               content: Text(
                                 'Numéro introuvable. Vérifiez et réessayez.',
-                                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500),
+                                style: GoogleFonts.sora(fontWeight: FontWeight.w500),
                               ),
-                              backgroundColor: kError,
+                              backgroundColor: DonyColors.error,
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12)),
@@ -260,7 +260,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       }
                     },
               style: ElevatedButton.styleFrom(
-                backgroundColor: kGreenPrimary,
+                backgroundColor: DonyColors.blue400,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -272,7 +272,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
                   : Text('Confirmer',
-                      style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+                      style: GoogleFonts.sora(fontWeight: FontWeight.w700)),
             ),
           ],
         ),
@@ -295,23 +295,23 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: kWarning.withValues(alpha: 0.12),
+                color: DonyColors.warning.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.wifi_off_rounded, color: kWarning, size: 40),
+              child: const Icon(Icons.wifi_off_rounded, color: DonyColors.warning, size: 40),
             ),
             const SizedBox(height: 16),
             Text(
               'Scan en attente',
-              style: GoogleFonts.plusJakartaSans(
-                  fontSize: 18, fontWeight: FontWeight.w800, color: kTextPrimary),
+              style: GoogleFonts.sora(
+                  fontSize: 18, fontWeight: FontWeight.w800, color: DonyColors.dark900),
             ),
             const SizedBox(height: 6),
             Text(
               'Pas de connexion internet. Le scan sera synchronisé automatiquement dès que vous serez en ligne.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13, color: kTextSecondary, height: 1.4),
+              style: GoogleFonts.sora(
+                  fontSize: 13, color: DonyColors.grey400, height: 1.4),
             ),
           ],
         ),
@@ -324,13 +324,13 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 context.pop();
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: kWarning,
+                backgroundColor: DonyColors.warning,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
               child: Text('Compris',
-                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+                  style: GoogleFonts.sora(fontWeight: FontWeight.w700)),
             ),
           ),
         ],
@@ -353,18 +353,18 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 color: Color(0xFFE8F5E9),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check_circle_rounded, color: kSuccess, size: 40),
+              child: const Icon(Icons.check_circle_rounded, color: DonyColors.success, size: 40),
             ),
             const SizedBox(height: 16),
             Text(
               'Scan enregistré !',
-              style: GoogleFonts.plusJakartaSans(
-                  fontSize: 18, fontWeight: FontWeight.w800, color: kTextPrimary),
+              style: GoogleFonts.sora(
+                  fontSize: 18, fontWeight: FontWeight.w800, color: DonyColors.dark900),
             ),
             const SizedBox(height: 6),
             Text(
               label,
-              style: GoogleFonts.plusJakartaSans(fontSize: 14, color: kTextSecondary),
+              style: GoogleFonts.sora(fontSize: 14, color: DonyColors.grey400),
             ),
           ],
         ),
@@ -377,13 +377,13 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 context.pop();
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: kGreenPrimary,
+                backgroundColor: DonyColors.blue400,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
               child: Text('Terminé',
-                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+                  style: GoogleFonts.sora(fontWeight: FontWeight.w700)),
             ),
           ),
         ],
@@ -445,7 +445,7 @@ class _CornerPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = kGreenPrimary
+      ..color = DonyColors.blue400
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -586,7 +586,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
 
     return Container(
       decoration: const BoxDecoration(
-        color: kSurface,
+        color: DonyColors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPad + 20),
@@ -613,7 +613,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                   width: 40,
                   height: 4,
                   decoration:
-                      BoxDecoration(color: kBorder, borderRadius: BorderRadius.circular(2)),
+                      BoxDecoration(color: DonyColors.grey100, borderRadius: BorderRadius.circular(2)),
                 ),
               ),
 
@@ -621,12 +621,12 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                 children: [
                   Expanded(
                     child: Text('QR scanné',
-                        style: GoogleFonts.plusJakartaSans(
-                            fontSize: 18, fontWeight: FontWeight.w800, color: kTextPrimary)),
+                        style: GoogleFonts.sora(
+                            fontSize: 18, fontWeight: FontWeight.w800, color: DonyColors.dark900)),
                   ),
                   if (!isSubmitting)
                     IconButton(
-                      icon: const Icon(Icons.close_rounded, color: kTextSecondary),
+                      icon: const Icon(Icons.close_rounded, color: DonyColors.grey400),
                       onPressed: () {
                         Navigator.pop(context);
                         widget.onClose();
@@ -639,9 +639,9 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
 
               // Event type selector
               Text('Type d\'étape',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.sora(
                       fontSize: 13, fontWeight: FontWeight.w700,
-                      color: kTextSecondary, letterSpacing: 0.5)),
+                      color: DonyColors.grey400, letterSpacing: 0.5)),
               const SizedBox(height: 10),
               Row(
                 children: _eventTypes.map((type) {
@@ -654,21 +654,21 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                         margin: const EdgeInsets.only(right: 8),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: isSelected ? kGreenPrimary : kBackground,
+                          color: isSelected ? DonyColors.blue400 : DonyColors.grey50,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                              color: isSelected ? kGreenPrimary : kBorder, width: 1.5),
+                              color: isSelected ? DonyColors.blue400 : DonyColors.grey100, width: 1.5),
                         ),
                         child: Column(
                           children: [
                             Icon(type.$3,
-                                color: isSelected ? Colors.white : kTextSecondary, size: 20),
+                                color: isSelected ? Colors.white : DonyColors.grey400, size: 20),
                             const SizedBox(height: 4),
                             Text(type.$2,
-                                style: GoogleFonts.plusJakartaSans(
+                                style: GoogleFonts.sora(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
-                                    color: isSelected ? Colors.white : kTextSecondary)),
+                                    color: isSelected ? Colors.white : DonyColors.grey400)),
                           ],
                         ),
                       ),
@@ -682,26 +682,26 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
               // ARRIVEE : code input — Photo : DEPART / TRANSIT
               if (isArrivee) ...[
                 Text('Code de confirmation',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.sora(
                         fontSize: 13, fontWeight: FontWeight.w700,
-                        color: kTextSecondary, letterSpacing: 0.5)),
+                        color: DonyColors.grey400, letterSpacing: 0.5)),
                 const SizedBox(height: 6),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: kGreenLight,
+                    color: DonyColors.blue100,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.info_outline_rounded, color: kGreenPrimary, size: 15),
+                      const Icon(Icons.info_outline_rounded, color: DonyColors.blue400, size: 15),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'Demandez le code à 6 chiffres au destinataire. Il l\'a reçu de l\'expéditeur.',
-                          style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12, color: kGreenDark, fontWeight: FontWeight.w500),
+                          style: GoogleFonts.sora(
+                              fontSize: 12, color: DonyColors.blue600, fontWeight: FontWeight.w500),
                         ),
                       ),
                     ],
@@ -714,31 +714,31 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                   keyboardType: TextInputType.number,
                   maxLength: 6,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.plusJakartaSans(
+                  style: GoogleFonts.sora(
                       fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: 10),
                   decoration: InputDecoration(
                     counterText: '',
                     hintText: '------',
-                    hintStyle: GoogleFonts.plusJakartaSans(
-                        fontSize: 28, color: kBorder, letterSpacing: 10),
+                    hintStyle: GoogleFonts.sora(
+                        fontSize: 28, color: DonyColors.grey100, letterSpacing: 10),
                     filled: true,
-                    fillColor: kBackground,
+                    fillColor: DonyColors.grey50,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: kBorder),
+                      borderSide: const BorderSide(color: DonyColors.grey100),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: kGreenPrimary, width: 2),
+                      borderSide: const BorderSide(color: DonyColors.blue400, width: 2),
                     ),
                     contentPadding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                 ),
               ] else ...[
                 Text('Photo du colis',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.sora(
                         fontSize: 13, fontWeight: FontWeight.w700,
-                        color: kTextSecondary, letterSpacing: 0.5)),
+                        color: DonyColors.grey400, letterSpacing: 0.5)),
                 const SizedBox(height: 10),
 
                 if (_photo == null)
@@ -747,9 +747,9 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                     child: Container(
                       height: 80,
                       decoration: BoxDecoration(
-                        color: kBackground,
+                        color: DonyColors.grey50,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: kBorder),
+                        border: Border.all(color: DonyColors.grey100),
                       ),
                       child: Center(
                         child: _loadingLocation
@@ -757,18 +757,18 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                                 width: 20,
                                 height: 20,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: kGreenPrimary))
+                                    strokeWidth: 2, color: DonyColors.blue400))
                             : Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   const Icon(Icons.camera_alt_rounded,
-                                      color: kGreenPrimary, size: 20),
+                                      color: DonyColors.blue400, size: 20),
                                   const SizedBox(width: 8),
                                   Text('Prendre une photo',
-                                      style: GoogleFonts.plusJakartaSans(
+                                      style: GoogleFonts.sora(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w600,
-                                          color: kGreenPrimary)),
+                                          color: DonyColors.blue400)),
                                 ],
                               ),
                       ),
@@ -786,10 +786,10 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Container(
                             height: 120,
-                            color: kGreenLight,
+                            color: DonyColors.blue100,
                             child: const Center(
                                 child: Icon(Icons.image_rounded,
-                                    color: kGreenPrimary, size: 32)),
+                                    color: DonyColors.blue400, size: 32)),
                           ),
                         ),
                       ),
@@ -815,12 +815,12 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.location_on_rounded, color: kSuccess, size: 14),
+                      const Icon(Icons.location_on_rounded, color: DonyColors.success, size: 14),
                       const SizedBox(width: 4),
                       Text(
                         'GPS : ${_position!.latitude.toStringAsFixed(4)}, ${_position!.longitude.toStringAsFixed(4)}',
-                        style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11, color: kTextSecondary),
+                        style: GoogleFonts.sora(
+                            fontSize: 11, color: DonyColors.grey400),
                       ),
                     ],
                   ),
@@ -829,13 +829,13 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.warning_amber_rounded, color: kError, size: 14),
+                      const Icon(Icons.warning_amber_rounded, color: DonyColors.error, size: 14),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           'Photo trop lourde (max 10 MB). Réessayez.',
-                          style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12, color: kError, fontWeight: FontWeight.w500),
+                          style: GoogleFonts.sora(
+                              fontSize: 12, color: DonyColors.error, fontWeight: FontWeight.w500),
                         ),
                       ),
                     ],
@@ -864,11 +864,11 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                     isSubmitting
                         ? (isArrivee ? 'Confirmation...' : 'Enregistrement...')
                         : (isArrivee ? 'Confirmer la livraison' : 'Confirmer le scan'),
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.sora(
                         fontWeight: FontWeight.w700, fontSize: 15),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isArrivee ? kSuccess : kGreenPrimary,
+                    backgroundColor: isArrivee ? DonyColors.success : DonyColors.blue400,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
@@ -883,8 +883,8 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                   state is QrScanError
                       ? state.message
                       : (state as DeliveryConfirmError).message,
-                  style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13, color: kError, fontWeight: FontWeight.w500),
+                  style: GoogleFonts.sora(
+                      fontSize: 13, color: DonyColors.error, fontWeight: FontWeight.w500),
                 ),
               ],
             ],

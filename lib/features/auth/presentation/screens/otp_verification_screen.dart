@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -130,7 +131,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Text(
                     'Entrez le code',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.sora(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
                       color: const Color(0xFF0D1B2A),
@@ -144,7 +145,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: RichText(
                     text: TextSpan(
-                      style: GoogleFonts.plusJakartaSans(
+                      style: GoogleFonts.sora(
                         fontSize: 14,
                         color: const Color(0xFF6B7A8D),
                       ),
@@ -152,10 +153,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                         const TextSpan(text: 'Code envoyé au '),
                         TextSpan(
                           text: _phoneNumber,
-                          style: GoogleFonts.plusJakartaSans(
+                          style: GoogleFonts.sora(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF1E88E5),
+                            color: DonyColors.blue400,
                           ),
                         ),
                       ],
@@ -181,7 +182,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
                           ],
-                          style: GoogleFonts.plusJakartaSans(
+                          style: GoogleFonts.sora(
                             fontSize: 22,
                             fontWeight: FontWeight.w700,
                             color: const Color(0xFF0D1B2A),
@@ -205,7 +206,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: const BorderSide(
-                                color: Color(0xFF1E88E5),
+                                color: DonyColors.blue400,
                                 width: 2,
                               ),
                             ),
@@ -232,9 +233,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           onTap: null,
                           child: Text(
                             'Renvoyer le code ($_secondsLeft s)',
-                            style: GoogleFonts.plusJakartaSans(
+                            style: GoogleFonts.sora(
                               fontSize: 14,
-                              color: const Color(0xFF1E88E5),
+                              color: DonyColors.blue400,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -243,9 +244,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           onTap: _resend,
                           child: Text(
                             'Renvoyer le code',
-                            style: GoogleFonts.plusJakartaSans(
+                            style: GoogleFonts.sora(
                               fontSize: 14,
-                              color: const Color(0xFF1E88E5),
+                              color: DonyColors.blue400,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -261,7 +262,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
+                          colors: [DonyColors.blue600, DonyColors.blue300],
                           begin: Alignment.centerLeft,
                           end: Alignment.centerRight,
                         ),
@@ -289,7 +290,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                               )
                             : Text(
                                 'Vérifier',
-                                style: GoogleFonts.plusJakartaSans(
+                                style: GoogleFonts.sora(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                 ),

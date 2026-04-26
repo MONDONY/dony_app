@@ -1,8 +1,8 @@
-import 'package:dony/app/theme.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -38,31 +38,31 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBackground,
+      backgroundColor: DonyColors.grey50,
       appBar: AppBar(
-        backgroundColor: kSurface,
+        backgroundColor: DonyColors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: kGreenPrimary),
+          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: DonyColors.blue400),
           onPressed: () => context.pop(),
         ),
         title: Text(
           'Suivi du colis',
-          style: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.w700, fontSize: 18, color: kTextPrimary),
+          style: GoogleFonts.sora(
+              fontWeight: FontWeight.w700, fontSize: 18, color: DonyColors.dark900),
         ),
         centerTitle: false,
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: kBorder),
+          child: Divider(height: 1, color: DonyColors.grey100),
         ),
       ),
       body: BlocBuilder<TrackingBloc, TrackingState>(
         builder: (context, state) {
           if (state is TrackingEventsLoading) {
             return const Center(
-                child: CircularProgressIndicator(color: kGreenPrimary));
+                child: CircularProgressIndicator(color: DonyColors.blue400));
           }
           if (state is TrackingEventsError) {
             return _ErrorView(
@@ -73,7 +73,7 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
           }
           if (state is TrackingEventsLoaded) {
             return RefreshIndicator(
-              color: kGreenPrimary,
+              color: DonyColors.blue400,
               onRefresh: () async {
                 context.read<TrackingBloc>().add(
                     TrackingEventsRequested(widget.bidId));
@@ -122,7 +122,7 @@ class _CorridorHeader extends StatelessWidget {
           const SizedBox(width: 10),
           Text(
             corridor,
-            style: GoogleFonts.plusJakartaSans(
+            style: GoogleFonts.sora(
                 color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
           ),
         ],
@@ -148,9 +148,9 @@ class _Timeline extends StatelessWidget {
       children: [
         Text(
           'HISTORIQUE DES SCANS',
-          style: GoogleFonts.plusJakartaSans(
+          style: GoogleFonts.sora(
               fontSize: 11, fontWeight: FontWeight.w700,
-              color: kTextSecondary, letterSpacing: 0.8),
+              color: DonyColors.grey400, letterSpacing: 0.8),
         ),
         const SizedBox(height: 16),
         ListView.builder(
@@ -182,9 +182,9 @@ class _TimelineItem extends StatelessWidget {
       {required this.event, required this.isLast, required this.index});
 
   Color get _stepColor => switch (event.eventType) {
-        'ARRIVEE' => kSuccess,
-        'TRANSIT' => kGreenPrimary,
-        _ => kGreenPrimary,
+        'ARRIVEE' => DonyColors.success,
+        'TRANSIT' => DonyColors.blue400,
+        _ => DonyColors.blue400,
       };
 
   IconData get _stepIcon => switch (event.eventType) {
@@ -219,7 +219,7 @@ class _TimelineItem extends StatelessWidget {
                   Expanded(
                     child: Container(
                       width: 2,
-                      color: kBorder,
+                      color: DonyColors.grey100,
                       margin: const EdgeInsets.symmetric(vertical: 4),
                     ),
                   ),
@@ -234,9 +234,9 @@ class _TimelineItem extends StatelessWidget {
               margin: EdgeInsets.only(bottom: isLast ? 0 : 16),
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: kSurface,
+                color: DonyColors.white,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: kBorder),
+                border: Border.all(color: DonyColors.grey100),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,10 +246,10 @@ class _TimelineItem extends StatelessWidget {
                       Expanded(
                         child: Text(
                           event.stepLabel,
-                          style: GoogleFonts.plusJakartaSans(
+                          style: GoogleFonts.sora(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
-                              color: kTextPrimary),
+                              color: DonyColors.dark900),
                         ),
                       ),
                       Container(
@@ -261,7 +261,7 @@ class _TimelineItem extends StatelessWidget {
                         ),
                         child: Text(
                           '#{${index + 1}}',
-                          style: GoogleFonts.plusJakartaSans(
+                          style: GoogleFonts.sora(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               color: _stepColor),
@@ -273,20 +273,20 @@ class _TimelineItem extends StatelessWidget {
                   Text(
                     DateFormat('dd/MM/yyyy à HH:mm').format(
                         event.scannedAt.toLocal()),
-                    style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12, color: kTextSecondary),
+                    style: GoogleFonts.sora(
+                        fontSize: 12, color: DonyColors.grey400),
                   ),
                   if (event.gpsLat != null && event.gpsLon != null) ...[
                     const SizedBox(height: 4),
                     Row(
                       children: [
                         const Icon(Icons.location_on_rounded,
-                            size: 12, color: kTextHint),
+                            size: 12, color: DonyColors.grey200),
                         const SizedBox(width: 4),
                         Text(
                           '${event.gpsLat!.toStringAsFixed(4)}, ${event.gpsLon!.toStringAsFixed(4)}',
-                          style: GoogleFonts.plusJakartaSans(
-                              fontSize: 11, color: kTextHint),
+                          style: GoogleFonts.sora(
+                              fontSize: 11, color: DonyColors.grey200),
                         ),
                       ],
                     ),
@@ -304,19 +304,19 @@ class _TimelineItem extends StatelessWidget {
                           if (progress == null) return child;
                           return Container(
                             height: 120,
-                            color: kGreenLight,
+                            color: DonyColors.blue100,
                             child: const Center(
                               child: CircularProgressIndicator(
-                                  color: kGreenPrimary, strokeWidth: 2),
+                                  color: DonyColors.blue400, strokeWidth: 2),
                             ),
                           );
                         },
                         errorBuilder: (_, __, ___) => Container(
                           height: 60,
-                          color: kBackground,
+                          color: DonyColors.grey50,
                           child: const Center(
                               child: Icon(Icons.broken_image_rounded,
-                                  color: kTextHint)),
+                                  color: DonyColors.grey200)),
                         ),
                       ),
                     ),
@@ -326,13 +326,13 @@ class _TimelineItem extends StatelessWidget {
                     Row(
                       children: [
                         const Icon(Icons.wifi_off_rounded,
-                            size: 12, color: kWarning),
+                            size: 12, color: DonyColors.warning),
                         const SizedBox(width: 4),
                         Text(
                           'Scan offline synchronisé',
-                          style: GoogleFonts.plusJakartaSans(
+                          style: GoogleFonts.sora(
                               fontSize: 11,
-                              color: kWarning,
+                              color: DonyColors.warning,
                               fontWeight: FontWeight.w500),
                         ),
                       ],
@@ -354,13 +354,13 @@ class _PendingConfirmationBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: kWarning.withValues(alpha: 0.08),
+        color: DonyColors.warning.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: kWarning.withValues(alpha: 0.3)),
+        border: Border.all(color: DonyColors.warning.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.hourglass_top_rounded, color: kWarning, size: 22),
+          const Icon(Icons.hourglass_top_rounded, color: DonyColors.warning, size: 22),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -368,14 +368,14 @@ class _PendingConfirmationBanner extends StatelessWidget {
               children: [
                 Text(
                   'En attente de confirmation',
-                  style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14, fontWeight: FontWeight.w700, color: kWarning),
+                  style: GoogleFonts.sora(
+                      fontSize: 14, fontWeight: FontWeight.w700, color: DonyColors.warning),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'Le destinataire doit confirmer la réception via le code SMS.',
-                  style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12, color: kTextSecondary, height: 1.4),
+                  style: GoogleFonts.sora(
+                      fontSize: 12, color: DonyColors.grey400, height: 1.4),
                 ),
               ],
             ),
@@ -392,33 +392,33 @@ class _EmptyTimeline extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: kSurface,
+        color: DonyColors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kBorder),
+        border: Border.all(color: DonyColors.grey100),
       ),
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: kGreenLight,
+              color: DonyColors.blue100,
               borderRadius: BorderRadius.circular(14),
             ),
             child: const Icon(Icons.hourglass_empty_rounded,
-                color: kGreenPrimary, size: 32),
+                color: DonyColors.blue400, size: 32),
           ),
           const SizedBox(height: 16),
           Text(
             'En attente du scan de départ',
-            style: GoogleFonts.plusJakartaSans(
-                fontSize: 15, fontWeight: FontWeight.w700, color: kTextPrimary),
+            style: GoogleFonts.sora(
+                fontSize: 15, fontWeight: FontWeight.w700, color: DonyColors.dark900),
           ),
           const SizedBox(height: 6),
           Text(
             'Le voyageur scannera le QR code lors de la remise du colis.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.plusJakartaSans(
-                fontSize: 13, color: kTextSecondary, height: 1.4),
+            style: GoogleFonts.sora(
+                fontSize: 13, color: DonyColors.grey400, height: 1.4),
           ),
         ],
       ),
@@ -439,19 +439,19 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline_rounded, color: kError, size: 40),
+            const Icon(Icons.error_outline_rounded, color: DonyColors.error, size: 40),
             const SizedBox(height: 12),
             Text(message,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14, color: kTextSecondary)),
+                style: GoogleFonts.sora(
+                    fontSize: 14, color: DonyColors.grey400)),
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded),
               label: const Text('Réessayer'),
               style: ElevatedButton.styleFrom(
-                  backgroundColor: kGreenPrimary,
+                  backgroundColor: DonyColors.blue400,
                   foregroundColor: Colors.white,
                   elevation: 0),
             ),

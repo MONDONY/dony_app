@@ -1,8 +1,8 @@
-import 'package:dony/app/theme.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:dony/features/notifications/data/notification_model.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -59,18 +59,18 @@ class _InboxScreenState extends State<InboxScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBackground,
+      backgroundColor: DonyColors.grey50,
       appBar: AppBar(
         title: Text(
           'Boîte de réception',
-          style: GoogleFonts.plusJakartaSans(
+          style: GoogleFonts.sora(
             fontSize: 17,
             fontWeight: FontWeight.w700,
-            color: kTextPrimary,
+            color: DonyColors.dark900,
           ),
         ),
         centerTitle: false,
-        backgroundColor: kSurface,
+        backgroundColor: DonyColors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
         actions: [
@@ -83,10 +83,10 @@ class _InboxScreenState extends State<InboxScreen>
                       .add(const NotificationsMarkAllReadRequested()),
                   child: Text(
                     'Tout lire',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.sora(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: kGreenPrimary,
+                      color: DonyColors.blue400,
                     ),
                   ),
                 );
@@ -97,15 +97,15 @@ class _InboxScreenState extends State<InboxScreen>
         ],
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: kGreenPrimary,
+          indicatorColor: DonyColors.blue400,
           indicatorWeight: 2,
-          labelColor: kGreenPrimary,
-          unselectedLabelColor: kTextSecondary,
-          labelStyle: GoogleFonts.plusJakartaSans(
+          labelColor: DonyColors.blue400,
+          unselectedLabelColor: DonyColors.grey400,
+          labelStyle: GoogleFonts.sora(
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
-          unselectedLabelStyle: GoogleFonts.plusJakartaSans(
+          unselectedLabelStyle: GoogleFonts.sora(
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
@@ -153,7 +153,7 @@ class _NotificationsTab extends StatelessWidget {
       builder: (context, state) {
         if (state is NotificationLoading || state is NotificationInitial) {
           return const Center(
-            child: CircularProgressIndicator(color: kGreenPrimary),
+            child: CircularProgressIndicator(color: DonyColors.blue400),
           );
         }
 
@@ -170,7 +170,7 @@ class _NotificationsTab extends StatelessWidget {
             return const _EmptyView();
           }
           return RefreshIndicator(
-            color: kGreenPrimary,
+            color: DonyColors.blue400,
             onRefresh: () async => context
                 .read<NotificationBloc>()
                 .add(const NotificationsLoadRequested()),
@@ -178,7 +178,7 @@ class _NotificationsTab extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: state.notifications.length,
               separatorBuilder: (_, __) =>
-                  const Divider(height: 1, color: kBorder, indent: 20, endIndent: 20),
+                  const Divider(height: 1, color: DonyColors.grey100, indent: 20, endIndent: 20),
               itemBuilder: (context, index) {
                 final notif = state.notifications[index];
                 final tile = _NotificationTile(
@@ -207,7 +207,7 @@ class _NotificationsTab extends StatelessWidget {
                   background: Container(
                     alignment: Alignment.centerRight,
                     padding: const EdgeInsets.only(right: 24),
-                    color: kError,
+                    color: DonyColors.error,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -216,7 +216,7 @@ class _NotificationsTab extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           'Supprimer',
-                          style: GoogleFonts.plusJakartaSans(
+                          style: GoogleFonts.sora(
                               color: Colors.white,
                               fontSize: 12,
                               fontWeight: FontWeight.w600),
@@ -255,28 +255,28 @@ class _MessagesTab extends StatelessWidget {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: kGreenLight,
+              color: DonyColors.blue100,
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Icon(Icons.chat_bubble_outline_rounded,
-                size: 32, color: kGreenPrimary),
+                size: 32, color: DonyColors.blue400),
           ),
           const SizedBox(height: 16),
           Text(
             'Messagerie bientôt disponible',
-            style: GoogleFonts.plusJakartaSans(
+            style: GoogleFonts.sora(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: kTextPrimary,
+              color: DonyColors.dark900,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             'Vous pourrez contacter votre\nvoyageur ou expéditeur ici.',
             textAlign: TextAlign.center,
-            style: GoogleFonts.plusJakartaSans(
+            style: GoogleFonts.sora(
               fontSize: 13,
-              color: kTextSecondary,
+              color: DonyColors.grey400,
             ),
           ),
         ],
@@ -299,7 +299,7 @@ class _NotificationTile extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        color: notification.read ? kSurface : kGreenLight.withValues(alpha: 0.5),
+        color: notification.read ? DonyColors.white : DonyColors.blue100.withValues(alpha: 0.5),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -315,12 +315,12 @@ class _NotificationTile extends StatelessWidget {
                       Expanded(
                         child: Text(
                           notification.title,
-                          style: GoogleFonts.plusJakartaSans(
+                          style: GoogleFonts.sora(
                             fontSize: 14,
                             fontWeight: notification.read
                                 ? FontWeight.w500
                                 : FontWeight.w700,
-                            color: kTextPrimary,
+                            color: DonyColors.dark900,
                           ),
                         ),
                       ),
@@ -330,7 +330,7 @@ class _NotificationTile extends StatelessWidget {
                           height: 8,
                           margin: const EdgeInsets.only(left: 6),
                           decoration: const BoxDecoration(
-                            color: kGreenPrimary,
+                            color: DonyColors.blue400,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -339,9 +339,9 @@ class _NotificationTile extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     notification.body,
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.sora(
                       fontSize: 13,
-                      color: kTextSecondary,
+                      color: DonyColors.grey400,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -349,9 +349,9 @@ class _NotificationTile extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     _formatDate(notification.createdAt),
-                    style: GoogleFonts.plusJakartaSans(
+                    style: GoogleFonts.sora(
                       fontSize: 11,
-                      color: kTextHint,
+                      color: DonyColors.grey200,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -360,7 +360,7 @@ class _NotificationTile extends StatelessWidget {
             ),
             if (hasRoute) ...[
               const SizedBox(width: 8),
-              const Icon(Icons.chevron_right_rounded, size: 18, color: kTextHint),
+              const Icon(Icons.chevron_right_rounded, size: 18, color: DonyColors.grey200),
             ],
           ],
         ),
@@ -385,15 +385,15 @@ class _NotificationIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (icon, color) = switch (type) {
-      'BID_CREATED' => (Icons.inbox_rounded, const Color(0xFF1E88E5)),
-      'BID_ACCEPTED' => (Icons.check_circle_rounded, kSuccess),
-      'BID_REJECTED' => (Icons.cancel_rounded, kError),
+      'BID_CREATED' => (Icons.inbox_rounded, DonyColors.blue400),
+      'BID_ACCEPTED' => (Icons.check_circle_rounded, DonyColors.success),
+      'BID_REJECTED' => (Icons.cancel_rounded, DonyColors.error),
       'HANDOVER_DEFINED' => (Icons.location_on_rounded, const Color(0xFFE67E22)),
-      'TRIP_CANCELLED' => (Icons.block_rounded, kError),
-      'PAYMENT_RELEASED' => (Icons.payments_rounded, kSuccess),
-      'DELIVERY_CONFIRMED' => (Icons.local_shipping_rounded, kSuccess),
-      'DISPUTE_OPENED' => (Icons.warning_amber_rounded, kWarning),
-      _ => (Icons.notifications_rounded, kTextSecondary),
+      'TRIP_CANCELLED' => (Icons.block_rounded, DonyColors.error),
+      'PAYMENT_RELEASED' => (Icons.payments_rounded, DonyColors.success),
+      'DELIVERY_CONFIRMED' => (Icons.local_shipping_rounded, DonyColors.success),
+      'DISPUTE_OPENED' => (Icons.warning_amber_rounded, DonyColors.warning),
+      _ => (Icons.notifications_rounded, DonyColors.grey400),
     };
 
     return Container(
@@ -423,27 +423,27 @@ class _EmptyView extends StatelessWidget {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: kGreenLight,
+              color: DonyColors.blue100,
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Icon(Icons.notifications_none_rounded,
-                size: 32, color: kGreenPrimary),
+                size: 32, color: DonyColors.blue400),
           ),
           const SizedBox(height: 16),
           Text(
             'Aucune notification',
-            style: GoogleFonts.plusJakartaSans(
+            style: GoogleFonts.sora(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: kTextPrimary,
+              color: DonyColors.dark900,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             'Vos notifications apparaîtront ici.',
-            style: GoogleFonts.plusJakartaSans(
+            style: GoogleFonts.sora(
               fontSize: 13,
-              color: kTextSecondary,
+              color: DonyColors.grey400,
             ),
           ),
         ],
@@ -462,14 +462,14 @@ class _ErrorView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.wifi_off_rounded, size: 48, color: kTextHint),
+          const Icon(Icons.wifi_off_rounded, size: 48, color: DonyColors.grey200),
           const SizedBox(height: 12),
           Text(
             'Erreur de chargement',
-            style: GoogleFonts.plusJakartaSans(
+            style: GoogleFonts.sora(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: kTextPrimary,
+              color: DonyColors.dark900,
             ),
           ),
           const SizedBox(height: 12),
@@ -492,12 +492,12 @@ class _UnreadBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: kError,
+        color: DonyColors.error,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         count > 99 ? '99+' : '$count',
-        style: GoogleFonts.plusJakartaSans(
+        style: GoogleFonts.sora(
           fontSize: 10,
           fontWeight: FontWeight.w700,
           color: Colors.white,
