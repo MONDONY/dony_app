@@ -1578,10 +1578,14 @@ class _TrackingLinkCard extends StatelessWidget {
   final BidModel bid;
   const _TrackingLinkCard({required this.bid});
 
-  static const String _apiBaseUrl =
-      String.fromEnvironment('API_BASE_URL', defaultValue: 'http://localhost:8080/api/v1');
+  // URL publique de la page de suivi — différente de API_BASE_URL (qui est l'URL interne de l'API).
+  // En dev, pointe sur le backend local. En prod, mettre l'URL publique (ex: https://dony.app).
+  static const String _trackingPublicBase = String.fromEnvironment(
+    'TRACKING_PUBLIC_URL',
+    defaultValue: 'http://localhost:8080/api/v1',
+  );
 
-  String get _trackingUrl => '$_apiBaseUrl/tracking/public/${bid.trackingToken}';
+  String get _trackingUrl => '$_trackingPublicBase/tracking/public/${bid.trackingToken}';
 
   @override
   Widget build(BuildContext context) {

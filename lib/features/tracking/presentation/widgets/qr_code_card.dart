@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dony/app/theme.dart';
@@ -11,6 +12,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gal/gal.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 class QrCodeCard extends StatefulWidget {
@@ -223,8 +225,13 @@ class _QrCodeContent extends StatelessWidget {
 
   Future<void> _shareQrCode(BuildContext context, Uint8List imageBytes) async {
     try {
+      // XFile.fromData ne fonctionne pas sur Android avec la plupart des apps.
+      // On écrit d'abord dans un fichier temporaire pour obtenir un vrai chemin.
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/qr_dony_${DateTime.now().millisecondsSinceEpoch}.png');
+      await file.writeAsBytes(imageBytes);
       await Share.shareXFiles(
-        [XFile.fromData(imageBytes, name: 'qr_code_dony.png', mimeType: 'image/png')],
+        [XFile(file.path, name: 'qr_dony.png', mimeType: 'image/png')],
         text: 'QR code de suivi Dony — À montrer au voyageur lors de la remise.',
       );
     } catch (e) {
@@ -235,8 +242,7 @@ class _QrCodeContent extends StatelessWidget {
                 style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500)),
             backgroundColor: kError,
             behavior: SnackBarBehavior.floating,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
