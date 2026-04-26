@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/app/theme.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -211,6 +212,10 @@ class _BidDetailViewState extends State<_BidDetailView> {
                 if (isSender && _bid.status == 'ACCEPTED' && _bid.trackingNumber != null) ...[
                   const SizedBox(height: 16),
                   QrCodeCard(bidId: _bid.id),
+                ],
+                if (_bid.status == 'ACCEPTED' && _bid.trackingToken != null) ...[
+                  const SizedBox(height: 16),
+                  _TrackingLinkCard(bid: _bid),
                 ],
                 if (isSender && _bid.status == 'ACCEPTED' && _bid.confirmationCode != null) ...[
                   const SizedBox(height: 16),
@@ -1457,6 +1462,118 @@ class _OptionTile extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _TrackingLinkCard extends StatelessWidget {
+  final BidModel bid;
+  const _TrackingLinkCard({required this.bid});
+
+  static const String _apiBaseUrl =
+      String.fromEnvironment('API_BASE_URL', defaultValue: 'http://localhost:8080/api/v1');
+
+  String get _trackingUrl => '$_apiBaseUrl/tracking/public/${bid.trackingToken}';
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: kSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: kBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'LIEN DE SUIVI',
+            style: GoogleFonts.plusJakartaSans(
+                fontSize: 11, fontWeight: FontWeight.w700,
+                color: kTextSecondary, letterSpacing: 0.8),
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: kBackground,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: kBorder),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.link_rounded, color: kGreenPrimary, size: 16),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _trackingUrl,
+                    style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11, color: kTextSecondary),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: _trackingUrl));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Lien copié',
+                            style: GoogleFonts.plusJakartaSans(
+                                fontWeight: FontWeight.w500)),
+                        backgroundColor: kSuccess,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.copy_rounded, size: 16),
+                  label: Text('Copier',
+                      style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13, fontWeight: FontWeight.w600)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: kGreenPrimary,
+                    side: const BorderSide(color: kGreenPrimary),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => Share.share(
+                    'Suivez votre colis dony en temps réel :\n$_trackingUrl',
+                    subject: 'Suivi de colis dony — ${bid.trackingNumber ?? ""}',
+                  ),
+                  icon: const Icon(Icons.share_rounded, size: 16),
+                  label: Text('Partager',
+                      style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13, fontWeight: FontWeight.w600)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kGreenPrimary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
   }
 }
 

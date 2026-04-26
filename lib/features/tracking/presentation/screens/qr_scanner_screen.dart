@@ -14,6 +14,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:native_exif/native_exif.dart';
 
 class QrScannerScreen extends StatefulWidget {
   const QrScannerScreen({super.key});
@@ -479,6 +480,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
   XFile? _photo;
   Position? _position;
   bool _loadingLocation = false;
+  bool _photoTooBig = false;
   final _codeController = TextEditingController();
 
   final _eventTypes = [
@@ -494,9 +496,9 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
   }
 
   Future<void> _pickPhoto() async {
-    setState(() => _loadingLocation = true);
+    setState(() { _loadingLocation = true; _photoTooBig = false; });
     try {
-      // Get GPS before opening camera
+      // Capture GPS before opening camera (CLAUDE.md: GPS captured at exact photo moment)
       Position? pos;
       try {
         final permission = await Geolocator.requestPermission();
@@ -512,6 +514,18 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
           source: ImageSource.camera, imageQuality: 85, maxWidth: 1920, maxHeight: 1080);
 
       if (picked != null && mounted) {
+        // Client-side size guard (mirrors backend 10MB limit)
+        final fileSize = await File(picked.path).length();
+        if (fileSize > 10 * 1024 * 1024) {
+          setState(() { _photoTooBig = true; _loadingLocation = false; });
+          return;
+        }
+
+        // Embed GPS in EXIF so the stored file carries location evidence
+        if (pos != null) {
+          await _writeGpsExif(picked.path, pos);
+        }
+
         setState(() {
           _photo = picked;
           _position = pos;
@@ -523,6 +537,30 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
     } catch (_) {
       if (mounted) setState(() => _loadingLocation = false);
     }
+  }
+
+  Future<void> _writeGpsExif(String path, Position pos) async {
+    try {
+      final exif = await Exif.fromPath(path);
+      await exif.writeAttributes({
+        'GPSLatitude': _toExifDms(pos.latitude.abs()),
+        'GPSLatitudeRef': pos.latitude >= 0 ? 'N' : 'S',
+        'GPSLongitude': _toExifDms(pos.longitude.abs()),
+        'GPSLongitudeRef': pos.longitude >= 0 ? 'E' : 'W',
+      });
+      await exif.close();
+    } catch (_) {
+      // Non-blocking — scan still proceeds without EXIF on failure
+    }
+  }
+
+  // Converts decimal degrees to EXIF rational DMS: "degrees/1,minutes/1,seconds*100/100"
+  String _toExifDms(double decimal) {
+    final deg = decimal.floor();
+    final minFull = (decimal - deg) * 60;
+    final min = minFull.floor();
+    final sec = ((minFull - min) * 60 * 100).round();
+    return '$deg/1,$min/1,$sec/100';
   }
 
   void _submit(BuildContext context) {
@@ -783,6 +821,22 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                         'GPS : ${_position!.latitude.toStringAsFixed(4)}, ${_position!.longitude.toStringAsFixed(4)}',
                         style: GoogleFonts.plusJakartaSans(
                             fontSize: 11, color: kTextSecondary),
+                      ),
+                    ],
+                  ),
+                ],
+                if (_photoTooBig) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.warning_amber_rounded, color: kError, size: 14),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          'Photo trop lourde (max 10 MB). Réessayez.',
+                          style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12, color: kError, fontWeight: FontWeight.w500),
+                        ),
                       ),
                     ],
                   ),

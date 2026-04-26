@@ -31,6 +31,7 @@ class BidModel {
   final String? arrivalTime;
   final double? pricePerKg;
   final String? trackingNumber;
+  final String? trackingToken;
   final String? confirmationCode;
 
   const BidModel({
@@ -61,6 +62,7 @@ class BidModel {
     this.arrivalTime,
     this.pricePerKg,
     this.trackingNumber,
+    this.trackingToken,
     this.confirmationCode,
   });
 
