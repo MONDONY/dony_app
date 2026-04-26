@@ -1,5 +1,9 @@
+import 'dart:async';
+
+import 'package:dony/core/network/api_client.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 // Must be top-level — Firebase requirement for background handler
 @pragma('vm:entry-point')
@@ -8,48 +12,145 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 class NotificationService {
+  final ApiClient _apiClient;
+
+  NotificationService(this._apiClient);
+
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  final _localNotifications = FlutterLocalNotificationsPlugin();
+
+  // Broadcasts the GoRouter path to navigate to when a notification is tapped
+  final _navigationController = StreamController<String>.broadcast();
+  Stream<String> get navigationStream => _navigationController.stream;
+
+  static const _androidChannel = AndroidNotificationChannel(
+    'dony_transactional',
+    'Notifications dony',
+    description: 'Paiements, livraisons et mises à jour de vos envois',
+    importance: Importance.high,
+  );
 
   Future<void> initialize() async {
-    // Request permissions (iOS + Android 13+)
-    final settings = await _fcm.requestPermission();
+    // iOS / Android 13+ permission request
+    final settings = await _fcm.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
     debugPrint('[FCM] Auth status: ${settings.authorizationStatus}');
+
+    // Create Android notification channel
+    await _localNotifications
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(_androidChannel);
+
+    // Init flutter_local_notifications
+    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const iosInit = DarwinInitializationSettings();
+    await _localNotifications.initialize(
+      const InitializationSettings(android: androidInit, iOS: iosInit),
+      onDidReceiveNotificationResponse: _onLocalNotificationTap,
+    );
 
     // Register background handler
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-    // Foreground messages
+    // Foreground messages → show local notification
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
 
-    // App opened from notification
+    // App opened from background notification tap
     FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
 
-    // Notification that launched the app from terminated state
+    // App launched from terminated state via notification
     final initialMessage = await _fcm.getInitialMessage();
     if (initialMessage != null) {
-      _handleNotificationTap(initialMessage);
+      // Delay slightly so the router is ready
+      Future.delayed(const Duration(milliseconds: 500), () {
+        _handleNotificationTap(initialMessage);
+      });
     }
 
-    // Log token (will be sent to backend in Story 2 after auth)
+    // Upload current token
     final token = await _fcm.getToken();
-    debugPrint('[FCM] Token: $token');
+    if (token != null) {
+      await _uploadToken(token);
+    }
 
-    // Refresh token listener
-    _fcm.onTokenRefresh.listen((newToken) {
-      debugPrint('[FCM] Token refreshed: $newToken');
-      // Will call PUT /api/v1/users/me/fcm-token in Story 2
-    });
+    // Upload on token refresh
+    _fcm.onTokenRefresh.listen(_uploadToken);
+  }
+
+  Future<void> _uploadToken(String token) async {
+    try {
+      await _apiClient.dio.put('/auth/me/fcm-token', data: {'fcmToken': token});
+      debugPrint('[FCM] Token uploaded to backend');
+    } catch (e) {
+      debugPrint('[FCM] Token upload failed: $e');
+    }
   }
 
   void _handleForegroundMessage(RemoteMessage message) {
-    debugPrint('[FCM] Foreground message: ${message.notification?.title}');
-    // In-app notification display will be added per feature
+    final notification = message.notification;
+    if (notification == null) return;
+
+    _localNotifications.show(
+      notification.hashCode,
+      notification.title,
+      notification.body,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          _androidChannel.id,
+          _androidChannel.name,
+          channelDescription: _androidChannel.description,
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
+      ),
+      payload: _routeForMessage(message.data),
+    );
   }
 
   void _handleNotificationTap(RemoteMessage message) {
-    debugPrint('[FCM] Notification tapped: ${message.data}');
-    // Navigation via GoRouter will be wired in Story 2
+    final route = _routeForMessage(message.data);
+    if (route != null) {
+      _navigationController.add(route);
+    }
   }
 
-  Future<String?> getToken() => _fcm.getToken();
+  void _onLocalNotificationTap(NotificationResponse response) {
+    final route = response.payload;
+    if (route != null && route.isNotEmpty) {
+      _navigationController.add(route);
+    }
+  }
+
+  /// Maps the FCM data `type` field to a GoRouter path.
+  String? _routeForMessage(Map<String, dynamic> data) {
+    final type = data['type'] as String?;
+    final bidId = data['bidId'] as String?;
+    final announcementId = data['announcementId'] as String?;
+
+    return switch (type) {
+      'BID_CREATED' when announcementId != null => '/matching/bids/$announcementId',
+      'BID_ACCEPTED' when bidId != null        => '/shipments/$bidId',
+      'BID_REJECTED' when bidId != null        => '/shipments/$bidId',
+      'HANDOVER_DEFINED' when bidId != null    => '/shipments/$bidId',
+      'TRIP_CANCELLED'                         => '/home',
+      'PAYMENT_RELEASED' when bidId != null    => '/shipments/$bidId',
+      'DELIVERY_CONFIRMED' when bidId != null  => '/shipments/$bidId',
+      'DISPUTE_OPENED' when bidId != null      => '/shipments/$bidId',
+      _                                        => null,
+    };
+  }
+
+  void dispose() {
+    _navigationController.close();
+  }
 }

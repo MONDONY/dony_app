@@ -33,7 +33,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Core
   getIt.registerLazySingleton<HiveService>(() => HiveService());
   getIt.registerLazySingleton<ApiClient>(() => ApiClient(baseUrl: apiBaseUrl));
-  getIt.registerLazySingleton<NotificationService>(() => NotificationService());
+  getIt.registerLazySingleton<NotificationService>(
+    () => NotificationService(getIt<ApiClient>()),
+  );
   getIt.registerLazySingleton<EnvoisRefreshNotifier>(() => EnvoisRefreshNotifier());
   getIt.registerLazySingleton<SavedTripsService>(
     () => SavedTripsService(getIt<HiveService>()),
