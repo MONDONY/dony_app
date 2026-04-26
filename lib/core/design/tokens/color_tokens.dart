@@ -37,6 +37,7 @@ abstract final class DonyColors {
   static const infoLight    = Color(0xFFE3F2FD);
 }
 
+// Extends ColorScheme with semantic tokens not present in Material 3.
 extension DonyStatusColors on ColorScheme {
   Color get success      => DonyColors.success;
   Color get warning      => DonyColors.warning;
@@ -47,4 +48,5 @@ extension DonyStatusColors on ColorScheme {
   Color get errorLight   => brightness == Brightness.light
       ? DonyColors.errorLight
       : DonyColors.error.withValues(alpha: 0.15);
+  Color get errorDark => DonyColors.errorDark;
 }
