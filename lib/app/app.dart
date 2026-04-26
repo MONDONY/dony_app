@@ -7,7 +7,10 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
+import 'package:dony/features/notifications/bloc/notification_bloc.dart';
+import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -21,6 +24,7 @@ class DonyApp extends StatefulWidget {
 
 class _DonyAppState extends State<DonyApp> {
   StreamSubscription<String>? _navSub;
+  StreamSubscription<User?>? _authSub;
 
   @override
   void initState() {
@@ -28,11 +32,19 @@ class _DonyAppState extends State<DonyApp> {
     _navSub = getIt<NotificationService>().navigationStream.listen((route) {
       appRouter.go(route);
     });
+    // Upload FCM token + load notifications as soon as Firebase confirms sign-in.
+    _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (user != null) {
+        getIt<NotificationService>().uploadCurrentToken();
+        getIt<NotificationBloc>().add(const NotificationsLoadRequested());
+      }
+    });
   }
 
   @override
   void dispose() {
     _navSub?.cancel();
+    _authSub?.cancel();
     super.dispose();
   }
 
@@ -50,6 +62,9 @@ class _DonyAppState extends State<DonyApp> {
           ),
           BlocProvider<AnnouncementBloc>(
             create: (_) => getIt<AnnouncementBloc>(),
+          ),
+          BlocProvider<NotificationBloc>(
+            create: (_) => getIt<NotificationBloc>(),
           ),
         ],
         child: MaterialApp.router(

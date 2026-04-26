@@ -10,6 +10,8 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/notifications/bloc/notification_bloc.dart';
+import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -93,13 +95,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: Divider(height: 1),
                       ),
                       actions: [
-                        IconButton(
-                          icon: const Icon(
-                            Icons.notifications_outlined,
-                            color: kTextPrimary,
-                            size: 22,
-                          ),
-                          onPressed: () {},
+                        BlocBuilder<NotificationBloc, NotificationState>(
+                          builder: (context, notifState) {
+                            final unread = notifState is NotificationLoaded
+                                ? notifState.unreadCount
+                                : 0;
+                            return Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.notifications_outlined,
+                                    color: kTextPrimary,
+                                    size: 22,
+                                  ),
+                                  onPressed: () => context.go('/messages'),
+                                ),
+                                if (unread > 0)
+                                  Positioned(
+                                    top: 8,
+                                    right: 8,
+                                    child: Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: const BoxDecoration(
+                                        color: kError,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
                         ),
                         const SizedBox(width: 4),
                       ],

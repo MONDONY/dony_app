@@ -33,6 +33,7 @@ import 'package:dony/features/matching/presentation/screens/create_bid_screen.da
 import 'package:dony/features/matching/presentation/screens/handover_screen.dart';
 import 'package:dony/features/matching/presentation/screens/search_announcement_screen.dart';
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
+import 'package:dony/features/notifications/presentation/inbox_screen.dart';
 import 'package:dony/features/profile/presentation/edit_profile_screen.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
@@ -301,13 +302,12 @@ final appRouter = GoRouter(
           ],
         ),
 
-        // Branch 3 — Messages (placeholder)
+        // Branch 3 — Boîte de réception (Notifications + Messages)
         StatefulShellBranch(
           routes: [
             GoRoute(
               path: '/messages',
-              builder: (context, state) =>
-                  const _PlaceholderScreen(title: 'Messages'),
+              builder: (context, state) => const InboxScreen(),
             ),
           ],
         ),

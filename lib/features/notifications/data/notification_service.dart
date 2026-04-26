@@ -71,14 +71,15 @@ class NotificationService {
       });
     }
 
-    // Upload current token
-    final token = await _fcm.getToken();
-    if (token != null) {
-      await _uploadToken(token);
-    }
-
-    // Upload on token refresh
+    // Token upload is deferred to after authentication (called by app.dart).
+    // onTokenRefresh re-uploads automatically once the user is signed in.
     _fcm.onTokenRefresh.listen(_uploadToken);
+  }
+
+  /// Call this after the user is authenticated (Firebase sign-in complete).
+  Future<void> uploadCurrentToken() async {
+    final token = await _fcm.getToken();
+    if (token != null) await _uploadToken(token);
   }
 
   Future<void> _uploadToken(String token) async {

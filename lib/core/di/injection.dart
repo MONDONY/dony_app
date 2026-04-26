@@ -18,6 +18,9 @@ import 'package:dony/features/matching/data/datasources/bid_remote_datasource.da
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/data/services/saved_trips_service.dart';
+import 'package:dony/features/notifications/bloc/notification_bloc.dart';
+import 'package:dony/features/notifications/data/notification_remote_datasource.dart';
+import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
@@ -35,6 +38,15 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<ApiClient>(() => ApiClient(baseUrl: apiBaseUrl));
   getIt.registerLazySingleton<NotificationService>(
     () => NotificationService(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<NotificationRemoteDatasource>(
+    () => NotificationRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepository(getIt<NotificationRemoteDatasource>()),
+  );
+  getIt.registerFactory<NotificationBloc>(
+    () => NotificationBloc(getIt<NotificationRepository>()),
   );
   getIt.registerLazySingleton<EnvoisRefreshNotifier>(() => EnvoisRefreshNotifier());
   getIt.registerLazySingleton<SavedTripsService>(
