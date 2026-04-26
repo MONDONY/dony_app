@@ -6,7 +6,9 @@ import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/pin_setup_screen.dart';
 import 'package:dony/features/auth/presentation/screens/role_selection_screen.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:dony/features/tracking/presentation/screens/qr_scanner_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/tracking_search_screen.dart';
+import 'package:dony/features/tracking/presentation/screens/tracking_timeline_screen.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/presentation/screens/cancellation_screen.dart';
@@ -125,8 +127,10 @@ final appRouter = GoRouter(
     // ── Routes plein écran (hors shell) ─────────────────────────────────
     GoRoute(
       path: '/tracking/scan',
-      builder: (context, state) =>
-          const _PlaceholderScreen(title: 'Scanner QR'),
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<TrackingBloc>(),
+        child: const QrScannerScreen(),
+      ),
     ),
     GoRoute(
       path: '/tracking/search',
@@ -134,6 +138,17 @@ final appRouter = GoRouter(
         create: (_) => getIt<TrackingBloc>(),
         child: const TrackingSearchScreen(),
       ),
+    ),
+    GoRoute(
+      path: '/tracking/:bidId/timeline',
+      builder: (context, state) {
+        final bidId = state.pathParameters['bidId']!;
+        final corridor = state.extra as String? ?? '';
+        return BlocProvider(
+          create: (_) => getIt<TrackingBloc>(),
+          child: TrackingTimelineScreen(bidId: bidId, corridor: corridor),
+        );
+      },
     ),
     GoRoute(
       path: '/payments/onboarding',
@@ -326,54 +341,123 @@ class _TrackingHubScreen extends StatelessWidget {
           child: Divider(height: 1, color: Color(0xFFE9ECEF)),
         ),
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE3F2FD),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Icon(Icons.local_shipping_outlined,
-                    color: Color(0xFF1E88E5), size: 48),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Suivre un colis',
-                style: TextStyle(
-                    fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFF0D1B2A)),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Entrez votre numéro de suivi DON-XXXXXX\npour connaître le statut de votre colis.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Color(0xFF6B7A8D), height: 1.5),
-              ),
-              const SizedBox(height: 28),
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton.icon(
-                  onPressed: () => context.push('/tracking/search'),
-                  icon: const Icon(Icons.search_rounded),
-                  label: const Text(
-                    'Rechercher par numéro',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1E88E5),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  ),
-                ),
-              ),
-            ],
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 32, 20, 40),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Section voyageur ──────────────────────────────────────
+            _HubSectionTitle(
+              icon: Icons.qr_code_scanner_rounded,
+              label: 'Je suis voyageur',
+            ),
+            const SizedBox(height: 12),
+            _HubCard(
+              icon: Icons.qr_code_scanner_rounded,
+              iconBg: const Color(0xFFE3F2FD),
+              iconColor: const Color(0xFF1E88E5),
+              title: 'Scanner le QR code d\'un colis',
+              subtitle: 'À la remise, en transit ou à la livraison',
+              onTap: () => context.push('/tracking/scan'),
+            ),
+            const SizedBox(height: 32),
+
+            // ── Section expéditeur / destinataire ────────────────────
+            _HubSectionTitle(
+              icon: Icons.search_rounded,
+              label: 'Je suis expéditeur ou destinataire',
+            ),
+            const SizedBox(height: 12),
+            _HubCard(
+              icon: Icons.search_rounded,
+              iconBg: const Color(0xFFE8F5E9),
+              iconColor: const Color(0xFF16A34A),
+              title: 'Suivre un colis par numéro',
+              subtitle: 'Entrez votre numéro DON-XXXXXX',
+              onTap: () => context.push('/tracking/search'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HubSectionTitle extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _HubSectionTitle({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: const Color(0xFF6B7A8D)),
+        const SizedBox(width: 6),
+        Text(
+          label.toUpperCase(),
+          style: const TextStyle(
+            fontSize: 11, fontWeight: FontWeight.w700,
+            color: Color(0xFF6B7A8D), letterSpacing: 0.8,
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HubCard extends StatelessWidget {
+  final IconData icon;
+  final Color iconBg;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  const _HubCard({
+    required this.icon, required this.iconBg, required this.iconColor,
+    required this.title, required this.subtitle, required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE9ECEF)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: iconColor, size: 24),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: const TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w700,
+                          color: Color(0xFF0D1B2A))),
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      style: const TextStyle(
+                          fontSize: 13, color: Color(0xFF6B7A8D))),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded,
+                color: Color(0xFFADB5BD), size: 20),
+          ],
         ),
       ),
     );

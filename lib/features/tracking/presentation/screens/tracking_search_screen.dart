@@ -310,6 +310,32 @@ class _TrackingResultCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 _StepTimeline(currentStep: result.currentStep),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      final corridor =
+                          '${result.departureCity} → ${result.arrivalCity}';
+                      context.push(
+                          '/tracking/${result.bidId}/timeline',
+                          extra: corridor);
+                    },
+                    icon: const Icon(Icons.timeline_rounded, size: 18),
+                    label: Text(
+                      'Voir le suivi détaillé',
+                      style: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w700, fontSize: 14),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: kGreenPrimary,
+                      side: const BorderSide(color: kGreenPrimary),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -320,13 +346,14 @@ class _TrackingResultCard extends StatelessWidget {
 
   (IconData, Color, String) _stepVisuals(String step) {
     return switch (step) {
-      'DELIVERED' => (Icons.check_circle_rounded, kSuccess, step),
-      'IN_TRANSIT' => (Icons.local_shipping_rounded, kGreenPrimary, step),
+      'DELIVERED'       => (Icons.check_circle_rounded, kSuccess, step),
+      'IN_TRANSIT'      => (Icons.local_shipping_rounded, kGreenPrimary, step),
+      'DEPARTED'        => (Icons.flight_takeoff_rounded, kGreenPrimary, step),
       'PAYMENT_SECURED' => (Icons.lock_rounded, kGreenPrimary, step),
-      'ACCEPTED' => (Icons.handshake_outlined, kWarning, step),
-      'REJECTED' => (Icons.cancel_outlined, kError, step),
-      'CANCELLED' => (Icons.block_outlined, kTextSecondary, step),
-      _ => (Icons.hourglass_empty_rounded, kWarning, step),
+      'ACCEPTED'        => (Icons.handshake_outlined, kWarning, step),
+      'REJECTED'        => (Icons.cancel_outlined, kError, step),
+      'CANCELLED'       => (Icons.block_outlined, kTextSecondary, step),
+      _                 => (Icons.hourglass_empty_rounded, kWarning, step),
     };
   }
 }
@@ -339,7 +366,8 @@ class _StepTimeline extends StatelessWidget {
     ('PENDING', 'En attente'),
     ('ACCEPTED', 'Confirmé'),
     ('PAYMENT_SECURED', 'Payé'),
-    ('IN_TRANSIT', 'En transit'),
+    ('DEPARTED', 'Remis'),
+    ('IN_TRANSIT', 'Transit'),
     ('DELIVERED', 'Livré'),
   ];
 

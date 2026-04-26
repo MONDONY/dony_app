@@ -20,6 +20,7 @@ import 'package:dony/features/matching/data/services/saved_trips_service.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:dony/features/payments/data/datasources/payment_remote_datasource.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
@@ -109,7 +110,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<TrackingRepository>(
     () => TrackingRepository(getIt<ApiClient>()),
   );
+  getIt.registerLazySingleton<OfflineSyncService>(
+    () => OfflineSyncService(getIt<HiveService>(), getIt<TrackingRepository>()),
+  );
   getIt.registerFactory<TrackingBloc>(
-    () => TrackingBloc(getIt<TrackingRepository>()),
+    () => TrackingBloc(getIt<TrackingRepository>(), getIt<OfflineSyncService>()),
   );
 }

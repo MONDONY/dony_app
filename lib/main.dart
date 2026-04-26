@@ -3,6 +3,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/firebase/firebase_options.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
+import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -39,6 +40,7 @@ Future<void> _bootstrap() async {
 
   // Heavy async init runs after UI is displayed (no ANR risk)
   await getIt<HiveService>().init();
+  getIt<OfflineSyncService>().startListening();
   await getIt<NotificationService>().initialize();
 }
 

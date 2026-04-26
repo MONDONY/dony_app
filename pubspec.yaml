@@ -27,6 +27,7 @@ dependencies:
 
   # Media
   image_picker: ^1.1.0
+  native_exif: ^0.7.0
 
   # Local storage
   hive: ^2.2.3

@@ -198,6 +198,10 @@ class _BidDetailViewState extends State<_BidDetailView> {
                   const SizedBox(height: 16),
                   QrCodeCard(bidId: _bid.id),
                 ],
+                if (_bid.status == 'ACCEPTED') ...[
+                  const SizedBox(height: 16),
+                  _TimelineButton(bid: _bid),
+                ],
               ],
             ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
           ),
@@ -1290,6 +1294,62 @@ class _TrackingNumberCard extends StatelessWidget {
                 fontSize: 12, color: kTextSecondary, height: 1.4),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _TimelineButton extends StatelessWidget {
+  final BidModel bid;
+  const _TimelineButton({required this.bid});
+
+  String get _corridor {
+    final dep = bid.departureCity ?? '';
+    final arr = bid.arrivalCity ?? '';
+    return dep.isNotEmpty && arr.isNotEmpty ? '$dep → $arr' : 'Suivi du colis';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push('/tracking/${bid.id}/timeline', extra: _corridor),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: kGreenLight,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: kGreenPrimary.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: kGreenPrimary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.timeline_rounded, color: kGreenPrimary, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Suivi en temps réel',
+                    style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14, fontWeight: FontWeight.w700, color: kTextPrimary),
+                  ),
+                  Text(
+                    'Consulter l\'historique des scans',
+                    style: GoogleFonts.plusJakartaSans(fontSize: 12, color: kTextSecondary),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: kGreenPrimary, size: 20),
+          ],
+        ),
       ),
     );
   }

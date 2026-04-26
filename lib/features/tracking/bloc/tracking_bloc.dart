@@ -1,14 +1,23 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
+import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
   final TrackingRepository _repository;
+  final OfflineSyncService _offlineSync;
 
-  TrackingBloc(this._repository) : super(TrackingInitial()) {
+  TrackingBloc(this._repository, this._offlineSync) : super(TrackingInitial()) {
     on<TrackingQrCodeRequested>(_onQrCodeRequested);
     on<TrackingSearchRequested>(_onSearchRequested);
+    on<TrackingEventsRequested>(_onEventsRequested);
+    on<QrScanSubmitRequested>(_onScanSubmit);
+    on<OfflineSyncRequested>(_onOfflineSync);
   }
 
   Future<void> _onQrCodeRequested(
@@ -33,7 +42,80 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
       final result = await _repository.searchByTrackingNumber(event.number);
       emit(TrackingSearchLoaded(result));
     } catch (e) {
-      emit(TrackingSearchError('Numéro de suivi introuvable. Vérifiez le numéro et réessayez.'));
+      emit(TrackingSearchError(
+          'Numéro de suivi introuvable. Vérifiez le numéro et réessayez.'));
     }
+  }
+
+  Future<void> _onEventsRequested(
+    TrackingEventsRequested event,
+    Emitter<TrackingState> emit,
+  ) async {
+    emit(TrackingEventsLoading());
+    try {
+      final events = await _repository.getEvents(event.bidId);
+      emit(TrackingEventsLoaded(events));
+    } catch (e) {
+      if (kDebugMode) debugPrint('[TrackingBloc] getEvents error: $e');
+      final inner = e is DioException ? e.error : e;
+      String message = 'Impossible de charger les événements de tracking';
+      if (inner is ForbiddenException) {
+        message = 'Accès refusé — vous n\'êtes pas autorisé à voir ce suivi';
+      } else if (inner is UnauthorizedException) {
+        message = 'Session expirée — reconnectez-vous';
+      }
+      emit(TrackingEventsError(message));
+    }
+  }
+
+  Future<void> _onScanSubmit(
+    QrScanSubmitRequested event,
+    Emitter<TrackingState> emit,
+  ) async {
+    emit(QrScanSubmitting());
+    try {
+      final connectivity = await Connectivity().checkConnectivity();
+      final isOnline =
+          connectivity.any((r) => r != ConnectivityResult.none);
+
+      if (!isOnline) {
+        await _offlineSync.queueScan(
+          bidId: event.bidId,
+          eventType: event.eventType,
+          gpsLat: event.gpsLat,
+          gpsLon: event.gpsLon,
+          photoPath: event.photo?.path,
+        );
+        emit(QrScanQueued());
+        return;
+      }
+
+      String? photoKey;
+      if (event.photo != null) {
+        photoKey = await _repository.uploadTrackingPhoto(
+            event.bidId, event.photo!.path);
+      }
+      final result = await _repository.postScan(
+        bidId: event.bidId,
+        eventType: event.eventType,
+        gpsLat: event.gpsLat,
+        gpsLon: event.gpsLon,
+        photoUrl: photoKey,
+      );
+      emit(QrScanSuccess(result));
+    } catch (e) {
+      emit(QrScanError(
+          'Erreur lors de l\'enregistrement du scan. Réessayez.'));
+    }
+  }
+
+  Future<void> _onOfflineSync(
+    OfflineSyncRequested event,
+    Emitter<TrackingState> emit,
+  ) async {
+    final before = _offlineSync.pendingCount;
+    emit(OfflineSyncInProgress());
+    await _offlineSync.syncAll();
+    emit(OfflineSyncDone(before - _offlineSync.pendingCount));
   }
 }
