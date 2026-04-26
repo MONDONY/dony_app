@@ -93,7 +93,9 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/bids/:bidId',
       builder: (context, state) {
-        final bid = state.extra as BidModel;
+        final bid = state.extra is BidModel
+            ? state.extra as BidModel
+            : BidModel.skeleton(state.pathParameters['bidId']!);
         return BidDetailScreen(bid: bid);
       },
       routes: [

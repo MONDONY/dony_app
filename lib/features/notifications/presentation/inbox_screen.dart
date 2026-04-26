@@ -6,8 +6,31 @@ import 'package:dony/features/notifications/data/notification_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+
+/// Returns the GoRouter path to navigate to when tapping a notification,
+/// or null if the notification has no actionable destination.
+String? _routeForNotification(NotificationModel n) {
+  final type = n.type;
+  final bidId = n.data['bidId'] as String?;
+  final announcementId = n.data['announcementId'] as String?;
+
+  return switch (type) {
+    // Voyageur → liste des offres sur son annonce
+    'BID_CREATED' when announcementId != null => '/announcements/$announcementId/bids',
+    // Expéditeur ou voyageur → détail de l'offre
+    'BID_ACCEPTED' when bidId != null        => '/bids/$bidId',
+    'BID_REJECTED' when bidId != null        => '/bids/$bidId',
+    'HANDOVER_DEFINED' when bidId != null    => '/bids/$bidId',
+    'DELIVERY_CONFIRMED' when bidId != null  => '/bids/$bidId',
+    'PAYMENT_RELEASED' when bidId != null    => '/bids/$bidId',
+    'DISPUTE_OPENED' when bidId != null      => '/bids/$bidId',
+    // Trajet annulé → pas de trajet cible
+    _ => null,
+  };
+}
 
 class InboxScreen extends StatefulWidget {
   const InboxScreen({super.key});
@@ -157,15 +180,55 @@ class _NotificationsTab extends StatelessWidget {
               separatorBuilder: (_, __) =>
                   const Divider(height: 1, color: kBorder, indent: 20, endIndent: 20),
               itemBuilder: (context, index) {
-                return _NotificationTile(
-                  notification: state.notifications[index],
-                  onTap: () => context.read<NotificationBloc>().add(
-                        NotificationMarkReadRequested(state.notifications[index].id),
-                      ),
+                final notif = state.notifications[index];
+                final tile = _NotificationTile(
+                  notification: notif,
+                  onTap: () {
+                    context.read<NotificationBloc>().add(
+                          NotificationMarkReadRequested(notif.id),
+                        );
+                    final route = _routeForNotification(notif);
+                    if (route != null) {
+                      if (route.startsWith('/bids/')) {
+                        context.push(route);
+                      } else {
+                        context.go(route);
+                      }
+                    }
+                  },
                 ).animate().fadeIn(
                       delay: Duration(milliseconds: 40 * index),
                       duration: 280.ms,
                     );
+
+                return Dismissible(
+                  key: ValueKey(notif.id),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 24),
+                    color: kError,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.delete_outline_rounded,
+                            color: Colors.white, size: 26),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Supprimer',
+                          style: GoogleFonts.plusJakartaSans(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
+                  onDismissed: (_) => context
+                      .read<NotificationBloc>()
+                      .add(NotificationDeleteRequested(notif.id)),
+                  child: tile,
+                );
               },
             ),
           );
@@ -232,6 +295,7 @@ class _NotificationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasRoute = _routeForNotification(notification) != null;
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -264,6 +328,7 @@ class _NotificationTile extends StatelessWidget {
                         Container(
                           width: 8,
                           height: 8,
+                          margin: const EdgeInsets.only(left: 6),
                           decoration: const BoxDecoration(
                             color: kGreenPrimary,
                             shape: BoxShape.circle,
@@ -293,6 +358,10 @@ class _NotificationTile extends StatelessWidget {
                 ],
               ),
             ),
+            if (hasRoute) ...[
+              const SizedBox(width: 8),
+              const Icon(Icons.chevron_right_rounded, size: 18, color: kTextHint),
+            ],
           ],
         ),
       ),

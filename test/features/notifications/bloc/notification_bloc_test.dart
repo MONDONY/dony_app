@@ -110,5 +110,49 @@ void main() {
             .having((s) => s.unreadCount, 'unread', 0),
       ],
     );
+
+    // ── NotificationDeleteRequested ─────────────────────────────────────────
+
+    blocTest<NotificationBloc, NotificationState>(
+      'removes notification optimistically and updates unreadCount',
+      build: () {
+        when(() => repository.deleteNotification('1')).thenAnswer((_) async {});
+        return NotificationBloc(repository);
+      },
+      seed: () => NotificationLoaded(
+        notifications: [
+          _makeNotif(id: '1', read: false),
+          _makeNotif(id: '2', read: true),
+        ],
+        unreadCount: 1,
+      ),
+      act: (bloc) => bloc.add(const NotificationDeleteRequested('1')),
+      expect: () => [
+        isA<NotificationLoaded>()
+            .having((s) => s.notifications.length, 'count', 1)
+            .having((s) => s.notifications.first.id, 'remaining id', '2')
+            .having((s) => s.unreadCount, 'unread', 0),
+      ],
+    );
+
+    blocTest<NotificationBloc, NotificationState>(
+      'restores previous state when delete API call fails',
+      build: () {
+        when(() => repository.deleteNotification('1'))
+            .thenThrow(Exception('network error'));
+        return NotificationBloc(repository);
+      },
+      seed: () => NotificationLoaded(
+        notifications: [_makeNotif(id: '1', read: false)],
+        unreadCount: 1,
+      ),
+      act: (bloc) => bloc.add(const NotificationDeleteRequested('1')),
+      expect: () => [
+        isA<NotificationLoaded>()
+            .having((s) => s.notifications.isEmpty, 'optimistic empty', true),
+        isA<NotificationLoaded>()
+            .having((s) => s.notifications.length, 'restored', 1),
+      ],
+    );
   });
 }

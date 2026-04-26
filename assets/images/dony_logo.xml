@@ -1,0 +1,22 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1024" height="1024" fill="white"/>
+  
+  <!-- Motion lines -->
+  <line x1="110" y1="485" x2="200" y2="485" stroke="#2563EB" stroke-width="16" stroke-linecap="round"/>
+  <line x1="90" y1="545" x2="200" y2="545" stroke="#2563EB" stroke-width="16" stroke-linecap="round"/>
+  <line x1="110" y1="605" x2="200" y2="605" stroke="#2563EB" stroke-width="16" stroke-linecap="round"/>
+
+  <!-- Globe -->
+  <circle cx="310" cy="545" r="120" stroke="#0F172A" stroke-width="14" fill="none"/>
+  <path d="M250 455C275 440 305 445 320 465C335 485 325 510 295 520C270 528 255 548 260 570C265 592 245 610 220 600" stroke="#0F172A" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M365 470C340 485 335 515 355 535C372 553 372 580 352 610C340 628 348 650 368 660" stroke="#0F172A" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- Package -->
+  <path d="M245 525L300 495L355 525L300 555L245 525Z" stroke="#0F172A" stroke-width="12" fill="white" stroke-linejoin="round"/>
+  <path d="M245 525V595L300 625V555" stroke="#0F172A" stroke-width="12" fill="none" stroke-linejoin="round"/>
+  <path d="M355 525V595" stroke="#0F172A" stroke-width="12" stroke-linecap="round"/>
+  <path d="M300 555V625" stroke="#0F172A" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- Wordmark -->
+  <text x="470" y="610" font-family="Inter, Arial, sans-serif" font-size="190" font-weight="400" fill="#0F172A" letter-spacing="-8">dony</text>
+</svg>

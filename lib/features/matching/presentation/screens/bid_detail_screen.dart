@@ -50,12 +50,14 @@ class _BidDetailViewState extends State<_BidDetailView> {
   late BidModel _bid;
   PaymentModel? _existingPayment;
   bool _paymentLoaded = false;
+  bool _skeletonLoading = false;
   Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _bid = widget.initialBid;
+    _skeletonLoading = _bid.isSkeleton;
     context.read<BidBloc>().add(BidDetailRequested(_bid.id));
     _loadPaymentStatus();
     if (_bid.status == 'ACCEPTED') {
@@ -136,6 +138,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
           final previousBidId = _bid.id;
           setState(() {
             _bid = state.bid;
+            _skeletonLoading = false;
             // Réinitialiser le statut paiement si c'est un bid différent
             if (state.bid.id != previousBidId) {
               _existingPayment = null;
@@ -147,6 +150,10 @@ class _BidDetailViewState extends State<_BidDetailView> {
             _loadPaymentStatus();
           }
         } else if (state is BidError) {
+          if (_skeletonLoading) {
+            setState(() => _skeletonLoading = false);
+            context.pop();
+          }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
@@ -160,7 +167,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
         final isLoading = state is BidLoading;
         final authState = context.read<AuthBloc>().state;
         final isSender = authState is AuthAuthenticated && authState.user.id == _bid.senderId;
-        
+
         return Scaffold(
           backgroundColor: kBackground,
           appBar: AppBar(
@@ -182,7 +189,9 @@ class _BidDetailViewState extends State<_BidDetailView> {
               child: Divider(height: 1, color: kBorder),
             ),
           ),
-          body: SingleChildScrollView(
+          body: _skeletonLoading
+              ? const Center(child: CircularProgressIndicator(color: kGreenPrimary))
+              : SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

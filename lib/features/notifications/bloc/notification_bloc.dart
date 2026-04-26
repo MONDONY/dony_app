@@ -11,6 +11,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     on<NotificationsLoadRequested>(_onLoad);
     on<NotificationMarkReadRequested>(_onMarkRead);
     on<NotificationsMarkAllReadRequested>(_onMarkAllRead);
+    on<NotificationDeleteRequested>(_onDelete);
   }
 
   Future<void> _onLoad(
@@ -54,6 +55,22 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
       final updated = current.notifications.map(_setRead).toList();
       emit(current.copyWith(notifications: updated, unreadCount: 0));
     } catch (_) {}
+  }
+
+  Future<void> _onDelete(
+    NotificationDeleteRequested event,
+    Emitter<NotificationState> emit,
+  ) async {
+    final current = state;
+    if (current is! NotificationLoaded) return;
+    final optimistic = current.notifications.where((n) => n.id != event.id).toList();
+    final unread = optimistic.where((n) => !n.read).length;
+    emit(current.copyWith(notifications: optimistic, unreadCount: unread));
+    try {
+      await _repository.deleteNotification(event.id);
+    } catch (_) {
+      emit(current);
+    }
   }
 
   NotificationModel _setRead(NotificationModel n) {

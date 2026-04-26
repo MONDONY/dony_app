@@ -77,6 +77,22 @@ class BidModel {
 
   Map<String, dynamic> toJson() => _$BidModelToJson(this);
 
+  /// Minimal placeholder used when navigating from a deep-link (no BidModel in extra).
+  /// The screen fetches the real data immediately via BidDetailRequested.
+  factory BidModel.skeleton(String id) => BidModel(
+        id: id,
+        announcementId: '',
+        senderId: '',
+        weightKg: 0,
+        declaredValueEur: 0,
+        description: '',
+        status: '',
+        createdAt: DateTime.fromMillisecondsSinceEpoch(0),
+        updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+      );
+
+  bool get isSkeleton => senderId.isEmpty;
+
   /// Nom à afficher pour l'expéditeur (même logique que TravelerProfile.resolvedName).
   /// Si le nom est défini → retourne le nom (le téléphone est géré séparément dans l'UI).
   /// Si le nom est null → retourne le téléphone.

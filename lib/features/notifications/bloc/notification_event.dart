@@ -14,3 +14,8 @@ class NotificationMarkReadRequested extends NotificationEvent {
 class NotificationsMarkAllReadRequested extends NotificationEvent {
   const NotificationsMarkAllReadRequested();
 }
+
+class NotificationDeleteRequested extends NotificationEvent {
+  final String id;
+  const NotificationDeleteRequested(this.id);
+}

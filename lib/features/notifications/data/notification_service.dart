@@ -139,14 +139,17 @@ class NotificationService {
     final announcementId = data['announcementId'] as String?;
 
     return switch (type) {
-      'BID_CREATED' when announcementId != null => '/matching/bids/$announcementId',
-      'BID_ACCEPTED' when bidId != null        => '/shipments/$bidId',
-      'BID_REJECTED' when bidId != null        => '/shipments/$bidId',
-      'HANDOVER_DEFINED' when bidId != null    => '/shipments/$bidId',
-      'TRIP_CANCELLED'                         => '/home',
-      'PAYMENT_RELEASED' when bidId != null    => '/shipments/$bidId',
-      'DELIVERY_CONFIRMED' when bidId != null  => '/shipments/$bidId',
-      'DISPUTE_OPENED' when bidId != null      => '/shipments/$bidId',
+      // Voyageur → liste des offres sur son annonce
+      'BID_CREATED' when announcementId != null => '/announcements/$announcementId/bids',
+      // Expéditeur → détail de son offre
+      'BID_ACCEPTED' when bidId != null        => '/bids/$bidId',
+      'BID_REJECTED' when bidId != null        => '/bids/$bidId',
+      'HANDOVER_DEFINED' when bidId != null    => '/bids/$bidId',
+      'DELIVERY_CONFIRMED' when bidId != null  => '/bids/$bidId',
+      'PAYMENT_RELEASED' when bidId != null    => '/bids/$bidId',
+      'DISPUTE_OPENED' when bidId != null      => '/bids/$bidId',
+      // Trajet annulé → pas de navigation (le trajet n'existe plus)
+      'TRIP_CANCELLED'                         => null,
       _                                        => null,
     };
   }

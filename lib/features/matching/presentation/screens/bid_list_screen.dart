@@ -70,7 +70,7 @@ class _BidListView extends StatelessWidget {
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ));
-            context.read<BidBloc>().add(BidListRequested(announcementId));
+            // Ne pas retry automatiquement — l'utilisateur doit agir explicitement
           }
         },
         builder: (context, state) {
@@ -82,6 +82,26 @@ class _BidListView extends StatelessWidget {
               return _EmptyView();
             }
             return _BidList(bids: state.bids);
+          }
+          if (state is BidError) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline_rounded, size: 48, color: kTextHint),
+                  const SizedBox(height: 12),
+                  Text(state.message,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.plusJakartaSans(fontSize: 14, color: kTextSecondary)),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () =>
+                        context.read<BidBloc>().add(BidListRequested(announcementId)),
+                    child: const Text('Réessayer'),
+                  ),
+                ],
+              ),
+            );
           }
           return const SizedBox.shrink();
         },
