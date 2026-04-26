@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/app/router.dart';
-import 'package:dony/app/theme.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
@@ -69,7 +69,8 @@ class _DonyAppState extends State<DonyApp> {
         ],
         child: MaterialApp.router(
           title: 'dony',
-          theme: appTheme,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
           routerConfig: appRouter,
           debugShowCheckedModeBanner: false,
           localizationsDelegates: const [
