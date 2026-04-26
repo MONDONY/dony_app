@@ -45,6 +45,16 @@ class TrackingEventsError extends TrackingState {
   TrackingEventsError(this.message);
 }
 
+// Confirmation code (sender side)
+class TrackingConfirmCodeLoading extends TrackingState {}
+
+class TrackingConfirmCodeLoaded extends TrackingState {
+  final String? code;
+  TrackingConfirmCodeLoaded(this.code);
+}
+
+class TrackingConfirmCodeError extends TrackingState {}
+
 // QR scan submission
 class QrScanSubmitting extends TrackingState {}
 
@@ -58,6 +68,19 @@ class QrScanQueued extends TrackingState {}
 class QrScanError extends TrackingState {
   final String message;
   QrScanError(this.message);
+}
+
+// Delivery confirmation (traveler side)
+class DeliveryConfirmLoading extends TrackingState {}
+
+class DeliveryConfirmSuccess extends TrackingState {
+  final TrackingEventModel event;
+  DeliveryConfirmSuccess(this.event);
+}
+
+class DeliveryConfirmError extends TrackingState {
+  final String message;
+  DeliveryConfirmError(this.message);
 }
 
 // Offline sync

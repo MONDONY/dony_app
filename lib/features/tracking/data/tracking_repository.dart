@@ -53,4 +53,21 @@ class TrackingRepository {
     final response = await _apiClient.dio.post('/storage/upload/tracking', data: formData);
     return (response.data as Map<String, dynamic>)['key'] as String;
   }
+
+  Future<String?> getConfirmationCode(String bidId) async {
+    final response =
+        await _apiClient.dio.get('/tracking/$bidId/confirmation-code');
+    return (response.data as Map<String, dynamic>)['confirmationCode'] as String?;
+  }
+
+  Future<TrackingEventModel> confirmDelivery({
+    required String bidId,
+    required String code,
+  }) async {
+    final response = await _apiClient.dio.post(
+      '/tracking/$bidId/confirm-delivery',
+      data: {'confirmationCode': code},
+    );
+    return TrackingEventModel.fromJson(response.data as Map<String, dynamic>);
+  }
 }

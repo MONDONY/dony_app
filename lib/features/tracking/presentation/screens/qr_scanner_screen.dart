@@ -479,12 +479,19 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
   XFile? _photo;
   Position? _position;
   bool _loadingLocation = false;
+  final _codeController = TextEditingController();
 
   final _eventTypes = [
     ('DEPART', 'Départ', Icons.flight_takeoff_rounded),
     ('TRANSIT', 'Transit', Icons.sync_alt_rounded),
     ('ARRIVEE', 'Arrivée', Icons.flight_land_rounded),
   ];
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickPhoto() async {
     setState(() => _loadingLocation = true);
@@ -519,13 +526,20 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
   }
 
   void _submit(BuildContext context) {
-    context.read<TrackingBloc>().add(QrScanSubmitRequested(
-          bidId: widget.bidId,
-          eventType: _eventType,
-          photo: _photo,
-          gpsLat: _position?.latitude,
-          gpsLon: _position?.longitude,
-        ));
+    if (_eventType == 'ARRIVEE') {
+      final code = _codeController.text.trim();
+      if (code.length != 6) return;
+      context.read<TrackingBloc>().add(
+            ConfirmDeliveryRequested(bidId: widget.bidId, code: code));
+    } else {
+      context.read<TrackingBloc>().add(QrScanSubmitRequested(
+            bidId: widget.bidId,
+            eventType: _eventType,
+            photo: _photo,
+            gpsLat: _position?.latitude,
+            gpsLon: _position?.longitude,
+          ));
+    }
   }
 
   @override
@@ -538,9 +552,17 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPad + 20),
-      child: BlocBuilder<TrackingBloc, TrackingState>(
+      child: BlocConsumer<TrackingBloc, TrackingState>(
+        listener: (context, state) {
+          if (state is DeliveryConfirmSuccess || state is QrScanSuccess || state is QrScanQueued) {
+            Navigator.pop(context);
+            widget.onClose();
+          }
+        },
         builder: (context, state) {
-          final isSubmitting = state is QrScanSubmitting;
+          final isSubmitting =
+              state is QrScanSubmitting || state is DeliveryConfirmLoading;
+          final isArrivee = _eventType == 'ARRIVEE';
 
           return Column(
             mainAxisSize: MainAxisSize.min,
@@ -619,94 +641,152 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
 
               const SizedBox(height: 20),
 
-              // Photo section
-              Text('Photo du colis',
-                  style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13, fontWeight: FontWeight.w700,
-                      color: kTextSecondary, letterSpacing: 0.5)),
-              const SizedBox(height: 10),
-
-              if (_photo == null)
-                GestureDetector(
-                  onTap: isSubmitting || _loadingLocation ? null : _pickPhoto,
-                  child: Container(
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: kBackground,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: kBorder, style: BorderStyle.solid),
-                    ),
-                    child: Center(
-                      child: _loadingLocation
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: kGreenPrimary))
-                          : Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.camera_alt_rounded,
-                                    color: kGreenPrimary, size: 20),
-                                const SizedBox(width: 8),
-                                Text('Prendre une photo',
-                                    style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: kGreenPrimary)),
-                              ],
-                            ),
-                    ),
+              // ARRIVEE : code input — Photo : DEPART / TRANSIT
+              if (isArrivee) ...[
+                Text('Code de confirmation',
+                    style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13, fontWeight: FontWeight.w700,
+                        color: kTextSecondary, letterSpacing: 0.5)),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: kGreenLight,
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                )
-              else
-                Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.file(
-                        File(_photo!.path),
-                        height: 120,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          height: 120,
-                          color: kGreenLight,
-                          child: const Center(
-                              child: Icon(Icons.image_rounded, color: kGreenPrimary, size: 32)),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.info_outline_rounded, color: kGreenPrimary, size: 15),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Demandez le code à 6 chiffres au destinataire. Il l\'a reçu de l\'expéditeur.',
+                          style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12, color: kGreenDark, fontWeight: FontWeight.w500),
                         ),
                       ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _codeController,
+                  enabled: !isSubmitting,
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.plusJakartaSans(
+                      fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: 10),
+                  decoration: InputDecoration(
+                    counterText: '',
+                    hintText: '------',
+                    hintStyle: GoogleFonts.plusJakartaSans(
+                        fontSize: 28, color: kBorder, letterSpacing: 10),
+                    filled: true,
+                    fillColor: kBackground,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: kBorder),
                     ),
-                    if (!isSubmitting)
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: GestureDetector(
-                          onTap: () => setState(() => _photo = null),
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                                color: Colors.black54, shape: BoxShape.circle),
-                            child: const Icon(Icons.close_rounded,
-                                color: Colors.white, size: 16),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: kGreenPrimary, width: 2),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+              ] else ...[
+                Text('Photo du colis',
+                    style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13, fontWeight: FontWeight.w700,
+                        color: kTextSecondary, letterSpacing: 0.5)),
+                const SizedBox(height: 10),
+
+                if (_photo == null)
+                  GestureDetector(
+                    onTap: isSubmitting || _loadingLocation ? null : _pickPhoto,
+                    child: Container(
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: kBackground,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: kBorder),
+                      ),
+                      child: Center(
+                        child: _loadingLocation
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: kGreenPrimary))
+                            : Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.camera_alt_rounded,
+                                      color: kGreenPrimary, size: 20),
+                                  const SizedBox(width: 8),
+                                  Text('Prendre une photo',
+                                      style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          color: kGreenPrimary)),
+                                ],
+                              ),
+                      ),
+                    ),
+                  )
+                else
+                  Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(
+                          File(_photo!.path),
+                          height: 120,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            height: 120,
+                            color: kGreenLight,
+                            child: const Center(
+                                child: Icon(Icons.image_rounded,
+                                    color: kGreenPrimary, size: 32)),
                           ),
                         ),
                       ),
-                  ],
-                ),
+                      if (!isSubmitting)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: GestureDetector(
+                            onTap: () => setState(() => _photo = null),
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                  color: Colors.black54, shape: BoxShape.circle),
+                              child: const Icon(Icons.close_rounded,
+                                  color: Colors.white, size: 16),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
 
-              if (_position != null) ...[
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.location_on_rounded, color: kSuccess, size: 14),
-                    const SizedBox(width: 4),
-                    Text(
-                      'GPS : ${_position!.latitude.toStringAsFixed(4)}, ${_position!.longitude.toStringAsFixed(4)}',
-                      style: GoogleFonts.plusJakartaSans(fontSize: 11, color: kTextSecondary),
-                    ),
-                  ],
-                ),
+                if (_position != null) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on_rounded, color: kSuccess, size: 14),
+                      const SizedBox(width: 4),
+                      Text(
+                        'GPS : ${_position!.latitude.toStringAsFixed(4)}, ${_position!.longitude.toStringAsFixed(4)}',
+                        style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11, color: kTextSecondary),
+                      ),
+                    ],
+                  ),
+                ],
               ],
 
               const SizedBox(height: 24),
@@ -723,26 +803,35 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                           height: 18,
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.white))
-                      : const Icon(Icons.check_rounded),
+                      : Icon(isArrivee
+                          ? Icons.verified_rounded
+                          : Icons.check_rounded),
                   label: Text(
-                    isSubmitting ? 'Enregistrement...' : 'Confirmer le scan',
+                    isSubmitting
+                        ? (isArrivee ? 'Confirmation...' : 'Enregistrement...')
+                        : (isArrivee ? 'Confirmer la livraison' : 'Confirmer le scan'),
                     style: GoogleFonts.plusJakartaSans(
                         fontWeight: FontWeight.w700, fontSize: 15),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: kGreenPrimary,
+                    backgroundColor: isArrivee ? kSuccess : kGreenPrimary,
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
                   ),
                 ),
               ),
 
-              if (state is QrScanError) ...[
+              if (state is QrScanError || state is DeliveryConfirmError) ...[
                 const SizedBox(height: 12),
-                Text(state.message,
-                    style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13, color: kError, fontWeight: FontWeight.w500)),
+                Text(
+                  state is QrScanError
+                      ? state.message
+                      : (state as DeliveryConfirmError).message,
+                  style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13, color: kError, fontWeight: FontWeight.w500),
+                ),
               ],
             ],
           );

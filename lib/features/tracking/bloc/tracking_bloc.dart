@@ -16,7 +16,9 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
     on<TrackingQrCodeRequested>(_onQrCodeRequested);
     on<TrackingSearchRequested>(_onSearchRequested);
     on<TrackingEventsRequested>(_onEventsRequested);
+    on<TrackingConfirmCodeRequested>(_onConfirmCodeRequested);
     on<QrScanSubmitRequested>(_onScanSubmit);
+    on<ConfirmDeliveryRequested>(_onConfirmDelivery);
     on<OfflineSyncRequested>(_onOfflineSync);
   }
 
@@ -68,6 +70,19 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
     }
   }
 
+  Future<void> _onConfirmCodeRequested(
+    TrackingConfirmCodeRequested event,
+    Emitter<TrackingState> emit,
+  ) async {
+    emit(TrackingConfirmCodeLoading());
+    try {
+      final code = await _repository.getConfirmationCode(event.bidId);
+      emit(TrackingConfirmCodeLoaded(code));
+    } catch (e) {
+      emit(TrackingConfirmCodeError());
+    }
+  }
+
   Future<void> _onScanSubmit(
     QrScanSubmitRequested event,
     Emitter<TrackingState> emit,
@@ -106,6 +121,26 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
     } catch (e) {
       emit(QrScanError(
           'Erreur lors de l\'enregistrement du scan. Réessayez.'));
+    }
+  }
+
+  Future<void> _onConfirmDelivery(
+    ConfirmDeliveryRequested event,
+    Emitter<TrackingState> emit,
+  ) async {
+    emit(DeliveryConfirmLoading());
+    try {
+      final result = await _repository.confirmDelivery(
+          bidId: event.bidId, code: event.code);
+      emit(DeliveryConfirmSuccess(result));
+    } catch (e) {
+      if (kDebugMode) debugPrint('[TrackingBloc] confirmDelivery error: $e');
+      final inner = e is DioException ? e.error : e;
+      String message = 'Erreur lors de la confirmation. Réessayez.';
+      if (inner is ValidationException || inner is AppException) {
+        message = (inner as AppException).message;
+      }
+      emit(DeliveryConfirmError(message));
     }
   }
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/app/theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
@@ -47,6 +49,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
   late BidModel _bid;
   PaymentModel? _existingPayment;
   bool _paymentLoaded = false;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
@@ -54,6 +57,17 @@ class _BidDetailViewState extends State<_BidDetailView> {
     _bid = widget.initialBid;
     context.read<BidBloc>().add(BidDetailRequested(_bid.id));
     _loadPaymentStatus();
+    if (_bid.status == 'ACCEPTED') {
+      _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+        if (mounted) context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadPaymentStatus() async {
@@ -197,6 +211,10 @@ class _BidDetailViewState extends State<_BidDetailView> {
                 if (isSender && _bid.status == 'ACCEPTED' && _bid.trackingNumber != null) ...[
                   const SizedBox(height: 16),
                   QrCodeCard(bidId: _bid.id),
+                ],
+                if (isSender && _bid.status == 'ACCEPTED' && _bid.confirmationCode != null) ...[
+                  const SizedBox(height: 16),
+                  _ConfirmationCodeCard(code: _bid.confirmationCode!),
                 ],
                 if (_bid.status == 'ACCEPTED') ...[
                   const SizedBox(height: 16),
@@ -1439,5 +1457,104 @@ class _OptionTile extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _ConfirmationCodeCard extends StatelessWidget {
+  final String code;
+  const _ConfirmationCodeCard({required this.code});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: kSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: kBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'CODE DE CONFIRMATION',
+            style: GoogleFonts.plusJakartaSans(
+                fontSize: 11, fontWeight: FontWeight.w700,
+                color: kTextSecondary, letterSpacing: 0.8),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            decoration: BoxDecoration(
+              color: kGreenLight,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              code,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.plusJakartaSans(
+                  fontSize: 36, fontWeight: FontWeight.w800,
+                  color: kGreenDark, letterSpacing: 12),
+            ),
+          ),
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: () {
+              Clipboard.setData(ClipboardData(text: code));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Code copié',
+                      style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500)),
+                  backgroundColor: kSuccess,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                border: Border.all(color: kGreenPrimary),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.copy_rounded, size: 16, color: kGreenPrimary),
+                  const SizedBox(width: 8),
+                  Text('Copier le code',
+                      style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13, fontWeight: FontWeight.w600, color: kGreenPrimary)),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: kWarning.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: kWarning.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.info_outline_rounded, size: 14, color: kWarning),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Transmettez ce code au destinataire par vos propres moyens (SMS, WhatsApp…). Le voyageur devra le saisir à la livraison.',
+                    style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12, color: kTextSecondary, height: 1.4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
   }
 }

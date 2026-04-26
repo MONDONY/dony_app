@@ -31,6 +31,7 @@ class BidModel {
   final String? arrivalTime;
   final double? pricePerKg;
   final String? trackingNumber;
+  final String? confirmationCode;
 
   const BidModel({
     required this.id,
@@ -60,6 +61,7 @@ class BidModel {
     this.arrivalTime,
     this.pricePerKg,
     this.trackingNumber,
+    this.confirmationCode,
   });
 
   factory BidModel.fromJson(Map<String, dynamic> json) =>

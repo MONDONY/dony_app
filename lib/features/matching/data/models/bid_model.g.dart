@@ -42,6 +42,7 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
       arrivalTime: json['arrivalTime'] as String?,
       pricePerKg: (json['pricePerKg'] as num?)?.toDouble(),
       trackingNumber: json['trackingNumber'] as String?,
+      confirmationCode: json['confirmationCode'] as String?,
     );
 
 Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
@@ -72,4 +73,5 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
       'arrivalTime': instance.arrivalTime,
       'pricePerKg': instance.pricePerKg,
       'trackingNumber': instance.trackingNumber,
+      'confirmationCode': instance.confirmationCode,
     };

@@ -17,6 +17,11 @@ class TrackingEventsRequested extends TrackingEvent {
   TrackingEventsRequested(this.bidId);
 }
 
+class TrackingConfirmCodeRequested extends TrackingEvent {
+  final String bidId;
+  TrackingConfirmCodeRequested(this.bidId);
+}
+
 class QrScanSubmitRequested extends TrackingEvent {
   final String bidId;
   final String eventType;
@@ -31,6 +36,12 @@ class QrScanSubmitRequested extends TrackingEvent {
     this.gpsLat,
     this.gpsLon,
   });
+}
+
+class ConfirmDeliveryRequested extends TrackingEvent {
+  final String bidId;
+  final String code;
+  ConfirmDeliveryRequested({required this.bidId, required this.code});
 }
 
 class OfflineSyncRequested extends TrackingEvent {}
