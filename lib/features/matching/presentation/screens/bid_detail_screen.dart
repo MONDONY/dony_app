@@ -72,7 +72,8 @@ class _BidDetailViewState extends State<_BidDetailView> {
   }
 
   Future<void> _loadPaymentStatus() async {
-    if (_bid.status != 'ACCEPTED') return;
+    // Charger le statut paiement pour PENDING et ACCEPTED — le paiement se fait dès la déclaration.
+    if (_bid.status == 'REJECTED' || _bid.status == 'CANCELLED') return;
     try {
       final payment = await getIt<PaymentRepository>().getPaymentForBid(_bid.id);
       if (mounted) setState(() { _existingPayment = payment; _paymentLoaded = true; });
@@ -141,8 +142,8 @@ class _BidDetailViewState extends State<_BidDetailView> {
               _paymentLoaded = false;
             }
           });
-          // Recharger le statut paiement si le bid est ACCEPTED et pas encore chargé
-          if (state.bid.status == 'ACCEPTED' && !_paymentLoaded) {
+          // Recharger le statut paiement si PENDING ou ACCEPTED et pas encore chargé
+          if ((state.bid.status == 'PENDING' || state.bid.status == 'ACCEPTED') && !_paymentLoaded) {
             _loadPaymentStatus();
           }
         } else if (state is BidError) {
@@ -865,27 +866,12 @@ class _ConfirmPresenceBar extends StatelessWidget {
 
 class _EscrowBadge extends StatelessWidget {
   final PaymentModel payment;
-  const _EscrowBadge({required this.payment});
+  final String bidStatus;
+  const _EscrowBadge({required this.payment, required this.bidStatus});
 
   @override
   Widget build(BuildContext context) {
-    final (IconData icon, Color color, String label) = switch (payment.status) {
-      'RELEASED' => (
-          Icons.check_circle_rounded,
-          kSuccess,
-          'Voyageur payé — ${payment.amount.toStringAsFixed(2)} €',
-        ),
-      'REFUNDED' => (
-          Icons.replay_rounded,
-          kTextSecondary,
-          'Remboursement en cours',
-        ),
-      _ => (
-          Icons.lock_rounded,
-          kSuccess,
-          'Paiement sécurisé — ${payment.amount.toStringAsFixed(2)} €',
-        ),
-    };
+    final (IconData icon, Color color, String label) = _resolve();
 
     return Container(
       height: 52,
@@ -899,14 +885,54 @@ class _EscrowBadge extends StatelessWidget {
         children: [
           Icon(icon, color: color, size: 18),
           const SizedBox(width: 8),
-          Text(
-            label,
-            style: GoogleFonts.plusJakartaSans(
-                fontWeight: FontWeight.w600, fontSize: 14, color: color),
+          Flexible(
+            child: Text(
+              label,
+              style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w600, fontSize: 13, color: color),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
     );
+  }
+
+  (IconData, Color, String) _resolve() {
+    final amount = payment.amount.toStringAsFixed(2);
+    return switch (payment.status) {
+      'RELEASED' => (
+          Icons.check_circle_rounded,
+          kSuccess,
+          'Voyageur payé — $amount €',
+        ),
+      'REFUNDED' => (
+          Icons.replay_rounded,
+          kTextSecondary,
+          'Remboursé — $amount €',
+        ),
+      'FAILED' => (
+          Icons.error_outline_rounded,
+          kError,
+          'Paiement échoué',
+        ),
+      // PENDING ou ESCROW — message selon statut du bid
+      _ when bidStatus == 'PENDING' => (
+          Icons.lock_clock_rounded,
+          const Color(0xFFF59E0B), // kWarning
+          'Paiement sécurisé · En attente du voyageur',
+        ),
+      _ when bidStatus == 'ACCEPTED' => (
+          Icons.lock_rounded,
+          kSuccess,
+          'Paiement sécurisé — $amount €',
+        ),
+      _ => (
+          Icons.lock_rounded,
+          kSuccess,
+          'Paiement sécurisé — $amount €',
+        ),
+    };
   }
 }
 
@@ -927,8 +953,6 @@ class _SenderActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isPending = bid.status == 'PENDING';
-
     return Container(
       color: kSurface,
       padding: EdgeInsets.fromLTRB(
@@ -953,7 +977,8 @@ class _SenderActionBar extends StatelessWidget {
             ),
           ),
 
-          if (bid.status == 'ACCEPTED') ...[
+          // Badge paiement — visible pour PENDING et ACCEPTED
+          if (bid.status == 'PENDING' || bid.status == 'ACCEPTED') ...[
             const SizedBox(width: 12),
             Expanded(
               child: !paymentLoaded
@@ -972,13 +997,9 @@ class _SenderActionBar extends StatelessWidget {
                         ),
                       ),
                     )
-                  : existingPayment != null &&
-                          existingPayment!.bidId == bid.id &&
-                          (existingPayment!.status == 'ESCROW' ||
-                              existingPayment!.status == 'PENDING' ||
-                              existingPayment!.status == 'RELEASED' ||
-                              existingPayment!.status == 'REFUNDED')
-                      ? _EscrowBadge(payment: existingPayment!)
+                  : existingPayment != null
+                      ? _EscrowBadge(payment: existingPayment!, bidStatus: bid.status)
+                      // Aucun paiement trouvé → le sender doit payer (cas de reprise)
                       : ElevatedButton.icon(
                           onPressed: () =>
                               context.push('/payments/pay', extra: bid),
@@ -988,8 +1009,7 @@ class _SenderActionBar extends StatelessWidget {
                             backgroundColor: kGreenPrimary,
                             foregroundColor: Colors.white,
                             elevation: 0,
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 14),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14)),
                           ),
@@ -997,67 +1017,14 @@ class _SenderActionBar extends StatelessWidget {
             ),
           ],
 
-          if (isPending) ...[
-            const SizedBox(width: 12),
-            // Annuler la demande — seulement pour PENDING
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: isLoading ? null : () => _showCancelDialog(context),
-                icon: isLoading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Icon(Icons.block_rounded, size: 18),
-                label: const Text('Annuler la demande'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kError,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-            ),
-          ],
+          // Note: pour PENDING, le badge paiement occupe déjà la place → l'annulation
+          // est accessible via le menu "..." (_SenderOptionsSheet).
+
         ],
       ),
     );
   }
 
-  void _showCancelDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Annuler la demande',
-            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 17)),
-        content: Text(
-            'Voulez-vous vraiment annuler votre demande d\'envoi ? Cette action est définitive.',
-            style: GoogleFonts.plusJakartaSans(fontSize: 14, color: kTextSecondary)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Non',
-                style: GoogleFonts.plusJakartaSans(color: kTextSecondary, fontWeight: FontWeight.w600)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              context.read<BidBloc>().add(BidCancelRequested(bid.id));
-            },
-            style: ElevatedButton.styleFrom(
-                backgroundColor: kError, foregroundColor: Colors.white, elevation: 0),
-            child: Text('Oui, annuler',
-                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 // ── Options bottom sheet (expéditeur) ────────────────────────────────────────
@@ -1126,6 +1093,22 @@ class _SenderOptionsSheet extends StatelessWidget {
           ),
 
           const SizedBox(height: 8),
+
+          // Annuler la demande (seulement si PENDING et paiement pas encore capturé)
+          if (bid.status == 'PENDING') ...[
+            _OptionTile(
+              icon: Icons.block_rounded,
+              iconColor: kError,
+              iconBg: const Color(0xFFFFEBEE),
+              label: 'Annuler la demande',
+              subtitle: 'Votre paiement sera remboursé automatiquement',
+              onTap: () {
+                Navigator.pop(context);
+                _showCancelDialog(outerContext);
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
 
           // Supprimer (seulement si terminé / refusé / annulé)
           if (bid.status == 'COMPLETED' ||
@@ -1238,6 +1221,37 @@ class _SenderOptionsSheet extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showCancelDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Annuler la demande',
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 17)),
+        content: Text(
+            'Voulez-vous vraiment annuler votre demande d\'envoi ? Cette action est définitive.',
+            style: GoogleFonts.plusJakartaSans(fontSize: 14, color: kTextSecondary)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Non',
+                style: GoogleFonts.plusJakartaSans(color: kTextSecondary, fontWeight: FontWeight.w600)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<BidBloc>().add(BidCancelRequested(bid.id));
+            },
+            style: ElevatedButton.styleFrom(
+                backgroundColor: kError, foregroundColor: Colors.white, elevation: 0),
+            child: Text('Oui, annuler',
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+          ),
+        ],
       ),
     );
   }

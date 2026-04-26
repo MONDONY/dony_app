@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class PaymentScreen extends StatelessWidget {
@@ -362,54 +363,72 @@ class _EscrowConfirmedView extends StatelessWidget {
     return Scaffold(
       backgroundColor: kBackground,
       appBar: AppBar(
-        title: Text('Payer mon envoi',
+        title: Text('Paiement confirmé',
             style: GoogleFonts.plusJakartaSans(
                 fontWeight: FontWeight.w700, fontSize: 18)),
         backgroundColor: kSurface,
         elevation: 0,
+        automaticallyImplyLeading: false,
         bottom: const PreferredSize(
             preferredSize: Size.fromHeight(1), child: Divider(height: 1)),
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: kSuccess.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
+      body: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 84,
+              height: 84,
+              decoration: BoxDecoration(
+                color: kSuccess.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.check_circle_rounded,
+                  color: kSuccess, size: 48),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Envoi réservé !',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                color: kTextPrimary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '${amount.toStringAsFixed(2)} € sont retenus en escrow et seront versés au voyageur après confirmation de livraison par le destinataire.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.plusJakartaSans(
+                  fontSize: 15, color: kTextSecondary, height: 1.5),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: () => context.go('/home'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kGreenPrimary,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
                 ),
-                child:
-                    const Icon(Icons.lock_rounded, color: kSuccess, size: 44),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Paiement sécurisé ✓',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: kTextPrimary,
+                child: Text(
+                  'Voir mes envois',
+                  style: GoogleFonts.plusJakartaSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white),
                 ),
               ),
-              const SizedBox(height: 12),
-              Text(
-                '${amount.toStringAsFixed(2)} € sont retenus en escrow et seront versés au voyageur après confirmation de livraison.',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.plusJakartaSans(
-                    fontSize: 15, color: kTextSecondary, height: 1.5),
-              ),
-            ],
-          )
-              .animate()
-              .fadeIn(duration: 400.ms)
-              .scale(
-                  begin: const Offset(0.9, 0.9),
-                  curve: Curves.easeOutCubic),
-        ),
+            ),
+          ],
+        )
+            .animate()
+            .fadeIn(duration: 400.ms)
+            .scale(begin: const Offset(0.92, 0.92), curve: Curves.easeOutCubic),
       ),
     );
   }

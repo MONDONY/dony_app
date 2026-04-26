@@ -103,12 +103,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     return BlocConsumer<BidBloc, BidState>(
       listener: (context, state) {
         if (state is BidCreated) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Demande envoyée !',
-                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600)),
-            backgroundColor: kSuccess,
-          ));
-          context.go('/home');
+          // Le bid est créé — redirige immédiatement vers le paiement.
+          // context.go remplace la pile pour éviter de revenir au formulaire.
+          context.go('/payments/pay', extra: state.bid);
         } else if (state is BidError) {
           _showError(state.message);
         }
