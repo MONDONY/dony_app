@@ -1,4 +1,6 @@
-abstract class BidEvent {}
+abstract class BidEvent {
+  const BidEvent();
+}
 
 class BidCreateRequested extends BidEvent {
   final String announcementId;
@@ -26,6 +28,13 @@ class BidListRequested extends BidEvent {
 }
 
 class BidMyListRequested extends BidEvent {}
+
+/// Rafraîchit la liste si les données sont périmées (TTL 3 min).
+/// [force] = true bypasse le TTL (pull-to-refresh manuel).
+class BidMyListAutoRefreshRequested extends BidEvent {
+  final bool force;
+  const BidMyListAutoRefreshRequested({this.force = false});
+}
 
 class BidDetailRequested extends BidEvent {
   final String bidId;

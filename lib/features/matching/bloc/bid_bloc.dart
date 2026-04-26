@@ -7,6 +7,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class BidBloc extends Bloc<BidEvent, BidState> {
   final BidRepository _repository;
 
+  static const _myBidsTtl = Duration(minutes: 3);
+
   BidBloc(this._repository) : super(BidInitial()) {
     on<BidCreateRequested>(_onCreateRequested);
     on<BidListRequested>(_onListRequested);
@@ -16,6 +18,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     on<BidHandoverRequested>(_onHandoverRequested);
     on<BidConfirmPresenceRequested>(_onConfirmPresenceRequested);
     on<BidMyListRequested>(_onMyListRequested);
+    on<BidMyListAutoRefreshRequested>(_onMyListAutoRefreshRequested);
     on<BidCancelRequested>(_onCancelRequested);
     on<BidHideRequested>(_onHideRequested);
     on<BidDeleteRequested>(_onDeleteRequested);
@@ -161,6 +164,45 @@ class BidBloc extends Bloc<BidEvent, BidState> {
       emit(BidError(detail));
     } catch (e) {
       emit(BidError(e.toString()));
+    }
+  }
+
+  Future<void> _onMyListAutoRefreshRequested(
+    BidMyListAutoRefreshRequested event,
+    Emitter<BidState> emit,
+  ) async {
+    final current = state;
+
+    if (current is BidListLoaded) {
+      final stale = DateTime.now().difference(current.fetchedAt) > _myBidsTtl;
+      // Données fraîches et pas de force → rien à faire
+      if (!stale && !event.force) return;
+
+      // Données périmées → refresh silencieux (pas de BidLoading, l'UI reste visible)
+      emit(BidListLoaded(current.bids,
+          fetchedAt: current.fetchedAt, isRefreshing: true));
+      try {
+        final bids = await _repository.getMyBids();
+        emit(BidListLoaded(bids));
+      } on DioException catch (_) {
+        // On garde les anciennes données en cas d'erreur réseau
+        emit(BidListLoaded(current.bids, fetchedAt: current.fetchedAt));
+      } catch (_) {
+        emit(BidListLoaded(current.bids, fetchedAt: current.fetchedAt));
+      }
+    } else {
+      // Pas encore de données → chargement initial normal
+      emit(BidLoading());
+      try {
+        final bids = await _repository.getMyBids();
+        emit(BidListLoaded(bids));
+      } on DioException catch (e) {
+        final detail =
+            e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
+        emit(BidError(detail));
+      } catch (e) {
+        emit(BidError(e.toString()));
+      }
     }
   }
 

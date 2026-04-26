@@ -1,3 +1,4 @@
+import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -33,6 +34,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<HiveService>(() => HiveService());
   getIt.registerLazySingleton<ApiClient>(() => ApiClient(baseUrl: apiBaseUrl));
   getIt.registerLazySingleton<NotificationService>(() => NotificationService());
+  getIt.registerLazySingleton<EnvoisRefreshNotifier>(() => EnvoisRefreshNotifier());
   getIt.registerLazySingleton<SavedTripsService>(
     () => SavedTripsService(getIt<HiveService>()),
   );

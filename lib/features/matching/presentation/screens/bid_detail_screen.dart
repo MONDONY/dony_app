@@ -197,6 +197,12 @@ class _BidDetailViewState extends State<_BidDetailView> {
                   const SizedBox(height: 16),
                   _TripDetailsCard(bid: _bid),
                 ],
+                if (isSender &&
+                    (_bid.status == 'ACCEPTED' ||
+                        _bid.status == 'COMPLETED')) ...[
+                  const SizedBox(height: 16),
+                  _TravelerCard(bid: _bid),
+                ],
                 const SizedBox(height: 16),
                 if (!isSender) _SenderCard(bid: _bid),
                 if (!isSender) const SizedBox(height: 16),
@@ -270,6 +276,11 @@ class _StatusBanner extends StatelessWidget {
         color = kError;
         label = 'Demande refusée';
         icon = Icons.cancel_outlined;
+        break;
+      case 'COMPLETED':
+        color = kSuccess;
+        label = 'Livraison confirmée';
+        icon = Icons.verified_rounded;
         break;
       case 'CANCELLED':
         color = kTextSecondary;
@@ -357,6 +368,104 @@ class _SenderCard extends StatelessWidget {
     );
   }
 }
+
+// ── Traveler card (visible to sender once bid is accepted or completed) ──────
+
+class _TravelerCard extends StatelessWidget {
+  final BidModel bid;
+  const _TravelerCard({required this.bid});
+
+  String get _initials {
+    final name = bid.travelerName ?? '';
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    if (parts[0].isNotEmpty) return parts[0][0].toUpperCase();
+    return '?';
+  }
+
+  void _openProfile(BuildContext context) {
+    context.push('/traveler/${bid.announcementId}');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final name = bid.travelerName ?? 'Voyageur';
+    final phone = bid.travelerPhone;
+
+    return _Card(
+      title: 'Voyageur',
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: kGreenLight,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Center(
+              child: Text(
+                _initials,
+                style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    color: kGreenPrimary),
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                      color: kTextPrimary),
+                ),
+                if (phone != null) ...[
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      const Icon(Icons.phone_rounded,
+                          size: 12, color: kTextSecondary),
+                      const SizedBox(width: 4),
+                      Text(
+                        phone,
+                        style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13, color: kTextSecondary),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () => _openProfile(context),
+            style: TextButton.styleFrom(
+              foregroundColor: kGreenPrimary,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              backgroundColor: kGreenLight,
+            ),
+            child: Text(
+              'Profil',
+              style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w600, fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Package card ──────────────────────────────────────────────────────────────
 
 class _PackageCard extends StatelessWidget {
   final BidModel bid;

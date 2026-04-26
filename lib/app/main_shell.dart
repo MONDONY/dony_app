@@ -1,4 +1,6 @@
 import 'package:dony/app/theme.dart';
+import 'package:dony/core/di/envois_refresh_notifier.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,6 +11,9 @@ class MainShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
   void _onTap(int index) {
+    if (index == 1) {
+      getIt<EnvoisRefreshNotifier>().requestRefresh();
+    }
     navigationShell.goBranch(
       index,
       initialLocation: index == navigationShell.currentIndex,

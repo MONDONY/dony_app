@@ -183,6 +183,15 @@ final appRouter = GoRouter(
           const _PlaceholderScreen(title: 'Admin'),
     ),
 
+    // ── Profil voyageur global (hors shell, pas de duplicate key) ────────
+    GoRoute(
+      path: '/traveler/:announcementId',
+      builder: (context, state) {
+        final announcementId = state.pathParameters['announcementId']!;
+        return TravelerProfileLoaderScreen(announcementId: announcementId);
+      },
+    ),
+
     // ── Shell principal avec Bottom Navigation ───────────────────────────
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>

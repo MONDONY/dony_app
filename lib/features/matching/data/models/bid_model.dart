@@ -33,6 +33,9 @@ class BidModel {
   final String? trackingNumber;
   final String? trackingToken;
   final String? confirmationCode;
+  final String? travelerId;
+  final String? travelerName;
+  final String? travelerPhone;
 
   const BidModel({
     required this.id,
@@ -64,6 +67,9 @@ class BidModel {
     this.trackingNumber,
     this.trackingToken,
     this.confirmationCode,
+    this.travelerId,
+    this.travelerName,
+    this.travelerPhone,
   });
 
   factory BidModel.fromJson(Map<String, dynamic> json) =>

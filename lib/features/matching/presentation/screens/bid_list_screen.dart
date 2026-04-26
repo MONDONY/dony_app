@@ -297,6 +297,8 @@ class _BidCard extends StatelessWidget {
         return 'Accepté';
       case 'REJECTED':
         return 'Refusé';
+      case 'COMPLETED':
+        return 'Livré';
       case 'CANCELLED':
         return 'Annulé';
       default:

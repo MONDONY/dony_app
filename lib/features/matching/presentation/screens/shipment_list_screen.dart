@@ -1,4 +1,5 @@
 import 'package:dony/app/theme.dart';
+import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -25,16 +26,27 @@ class ShipmentListScreen extends StatefulWidget {
 class _ShipmentListScreenState extends State<ShipmentListScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  late final EnvoisRefreshNotifier _refreshNotifier;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    context.read<BidBloc>().add(BidMyListRequested());
+    _refreshNotifier = getIt<EnvoisRefreshNotifier>();
+    _refreshNotifier.addListener(_onTabRefreshRequested);
+    // Chargement initial via auto-refresh (TTL check, pas de double appel si déjà chargé)
+    context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
+  }
+
+  void _onTabRefreshRequested() {
+    if (mounted) {
+      context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
+    }
   }
 
   @override
   void dispose() {
+    _refreshNotifier.removeListener(_onTabRefreshRequested);
     _tabController.dispose();
     super.dispose();
   }
@@ -73,11 +85,14 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
                     b.status == 'CANCELLED')
                 .toList();
 
-            return RefreshIndicator(
-              color: kGreenPrimary,
-              onRefresh: () async =>
-                  context.read<BidBloc>().add(BidMyListRequested()),
-              child: NestedScrollView(
+            return Stack(
+              children: [
+                RefreshIndicator(
+                  color: kGreenPrimary,
+                  onRefresh: () async => context
+                      .read<BidBloc>()
+                      .add(const BidMyListAutoRefreshRequested(force: true)),
+                  child: NestedScrollView(
                 headerSliverBuilder: (context, _) => [
                   SliverToBoxAdapter(
                     child: _EnvoisHeader(
@@ -124,6 +139,14 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
                   ],
                 ),
               ),
+                ),
+                if (state.isRefreshing)
+                  const LinearProgressIndicator(
+                    backgroundColor: Colors.transparent,
+                    color: kGreenPrimary,
+                    minHeight: 2,
+                  ),
+              ],
             );
           }
           return const SizedBox();

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/app/theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/data/services/saved_trips_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,8 +14,15 @@ import 'package:intl/intl.dart';
 
 class TravelerProfileScreen extends StatefulWidget {
   final AnnouncementModel announcement;
+  /// When true: hides trip/tarif/handover sections and the "Envoyer un colis" CTA.
+  /// Used when consulting a traveler profile outside of the search flow.
+  final bool consultOnly;
 
-  const TravelerProfileScreen({super.key, required this.announcement});
+  const TravelerProfileScreen({
+    super.key,
+    required this.announcement,
+    this.consultOnly = false,
+  });
 
   @override
   State<TravelerProfileScreen> createState() => _TravelerProfileScreenState();
@@ -70,6 +78,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
   Widget build(BuildContext context) {
     final traveler = _announcement.traveler;
     final isKiloPro = traveler?.kiloPro ?? false;
+    final consultOnly = widget.consultOnly;
 
     return Scaffold(
       backgroundColor: kBackground,
@@ -85,20 +94,22 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
           onPressed: () => context.pop(),
         ),
         actions: [
-          IconButton(
-            icon: Icon(
-              _isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-              color: _isSaved ? kGreenPrimary : kTextSecondary,
-              size: 24,
+          if (!consultOnly) ...[
+            IconButton(
+              icon: Icon(
+                _isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                color: _isSaved ? kGreenPrimary : kTextSecondary,
+                size: 24,
+              ),
+              onPressed: _toggleSave,
+              tooltip: _isSaved ? 'Retirer des sauvegardes' : 'Sauvegarder ce trajet',
             ),
-            onPressed: _toggleSave,
-            tooltip: _isSaved ? 'Retirer des sauvegardes' : 'Sauvegarder ce trajet',
-          ),
-          IconButton(
-            icon: const Icon(Icons.chat_bubble_outline_rounded, color: kTextSecondary, size: 22),
-            onPressed: () {}, // TODO: messagerie
-            tooltip: 'Contacter',
-          ),
+            IconButton(
+              icon: const Icon(Icons.chat_bubble_outline_rounded, color: kTextSecondary, size: 22),
+              onPressed: () {}, // TODO: messagerie
+              tooltip: 'Contacter',
+            ),
+          ],
         ],
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
@@ -108,7 +119,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 28, 20, 120),
+            padding: EdgeInsets.fromLTRB(20, 28, 20, consultOnly ? 40 : 120),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -147,6 +158,23 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                         letterSpacing: -0.3,
                       ),
                     ),
+                    if (traveler?.phoneNumber != null) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.phone_rounded, size: 13, color: kTextSecondary),
+                          const SizedBox(width: 5),
+                          Text(
+                            traveler!.phoneNumber!,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 14,
+                              color: kTextSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 10),
                     Wrap(
                       spacing: 8,
@@ -208,52 +236,54 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
 
                 const SizedBox(height: 24),
 
-                // ── Trajet proposé ───────────────────────────────────────
-                Text(
-                  'Trajet proposé',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: kTextPrimary,
+                if (!consultOnly) ...[
+                  // ── Trajet proposé ─────────────────────────────────────
+                  Text(
+                    'Trajet proposé',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: kTextPrimary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                _TripCard(announcement: _announcement).animate().fadeIn(delay: 80.ms),
+                  const SizedBox(height: 10),
+                  _TripCard(announcement: _announcement).animate().fadeIn(delay: 80.ms),
 
-                const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-                // ── Lieux de remise ──────────────────────────────────────
-                Text(
-                  'Lieux de remise',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: kTextPrimary,
+                  // ── Lieux de remise ────────────────────────────────────
+                  Text(
+                    'Lieux de remise',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: kTextPrimary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                _HandoverCard(announcement: _announcement).animate().fadeIn(delay: 110.ms),
+                  const SizedBox(height: 10),
+                  _HandoverCard(announcement: _announcement).animate().fadeIn(delay: 110.ms),
 
-                const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-                // ── Tarif ────────────────────────────────────────────────
-                Text(
-                  'Tarif',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: kTextPrimary,
+                  // ── Tarif ──────────────────────────────────────────────
+                  Text(
+                    'Tarif',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: kTextPrimary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                _TarifCard(announcement: _announcement).animate().fadeIn(delay: 150.ms),
+                  const SizedBox(height: 10),
+                  _TarifCard(announcement: _announcement).animate().fadeIn(delay: 150.ms),
 
-                const SizedBox(height: 20),
+                  const SizedBox(height: 20),
+                ],
 
                 // ── À propos ─────────────────────────────────────────────
                 _AboutSection(announcement: _announcement)
                     .animate()
-                    .fadeIn(delay: 190.ms),
+                    .fadeIn(delay: consultOnly ? 80.ms : 190.ms),
 
                 const SizedBox(height: 20),
 
@@ -269,53 +299,54 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                 const SizedBox(height: 10),
                 _ReviewsCard(announcement: _announcement)
                     .animate()
-                    .fadeIn(delay: 230.ms),
+                    .fadeIn(delay: consultOnly ? 130.ms : 230.ms),
               ],
             ),
           ),
 
-          // ── CTA fixe ────────────────────────────────────────────────
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: EdgeInsets.fromLTRB(
-                20,
-                14,
-                20,
-                MediaQuery.of(context).padding.bottom + 16,
-              ),
-              decoration: const BoxDecoration(
-                color: kSurface,
-                border: Border(top: BorderSide(color: kBorder)),
-              ),
-              child: SizedBox(
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: () => context.push(
-                    '/search/${_announcement.id}/bid',
-                    extra: _announcement,
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kGreenPrimary,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+          // ── CTA fixe (mode recherche uniquement) ─────────────────────
+          if (!consultOnly)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  14,
+                  20,
+                  MediaQuery.of(context).padding.bottom + 16,
+                ),
+                decoration: const BoxDecoration(
+                  color: kSurface,
+                  border: Border(top: BorderSide(color: kBorder)),
+                ),
+                child: SizedBox(
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: () => context.push(
+                      '/search/${_announcement.id}/bid',
+                      extra: _announcement,
                     ),
-                  ),
-                  child: Text(
-                    'Envoyer un colis',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kGreenPrimary,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: Text(
+                      'Envoyer un colis',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ).animate().slideY(begin: 0.5, duration: 280.ms, curve: Curves.easeOutCubic),
-          ),
+              ).animate().slideY(begin: 0.5, duration: 280.ms, curve: Curves.easeOutCubic),
+            ),
         ],
       ),
     );
@@ -1003,3 +1034,103 @@ class _ReviewTile extends StatelessWidget {
     );
   }
 }
+
+// ── Global loader — accessible depuis n'importe quel contexte ─────────────────
+
+class TravelerProfileLoaderScreen extends StatefulWidget {
+  final String announcementId;
+  const TravelerProfileLoaderScreen({super.key, required this.announcementId});
+
+  @override
+  State<TravelerProfileLoaderScreen> createState() =>
+      _TravelerProfileLoaderScreenState();
+}
+
+class _TravelerProfileLoaderScreenState
+    extends State<TravelerProfileLoaderScreen> {
+  AnnouncementModel? _announcement;
+  bool _hasError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetch();
+  }
+
+  Future<void> _fetch() async {
+    try {
+      final a = await getIt<AnnouncementRepository>()
+          .getAnnouncementDetail(widget.announcementId);
+      if (mounted) setState(() => _announcement = a);
+    } catch (_) {
+      if (mounted) setState(() => _hasError = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_hasError) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF4F6F8),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_rounded,
+                size: 20, color: Color(0xFF1E88E5)),
+            onPressed: () => context.pop(),
+          ),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline_rounded,
+                  size: 48, color: Color(0xFF6B7A8D)),
+              const SizedBox(height: 12),
+              Text(
+                'Impossible de charger le profil',
+                style: GoogleFonts.plusJakartaSans(
+                    fontSize: 15, color: const Color(0xFF6B7A8D)),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _hasError = false;
+                    _announcement = null;
+                  });
+                  _fetch();
+                },
+                child: const Text('Réessayer'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_announcement == null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF4F6F8),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_rounded,
+                size: 20, color: Color(0xFF1E88E5)),
+            onPressed: () => context.pop(),
+          ),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(color: Color(0xFF1E88E5)),
+        ),
+      );
+    }
+
+    return TravelerProfileScreen(announcement: _announcement!, consultOnly: true);
+  }
+}
+
