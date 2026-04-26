@@ -84,5 +84,13 @@ void main() {
 
       expect(() async => await repository.getNotifications(), throwsException);
     });
+
+    test('ack delegates to datasource', () async {
+      when(() => datasource.ack('n1')).thenAnswer((_) async {});
+
+      await repository.ack('n1');
+
+      verify(() => datasource.ack('n1')).called(1);
+    });
   });
 }

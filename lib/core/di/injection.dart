@@ -36,14 +36,14 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Core
   getIt.registerLazySingleton<HiveService>(() => HiveService());
   getIt.registerLazySingleton<ApiClient>(() => ApiClient(baseUrl: apiBaseUrl));
-  getIt.registerLazySingleton<NotificationService>(
-    () => NotificationService(getIt<ApiClient>()),
-  );
   getIt.registerLazySingleton<NotificationRemoteDatasource>(
     () => NotificationRemoteDatasource(getIt<ApiClient>()),
   );
   getIt.registerLazySingleton<NotificationRepository>(
     () => NotificationRepository(getIt<NotificationRemoteDatasource>()),
+  );
+  getIt.registerLazySingleton<NotificationService>(
+    () => NotificationService(getIt<ApiClient>(), getIt<NotificationRepository>()),
   );
   getIt.registerFactory<NotificationBloc>(
     () => NotificationBloc(getIt<NotificationRepository>()),

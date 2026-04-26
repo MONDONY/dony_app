@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -11,12 +12,20 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint('[FCM] Background message: ${message.messageId}');
 }
 
+const _criticalTypes = {
+  'PAYMENT_RELEASED',
+  'DELIVERY_CONFIRMED',
+  'DISPUTE_OPENED',
+};
+
 class NotificationService {
   final ApiClient _apiClient;
+  final NotificationRepository _repository;
 
-  NotificationService(this._apiClient);
+  NotificationService(this._apiClient, this._repository);
 
-  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  // late: deferred until initialize() so tests can instantiate this class without Firebase
+  late final FirebaseMessaging _fcm = FirebaseMessaging.instance;
   final _localNotifications = FlutterLocalNotificationsPlugin();
 
   // Broadcasts the GoRouter path to navigate to when a notification is tapped
@@ -91,7 +100,27 @@ class NotificationService {
     }
   }
 
+  Future<void> _ackIfCritical(Map<String, dynamic> data) async {
+    final type = data['type'] as String?;
+    final notificationId = data['notificationId'] as String?;
+    if (type == null || notificationId == null) return;
+    if (!_criticalTypes.contains(type)) return;
+    try {
+      await _repository.ack(notificationId);
+      debugPrint('[FCM] ACK sent for $type / $notificationId');
+    } catch (e) {
+      debugPrint('[FCM] ACK failed: $e');
+    }
+  }
+
+  @visibleForTesting
+  Future<void> testAckIfCritical(Map<String, dynamic> data) => _ackIfCritical(data);
+
+  @visibleForTesting
+  String? testRouteForMessage(Map<String, dynamic> data) => _routeForMessage(data);
+
   void _handleForegroundMessage(RemoteMessage message) {
+    _ackIfCritical(message.data);
     final notification = message.notification;
     if (notification == null) return;
 
@@ -119,6 +148,7 @@ class NotificationService {
   }
 
   void _handleNotificationTap(RemoteMessage message) {
+    _ackIfCritical(message.data);
     final route = _routeForMessage(message.data);
     if (route != null) {
       _navigationController.add(route);

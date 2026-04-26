@@ -142,5 +142,19 @@ void main() {
         verify(() => dio.delete('/notifications/notif-1')).called(1);
       });
     });
+
+    group('ack', () {
+      test('calls POST /notifications/{id}/ack', () async {
+        when(() => dio.post('/notifications/notif-1/ack'))
+            .thenAnswer((_) async => Response(
+                  statusCode: 204,
+                  requestOptions: RequestOptions(path: '/notifications/notif-1/ack'),
+                ));
+
+        await datasource.ack('notif-1');
+
+        verify(() => dio.post('/notifications/notif-1/ack')).called(1);
+      });
+    });
   });
 }

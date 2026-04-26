@@ -33,4 +33,8 @@ class NotificationRemoteDatasource {
   Future<void> deleteNotification(String id) async {
     await _apiClient.dio.delete('/notifications/$id');
   }
+
+  Future<void> ack(String id) async {
+    await _apiClient.dio.post('/notifications/$id/ack');
+  }
 }
