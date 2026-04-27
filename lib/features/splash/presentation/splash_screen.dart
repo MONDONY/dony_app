@@ -11,6 +11,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -55,6 +56,17 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _navigateNext() async {
+    // First-launch check: show onboarding once
+    final prefs = Hive.box('user_prefs');
+    final onboardingDone = prefs.get('onboarding_done', defaultValue: false) as bool;
+    if (!onboardingDone) {
+      await prefs.put('onboarding_done', true);
+      if (mounted) {
+        context.go('/onboarding');
+      }
+      return;
+    }
+
     final firebaseUser = FirebaseAuth.instance.currentUser;
     if (firebaseUser == null) {
       if (mounted) {
