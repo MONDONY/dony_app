@@ -46,6 +46,10 @@ abstract final class DonyColors {
   static const warningLight = Color(0xFFFFF3E0);
   static const info         = Color(0xFF1565C0);
   static const infoLight    = Color(0xFFE3F2FD);
+
+  // Avatar supplement
+  static const purple = Color(0xFF6A1B9A);
+  static const teal   = Color(0xFF00695C);
 }
 
 extension DonyStatusColors on ColorScheme {

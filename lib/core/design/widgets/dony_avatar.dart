@@ -43,9 +43,9 @@ class DonyAvatar extends StatelessWidget {
     DonyColors.green400,
     DonyColors.terra500,
     DonyColors.ink900,
-    Color(0xFF1565C0),
-    Color(0xFF6A1B9A),
-    Color(0xFF00695C),
+    DonyColors.info,
+    DonyColors.purple,
+    DonyColors.teal,
   ];
 
   Color get _bgColor {

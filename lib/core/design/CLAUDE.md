@@ -184,9 +184,10 @@ DonyBadge(
 
 ```dart
 DonyAvatar(
-  imageUrl: user.photoUrl,     // réseau — optionnel
-  initials: 'Ibrahima Diallo', // première lettre extraite
-  size: DonyAvatarSize.md,     // sm=32 | md=44 | lg=56
+  name: 'Ibrahima Diallo',   // initiales extraites automatiquement
+  imageUrl: user.photoUrl,   // optionnel
+  size: DonyAvatarSize.md,   // sm=32 | md=44 | lg=56 | xl=72
+  verified: false,           // optionnel — badge check vert
 )
 ```
 
