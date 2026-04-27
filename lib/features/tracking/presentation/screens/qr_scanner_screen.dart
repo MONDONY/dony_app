@@ -11,7 +11,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:native_exif/native_exif.dart';
@@ -25,36 +24,37 @@ class QrScannerScreen extends StatefulWidget {
 
 class _QrScannerScreenState extends State<QrScannerScreen> {
   final MobileScannerController _scanner = MobileScannerController();
-  bool _detected = false;
+
+  // ValueNotifier replaces setState for detected flag
+  final _detectedNotifier = ValueNotifier<bool>(false);
 
   @override
   void dispose() {
     _scanner.dispose();
+    _detectedNotifier.dispose();
     super.dispose();
   }
 
   void _onDetect(BarcodeCapture capture) {
-    if (_detected) return;
+    if (_detectedNotifier.value) return;
     final raw = capture.barcodes.firstOrNull?.rawValue;
     if (raw == null) return;
 
     final bidId = _extractBidId(raw);
     if (bidId == null) return;
 
-    setState(() => _detected = true);
+    _detectedNotifier.value = true;
     _scanner.stop();
     _showScanSheet(bidId);
   }
 
   String? _extractBidId(String raw) {
-    // URL format: .../tracking/{bidId}/scan
     final uri = Uri.tryParse(raw);
     if (uri == null) return null;
     final segments = uri.pathSegments;
     final idx = segments.indexOf('tracking');
     if (idx == -1 || idx + 1 >= segments.length) return null;
     final candidate = segments[idx + 1];
-    // Basic UUID check
     final uuidPattern = RegExp(
         r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
         caseSensitive: false);
@@ -72,7 +72,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
         child: _ScanConfirmSheet(
           bidId: bidId,
           onClose: () {
-            setState(() => _detected = false);
+            _detectedNotifier.value = false;
             _scanner.start();
           },
         ),
@@ -82,6 +82,8 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
     return BlocListener<TrackingBloc, TrackingState>(
       listener: (context, state) {
         if (state is QrScanSuccess) {
@@ -93,84 +95,178 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.black,
-        appBar: AppBar(
-          backgroundColor: Colors.black,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white, size: 20),
-            onPressed: () => context.pop(),
-          ),
-          title: Text(
-            'Scanner le QR code',
-            style: GoogleFonts.sora(
-                color: Colors.white, fontWeight: FontWeight.w700, fontSize: 18),
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.keyboard_rounded, color: Colors.white),
-              tooltip: 'Saisir le numéro manuellement',
-              onPressed: _showManualEntryDialog,
-            ),
-            IconButton(
-              icon: const Icon(Icons.flash_on_rounded, color: Colors.white),
-              onPressed: () => _scanner.toggleTorch(),
-            ),
-          ],
-        ),
-        body: Stack(
-          children: [
-            MobileScanner(
-              controller: _scanner,
-              onDetect: _onDetect,
-            ),
-            _ScanFrame(),
-            Positioned(
-              bottom: 40,
-              left: 0,
-              right: 0,
-              child: Column(
-                children: [
-                  Text(
-                    'Pointez la caméra vers le QR code du colis',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.sora(
-                        color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+        backgroundColor: DonyColors.ink900,
+        body: SafeArea(
+          child: Stack(
+            children: [
+              // Camera feed
+              MobileScanner(
+                controller: _scanner,
+                onDetect: _onDetect,
+              ),
+
+              // Top bar (dark overlay)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  color: DonyColors.ink900.withValues(alpha: 0.6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.sm,
+                    vertical: DonySpacing.sm,
                   ),
-                  const SizedBox(height: 12),
-                  GestureDetector(
-                    onTap: _showManualEntryDialog,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+                  child: Row(
+                    children: [
+                      // X close
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded,
+                            color: DonyColors.white),
+                        onPressed: () => context.pop(),
+                        tooltip: 'Fermer',
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                      // Title centered
+                      Expanded(
+                        child: Text(
+                          'Scan départ',
+                          textAlign: TextAlign.center,
+                          style: tt.bodyMedium?.copyWith(
+                            color: DonyColors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      // Flash
+                      IconButton(
+                        icon: const Icon(Icons.flash_on_rounded,
+                            color: DonyColors.white),
+                        onPressed: () => _scanner.toggleTorch(),
+                        tooltip: 'Lampe torche',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Context text below top bar
+              Positioned(
+                top: 72,
+                left: 0,
+                right: 0,
+                child: Column(
+                  children: [
+                    Text(
+                      'colis #A47C',
+                      style: tt.labelMedium?.copyWith(
+                        color: DonyColors.white.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    const SizedBox(height: DonySpacing.xs),
+                    Text(
+                      'Bonjour Aminata 👋',
+                      style: DonyTypography.caveat(
+                        fontSize: 28,
+                        color: DonyColors.white,
+                      ),
+                    ),
+                  ],
+                ).animate().fadeIn(duration: 400.ms),
+              ),
+
+              // QR scanner frame (center)
+              ValueListenableBuilder<bool>(
+                valueListenable: _detectedNotifier,
+                builder: (context, detected, _) {
+                  return Center(
+                    child: _ScanFrame(detected: detected),
+                  );
+                },
+              ),
+
+              // Step indicator + bottom action bar
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  color: DonyColors.ink900.withValues(alpha: 0.7),
+                  padding: const EdgeInsets.fromLTRB(
+                    DonySpacing.lg,
+                    DonySpacing.base,
+                    DonySpacing.lg,
+                    DonySpacing.xl,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Step indicator
+                      Text(
+                        'ÉTAPE 1 SUR 3',
+                        style: tt.labelSmall?.copyWith(
+                          color: DonyColors.white,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                      const SizedBox(height: DonySpacing.xs),
+                      Text(
+                        'Colis confirmé en valise',
+                        style: tt.bodySmall?.copyWith(
+                          color: DonyColors.white,
+                        ),
+                      ),
+                      const SizedBox(height: DonySpacing.base),
+                      // Action buttons
+                      Row(
                         children: [
-                          const Icon(Icons.keyboard_rounded, color: Colors.white, size: 16),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Saisir le numéro manuellement',
-                            style: GoogleFonts.sora(
-                                color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                          // Photo button (outlined white)
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _showManualEntryDialog,
+                              icon: const Icon(Icons.camera_alt_outlined,
+                                  color: DonyColors.white, size: 18),
+                              label: Text(
+                                'Photo',
+                                style: tt.labelLarge?.copyWith(
+                                  color: DonyColors.white,
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: DonyColors.white,
+                                side: const BorderSide(color: DonyColors.white),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(DonyRadius.lg),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: DonySpacing.md,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: DonySpacing.md),
+                          // Confirm button (green filled)
+                          Expanded(
+                            flex: 2,
+                            child: DonyButton(
+                              label: 'Confirmer & continuer',
+                              icon: Icons.check_rounded,
+                              onPressed: _showManualEntryDialog,
+                            ),
                           ),
                         ],
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ).animate().fadeIn(duration: 500.ms),
-            ),
-          ],
+                ).animate().fadeIn(duration: 500.ms),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   void _showManualEntryDialog() {
+    final tt = Theme.of(context).textTheme;
     _scanner.stop();
     final ctrl = TextEditingController();
     bool loading = false;
@@ -179,39 +275,39 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text(
-            'Numéro de suivi',
-            style: GoogleFonts.sora(fontSize: 17, fontWeight: FontWeight.w700),
-          ),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(DonyRadius.sheet)),
+          title: Text('Numéro de suivi', style: tt.headlineMedium),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Entrez le numéro DON-XXXXXX du colis à scanner.',
-                style: GoogleFonts.sora(fontSize: 13, color: DonyColors.grey400),
+                style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: DonySpacing.md),
               TextField(
                 controller: ctrl,
                 textCapitalization: TextCapitalization.characters,
                 decoration: InputDecoration(
                   hintText: 'DON-XXXXXX',
-                  hintStyle: GoogleFonts.sora(color: DonyColors.grey200),
-                  prefixIcon: const Icon(Icons.local_shipping_outlined, color: DonyColors.green400),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  hintStyle: tt.bodyMedium?.copyWith(color: DonyColors.grey400),
+                  prefixIcon: const Icon(Icons.local_shipping_outlined,
+                      color: DonyColors.green400),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(DonyRadius.md)),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: DonyColors.grey100),
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                    borderSide: const BorderSide(color: DonyColors.grey200),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: DonyColors.green400, width: 2),
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                    borderSide:
+                        const BorderSide(color: DonyColors.green400, width: 2),
                   ),
                 ),
-                style: GoogleFonts.sora(
-                    fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 1.5),
+                style: tt.titleLarge?.copyWith(letterSpacing: 1.5),
               ),
             ],
           ),
@@ -224,7 +320,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       _scanner.start();
                     },
               child: Text('Annuler',
-                  style: GoogleFonts.sora(color: DonyColors.grey400)),
+                  style: tt.bodyMedium?.copyWith(color: DonyColors.grey400)),
             ),
             ElevatedButton(
               onPressed: loading
@@ -238,7 +334,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                             .searchByTrackingNumber(number);
                         if (ctx.mounted) {
                           Navigator.of(ctx).pop();
-                          setState(() => _detected = true);
+                          _detectedNotifier.value = true;
                           _showScanSheet(result.bidId);
                         }
                       } catch (_) {
@@ -248,12 +344,14 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                             SnackBar(
                               content: Text(
                                 'Numéro introuvable. Vérifiez et réessayez.',
-                                style: GoogleFonts.sora(fontWeight: FontWeight.w500),
+                                style: tt.bodyMedium
+                                    ?.copyWith(fontWeight: FontWeight.w500),
                               ),
                               backgroundColor: DonyColors.error,
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
+                                  borderRadius:
+                                      BorderRadius.circular(DonyRadius.sm)),
                             ),
                           );
                         }
@@ -261,57 +359,56 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                     },
               style: ElevatedButton.styleFrom(
                 backgroundColor: DonyColors.green400,
-                foregroundColor: Colors.white,
+                foregroundColor: DonyColors.white,
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(DonyRadius.md)),
               ),
               child: loading
                   ? const SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: DonyColors.white),
                     )
-                  : Text('Confirmer',
-                      style: GoogleFonts.sora(fontWeight: FontWeight.w700)),
+                  : Text('Confirmer', style: tt.labelLarge),
             ),
           ],
         ),
       ),
     ).then((_) {
-      // Si fermé sans confirmer, relance le scanner
-      if (!_detected) _scanner.start();
+      if (!_detectedNotifier.value) _scanner.start();
     });
   }
 
   void _showQueuedDialog() {
+    final tt = Theme.of(context).textTheme;
     showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.sheet)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(DonySpacing.base),
               decoration: BoxDecoration(
                 color: DonyColors.warning.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.wifi_off_rounded, color: DonyColors.warning, size: 40),
+              child: const Icon(Icons.wifi_off_rounded,
+                  color: DonyColors.warning, size: 40),
             ),
-            const SizedBox(height: 16),
-            Text(
-              'Scan en attente',
-              style: GoogleFonts.sora(
-                  fontSize: 18, fontWeight: FontWeight.w800, color: DonyColors.ink900),
-            ),
-            const SizedBox(height: 6),
+            const SizedBox(height: DonySpacing.base),
+            Text('Scan en attente',
+                style: tt.headlineMedium?.copyWith(color: DonyColors.ink900)),
+            const SizedBox(height: DonySpacing.sm),
             Text(
               'Pas de connexion internet. Le scan sera synchronisé automatiquement dès que vous serez en ligne.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.sora(
-                  fontSize: 13, color: DonyColors.grey400, height: 1.4),
+              style: tt.bodySmall?.copyWith(color: DonyColors.grey400, height: 1.4),
             ),
           ],
         ),
@@ -325,12 +422,12 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: DonyColors.warning,
-                foregroundColor: Colors.white,
+                foregroundColor: DonyColors.white,
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(DonyRadius.lg)),
               ),
-              child: Text('Compris',
-                  style: GoogleFonts.sora(fontWeight: FontWeight.w700)),
+              child: Text('Compris', style: tt.labelLarge),
             ),
           ),
         ],
@@ -339,33 +436,31 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
   }
 
   void _showSuccessDialog(String label) {
+    final tt = Theme.of(context).textTheme;
     showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.sheet)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                color: Color(0xFFE8F5E9),
+              padding: const EdgeInsets.all(DonySpacing.base),
+              decoration: BoxDecoration(
+                color: DonyColors.successLight,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check_circle_rounded, color: DonyColors.success, size: 40),
+              child: const Icon(Icons.check_circle_rounded,
+                  color: DonyColors.success, size: 40),
             ),
-            const SizedBox(height: 16),
-            Text(
-              'Scan enregistré !',
-              style: GoogleFonts.sora(
-                  fontSize: 18, fontWeight: FontWeight.w800, color: DonyColors.ink900),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: GoogleFonts.sora(fontSize: 14, color: DonyColors.grey400),
-            ),
+            const SizedBox(height: DonySpacing.base),
+            Text('Scan enregistré !',
+                style: tt.headlineMedium?.copyWith(color: DonyColors.ink900)),
+            const SizedBox(height: DonySpacing.sm),
+            Text(label,
+                style: tt.bodySmall?.copyWith(color: DonyColors.grey400)),
           ],
         ),
         actions: [
@@ -378,12 +473,12 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: DonyColors.green400,
-                foregroundColor: Colors.white,
+                foregroundColor: DonyColors.white,
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(DonyRadius.lg)),
               ),
-              child: Text('Terminé',
-                  style: GoogleFonts.sora(fontWeight: FontWeight.w700)),
+              child: Text('Terminé', style: tt.labelLarge),
             ),
           ),
         ],
@@ -395,24 +490,48 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 // ── Scan frame overlay ────────────────────────────────────────────────────────
 
 class _ScanFrame extends StatelessWidget {
+  final bool detected;
+  const _ScanFrame({required this.detected});
+
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SizedBox(
-        width: 240,
-        height: 240,
-        child: Stack(
-          children: [
-            // corners
-            for (final pos in [
-              Alignment.topLeft,
-              Alignment.topRight,
-              Alignment.bottomLeft,
-              Alignment.bottomRight,
-            ])
-              Align(alignment: pos, child: _Corner(alignment: pos)),
-          ],
-        ),
+    return SizedBox(
+      width: 240,
+      height: 240,
+      child: Stack(
+        children: [
+          // Corner brackets
+          for (final pos in [
+            Alignment.topLeft,
+            Alignment.topRight,
+            Alignment.bottomLeft,
+            Alignment.bottomRight,
+          ])
+            Align(alignment: pos, child: _Corner(alignment: pos)),
+
+          // Success check overlay when detected
+          if (detected)
+            Center(
+              child: Container(
+                width: 72,
+                height: 72,
+                decoration: const BoxDecoration(
+                  color: DonyColors.success,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_circle_rounded,
+                  color: DonyColors.white,
+                  size: 44,
+                ),
+              ).animate().scale(
+                    begin: const Offset(0.5, 0.5),
+                    end: const Offset(1.0, 1.0),
+                    duration: 300.ms,
+                    curve: Curves.easeOutBack,
+                  ),
+            ),
+        ],
       ),
     );
   }
@@ -424,8 +543,10 @@ class _Corner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isLeft = alignment == Alignment.topLeft || alignment == Alignment.bottomLeft;
-    final isTop = alignment == Alignment.topLeft || alignment == Alignment.topRight;
+    final isLeft =
+        alignment == Alignment.topLeft || alignment == Alignment.bottomLeft;
+    final isTop =
+        alignment == Alignment.topLeft || alignment == Alignment.topRight;
 
     return SizedBox(
       width: 28,
@@ -445,7 +566,7 @@ class _CornerPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = DonyColors.green400
+      ..color = DonyColors.white
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -496,32 +617,39 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
   }
 
   Future<void> _pickPhoto() async {
-    setState(() { _loadingLocation = true; _photoTooBig = false; });
+    setState(() {
+      _loadingLocation = true;
+      _photoTooBig = false;
+    });
     try {
-      // Capture GPS before opening camera (CLAUDE.md: GPS captured at exact photo moment)
       Position? pos;
       try {
         final permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.always ||
             permission == LocationPermission.whileInUse) {
           pos = await Geolocator.getCurrentPosition(
-              locationSettings: const LocationSettings(accuracy: LocationAccuracy.high));
+              locationSettings:
+                  const LocationSettings(accuracy: LocationAccuracy.high));
         }
       } catch (_) {}
 
       final picker = ImagePicker();
       final picked = await picker.pickImage(
-          source: ImageSource.camera, imageQuality: 85, maxWidth: 1920, maxHeight: 1080);
+          source: ImageSource.camera,
+          imageQuality: 85,
+          maxWidth: 1920,
+          maxHeight: 1080);
 
       if (picked != null && mounted) {
-        // Client-side size guard (mirrors backend 10MB limit)
         final fileSize = await File(picked.path).length();
         if (fileSize > 10 * 1024 * 1024) {
-          setState(() { _photoTooBig = true; _loadingLocation = false; });
+          setState(() {
+            _photoTooBig = true;
+            _loadingLocation = false;
+          });
           return;
         }
 
-        // Embed GPS in EXIF so the stored file carries location evidence
         if (pos != null) {
           await _writeGpsExif(picked.path, pos);
         }
@@ -549,12 +677,9 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
         'GPSLongitudeRef': pos.longitude >= 0 ? 'E' : 'W',
       });
       await exif.close();
-    } catch (_) {
-      // Non-blocking — scan still proceeds without EXIF on failure
-    }
+    } catch (_) {}
   }
 
-  // Converts decimal degrees to EXIF rational DMS: "degrees/1,minutes/1,seconds*100/100"
   String _toExifDms(double decimal) {
     final deg = decimal.floor();
     final minFull = (decimal - deg) * 60;
@@ -582,17 +707,27 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Container(
       decoration: const BoxDecoration(
         color: DonyColors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(DonyRadius.sheet),
+        ),
       ),
-      padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPad + 20),
+      padding: EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        0,
+        DonySpacing.lg,
+        bottomPad + DonySpacing.lg,
+      ),
       child: BlocConsumer<TrackingBloc, TrackingState>(
         listener: (context, state) {
-          if (state is DeliveryConfirmSuccess || state is QrScanSuccess || state is QrScanQueued) {
+          if (state is DeliveryConfirmSuccess ||
+              state is QrScanSuccess ||
+              state is QrScanQueued) {
             Navigator.pop(context);
             widget.onClose();
           }
@@ -609,24 +744,25 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
               // Handle
               Center(
                 child: Container(
-                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
                   width: 40,
                   height: 4,
-                  decoration:
-                      BoxDecoration(color: DonyColors.grey100, borderRadius: BorderRadius.circular(2)),
+                  decoration: BoxDecoration(
+                    color: DonyColors.grey200,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
 
               Row(
                 children: [
                   Expanded(
-                    child: Text('QR scanné',
-                        style: GoogleFonts.sora(
-                            fontSize: 18, fontWeight: FontWeight.w800, color: DonyColors.ink900)),
+                    child: Text('QR scanné', style: tt.headlineMedium),
                   ),
                   if (!isSubmitting)
                     IconButton(
-                      icon: const Icon(Icons.close_rounded, color: DonyColors.grey400),
+                      icon: const Icon(Icons.close_rounded,
+                          color: DonyColors.grey400),
                       onPressed: () {
                         Navigator.pop(context);
                         widget.onClose();
@@ -635,40 +771,55 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                 ],
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: DonySpacing.base),
 
               // Event type selector
-              Text('Type d\'étape',
-                  style: GoogleFonts.sora(
-                      fontSize: 13, fontWeight: FontWeight.w700,
-                      color: DonyColors.grey400, letterSpacing: 0.5)),
-              const SizedBox(height: 10),
+              Text(
+                'Type d\'étape',
+                style: tt.labelMedium?.copyWith(color: DonyColors.grey400),
+              ),
+              const SizedBox(height: DonySpacing.sm),
               Row(
                 children: _eventTypes.map((type) {
                   final isSelected = _eventType == type.$1;
                   return Expanded(
                     child: GestureDetector(
-                      onTap: isSubmitting ? null : () => setState(() => _eventType = type.$1),
+                      onTap: isSubmitting
+                          ? null
+                          : () => setState(() => _eventType = type.$1),
                       child: AnimatedContainer(
                         duration: 200.ms,
-                        margin: const EdgeInsets.only(right: 8),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        margin: const EdgeInsets.only(right: DonySpacing.sm),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: DonySpacing.md),
                         decoration: BoxDecoration(
-                          color: isSelected ? DonyColors.green400 : DonyColors.grey50,
-                          borderRadius: BorderRadius.circular(12),
+                          color: isSelected
+                              ? DonyColors.green400
+                              : DonyColors.grey100,
+                          borderRadius: BorderRadius.circular(DonyRadius.md),
                           border: Border.all(
-                              color: isSelected ? DonyColors.green400 : DonyColors.grey100, width: 1.5),
+                            color: isSelected
+                                ? DonyColors.green400
+                                : DonyColors.grey200,
+                            width: 1.5,
+                          ),
                         ),
                         child: Column(
                           children: [
                             Icon(type.$3,
-                                color: isSelected ? Colors.white : DonyColors.grey400, size: 20),
-                            const SizedBox(height: 4),
-                            Text(type.$2,
-                                style: GoogleFonts.sora(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: isSelected ? Colors.white : DonyColors.grey400)),
+                                color: isSelected
+                                    ? DonyColors.white
+                                    : DonyColors.grey400,
+                                size: 20),
+                            const SizedBox(height: DonySpacing.xs),
+                            Text(
+                              type.$2,
+                              style: tt.labelSmall?.copyWith(
+                                color: isSelected
+                                    ? DonyColors.white
+                                    : DonyColors.grey400,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -677,69 +828,78 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                 }).toList(),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: DonySpacing.lg),
 
-              // ARRIVEE : code input — Photo : DEPART / TRANSIT
+              // ARRIVEE: code input — DEPART/TRANSIT: photo
               if (isArrivee) ...[
-                Text('Code de confirmation',
-                    style: GoogleFonts.sora(
-                        fontSize: 13, fontWeight: FontWeight.w700,
-                        color: DonyColors.grey400, letterSpacing: 0.5)),
-                const SizedBox(height: 6),
+                Text(
+                  'Code de confirmation',
+                  style: tt.labelMedium?.copyWith(color: DonyColors.grey400),
+                ),
+                const SizedBox(height: DonySpacing.sm),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.md,
+                    vertical: DonySpacing.sm,
+                  ),
                   decoration: BoxDecoration(
                     color: DonyColors.green100,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.info_outline_rounded, color: DonyColors.green400, size: 15),
-                      const SizedBox(width: 8),
+                      const Icon(Icons.info_outline_rounded,
+                          color: DonyColors.green400, size: 15),
+                      const SizedBox(width: DonySpacing.sm),
                       Expanded(
                         child: Text(
                           'Demandez le code à 6 chiffres au destinataire. Il l\'a reçu de l\'expéditeur.',
-                          style: GoogleFonts.sora(
-                              fontSize: 12, color: DonyColors.green600, fontWeight: FontWeight.w500),
+                          style: tt.bodySmall?.copyWith(
+                            color: DonyColors.green600,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: DonySpacing.md),
                 TextField(
                   controller: _codeController,
                   enabled: !isSubmitting,
                   keyboardType: TextInputType.number,
                   maxLength: 6,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.sora(
-                      fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: 10),
+                  style: tt.displayMedium?.copyWith(letterSpacing: 10),
                   decoration: InputDecoration(
                     counterText: '',
                     hintText: '------',
-                    hintStyle: GoogleFonts.sora(
-                        fontSize: 28, color: DonyColors.grey100, letterSpacing: 10),
+                    hintStyle: tt.displayMedium?.copyWith(
+                      color: DonyColors.grey200,
+                      letterSpacing: 10,
+                    ),
                     filled: true,
-                    fillColor: DonyColors.grey50,
+                    fillColor: DonyColors.grey100,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: DonyColors.grey100),
+                      borderRadius: BorderRadius.circular(DonyRadius.md),
+                      borderSide: const BorderSide(color: DonyColors.grey200),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: DonyColors.green400, width: 2),
+                      borderRadius: BorderRadius.circular(DonyRadius.md),
+                      borderSide: const BorderSide(
+                          color: DonyColors.green400, width: 2),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                    contentPadding:
+                        const EdgeInsets.symmetric(vertical: DonySpacing.base),
                   ),
                 ),
               ] else ...[
-                Text('Photo du colis',
-                    style: GoogleFonts.sora(
-                        fontSize: 13, fontWeight: FontWeight.w700,
-                        color: DonyColors.grey400, letterSpacing: 0.5)),
-                const SizedBox(height: 10),
+                Text(
+                  'Photo du colis',
+                  style: tt.labelMedium?.copyWith(color: DonyColors.grey400),
+                ),
+                const SizedBox(height: DonySpacing.sm),
 
                 if (_photo == null)
                   GestureDetector(
@@ -747,9 +907,9 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                     child: Container(
                       height: 80,
                       decoration: BoxDecoration(
-                        color: DonyColors.grey50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: DonyColors.grey100),
+                        color: DonyColors.grey100,
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
+                        border: Border.all(color: DonyColors.grey200),
                       ),
                       child: Center(
                         child: _loadingLocation
@@ -757,18 +917,20 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                                 width: 20,
                                 height: 20,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: DonyColors.green400))
+                                    strokeWidth: 2,
+                                    color: DonyColors.green400),
+                              )
                             : Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   const Icon(Icons.camera_alt_rounded,
                                       color: DonyColors.green400, size: 20),
-                                  const SizedBox(width: 8),
-                                  Text('Prendre une photo',
-                                      style: GoogleFonts.sora(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                          color: DonyColors.green400)),
+                                  const SizedBox(width: DonySpacing.sm),
+                                  Text(
+                                    'Prendre une photo',
+                                    style: tt.titleSmall
+                                        ?.copyWith(color: DonyColors.green400),
+                                  ),
                                 ],
                               ),
                       ),
@@ -778,7 +940,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                   Stack(
                     children: [
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
                         child: Image.file(
                           File(_photo!.path),
                           height: 120,
@@ -795,16 +957,17 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                       ),
                       if (!isSubmitting)
                         Positioned(
-                          top: 8,
-                          right: 8,
+                          top: DonySpacing.sm,
+                          right: DonySpacing.sm,
                           child: GestureDetector(
                             onTap: () => setState(() => _photo = null),
                             child: Container(
-                              padding: const EdgeInsets.all(4),
+                              padding: const EdgeInsets.all(DonySpacing.xs),
                               decoration: const BoxDecoration(
-                                  color: Colors.black54, shape: BoxShape.circle),
+                                  color: Colors.black54,
+                                  shape: BoxShape.circle),
                               child: const Icon(Icons.close_rounded,
-                                  color: Colors.white, size: 16),
+                                  color: DonyColors.white, size: 16),
                             ),
                           ),
                         ),
@@ -812,30 +975,33 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                   ),
 
                 if (_position != null) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: DonySpacing.sm),
                   Row(
                     children: [
-                      const Icon(Icons.location_on_rounded, color: DonyColors.success, size: 14),
-                      const SizedBox(width: 4),
+                      const Icon(Icons.location_on_rounded,
+                          color: DonyColors.success, size: 14),
+                      const SizedBox(width: DonySpacing.xs),
                       Text(
                         'GPS : ${_position!.latitude.toStringAsFixed(4)}, ${_position!.longitude.toStringAsFixed(4)}',
-                        style: GoogleFonts.sora(
-                            fontSize: 11, color: DonyColors.grey400),
+                        style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
                       ),
                     ],
                   ),
                 ],
                 if (_photoTooBig) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: DonySpacing.sm),
                   Row(
                     children: [
-                      const Icon(Icons.warning_amber_rounded, color: DonyColors.error, size: 14),
-                      const SizedBox(width: 4),
+                      const Icon(Icons.warning_amber_rounded,
+                          color: DonyColors.error, size: 14),
+                      const SizedBox(width: DonySpacing.xs),
                       Expanded(
                         child: Text(
                           'Photo trop lourde (max 10 MB). Réessayez.',
-                          style: GoogleFonts.sora(
-                              fontSize: 12, color: DonyColors.error, fontWeight: FontWeight.w500),
+                          style: tt.bodySmall?.copyWith(
+                            color: DonyColors.error,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ],
@@ -843,48 +1009,30 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                 ],
               ],
 
-              const SizedBox(height: 24),
+              const SizedBox(height: DonySpacing.xl),
 
               // Submit button
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton.icon(
-                  onPressed: isSubmitting ? null : () => _submit(context),
-                  icon: isSubmitting
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white))
-                      : Icon(isArrivee
-                          ? Icons.verified_rounded
-                          : Icons.check_rounded),
-                  label: Text(
-                    isSubmitting
-                        ? (isArrivee ? 'Confirmation...' : 'Enregistrement...')
-                        : (isArrivee ? 'Confirmer la livraison' : 'Confirmer le scan'),
-                    style: GoogleFonts.sora(
-                        fontWeight: FontWeight.w700, fontSize: 15),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isArrivee ? DonyColors.success : DonyColors.green400,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                  ),
-                ),
+              DonyButton(
+                label: isSubmitting
+                    ? (isArrivee ? 'Confirmation...' : 'Enregistrement...')
+                    : (isArrivee ? 'Confirmer la livraison' : 'Confirmer le scan'),
+                icon: isArrivee
+                    ? Icons.verified_rounded
+                    : Icons.check_rounded,
+                onPressed: isSubmitting ? null : () => _submit(context),
+                isLoading: isSubmitting,
               ),
 
               if (state is QrScanError || state is DeliveryConfirmError) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: DonySpacing.md),
                 Text(
                   state is QrScanError
                       ? state.message
                       : (state as DeliveryConfirmError).message,
-                  style: GoogleFonts.sora(
-                      fontSize: 13, color: DonyColors.error, fontWeight: FontWeight.w500),
+                  style: tt.bodySmall?.copyWith(
+                    color: DonyColors.error,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ],

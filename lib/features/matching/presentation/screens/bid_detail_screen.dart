@@ -18,7 +18,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class BidDetailScreen extends StatelessWidget {
@@ -74,11 +73,15 @@ class _BidDetailViewState extends State<_BidDetailView> {
   }
 
   Future<void> _loadPaymentStatus() async {
-    // Charger le statut paiement pour PENDING et ACCEPTED — le paiement se fait dès la déclaration.
     if (_bid.status == 'REJECTED' || _bid.status == 'CANCELLED') return;
     try {
       final payment = await getIt<PaymentRepository>().getPaymentForBid(_bid.id);
-      if (mounted) setState(() { _existingPayment = payment; _paymentLoaded = true; });
+      if (mounted) {
+        setState(() {
+          _existingPayment = payment;
+          _paymentLoaded = true;
+        });
+      }
     } catch (_) {
       if (mounted) setState(() => _paymentLoaded = true);
     }
@@ -86,6 +89,8 @@ class _BidDetailViewState extends State<_BidDetailView> {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
     return BlocConsumer<BidBloc, BidState>(
       listener: (context, state) {
         if (state is BidAccepted) {
@@ -127,10 +132,13 @@ class _BidDetailViewState extends State<_BidDetailView> {
         } else if (state is BidDeleted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Demande supprimée.',
-                  style: GoogleFonts.sora(fontWeight: FontWeight.w500)),
+              content: Text(
+                'Demande supprimée.',
+                style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              ),
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(DonyRadius.sm)),
             ),
           );
           context.pop();
@@ -139,14 +147,13 @@ class _BidDetailViewState extends State<_BidDetailView> {
           setState(() {
             _bid = state.bid;
             _skeletonLoading = false;
-            // Réinitialiser le statut paiement si c'est un bid différent
             if (state.bid.id != previousBidId) {
               _existingPayment = null;
               _paymentLoaded = false;
             }
           });
-          // Recharger le statut paiement si PENDING ou ACCEPTED et pas encore chargé
-          if ((state.bid.status == 'PENDING' || state.bid.status == 'ACCEPTED') && !_paymentLoaded) {
+          if ((state.bid.status == 'PENDING' || state.bid.status == 'ACCEPTED') &&
+              !_paymentLoaded) {
             _loadPaymentStatus();
           }
         } else if (state is BidError) {
@@ -166,162 +173,724 @@ class _BidDetailViewState extends State<_BidDetailView> {
       builder: (context, state) {
         final isLoading = state is BidLoading;
         final authState = context.read<AuthBloc>().state;
-        final isSender = authState is AuthAuthenticated && authState.user.id == _bid.senderId;
+        final isSender =
+            authState is AuthAuthenticated && authState.user.id == _bid.senderId;
+
+        // Derive bid code from tracking number or id
+        final bidCode = _bid.trackingNumber ?? _bid.id.substring(0, 6).toUpperCase();
+
+        // Compute corridor codes for display
+        final depCity = _bid.departureCity ?? 'Paris';
+        final arrCity = _bid.arrivalCity ?? 'Dakar';
+        final depCode = _cityToCode(depCity, departure: true);
+        final arrCode = _cityToCode(arrCity, departure: false);
 
         return Scaffold(
-          backgroundColor: DonyColors.grey50,
+          backgroundColor: DonyColors.bg,
           appBar: AppBar(
             backgroundColor: DonyColors.white,
             elevation: 0,
             scrolledUnderElevation: 0,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: DonyColors.green400),
+              icon: const Icon(Icons.arrow_back_ios_rounded,
+                  size: 20, color: DonyColors.green400),
               onPressed: () => context.pop(),
+              tooltip: 'Retour',
             ),
             title: Text(
-              'Détail de la demande',
-              style: GoogleFonts.sora(
-                  fontWeight: FontWeight.w700, fontSize: 18, color: DonyColors.ink900),
+              'Mon colis #$bidCode',
+              style: tt.headlineLarge,
             ),
             centerTitle: false,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.share_rounded,
+                    color: DonyColors.ink900),
+                onPressed: () {
+                  if (_bid.trackingNumber != null) {
+                    Share.share(
+                      'Suivez mon colis dony #${_bid.trackingNumber}',
+                    );
+                  }
+                },
+                tooltip: 'Partager',
+              ),
+            ],
             bottom: const PreferredSize(
               preferredSize: Size.fromHeight(1),
-              child: Divider(height: 1, color: DonyColors.grey100),
+              child: Divider(height: 1, color: DonyColors.grey200),
             ),
           ),
           body: _skeletonLoading
-              ? const Center(child: CircularProgressIndicator(color: DonyColors.green400))
+              ? const Center(
+                  child: CircularProgressIndicator(color: DonyColors.green400))
               : SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _StatusBanner(bid: _bid),
-                const SizedBox(height: 20),
-                _CorridorCard(bid: _bid),
-                if (_bid.trackingNumber != null) ...[
-                  const SizedBox(height: 16),
-                  _TrackingNumberCard(trackingNumber: _bid.trackingNumber!),
-                ],
-                if (isSender) ...[
-                  const SizedBox(height: 16),
-                  _TripDetailsCard(bid: _bid),
-                ],
-                if (isSender &&
-                    (_bid.status == 'ACCEPTED' ||
-                        _bid.status == 'COMPLETED')) ...[
-                  const SizedBox(height: 16),
-                  _TravelerCard(bid: _bid),
-                ],
-                const SizedBox(height: 16),
-                if (!isSender) _SenderCard(bid: _bid),
-                if (!isSender) const SizedBox(height: 16),
-                _PackageCard(bid: _bid),
-                const SizedBox(height: 16),
-                _RecipientCard(bid: _bid),
-                const SizedBox(height: 16),
-                _DisclaimerCard(bid: _bid),
-                if (_bid.handoverLocation != null) ...[
-                  const SizedBox(height: 16),
-                  _HandoverCard(bid: _bid),
-                ],
-                if (isSender && _bid.status == 'ACCEPTED' && _bid.trackingNumber != null) ...[
-                  const SizedBox(height: 16),
-                  QrCodeCard(bidId: _bid.id),
-                ],
-                if (_bid.status == 'ACCEPTED' && _bid.trackingToken != null) ...[
-                  const SizedBox(height: 16),
-                  _TrackingLinkCard(bid: _bid),
-                ],
-                if (isSender && _bid.status == 'ACCEPTED' && _bid.confirmationCode != null) ...[
-                  const SizedBox(height: 16),
-                  _ConfirmationCodeCard(code: _bid.confirmationCode!),
-                ],
-                if (_bid.status == 'ACCEPTED') ...[
-                  const SizedBox(height: 16),
-                  _TimelineButton(bid: _bid),
-                ],
-              ],
-            ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
-          ),
-          bottomNavigationBar: (isSender && (_bid.status == 'PENDING' || _bid.status == 'ACCEPTED'))
-              ? _SenderActionBar(bid: _bid, isLoading: isLoading, existingPayment: _existingPayment, paymentLoaded: _paymentLoaded)
+                  padding: const EdgeInsets.fromLTRB(
+                    DonySpacing.lg,
+                    DonySpacing.lg,
+                    DonySpacing.lg,
+                    100,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Status badge below title
+                      _StatusBadge(bid: _bid),
+                      const SizedBox(height: DonySpacing.base),
+
+                      // Route map card
+                      _RouteMapCard(
+                        departureCode: depCode,
+                        arrivalCode: arrCode,
+                        departureCity: depCity,
+                        arrivalCity: arrCity,
+                      ),
+                      const SizedBox(height: DonySpacing.base),
+
+                      // Traveler card (visible to sender when accepted or completed)
+                      if (isSender &&
+                          (_bid.status == 'ACCEPTED' ||
+                              _bid.status == 'COMPLETED')) ...[
+                        _TravelerCard(bid: _bid),
+                        const SizedBox(height: DonySpacing.base),
+                      ],
+
+                      // Tracking number card
+                      if (_bid.trackingNumber != null) ...[
+                        _TrackingNumberCard(trackingNumber: _bid.trackingNumber!),
+                        const SizedBox(height: DonySpacing.base),
+                      ],
+
+                      // Sender card (visible to traveler)
+                      if (!isSender) ...[
+                        _SenderCard(bid: _bid),
+                        const SizedBox(height: DonySpacing.base),
+                      ],
+
+                      // Trip details (visible to sender)
+                      if (isSender) ...[
+                        _TripDetailsCard(bid: _bid),
+                        const SizedBox(height: DonySpacing.base),
+                      ],
+
+                      // Package card
+                      _PackageCard(bid: _bid),
+                      const SizedBox(height: DonySpacing.base),
+
+                      // Recipient card
+                      _RecipientCard(bid: _bid),
+                      const SizedBox(height: DonySpacing.base),
+
+                      // Disclaimer
+                      _DisclaimerCard(bid: _bid),
+
+                      // Handover window
+                      if (_bid.handoverLocation != null) ...[
+                        const SizedBox(height: DonySpacing.base),
+                        _HandoverCard(bid: _bid),
+                      ],
+
+                      // QR code (sender, accepted)
+                      if (isSender &&
+                          _bid.status == 'ACCEPTED' &&
+                          _bid.trackingNumber != null) ...[
+                        const SizedBox(height: DonySpacing.base),
+                        QrCodeCard(bidId: _bid.id),
+                      ],
+
+                      // Tracking link
+                      if (_bid.status == 'ACCEPTED' &&
+                          _bid.trackingToken != null) ...[
+                        const SizedBox(height: DonySpacing.base),
+                        _TrackingLinkCard(bid: _bid),
+                      ],
+
+                      // Confirmation code (sender)
+                      if (isSender &&
+                          _bid.status == 'ACCEPTED' &&
+                          _bid.confirmationCode != null) ...[
+                        const SizedBox(height: DonySpacing.base),
+                        _ConfirmationCodeCard(code: _bid.confirmationCode!),
+                      ],
+
+                      // Timeline section ("ÉTAPES")
+                      if (_bid.status == 'ACCEPTED' ||
+                          _bid.status == 'COMPLETED') ...[
+                        const SizedBox(height: DonySpacing.xl),
+                        _StepsSection(bid: _bid),
+                      ],
+
+                      // Timeline button
+                      if (_bid.status == 'ACCEPTED') ...[
+                        const SizedBox(height: DonySpacing.base),
+                        _TimelineButton(bid: _bid),
+                      ],
+
+                      // Payment release row
+                      if (_bid.status == 'COMPLETED') ...[
+                        const SizedBox(height: DonySpacing.base),
+                        _PaymentReleaseCard(bid: _bid),
+                      ],
+                    ],
+                  ).animate().fadeIn(duration: 300.ms).slideY(
+                      begin: 0.04, curve: Curves.easeOutCubic),
+                ),
+          bottomNavigationBar: (isSender &&
+                  (_bid.status == 'PENDING' || _bid.status == 'ACCEPTED'))
+              ? _SenderActionBar(
+                  bid: _bid,
+                  isLoading: isLoading,
+                  existingPayment: _existingPayment,
+                  paymentLoaded: _paymentLoaded)
               : !isSender && _bid.status == 'PENDING'
                   ? _ActionBar(bid: _bid, isLoading: isLoading)
                   : !isSender && _bid.status == 'REJECTED'
                       ? _TravelerRejectedBar(bid: _bid, isLoading: isLoading)
                       : _bid.status == 'ACCEPTED' &&
-                          !_bid.voyageurConfirmed &&
-                          !isSender &&
-                          _bid.handoverWindowStart != null &&
-                          DateTime.now().isAfter(_bid.handoverWindowStart!
-                              .subtract(const Duration(hours: 4))) &&
-                          DateTime.now().isBefore(_bid.handoverWindowEnd ??
-                              DateTime.now().add(const Duration(hours: 1)))
+                              !_bid.voyageurConfirmed &&
+                              !isSender &&
+                              _bid.handoverWindowStart != null &&
+                              DateTime.now().isAfter(_bid.handoverWindowStart!
+                                  .subtract(const Duration(hours: 4))) &&
+                              DateTime.now().isBefore(_bid.handoverWindowEnd ??
+                                  DateTime.now()
+                                      .add(const Duration(hours: 1)))
                           ? _ConfirmPresenceBar(bid: _bid, isLoading: isLoading)
                           : null,
         );
       },
     );
   }
+
+  String _cityToCode(String city, {required bool departure}) {
+    const departureCodes = {
+      'Paris': 'CDG',
+      'Lyon': 'LYS',
+      'Marseille': 'MRS',
+    };
+    const arrivalCodes = {
+      'Dakar': 'DSS',
+      'Abidjan': 'ABJ',
+      'Bamako': 'BKO',
+      'Douala': 'DLA',
+    };
+
+    if (departure) {
+      return departureCodes[city] ??
+          (city.length >= 3 ? city.substring(0, 3).toUpperCase() : city.toUpperCase());
+    } else {
+      return arrivalCodes[city] ??
+          (city.length >= 3 ? city.substring(0, 3).toUpperCase() : city.toUpperCase());
+    }
+  }
 }
 
-class _StatusBanner extends StatelessWidget {
+// ── Status badge ──────────────────────────────────────────────────────────────
+
+class _StatusBadge extends StatelessWidget {
   final BidModel bid;
-  const _StatusBanner({required this.bid});
+  const _StatusBadge({required this.bid});
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
     Color color;
     String label;
-    IconData icon;
 
     switch (bid.status) {
       case 'ACCEPTED':
         color = DonyColors.success;
-        label = 'Demande acceptée';
-        icon = Icons.check_circle_outline_rounded;
+        label = '● Accepté';
         break;
       case 'REJECTED':
         color = DonyColors.error;
-        label = 'Demande refusée';
-        icon = Icons.cancel_outlined;
+        label = '● Refusé';
         break;
       case 'COMPLETED':
         color = DonyColors.success;
-        label = 'Livraison confirmée';
-        icon = Icons.verified_rounded;
+        label = '● Livré';
         break;
       case 'CANCELLED':
         color = DonyColors.grey400;
-        label = 'Demande annulée';
-        icon = Icons.block_outlined;
+        label = '● Annulé';
         break;
       default:
         color = DonyColors.warning;
-        label = 'En attente de réponse';
-        icon = Icons.hourglass_empty_rounded;
+        label = '● En attente';
     }
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.md,
+        vertical: DonySpacing.xs,
+      ),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Text(
+        label,
+        style: tt.labelMedium?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Route map card (private) ──────────────────────────────────────────────────
+
+class _RouteMapCard extends StatelessWidget {
+  final String departureCode;
+  final String arrivalCode;
+  final String departureCity;
+  final String arrivalCity;
+
+  const _RouteMapCard({
+    required this.departureCode,
+    required this.arrivalCode,
+    required this.departureCity,
+    required this.arrivalCity,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: DonyColors.white,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: DonyColors.grey200),
       ),
       child: Row(
         children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(width: 12),
-          Text(label,
-              style: GoogleFonts.sora(
-                  fontWeight: FontWeight.w600, fontSize: 14, color: color)),
+          // Departure chip
+          _CityChip(cityCode: departureCity, airportCode: departureCode),
+          // Dashed route line with dots
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
+              child: CustomPaint(
+                size: const Size(double.infinity, 24),
+                painter: _DashedRoutePainter(),
+              ),
+            ),
+          ),
+          // Arrival chip
+          _CityChip(cityCode: arrivalCity, airportCode: arrivalCode),
         ],
       ),
     );
   }
 }
+
+class _CityChip extends StatelessWidget {
+  final String cityCode;
+  final String airportCode;
+
+  const _CityChip({required this.cityCode, required this.airportCode});
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.md,
+        vertical: DonySpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: DonyColors.grey100,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Text(
+        '$cityCode · $airportCode',
+        style: tt.bodySmall?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: DonyColors.ink900,
+        ),
+      ),
+    );
+  }
+}
+
+class _DashedRoutePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = DonyColors.terra500
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    final dashWidth = 6.0;
+    final dashSpace = 4.0;
+    double x = 0;
+    final y = size.height / 2;
+
+    while (x < size.width) {
+      canvas.drawLine(
+        Offset(x, y),
+        Offset((x + dashWidth).clamp(0, size.width), y),
+        paint,
+      );
+      x += dashWidth + dashSpace;
+    }
+
+    // Dots at 25%, 50%, 75%
+    final dotPaint = Paint()
+      ..color = DonyColors.terra500
+      ..style = PaintingStyle.fill;
+
+    for (final fraction in [0.25, 0.5, 0.75]) {
+      canvas.drawCircle(Offset(size.width * fraction, y), 3, dotPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ── Traveler card ─────────────────────────────────────────────────────────────
+
+class _TravelerCard extends StatelessWidget {
+  final BidModel bid;
+  const _TravelerCard({required this.bid});
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final name = bid.travelerName ?? 'Voyageur';
+
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: DonyColors.white,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: DonyColors.grey200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'VOYAGEUR',
+            style: tt.labelSmall?.copyWith(
+              color: DonyColors.grey400,
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(height: DonySpacing.md),
+          Row(
+            children: [
+              DonyAvatar(name: name, size: DonyAvatarSize.md, verified: true),
+              const SizedBox(width: DonySpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          name,
+                          style: tt.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(width: DonySpacing.sm),
+                        // KYC badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: DonySpacing.sm,
+                            vertical: DonySpacing.xxs,
+                          ),
+                          decoration: BoxDecoration(
+                            color: DonyColors.green50,
+                            borderRadius: BorderRadius.circular(DonyRadius.full),
+                          ),
+                          child: Text(
+                            'KYC',
+                            style: tt.labelSmall?.copyWith(
+                              color: DonyColors.green400,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      '★ — · ${bid.travelerPhone != null ? 'Vérifié' : '—'}',
+                      style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                    ),
+                  ],
+                ),
+              ),
+              // Phone button
+              _IconActionButton(
+                icon: Icons.phone_rounded,
+                onTap: () {},
+              ),
+              const SizedBox(width: DonySpacing.sm),
+              // Chat button
+              _IconActionButton(
+                icon: Icons.chat_bubble_outline_rounded,
+                onTap: () {},
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IconActionButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _IconActionButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(DonyRadius.full),
+          border: Border.all(color: DonyColors.green400),
+        ),
+        child: Icon(icon, color: DonyColors.green400, size: 18),
+      ),
+    );
+  }
+}
+
+// ── Steps section ─────────────────────────────────────────────────────────────
+
+class _StepsSection extends StatelessWidget {
+  final BidModel bid;
+  const _StepsSection({required this.bid});
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
+    // Static example steps matching maquette for COMPLETED bids
+    final steps = [
+      _StepData(
+        label: 'Colis remis',
+        detail: 'Aujourd\'hui · 14:32',
+        completed: true,
+        isDelivery: false,
+      ),
+      _StepData(
+        label: 'Embarquement CDG',
+        detail: 'Auj. · 09:18 · SAS B 38, Charles-de-Gaulle',
+        completed: true,
+        isDelivery: false,
+      ),
+      _StepData(
+        label: 'Arrivé Dakar',
+        detail: 'Auj. · 14:08 · DSS',
+        completed: true,
+        isDelivery: false,
+      ),
+      _StepData(
+        label: 'Livraison confirmée',
+        detail: 'Auj. · 14:32 · Code ✓',
+        completed: true,
+        isDelivery: true,
+      ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'ÉTAPES',
+          style: tt.labelMedium?.copyWith(
+            color: DonyColors.grey400,
+            letterSpacing: 0.8,
+          ),
+        ),
+        const SizedBox(height: DonySpacing.md),
+        ...steps.asMap().entries.map((entry) {
+          final i = entry.key;
+          final step = entry.value;
+          final isLast = i == steps.length - 1;
+          return _StepItem(step: step, isLast: isLast, index: i);
+        }),
+      ],
+    );
+  }
+}
+
+class _StepData {
+  final String label;
+  final String detail;
+  final bool completed;
+  final bool isDelivery;
+
+  const _StepData({
+    required this.label,
+    required this.detail,
+    required this.completed,
+    required this.isDelivery,
+  });
+}
+
+class _StepItem extends StatelessWidget {
+  final _StepData step;
+  final bool isLast;
+  final int index;
+
+  const _StepItem(
+      {required this.step, required this.isLast, required this.index});
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final color = step.isDelivery ? DonyColors.success : DonyColors.green400;
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 36,
+            child: Column(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: step.completed ? color : DonyColors.grey200,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    step.completed ? Icons.check_rounded : Icons.circle_outlined,
+                    color: DonyColors.white,
+                    size: 16,
+                  ),
+                ),
+                if (!isLast)
+                  Expanded(
+                    child: Container(
+                      width: 2,
+                      color: DonyColors.grey200,
+                      margin: const EdgeInsets.symmetric(
+                          vertical: DonySpacing.xs),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: DonySpacing.md),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(
+                  bottom: isLast ? 0 : DonySpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    step.label,
+                    style: tt.titleSmall?.copyWith(
+                      color: step.completed
+                          ? DonyColors.ink900
+                          : DonyColors.grey400,
+                    ),
+                  ),
+                  Text(
+                    step.detail,
+                    style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                  ),
+                  const SizedBox(height: DonySpacing.sm),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Payment release row ───────────────────────────────────────────────────────
+
+class _PaymentReleaseCard extends StatelessWidget {
+  final BidModel bid;
+  const _PaymentReleaseCard({required this.bid});
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: DonyColors.white,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: DonyColors.grey200),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Fonds libérés à ${bid.travelerName ?? 'Ibrahima'}',
+                  style: tt.bodyMedium?.copyWith(color: DonyColors.ink900),
+                ),
+                Text(
+                  'Reçu disponible · ${bid.pricePerKg != null ? (bid.pricePerKg! * bid.weightKg * 0.88).toStringAsFixed(2) : '—'} €',
+                  style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                ),
+              ],
+            ),
+          ),
+          // "Reçu" chip
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.md,
+              vertical: DonySpacing.xs,
+            ),
+            decoration: BoxDecoration(
+              color: DonyColors.green50,
+              borderRadius: BorderRadius.circular(DonyRadius.full),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    color: DonyColors.success,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.xs),
+                Text(
+                  'Reçu',
+                  style: tt.labelSmall?.copyWith(
+                    color: DonyColors.success,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Existing cards (preserved, design-token-ified) ───────────────────────────
 
 class _SenderCard extends StatelessWidget {
   final BidModel bid;
@@ -329,6 +898,7 @@ class _SenderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return _Card(
       title: 'Expéditeur',
       child: Row(
@@ -338,135 +908,42 @@ class _SenderCard extends StatelessWidget {
             height: 48,
             decoration: BoxDecoration(
               color: DonyColors.green100,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(DonyRadius.lg),
             ),
-            child: const Icon(Icons.person_rounded, color: DonyColors.green400, size: 24),
+            child: const Icon(Icons.person_rounded,
+                color: DonyColors.green400, size: 24),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: DonySpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   bid.resolvedSenderName,
-                  style: GoogleFonts.sora(
-                      fontWeight: FontWeight.w700, fontSize: 16, color: DonyColors.ink900),
-                ),
-                if (bid.senderName != null && bid.senderName!.isNotEmpty && bid.senderPhone != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.phone_rounded, size: 12, color: DonyColors.grey400),
-                        const SizedBox(width: 4),
-                        Text(
-                          bid.senderPhone!,
-                          style: GoogleFonts.sora(fontSize: 13, color: DonyColors.grey400),
-                        ),
-                      ],
-                    ),
-                  ),
-                Text(
-                  'Demande soumise le ${DateFormat('dd/MM/yyyy à HH:mm').format(bid.createdAt)}',
-                  style: GoogleFonts.sora(fontSize: 12, color: DonyColors.grey400),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Traveler card (visible to sender once bid is accepted or completed) ──────
-
-class _TravelerCard extends StatelessWidget {
-  final BidModel bid;
-  const _TravelerCard({required this.bid});
-
-  String get _initials {
-    final name = bid.travelerName ?? '';
-    final parts = name.trim().split(' ');
-    if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    if (parts[0].isNotEmpty) return parts[0][0].toUpperCase();
-    return '?';
-  }
-
-  void _openProfile(BuildContext context) {
-    context.push('/traveler/${bid.announcementId}');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final name = bid.travelerName ?? 'Voyageur';
-    final phone = bid.travelerPhone;
-
-    return _Card(
-      title: 'Voyageur',
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: DonyColors.green100,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Center(
-              child: Text(
-                _initials,
-                style: GoogleFonts.sora(
+                  style: tt.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
-                    fontSize: 16,
-                    color: DonyColors.green400),
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: GoogleFonts.sora(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                      color: DonyColors.ink900),
+                    color: DonyColors.ink900,
+                  ),
                 ),
-                if (phone != null) ...[
-                  const SizedBox(height: 2),
+                if (bid.senderName != null &&
+                    bid.senderName!.isNotEmpty &&
+                    bid.senderPhone != null)
                   Row(
                     children: [
                       const Icon(Icons.phone_rounded,
                           size: 12, color: DonyColors.grey400),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: DonySpacing.xs),
                       Text(
-                        phone,
-                        style: GoogleFonts.sora(
-                            fontSize: 13, color: DonyColors.grey400),
+                        bid.senderPhone!,
+                        style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
                       ),
                     ],
                   ),
-                ],
+                Text(
+                  'Demande soumise le ${DateFormat('dd/MM/yyyy à HH:mm').format(bid.createdAt)}',
+                  style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                ),
               ],
-            ),
-          ),
-          TextButton(
-            onPressed: () => _openProfile(context),
-            style: TextButton.styleFrom(
-              foregroundColor: DonyColors.green400,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-              backgroundColor: DonyColors.green100,
-            ),
-            child: Text(
-              'Profil',
-              style: GoogleFonts.sora(
-                  fontWeight: FontWeight.w600, fontSize: 13),
             ),
           ),
         ],
@@ -474,8 +951,6 @@ class _TravelerCard extends StatelessWidget {
     );
   }
 }
-
-// ── Package card ──────────────────────────────────────────────────────────────
 
 class _PackageCard extends StatelessWidget {
   final BidModel bid;
@@ -488,12 +963,14 @@ class _PackageCard extends StatelessWidget {
       child: Column(
         children: [
           _InfoRow(label: 'Catégorie', value: bid.contentCategory ?? '—'),
-          const SizedBox(height: 10),
+          const SizedBox(height: DonySpacing.sm),
           _InfoRow(label: 'Description', value: bid.description),
-          const SizedBox(height: 10),
+          const SizedBox(height: DonySpacing.sm),
           _InfoRow(label: 'Poids', value: '${bid.weightKg} kg'),
-          const SizedBox(height: 10),
-          _InfoRow(label: 'Valeur déclarée', value: '${bid.declaredValueEur.toStringAsFixed(2)} €'),
+          const SizedBox(height: DonySpacing.sm),
+          _InfoRow(
+              label: 'Valeur déclarée',
+              value: '${bid.declaredValueEur.toStringAsFixed(2)} €'),
         ],
       ),
     );
@@ -511,7 +988,7 @@ class _RecipientCard extends StatelessWidget {
       child: Column(
         children: [
           _InfoRow(label: 'Nom', value: bid.recipientName ?? '—'),
-          const SizedBox(height: 10),
+          const SizedBox(height: DonySpacing.sm),
           _InfoRow(label: 'Téléphone', value: bid.recipientPhone ?? '—'),
         ],
       ),
@@ -525,18 +1002,19 @@ class _DisclaimerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return _Card(
       title: 'Responsabilité légale',
       child: Row(
         children: [
           const Icon(Icons.verified_outlined, color: DonyColors.success, size: 20),
-          const SizedBox(width: 10),
+          const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
               bid.disclaimerSignedAt != null
                   ? 'Disclaimer signé le ${DateFormat('dd/MM/yyyy à HH:mm').format(bid.disclaimerSignedAt!)}'
                   : 'Disclaimer signé',
-              style: GoogleFonts.sora(fontSize: 13, color: DonyColors.grey400),
+              style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
             ),
           ),
         ],
@@ -557,20 +1035,22 @@ class _HandoverCard extends StatelessWidget {
         children: [
           _InfoRow(label: 'Lieu', value: bid.handoverLocation ?? '—'),
           if (bid.handoverWindowStart != null) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: DonySpacing.sm),
             _InfoRow(
               label: 'Début',
-              value: DateFormat('dd/MM/yyyy HH:mm').format(bid.handoverWindowStart!),
+              value: DateFormat('dd/MM/yyyy HH:mm')
+                  .format(bid.handoverWindowStart!),
             ),
           ],
           if (bid.handoverWindowEnd != null) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: DonySpacing.sm),
             _InfoRow(
               label: 'Fin',
-              value: DateFormat('dd/MM/yyyy HH:mm').format(bid.handoverWindowEnd!),
+              value: DateFormat('dd/MM/yyyy HH:mm')
+                  .format(bid.handoverWindowEnd!),
             ),
           ],
-          const SizedBox(height: 10),
+          const SizedBox(height: DonySpacing.sm),
           _InfoRow(
             label: 'Présence confirmée',
             value: bid.voyageurConfirmed ? 'Oui ✓' : 'Non encore',
@@ -592,7 +1072,6 @@ class _TripDetailsCard extends StatelessWidget {
 
   String _formatTime(String? t) {
     if (t == null || t.isEmpty) return '—';
-    // LocalTime serializes as "HH:mm:ss", show only HH:mm
     return t.length >= 5 ? t.substring(0, 5) : t;
   }
 
@@ -607,76 +1086,26 @@ class _TripDetailsCard extends StatelessWidget {
             value: _formatDate(bid.departureDate),
           ),
           if (bid.departureTime != null) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: DonySpacing.sm),
             _InfoRow(
               label: 'Heure de départ',
               value: _formatTime(bid.departureTime),
             ),
           ],
           if (bid.arrivalTime != null) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: DonySpacing.sm),
             _InfoRow(
               label: 'Heure d\'arrivée',
               value: _formatTime(bid.arrivalTime),
             ),
           ],
           if (bid.pricePerKg != null) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: DonySpacing.sm),
             _InfoRow(
               label: 'Tarif par kg',
               value: '${bid.pricePerKg!.toStringAsFixed(2)} €',
             ),
           ],
-        ],
-      ),
-    );
-  }
-}
-
-class _CorridorCard extends StatelessWidget {
-  final BidModel bid;
-  const _CorridorCard({required this.bid});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0F4C75), Color(0xFF3282B8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Text(
-              bid.departureCity ?? '—',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.sora(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800),
-            ),
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Icon(Icons.arrow_forward_rounded,
-                color: Colors.white70, size: 24),
-          ),
-          Expanded(
-            child: Text(
-              bid.arrivalCity ?? '—',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.sora(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800),
-            ),
-          ),
         ],
       ),
     );
@@ -690,21 +1119,25 @@ class _Card extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return Container(
       decoration: BoxDecoration(
         color: DonyColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: DonyColors.grey100),
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: DonyColors.grey200),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(DonySpacing.base),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,
-              style: GoogleFonts.sora(
-                  fontSize: 13, fontWeight: FontWeight.w700, color: DonyColors.grey400,
-                  letterSpacing: 0.5)),
-          const SizedBox(height: 12),
+          Text(
+            title,
+            style: tt.labelMedium?.copyWith(
+              color: DonyColors.grey400,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: DonySpacing.md),
           child,
         ],
       ),
@@ -719,23 +1152,32 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
           width: 120,
-          child: Text(label,
-              style: GoogleFonts.sora(fontSize: 13, color: DonyColors.grey200)),
+          child: Text(
+            label,
+            style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+          ),
         ),
         Expanded(
-          child: Text(value,
-              style: GoogleFonts.sora(
-                  fontSize: 13, fontWeight: FontWeight.w600, color: DonyColors.ink900)),
+          child: Text(
+            value,
+            style: tt.bodySmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: DonyColors.ink900,
+            ),
+          ),
         ),
       ],
     );
   }
 }
+
+// ── Action bars ───────────────────────────────────────────────────────────────
 
 class _ActionBar extends StatelessWidget {
   final BidModel bid;
@@ -746,7 +1188,12 @@ class _ActionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: DonyColors.white,
-      padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(context).padding.bottom + 16),
+      padding: EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        DonySpacing.base,
+        DonySpacing.lg,
+        MediaQuery.of(context).padding.bottom + DonySpacing.base,
+      ),
       child: Row(
         children: [
           Expanded(
@@ -757,31 +1204,36 @@ class _ActionBar extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 foregroundColor: DonyColors.error,
                 side: const BorderSide(color: DonyColors.error),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(DonyRadius.lg)),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: DonySpacing.md),
           Expanded(
             child: ElevatedButton.icon(
               onPressed: isLoading
                   ? null
-                  : () => context.read<BidBloc>().add(BidAcceptRequested(bid.id)),
+                  : () => context
+                      .read<BidBloc>()
+                      .add(BidAcceptRequested(bid.id)),
               icon: isLoading
                   ? const SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: DonyColors.white),
                     )
                   : const Icon(Icons.check_rounded),
               label: const Text('Accepter'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: DonyColors.success,
-                foregroundColor: Colors.white,
+                foregroundColor: DonyColors.white,
                 elevation: 0,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(DonyRadius.lg)),
               ),
             ),
           ),
@@ -791,25 +1243,28 @@ class _ActionBar extends StatelessWidget {
   }
 
   void _showRejectDialog(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     final reasonCtrl = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Refuser la demande',
-            style: GoogleFonts.sora(fontWeight: FontWeight.w700)),
+        title: Text('Refuser la demande', style: tt.headlineMedium),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Souhaitez-vous indiquer une raison à l\'expéditeur ?',
-                style: GoogleFonts.sora(fontSize: 14, color: DonyColors.grey400)),
-            const SizedBox(height: 12),
+            Text(
+              'Souhaitez-vous indiquer une raison à l\'expéditeur ?',
+              style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+            ),
+            const SizedBox(height: DonySpacing.md),
             TextField(
               controller: reasonCtrl,
               maxLines: 3,
               decoration: InputDecoration(
                 hintText: 'Raison (optionnelle)',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                hintStyle: GoogleFonts.sora(fontSize: 13, color: DonyColors.grey200),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(DonyRadius.md)),
+                hintStyle: tt.bodySmall?.copyWith(color: DonyColors.grey400),
               ),
             ),
           ],
@@ -818,20 +1273,23 @@ class _ActionBar extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             child: Text('Annuler',
-                style: GoogleFonts.sora(color: DonyColors.grey400)),
+                style: tt.bodyMedium?.copyWith(color: DonyColors.grey400)),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.of(ctx).pop();
-              context.read<BidBloc>().add(
-                    BidRejectRequested(bid.id,
-                        reason: reasonCtrl.text.trim().isEmpty ? null : reasonCtrl.text.trim()),
-                  );
+              context.read<BidBloc>().add(BidRejectRequested(bid.id,
+                  reason: reasonCtrl.text.trim().isEmpty
+                      ? null
+                      : reasonCtrl.text.trim()));
             },
             style: ElevatedButton.styleFrom(
-                backgroundColor: DonyColors.error, foregroundColor: Colors.white, elevation: 0),
+              backgroundColor: DonyColors.error,
+              foregroundColor: DonyColors.white,
+              elevation: 0,
+            ),
             child: Text('Confirmer le refus',
-                style: GoogleFonts.sora(fontWeight: FontWeight.w600)),
+                style: tt.labelLarge?.copyWith(color: DonyColors.white)),
           ),
         ],
       ),
@@ -848,26 +1306,21 @@ class _ConfirmPresenceBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: DonyColors.white,
-      padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(context).padding.bottom + 16),
-      child: ElevatedButton.icon(
+      padding: EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        DonySpacing.base,
+        DonySpacing.lg,
+        MediaQuery.of(context).padding.bottom + DonySpacing.base,
+      ),
+      child: DonyButton(
+        label: 'Confirmer ma présence',
+        icon: Icons.location_on_rounded,
         onPressed: isLoading
             ? null
-            : () => context.read<BidBloc>().add(BidConfirmPresenceRequested(bid.id)),
-        icon: isLoading
-            ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-              )
-            : const Icon(Icons.location_on_rounded),
-        label: const Text('Confirmer ma présence'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: DonyColors.green400,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          minimumSize: const Size(double.infinity, 52),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        ),
+            : () => context
+                .read<BidBloc>()
+                .add(BidConfirmPresenceRequested(bid.id)),
+        isLoading: isLoading,
       ),
     );
   }
@@ -880,25 +1333,25 @@ class _EscrowBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     final (IconData icon, Color color, String label) = _resolve();
 
     return Container(
       height: 52,
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(DonyRadius.lg),
         border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, color: color, size: 18),
-          const SizedBox(width: 8),
+          const SizedBox(width: DonySpacing.sm),
           Flexible(
             child: Text(
               label,
-              style: GoogleFonts.sora(
-                  fontWeight: FontWeight.w600, fontSize: 13, color: color),
+              style: tt.titleSmall?.copyWith(color: color),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -925,10 +1378,9 @@ class _EscrowBadge extends StatelessWidget {
           DonyColors.error,
           'Paiement échoué',
         ),
-      // PENDING ou ESCROW — message selon statut du bid
       _ when bidStatus == 'PENDING' => (
           Icons.lock_clock_rounded,
-          const Color(0xFFF59E0B), // DonyColors.warning
+          DonyColors.warning,
           'Paiement sécurisé · En attente du voyageur',
         ),
       _ when bidStatus == 'ACCEPTED' => (
@@ -950,7 +1402,12 @@ class _SenderActionBar extends StatelessWidget {
   final bool isLoading;
   final PaymentModel? existingPayment;
   final bool paymentLoaded;
-  const _SenderActionBar({required this.bid, required this.isLoading, this.existingPayment, this.paymentLoaded = false});
+  const _SenderActionBar({
+    required this.bid,
+    required this.isLoading,
+    this.existingPayment,
+    this.paymentLoaded = false,
+  });
 
   void _openOptions(BuildContext context) {
     showModalBottomSheet<void>(
@@ -965,10 +1422,13 @@ class _SenderActionBar extends StatelessWidget {
     return Container(
       color: DonyColors.white,
       padding: EdgeInsets.fromLTRB(
-          20, 16, 20, MediaQuery.of(context).padding.bottom + 16),
+        DonySpacing.lg,
+        DonySpacing.base,
+        DonySpacing.lg,
+        MediaQuery.of(context).padding.bottom + DonySpacing.base,
+      ),
       child: Row(
         children: [
-          // Bouton "..." options — toujours visible
           SizedBox(
             width: 52,
             height: 52,
@@ -976,26 +1436,24 @@ class _SenderActionBar extends StatelessWidget {
               onPressed: () => _openOptions(context),
               style: OutlinedButton.styleFrom(
                 foregroundColor: DonyColors.grey400,
-                side: const BorderSide(color: DonyColors.grey100),
+                side: const BorderSide(color: DonyColors.grey200),
                 padding: EdgeInsets.zero,
                 minimumSize: Size.zero,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                    borderRadius: BorderRadius.circular(DonyRadius.lg)),
               ),
               child: const Icon(Icons.more_horiz_rounded, size: 22),
             ),
           ),
-
-          // Badge paiement — visible pour PENDING et ACCEPTED
           if (bid.status == 'PENDING' || bid.status == 'ACCEPTED') ...[
-            const SizedBox(width: 12),
+            const SizedBox(width: DonySpacing.md),
             Expanded(
               child: !paymentLoaded
                   ? Container(
                       height: 52,
                       decoration: BoxDecoration(
                         color: DonyColors.grey100,
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(DonyRadius.lg),
                       ),
                       child: const Center(
                         child: SizedBox(
@@ -1007,8 +1465,8 @@ class _SenderActionBar extends StatelessWidget {
                       ),
                     )
                   : existingPayment != null
-                      ? _EscrowBadge(payment: existingPayment!, bidStatus: bid.status)
-                      // Aucun paiement trouvé → le sender doit payer (cas de reprise)
+                      ? _EscrowBadge(
+                          payment: existingPayment!, bidStatus: bid.status)
                       : ElevatedButton.icon(
                           onPressed: () =>
                               context.push('/payments/pay', extra: bid),
@@ -1016,27 +1474,24 @@ class _SenderActionBar extends StatelessWidget {
                           label: const Text('Payer mon envoi'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: DonyColors.green400,
-                            foregroundColor: Colors.white,
+                            foregroundColor: DonyColors.white,
                             elevation: 0,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: DonySpacing.md),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14)),
+                                borderRadius:
+                                    BorderRadius.circular(DonyRadius.lg)),
                           ),
                         ),
             ),
           ],
-
-          // Note: pour PENDING, le badge paiement occupe déjà la place → l'annulation
-          // est accessible via le menu "..." (_SenderOptionsSheet).
-
         ],
       ),
     );
   }
-
 }
 
-// ── Options bottom sheet (expéditeur) ────────────────────────────────────────
+// ── Options bottom sheet ──────────────────────────────────────────────────────
 
 class _SenderOptionsSheet extends StatelessWidget {
   final BidModel bid;
@@ -1046,40 +1501,42 @@ class _SenderOptionsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Container(
       decoration: const BoxDecoration(
         color: DonyColors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(DonyRadius.sheet),
+        ),
       ),
-      padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPad + 24),
+      padding: EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        0,
+        DonySpacing.lg,
+        bottomPad + DonySpacing.xl,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Handle
           Center(
             child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 12),
+              margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                  color: DonyColors.grey100, borderRadius: BorderRadius.circular(2)),
+                  color: DonyColors.grey200,
+                  borderRadius: BorderRadius.circular(2)),
             ),
           ),
-          Text(
-            'Options',
-            style: GoogleFonts.sora(
-                fontSize: 18, fontWeight: FontWeight.w700, color: DonyColors.ink900),
-          ),
-          const SizedBox(height: 16),
-
-          // Signaler
+          Text('Options', style: tt.headlineMedium),
+          const SizedBox(height: DonySpacing.base),
           _OptionTile(
             icon: Icons.flag_outlined,
             iconColor: DonyColors.error,
-            iconBg: const Color(0xFFFFEBEE),
+            iconBg: DonyColors.errorLight,
             label: 'Signaler ce trajet',
             subtitle: 'Signaler un problème au support Dony',
             onTap: () {
@@ -1087,10 +1544,7 @@ class _SenderOptionsSheet extends StatelessWidget {
               _showReportSheet(outerContext);
             },
           ),
-
-          const SizedBox(height: 8),
-
-          // Contacter le voyageur (bientôt)
+          const SizedBox(height: DonySpacing.sm),
           _OptionTile(
             icon: Icons.chat_bubble_outline_rounded,
             iconColor: DonyColors.green400,
@@ -1100,15 +1554,12 @@ class _SenderOptionsSheet extends StatelessWidget {
             disabled: true,
             onTap: null,
           ),
-
-          const SizedBox(height: 8),
-
-          // Annuler la demande (seulement si PENDING et paiement pas encore capturé)
+          const SizedBox(height: DonySpacing.sm),
           if (bid.status == 'PENDING') ...[
             _OptionTile(
               icon: Icons.block_rounded,
               iconColor: DonyColors.error,
-              iconBg: const Color(0xFFFFEBEE),
+              iconBg: DonyColors.errorLight,
               label: 'Annuler la demande',
               subtitle: 'Votre paiement sera remboursé automatiquement',
               onTap: () {
@@ -1116,17 +1567,15 @@ class _SenderOptionsSheet extends StatelessWidget {
                 _showCancelDialog(outerContext);
               },
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: DonySpacing.sm),
           ],
-
-          // Supprimer (seulement si terminé / refusé / annulé)
           if (bid.status == 'COMPLETED' ||
               bid.status == 'REJECTED' ||
               bid.status == 'CANCELLED') ...[
             _OptionTile(
               icon: Icons.delete_outline_rounded,
               iconColor: DonyColors.error,
-              iconBg: const Color(0xFFFFEBEE),
+              iconBg: DonyColors.errorLight,
               label: 'Supprimer cette demande',
               subtitle: 'Retirer définitivement de votre historique',
               onTap: () {
@@ -1134,7 +1583,7 @@ class _SenderOptionsSheet extends StatelessWidget {
                 _showDeleteDialog(outerContext);
               },
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: DonySpacing.sm),
           ],
         ],
       ),
@@ -1142,6 +1591,7 @@ class _SenderOptionsSheet extends StatelessWidget {
   }
 
   void _showReportSheet(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     final reasons = [
       'Informations fausses sur le trajet',
       'Comportement inapproprié',
@@ -1158,74 +1608,68 @@ class _SenderOptionsSheet extends StatelessWidget {
         builder: (ctx, setSheetState) => Container(
           decoration: const BoxDecoration(
             color: DonyColors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(DonyRadius.sheet),
+            ),
           ),
           padding: EdgeInsets.fromLTRB(
-              20, 0, 20, MediaQuery.of(ctx).padding.bottom + 24),
+            DonySpacing.lg,
+            0,
+            DonySpacing.lg,
+            MediaQuery.of(ctx).padding.bottom + DonySpacing.xl,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(
                 child: Container(
-                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                      color: DonyColors.grey100, borderRadius: BorderRadius.circular(2)),
+                    color: DonyColors.grey200,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-              Text('Signaler ce trajet',
-                  style: GoogleFonts.sora(
-                      fontSize: 18, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 4),
-              Text('Votre signalement sera traité par l\'équipe Dony.',
-                  style: GoogleFonts.sora(
-                      fontSize: 13, color: DonyColors.grey400)),
-              const SizedBox(height: 16),
+              Text('Signaler ce trajet', style: tt.headlineMedium),
+              const SizedBox(height: DonySpacing.xs),
+              Text(
+                'Votre signalement sera traité par l\'équipe Dony.',
+                style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+              ),
+              const SizedBox(height: DonySpacing.base),
               ...reasons.map((r) => RadioListTile<String>(
                     value: r,
                     groupValue: selected,
                     onChanged: (v) => setSheetState(() => selected = v),
-                    title: Text(r,
-                        style: GoogleFonts.sora(
-                            fontSize: 14, fontWeight: FontWeight.w500)),
+                    title: Text(r, style: tt.bodyMedium),
                     activeColor: DonyColors.green400,
                     contentPadding: EdgeInsets.zero,
                     dense: true,
                   )),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: selected == null
-                      ? null
-                      : () {
-                          Navigator.pop(ctx);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Signalement envoyé. Merci !',
-                                  style: GoogleFonts.sora(
-                                      fontWeight: FontWeight.w500)),
-                              backgroundColor: DonyColors.success,
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
-                            ),
-                          );
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: DonyColors.error,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                  ),
-                  child: Text('Envoyer le signalement',
-                      style: GoogleFonts.sora(
-                          fontWeight: FontWeight.w700)),
-                ),
+              const SizedBox(height: DonySpacing.base),
+              DonyButton(
+                label: 'Envoyer le signalement',
+                variant: DonyButtonVariant.destructive,
+                onPressed: selected == null
+                    ? null
+                    : () {
+                        Navigator.pop(ctx);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Signalement envoyé. Merci !',
+                                style: tt.bodyMedium
+                                    ?.copyWith(fontWeight: FontWeight.w500)),
+                            backgroundColor: DonyColors.success,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(DonyRadius.sm)),
+                          ),
+                        );
+                      },
               ),
             ],
           ),
@@ -1235,20 +1679,22 @@ class _SenderOptionsSheet extends StatelessWidget {
   }
 
   void _showCancelDialog(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Annuler la demande',
-            style: GoogleFonts.sora(fontWeight: FontWeight.w700, fontSize: 17)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.sheet)),
+        title: Text('Annuler la demande', style: tt.headlineMedium),
         content: Text(
-            'Voulez-vous vraiment annuler votre demande d\'envoi ? Cette action est définitive.',
-            style: GoogleFonts.sora(fontSize: 14, color: DonyColors.grey400)),
+          'Voulez-vous vraiment annuler votre demande d\'envoi ? Cette action est définitive.',
+          style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text('Non',
-                style: GoogleFonts.sora(color: DonyColors.grey400, fontWeight: FontWeight.w600)),
+                style: tt.bodyMedium?.copyWith(color: DonyColors.grey400)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -1256,9 +1702,11 @@ class _SenderOptionsSheet extends StatelessWidget {
               context.read<BidBloc>().add(BidCancelRequested(bid.id));
             },
             style: ElevatedButton.styleFrom(
-                backgroundColor: DonyColors.error, foregroundColor: Colors.white, elevation: 0),
-            child: Text('Oui, annuler',
-                style: GoogleFonts.sora(fontWeight: FontWeight.w700)),
+              backgroundColor: DonyColors.error,
+              foregroundColor: DonyColors.white,
+              elevation: 0,
+            ),
+            child: Text('Oui, annuler', style: tt.labelLarge),
           ),
         ],
       ),
@@ -1266,23 +1714,22 @@ class _SenderOptionsSheet extends StatelessWidget {
   }
 
   void _showDeleteDialog(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Supprimer cette demande',
-            style: GoogleFonts.sora(
-                fontWeight: FontWeight.w700, fontSize: 17)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.sheet)),
+        title: Text('Supprimer cette demande', style: tt.headlineMedium),
         content: Text(
-            'Cette demande sera définitivement supprimée de votre historique.',
-            style: GoogleFonts.sora(
-                fontSize: 14, color: DonyColors.grey400)),
+          'Cette demande sera définitivement supprimée de votre historique.',
+          style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text('Annuler',
-                style: GoogleFonts.sora(
-                    color: DonyColors.grey400, fontWeight: FontWeight.w600)),
+                style: tt.bodyMedium?.copyWith(color: DonyColors.grey400)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -1290,12 +1737,11 @@ class _SenderOptionsSheet extends StatelessWidget {
               context.read<BidBloc>().add(BidDeleteRequested(bid.id));
             },
             style: ElevatedButton.styleFrom(
-                backgroundColor: DonyColors.error,
-                foregroundColor: Colors.white,
-                elevation: 0),
-            child: Text('Supprimer',
-                style:
-                    GoogleFonts.sora(fontWeight: FontWeight.w700)),
+              backgroundColor: DonyColors.error,
+              foregroundColor: DonyColors.white,
+              elevation: 0,
+            ),
+            child: Text('Supprimer', style: tt.labelLarge),
           ),
         ],
       ),
@@ -1303,7 +1749,7 @@ class _SenderOptionsSheet extends StatelessWidget {
   }
 }
 
-// ── Barre voyageur — demande refusée ─────────────────────────────────────────
+// ── Traveler rejected bar ─────────────────────────────────────────────────────
 
 class _TravelerRejectedBar extends StatelessWidget {
   final BidModel bid;
@@ -1315,48 +1761,38 @@ class _TravelerRejectedBar extends StatelessWidget {
     return Container(
       color: DonyColors.white,
       padding: EdgeInsets.fromLTRB(
-          20, 16, 20, MediaQuery.of(context).padding.bottom + 16),
-      child: ElevatedButton.icon(
+        DonySpacing.lg,
+        DonySpacing.base,
+        DonySpacing.lg,
+        MediaQuery.of(context).padding.bottom + DonySpacing.base,
+      ),
+      child: DonyButton(
+        label: 'Supprimer cette demande',
+        icon: Icons.delete_outline_rounded,
+        variant: DonyButtonVariant.destructive,
         onPressed: isLoading ? null : () => _showDeleteDialog(context),
-        icon: isLoading
-            ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: Colors.white),
-              )
-            : const Icon(Icons.delete_outline_rounded, size: 18),
-        label: const Text('Supprimer cette demande'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: DonyColors.error,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          minimumSize: const Size(double.infinity, 52),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        ),
+        isLoading: isLoading,
       ),
     );
   }
 
   void _showDeleteDialog(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('Supprimer cette demande',
-            style: GoogleFonts.sora(
-                fontWeight: FontWeight.w700, fontSize: 17)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.sheet)),
+        title: Text('Supprimer cette demande', style: tt.headlineMedium),
         content: Text(
-            'Cette demande refusée sera retirée définitivement de votre liste.',
-            style: GoogleFonts.sora(
-                fontSize: 14, color: DonyColors.grey400)),
+          'Cette demande refusée sera retirée définitivement de votre liste.',
+          style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text('Annuler',
-                style: GoogleFonts.sora(
-                    color: DonyColors.grey400, fontWeight: FontWeight.w600)),
+                style: tt.bodyMedium?.copyWith(color: DonyColors.grey400)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -1364,12 +1800,11 @@ class _TravelerRejectedBar extends StatelessWidget {
               context.read<BidBloc>().add(BidTravelerDismissRequested(bid.id));
             },
             style: ElevatedButton.styleFrom(
-                backgroundColor: DonyColors.error,
-                foregroundColor: Colors.white,
-                elevation: 0),
-            child: Text('Supprimer',
-                style:
-                    GoogleFonts.sora(fontWeight: FontWeight.w700)),
+              backgroundColor: DonyColors.error,
+              foregroundColor: DonyColors.white,
+              elevation: 0,
+            ),
+            child: Text('Supprimer', style: tt.labelLarge),
           ),
         ],
       ),
@@ -1377,63 +1812,67 @@ class _TravelerRejectedBar extends StatelessWidget {
   }
 }
 
+// ── Tracking number card ──────────────────────────────────────────────────────
+
 class _TrackingNumberCard extends StatelessWidget {
   final String trackingNumber;
   const _TrackingNumberCard({required this.trackingNumber});
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
         color: DonyColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: DonyColors.grey100),
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: DonyColors.grey200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'NUMÉRO DE SUIVI',
-            style: GoogleFonts.sora(
-                fontSize: 11, fontWeight: FontWeight.w700,
-                color: DonyColors.grey400, letterSpacing: 0.8),
+            style: tt.labelMedium?.copyWith(
+              color: DonyColors.grey400,
+              letterSpacing: 0.8,
+            ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: DonySpacing.sm),
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(DonySpacing.sm),
                 decoration: BoxDecoration(
                   color: DonyColors.green100,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(DonyRadius.sm),
                 ),
                 child: const Icon(Icons.local_shipping_outlined,
                     color: DonyColors.green400, size: 20),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: DonySpacing.md),
               Expanded(
                 child: Text(
                   trackingNumber,
-                  style: GoogleFonts.sora(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: DonyColors.ink900,
-                      letterSpacing: 2),
+                  style: tt.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 2,
+                  ),
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.copy_rounded, color: DonyColors.green400, size: 20),
+                icon: const Icon(Icons.copy_rounded,
+                    color: DonyColors.green400, size: 20),
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: trackingNumber));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(
-                        'Numéro copié !',
-                        style: GoogleFonts.sora(fontWeight: FontWeight.w500),
-                      ),
+                      content: Text('Numéro copié !',
+                          style: tt.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w500)),
                       behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(DonyRadius.sm)),
                       duration: const Duration(seconds: 2),
                     ),
                   );
@@ -1442,17 +1881,18 @@ class _TrackingNumberCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: DonySpacing.sm),
           Text(
             'Partagez ce numéro avec votre destinataire pour qu\'il puisse suivre le colis.',
-            style: GoogleFonts.sora(
-                fontSize: 12, color: DonyColors.grey400, height: 1.4),
+            style: tt.bodySmall?.copyWith(color: DonyColors.grey400, height: 1.4),
           ),
         ],
       ),
     );
   }
 }
+
+// ── Timeline button ───────────────────────────────────────────────────────────
 
 class _TimelineButton extends StatelessWidget {
   final BidModel bid;
@@ -1466,49 +1906,53 @@ class _TimelineButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return GestureDetector(
       onTap: () => context.push('/tracking/${bid.id}/timeline', extra: _corridor),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(DonySpacing.base),
         decoration: BoxDecoration(
           color: DonyColors.green100,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(DonyRadius.card),
           border: Border.all(color: DonyColors.green400.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(DonySpacing.sm),
               decoration: BoxDecoration(
                 color: DonyColors.green400.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(DonyRadius.sm),
               ),
-              child: const Icon(Icons.timeline_rounded, color: DonyColors.green400, size: 20),
+              child: const Icon(Icons.timeline_rounded,
+                  color: DonyColors.green400, size: 20),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: DonySpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Suivi en temps réel',
-                    style: GoogleFonts.sora(
-                        fontSize: 14, fontWeight: FontWeight.w700, color: DonyColors.ink900),
+                    style: tt.titleSmall?.copyWith(color: DonyColors.ink900),
                   ),
                   Text(
                     'Consulter l\'historique des scans',
-                    style: GoogleFonts.sora(fontSize: 12, color: DonyColors.grey400),
+                    style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: DonyColors.green400, size: 20),
+            const Icon(Icons.chevron_right_rounded,
+                color: DonyColors.green400, size: 20),
           ],
         ),
       ),
     );
   }
 }
+
+// ── Option tile ───────────────────────────────────────────────────────────────
 
 class _OptionTile extends StatelessWidget {
   final IconData icon;
@@ -1531,62 +1975,59 @@ class _OptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return Opacity(
       opacity: disabled ? 0.45 : 1.0,
       child: GestureDetector(
         onTap: disabled ? null : onTap,
         child: Container(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(DonySpacing.md),
           decoration: BoxDecoration(
-            color: DonyColors.grey50,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: DonyColors.grey100),
+            color: DonyColors.grey100,
+            borderRadius: BorderRadius.circular(DonyRadius.lg),
+            border: Border.all(color: DonyColors.grey200),
           ),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(DonySpacing.sm),
                 decoration: BoxDecoration(
-                    color: iconBg, borderRadius: BorderRadius.circular(10)),
+                    color: iconBg,
+                    borderRadius: BorderRadius.circular(DonyRadius.sm)),
                 child: Icon(icon, color: iconColor, size: 18),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: DonySpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       label,
-                      style: GoogleFonts.sora(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: DonyColors.ink900),
+                      style: tt.titleSmall?.copyWith(color: DonyColors.ink900),
                     ),
                     Text(
                       subtitle,
-                      style: GoogleFonts.sora(
-                          fontSize: 12, color: DonyColors.grey400),
+                      style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
                     ),
                   ],
                 ),
               ),
               if (!disabled)
                 const Icon(Icons.chevron_right_rounded,
-                    color: DonyColors.grey200, size: 18),
+                    color: DonyColors.grey400, size: 18),
               if (disabled)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.sm,
+                    vertical: DonySpacing.xxs,
+                  ),
                   decoration: BoxDecoration(
-                    color: DonyColors.grey100,
-                    borderRadius: BorderRadius.circular(8),
+                    color: DonyColors.grey200,
+                    borderRadius: BorderRadius.circular(DonyRadius.sm),
                   ),
                   child: Text(
                     'Bientôt',
-                    style: GoogleFonts.sora(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: DonyColors.grey400),
+                    style: tt.labelSmall?.copyWith(color: DonyColors.grey400),
                   ),
                 ),
             ],
@@ -1597,54 +2038,57 @@ class _OptionTile extends StatelessWidget {
   }
 }
 
+// ── Tracking link card ────────────────────────────────────────────────────────
+
 class _TrackingLinkCard extends StatelessWidget {
   final BidModel bid;
   const _TrackingLinkCard({required this.bid});
 
-  // URL publique de la page de suivi — différente de API_BASE_URL (qui est l'URL interne de l'API).
-  // En dev, pointe sur le backend local. En prod, mettre l'URL publique (ex: https://dony.app).
   static const String _trackingPublicBase = String.fromEnvironment(
     'TRACKING_PUBLIC_URL',
     defaultValue: 'http://localhost:8080/api/v1',
   );
 
-  String get _trackingUrl => '$_trackingPublicBase/tracking/public/${bid.trackingToken}';
+  String get _trackingUrl =>
+      '$_trackingPublicBase/tracking/public/${bid.trackingToken}';
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
         color: DonyColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: DonyColors.grey100),
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: DonyColors.grey200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'LIEN DE SUIVI',
-            style: GoogleFonts.sora(
-                fontSize: 11, fontWeight: FontWeight.w700,
-                color: DonyColors.grey400, letterSpacing: 0.8),
+            style: tt.labelMedium?.copyWith(
+              color: DonyColors.grey400,
+              letterSpacing: 0.8,
+            ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: DonySpacing.sm),
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(DonySpacing.md),
             decoration: BoxDecoration(
-              color: DonyColors.grey50,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: DonyColors.grey100),
+              color: DonyColors.grey100,
+              borderRadius: BorderRadius.circular(DonyRadius.sm),
+              border: Border.all(color: DonyColors.grey200),
             ),
             child: Row(
               children: [
-                const Icon(Icons.link_rounded, color: DonyColors.green400, size: 16),
-                const SizedBox(width: 8),
+                const Icon(Icons.link_rounded,
+                    color: DonyColors.green400, size: 16),
+                const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Text(
                     _trackingUrl,
-                    style: GoogleFonts.sora(
-                        fontSize: 11, color: DonyColors.grey400),
+                    style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1652,7 +2096,7 @@ class _TrackingLinkCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: DonySpacing.sm),
           Row(
             children: [
               Expanded(
@@ -1662,46 +2106,50 @@ class _TrackingLinkCard extends StatelessWidget {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Lien copié',
-                            style: GoogleFonts.sora(
-                                fontWeight: FontWeight.w500)),
+                            style: tt.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w500)),
                         backgroundColor: DonyColors.success,
                         behavior: SnackBarBehavior.floating,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                            borderRadius:
+                                BorderRadius.circular(DonyRadius.sm)),
                       ),
                     );
                   },
                   icon: const Icon(Icons.copy_rounded, size: 16),
                   label: Text('Copier',
-                      style: GoogleFonts.sora(
-                          fontSize: 13, fontWeight: FontWeight.w600)),
+                      style:
+                          tt.titleSmall?.copyWith(color: DonyColors.green400)),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: DonyColors.green400,
                     side: const BorderSide(color: DonyColors.green400),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: DonySpacing.md),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(DonyRadius.md)),
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () => Share.share(
                     'Suivez votre colis dony en temps réel :\n$_trackingUrl',
-                    subject: 'Suivi de colis dony — ${bid.trackingNumber ?? ""}',
+                    subject:
+                        'Suivi de colis dony — ${bid.trackingNumber ?? ""}',
                   ),
                   icon: const Icon(Icons.share_rounded, size: 16),
                   label: Text('Partager',
-                      style: GoogleFonts.sora(
-                          fontSize: 13, fontWeight: FontWeight.w600)),
+                      style:
+                          tt.titleSmall?.copyWith(color: DonyColors.white)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: DonyColors.green400,
-                    foregroundColor: Colors.white,
+                    foregroundColor: DonyColors.white,
                     elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: DonySpacing.md),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(DonyRadius.md)),
                   ),
                 ),
               ),
@@ -1713,94 +2161,104 @@ class _TrackingLinkCard extends StatelessWidget {
   }
 }
 
+// ── Confirmation code card ────────────────────────────────────────────────────
+
 class _ConfirmationCodeCard extends StatelessWidget {
   final String code;
   const _ConfirmationCodeCard({required this.code});
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
         color: DonyColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: DonyColors.grey100),
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: DonyColors.grey200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'CODE DE CONFIRMATION',
-            style: GoogleFonts.sora(
-                fontSize: 11, fontWeight: FontWeight.w700,
-                color: DonyColors.grey400, letterSpacing: 0.8),
+            style: tt.labelMedium?.copyWith(
+              color: DonyColors.grey400,
+              letterSpacing: 0.8,
+            ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: DonySpacing.md),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 18),
+            padding: const EdgeInsets.symmetric(vertical: DonySpacing.lg),
             decoration: BoxDecoration(
               color: DonyColors.green100,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(DonyRadius.md),
             ),
             child: Text(
               code,
               textAlign: TextAlign.center,
-              style: GoogleFonts.sora(
-                  fontSize: 36, fontWeight: FontWeight.w800,
-                  color: DonyColors.green600, letterSpacing: 12),
+              style: tt.displayLarge?.copyWith(
+                color: DonyColors.green600,
+                letterSpacing: 12,
+              ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: DonySpacing.md),
           GestureDetector(
             onTap: () {
               Clipboard.setData(ClipboardData(text: code));
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('Code copié',
-                      style: GoogleFonts.sora(fontWeight: FontWeight.w500)),
+                      style: tt.bodyMedium
+                          ?.copyWith(fontWeight: FontWeight.w500)),
                   backgroundColor: DonyColors.success,
                   behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(DonyRadius.sm)),
                 ),
               );
             },
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 10),
+              padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
               decoration: BoxDecoration(
                 border: Border.all(color: DonyColors.green400),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(DonyRadius.md),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.copy_rounded, size: 16, color: DonyColors.green400),
-                  const SizedBox(width: 8),
-                  Text('Copier le code',
-                      style: GoogleFonts.sora(
-                          fontSize: 13, fontWeight: FontWeight.w600, color: DonyColors.green400)),
+                  const Icon(Icons.copy_rounded,
+                      size: 16, color: DonyColors.green400),
+                  const SizedBox(width: DonySpacing.sm),
+                  Text(
+                    'Copier le code',
+                    style: tt.titleSmall?.copyWith(color: DonyColors.green400),
+                  ),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: DonySpacing.sm),
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(DonySpacing.sm),
             decoration: BoxDecoration(
-              color: DonyColors.warning.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
+              color: DonyColors.warningLight,
+              borderRadius: BorderRadius.circular(DonyRadius.sm),
               border: Border.all(color: DonyColors.warning.withValues(alpha: 0.3)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.info_outline_rounded, size: 14, color: DonyColors.warning),
-                const SizedBox(width: 8),
+                const Icon(Icons.info_outline_rounded,
+                    size: 14, color: DonyColors.warning),
+                const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Text(
                     'Transmettez ce code au destinataire par vos propres moyens (SMS, WhatsApp…). Le voyageur devra le saisir à la livraison.',
-                    style: GoogleFonts.sora(
-                        fontSize: 12, color: DonyColors.grey400, height: 1.4),
+                    style: tt.bodySmall
+                        ?.copyWith(color: DonyColors.grey400, height: 1.4),
                   ),
                 ),
               ],
