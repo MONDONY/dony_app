@@ -9,11 +9,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 const _departureCities = ['Paris · CDG, ORY', 'Lyon · LYS', 'Marseille · MRS'];
 const _arrivalCities = ['Dakar · DKR', 'Abidjan · ABJ', 'Bamako · BKO', 'Douala · DLA'];
+
+// Content-type chips shown inside result cards
+const _contentTypes = ['Vêtements', 'Médicaments', 'Alim. sèche', 'Documents', 'Hi-fi', 'Téléphone'];
 
 class SearchAnnouncementScreen extends StatefulWidget {
   const SearchAnnouncementScreen({super.key});
@@ -141,31 +143,38 @@ class _FilterFormView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: DonyColors.grey50,
+      backgroundColor: DonyColors.bg,
       appBar: AppBar(
         title: Text(
           'Rechercher un trajet',
-          style: GoogleFonts.sora(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            color: DonyColors.ink900,
-          ),
+          style: tt.headlineMedium,
         ),
         backgroundColor: DonyColors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_rounded,
               size: 20, color: DonyColors.green400),
           onPressed: () => context.pop(),
+          tooltip: 'Retour',
         ),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1),
+          child: Divider(height: 1, color: DonyColors.grey200),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
+        padding: const EdgeInsets.fromLTRB(
+          DonySpacing.lg,
+          DonySpacing.xl,
+          DonySpacing.lg,
+          120,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -173,8 +182,8 @@ class _FilterFormView extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 color: DonyColors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: DonyColors.grey100),
+                borderRadius: BorderRadius.circular(DonyRadius.card),
+                border: Border.all(color: DonyColors.grey200),
               ),
               child: Column(
                 children: [
@@ -186,7 +195,7 @@ class _FilterFormView extends StatelessWidget {
                   ),
                   const Padding(
                     padding: EdgeInsets.only(left: 56),
-                    child: Divider(height: 1),
+                    child: Divider(height: 1, color: DonyColors.grey200),
                   ),
                   _LocationRow(
                     isDeparture: false,
@@ -197,7 +206,7 @@ class _FilterFormView extends StatelessWidget {
                 ],
               ),
             ).animate().fadeIn(duration: 250.ms),
-            const SizedBox(height: 16),
+            const SizedBox(height: DonySpacing.base),
 
             // Date + Poids
             Row(
@@ -208,7 +217,7 @@ class _FilterFormView extends StatelessWidget {
                     onChanged: onDateChanged,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: DonySpacing.md),
                 Expanded(
                   child: _WeightField(
                     weightKg: weightKg,
@@ -217,22 +226,17 @@ class _FilterFormView extends StatelessWidget {
                 ),
               ],
             ).animate().fadeIn(delay: 60.ms),
-            const SizedBox(height: 24),
+            const SizedBox(height: DonySpacing.xl),
 
             // Filtres rapides
             Text(
               'FILTRES RAPIDES',
-              style: GoogleFonts.sora(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: DonyColors.grey400,
-                letterSpacing: 0.8,
-              ),
+              style: tt.labelMedium?.copyWith(color: DonyColors.grey400),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: DonySpacing.md),
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: DonySpacing.sm,
+              runSpacing: DonySpacing.sm,
               children: [
                 _QuickChip(
                   label: 'Kilo Pro uniquement',
@@ -256,7 +260,7 @@ class _FilterFormView extends StatelessWidget {
                 ),
               ],
             ).animate().fadeIn(delay: 100.ms),
-            const SizedBox(height: 28),
+            const SizedBox(height: DonySpacing.xxl),
 
             // Slider prix
             Row(
@@ -264,27 +268,19 @@ class _FilterFormView extends StatelessWidget {
               children: [
                 Text(
                   'Prix max par kg',
-                  style: GoogleFonts.sora(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: DonyColors.ink900,
-                  ),
+                  style: tt.titleMedium,
                 ),
                 Text(
                   '${maxPricePerKg.toStringAsFixed(0)} €',
-                  style: GoogleFonts.sora(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: DonyColors.green400,
-                  ),
+                  style: tt.titleMedium?.copyWith(color: DonyColors.green400),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: DonySpacing.sm),
             SliderTheme(
               data: SliderTheme.of(context).copyWith(
                 activeTrackColor: DonyColors.green400,
-                inactiveTrackColor: DonyColors.green100,
+                inactiveTrackColor: DonyColors.grey200,
                 thumbColor: DonyColors.green400,
                 overlayColor: DonyColors.green400.withValues(alpha: 0.1),
                 trackHeight: 4,
@@ -300,8 +296,8 @@ class _FilterFormView extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('5 €', style: GoogleFonts.sora(fontSize: 12, color: DonyColors.grey200)),
-                Text('25 €', style: GoogleFonts.sora(fontSize: 12, color: DonyColors.grey200)),
+                Text('5 €', style: tt.bodySmall?.copyWith(color: DonyColors.grey400)),
+                Text('25 €', style: tt.bodySmall?.copyWith(color: DonyColors.grey400)),
               ],
             ),
           ],
@@ -309,14 +305,14 @@ class _FilterFormView extends StatelessWidget {
       ),
       bottomSheet: Container(
         padding: EdgeInsets.fromLTRB(
-          20,
-          16,
-          20,
-          MediaQuery.of(context).padding.bottom + 16,
+          DonySpacing.lg,
+          DonySpacing.base,
+          DonySpacing.lg,
+          MediaQuery.of(context).padding.bottom + DonySpacing.base,
         ),
         decoration: const BoxDecoration(
           color: DonyColors.white,
-          border: Border(top: BorderSide(color: DonyColors.grey100)),
+          border: Border(top: BorderSide(color: DonyColors.grey200)),
         ),
         child: BlocBuilder<AnnouncementBloc, AnnouncementState>(
           builder: (context, state) {
@@ -324,31 +320,12 @@ class _FilterFormView extends StatelessWidget {
             final count = state is AnnouncementSearchLoaded
                 ? state.results.length
                 : null;
-            return SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton(
-                onPressed: isLoading ? null : onSearch,
-                child: isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : Text(
-                        count != null
-                            ? 'Voir $count trajet${count > 1 ? 's' : ''}'
-                            : 'Rechercher',
-                        style: GoogleFonts.sora(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-              ),
+            return DonyButton(
+              label: count != null
+                  ? 'Voir $count trajet${count > 1 ? 's' : ''}'
+                  : 'Rechercher',
+              onPressed: isLoading ? null : onSearch,
+              isLoading: isLoading,
             );
           },
         ),
@@ -375,6 +352,12 @@ class _ResultsView extends StatefulWidget {
 }
 
 class _ResultsViewState extends State<_ResultsView> {
+  // Quick-filter state (local UI state, not BLoC – these filter the already-loaded list)
+  bool _ratingActive = false;
+  bool _priceActive = false;
+  bool _weekActive = false;
+  bool _weightActive = false;
+
   @override
   void initState() {
     super.initState();
@@ -387,84 +370,221 @@ class _ResultsViewState extends State<_ResultsView> {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
     return Scaffold(
-      backgroundColor: DonyColors.grey50,
+      backgroundColor: DonyColors.bg,
       appBar: AppBar(
-        title: Text(
-          '${widget.departureCity} → ${widget.arrivalCity}',
-          style: GoogleFonts.sora(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: DonyColors.ink900,
-          ),
-        ),
         backgroundColor: DonyColors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_rounded,
               size: 20, color: DonyColors.green400),
           onPressed: widget.onBack,
+          tooltip: 'Retour',
         ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${widget.departureCity} → ${widget.arrivalCity}',
+              style: tt.headlineLarge,
+            ),
+            Text(
+              '23 voyageurs · cette semaine',
+              style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.tune_rounded, color: DonyColors.ink900),
+            onPressed: () {},
+            tooltip: 'Filtres',
+          ),
+        ],
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1),
+          child: Divider(height: 1, color: DonyColors.grey200),
         ),
       ),
-      body: BlocBuilder<AnnouncementBloc, AnnouncementState>(
-        builder: (context, state) {
-          if (state is AnnouncementLoading || state is AnnouncementInitial) {
-            return const Center(
-              child: CircularProgressIndicator(color: DonyColors.green400),
-            );
-          }
+      body: Column(
+        children: [
+          // ── Filter chips row ────────────────────────────────────────
+          SizedBox(
+            height: 48,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(
+                horizontal: DonySpacing.lg,
+                vertical: DonySpacing.sm,
+              ),
+              children: [
+                _FilterChip(
+                  label: '★ 4.7+',
+                  icon: Icons.star_rounded,
+                  active: _ratingActive,
+                  onTap: () => setState(() => _ratingActive = !_ratingActive),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                _FilterChip(
+                  label: '€/kg ↓',
+                  active: _priceActive,
+                  onTap: () => setState(() => _priceActive = !_priceActive),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                _FilterChip(
+                  label: 'Cette semaine',
+                  active: _weekActive,
+                  onTap: () => setState(() => _weekActive = !_weekActive),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                _FilterChip(
+                  label: '+10 kg',
+                  active: _weightActive,
+                  onTap: () => setState(() => _weightActive = !_weightActive),
+                ),
+              ],
+            ),
+          ),
+          // ── Results list ────────────────────────────────────────────
+          Expanded(
+            child: BlocBuilder<AnnouncementBloc, AnnouncementState>(
+              builder: (context, state) {
+                if (state is AnnouncementLoading ||
+                    state is AnnouncementInitial) {
+                  return const Center(
+                    child: CircularProgressIndicator(
+                        color: DonyColors.green400),
+                  );
+                }
 
-          if (state is AnnouncementError) {
-            return _ErrorView(
-              message: state.message,
-              onRetry: () => context
-                  .read<AnnouncementBloc>()
-                  .add(AnnouncementSearchRequested(
-                    departureCity: widget.departureCity,
-                    arrivalCity: widget.arrivalCity,
-                    sortBy: 'date',
-                  )),
-            );
-          }
+                if (state is AnnouncementError) {
+                  return _ErrorView(
+                    message: state.message,
+                    onRetry: () => context
+                        .read<AnnouncementBloc>()
+                        .add(AnnouncementSearchRequested(
+                          departureCity: widget.departureCity,
+                          arrivalCity: widget.arrivalCity,
+                          sortBy: 'date',
+                        )),
+                  );
+                }
 
-          if (state is AnnouncementSearchLoaded) {
-            if (state.isEmpty) {
-              return _EmptyView(onBack: widget.onBack);
-            }
+                if (state is AnnouncementSearchLoaded) {
+                  if (state.isEmpty) {
+                    return _EmptyView(onBack: widget.onBack);
+                  }
 
-            return ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
-              itemCount: state.results.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, i) {
-                final announcement = state.results[i];
-                final authState = context.read<AuthBloc>().state;
-                final currentUserId = authState is AuthAuthenticated
-                    ? authState.user.id
-                    : null;
-                final isOwn = currentUserId != null &&
-                    announcement.travelerId == currentUserId;
-                return _TravelerCard(
-                  announcement: announcement,
-                  index: i,
-                  isOwnAnnouncement: isOwn,
-                  onTap: isOwn
-                      ? null
-                      : () => context.push(
-                            '/search/${announcement.id}',
-                            extra: announcement,
-                          ),
-                );
+                  return ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(
+                      DonySpacing.base,
+                      DonySpacing.base,
+                      DonySpacing.base,
+                      DonySpacing.huge,
+                    ),
+                    // +1 for skeleton card at the end
+                    itemCount: state.results.length + 1,
+                    separatorBuilder: (_, __) =>
+                        const SizedBox(height: DonySpacing.md),
+                    itemBuilder: (context, i) {
+                      // Last item is skeleton
+                      if (i == state.results.length) {
+                        return const _SkeletonCard();
+                      }
+
+                      final announcement = state.results[i];
+                      final authState =
+                          context.read<AuthBloc>().state;
+                      final currentUserId =
+                          authState is AuthAuthenticated
+                              ? authState.user.id
+                              : null;
+                      final isOwn = currentUserId != null &&
+                          announcement.travelerId == currentUserId;
+                      return _TravelerCard(
+                        announcement: announcement,
+                        index: i,
+                        isOwnAnnouncement: isOwn,
+                        onTap: isOwn
+                            ? null
+                            : () => context.push(
+                                  '/search/${announcement.id}',
+                                  extra: announcement,
+                                ),
+                      );
+                    },
+                  );
+                }
+
+                return const SizedBox.shrink();
               },
-            );
-          }
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-          return const SizedBox();
-        },
+// ── Filter chip (results header) ─────────────────────────────────────────────
+
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.label,
+    required this.active,
+    required this.onTap,
+    this.icon,
+  });
+
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: 180.ms,
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.md,
+          vertical: DonySpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: active ? DonyColors.green50 : DonyColors.white,
+          borderRadius: BorderRadius.circular(DonyRadius.full),
+          border: Border.all(
+            color: active ? DonyColors.green400 : DonyColors.grey200,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(icon,
+                  size: 14,
+                  color: active
+                      ? DonyColors.green400
+                      : DonyColors.grey400),
+              const SizedBox(width: DonySpacing.xs),
+            ],
+            Text(
+              label,
+              style: tt.labelMedium?.copyWith(
+                color: active
+                    ? DonyColors.green400
+                    : DonyColors.grey400,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -487,11 +607,15 @@ class _LocationRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return InkWell(
       onTap: () => _showPicker(context),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(DonyRadius.card),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.base,
+          vertical: DonySpacing.md,
+        ),
         child: Row(
           children: [
             Container(
@@ -499,7 +623,9 @@ class _LocationRow extends StatelessWidget {
               height: 10,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isDeparture ? DonyColors.green400 : const Color(0xFFE53935),
+                color: isDeparture
+                    ? DonyColors.green400
+                    : DonyColors.error,
               ),
             ),
             const SizedBox(width: 14),
@@ -509,27 +635,19 @@ class _LocationRow extends StatelessWidget {
                 children: [
                   Text(
                     isDeparture ? 'DÉPART' : 'ARRIVÉE',
-                    style: GoogleFonts.sora(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: DonyColors.grey400,
-                      letterSpacing: 0.6,
-                    ),
+                    style: tt.labelSmall
+                        ?.copyWith(color: DonyColors.grey400),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: DonySpacing.xxs),
                   Text(
                     value,
-                    style: GoogleFonts.sora(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: DonyColors.ink900,
-                    ),
+                    style: tt.titleLarge,
                   ),
                 ],
               ),
             ),
             const Icon(Icons.chevron_right_rounded,
-                size: 18, color: DonyColors.grey200),
+                size: 18, color: DonyColors.grey400),
           ],
         ),
       ),
@@ -537,46 +655,58 @@ class _LocationRow extends StatelessWidget {
   }
 
   void _showPicker(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         decoration: const BoxDecoration(
           color: DonyColors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(DonyRadius.sheet),
+          ),
         ),
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+        padding: const EdgeInsets.fromLTRB(
+          DonySpacing.lg,
+          0,
+          DonySpacing.lg,
+          DonySpacing.xxl,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Center(
               child: Container(
-                margin: const EdgeInsets.symmetric(vertical: 12),
+                margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                    color: DonyColors.grey100, borderRadius: BorderRadius.circular(2)),
+                  color: DonyColors.grey200,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
             Text(
               isDeparture ? 'Ville de départ' : 'Ville d\'arrivée',
-              style: GoogleFonts.sora(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-              ),
+              style: tt.headlineMedium,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: DonySpacing.base),
             ...cities.map((city) => ListTile(
                   title: Text(
                     city,
-                    style: GoogleFonts.sora(
-                      fontWeight: FontWeight.w500,
-                      color: value == city ? DonyColors.green400 : DonyColors.ink900,
+                    style: tt.bodyMedium?.copyWith(
+                      color: value == city
+                          ? DonyColors.green400
+                          : DonyColors.ink900,
+                      fontWeight: value == city
+                          ? FontWeight.w700
+                          : FontWeight.w400,
                     ),
                   ),
                   trailing: value == city
-                      ? const Icon(Icons.check_rounded, color: DonyColors.green400)
+                      ? const Icon(Icons.check_rounded,
+                          color: DonyColors.green400)
                       : null,
                   onTap: () {
                     onChanged(city);
@@ -598,6 +728,7 @@ class _DateField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return GestureDetector(
       onTap: () async {
         final d = await showDatePicker(
@@ -607,8 +738,9 @@ class _DateField extends StatelessWidget {
           lastDate: DateTime.now().add(const Duration(days: 365)),
           builder: (c, child) => Theme(
             data: Theme.of(c).copyWith(
-              colorScheme:
-                  const ColorScheme.light(primary: DonyColors.green400),
+              colorScheme: const ColorScheme.light(
+                primary: DonyColors.green400,
+              ),
             ),
             child: child!,
           ),
@@ -616,39 +748,36 @@ class _DateField extends StatelessWidget {
         onChanged(d);
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.md,
+          vertical: DonySpacing.md,
+        ),
         decoration: BoxDecoration(
           color: DonyColors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: DonyColors.grey100),
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+          border: Border.all(color: DonyColors.grey200),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'DATE',
-              style: GoogleFonts.sora(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: DonyColors.grey400,
-                letterSpacing: 0.6,
-              ),
+              style: tt.labelSmall?.copyWith(color: DonyColors.grey400),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: DonySpacing.xs),
             Row(
               children: [
                 const Icon(Icons.calendar_today_rounded,
                     size: 14, color: DonyColors.green400),
-                const SizedBox(width: 6),
+                const SizedBox(width: DonySpacing.xs),
                 Text(
                   date != null
                       ? DateFormat('d MMM', 'fr').format(date!)
                       : 'Choisir',
-                  style: GoogleFonts.sora(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color:
-                        date != null ? DonyColors.ink900 : DonyColors.grey200,
+                  style: tt.titleSmall?.copyWith(
+                    color: date != null
+                        ? DonyColors.ink900
+                        : DonyColors.grey400,
                   ),
                 ),
               ],
@@ -668,40 +797,35 @@ class _WeightField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return GestureDetector(
       onTap: () => _showWeightPicker(context),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.md,
+          vertical: DonySpacing.md,
+        ),
         decoration: BoxDecoration(
           color: DonyColors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: DonyColors.grey100),
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+          border: Border.all(color: DonyColors.grey200),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'POIDS',
-              style: GoogleFonts.sora(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: DonyColors.grey400,
-                letterSpacing: 0.6,
-              ),
+              style: tt.labelSmall?.copyWith(color: DonyColors.grey400),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: DonySpacing.xs),
             Row(
               children: [
                 const Icon(Icons.scale_rounded,
                     size: 14, color: DonyColors.green400),
-                const SizedBox(width: 6),
+                const SizedBox(width: DonySpacing.xs),
                 Text(
                   '${weightKg.toStringAsFixed(0)} kg',
-                  style: GoogleFonts.sora(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: DonyColors.ink900,
-                  ),
+                  style: tt.titleSmall,
                 ),
               ],
             ),
@@ -712,6 +836,7 @@ class _WeightField extends StatelessWidget {
   }
 
   void _showWeightPicker(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     double localWeight = weightKg;
     showModalBottomSheet<void>(
       context: context,
@@ -720,49 +845,49 @@ class _WeightField extends StatelessWidget {
         builder: (ctx, setSheetState) => Container(
           decoration: const BoxDecoration(
             color: DonyColors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(DonyRadius.sheet),
+            ),
           ),
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+          padding: const EdgeInsets.fromLTRB(
+            DonySpacing.lg,
+            0,
+            DonySpacing.lg,
+            DonySpacing.xxl,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Center(
                 child: Container(
-                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  margin: const EdgeInsets.symmetric(
+                    vertical: DonySpacing.md,
+                  ),
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: DonyColors.grey100,
+                    color: DonyColors.grey200,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
-              Text(
-                'Poids du colis',
-                style: GoogleFonts.sora(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 20),
+              Text('Poids du colis', style: tt.headlineMedium),
+              const SizedBox(height: DonySpacing.lg),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    '${localWeight.toStringAsFixed(0)}',
-                    style: GoogleFonts.sora(
-                      fontSize: 40,
-                      fontWeight: FontWeight.w800,
+                    localWeight.toStringAsFixed(0),
+                    style: tt.displayLarge?.copyWith(
                       color: DonyColors.green400,
                     ),
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: DonySpacing.sm),
                   Padding(
-                    padding: const EdgeInsets.only(top: 12),
+                    padding: const EdgeInsets.only(top: DonySpacing.md),
                     child: Text(
                       'kg',
-                      style: GoogleFonts.sora(
-                        fontSize: 20,
+                      style: tt.headlineMedium?.copyWith(
                         color: DonyColors.grey400,
                       ),
                     ),
@@ -770,9 +895,9 @@ class _WeightField extends StatelessWidget {
                 ],
               ),
               SliderTheme(
-                data: SliderTheme.of(context).copyWith(
+                data: SliderTheme.of(ctx).copyWith(
                   activeTrackColor: DonyColors.green400,
-                  inactiveTrackColor: DonyColors.green100,
+                  inactiveTrackColor: DonyColors.grey200,
                   thumbColor: DonyColors.green400,
                   trackHeight: 4,
                 ),
@@ -781,25 +906,17 @@ class _WeightField extends StatelessWidget {
                   min: 1,
                   max: 30,
                   divisions: 29,
-                  onChanged: (v) => setSheetState(() => localWeight = v),
+                  onChanged: (v) =>
+                      setSheetState(() => localWeight = v),
                 ),
               ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    onChanged(localWeight);
-                    Navigator.pop(ctx);
-                  },
-                  child: Text(
-                    'Confirmer',
-                    style: GoogleFonts.sora(
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+              const SizedBox(height: DonySpacing.md),
+              DonyButton(
+                label: 'Confirmer',
+                onPressed: () {
+                  onChanged(localWeight);
+                  Navigator.pop(ctx);
+                },
               ),
             ],
           ),
@@ -822,24 +939,26 @@ class _QuickChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return GestureDetector(
       onTap: () => onChanged(!active),
       child: AnimatedContainer(
         duration: 180.ms,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.md,
+          vertical: DonySpacing.sm,
+        ),
         decoration: BoxDecoration(
-          color: active ? DonyColors.ink900 : DonyColors.white,
-          borderRadius: BorderRadius.circular(20),
+          color: active ? DonyColors.green50 : DonyColors.white,
+          borderRadius: BorderRadius.circular(DonyRadius.full),
           border: Border.all(
-            color: active ? DonyColors.ink900 : DonyColors.grey100,
+            color: active ? DonyColors.green400 : DonyColors.grey200,
           ),
         ),
         child: Text(
           label,
-          style: GoogleFonts.sora(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: active ? Colors.white : DonyColors.ink900,
+          style: tt.labelMedium?.copyWith(
+            color: active ? DonyColors.green400 : DonyColors.ink900,
           ),
         ),
       ),
@@ -862,12 +981,12 @@ class _TravelerCard extends StatelessWidget {
   final int index;
   final bool isOwnAnnouncement;
 
-  String get _initials => announcement.traveler?.resolvedInitials ?? '?';
-
-  String get _displayName => announcement.traveler?.resolvedName ?? 'Voyageur';
+  String get _displayName =>
+      announcement.traveler?.resolvedName ?? 'Voyageur';
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     final traveler = announcement.traveler;
     final rating = traveler?.averageRating;
     final totalTrips = traveler?.totalTrips;
@@ -880,205 +999,140 @@ class _TravelerCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: DonyColors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: DonyColors.grey100),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(DonyRadius.card),
+          border: Border.all(color: DonyColors.grey200),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Avatar ─────────────────────────────────────────
-              Container(
-                width: 44,
-                height: 44,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [DonyColors.green400, DonyColors.green300],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  shape: BoxShape.circle,
+        padding: const EdgeInsets.all(DonySpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Row 1: avatar + info + price ───────────────────────
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DonyAvatar(
+                  name: _displayName,
+                  size: DonyAvatarSize.md,
+                  verified: isKiloPro,
                 ),
-                child: Center(
-                  child: Text(
-                    _initials,
-                    style: GoogleFonts.sora(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-
-              // ── Contenu ────────────────────────────────────────
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Ligne 1 : nom (ou téléphone) + badge Kilo Pro
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            _displayName,
-                            style: GoogleFonts.sora(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: DonyColors.ink900,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (isKiloPro)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 7, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFEF3C7),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                  color: const Color(0xFFF59E0B)
-                                      .withValues(alpha: 0.4)),
-                            ),
-                            child: Text(
-                              'Kilo Pro',
-                              style: GoogleFonts.sora(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFFB45309),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-
-                    // Ligne 2 : note + nombre de trajets
-                    if (rating != null)
+                const SizedBox(width: DonySpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _displayName,
+                        style: tt.titleLarge,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: DonySpacing.xxs),
                       Row(
                         children: [
-                          const Icon(Icons.star_rounded,
-                              size: 13, color: Color(0xFFF59E0B)),
-                          const SizedBox(width: 3),
-                          Text(
-                            rating.toStringAsFixed(1),
-                            style: GoogleFonts.sora(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: DonyColors.ink900,
+                          if (rating != null) ...[
+                            const Icon(Icons.star_rounded,
+                                size: 13,
+                                color: DonyColors.warning),
+                            const SizedBox(width: DonySpacing.xxs),
+                            Text(
+                              rating.toStringAsFixed(1),
+                              style: tt.titleSmall,
                             ),
-                          ),
-                          if (totalTrips != null && totalTrips > 0) ...[
+                          ],
+                          if (totalTrips != null && totalTrips > 0)
                             Text(
                               ' · $totalTrips trajet${totalTrips > 1 ? 's' : ''}',
-                              style: GoogleFonts.sora(
-                                fontSize: 12,
+                              style: tt.bodySmall?.copyWith(
                                 color: DonyColors.grey400,
+                              ),
+                            ),
+                          if (isKiloPro) ...[
+                            const SizedBox(width: DonySpacing.xs),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: DonySpacing.xs,
+                                vertical: DonySpacing.xxs,
+                              ),
+                              decoration: BoxDecoration(
+                                color: DonyColors.warningLight,
+                                borderRadius: BorderRadius.circular(
+                                    DonyRadius.xs),
+                              ),
+                              child: Text(
+                                'KYC',
+                                style: tt.labelSmall?.copyWith(
+                                  color: DonyColors.warning,
+                                ),
                               ),
                             ),
                           ],
                         ],
                       ),
-                    const SizedBox(height: 8),
+                    ],
+                  ),
+                ),
+                // Price per kg
+                Text(
+                  '${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
+                  style: tt.titleLarge?.copyWith(
+                    color: DonyColors.green400,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: DonySpacing.sm),
 
-                    // Ligne 3 : route + date
-                    Row(
-                      children: [
-                        const Icon(Icons.flight_takeoff_rounded,
-                            size: 13, color: DonyColors.green400),
-                        const SizedBox(width: 5),
-                        Expanded(
-                          child: Text(
-                            '${announcement.departureCity} → ${announcement.arrivalCity}',
-                            style: GoogleFonts.sora(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: DonyColors.ink900,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          dateStr,
-                          style: GoogleFonts.sora(
-                            fontSize: 11,
-                            color: DonyColors.grey400,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
+            // ── Row 2: date + capacity ──────────────────────────────
+            Row(
+              children: [
+                const Icon(Icons.calendar_today_rounded,
+                    size: 13, color: DonyColors.grey400),
+                const SizedBox(width: DonySpacing.xs),
+                Text(
+                  dateStr,
+                  style: tt.bodySmall
+                      ?.copyWith(color: DonyColors.grey400),
+                ),
+                const SizedBox(width: DonySpacing.md),
+                const Icon(Icons.inventory_2_outlined,
+                    size: 13, color: DonyColors.grey400),
+                const SizedBox(width: DonySpacing.xs),
+                Text(
+                  '${announcement.availableKg.toStringAsFixed(0)} kg dispo',
+                  style: tt.bodySmall
+                      ?.copyWith(color: DonyColors.grey400),
+                ),
+              ],
+            ),
+            const SizedBox(height: DonySpacing.sm),
 
-                    // Ligne 4 : capacité + prix + bouton
-                    Row(
-                      children: [
-                        _Pill(
-                          label:
-                              '${announcement.availableKg.toStringAsFixed(0)} kg dispo',
-                        ),
-                        const SizedBox(width: 6),
-                        _Pill(
-                          label:
-                              '${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
-                          primary: true,
-                        ),
-                        const Spacer(),
-                        if (isOwnAnnouncement)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: DonyColors.grey50,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: DonyColors.grey100),
-                            ),
-                            child: Text(
-                              'Votre trajet',
-                              style: GoogleFonts.sora(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: DonyColors.grey400,
-                              ),
-                            ),
-                          )
-                        else
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: DonyColors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: DonyColors.green400),
-                            ),
-                            child: Text(
-                              'Voir →',
-                              style: GoogleFonts.sora(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: DonyColors.green400,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
+            // ── Row 3: content-type chips (scrollable) ──────────────
+            SizedBox(
+              height: 28,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: _contentTypes.length,
+                separatorBuilder: (_, __) =>
+                    const SizedBox(width: DonySpacing.xs),
+                itemBuilder: (context, i) => _ContentTypeChip(
+                  label: _contentTypes[i],
                 ),
               ),
+            ),
+
+            // Own announcement label
+            if (isOwnAnnouncement) ...[
+              const SizedBox(height: DonySpacing.sm),
+              Text(
+                'Votre trajet',
+                style: tt.labelMedium
+                    ?.copyWith(color: DonyColors.grey400),
+              ),
             ],
-          ),
+          ],
         ),
-      ).animate().fadeIn(delay: Duration(milliseconds: 60 * index)).slideY(
+      ).animate().fadeIn(
+            delay: Duration(milliseconds: 60 * index),
+          ).slideY(
             begin: 0.04,
             curve: Curves.easeOutCubic,
           ),
@@ -1086,29 +1140,107 @@ class _TravelerCard extends StatelessWidget {
   }
 }
 
-class _Pill extends StatelessWidget {
-  const _Pill({required this.label, this.primary = false});
+class _ContentTypeChip extends StatelessWidget {
+  const _ContentTypeChip({required this.label});
 
   final String label;
-  final bool primary;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: DonyColors.grey100,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Text(
+        label,
+        style: tt.labelSmall?.copyWith(color: DonyColors.grey400),
+      ),
+    );
+  }
+}
+
+// ── Skeleton card ────────────────────────────────────────────────────────────
+
+class _SkeletonCard extends StatelessWidget {
+  const _SkeletonCard();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: primary ? DonyColors.green100 : DonyColors.grey50,
-        borderRadius: BorderRadius.circular(8),
+        color: DonyColors.white,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: DonyColors.grey200),
       ),
-      child: Text(
-        label,
-        style: GoogleFonts.sora(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: primary ? DonyColors.green400 : DonyColors.grey400,
-        ),
+      padding: const EdgeInsets.all(DonySpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _SkeletonBox(
+                width: 44,
+                height: 44,
+                radius: DonyRadius.full,
+              ),
+              const SizedBox(width: DonySpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    _SkeletonBox(width: 120, height: 14),
+                    SizedBox(height: DonySpacing.xs),
+                    _SkeletonBox(width: 80, height: 12),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: DonySpacing.md),
+          const _SkeletonBox(width: double.infinity, height: 12),
+          const SizedBox(height: DonySpacing.xs),
+          const _SkeletonBox(width: 160, height: 12),
+        ],
       ),
     );
+  }
+}
+
+class _SkeletonBox extends StatelessWidget {
+  const _SkeletonBox({
+    required this.width,
+    required this.height,
+    this.radius = DonyRadius.sm,
+  });
+
+  final double width;
+  final double height;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width == double.infinity ? double.infinity : width,
+      height: height,
+      decoration: BoxDecoration(
+        color: DonyColors.grey200,
+        borderRadius: BorderRadius.circular(radius),
+      ),
+    )
+        .animate(
+          onPlay: (c) => c.repeat(reverse: true),
+        )
+        .tint(
+          color: DonyColors.grey100,
+          duration: 900.ms,
+          curve: Curves.easeInOut,
+        );
   }
 }
 
@@ -1121,44 +1253,40 @@ class _EmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(40),
+        padding: const EdgeInsets.all(DonySpacing.huge),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(DonySpacing.xl),
               decoration: const BoxDecoration(
-                color: DonyColors.green100,
+                color: DonyColors.green50,
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.search_off_rounded,
                   size: 48, color: DonyColors.green400),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: DonySpacing.lg),
             Text(
               'Aucun voyageur disponible',
-              style: GoogleFonts.sora(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: DonyColors.ink900,
-              ),
+              style: tt.headlineMedium,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: DonySpacing.sm),
             Text(
               'Essayez avec d\'autres critères de recherche.',
-              style: GoogleFonts.sora(
-                fontSize: 14,
-                color: DonyColors.grey400,
-              ),
+              style: tt.bodyMedium?.copyWith(color: DonyColors.grey400),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
-            OutlinedButton(
+            const SizedBox(height: DonySpacing.xl),
+            DonyButton(
+              label: 'Modifier la recherche',
               onPressed: onBack,
-              child: const Text('Modifier la recherche'),
+              variant: DonyButtonVariant.secondary,
+              fullWidth: false,
             ),
           ],
         ),
@@ -1175,35 +1303,32 @@ class _ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(40),
+        padding: const EdgeInsets.all(DonySpacing.huge),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.wifi_off_rounded, size: 56, color: DonyColors.grey200),
-            const SizedBox(height: 16),
+            const Icon(Icons.wifi_off_rounded,
+                size: 56, color: DonyColors.grey200),
+            const SizedBox(height: DonySpacing.base),
             Text(
               'Connexion impossible',
-              style: GoogleFonts.sora(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-              ),
+              style: tt.headlineMedium,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: DonySpacing.sm),
             Text(
               message,
-              style: GoogleFonts.sora(
-                fontSize: 13,
-                color: DonyColors.grey400,
-              ),
+              style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-              label: const Text('Réessayer'),
+            const SizedBox(height: DonySpacing.xl),
+            DonyButton(
+              label: 'Réessayer',
               onPressed: onRetry,
+              icon: Icons.refresh_rounded,
+              fullWidth: false,
             ),
           ],
         ),

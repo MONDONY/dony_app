@@ -8,121 +8,259 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class BidListScreen extends StatelessWidget {
   final String announcementId;
+  // Route metadata: pass these for the AppBar subtitle
+  final String? departureCityCode;
+  final String? arrivalCityCode;
+  final DateTime? departureDate;
 
-  const BidListScreen({super.key, required this.announcementId});
+  const BidListScreen({
+    super.key,
+    required this.announcementId,
+    this.departureCityCode,
+    this.arrivalCityCode,
+    this.departureDate,
+  });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) =>
           getIt<BidBloc>()..add(BidListRequested(announcementId)),
-      child: _BidListView(announcementId: announcementId),
+      child: _BidListView(
+        announcementId: announcementId,
+        departureCityCode: departureCityCode,
+        arrivalCityCode: arrivalCityCode,
+        departureDate: departureDate,
+      ),
     );
   }
 }
 
 class _BidListView extends StatelessWidget {
   final String announcementId;
-  const _BidListView({required this.announcementId});
+  final String? departureCityCode;
+  final String? arrivalCityCode;
+  final DateTime? departureDate;
+
+  const _BidListView({
+    required this.announcementId,
+    this.departureCityCode,
+    this.arrivalCityCode,
+    this.departureDate,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: DonyColors.grey50,
-      appBar: AppBar(
-        backgroundColor: DonyColors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: DonyColors.green400),
-          onPressed: () => context.pop(),
-        ),
-        title: Text(
-          'Demandes reçues',
-          style: GoogleFonts.sora(fontWeight: FontWeight.w700, fontSize: 18, color: DonyColors.ink900),
-        ),
-        centerTitle: false,
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: DonyColors.grey100),
-        ),
-      ),
-      body: BlocConsumer<BidBloc, BidState>(
-        listener: (context, state) {
-          if (state is BidDeleted) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('Demande supprimée.',
-                  style: GoogleFonts.sora(fontWeight: FontWeight.w500)),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ));
-            context.read<BidBloc>().add(BidListRequested(announcementId));
-          } else if (state is BidError) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(state.message,
-                  style: GoogleFonts.sora(fontWeight: FontWeight.w500)),
-              backgroundColor: DonyColors.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ));
-            // Ne pas retry automatiquement — l'utilisateur doit agir explicitement
-          }
-        },
-        builder: (context, state) {
-          if (state is BidLoading) {
-            return const Center(child: CircularProgressIndicator(color: DonyColors.green400));
-          }
-          if (state is BidListLoaded) {
-            if (state.bids.isEmpty) {
-              return _EmptyView();
-            }
-            return _BidList(bids: state.bids);
-          }
-          if (state is BidError) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.error_outline_rounded, size: 48, color: DonyColors.grey200),
-                  const SizedBox(height: 12),
-                  Text(state.message,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.sora(fontSize: 14, color: DonyColors.grey400)),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: () =>
-                        context.read<BidBloc>().add(BidListRequested(announcementId)),
-                    child: const Text('Réessayer'),
+    final tt = Theme.of(context).textTheme;
+
+    // Build subtitle: "CDG → DSS · jeu 17 avril" when data available
+    final String subtitle = _buildSubtitle();
+
+    return BlocConsumer<BidBloc, BidState>(
+      listener: (context, state) {
+        if (state is BidDeleted) {
+          DonySnackbar.show(context,
+              message: 'Demande supprimée.',
+              type: DonySnackbarType.success);
+          context
+              .read<BidBloc>()
+              .add(BidListRequested(announcementId));
+        } else if (state is BidError) {
+          DonySnackbar.show(context,
+              message: state.message, type: DonySnackbarType.error);
+        }
+      },
+      builder: (context, state) {
+        // Determine count for AppBar title
+        final int count = state is BidListLoaded
+            ? state.bids.length
+            : 0;
+
+        return Scaffold(
+          backgroundColor: DonyColors.bg,
+          appBar: AppBar(
+            backgroundColor: DonyColors.white,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            centerTitle: false,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_rounded,
+                  size: 20, color: DonyColors.green400),
+              onPressed: () => context.pop(),
+              tooltip: 'Retour',
+            ),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  count > 0
+                      ? '$count demande${count > 1 ? 's' : ''}'
+                      : 'Demandes',
+                  style: tt.headlineLarge,
+                ),
+                if (subtitle.isNotEmpty)
+                  Text(
+                    subtitle,
+                    style: tt.bodySmall
+                        ?.copyWith(color: DonyColors.grey400),
                   ),
-                ],
+              ],
+            ),
+            actions: [
+              // Scanner chip button
+              Padding(
+                padding: const EdgeInsets.only(right: DonySpacing.md),
+                child: _ScannerChipButton(
+                  onTap: () => context.push('/tracking/scan'),
+                ),
               ),
-            );
-          }
-          return const SizedBox.shrink();
-        },
+            ],
+            bottom: const PreferredSize(
+              preferredSize: Size.fromHeight(1),
+              child: Divider(height: 1, color: DonyColors.grey200),
+            ),
+          ),
+          body: _buildBody(context, state),
+        );
+      },
+    );
+  }
+
+  String _buildSubtitle() {
+    final parts = <String>[];
+    if (departureCityCode != null && arrivalCityCode != null) {
+      parts.add('$departureCityCode → $arrivalCityCode');
+    }
+    if (departureDate != null) {
+      parts.add(DateFormat('EEE d MMMM', 'fr').format(departureDate!));
+    }
+    return parts.join(' · ');
+  }
+
+  Widget _buildBody(BuildContext context, BidState state) {
+    final tt = Theme.of(context).textTheme;
+
+    if (state is BidLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: DonyColors.green400),
+      );
+    }
+
+    if (state is BidListLoaded) {
+      if (state.bids.isEmpty) {
+        return const _EmptyView();
+      }
+      return _BidList(
+        bids: state.bids,
+        announcementId: announcementId,
+      );
+    }
+
+    if (state is BidError) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(DonySpacing.huge),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline_rounded,
+                  size: 48, color: DonyColors.grey200),
+              const SizedBox(height: DonySpacing.md),
+              Text(
+                state.message,
+                textAlign: TextAlign.center,
+                style:
+                    tt.bodyMedium?.copyWith(color: DonyColors.grey400),
+              ),
+              const SizedBox(height: DonySpacing.base),
+              DonyButton(
+                label: 'Réessayer',
+                onPressed: () => context
+                    .read<BidBloc>()
+                    .add(BidListRequested(announcementId)),
+                variant: DonyButtonVariant.secondary,
+                fullWidth: false,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+}
+
+// ── Scanner chip button ───────────────────────────────────────────────────────
+
+class _ScannerChipButton extends StatelessWidget {
+  const _ScannerChipButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.md,
+          vertical: DonySpacing.xs,
+        ),
+        decoration: BoxDecoration(
+          color: DonyColors.white,
+          borderRadius: BorderRadius.circular(DonyRadius.full),
+          border: Border.all(color: DonyColors.grey200),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.qr_code_scanner_rounded,
+                size: 16, color: DonyColors.ink900),
+            const SizedBox(width: DonySpacing.xs),
+            Text(
+              'Scanner',
+              style: tt.labelMedium?.copyWith(color: DonyColors.ink900),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
+// ── Bid list ──────────────────────────────────────────────────────────────────
+
 class _BidList extends StatelessWidget {
   final List<BidModel> bids;
-  const _BidList({required this.bids});
+  final String announcementId;
+
+  const _BidList({required this.bids, required this.announcementId});
 
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        DonySpacing.xl,
+        DonySpacing.lg,
+        DonySpacing.huge,
+      ),
       itemCount: bids.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, __) =>
+          const SizedBox(height: DonySpacing.md),
       itemBuilder: (context, i) {
         final bid = bids[i];
-        final card = _BidCard(bid: bid)
+        final card = _BidCard(
+          bid: bid,
+          announcementId: announcementId,
+        )
             .animate(delay: Duration(milliseconds: i * 60))
             .fadeIn(duration: 300.ms)
             .slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic);
@@ -134,22 +272,24 @@ class _BidList extends StatelessWidget {
           direction: DismissDirection.endToStart,
           background: Container(
             alignment: Alignment.centerRight,
-            padding: const EdgeInsets.only(right: 24),
+            padding: const EdgeInsets.only(right: DonySpacing.xl),
             decoration: BoxDecoration(
               color: DonyColors.error,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(DonyRadius.card),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(Icons.delete_outline_rounded,
-                    color: Colors.white, size: 28),
-                const SizedBox(height: 4),
-                Text('Supprimer',
-                    style: GoogleFonts.sora(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600)),
+                    color: DonyColors.white, size: 28),
+                const SizedBox(height: DonySpacing.xs),
+                Text(
+                  'Supprimer',
+                  style: Theme.of(context)
+                      .textTheme
+                      .labelSmall
+                      ?.copyWith(color: DonyColors.white),
+                ),
               ],
             ),
           ),
@@ -158,39 +298,52 @@ class _BidList extends StatelessWidget {
               context: context,
               builder: (ctx) => AlertDialog(
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
-                title: Text('Supprimer cette demande',
-                    style: GoogleFonts.sora(
-                        fontWeight: FontWeight.w700, fontSize: 17)),
+                  borderRadius:
+                      BorderRadius.circular(DonyRadius.sheet),
+                ),
+                title: Text(
+                  'Supprimer cette demande',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
                 content: Text(
-                    'Cette demande refusée sera retirée définitivement de votre liste.',
-                    style: GoogleFonts.sora(
-                        fontSize: 14, color: DonyColors.grey400)),
+                  'Cette demande refusée sera retirée définitivement de votre liste.',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: DonyColors.grey400),
+                ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(ctx, false),
-                    child: Text('Annuler',
-                        style: GoogleFonts.sora(
-                            color: DonyColors.grey400,
-                            fontWeight: FontWeight.w600)),
+                    child: Text(
+                      'Annuler',
+                      style: Theme.of(context)
+                          .textTheme
+                          .labelLarge
+                          ?.copyWith(color: DonyColors.grey400),
+                    ),
                   ),
-                  ElevatedButton(
+                  FilledButton(
                     onPressed: () => Navigator.pop(ctx, true),
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: DonyColors.error,
-                        foregroundColor: Colors.white,
-                        elevation: 0),
-                    child: Text('Supprimer',
-                        style: GoogleFonts.sora(
-                            fontWeight: FontWeight.w700)),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: DonyColors.error,
+                    ),
+                    child: Text(
+                      'Supprimer',
+                      style: Theme.of(context)
+                          .textTheme
+                          .labelLarge
+                          ?.copyWith(color: DonyColors.white),
+                    ),
                   ),
                 ],
               ),
             ) ??
                 false;
           },
-          onDismissed: (_) =>
-              context.read<BidBloc>().add(BidTravelerDismissRequested(bid.id)),
+          onDismissed: (_) => context
+              .read<BidBloc>()
+              .add(BidTravelerDismissRequested(bid.id)),
           child: card,
         );
       },
@@ -198,182 +351,163 @@ class _BidList extends StatelessWidget {
   }
 }
 
+// ── Bid card ──────────────────────────────────────────────────────────────────
+
 class _BidCard extends StatelessWidget {
   final BidModel bid;
-  const _BidCard({required this.bid});
+  final String announcementId;
+
+  const _BidCard({required this.bid, required this.announcementId});
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = _statusColor(bid.status);
-    final statusLabel = _statusLabel(bid.status);
+    final tt = Theme.of(context).textTheme;
 
-    return GestureDetector(
-      onTap: () => context.push('/bids/${bid.id}', extra: bid),
-      child: Container(
-        decoration: BoxDecoration(
-          color: DonyColors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: DonyColors.grey100),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: DonyColors.green100,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.person_outline_rounded, color: DonyColors.green400, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        bid.resolvedSenderName,
-                        style: GoogleFonts.sora(
-                            fontWeight: FontWeight.w600, fontSize: 14, color: DonyColors.ink900),
-                      ),
-                      if (bid.senderName != null && bid.senderName!.isNotEmpty && bid.senderPhone != null)
+    return Container(
+      decoration: BoxDecoration(
+        color: DonyColors.white,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: DonyColors.grey200),
+      ),
+      padding: const EdgeInsets.all(DonySpacing.base),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Row 1: avatar + sender info + amount ──────────────────
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DonyAvatar(
+                name: bid.resolvedSenderName,
+                size: DonyAvatarSize.md,
+              ),
+              const SizedBox(width: DonySpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      bid.resolvedSenderName,
+                      style: tt.titleLarge,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: DonySpacing.xxs),
+                    // "★ rating · X kg"
+                    Row(
+                      children: [
+                        const Icon(Icons.star_rounded,
+                            size: 13, color: DonyColors.warning),
+                        const SizedBox(width: DonySpacing.xxs),
                         Text(
-                          bid.senderPhone!,
-                          style: GoogleFonts.sora(fontSize: 12, color: DonyColors.grey400),
+                          '—',
+                          style: tt.bodySmall
+                              ?.copyWith(color: DonyColors.grey400),
                         ),
-                      Text(
-                        DateFormat('dd MMM yyyy').format(bid.createdAt),
-                        style: GoogleFonts.sora(fontSize: 12, color: DonyColors.grey400),
-                      ),
-                    ],
-                  ),
+                        const SizedBox(width: DonySpacing.xs),
+                        Text(
+                          '· ${bid.weightKg.toStringAsFixed(0)} kg',
+                          style: tt.bodySmall
+                              ?.copyWith(color: DonyColors.grey400),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    statusLabel,
-                    style: GoogleFonts.sora(
-                        fontSize: 12, fontWeight: FontWeight.w600, color: statusColor),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            const Divider(color: DonyColors.grey100, height: 1),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                _Stat(label: 'Poids', value: '${bid.weightKg} kg'),
-                const SizedBox(width: 24),
-                _Stat(label: 'Valeur', value: '${bid.declaredValueEur.toStringAsFixed(0)} €'),
-                const SizedBox(width: 24),
-                _Stat(label: 'Catégorie', value: bid.contentCategory ?? '—'),
-              ],
-            ),
-            if (bid.status == 'PENDING') ...[
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: DonyColors.grey200),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Voir le détail et répondre',
-                    style: GoogleFonts.sora(
-                        fontSize: 12, color: DonyColors.green400, fontWeight: FontWeight.w600),
-                  ),
-                ],
+              ),
+              // Amount
+              Text(
+                '${(bid.weightKg * (bid.pricePerKg ?? 0)).toStringAsFixed(0)} €',
+                style: tt.titleLarge
+                    ?.copyWith(color: DonyColors.green400),
               ),
             ],
-          ],
-        ),
+          ),
+          const SizedBox(height: DonySpacing.md),
+
+          // ── Content label ─────────────────────────────────────────
+          Text(
+            'CONTENU DÉCLARÉ',
+            style: tt.labelSmall?.copyWith(color: DonyColors.grey400),
+          ),
+          const SizedBox(height: DonySpacing.xxs),
+          Text(
+            bid.contentCategory ?? bid.description,
+            style: tt.bodySmall?.copyWith(color: DonyColors.ink900),
+          ),
+          const SizedBox(height: DonySpacing.md),
+
+          // ── Divider ───────────────────────────────────────────────
+          const Divider(color: DonyColors.grey200, height: 1),
+          const SizedBox(height: DonySpacing.md),
+
+          // ── Row of 2 action buttons ────────────────────────────────
+          Row(
+            children: [
+              Expanded(
+                child: DonyButton(
+                  label: 'Refuser',
+                  variant: DonyButtonVariant.ghost,
+                  onPressed: () => context
+                      .read<BidBloc>()
+                      .add(BidRejectRequested(bid.id)),
+                ),
+              ),
+              const SizedBox(width: DonySpacing.md),
+              Expanded(
+                child: DonyButton(
+                  label: 'Accepter',
+                  variant: DonyButtonVariant.primary,
+                  onPressed: () => context
+                      .read<BidBloc>()
+                      .add(BidAcceptRequested(bid.id)),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
-
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'ACCEPTED':
-        return DonyColors.success;
-      case 'REJECTED':
-        return DonyColors.error;
-      case 'CANCELLED':
-        return DonyColors.grey400;
-      default:
-        return DonyColors.warning;
-    }
-  }
-
-  String _statusLabel(String status) {
-    switch (status) {
-      case 'ACCEPTED':
-        return 'Accepté';
-      case 'REJECTED':
-        return 'Refusé';
-      case 'COMPLETED':
-        return 'Livré';
-      case 'CANCELLED':
-        return 'Annulé';
-      default:
-        return 'En attente';
-    }
-  }
 }
 
-class _Stat extends StatelessWidget {
-  final String label;
-  final String value;
-  const _Stat({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: GoogleFonts.sora(fontSize: 11, color: DonyColors.grey200, fontWeight: FontWeight.w500)),
-        const SizedBox(height: 2),
-        Text(value,
-            style: GoogleFonts.sora(fontSize: 13, color: DonyColors.ink900, fontWeight: FontWeight.w600)),
-      ],
-    );
-  }
-}
+// ── Empty view ────────────────────────────────────────────────────────────────
 
 class _EmptyView extends StatelessWidget {
+  const _EmptyView();
+
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(40),
+        padding: const EdgeInsets.all(DonySpacing.huge),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: 72,
               height: 72,
-              decoration: BoxDecoration(color: DonyColors.green100, borderRadius: BorderRadius.circular(20)),
-              child: const Icon(Icons.inbox_outlined, color: DonyColors.green400, size: 36),
+              decoration: BoxDecoration(
+                color: DonyColors.green50,
+                borderRadius: BorderRadius.circular(DonyRadius.xl),
+              ),
+              child: const Icon(Icons.inbox_outlined,
+                  color: DonyColors.green400, size: 36),
             ),
-            const SizedBox(height: 16),
-            Text('Aucune demande',
-                style: GoogleFonts.sora(
-                    fontSize: 18, fontWeight: FontWeight.w700, color: DonyColors.ink900)),
-            const SizedBox(height: 8),
-            Text('Partagez votre annonce pour recevoir des demandes d\'expéditeurs.',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.sora(fontSize: 14, color: DonyColors.grey400)),
+            const SizedBox(height: DonySpacing.base),
+            Text(
+              'Aucune demande',
+              style: tt.headlineMedium,
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            Text(
+              'Partagez votre annonce pour recevoir des demandes d\'expéditeurs.',
+              textAlign: TextAlign.center,
+              style: tt.bodyMedium?.copyWith(color: DonyColors.grey400),
+            ),
           ],
         ),
       ),
     );
   }
 }
-
