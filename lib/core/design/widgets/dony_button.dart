@@ -1,4 +1,5 @@
-import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/design/tokens/color_tokens.dart';
+import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:flutter/material.dart';
 
 enum DonyButtonVariant { primary, secondary, ghost, destructive }
@@ -10,52 +11,63 @@ class DonyButton extends StatelessWidget {
     required this.onPressed,
     this.variant = DonyButtonVariant.primary,
     this.icon,
+    this.iconRight,
     this.isLoading = false,
+    this.fullWidth = true,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final DonyButtonVariant variant;
   final IconData? icon;
+  final IconData? iconRight;
   final bool isLoading;
+  final bool fullWidth;
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final child = isLoading
-        ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
-        : (icon != null
-            ? Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(icon, size: 18),
-                  const SizedBox(width: DonySpacing.sm),
-                  Text(label),
-                ],
-              )
-            : Text(label));
+        ? const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2, color: DonyColors.white),
+          )
+        : Row(
+            mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (icon != null) ...[Icon(icon, size: 18), const SizedBox(width: DonySpacing.xs)],
+              Text(label),
+              if (iconRight != null) ...[const SizedBox(width: DonySpacing.xs), Icon(iconRight, size: 18)],
+            ],
+          );
 
-    final content = SizedBox(width: double.infinity, child: _button(cs, child));
-    return content;
-  }
+    final minSize = fullWidth ? const Size.fromHeight(52) : const Size(120, 52);
 
-  Widget _button(ColorScheme cs, Widget child) {
-    switch (variant) {
-      case DonyButtonVariant.primary:
-        return FilledButton(onPressed: onPressed, child: child);
-      case DonyButtonVariant.secondary:
-        return OutlinedButton(onPressed: onPressed, child: child);
-      case DonyButtonVariant.ghost:
-        return TextButton(onPressed: onPressed, child: child);
-      case DonyButtonVariant.destructive:
-        return FilledButton(
-          onPressed: onPressed,
+    return switch (variant) {
+      DonyButtonVariant.primary => FilledButton(
+          onPressed: isLoading ? null : onPressed,
+          style: FilledButton.styleFrom(minimumSize: minSize),
+          child: child,
+        ),
+      DonyButtonVariant.secondary => OutlinedButton(
+          onPressed: isLoading ? null : onPressed,
+          style: OutlinedButton.styleFrom(minimumSize: minSize),
+          child: child,
+        ),
+      DonyButtonVariant.ghost => TextButton(
+          onPressed: isLoading ? null : onPressed,
+          style: TextButton.styleFrom(minimumSize: minSize),
+          child: child,
+        ),
+      DonyButtonVariant.destructive => FilledButton(
+          onPressed: isLoading ? null : onPressed,
           style: FilledButton.styleFrom(
-            backgroundColor: cs.error,
-            foregroundColor: cs.onError,
+            backgroundColor: DonyColors.error,
+            minimumSize: minSize,
           ),
           child: child,
-        );
-    }
+        ),
+    };
   }
 }

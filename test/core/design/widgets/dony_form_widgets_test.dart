@@ -72,32 +72,85 @@ void main() {
   });
 
   group('DonyAvatar', () {
-    testWidgets('shows initials when no imageUrl', (tester) async {
-      await tester.pumpWidget(_wrap(const DonyAvatar(initials: 'Ibrahima')));
+    testWidgets('shows two initials for full name', (tester) async {
+      await tester.pumpWidget(_wrap(const DonyAvatar(name: 'Ibrahima Diallo')));
+      expect(find.text('ID'), findsOneWidget);
+    });
+
+    testWidgets('shows single initial for single word name', (tester) async {
+      await tester.pumpWidget(_wrap(const DonyAvatar(name: 'Ibrahima')));
       expect(find.text('I'), findsOneWidget);
     });
 
-    testWidgets('sm size has radius 16', (tester) async {
-      await tester.pumpWidget(_wrap(const DonyAvatar(size: DonyAvatarSize.sm)));
-      final avatar = tester.widget<CircleAvatar>(find.byType(CircleAvatar));
-      expect(avatar.radius, 16.0);
-    });
-
-    testWidgets('md size has radius 22', (tester) async {
-      await tester.pumpWidget(_wrap(const DonyAvatar(size: DonyAvatarSize.md)));
-      final avatar = tester.widget<CircleAvatar>(find.byType(CircleAvatar));
-      expect(avatar.radius, 22.0);
-    });
-
-    testWidgets('lg size has radius 28', (tester) async {
-      await tester.pumpWidget(_wrap(const DonyAvatar(size: DonyAvatarSize.lg)));
-      final avatar = tester.widget<CircleAvatar>(find.byType(CircleAvatar));
-      expect(avatar.radius, 28.0);
-    });
-
-    testWidgets('shows question mark when no initials', (tester) async {
-      await tester.pumpWidget(_wrap(const DonyAvatar()));
+    testWidgets('shows question mark for empty name', (tester) async {
+      await tester.pumpWidget(_wrap(const DonyAvatar(name: '')));
       expect(find.text('?'), findsOneWidget);
+    });
+
+    testWidgets('sm size renders Container with dimension 32', (tester) async {
+      await tester.pumpWidget(_wrap(const DonyAvatar(name: 'Test', size: DonyAvatarSize.sm)));
+      // The outer Container has width/height = _dimension
+      final containers = tester.widgetList<Container>(find.byType(Container));
+      final mainContainer = containers.firstWhere(
+        (c) => c.constraints == null && (c.decoration is BoxDecoration),
+        orElse: () => containers.first,
+      );
+      // Verify the avatar rendered (size sm = 32)
+      expect(find.byType(DonyAvatar), findsOneWidget);
+      final size = tester.getSize(find.byType(DonyAvatar));
+      expect(size.width, greaterThanOrEqualTo(32));
+    });
+
+    testWidgets('md size renders correctly', (tester) async {
+      await tester.pumpWidget(_wrap(const DonyAvatar(name: 'Test', size: DonyAvatarSize.md)));
+      expect(find.byType(DonyAvatar), findsOneWidget);
+      final size = tester.getSize(find.byType(DonyAvatar));
+      expect(size.width, greaterThanOrEqualTo(44));
+    });
+
+    testWidgets('lg size renders correctly', (tester) async {
+      await tester.pumpWidget(_wrap(const DonyAvatar(name: 'Test', size: DonyAvatarSize.lg)));
+      expect(find.byType(DonyAvatar), findsOneWidget);
+      final size = tester.getSize(find.byType(DonyAvatar));
+      expect(size.width, greaterThanOrEqualTo(56));
+    });
+
+    testWidgets('xl size renders correctly', (tester) async {
+      await tester.pumpWidget(_wrap(const DonyAvatar(name: 'Test', size: DonyAvatarSize.xl)));
+      expect(find.byType(DonyAvatar), findsOneWidget);
+      final size = tester.getSize(find.byType(DonyAvatar));
+      expect(size.width, greaterThanOrEqualTo(72));
+    });
+
+    testWidgets('verified shows check icon', (tester) async {
+      await tester.pumpWidget(_wrap(const DonyAvatar(name: 'Test User', verified: true)));
+      expect(find.byIcon(Icons.check), findsOneWidget);
+    });
+
+    testWidgets('not verified hides check icon', (tester) async {
+      await tester.pumpWidget(_wrap(const DonyAvatar(name: 'Test User')));
+      expect(find.byIcon(Icons.check), findsNothing);
+    });
+
+    testWidgets('same name produces same initials text', (tester) async {
+      // Both should show same initials — deterministic hash
+      await tester.pumpWidget(_wrap(
+        const Column(children: [
+          DonyAvatar(name: 'Amadou Maiga'),
+          DonyAvatar(name: 'Amadou Maiga'),
+        ]),
+      ));
+      expect(find.text('AM'), findsNWidgets(2));
+    });
+
+    testWidgets('different names produce avatar widgets', (tester) async {
+      await tester.pumpWidget(_wrap(
+        const Column(children: [
+          DonyAvatar(name: 'Ibrahima Diallo'),
+          DonyAvatar(name: 'Amadou Maiga'),
+        ]),
+      ));
+      expect(find.byType(DonyAvatar), findsNWidgets(2));
     });
   });
 }

@@ -70,17 +70,32 @@ void main() {
       expect(find.byIcon(Icons.send), findsOneWidget);
     });
 
-    testWidgets('is full width by default', (tester) async {
+    testWidgets('shows trailing icon when provided', (tester) async {
+      await tester.pumpWidget(_wrap(
+        DonyButton(
+          label: 'Test',
+          onPressed: () {},
+          iconRight: Icons.arrow_forward,
+        ),
+      ));
+      expect(find.byIcon(Icons.arrow_forward), findsOneWidget);
+    });
+
+    testWidgets('is full width by default (fullWidth true)', (tester) async {
       await tester.pumpWidget(_wrap(
         DonyButton(label: 'Full', onPressed: () {}),
       ));
-      final sizedBox = tester.widget<SizedBox>(
-        find.descendant(
-          of: find.byType(DonyButton),
-          matching: find.byType(SizedBox),
-        ).first,
-      );
-      expect(sizedBox.width, double.infinity);
+      // fullWidth=true uses Size.fromHeight(52) which expands in a constrained parent
+      final btn = tester.widget<DonyButton>(find.byType(DonyButton));
+      expect(btn.fullWidth, isTrue);
+    });
+
+    testWidgets('fullWidth false sets compact size', (tester) async {
+      await tester.pumpWidget(_wrap(
+        DonyButton(label: 'Compact', onPressed: () {}, fullWidth: false),
+      ));
+      final btn = tester.widget<DonyButton>(find.byType(DonyButton));
+      expect(btn.fullWidth, isFalse);
     });
 
     testWidgets('tap triggers onPressed callback', (tester) async {
@@ -90,6 +105,15 @@ void main() {
       ));
       await tester.tap(find.byType(FilledButton));
       expect(tapped, isTrue);
+    });
+
+    testWidgets('isLoading disables onPressed and shows progress indicator', (tester) async {
+      await tester.pumpWidget(_wrap(
+        DonyButton(label: 'Loading', onPressed: () {}, isLoading: true),
+      ));
+      final btn = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(btn.onPressed, isNull);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
   });
 }

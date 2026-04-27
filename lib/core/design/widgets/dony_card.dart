@@ -23,7 +23,7 @@ class DonyCard extends StatelessWidget {
       return Card(
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(DonyRadius.md),
+          borderRadius: BorderRadius.circular(DonyRadius.card),
           child: inner,
         ),
       );
