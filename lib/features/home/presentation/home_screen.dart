@@ -98,7 +98,7 @@ class _SenderView extends StatelessWidget {
                   // Bell icon
                   IconButton(
                     icon: const Icon(Icons.notifications_outlined, color: DonyColors.ink900),
-                    onPressed: () {},
+                    onPressed: () => context.push('/messages'),
                     tooltip: 'Notifications',
                   ),
                   const SizedBox(width: DonySpacing.xs),
@@ -170,7 +170,7 @@ class _SenderView extends StatelessWidget {
                   const SizedBox(height: DonySpacing.xl),
 
                   // ── Search form card ───────────────────────────────────────
-                  _SearchFormCard().animate().fadeIn(delay: 100.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                  const _SearchFormCard().animate().fadeIn(delay: 100.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
 
                   const SizedBox(height: DonySpacing.base),
 
@@ -204,7 +204,7 @@ class _SenderView extends StatelessWidget {
                   const SizedBox(height: DonySpacing.md),
 
                   // ── Corridors grid ────────────────────────────────────────
-                  _CorridorsGrid().animate().fadeIn(delay: 180.ms),
+                  const _CorridorsGrid().animate().fadeIn(delay: 180.ms),
 
                   const SizedBox(height: DonySpacing.xl),
 
@@ -225,6 +225,8 @@ class _SenderView extends StatelessWidget {
 // ── Search form card ─────────────────────────────────────────────────────────
 
 class _SearchFormCard extends StatelessWidget {
+  const _SearchFormCard();
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
@@ -351,6 +353,8 @@ class _SearchFormCard extends StatelessWidget {
 // ── Corridors grid ────────────────────────────────────────────────────────────
 
 class _CorridorsGrid extends StatelessWidget {
+  const _CorridorsGrid();
+
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
@@ -510,7 +514,7 @@ class _TravelerView extends StatelessWidget {
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.notifications_outlined, color: DonyColors.ink900),
-                    onPressed: () {},
+                    onPressed: () => context.push('/messages'),
                     tooltip: 'Notifications',
                   ),
                 ],
@@ -583,7 +587,7 @@ class _TravelerView extends StatelessWidget {
                   const SizedBox(height: DonySpacing.xl),
 
                   // ── Dark stats card ──────────────────────────────────────
-                  _StatsCard().animate().fadeIn(delay: 60.ms).slideY(begin: 0.03, curve: Curves.easeOutCubic),
+                  const _StatsCard().animate().fadeIn(delay: 60.ms).slideY(begin: 0.03, curve: Curves.easeOutCubic),
 
                   const SizedBox(height: DonySpacing.xxl),
 
@@ -599,7 +603,7 @@ class _TravelerView extends StatelessWidget {
                   const SizedBox(height: DonySpacing.md),
 
                   // ── Trip card ────────────────────────────────────────────
-                  _ActiveTripCard().animate().fadeIn(delay: 100.ms),
+                  const _ActiveTripCard().animate().fadeIn(delay: 100.ms),
 
                   const SizedBox(height: DonySpacing.xl),
 
@@ -613,7 +617,7 @@ class _TravelerView extends StatelessWidget {
                   const SizedBox(height: DonySpacing.xl),
 
                   // ── Payout footer ────────────────────────────────────────
-                  _PayoutFooter().animate().fadeIn(delay: 180.ms),
+                  const _PayoutFooter().animate().fadeIn(delay: 180.ms),
 
                   const SizedBox(height: DonySpacing.huge),
                 ],
@@ -629,6 +633,8 @@ class _TravelerView extends StatelessWidget {
 // ── Stats card (dark greenDark background) ────────────────────────────────────
 
 class _StatsCard extends StatelessWidget {
+  const _StatsCard();
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
@@ -711,6 +717,8 @@ class _StatPill extends StatelessWidget {
 // ── Active trip card ──────────────────────────────────────────────────────────
 
 class _ActiveTripCard extends StatelessWidget {
+  const _ActiveTripCard();
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
@@ -785,6 +793,8 @@ class _ActiveTripCard extends StatelessWidget {
 // ── Payout footer row ─────────────────────────────────────────────────────────
 
 class _PayoutFooter extends StatelessWidget {
+  const _PayoutFooter();
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;

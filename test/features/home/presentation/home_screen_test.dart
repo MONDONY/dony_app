@@ -46,6 +46,10 @@ GoRouter _buildRouter(AuthBloc authBloc) => GoRouter(
           path: '/announcements/create',
           builder: (_, __) => const Scaffold(body: Text('Create Announcement')),
         ),
+        GoRoute(
+          path: '/messages',
+          builder: (_, __) => const Scaffold(body: Text('Messages')),
+        ),
       ],
     );
 
@@ -57,7 +61,7 @@ Future<void> _pump(WidgetTester tester, AuthBloc authBloc) async {
     ),
   );
   // Allow flutter_animate animations to settle
-  await tester.pump(const Duration(milliseconds: 500));
+  await tester.pump(const Duration(milliseconds: 600));
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────

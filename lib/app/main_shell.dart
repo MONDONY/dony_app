@@ -154,10 +154,13 @@ class _NavItem extends StatelessWidget {
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.md,
+              vertical: DonySpacing.xs,
+            ),
             decoration: BoxDecoration(
               color: _active ? DonyColors.green100 : Colors.transparent,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(DonyRadius.xl),
             ),
             child: Icon(
               _active ? icon : outlinedIcon,
