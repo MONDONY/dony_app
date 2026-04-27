@@ -1,32 +1,26 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
-import 'package:dony/features/matching/bloc/announcement_bloc.dart';
-import 'package:dony/features/matching/bloc/announcement_event.dart';
-import 'package:dony/features/matching/bloc/announcement_state.dart';
-import 'package:dony/features/matching/data/models/announcement_model.dart';
-import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 
-class HomeScreen extends StatefulWidget {
+// ── Static corridor data ─────────────────────────────────────────────────────
+
+typedef _Corridor = ({String code, int travelers, bool isHot});
+
+const List<_Corridor> _corridors = [
+  (code: 'PAR → DKR', travelers: 23, isHot: true),
+  (code: 'LYS → ABJ', travelers: 11, isHot: false),
+  (code: 'MRS → BKO', travelers: 7, isHot: false),
+  (code: 'PAR → DLA', travelers: 14, isHot: false),
+];
+
+// ── HomeScreen ───────────────────────────────────────────────────────────────
+
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<AnnouncementBloc>().add(AnnouncementSearchRequested(
-      sortBy: 'date',
-    ));
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,164 +31,36 @@ class _HomeScreenState extends State<HomeScreen> {
             : authState is AuthProfileUpdated
                 ? authState.user
                 : null;
-        final displayName = user?.displayName ?? 'vous';
 
-        return Scaffold(
-          backgroundColor: DonyColors.grey50,
-          body: RefreshIndicator(
-            color: DonyColors.green400,
-            onRefresh: () async {
-              context
-                  .read<AnnouncementBloc>()
-                  .add(AnnouncementSearchRequested(sortBy: 'date'));
-            },
-            child: CustomScrollView(
-              slivers: [
-                // ── Header ────────────────────────────────────────────
-                SliverToBoxAdapter(
-                  child: _Header(displayName: displayName),
-                ),
+        final isTraveler = user?.roles.contains('ROLE_TRAVELER') ?? false;
 
-                // ── Barre de recherche ─────────────────────────────────
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                    child: _SearchBar(),
-                  ),
-                ),
-
-                // ── Voyageurs disponibles ──────────────────────────────
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
-                    child: BlocBuilder<AnnouncementBloc, AnnouncementState>(
-                      builder: (context, state) {
-                        final count = state is AnnouncementSearchLoaded
-                            ? state.results.length
-                            : 0;
-                        return Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                'Voyageurs disponibles',
-                                style: GoogleFonts.sora(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w700,
-                                  color: DonyColors.ink900,
-                                ),
-                              ),
-                            ),
-                            if (count > 0)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: DonyColors.green100,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  '$count trajets',
-                                  style: GoogleFonts.sora(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: DonyColors.green400,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ),
-
-                // ── Liste voyageurs (scroll horizontal) ───────────────
-                SliverToBoxAdapter(
-                  child: BlocBuilder<AnnouncementBloc, AnnouncementState>(
-                    builder: (context, state) {
-                      if (state is AnnouncementLoading ||
-                          state is AnnouncementInitial) {
-                        return const SizedBox(
-                          height: 200,
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              color: DonyColors.green400,
-                            ),
-                          ),
-                        );
-                      }
-
-                      if (state is AnnouncementSearchLoaded &&
-                          state.results.isNotEmpty) {
-                        return SizedBox(
-                          height: 200,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            itemCount: state.results.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(width: 12),
-                            itemBuilder: (context, i) {
-                              final announcement = state.results[i];
-                              final authState = context.read<AuthBloc>().state;
-                              final currentUserId = authState is AuthAuthenticated
-                                  ? authState.user.id
-                                  : authState is AuthProfileUpdated
-                                      ? authState.user.id
-                                      : null;
-                              final isOwn = currentUserId != null &&
-                                  announcement.travelerId == currentUserId;
-                              return _TravelerCard(
-                                announcement: announcement,
-                                isOwnAnnouncement: isOwn,
-                                onTap: isOwn
-                                    ? null
-                                    : () => context.push(
-                                          '/search/${announcement.id}',
-                                          extra: announcement,
-                                        ),
-                              );
-                            },
-                          ),
-                        );
-                      }
-
-                      return Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                        child: _EmptyTravelers(),
-                      );
-                    },
-                  ),
-                ),
-
-                const SliverToBoxAdapter(child: SizedBox(height: 32)),
-              ],
-            ),
-          ),
+        if (isTraveler) {
+          return _TravelerView(displayName: user?.displayName ?? 'Voyageur');
+        }
+        return _SenderView(
+          firstName: user?.firstName ?? user?.displayName ?? 'vous',
+          displayName: user?.displayName ?? 'vous',
         );
       },
     );
   }
 }
 
-// ── Header ──────────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// SENDER VIEW
+// ══════════════════════════════════════════════════════════════════════════════
 
-class _Header extends StatelessWidget {
-  const _Header({required this.displayName});
+class _SenderView extends StatelessWidget {
+  const _SenderView({required this.firstName, required this.displayName});
 
+  final String firstName;
   final String displayName;
 
-  String get _firstName {
-    final parts = displayName.split(' ');
-    if (parts.isNotEmpty && parts[0].isNotEmpty) return parts[0];
-    return displayName;
-  }
-
   String get _initials {
-    if (displayName.isEmpty) return '?';
-    final parts = displayName.trim().split(' ');
+    if (displayName.isEmpty) {
+      return '?';
+    }
+    final parts = displayName.trim().split(' ').where((p) => p.isNotEmpty).toList();
     if (parts.length >= 2) {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
@@ -203,390 +69,365 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: DonyColors.white,
-      padding: EdgeInsets.fromLTRB(
-        20,
-        MediaQuery.of(context).padding.top + 16,
-        20,
-        20,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Bonjour,',
-                  style: GoogleFonts.sora(
-                    fontSize: 14,
-                    color: DonyColors.grey400,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Text(
-                      _firstName,
-                      style: GoogleFonts.sora(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        color: DonyColors.ink900,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    const Text('👋', style: TextStyle(fontSize: 20)),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          // Avatar
-          Container(
-            width: 44,
-            height: 44,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [DonyColors.green600, DonyColors.green400],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                _initials,
-                style: GoogleFonts.sora(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ).animate().fadeIn(duration: 300.ms),
-    );
-  }
-}
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final topPad = MediaQuery.of(context).padding.top;
 
-// ── Barre de recherche ───────────────────────────────────────────────────────
-
-class _SearchBar extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.push('/search'),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: DonyColors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: DonyColors.grey100),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'OÙ ENVOYER ?',
-                    style: GoogleFonts.sora(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: DonyColors.grey400,
-                      letterSpacing: 0.8,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Paris → Dakar · ${DateFormat('d MMM', 'fr').format(DateTime.now())}',
-                    style: GoogleFonts.sora(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: DonyColors.ink900,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: DonyColors.green400,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.arrow_forward_rounded,
-                color: Colors.white,
-                size: 18,
-              ),
-            ),
-          ],
-        ),
-      ).animate().fadeIn(delay: 80.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
-    );
-  }
-}
-
-// ── Carte voyageur (scroll horizontal) ──────────────────────────────────────
-
-class _TravelerCard extends StatelessWidget {
-  const _TravelerCard({
-    required this.announcement,
-    required this.onTap,
-    this.isOwnAnnouncement = false,
-  });
-
-  final AnnouncementModel announcement;
-  final VoidCallback? onTap;
-  final bool isOwnAnnouncement;
-
-  String get _initials => announcement.traveler?.resolvedInitials ?? '?';
-
-  String get _displayName => announcement.traveler?.resolvedName ?? 'Voyageur';
-
-  @override
-  Widget build(BuildContext context) {
-    final traveler = announcement.traveler;
-    final rating = traveler?.averageRating;
-    final trips = traveler?.totalTrips ?? 0;
-    final isKiloPro = traveler?.kiloPro ?? false;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 240,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: isOwnAnnouncement ? DonyColors.grey50 : DonyColors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: DonyColors.grey100),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
+    return Scaffold(
+      backgroundColor: DonyColors.bg,
+      body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Avatar + name + badge
-            Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [DonyColors.green400, DonyColors.green300],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    shape: BoxShape.circle,
+            // ── Header row ──────────────────────────────────────────────────
+            Container(
+              color: DonyColors.white,
+              padding: EdgeInsets.fromLTRB(DonySpacing.lg, topPad + DonySpacing.base, DonySpacing.lg, DonySpacing.base),
+              child: Row(
+                children: [
+                  // Logo
+                  Text(
+                    'dony',
+                    style: DonyTypography.caveat(fontSize: 26, color: DonyColors.ink900),
                   ),
-                  child: Center(
+                  Text(
+                    '.',
+                    style: DonyTypography.caveat(fontSize: 26, color: DonyColors.green400),
+                  ),
+                  const Spacer(),
+                  // Bell icon
+                  IconButton(
+                    icon: const Icon(Icons.notifications_outlined, color: DonyColors.ink900),
+                    onPressed: () {},
+                    tooltip: 'Notifications',
+                  ),
+                  const SizedBox(width: DonySpacing.xs),
+                  // Avatar chip
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
+                    decoration: BoxDecoration(
+                      color: DonyColors.green50,
+                      borderRadius: BorderRadius.circular(DonyRadius.full),
+                      border: Border.all(color: DonyColors.green200),
+                    ),
                     child: Text(
                       _initials,
-                      style: GoogleFonts.sora(
-                        color: Colors.white,
-                        fontSize: 14,
+                      style: tt.labelMedium!.copyWith(
+                        color: DonyColors.green400,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
+                ],
+              ).animate().fadeIn(duration: 280.ms),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.xl, DonySpacing.lg, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Greeting ──────────────────────────────────────────────
+                  Text(
+                    'Bonjour $firstName,',
+                    style: tt.bodyMedium!.copyWith(color: DonyColors.grey400),
+                  ),
+                  const SizedBox(height: DonySpacing.xs),
+
+                  // ── Headline ──────────────────────────────────────────────
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'on envoie quoi ',
+                          style: tt.headlineLarge!.copyWith(
+                            color: DonyColors.ink900,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.baseline,
+                          baseline: TextBaseline.alphabetic,
+                          child: Text(
+                            "aujourd'hui",
+                            style: DonyTypography.caveat(
+                              fontSize: 24,
+                              color: DonyColors.green400,
+                            ),
+                          ),
+                        ),
+                        TextSpan(
+                          text: ' ?',
+                          style: tt.headlineLarge!.copyWith(
+                            color: DonyColors.ink900,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ).animate().fadeIn(delay: 60.ms, duration: 300.ms),
+
+                  const SizedBox(height: DonySpacing.xl),
+
+                  // ── Search form card ───────────────────────────────────────
+                  _SearchFormCard().animate().fadeIn(delay: 100.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+
+                  const SizedBox(height: DonySpacing.base),
+
+                  // ── CTA button ────────────────────────────────────────────
+                  DonyButton(
+                    label: 'Trouver un voyageur',
+                    icon: Icons.search,
+                    onPressed: () => context.push('/search'),
+                  ).animate().fadeIn(delay: 140.ms),
+
+                  const SizedBox(height: DonySpacing.xxl),
+
+                  // ── Section header ────────────────────────────────────────
+                  Row(
+                    children: [
+                      Text(
+                        'CORRIDORS POPULAIRES',
+                        style: tt.labelMedium!.copyWith(
+                          color: DonyColors.grey400,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        'cette semaine',
+                        style: tt.bodySmall!.copyWith(color: DonyColors.grey400),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: DonySpacing.md),
+
+                  // ── Corridors grid ────────────────────────────────────────
+                  _CorridorsGrid().animate().fadeIn(delay: 180.ms),
+
+                  const SizedBox(height: DonySpacing.xl),
+
+                  // ── Garantie Dony card ─────────────────────────────────────
+                  _GarantieCard(cs: cs).animate().fadeIn(delay: 220.ms),
+
+                  const SizedBox(height: DonySpacing.huge),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Search form card ─────────────────────────────────────────────────────────
+
+class _SearchFormCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      decoration: BoxDecoration(
+        color: DonyColors.white,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: DonyColors.grey200),
+      ),
+      child: Column(
+        children: [
+          // Row 1: DÉPART
+          Padding(
+            padding: const EdgeInsets.fromLTRB(DonySpacing.base, DonySpacing.base, DonySpacing.base, DonySpacing.sm),
+            child: Row(
+              children: [
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _displayName,
-                        style: GoogleFonts.sora(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: DonyColors.ink900,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        'DÉPART',
+                        style: tt.labelSmall!.copyWith(color: DonyColors.grey400),
                       ),
-                      if (isKiloPro)
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.star_rounded,
-                              size: 11,
-                              color: Color(0xFFF59E0B),
-                            ),
-                            const SizedBox(width: 3),
-                            Text(
-                              'Kilo Pro',
-                              style: GoogleFonts.sora(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFFB45309),
-                              ),
-                            ),
-                          ],
+                      const SizedBox(height: DonySpacing.xxs),
+                      Text(
+                        'Paris CDG',
+                        style: tt.titleMedium!.copyWith(
+                          color: DonyColors.ink900,
+                          fontWeight: FontWeight.w700,
                         ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.swap_vert_rounded, color: DonyColors.grey400),
+                  onPressed: () {},
+                  tooltip: 'Inverser',
+                ),
+              ],
+            ),
+          ),
+          // Row 2: ARRIVÉE
+          Padding(
+            padding: const EdgeInsets.fromLTRB(DonySpacing.base, 0, DonySpacing.base, DonySpacing.sm),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'ARRIVÉE',
+                        style: Theme.of(context).textTheme.labelSmall!.copyWith(color: DonyColors.grey400),
+                      ),
+                      const SizedBox(height: DonySpacing.xxs),
+                      Text(
+                        'Dakar DKR',
+                        style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                          color: DonyColors.ink900,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {},
+                  child: Text(
+                    'Modifier',
+                    style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                      color: DonyColors.green400,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: DonyColors.grey200),
+          // Row 3: Date + Weight
+          Padding(
+            padding: const EdgeInsets.all(DonySpacing.base),
+            child: Row(
+              children: [
+                const Icon(Icons.calendar_today_outlined, size: 12, color: DonyColors.grey400),
+                const SizedBox(width: DonySpacing.xs),
+                Text(
+                  'Cette semaine',
+                  style: Theme.of(context).textTheme.bodySmall!.copyWith(color: DonyColors.ink900),
+                ),
+                const Spacer(),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: 'Jusqu\'à ',
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(color: DonyColors.ink900),
+                      ),
+                      TextSpan(
+                        text: '15',
+                        style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                          color: DonyColors.ink900,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      TextSpan(
+                        text: ' kg',
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(color: DonyColors.ink900),
+                      ),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            // Rating + trips
-            if (rating != null)
-              Row(
-                children: [
-                  const Icon(
-                    Icons.star_rounded,
-                    size: 13,
-                    color: Color(0xFFF59E0B),
-                  ),
-                  const SizedBox(width: 3),
-                  Text(
-                    rating.toStringAsFixed(1),
-                    style: GoogleFonts.sora(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Corridors grid ────────────────────────────────────────────────────────────
+
+class _CorridorsGrid extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: DonySpacing.sm,
+        mainAxisSpacing: DonySpacing.sm,
+        childAspectRatio: 2.2,
+      ),
+      itemCount: _corridors.length,
+      itemBuilder: (context, i) {
+        final corridor = _corridors[i];
+        return _CorridorChip(corridor: corridor);
+      },
+    );
+  }
+}
+
+class _CorridorChip extends StatelessWidget {
+  const _CorridorChip({required this.corridor});
+
+  final _Corridor corridor;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return GestureDetector(
+      onTap: () => context.push('/search'),
+      child: Container(
+        padding: const EdgeInsets.all(DonySpacing.md),
+        decoration: BoxDecoration(
+          color: DonyColors.white,
+          borderRadius: BorderRadius.circular(DonyRadius.card),
+          border: Border.all(color: DonyColors.grey200),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    corridor.code,
+                    style: tt.titleSmall!.copyWith(
                       color: DonyColors.ink900,
+                      fontWeight: FontWeight.w700,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '· $trips trajet${trips > 1 ? 's' : ''}',
-                    style: GoogleFonts.sora(
-                      fontSize: 12,
-                      color: DonyColors.grey400,
+                ),
+                if (corridor.isHot) ...[
+                  const SizedBox(width: DonySpacing.xs),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: DonyColors.errorLight,
+                      borderRadius: BorderRadius.circular(DonyRadius.xs),
+                    ),
+                    child: Text(
+                      'HOT',
+                      style: tt.labelSmall!.copyWith(
+                        color: DonyColors.error,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 9,
+                      ),
                     ),
                   ),
                 ],
-              ),
-            const SizedBox(height: 8),
-            // Corridor
-            Row(
-              children: [
-                const Icon(Icons.flight_takeoff_rounded,
-                    size: 12, color: DonyColors.green400),
-                const SizedBox(width: 4),
-                Text(
-                  '${announcement.departureCity} → ${announcement.arrivalCity}',
-                  style: GoogleFonts.sora(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: DonyColors.green400,
-                  ),
-                ),
               ],
             ),
-            const SizedBox(height: 4),
-            // Date
-            Row(
-              children: [
-                const Icon(Icons.calendar_today_rounded,
-                    size: 12, color: DonyColors.grey400),
-                const SizedBox(width: 4),
-                Text(
-                  DateFormat('EEE d MMM', 'fr').format(announcement.departureDate),
-                  style: GoogleFonts.sora(
-                    fontSize: 12,
-                    color: DonyColors.grey400,
-                  ),
-                ),
-              ],
-            ),
-            const Spacer(),
-            // Capacity + price + button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${announcement.availableKg.toStringAsFixed(0)} kg dispo',
-                      style: GoogleFonts.sora(
-                        fontSize: 11,
-                        color: DonyColors.grey400,
-                      ),
-                    ),
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text:
-                                '${announcement.pricePerKg.toStringAsFixed(0)} €',
-                            style: GoogleFonts.sora(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: DonyColors.ink900,
-                            ),
-                          ),
-                          TextSpan(
-                            text: '/kg',
-                            style: GoogleFonts.sora(
-                              fontSize: 11,
-                              color: DonyColors.grey400,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 7,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isOwnAnnouncement ? DonyColors.grey100 : DonyColors.green400,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: isOwnAnnouncement
-                      ? Text(
-                          'Votre trajet',
-                          style: GoogleFonts.sora(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: DonyColors.grey400,
-                          ),
-                        )
-                      : Row(
-                          children: [
-                            Text(
-                              'Voir',
-                              style: GoogleFonts.sora(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            const Icon(
-                              Icons.arrow_forward_rounded,
-                              size: 12,
-                              color: Colors.white,
-                            ),
-                          ],
-                        ),
-                ),
-              ],
+            const SizedBox(height: 2),
+            Text(
+              '${corridor.travelers} voyageurs',
+              style: tt.bodySmall!.copyWith(color: DonyColors.grey400),
             ),
           ],
         ),
@@ -595,52 +436,376 @@ class _TravelerCard extends StatelessWidget {
   }
 }
 
-// ── État vide ────────────────────────────────────────────────────────────────
+// ── Garantie Dony card ────────────────────────────────────────────────────────
 
-class _EmptyTravelers extends StatelessWidget {
+class _GarantieCard extends StatelessWidget {
+  const _GarantieCard({required this.cs});
+
+  final ColorScheme cs;
+
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
-        color: DonyColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: DonyColors.grey100),
+        color: DonyColors.grey50,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: DonyColors.green200),
       ),
-      child: Column(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: DonyColors.green100,
-              shape: BoxShape.circle,
+          const Icon(Icons.shield_outlined, color: DonyColors.green400, size: 22),
+          const SizedBox(width: DonySpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Garantie Dony',
+                  style: tt.titleMedium!.copyWith(
+                    color: DonyColors.ink900,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: DonySpacing.xxs),
+                Text(
+                  'Remboursé jusqu\'à 200 € si le colis n\'arrive pas.',
+                  style: tt.bodySmall!.copyWith(color: DonyColors.grey400),
+                ),
+              ],
             ),
-            child: const Icon(
-              Icons.flight_takeoff_rounded,
-              color: DonyColors.green400,
-              size: 28,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Aucun voyageur disponible',
-            style: GoogleFonts.sora(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: DonyColors.ink900,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Revenez bientôt pour trouver un voyageur.',
-            style: GoogleFonts.sora(
-              fontSize: 13,
-              color: DonyColors.grey400,
-            ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),
-    ).animate().fadeIn();
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TRAVELER VIEW
+// ══════════════════════════════════════════════════════════════════════════════
+
+class _TravelerView extends StatelessWidget {
+  const _TravelerView({required this.displayName});
+
+  final String displayName;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final topPad = MediaQuery.of(context).padding.top;
+
+    return Scaffold(
+      backgroundColor: DonyColors.bg,
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Header row (notification bell only) ──────────────────────────
+            Padding(
+              padding: EdgeInsets.fromLTRB(DonySpacing.lg, topPad + DonySpacing.sm, DonySpacing.lg, 0),
+              child: Row(
+                children: [
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.notifications_outlined, color: DonyColors.ink900),
+                    onPressed: () {},
+                    tooltip: 'Notifications',
+                  ),
+                ],
+              ).animate().fadeIn(duration: 280.ms),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.sm, DonySpacing.lg, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Profile row ──────────────────────────────────────────
+                  Row(
+                    children: [
+                      DonyAvatar(
+                        name: displayName,
+                        size: DonyAvatarSize.md,
+                        verified: true,
+                      ),
+                      const SizedBox(width: DonySpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              displayName,
+                              style: tt.headlineMedium!.copyWith(fontWeight: FontWeight.w700),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: DonySpacing.xxs),
+                            Row(
+                              children: [
+                                const Icon(Icons.star_rounded, color: DonyColors.warning, size: 14),
+                                const SizedBox(width: DonySpacing.xxs),
+                                Text(
+                                  '4.9',
+                                  style: tt.bodySmall!.copyWith(
+                                    color: DonyColors.ink900,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(width: DonySpacing.sm),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: DonyColors.green50,
+                                    borderRadius: BorderRadius.circular(DonyRadius.full),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.check_circle_rounded, size: 11, color: DonyColors.green400),
+                                      const SizedBox(width: DonySpacing.xxs),
+                                      Text(
+                                        'VTC vérifié',
+                                        style: tt.labelSmall!.copyWith(color: DonyColors.green400),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ).animate().fadeIn(duration: 300.ms),
+
+                  const SizedBox(height: DonySpacing.xl),
+
+                  // ── Dark stats card ──────────────────────────────────────
+                  _StatsCard().animate().fadeIn(delay: 60.ms).slideY(begin: 0.03, curve: Curves.easeOutCubic),
+
+                  const SizedBox(height: DonySpacing.xxl),
+
+                  // ── Active trips section ──────────────────────────────────
+                  Text(
+                    'MES TRAJETS ACTIFS',
+                    style: tt.labelMedium!.copyWith(
+                      color: DonyColors.grey400,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+
+                  const SizedBox(height: DonySpacing.md),
+
+                  // ── Trip card ────────────────────────────────────────────
+                  _ActiveTripCard().animate().fadeIn(delay: 100.ms),
+
+                  const SizedBox(height: DonySpacing.xl),
+
+                  // ── Publish CTA ──────────────────────────────────────────
+                  DonyButton(
+                    label: 'Publier un trajet',
+                    icon: Icons.send_rounded,
+                    onPressed: () => context.push('/announcements/create'),
+                  ).animate().fadeIn(delay: 140.ms),
+
+                  const SizedBox(height: DonySpacing.xl),
+
+                  // ── Payout footer ────────────────────────────────────────
+                  _PayoutFooter().animate().fadeIn(delay: 180.ms),
+
+                  const SizedBox(height: DonySpacing.huge),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Stats card (dark greenDark background) ────────────────────────────────────
+
+class _StatsCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(DonySpacing.xl),
+      decoration: BoxDecoration(
+        color: DonyColors.greenDark,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'CE MOIS-CI',
+            style: tt.labelSmall!.copyWith(
+              color: DonyColors.white.withValues(alpha: 0.6),
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(height: DonySpacing.xs),
+          Text(
+            '248,50 €',
+            style: tt.displaySmall!.copyWith(color: DonyColors.white),
+          ),
+          const SizedBox(height: DonySpacing.xxs),
+          Text(
+            '4 colis · paiement Wed',
+            style: tt.bodySmall!.copyWith(
+              color: DonyColors.white.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: DonySpacing.base),
+          const Row(
+            children: [
+              _StatPill(label: 'Trajets', value: '8'),
+              SizedBox(width: DonySpacing.sm),
+              _StatPill(label: 'Portés', value: '62kg'),
+              SizedBox(width: DonySpacing.sm),
+              _StatPill(label: 'Complétés', value: '100%'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatPill extends StatelessWidget {
+  const _StatPill({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.sm),
+      decoration: BoxDecoration(
+        color: DonyColors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(DonyRadius.xl),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: tt.titleSmall!.copyWith(color: DonyColors.white, fontWeight: FontWeight.w700),
+          ),
+          Text(
+            label,
+            style: tt.labelSmall!.copyWith(color: DonyColors.white.withValues(alpha: 0.7)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Active trip card ──────────────────────────────────────────────────────────
+
+class _ActiveTripCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    const double reserved = 5;
+    const double total = 15;
+
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: DonyColors.white,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: DonyColors.grey200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'CDG → DSS',
+                style: tt.titleLarge!.copyWith(
+                  color: DonyColors.ink900,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: DonySpacing.xxs),
+                decoration: BoxDecoration(
+                  color: DonyColors.successLight,
+                  borderRadius: BorderRadius.circular(DonyRadius.full),
+                ),
+                child: Text(
+                  'OUVERT',
+                  style: tt.labelSmall!.copyWith(
+                    color: DonyColors.success,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: DonySpacing.xs),
+          Text(
+            'Ven 18 · 14h05 · 5 kg réservés',
+            style: tt.bodySmall!.copyWith(color: DonyColors.grey400),
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(DonyRadius.full),
+            child: LinearProgressIndicator(
+              value: reserved / total,
+              minHeight: 6,
+              color: DonyColors.green400,
+              backgroundColor: DonyColors.grey200,
+            ),
+          ),
+          const SizedBox(height: DonySpacing.xxs),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              '${reserved.toStringAsFixed(0)} / ${total.toStringAsFixed(0)} kg',
+              style: tt.bodySmall!.copyWith(color: DonyColors.grey400),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Payout footer row ─────────────────────────────────────────────────────────
+
+class _PayoutFooter extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Row(
+      children: [
+        const Icon(Icons.access_time_rounded, color: DonyColors.grey400, size: 16),
+        const SizedBox(width: DonySpacing.xs),
+        Text(
+          'Prochain payout · mer. 23/04',
+          style: tt.bodyMedium!.copyWith(color: DonyColors.ink900),
+        ),
+        const Spacer(),
+        Text(
+          '248,50 €',
+          style: tt.titleMedium!.copyWith(
+            color: DonyColors.green400,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
   }
 }
