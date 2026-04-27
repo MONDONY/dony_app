@@ -9,6 +9,10 @@ abstract final class DonySpacing {
   static const double xxl  = 32;
   static const double huge = 48;
   static const double tab  = 72;
+
+  // Sizes — icon containers
+  static const double icon   = 40;   // icon container size
+  static const double iconSm = 20;   // icon size inside container
 }
 
 abstract final class DonyRadius {

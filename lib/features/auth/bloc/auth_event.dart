@@ -70,3 +70,7 @@ class AuthUpdateProfileRequested extends AuthEvent {
   @override
   List<Object?> get props => [firstName, lastName, email, birthDate, city];
 }
+
+class OnboardingCompleted extends AuthEvent {
+  const OnboardingCompleted();
+}

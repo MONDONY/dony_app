@@ -1,8 +1,12 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+
+const _kLogoDotSize = 34.0;
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
@@ -107,7 +111,7 @@ class OnboardingScreen extends StatelessWidget {
                   DonyButton(
                     label: 'J\'envoie un colis',
                     onPressed: () {
-                      Hive.box('user_prefs').put('onboarding_done', true);
+                      context.read<AuthBloc>().add(const OnboardingCompleted());
                       context.go('/auth/phone');
                     },
                   ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.06, curve: Curves.easeOutCubic),
@@ -117,7 +121,7 @@ class OnboardingScreen extends StatelessWidget {
                   DonyButton(
                     label: 'Je suis voyageur',
                     onPressed: () {
-                      Hive.box('user_prefs').put('onboarding_done', true);
+                      context.read<AuthBloc>().add(const OnboardingCompleted());
                       context.go('/auth/phone');
                     },
                     variant: DonyButtonVariant.ghost,
@@ -184,7 +188,7 @@ class _DonyLogo extends StatelessWidget {
         const Text(
           '.',
           style: TextStyle(
-            fontSize: 34,
+            fontSize: _kLogoDotSize,
             fontWeight: FontWeight.w900,
             color: DonyColors.green400,
             height: 1.0,
@@ -219,13 +223,13 @@ class _FeatureCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: DonySpacing.icon,
+            height: DonySpacing.icon,
             decoration: BoxDecoration(
               color: DonyColors.green50,
               borderRadius: BorderRadius.circular(DonyRadius.md),
             ),
-            child: Icon(icon, size: 20, color: DonyColors.green400),
+            child: Icon(icon, size: DonySpacing.iconSm, color: DonyColors.green400),
           ),
           const SizedBox(width: DonySpacing.md),
           Expanded(
@@ -236,7 +240,7 @@ class _FeatureCard extends StatelessWidget {
                   title,
                   style: tt.titleSmall?.copyWith(color: DonyColors.ink900),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: DonySpacing.xxs),
                 Text(
                   subtitle,
                   style: tt.bodySmall?.copyWith(color: DonyColors.grey400),

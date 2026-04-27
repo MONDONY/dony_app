@@ -7,6 +7,7 @@ import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hive/hive.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
@@ -28,6 +29,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthLogoutRequested>(_onLogoutRequested);
     on<AuthDeleteAccountRequested>(_onDeleteAccountRequested);
     on<AuthUpdateProfileRequested>(_onUpdateProfileRequested);
+    on<OnboardingCompleted>(_onOnboardingCompleted);
   }
 
   // ─── Vérification au démarrage (splash) ────────────────────────────────────
@@ -217,6 +219,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } catch (e) {
       emit(AuthError(_friendlyError(e)));
     }
+  }
+
+  // ─── Onboarding flag ─────────────────────────────────────────────────────
+
+  Future<void> _onOnboardingCompleted(
+    OnboardingCompleted event,
+    Emitter<AuthState> emit,
+  ) async {
+    await Hive.box('user_prefs').put('onboarding_done', true);
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
