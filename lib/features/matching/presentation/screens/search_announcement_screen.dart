@@ -14,8 +14,9 @@ import 'package:intl/intl.dart';
 const _departureCities = ['Paris · CDG, ORY', 'Lyon · LYS', 'Marseille · MRS'];
 const _arrivalCities = ['Dakar · DKR', 'Abidjan · ABJ', 'Bamako · BKO', 'Douala · DLA'];
 
-// Content-type chips shown inside result cards
-const _contentTypes = ['Vêtements', 'Médicaments', 'Alim. sèche', 'Documents', 'Hi-fi', 'Téléphone'];
+// Layout constants
+const _kRowIndent = 56.0; // left indent for divider under location rows
+const _kIconGap = 14.0;   // gap between location dot and city text
 
 class SearchAnnouncementScreen extends StatefulWidget {
   const SearchAnnouncementScreen({super.key});
@@ -26,72 +27,102 @@ class SearchAnnouncementScreen extends StatefulWidget {
 }
 
 class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
-  // Filtres
-  String _departureCity = _departureCities[0];
-  String _arrivalCity = _arrivalCities[0];
-  DateTime? _date;
-  double _weightKg = 6;
-  double _maxPricePerKg = 25;
-
-  // Filtres rapides
-  bool _kiloProOnly = false;
-  bool _ratingFilter = false;
-  bool _weekendFilter = false;
-  bool _priceFilter = false;
-
-  // État
-  bool _showResults = false;
+  // Form field notifiers — no setState required
+  final _departureCityNotifier = ValueNotifier<String>(_departureCities[0]);
+  final _arrivalCityNotifier = ValueNotifier<String>(_arrivalCities[0]);
+  final _dateNotifier = ValueNotifier<DateTime?>(null);
+  final _weightKgNotifier = ValueNotifier<double>(6);
+  final _maxPricePerKgNotifier = ValueNotifier<double>(25);
+  final _kiloProOnlyNotifier = ValueNotifier<bool>(false);
+  final _ratingFilterNotifier = ValueNotifier<bool>(false);
+  final _weekendFilterNotifier = ValueNotifier<bool>(false);
+  final _priceFilterNotifier = ValueNotifier<bool>(false);
+  // showResults flag as a ValueNotifier — toggled without setState
+  final _showResultsNotifier = ValueNotifier<bool>(false);
 
   String get _departureCityShort =>
-      _departureCity.split(' ').first;
+      _departureCityNotifier.value.split(' ').first;
   String get _arrivalCityShort =>
-      _arrivalCity.split(' ').first;
+      _arrivalCityNotifier.value.split(' ').first;
+
+  @override
+  void dispose() {
+    _departureCityNotifier.dispose();
+    _arrivalCityNotifier.dispose();
+    _dateNotifier.dispose();
+    _weightKgNotifier.dispose();
+    _maxPricePerKgNotifier.dispose();
+    _kiloProOnlyNotifier.dispose();
+    _ratingFilterNotifier.dispose();
+    _weekendFilterNotifier.dispose();
+    _priceFilterNotifier.dispose();
+    _showResultsNotifier.dispose();
+    super.dispose();
+  }
 
   void _search() {
     context.read<AnnouncementBloc>().add(AnnouncementSearchRequested(
       departureCity: _departureCityShort,
       arrivalCity: _arrivalCityShort,
-      departureDateFrom: _date,
-      minAvailableKg: _weightKg > 1 ? _weightKg : null,
+      departureDateFrom: _dateNotifier.value,
+      minAvailableKg: _weightKgNotifier.value > 1 ? _weightKgNotifier.value : null,
       sortBy: 'date',
     ));
-    setState(() => _showResults = true);
+    _showResultsNotifier.value = true;
   }
 
   void _resetSearch() {
-    setState(() => _showResults = false);
+    _showResultsNotifier.value = false;
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_showResults) {
-      return _ResultsView(
-        departureCity: _departureCityShort,
-        arrivalCity: _arrivalCityShort,
-        onBack: _resetSearch,
-      );
-    }
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        _departureCityNotifier,
+        _arrivalCityNotifier,
+        _dateNotifier,
+        _weightKgNotifier,
+        _maxPricePerKgNotifier,
+        _kiloProOnlyNotifier,
+        _ratingFilterNotifier,
+        _weekendFilterNotifier,
+        _priceFilterNotifier,
+        _showResultsNotifier,
+      ]),
+      builder: (context, _) {
+        final showResults = _showResultsNotifier.value;
 
-    return _FilterFormView(
-      departureCity: _departureCity,
-      arrivalCity: _arrivalCity,
-      date: _date,
-      weightKg: _weightKg,
-      maxPricePerKg: _maxPricePerKg,
-      kiloProOnly: _kiloProOnly,
-      ratingFilter: _ratingFilter,
-      weekendFilter: _weekendFilter,
-      priceFilter: _priceFilter,
-      onDepartureChanged: (v) => setState(() => _departureCity = v),
-      onArrivalChanged: (v) => setState(() => _arrivalCity = v),
-      onDateChanged: (v) => setState(() => _date = v),
-      onWeightChanged: (v) => setState(() => _weightKg = v),
-      onMaxPriceChanged: (v) => setState(() => _maxPricePerKg = v),
-      onKiloProChanged: (v) => setState(() => _kiloProOnly = v),
-      onRatingChanged: (v) => setState(() => _ratingFilter = v),
-      onWeekendChanged: (v) => setState(() => _weekendFilter = v),
-      onPriceChanged: (v) => setState(() => _priceFilter = v),
-      onSearch: _search,
+        if (showResults) {
+          return _ResultsView(
+            departureCity: _departureCityShort,
+            arrivalCity: _arrivalCityShort,
+            onBack: _resetSearch,
+          );
+        }
+
+        return _FilterFormView(
+          departureCity: _departureCityNotifier.value,
+          arrivalCity: _arrivalCityNotifier.value,
+          date: _dateNotifier.value,
+          weightKg: _weightKgNotifier.value,
+          maxPricePerKg: _maxPricePerKgNotifier.value,
+          kiloProOnly: _kiloProOnlyNotifier.value,
+          ratingFilter: _ratingFilterNotifier.value,
+          weekendFilter: _weekendFilterNotifier.value,
+          priceFilter: _priceFilterNotifier.value,
+          onDepartureChanged: (v) => _departureCityNotifier.value = v,
+          onArrivalChanged: (v) => _arrivalCityNotifier.value = v,
+          onDateChanged: (v) => _dateNotifier.value = v,
+          onWeightChanged: (v) => _weightKgNotifier.value = v,
+          onMaxPriceChanged: (v) => _maxPricePerKgNotifier.value = v,
+          onKiloProChanged: (v) => _kiloProOnlyNotifier.value = v,
+          onRatingChanged: (v) => _ratingFilterNotifier.value = v,
+          onWeekendChanged: (v) => _weekendFilterNotifier.value = v,
+          onPriceChanged: (v) => _priceFilterNotifier.value = v,
+          onSearch: _search,
+        );
+      },
     );
   }
 }
@@ -144,7 +175,6 @@ class _FilterFormView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       backgroundColor: DonyColors.bg,
@@ -194,7 +224,7 @@ class _FilterFormView extends StatelessWidget {
                     onChanged: onDepartureChanged,
                   ),
                   const Padding(
-                    padding: EdgeInsets.only(left: 56),
+                    padding: EdgeInsets.only(left: _kRowIndent),
                     child: Divider(height: 1, color: DonyColors.grey200),
                   ),
                   _LocationRow(
@@ -352,11 +382,11 @@ class _ResultsView extends StatefulWidget {
 }
 
 class _ResultsViewState extends State<_ResultsView> {
-  // Quick-filter state (local UI state, not BLoC – these filter the already-loaded list)
-  bool _ratingActive = false;
-  bool _priceActive = false;
-  bool _weekActive = false;
-  bool _weightActive = false;
+  // Quick-filter state — ValueNotifier, no setState
+  final _ratingActive = ValueNotifier<bool>(false);
+  final _priceActive = ValueNotifier<bool>(false);
+  final _weekActive = ValueNotifier<bool>(false);
+  final _weightActive = ValueNotifier<bool>(false);
 
   @override
   void initState() {
@@ -366,6 +396,15 @@ class _ResultsViewState extends State<_ResultsView> {
       arrivalCity: widget.arrivalCity,
       sortBy: 'date',
     ));
+  }
+
+  @override
+  void dispose() {
+    _ratingActive.dispose();
+    _priceActive.dispose();
+    _weekActive.dispose();
+    _weightActive.dispose();
+    super.dispose();
   }
 
   @override
@@ -416,38 +455,46 @@ class _ResultsViewState extends State<_ResultsView> {
           // ── Filter chips row ────────────────────────────────────────
           SizedBox(
             height: 48,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(
-                horizontal: DonySpacing.lg,
-                vertical: DonySpacing.sm,
+            child: ListenableBuilder(
+              listenable: Listenable.merge([
+                _ratingActive,
+                _priceActive,
+                _weekActive,
+                _weightActive,
+              ]),
+              builder: (context, _) => ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.lg,
+                  vertical: DonySpacing.sm,
+                ),
+                children: [
+                  _FilterChip(
+                    label: '★ 4.7+',
+                    icon: Icons.star_rounded,
+                    active: _ratingActive.value,
+                    onTap: () => _ratingActive.value = !_ratingActive.value,
+                  ),
+                  const SizedBox(width: DonySpacing.sm),
+                  _FilterChip(
+                    label: '€/kg ↓',
+                    active: _priceActive.value,
+                    onTap: () => _priceActive.value = !_priceActive.value,
+                  ),
+                  const SizedBox(width: DonySpacing.sm),
+                  _FilterChip(
+                    label: 'Cette semaine',
+                    active: _weekActive.value,
+                    onTap: () => _weekActive.value = !_weekActive.value,
+                  ),
+                  const SizedBox(width: DonySpacing.sm),
+                  _FilterChip(
+                    label: '+10 kg',
+                    active: _weightActive.value,
+                    onTap: () => _weightActive.value = !_weightActive.value,
+                  ),
+                ],
               ),
-              children: [
-                _FilterChip(
-                  label: '★ 4.7+',
-                  icon: Icons.star_rounded,
-                  active: _ratingActive,
-                  onTap: () => setState(() => _ratingActive = !_ratingActive),
-                ),
-                const SizedBox(width: DonySpacing.sm),
-                _FilterChip(
-                  label: '€/kg ↓',
-                  active: _priceActive,
-                  onTap: () => setState(() => _priceActive = !_priceActive),
-                ),
-                const SizedBox(width: DonySpacing.sm),
-                _FilterChip(
-                  label: 'Cette semaine',
-                  active: _weekActive,
-                  onTap: () => setState(() => _weekActive = !_weekActive),
-                ),
-                const SizedBox(width: DonySpacing.sm),
-                _FilterChip(
-                  label: '+10 kg',
-                  active: _weightActive,
-                  onTap: () => setState(() => _weightActive = !_weightActive),
-                ),
-              ],
             ),
           ),
           // ── Results list ────────────────────────────────────────────
@@ -628,7 +675,7 @@ class _LocationRow extends StatelessWidget {
                     : DonyColors.error,
               ),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: _kIconGap),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -710,7 +757,7 @@ class _LocationRow extends StatelessWidget {
                       : null,
                   onTap: () {
                     onChanged(city);
-                    Navigator.pop(context);
+                    context.pop();
                   },
                 )),
           ],
@@ -915,7 +962,7 @@ class _WeightField extends StatelessWidget {
                 label: 'Confirmer',
                 onPressed: () {
                   onChanged(localWeight);
-                  Navigator.pop(ctx);
+                  ctx.pop();
                 },
               ),
             ],
@@ -1105,19 +1152,11 @@ class _TravelerCard extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.sm),
 
-            // ── Row 3: content-type chips (scrollable) ──────────────
-            SizedBox(
-              height: 28,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _contentTypes.length,
-                separatorBuilder: (_, __) =>
-                    const SizedBox(width: DonySpacing.xs),
-                itemBuilder: (context, i) => _ContentTypeChip(
-                  label: _contentTypes[i],
-                ),
-              ),
-            ),
+            // ── Row 3: content-type chips — shown only when the model
+            // exposes an acceptedContentTypes field. AnnouncementModel
+            // currently has no such field; nothing is rendered here to
+            // avoid displaying hardcoded placeholder content.
+            // TODO(matching): wire up announcement.acceptedContentTypes when added.
 
             // Own announcement label
             if (isOwnAnnouncement) ...[
@@ -1140,35 +1179,18 @@ class _TravelerCard extends StatelessWidget {
   }
 }
 
-class _ContentTypeChip extends StatelessWidget {
-  const _ContentTypeChip({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.sm,
-        vertical: DonySpacing.xxs,
-      ),
-      decoration: BoxDecoration(
-        color: DonyColors.grey100,
-        borderRadius: BorderRadius.circular(DonyRadius.full),
-      ),
-      child: Text(
-        label,
-        style: tt.labelSmall?.copyWith(color: DonyColors.grey400),
-      ),
-    );
-  }
-}
-
 // ── Skeleton card ────────────────────────────────────────────────────────────
 
 class _SkeletonCard extends StatelessWidget {
   const _SkeletonCard();
+
+  // Dimension constants to avoid raw literals
+  static const double _kAvatarSize = 44.0;
+  static const double _kLineHeight = 12.0;
+  static const double _kNameWidth = 120.0;
+  static const double _kSubWidth = 80.0;
+  static const double _kShortLineWidth = 160.0;
+  static const double _kNameHeight = 14.0;
 
   @override
   Widget build(BuildContext context) {
@@ -1184,9 +1206,9 @@ class _SkeletonCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              _SkeletonBox(
-                width: 44,
-                height: 44,
+              const _SkeletonBox(
+                width: _kAvatarSize,
+                height: _kAvatarSize,
                 radius: DonyRadius.full,
               ),
               const SizedBox(width: DonySpacing.md),
@@ -1194,18 +1216,18 @@ class _SkeletonCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: const [
-                    _SkeletonBox(width: 120, height: 14),
+                    _SkeletonBox(width: _kNameWidth, height: _kNameHeight),
                     SizedBox(height: DonySpacing.xs),
-                    _SkeletonBox(width: 80, height: 12),
+                    _SkeletonBox(width: _kSubWidth, height: _kLineHeight),
                   ],
                 ),
               ),
             ],
           ),
           const SizedBox(height: DonySpacing.md),
-          const _SkeletonBox(width: double.infinity, height: 12),
+          const _SkeletonBox(width: double.infinity, height: _kLineHeight),
           const SizedBox(height: DonySpacing.xs),
-          const _SkeletonBox(width: 160, height: 12),
+          const _SkeletonBox(width: _kShortLineWidth, height: _kLineHeight),
         ],
       ),
     );

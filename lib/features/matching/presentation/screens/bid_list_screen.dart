@@ -10,6 +10,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+const _kRejectedStatus = 'REJECTED';
+
 class BidListScreen extends StatelessWidget {
   final String announcementId;
   // Route metadata: pass these for the AppBar subtitle
@@ -265,7 +267,7 @@ class _BidList extends StatelessWidget {
             .fadeIn(duration: 300.ms)
             .slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic);
 
-        if (bid.status != 'REJECTED') return card;
+        if (bid.status != _kRejectedStatus) return card;
 
         return Dismissible(
           key: ValueKey(bid.id),
@@ -314,7 +316,7 @@ class _BidList extends StatelessWidget {
                 ),
                 actions: [
                   TextButton(
-                    onPressed: () => Navigator.pop(ctx, false),
+                    onPressed: () => ctx.pop(false),
                     child: Text(
                       'Annuler',
                       style: Theme.of(context)
@@ -324,7 +326,7 @@ class _BidList extends StatelessWidget {
                     ),
                   ),
                   FilledButton(
-                    onPressed: () => Navigator.pop(ctx, true),
+                    onPressed: () => ctx.pop(true),
                     style: FilledButton.styleFrom(
                       backgroundColor: DonyColors.error,
                     ),
@@ -416,7 +418,9 @@ class _BidCard extends StatelessWidget {
               ),
               // Amount
               Text(
-                '${(bid.weightKg * (bid.pricePerKg ?? 0)).toStringAsFixed(0)} €',
+                bid.pricePerKg != null
+                    ? '${(bid.weightKg * bid.pricePerKg!).toStringAsFixed(0)} €'
+                    : '—',
                 style: tt.titleLarge
                     ?.copyWith(color: DonyColors.green400),
               ),
