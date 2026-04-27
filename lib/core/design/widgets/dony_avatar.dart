@@ -100,7 +100,7 @@ class _InitialsText extends StatelessWidget {
   Widget build(BuildContext context) => Center(
         child: Text(
           initials,
-          style: TextStyle(
+          style: Theme.of(context).textTheme.titleLarge!.copyWith(
             color: DonyColors.white,
             fontSize: fontSize,
             fontWeight: FontWeight.w700,

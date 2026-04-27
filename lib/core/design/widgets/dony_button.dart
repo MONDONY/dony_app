@@ -26,11 +26,18 @@ class DonyButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final spinnerColor = switch (variant) {
+      DonyButtonVariant.primary     => DonyColors.white,
+      DonyButtonVariant.destructive => DonyColors.white,
+      DonyButtonVariant.secondary   => DonyColors.ink900,
+      DonyButtonVariant.ghost       => DonyColors.green400,
+    };
+
     final child = isLoading
-        ? const SizedBox(
+        ? SizedBox(
             width: 20,
             height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2, color: DonyColors.white),
+            child: CircularProgressIndicator(strokeWidth: 2, color: spinnerColor),
           )
         : Row(
             mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,

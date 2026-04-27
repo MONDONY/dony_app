@@ -115,5 +115,33 @@ void main() {
       expect(btn.onPressed, isNull);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
+
+    testWidgets('secondary loading state shows CircularProgressIndicator', (tester) async {
+      await tester.pumpWidget(_wrap(
+        DonyButton(
+          label: 'Loading',
+          onPressed: () {},
+          variant: DonyButtonVariant.secondary,
+          isLoading: true,
+        ),
+      ));
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      final btn = tester.widget<OutlinedButton>(find.byType(OutlinedButton));
+      expect(btn.onPressed, isNull);
+    });
+
+    testWidgets('ghost loading state shows CircularProgressIndicator', (tester) async {
+      await tester.pumpWidget(_wrap(
+        DonyButton(
+          label: 'Loading',
+          onPressed: () {},
+          variant: DonyButtonVariant.ghost,
+          isLoading: true,
+        ),
+      ));
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      final btn = tester.widget<TextButton>(find.byType(TextButton));
+      expect(btn.onPressed, isNull);
+    });
   });
 }
