@@ -87,10 +87,10 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     return BlocListener<TrackingBloc, TrackingState>(
       listener: (context, state) {
         if (state is QrScanSuccess) {
-          Navigator.of(context).pop(); // close sheet
+          context.pop(); // close sheet
           _showSuccessDialog(state.event.stepLabel);
         } else if (state is QrScanQueued) {
-          Navigator.of(context).pop(); // close sheet
+          context.pop(); // close sheet
           _showQueuedDialog();
         }
       },
@@ -316,7 +316,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
               onPressed: loading
                   ? null
                   : () {
-                      Navigator.of(ctx).pop();
+                      ctx.pop();
                       _scanner.start();
                     },
               child: Text('Annuler',
@@ -333,7 +333,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                         final result = await getIt<TrackingRepository>()
                             .searchByTrackingNumber(number);
                         if (ctx.mounted) {
-                          Navigator.of(ctx).pop();
+                          ctx.pop();
                           _detectedNotifier.value = true;
                           _showScanSheet(result.bidId);
                         }
@@ -417,7 +417,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                Navigator.of(ctx).pop();
+                ctx.pop();
                 context.pop();
               },
               style: ElevatedButton.styleFrom(
@@ -468,7 +468,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                Navigator.of(ctx).pop();
+                ctx.pop();
                 context.pop();
               },
               style: ElevatedButton.styleFrom(
@@ -728,7 +728,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
           if (state is DeliveryConfirmSuccess ||
               state is QrScanSuccess ||
               state is QrScanQueued) {
-            Navigator.pop(context);
+            context.pop();
             widget.onClose();
           }
         },
@@ -764,7 +764,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                       icon: const Icon(Icons.close_rounded,
                           color: DonyColors.grey400),
                       onPressed: () {
-                        Navigator.pop(context);
+                        context.pop();
                         widget.onClose();
                       },
                     ),
@@ -963,8 +963,8 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                             onTap: () => setState(() => _photo = null),
                             child: Container(
                               padding: const EdgeInsets.all(DonySpacing.xs),
-                              decoration: const BoxDecoration(
-                                  color: Colors.black54,
+                              decoration: BoxDecoration(
+                                  color: DonyColors.ink900.withValues(alpha: 0.54),
                                   shape: BoxShape.circle),
                               child: const Icon(Icons.close_rounded,
                                   color: DonyColors.white, size: 16),

@@ -47,10 +47,11 @@ class _BidDetailView extends StatefulWidget {
 
 class _BidDetailViewState extends State<_BidDetailView> {
   late BidModel _bid;
-  PaymentModel? _existingPayment;
-  bool _paymentLoaded = false;
   bool _skeletonLoading = false;
   Timer? _refreshTimer;
+
+  final _existingPaymentNotifier = ValueNotifier<PaymentModel?>(null);
+  final _paymentLoadedNotifier = ValueNotifier<bool>(false);
 
   @override
   void initState() {
@@ -69,6 +70,8 @@ class _BidDetailViewState extends State<_BidDetailView> {
   @override
   void dispose() {
     _refreshTimer?.cancel();
+    _existingPaymentNotifier.dispose();
+    _paymentLoadedNotifier.dispose();
     super.dispose();
   }
 
@@ -77,13 +80,11 @@ class _BidDetailViewState extends State<_BidDetailView> {
     try {
       final payment = await getIt<PaymentRepository>().getPaymentForBid(_bid.id);
       if (mounted) {
-        setState(() {
-          _existingPayment = payment;
-          _paymentLoaded = true;
-        });
+        _existingPaymentNotifier.value = payment;
+        _paymentLoadedNotifier.value = true;
       }
     } catch (_) {
-      if (mounted) setState(() => _paymentLoaded = true);
+      if (mounted) _paymentLoadedNotifier.value = true;
     }
   }
 
@@ -94,7 +95,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
     return BlocConsumer<BidBloc, BidState>(
       listener: (context, state) {
         if (state is BidAccepted) {
-          setState(() => _bid = state.bid);
+          _bid = state.bid;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Demande acceptée ! Définissez maintenant la fenêtre de remise.'),
@@ -104,7 +105,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
           );
           context.push('/bids/${_bid.id}/handover', extra: _bid);
         } else if (state is BidRejected) {
-          setState(() => _bid = state.bid);
+          _bid = state.bid;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Demande refusée.'),
@@ -113,7 +114,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
           );
           context.pop();
         } else if (state is BidPresenceConfirmed) {
-          setState(() => _bid = state.bid);
+          _bid = state.bid;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Présence confirmée !'),
@@ -122,7 +123,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
             ),
           );
         } else if (state is BidCancelled) {
-          setState(() => _bid = state.bid);
+          _bid = state.bid;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Demande annulée.'),
@@ -144,21 +145,19 @@ class _BidDetailViewState extends State<_BidDetailView> {
           context.pop();
         } else if (state is BidDetailLoaded) {
           final previousBidId = _bid.id;
-          setState(() {
-            _bid = state.bid;
-            _skeletonLoading = false;
-            if (state.bid.id != previousBidId) {
-              _existingPayment = null;
-              _paymentLoaded = false;
-            }
-          });
+          _bid = state.bid;
+          _skeletonLoading = false;
+          if (state.bid.id != previousBidId) {
+            _existingPaymentNotifier.value = null;
+            _paymentLoadedNotifier.value = false;
+          }
           if ((state.bid.status == 'PENDING' || state.bid.status == 'ACCEPTED') &&
-              !_paymentLoaded) {
+              !_paymentLoadedNotifier.value) {
             _loadPaymentStatus();
           }
         } else if (state is BidError) {
           if (_skeletonLoading) {
-            setState(() => _skeletonLoading = false);
+            _skeletonLoading = false;
             context.pop();
           }
           ScaffoldMessenger.of(context).showSnackBar(
@@ -314,8 +313,8 @@ class _BidDetailViewState extends State<_BidDetailView> {
                       ],
 
                       // Timeline section ("ÉTAPES")
-                      if (_bid.status == 'ACCEPTED' ||
-                          _bid.status == 'COMPLETED') ...[
+                      if (_bid.status == 'COMPLETED' ||
+                          _bid.status == 'DELIVERED') ...[
                         const SizedBox(height: DonySpacing.xl),
                         _StepsSection(bid: _bid),
                       ],
@@ -337,11 +336,18 @@ class _BidDetailViewState extends State<_BidDetailView> {
                 ),
           bottomNavigationBar: (isSender &&
                   (_bid.status == 'PENDING' || _bid.status == 'ACCEPTED'))
-              ? _SenderActionBar(
-                  bid: _bid,
-                  isLoading: isLoading,
-                  existingPayment: _existingPayment,
-                  paymentLoaded: _paymentLoaded)
+              ? ListenableBuilder(
+                  listenable: Listenable.merge([
+                    _existingPaymentNotifier,
+                    _paymentLoadedNotifier,
+                  ]),
+                  builder: (context, _) => _SenderActionBar(
+                    bid: _bid,
+                    isLoading: isLoading,
+                    existingPayment: _existingPaymentNotifier.value,
+                    paymentLoaded: _paymentLoadedNotifier.value,
+                  ),
+                )
               : !isSender && _bid.status == 'PENDING'
                   ? _ActionBar(bid: _bid, isLoading: isLoading)
                   : !isSender && _bid.status == 'REJECTED'
@@ -1271,13 +1277,13 @@ class _ActionBar extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
+            onPressed: () => ctx.pop(),
             child: Text('Annuler',
                 style: tt.bodyMedium?.copyWith(color: DonyColors.grey400)),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.of(ctx).pop();
+              ctx.pop();
               context.read<BidBloc>().add(BidRejectRequested(bid.id,
                   reason: reasonCtrl.text.trim().isEmpty
                       ? null
@@ -1540,7 +1546,7 @@ class _SenderOptionsSheet extends StatelessWidget {
             label: 'Signaler ce trajet',
             subtitle: 'Signaler un problème au support Dony',
             onTap: () {
-              Navigator.pop(context);
+              context.pop();
               _showReportSheet(outerContext);
             },
           ),
@@ -1563,7 +1569,7 @@ class _SenderOptionsSheet extends StatelessWidget {
               label: 'Annuler la demande',
               subtitle: 'Votre paiement sera remboursé automatiquement',
               onTap: () {
-                Navigator.pop(context);
+                context.pop();
                 _showCancelDialog(outerContext);
               },
             ),
@@ -1579,7 +1585,7 @@ class _SenderOptionsSheet extends StatelessWidget {
               label: 'Supprimer cette demande',
               subtitle: 'Retirer définitivement de votre historique',
               onTap: () {
-                Navigator.pop(context);
+                context.pop();
                 _showDeleteDialog(outerContext);
               },
             ),
@@ -1656,7 +1662,7 @@ class _SenderOptionsSheet extends StatelessWidget {
                 onPressed: selected == null
                     ? null
                     : () {
-                        Navigator.pop(ctx);
+                        ctx.pop();
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text('Signalement envoyé. Merci !',
@@ -1692,13 +1698,13 @@ class _SenderOptionsSheet extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () => ctx.pop(),
             child: Text('Non',
                 style: tt.bodyMedium?.copyWith(color: DonyColors.grey400)),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(ctx);
+              ctx.pop();
               context.read<BidBloc>().add(BidCancelRequested(bid.id));
             },
             style: ElevatedButton.styleFrom(
@@ -1727,13 +1733,13 @@ class _SenderOptionsSheet extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () => ctx.pop(),
             child: Text('Annuler',
                 style: tt.bodyMedium?.copyWith(color: DonyColors.grey400)),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(ctx);
+              ctx.pop();
               context.read<BidBloc>().add(BidDeleteRequested(bid.id));
             },
             style: ElevatedButton.styleFrom(
@@ -1790,13 +1796,13 @@ class _TravelerRejectedBar extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () => ctx.pop(),
             child: Text('Annuler',
                 style: tt.bodyMedium?.copyWith(color: DonyColors.grey400)),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(ctx);
+              ctx.pop();
               context.read<BidBloc>().add(BidTravelerDismissRequested(bid.id));
             },
             style: ElevatedButton.styleFrom(
@@ -2046,7 +2052,7 @@ class _TrackingLinkCard extends StatelessWidget {
 
   static const String _trackingPublicBase = String.fromEnvironment(
     'TRACKING_PUBLIC_URL',
-    defaultValue: 'http://localhost:8080/api/v1',
+    defaultValue: 'https://api.dony.app/api/v1',
   );
 
   String get _trackingUrl =>

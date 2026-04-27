@@ -40,8 +40,8 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
     final dep = parts.isNotEmpty ? parts[0].trim() : 'Paris';
     final arr = parts.length > 1 ? parts[1].trim() : 'Dakar';
 
-    final depCodes = _cityToCodes[dep] ?? (dep.substring(0, 3).toUpperCase(), dep.substring(0, 3).toUpperCase());
-    final arrCodes = _cityToCodes[arr] ?? (arr.substring(0, 3).toUpperCase(), arr.substring(0, 3).toUpperCase());
+    final depCodes = _cityToCodes[dep] ?? (dep.length >= 3 ? dep.substring(0, 3).toUpperCase() : dep.toUpperCase(), dep.length >= 3 ? dep.substring(0, 3).toUpperCase() : dep.toUpperCase());
+    final arrCodes = _cityToCodes[arr] ?? (arr.length >= 3 ? arr.substring(0, 3).toUpperCase() : arr.toUpperCase(), arr.length >= 3 ? arr.substring(0, 3).toUpperCase() : arr.toUpperCase());
 
     return (depCodes.$1, depCodes.$2, arrCodes.$1, arrCodes.$2);
   }
@@ -605,7 +605,7 @@ class _ApplessBanner extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.add_rounded,
+              const Icon(Icons.check_circle_outline_rounded,
                   color: DonyColors.terra500, size: 20),
               const SizedBox(width: DonySpacing.sm),
               Text(
@@ -619,7 +619,7 @@ class _ApplessBanner extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            'Quand $travelerName sera devant votre porte, vous confirmerez avec un QR ou un code à 4 chiffres.',
+            'Quand $travelerName sera devant votre porte, vous confirmerez avec un QR ou un code à 6 chiffres.',
             style: tt.bodySmall
                 ?.copyWith(color: DonyColors.ink900, height: 1.4),
           ),

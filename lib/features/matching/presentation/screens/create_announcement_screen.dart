@@ -60,15 +60,14 @@ class CreateAnnouncementScreen extends StatefulWidget {
 }
 
 class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
-  String? _departureCity;
-  String? _arrivalCity;
-  DateTime? _departureDate;
-  TimeOfDay? _departureTime;
-  TimeOfDay? _arrivalTime;
+  // ValueNotifiers for UI state (no setState)
+  final _departureCityNotifier = ValueNotifier<String?>(null);
+  final _arrivalCityNotifier = ValueNotifier<String?>(null);
+  final _departureDateNotifier = ValueNotifier<DateTime?>(null);
+  final _departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+  final _arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
   final _departureLocationCtrl = TextEditingController();
   final _arrivalLocationCtrl = TextEditingController();
-
-  // ValueNotifiers for UI state (no setState)
   final _availableKgNotifier = ValueNotifier<double>(15);
   final _priceOptionNotifier = ValueNotifier<int>(1); // index into _priceOptions
   final _selectedContentNotifier = ValueNotifier<Set<String>>(
@@ -83,21 +82,21 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     super.initState();
     if (_isEdit) {
       final a = widget.announcement!;
-      _departureCity = a.departureCity;
-      _arrivalCity = a.arrivalCity;
-      _departureDate = a.departureDate;
+      _departureCityNotifier.value = a.departureCity;
+      _arrivalCityNotifier.value = a.arrivalCity;
+      _departureDateNotifier.value = a.departureDate;
       _availableKgNotifier.value = a.availableKg;
 
       if (a.departureTime != null) {
         final parts = a.departureTime!.split(':');
-        _departureTime = TimeOfDay(
+        _departureTimeNotifier.value = TimeOfDay(
           hour: int.parse(parts[0]),
           minute: int.parse(parts[1]),
         );
       }
       if (a.arrivalTime != null) {
         final parts = a.arrivalTime!.split(':');
-        _arrivalTime = TimeOfDay(
+        _arrivalTimeNotifier.value = TimeOfDay(
           hour: int.parse(parts[0]),
           minute: int.parse(parts[1]),
         );
@@ -123,6 +122,11 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   void dispose() {
     _departureLocationCtrl.dispose();
     _arrivalLocationCtrl.dispose();
+    _departureCityNotifier.dispose();
+    _arrivalCityNotifier.dispose();
+    _departureDateNotifier.dispose();
+    _departureTimeNotifier.dispose();
+    _arrivalTimeNotifier.dispose();
     _availableKgNotifier.dispose();
     _priceOptionNotifier.dispose();
     _selectedContentNotifier.dispose();
@@ -136,21 +140,27 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   }
 
   void _submit() {
-    if (_departureCity == null) {
+    final departureCity = _departureCityNotifier.value;
+    final arrivalCity = _arrivalCityNotifier.value;
+    final departureDate = _departureDateNotifier.value;
+    final departureTimeVal = _departureTimeNotifier.value;
+    final arrivalTimeVal = _arrivalTimeNotifier.value;
+
+    if (departureCity == null) {
       _showError('Ville de départ obligatoire');
       return;
     }
-    if (_arrivalCity == null) {
+    if (arrivalCity == null) {
       _showError('Ville d\'arrivée obligatoire');
       return;
     }
-    if (_departureDate == null) {
+    if (departureDate == null) {
       _showError('Date de départ obligatoire');
       return;
     }
 
-    final departureTime = _departureTime != null ? _formatTime(_departureTime!) : null;
-    final arrivalTime = _arrivalTime != null ? _formatTime(_arrivalTime!) : null;
+    final departureTime = departureTimeVal != null ? _formatTime(departureTimeVal) : null;
+    final arrivalTime = arrivalTimeVal != null ? _formatTime(arrivalTimeVal) : null;
     final departureLocation = _departureLocationCtrl.text.trim().isEmpty
         ? null
         : _departureLocationCtrl.text.trim();
@@ -161,9 +171,9 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     if (_isEdit) {
       context.read<AnnouncementBloc>().add(AnnouncementUpdateRequested(
         id: widget.announcement!.id,
-        departureCity: _departureCity!,
-        arrivalCity: _arrivalCity!,
-        departureDate: _departureDate!,
+        departureCity: departureCity,
+        arrivalCity: arrivalCity,
+        departureDate: departureDate,
         departureTime: departureTime,
         arrivalTime: arrivalTime,
         departureLocation: departureLocation,
@@ -173,9 +183,9 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       ));
     } else {
       context.read<AnnouncementBloc>().add(AnnouncementCreateRequested(
-        departureCity: _departureCity!,
-        arrivalCity: _arrivalCity!,
-        departureDate: _departureDate!,
+        departureCity: departureCity,
+        arrivalCity: arrivalCity,
+        departureDate: departureDate,
         departureTime: departureTime,
         arrivalTime: arrivalTime,
         departureLocation: departureLocation,
@@ -195,7 +205,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   Future<void> _selectDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _departureDate ?? DateTime.now().add(const Duration(days: 1)),
+      initialDate: _departureDateNotifier.value ?? DateTime.now().add(const Duration(days: 1)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (ctx, child) => Theme(
@@ -206,14 +216,14 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       ),
     );
     if (picked != null) {
-      setState(() => _departureDate = picked);
+      _departureDateNotifier.value = picked;
     }
   }
 
   Future<void> _selectDepartureTime() async {
     final picked = await showTimePicker(
       context: context,
-      initialTime: _departureTime ?? const TimeOfDay(hour: 8, minute: 0),
+      initialTime: _departureTimeNotifier.value ?? const TimeOfDay(hour: 8, minute: 0),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
           colorScheme: const ColorScheme.light(primary: DonyColors.green400),
@@ -221,13 +231,13 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
         child: child!,
       ),
     );
-    if (picked != null) setState(() => _departureTime = picked);
+    if (picked != null) _departureTimeNotifier.value = picked;
   }
 
   Future<void> _selectArrivalTime() async {
     final picked = await showTimePicker(
       context: context,
-      initialTime: _arrivalTime ?? const TimeOfDay(hour: 12, minute: 0),
+      initialTime: _arrivalTimeNotifier.value ?? const TimeOfDay(hour: 12, minute: 0),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
           colorScheme: const ColorScheme.light(primary: DonyColors.green400),
@@ -235,7 +245,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
         child: child!,
       ),
     );
-    if (picked != null) setState(() => _arrivalTime = picked);
+    if (picked != null) _arrivalTimeNotifier.value = picked;
   }
 
   @override
@@ -256,14 +266,6 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       },
       builder: (context, state) {
         final isLoading = state is AnnouncementLoading;
-
-        // Computed corridor labels for display
-        final depCode = _departureCity != null
-            ? (_departureAirportCodes[_departureCity] ?? _departureCity!)
-            : null;
-        final arrCode = _arrivalCity != null
-            ? (_arrivalAirportCodes[_arrivalCity] ?? _arrivalCity!)
-            : null;
 
         return Scaffold(
           backgroundColor: DonyColors.bg,
@@ -305,132 +307,162 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Corridor card ───────────────────────────────────────────
-                if (_departureCity != null && _arrivalCity != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: DonySpacing.base,
-                      vertical: DonySpacing.md,
-                    ),
-                    decoration: BoxDecoration(
-                      color: DonyColors.white,
-                      borderRadius: BorderRadius.circular(DonyRadius.card),
-                      border: Border.all(color: DonyColors.grey200),
-                    ),
-                    child: Row(
+                // ── Corridor card + Trajet section (reactive) ───────────────
+                ListenableBuilder(
+                  listenable: Listenable.merge([
+                    _departureCityNotifier,
+                    _arrivalCityNotifier,
+                    _departureDateNotifier,
+                    _departureTimeNotifier,
+                    _arrivalTimeNotifier,
+                  ]),
+                  builder: (context, _) {
+                    final departureCity = _departureCityNotifier.value;
+                    final arrivalCity = _arrivalCityNotifier.value;
+                    final departureDate = _departureDateNotifier.value;
+                    final departureTime = _departureTimeNotifier.value;
+                    final arrivalTime = _arrivalTimeNotifier.value;
+
+                    final depCode = departureCity != null
+                        ? (_departureAirportCodes[departureCity] ?? departureCity)
+                        : null;
+                    final arrCode = arrivalCity != null
+                        ? (_arrivalAirportCodes[arrivalCity] ?? arrivalCity)
+                        : null;
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '$depCode → $arrCode',
-                                style: tt.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              if (_departureDate != null)
-                                Text(
-                                  _formatCorridorDateTime(),
-                                  style: tt.bodyMedium?.copyWith(
-                                    color: DonyColors.grey400,
+                        // Corridor card
+                        if (departureCity != null && arrivalCity != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: DonySpacing.base,
+                              vertical: DonySpacing.md,
+                            ),
+                            decoration: BoxDecoration(
+                              color: DonyColors.white,
+                              borderRadius: BorderRadius.circular(DonyRadius.card),
+                              border: Border.all(color: DonyColors.grey200),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '$depCode → $arrCode',
+                                        style: tt.titleLarge?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      if (departureDate != null)
+                                        Text(
+                                          _formatCorridorDateTime(),
+                                          style: tt.bodyMedium?.copyWith(
+                                            color: DonyColors.grey400,
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
+                                TextButton(
+                                  onPressed: () {
+                                    // Scroll back or allow re-selection
+                                  },
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: DonyColors.green400,
+                                    padding: EdgeInsets.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: Text(
+                                    'Modifier',
+                                    style: tt.bodyMedium?.copyWith(
+                                      color: DonyColors.green400,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ).animate().fadeIn(duration: 250.ms),
+
+                        if (departureCity != null && arrivalCity != null)
+                          const SizedBox(height: DonySpacing.xl),
+
+                        // Trajet section
+                        _SectionLabel(label: 'TRAJET'),
+                        const SizedBox(height: DonySpacing.md),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: DonyColors.white,
+                            borderRadius: BorderRadius.circular(DonyRadius.card),
+                            border: Border.all(color: DonyColors.grey200),
+                          ),
+                          child: Column(
+                            children: [
+                              _CityRow(
+                                isDeparture: true,
+                                value: departureCity,
+                                airport: departureCity != null
+                                    ? _departureAirports[departureCity]
+                                    : null,
+                                cities: _departureCities,
+                                onChanged: (v) => _departureCityNotifier.value = v,
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.only(left: DonySpacing.icon),
+                                child: Divider(height: 1),
+                              ),
+                              _TimeRow(
+                                isDeparture: true,
+                                time: departureTime,
+                                onTap: _selectDepartureTime,
+                                onClear: departureTime != null
+                                    ? () => _departureTimeNotifier.value = null
+                                    : null,
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.only(left: DonySpacing.icon),
+                                child: Divider(height: 1),
+                              ),
+                              _CityRow(
+                                isDeparture: false,
+                                value: arrivalCity,
+                                airport: arrivalCity != null
+                                    ? _arrivalAirports[arrivalCity]
+                                    : null,
+                                cities: _arrivalCities,
+                                onChanged: (v) => _arrivalCityNotifier.value = v,
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.only(left: DonySpacing.icon),
+                                child: Divider(height: 1),
+                              ),
+                              _TimeRow(
+                                isDeparture: false,
+                                time: arrivalTime,
+                                onTap: _selectArrivalTime,
+                                onClear: arrivalTime != null
+                                    ? () => _arrivalTimeNotifier.value = null
+                                    : null,
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.only(left: DonySpacing.icon),
+                                child: Divider(height: 1),
+                              ),
+                              _DateRow(
+                                date: departureDate,
+                                onTap: _selectDate,
+                              ),
                             ],
                           ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            // Scroll back or allow re-selection
-                          },
-                          style: TextButton.styleFrom(
-                            foregroundColor: DonyColors.green400,
-                            padding: EdgeInsets.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: Text(
-                            'Modifier',
-                            style: tt.bodyMedium?.copyWith(
-                              color: DonyColors.green400,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
+                        ).animate().fadeIn(delay: 60.ms),
                       ],
-                    ),
-                  ).animate().fadeIn(duration: 250.ms),
-
-                if (_departureCity != null && _arrivalCity != null)
-                  const SizedBox(height: DonySpacing.xl),
-
-                // ── Trajet section ──────────────────────────────────────────
-                _SectionLabel(label: 'TRAJET'),
-                const SizedBox(height: DonySpacing.md),
-                Container(
-                  decoration: BoxDecoration(
-                    color: DonyColors.white,
-                    borderRadius: BorderRadius.circular(DonyRadius.card),
-                    border: Border.all(color: DonyColors.grey200),
-                  ),
-                  child: Column(
-                    children: [
-                      _CityRow(
-                        isDeparture: true,
-                        value: _departureCity,
-                        airport: _departureCity != null
-                            ? _departureAirports[_departureCity]
-                            : null,
-                        cities: _departureCities,
-                        onChanged: (v) => setState(() => _departureCity = v),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.only(left: DonySpacing.icon),
-                        child: Divider(height: 1),
-                      ),
-                      _TimeRow(
-                        isDeparture: true,
-                        time: _departureTime,
-                        onTap: _selectDepartureTime,
-                        onClear: _departureTime != null
-                            ? () => setState(() => _departureTime = null)
-                            : null,
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.only(left: DonySpacing.icon),
-                        child: Divider(height: 1),
-                      ),
-                      _CityRow(
-                        isDeparture: false,
-                        value: _arrivalCity,
-                        airport: _arrivalCity != null
-                            ? _arrivalAirports[_arrivalCity]
-                            : null,
-                        cities: _arrivalCities,
-                        onChanged: (v) => setState(() => _arrivalCity = v),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.only(left: DonySpacing.icon),
-                        child: Divider(height: 1),
-                      ),
-                      _TimeRow(
-                        isDeparture: false,
-                        time: _arrivalTime,
-                        onTap: _selectArrivalTime,
-                        onClear: _arrivalTime != null
-                            ? () => setState(() => _arrivalTime = null)
-                            : null,
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.only(left: DonySpacing.icon),
-                        child: Divider(height: 1),
-                      ),
-                      _DateRow(
-                        date: _departureDate,
-                        onTap: _selectDate,
-                      ),
-                    ],
-                  ),
-                ).animate().fadeIn(delay: 60.ms),
+                    );
+                  },
+                ),
                 const SizedBox(height: DonySpacing.xxl),
 
                 // ── LIEUX DE REMISE ─────────────────────────────────────────
@@ -630,48 +662,53 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 // ── LIMITE DÉPART ───────────────────────────────────────────
                 _SectionLabel(label: 'LIMITE DÉPART'),
                 const SizedBox(height: DonySpacing.md),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.base,
-                    vertical: DonySpacing.md,
-                  ),
-                  decoration: BoxDecoration(
-                    color: DonyColors.white,
-                    borderRadius: BorderRadius.circular(DonyRadius.card),
-                    border: Border.all(color: DonyColors.grey200),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.calendar_today_rounded,
-                        color: DonyColors.green400,
-                        size: 20,
+                ValueListenableBuilder<DateTime?>(
+                  valueListenable: _departureDateNotifier,
+                  builder: (context, departureDate, _) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.base,
+                        vertical: DonySpacing.md,
                       ),
-                      const SizedBox(width: DonySpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _departureDate != null
-                                  ? _formatHandoverDate()
-                                  : 'Jeu 17 avril · 18h–20h',
-                              style: tt.bodyMedium,
-                            ),
-                            Text(
-                              _departureLocationCtrl.text.isNotEmpty
-                                  ? _departureLocationCtrl.text
-                                  : 'Adresse de remise · 12e arrond.',
-                              style: tt.bodySmall?.copyWith(
-                                color: DonyColors.grey400,
-                              ),
-                            ),
-                          ],
-                        ),
+                      decoration: BoxDecoration(
+                        color: DonyColors.white,
+                        borderRadius: BorderRadius.circular(DonyRadius.card),
+                        border: Border.all(color: DonyColors.grey200),
                       ),
-                    ],
-                  ),
-                ).animate().fadeIn(delay: 100.ms),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.calendar_today_rounded,
+                            color: DonyColors.green400,
+                            size: 20,
+                          ),
+                          const SizedBox(width: DonySpacing.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  departureDate != null
+                                      ? _formatHandoverDate()
+                                      : 'Jeu 17 avril · 18h–20h',
+                                  style: tt.bodyMedium,
+                                ),
+                                Text(
+                                  _departureLocationCtrl.text.isNotEmpty
+                                      ? _departureLocationCtrl.text
+                                      : 'Adresse de remise · 12e arrond.',
+                                  style: tt.bodySmall?.copyWith(
+                                    color: DonyColors.grey400,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ).animate().fadeIn(delay: 100.ms);
+                  },
+                ),
                 const SizedBox(height: DonySpacing.xxl),
 
                 // ── CE QUE J'ACCEPTE DE TRANSPORTER ────────────────────────
@@ -767,21 +804,27 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   }
 
   String _formatCorridorDateTime() {
-    if (_departureDate == null) return '';
-    final date = DateFormat('EEE d MMM', 'fr').format(_departureDate!);
-    if (_departureTime != null && _arrivalTime != null) {
-      return '$date · ${_departureTime!.hour}h–${_arrivalTime!.hour}h';
-    } else if (_departureTime != null) {
-      return '$date · ${_departureTime!.hour}h';
+    final departureDate = _departureDateNotifier.value;
+    final departureTime = _departureTimeNotifier.value;
+    final arrivalTime = _arrivalTimeNotifier.value;
+    if (departureDate == null) return '';
+    final date = DateFormat('EEE d MMM', 'fr').format(departureDate);
+    if (departureTime != null && arrivalTime != null) {
+      return '$date · ${departureTime.hour}h–${arrivalTime.hour}h';
+    } else if (departureTime != null) {
+      return '$date · ${departureTime.hour}h';
     }
     return date;
   }
 
   String _formatHandoverDate() {
-    if (_departureDate == null) return '';
-    final date = DateFormat('EEE d MMMM', 'fr').format(_departureDate!);
-    if (_departureTime != null && _arrivalTime != null) {
-      return '$date · ${_departureTime!.hour}h–${_arrivalTime!.hour}h';
+    final departureDate = _departureDateNotifier.value;
+    final departureTime = _departureTimeNotifier.value;
+    final arrivalTime = _arrivalTimeNotifier.value;
+    if (departureDate == null) return '';
+    final date = DateFormat('EEE d MMMM', 'fr').format(departureDate);
+    if (departureTime != null && arrivalTime != null) {
+      return '$date · ${departureTime.hour}h–${arrivalTime.hour}h';
     }
     return date;
   }
@@ -925,7 +968,7 @@ class _CityRow extends StatelessWidget {
                       : null,
                   onTap: () {
                     onChanged(city);
-                    Navigator.pop(context);
+                    context.pop();
                   },
                 )),
           ],
