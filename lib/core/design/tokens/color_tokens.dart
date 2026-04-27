@@ -34,6 +34,9 @@ abstract final class DonyColors {
   static const ink800 = Color(0xFF1A2B3C);
   static const ink700 = Color(0xFF253545);
 
+  // Shadow
+  static const shadow = Color(0x1A0D1B2A);  // ink900 @ 10%
+
   // Semantic
   static const success      = Color(0xFF16A34A);
   static const successLight = Color(0xFFE8F5EE);

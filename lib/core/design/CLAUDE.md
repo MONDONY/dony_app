@@ -16,20 +16,21 @@ import 'package:dony/core/design/design_system.dart';
 |-------|--------|-------|
 | `DonyColors.green400` | `#1A6B3C` | Primary ★ — CTA, liens, actifs |
 | `DonyColors.green300` | `#4CAF7D` | Primary dark mode / accent secondaire |
-| `DonyColors.green100` | `#E8F5EE` | Fond chips/badges actifs |
-| `DonyColors.green600` | `#134F2D` | Gradients, headers sombres |
+| `DonyColors.green50`  | `#E8F5EE` | Fond chips/badges actifs |
+| `DonyColors.green600` | `#0E3D23` | Gradients, headers sombres |
 | `DonyColors.terra500` | `#D96A3A` | Accent ★ — accents chauds, highlights |
-| `DonyColors.terra300` | `#E8956A` | Accent dark mode |
-| `DonyColors.terra100` | `#FAE9DF` | Fond accent |
-| `DonyColors.bg`       | `#F4F6F8` | Surface light / fond d'écran |
-| `DonyColors.surface`  | `#FFFFFF` | Cards, champs, appbar |
+| `DonyColors.terra300` | `#EA9468` | Accent dark mode |
+| `DonyColors.terra50`  | `#FCF0E9` | Fond accent |
+| `DonyColors.bg`       | `#F4F5F0` | Surface light / fond d'écran |
+| `DonyColors.white`    | `#FFFFFF` | Cards, champs, appbar |
 | `DonyColors.ink900`   | `#0D1B2A` | Texte primaire (titres, corps) |
-| `DonyColors.ink600`   | `#6B7A8D` | Texte secondaire (labels, sous-titres) |
-| `DonyColors.ink300`   | `#ADB5BD` | Texte hint / placeholders |
-| `DonyColors.border`   | `#E9ECEF` | Bordures cards et inputs |
+| `DonyColors.grey400`  | `#6B7A8D` | Texte secondaire (labels, sous-titres) |
+| `DonyColors.grey300`  | `#D2CDC2` | Texte hint / placeholders |
+| `DonyColors.grey200`  | `#E9ECEF` | Bordures cards et inputs |
 | `DonyColors.success`  | `#16A34A` | Confirmations |
 | `DonyColors.warning`  | `#F59E0B` | Avertissements |
 | `DonyColors.error`    | `#E53935` | Erreurs light mode |
+| `DonyColors.shadow`   | `#1A0D1B2A` | Ombre cards (ink900 @ 10%) |
 
 ### Espacement — `DonySpacing`
 
@@ -51,8 +52,8 @@ DonyRadius.card  = 16  // cards ★
 DonyRadius.lg    = 14  // boutons ★
 DonyRadius.sheet = 24  // sheets/modals ★
 DonyRadius.sm    = 8   // snackbars
-DonyRadius.chip  = 20  // chips/pills
-DonyRadius.input = 12  // inputs
+DonyRadius.xl    = 20  // chips/pills
+DonyRadius.md    = 12  // inputs
 DonyRadius.full  = 999 // badges (pill)
 ```
 
@@ -155,7 +156,7 @@ DonyTextField(
 )
 ```
 
-Rayon interne : `DonyRadius.input` (12).
+Rayon interne : `DonyRadius.md` (12).
 
 ### `DonyCard`
 
@@ -167,7 +168,7 @@ DonyCard(
 )
 ```
 
-Rayon : `DonyRadius.card` (16). Élévation 0, bordure `DonyColors.border`.
+Rayon : `DonyRadius.card` (16). Élévation 0, bordure `DonyColors.grey200`.
 
 ### `DonyBadge`
 

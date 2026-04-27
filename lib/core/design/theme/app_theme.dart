@@ -4,9 +4,9 @@ import 'package:dony/core/design/tokens/typography_tokens.dart';
 import 'package:flutter/material.dart';
 
 abstract final class AppTheme {
-  static ThemeData get light => _build(Brightness.light);
+  static ThemeData get light => _build();
 
-  static ThemeData _build(Brightness brightness) {
+  static ThemeData _build() {
     const cs = ColorScheme(
       brightness: Brightness.light,
       primary:          DonyColors.green400,
@@ -25,7 +25,7 @@ abstract final class AppTheme {
       outlineVariant:   DonyColors.grey100,
       error:            DonyColors.error,
       onError:          DonyColors.white,
-      shadow:           Color(0x1A0D1B2A),
+      shadow:           DonyColors.shadow,
     );
 
     return ThemeData(
