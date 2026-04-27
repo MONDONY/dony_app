@@ -96,7 +96,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                     ),
                   ),
                   trailing: _selectedCode == c.$1
-                      ? const Icon(Icons.check_rounded, color: DonyColors.blue400)
+                      ? const Icon(Icons.check_rounded, color: DonyColors.green400)
                       : null,
                   onTap: () {
                     setState(() {
@@ -289,7 +289,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                         child: ElevatedButton(
                           onPressed: isLoading ? null : _submit,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: DonyColors.blue400,
+                            backgroundColor: DonyColors.green400,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
@@ -336,7 +336,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             text: 'Conditions',
                             style: GoogleFonts.sora(
                               fontSize: 12,
-                              color: DonyColors.blue400,
+                              color: DonyColors.green400,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -345,7 +345,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             text: 'Politique de confidentialité',
                             style: GoogleFonts.sora(
                               fontSize: 12,
-                              color: DonyColors.blue400,
+                              color: DonyColors.green400,
                               fontWeight: FontWeight.w600,
                             ),
                           ),

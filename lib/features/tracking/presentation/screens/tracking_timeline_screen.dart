@@ -44,13 +44,13 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: DonyColors.blue400),
+          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: DonyColors.green400),
           onPressed: () => context.pop(),
         ),
         title: Text(
           'Suivi du colis',
           style: GoogleFonts.sora(
-              fontWeight: FontWeight.w700, fontSize: 18, color: DonyColors.dark900),
+              fontWeight: FontWeight.w700, fontSize: 18, color: DonyColors.ink900),
         ),
         centerTitle: false,
         bottom: const PreferredSize(
@@ -62,7 +62,7 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
         builder: (context, state) {
           if (state is TrackingEventsLoading) {
             return const Center(
-                child: CircularProgressIndicator(color: DonyColors.blue400));
+                child: CircularProgressIndicator(color: DonyColors.green400));
           }
           if (state is TrackingEventsError) {
             return _ErrorView(
@@ -73,7 +73,7 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
           }
           if (state is TrackingEventsLoaded) {
             return RefreshIndicator(
-              color: DonyColors.blue400,
+              color: DonyColors.green400,
               onRefresh: () async {
                 context.read<TrackingBloc>().add(
                     TrackingEventsRequested(widget.bidId));
@@ -183,8 +183,8 @@ class _TimelineItem extends StatelessWidget {
 
   Color get _stepColor => switch (event.eventType) {
         'ARRIVEE' => DonyColors.success,
-        'TRANSIT' => DonyColors.blue400,
-        _ => DonyColors.blue400,
+        'TRANSIT' => DonyColors.green400,
+        _ => DonyColors.green400,
       };
 
   IconData get _stepIcon => switch (event.eventType) {
@@ -249,7 +249,7 @@ class _TimelineItem extends StatelessWidget {
                           style: GoogleFonts.sora(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
-                              color: DonyColors.dark900),
+                              color: DonyColors.ink900),
                         ),
                       ),
                       Container(
@@ -304,10 +304,10 @@ class _TimelineItem extends StatelessWidget {
                           if (progress == null) return child;
                           return Container(
                             height: 120,
-                            color: DonyColors.blue100,
+                            color: DonyColors.green100,
                             child: const Center(
                               child: CircularProgressIndicator(
-                                  color: DonyColors.blue400, strokeWidth: 2),
+                                  color: DonyColors.green400, strokeWidth: 2),
                             ),
                           );
                         },
@@ -401,17 +401,17 @@ class _EmptyTimeline extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: DonyColors.blue100,
+              color: DonyColors.green100,
               borderRadius: BorderRadius.circular(14),
             ),
             child: const Icon(Icons.hourglass_empty_rounded,
-                color: DonyColors.blue400, size: 32),
+                color: DonyColors.green400, size: 32),
           ),
           const SizedBox(height: 16),
           Text(
             'En attente du scan de départ',
             style: GoogleFonts.sora(
-                fontSize: 15, fontWeight: FontWeight.w700, color: DonyColors.dark900),
+                fontSize: 15, fontWeight: FontWeight.w700, color: DonyColors.ink900),
           ),
           const SizedBox(height: 6),
           Text(
@@ -451,7 +451,7 @@ class _ErrorView extends StatelessWidget {
               icon: const Icon(Icons.refresh_rounded),
               label: const Text('Réessayer'),
               style: ElevatedButton.styleFrom(
-                  backgroundColor: DonyColors.blue400,
+                  backgroundColor: DonyColors.green400,
                   foregroundColor: Colors.white,
                   elevation: 0),
             ),

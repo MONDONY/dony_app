@@ -175,13 +175,13 @@ class _BidDetailViewState extends State<_BidDetailView> {
             elevation: 0,
             scrolledUnderElevation: 0,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: DonyColors.blue400),
+              icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: DonyColors.green400),
               onPressed: () => context.pop(),
             ),
             title: Text(
               'Détail de la demande',
               style: GoogleFonts.sora(
-                  fontWeight: FontWeight.w700, fontSize: 18, color: DonyColors.dark900),
+                  fontWeight: FontWeight.w700, fontSize: 18, color: DonyColors.ink900),
             ),
             centerTitle: false,
             bottom: const PreferredSize(
@@ -190,7 +190,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
             ),
           ),
           body: _skeletonLoading
-              ? const Center(child: CircularProgressIndicator(color: DonyColors.blue400))
+              ? const Center(child: CircularProgressIndicator(color: DonyColors.green400))
               : SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
             child: Column(
@@ -337,10 +337,10 @@ class _SenderCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: DonyColors.blue100,
+              color: DonyColors.green100,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(Icons.person_rounded, color: DonyColors.blue400, size: 24),
+            child: const Icon(Icons.person_rounded, color: DonyColors.green400, size: 24),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -350,7 +350,7 @@ class _SenderCard extends StatelessWidget {
                 Text(
                   bid.resolvedSenderName,
                   style: GoogleFonts.sora(
-                      fontWeight: FontWeight.w700, fontSize: 16, color: DonyColors.dark900),
+                      fontWeight: FontWeight.w700, fontSize: 16, color: DonyColors.ink900),
                 ),
                 if (bid.senderName != null && bid.senderName!.isNotEmpty && bid.senderPhone != null)
                   Padding(
@@ -410,7 +410,7 @@ class _TravelerCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: DonyColors.blue100,
+              color: DonyColors.green100,
               borderRadius: BorderRadius.circular(14),
             ),
             child: Center(
@@ -419,7 +419,7 @@ class _TravelerCard extends StatelessWidget {
                 style: GoogleFonts.sora(
                     fontWeight: FontWeight.w700,
                     fontSize: 16,
-                    color: DonyColors.blue400),
+                    color: DonyColors.green400),
               ),
             ),
           ),
@@ -433,7 +433,7 @@ class _TravelerCard extends StatelessWidget {
                   style: GoogleFonts.sora(
                       fontWeight: FontWeight.w700,
                       fontSize: 16,
-                      color: DonyColors.dark900),
+                      color: DonyColors.ink900),
                 ),
                 if (phone != null) ...[
                   const SizedBox(height: 2),
@@ -456,12 +456,12 @@ class _TravelerCard extends StatelessWidget {
           TextButton(
             onPressed: () => _openProfile(context),
             style: TextButton.styleFrom(
-              foregroundColor: DonyColors.blue400,
+              foregroundColor: DonyColors.green400,
               padding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
-              backgroundColor: DonyColors.blue100,
+              backgroundColor: DonyColors.green100,
             ),
             child: Text(
               'Profil',
@@ -730,7 +730,7 @@ class _InfoRow extends StatelessWidget {
         Expanded(
           child: Text(value,
               style: GoogleFonts.sora(
-                  fontSize: 13, fontWeight: FontWeight.w600, color: DonyColors.dark900)),
+                  fontSize: 13, fontWeight: FontWeight.w600, color: DonyColors.ink900)),
         ),
       ],
     );
@@ -862,7 +862,7 @@ class _ConfirmPresenceBar extends StatelessWidget {
             : const Icon(Icons.location_on_rounded),
         label: const Text('Confirmer ma présence'),
         style: ElevatedButton.styleFrom(
-          backgroundColor: DonyColors.blue400,
+          backgroundColor: DonyColors.green400,
           foregroundColor: Colors.white,
           elevation: 0,
           minimumSize: const Size(double.infinity, 52),
@@ -1015,7 +1015,7 @@ class _SenderActionBar extends StatelessWidget {
                           icon: const Icon(Icons.lock_rounded, size: 18),
                           label: const Text('Payer mon envoi'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: DonyColors.blue400,
+                            backgroundColor: DonyColors.green400,
                             foregroundColor: Colors.white,
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(vertical: 14),
@@ -1071,7 +1071,7 @@ class _SenderOptionsSheet extends StatelessWidget {
           Text(
             'Options',
             style: GoogleFonts.sora(
-                fontSize: 18, fontWeight: FontWeight.w700, color: DonyColors.dark900),
+                fontSize: 18, fontWeight: FontWeight.w700, color: DonyColors.ink900),
           ),
           const SizedBox(height: 16),
 
@@ -1093,8 +1093,8 @@ class _SenderOptionsSheet extends StatelessWidget {
           // Contacter le voyageur (bientôt)
           _OptionTile(
             icon: Icons.chat_bubble_outline_rounded,
-            iconColor: DonyColors.blue400,
-            iconBg: DonyColors.blue100,
+            iconColor: DonyColors.green400,
+            iconBg: DonyColors.green100,
             label: 'Contacter le voyageur',
             subtitle: 'Messagerie — bientôt disponible',
             disabled: true,
@@ -1190,7 +1190,7 @@ class _SenderOptionsSheet extends StatelessWidget {
                     title: Text(r,
                         style: GoogleFonts.sora(
                             fontSize: 14, fontWeight: FontWeight.w500)),
-                    activeColor: DonyColors.blue400,
+                    activeColor: DonyColors.green400,
                     contentPadding: EdgeInsets.zero,
                     dense: true,
                   )),
@@ -1405,11 +1405,11 @@ class _TrackingNumberCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: DonyColors.blue100,
+                  color: DonyColors.green100,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.local_shipping_outlined,
-                    color: DonyColors.blue400, size: 20),
+                    color: DonyColors.green400, size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1418,12 +1418,12 @@ class _TrackingNumberCard extends StatelessWidget {
                   style: GoogleFonts.sora(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
-                      color: DonyColors.dark900,
+                      color: DonyColors.ink900,
                       letterSpacing: 2),
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.copy_rounded, color: DonyColors.blue400, size: 20),
+                icon: const Icon(Icons.copy_rounded, color: DonyColors.green400, size: 20),
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: trackingNumber));
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -1471,19 +1471,19 @@ class _TimelineButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: DonyColors.blue100,
+          color: DonyColors.green100,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: DonyColors.blue400.withValues(alpha: 0.3)),
+          border: Border.all(color: DonyColors.green400.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: DonyColors.blue400.withValues(alpha: 0.12),
+                color: DonyColors.green400.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.timeline_rounded, color: DonyColors.blue400, size: 20),
+              child: const Icon(Icons.timeline_rounded, color: DonyColors.green400, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -1493,7 +1493,7 @@ class _TimelineButton extends StatelessWidget {
                   Text(
                     'Suivi en temps réel',
                     style: GoogleFonts.sora(
-                        fontSize: 14, fontWeight: FontWeight.w700, color: DonyColors.dark900),
+                        fontSize: 14, fontWeight: FontWeight.w700, color: DonyColors.ink900),
                   ),
                   Text(
                     'Consulter l\'historique des scans',
@@ -1502,7 +1502,7 @@ class _TimelineButton extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: DonyColors.blue400, size: 20),
+            const Icon(Icons.chevron_right_rounded, color: DonyColors.green400, size: 20),
           ],
         ),
       ),
@@ -1560,7 +1560,7 @@ class _OptionTile extends StatelessWidget {
                       style: GoogleFonts.sora(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: DonyColors.dark900),
+                          color: DonyColors.ink900),
                     ),
                     Text(
                       subtitle,
@@ -1638,7 +1638,7 @@ class _TrackingLinkCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(Icons.link_rounded, color: DonyColors.blue400, size: 16),
+                const Icon(Icons.link_rounded, color: DonyColors.green400, size: 16),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -1676,8 +1676,8 @@ class _TrackingLinkCard extends StatelessWidget {
                       style: GoogleFonts.sora(
                           fontSize: 13, fontWeight: FontWeight.w600)),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: DonyColors.blue400,
-                    side: const BorderSide(color: DonyColors.blue400),
+                    foregroundColor: DonyColors.green400,
+                    side: const BorderSide(color: DonyColors.green400),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
@@ -1696,7 +1696,7 @@ class _TrackingLinkCard extends StatelessWidget {
                       style: GoogleFonts.sora(
                           fontSize: 13, fontWeight: FontWeight.w600)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: DonyColors.blue400,
+                    backgroundColor: DonyColors.green400,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1740,7 +1740,7 @@ class _ConfirmationCodeCard extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 18),
             decoration: BoxDecoration(
-              color: DonyColors.blue100,
+              color: DonyColors.green100,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -1748,7 +1748,7 @@ class _ConfirmationCodeCard extends StatelessWidget {
               textAlign: TextAlign.center,
               style: GoogleFonts.sora(
                   fontSize: 36, fontWeight: FontWeight.w800,
-                  color: DonyColors.blue600, letterSpacing: 12),
+                  color: DonyColors.green600, letterSpacing: 12),
             ),
           ),
           const SizedBox(height: 12),
@@ -1768,17 +1768,17 @@ class _ConfirmationCodeCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                border: Border.all(color: DonyColors.blue400),
+                border: Border.all(color: DonyColors.green400),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.copy_rounded, size: 16, color: DonyColors.blue400),
+                  const Icon(Icons.copy_rounded, size: 16, color: DonyColors.green400),
                   const SizedBox(width: 8),
                   Text('Copier le code',
                       style: GoogleFonts.sora(
-                          fontSize: 13, fontWeight: FontWeight.w600, color: DonyColors.blue400)),
+                          fontSize: 13, fontWeight: FontWeight.w600, color: DonyColors.green400)),
                 ],
               ),
             ),

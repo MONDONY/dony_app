@@ -99,11 +99,11 @@ class _HeroSection extends StatelessWidget {
           width: 64,
           height: 64,
           decoration: BoxDecoration(
-            color: DonyColors.blue100,
+            color: DonyColors.green100,
             borderRadius: BorderRadius.circular(18),
           ),
           child: const Icon(Icons.account_balance_wallet_rounded,
-              color: DonyColors.blue400, size: 32),
+              color: DonyColors.green400, size: 32),
         ),
         const SizedBox(height: 20),
         Text(
@@ -111,7 +111,7 @@ class _HeroSection extends StatelessWidget {
           style: GoogleFonts.sora(
             fontSize: 28,
             fontWeight: FontWeight.w800,
-            color: DonyColors.dark900,
+            color: DonyColors.ink900,
             letterSpacing: -0.5,
             height: 1.2,
           ),
@@ -159,10 +159,10 @@ class _BenefitsSection extends StatelessWidget {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: DonyColors.blue100,
+                        color: DonyColors.green100,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(icon, color: DonyColors.blue400, size: 20),
+                      child: Icon(icon, color: DonyColors.green400, size: 20),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -173,7 +173,7 @@ class _BenefitsSection extends StatelessWidget {
                               style: GoogleFonts.sora(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 14,
-                                  color: DonyColors.dark900)),
+                                  color: DonyColors.ink900)),
                           const SizedBox(height: 2),
                           Text(subtitle,
                               style: GoogleFonts.sora(
@@ -212,7 +212,7 @@ class _ConnectButton extends StatelessWidget {
                 .read<PaymentBloc>()
                 .add(const PaymentConnectAccountRequested()),
         style: ElevatedButton.styleFrom(
-          backgroundColor: DonyColors.blue400,
+          backgroundColor: DonyColors.green400,
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
@@ -335,7 +335,7 @@ class _SuccessView extends StatelessWidget {
                 style: GoogleFonts.sora(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
-                  color: DonyColors.dark900,
+                  color: DonyColors.ink900,
                 ),
               ),
               const SizedBox(height: 12),
@@ -423,7 +423,7 @@ class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
           WebViewWidget(controller: _controller),
           if (_isLoading)
             const Center(
-              child: CircularProgressIndicator(color: DonyColors.blue400),
+              child: CircularProgressIndicator(color: DonyColors.green400),
             ),
         ],
       ),

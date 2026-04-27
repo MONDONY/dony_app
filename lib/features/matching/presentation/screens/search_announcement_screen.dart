@@ -149,14 +149,14 @@ class _FilterFormView extends StatelessWidget {
           style: GoogleFonts.sora(
             fontSize: 17,
             fontWeight: FontWeight.w700,
-            color: DonyColors.dark900,
+            color: DonyColors.ink900,
           ),
         ),
         backgroundColor: DonyColors.white,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_rounded,
-              size: 20, color: DonyColors.blue400),
+              size: 20, color: DonyColors.green400),
           onPressed: () => context.pop(),
         ),
         bottom: const PreferredSize(
@@ -267,7 +267,7 @@ class _FilterFormView extends StatelessWidget {
                   style: GoogleFonts.sora(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: DonyColors.dark900,
+                    color: DonyColors.ink900,
                   ),
                 ),
                 Text(
@@ -275,7 +275,7 @@ class _FilterFormView extends StatelessWidget {
                   style: GoogleFonts.sora(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: DonyColors.blue400,
+                    color: DonyColors.green400,
                   ),
                 ),
               ],
@@ -283,10 +283,10 @@ class _FilterFormView extends StatelessWidget {
             const SizedBox(height: 8),
             SliderTheme(
               data: SliderTheme.of(context).copyWith(
-                activeTrackColor: DonyColors.blue400,
-                inactiveTrackColor: DonyColors.blue100,
-                thumbColor: DonyColors.blue400,
-                overlayColor: DonyColors.blue400.withValues(alpha: 0.1),
+                activeTrackColor: DonyColors.green400,
+                inactiveTrackColor: DonyColors.green100,
+                thumbColor: DonyColors.green400,
+                overlayColor: DonyColors.green400.withValues(alpha: 0.1),
                 trackHeight: 4,
               ),
               child: Slider(
@@ -395,14 +395,14 @@ class _ResultsViewState extends State<_ResultsView> {
           style: GoogleFonts.sora(
             fontSize: 16,
             fontWeight: FontWeight.w700,
-            color: DonyColors.dark900,
+            color: DonyColors.ink900,
           ),
         ),
         backgroundColor: DonyColors.white,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_rounded,
-              size: 20, color: DonyColors.blue400),
+              size: 20, color: DonyColors.green400),
           onPressed: widget.onBack,
         ),
         bottom: const PreferredSize(
@@ -414,7 +414,7 @@ class _ResultsViewState extends State<_ResultsView> {
         builder: (context, state) {
           if (state is AnnouncementLoading || state is AnnouncementInitial) {
             return const Center(
-              child: CircularProgressIndicator(color: DonyColors.blue400),
+              child: CircularProgressIndicator(color: DonyColors.green400),
             );
           }
 
@@ -499,7 +499,7 @@ class _LocationRow extends StatelessWidget {
               height: 10,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isDeparture ? DonyColors.blue400 : const Color(0xFFE53935),
+                color: isDeparture ? DonyColors.green400 : const Color(0xFFE53935),
               ),
             ),
             const SizedBox(width: 14),
@@ -522,7 +522,7 @@ class _LocationRow extends StatelessWidget {
                     style: GoogleFonts.sora(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: DonyColors.dark900,
+                      color: DonyColors.ink900,
                     ),
                   ),
                 ],
@@ -572,11 +572,11 @@ class _LocationRow extends StatelessWidget {
                     city,
                     style: GoogleFonts.sora(
                       fontWeight: FontWeight.w500,
-                      color: value == city ? DonyColors.blue400 : DonyColors.dark900,
+                      color: value == city ? DonyColors.green400 : DonyColors.ink900,
                     ),
                   ),
                   trailing: value == city
-                      ? const Icon(Icons.check_rounded, color: DonyColors.blue400)
+                      ? const Icon(Icons.check_rounded, color: DonyColors.green400)
                       : null,
                   onTap: () {
                     onChanged(city);
@@ -608,7 +608,7 @@ class _DateField extends StatelessWidget {
           builder: (c, child) => Theme(
             data: Theme.of(c).copyWith(
               colorScheme:
-                  const ColorScheme.light(primary: DonyColors.blue400),
+                  const ColorScheme.light(primary: DonyColors.green400),
             ),
             child: child!,
           ),
@@ -638,7 +638,7 @@ class _DateField extends StatelessWidget {
             Row(
               children: [
                 const Icon(Icons.calendar_today_rounded,
-                    size: 14, color: DonyColors.blue400),
+                    size: 14, color: DonyColors.green400),
                 const SizedBox(width: 6),
                 Text(
                   date != null
@@ -648,7 +648,7 @@ class _DateField extends StatelessWidget {
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color:
-                        date != null ? DonyColors.dark900 : DonyColors.grey200,
+                        date != null ? DonyColors.ink900 : DonyColors.grey200,
                   ),
                 ),
               ],
@@ -693,14 +693,14 @@ class _WeightField extends StatelessWidget {
             Row(
               children: [
                 const Icon(Icons.scale_rounded,
-                    size: 14, color: DonyColors.blue400),
+                    size: 14, color: DonyColors.green400),
                 const SizedBox(width: 6),
                 Text(
                   '${weightKg.toStringAsFixed(0)} kg',
                   style: GoogleFonts.sora(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: DonyColors.dark900,
+                    color: DonyColors.ink900,
                   ),
                 ),
               ],
@@ -753,7 +753,7 @@ class _WeightField extends StatelessWidget {
                     style: GoogleFonts.sora(
                       fontSize: 40,
                       fontWeight: FontWeight.w800,
-                      color: DonyColors.blue400,
+                      color: DonyColors.green400,
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -771,9 +771,9 @@ class _WeightField extends StatelessWidget {
               ),
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
-                  activeTrackColor: DonyColors.blue400,
-                  inactiveTrackColor: DonyColors.blue100,
-                  thumbColor: DonyColors.blue400,
+                  activeTrackColor: DonyColors.green400,
+                  inactiveTrackColor: DonyColors.green100,
+                  thumbColor: DonyColors.green400,
                   trackHeight: 4,
                 ),
                 child: Slider(
@@ -828,10 +828,10 @@ class _QuickChip extends StatelessWidget {
         duration: 180.ms,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? DonyColors.dark900 : DonyColors.white,
+          color: active ? DonyColors.ink900 : DonyColors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: active ? DonyColors.dark900 : DonyColors.grey100,
+            color: active ? DonyColors.ink900 : DonyColors.grey100,
           ),
         ),
         child: Text(
@@ -839,7 +839,7 @@ class _QuickChip extends StatelessWidget {
           style: GoogleFonts.sora(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: active ? Colors.white : DonyColors.dark900,
+            color: active ? Colors.white : DonyColors.ink900,
           ),
         ),
       ),
@@ -901,7 +901,7 @@ class _TravelerCard extends StatelessWidget {
                 height: 44,
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [DonyColors.blue400, DonyColors.blue300],
+                    colors: [DonyColors.green400, DonyColors.green300],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -934,7 +934,7 @@ class _TravelerCard extends StatelessWidget {
                             style: GoogleFonts.sora(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
-                              color: DonyColors.dark900,
+                              color: DonyColors.ink900,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -975,7 +975,7 @@ class _TravelerCard extends StatelessWidget {
                             style: GoogleFonts.sora(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
-                              color: DonyColors.dark900,
+                              color: DonyColors.ink900,
                             ),
                           ),
                           if (totalTrips != null && totalTrips > 0) ...[
@@ -995,7 +995,7 @@ class _TravelerCard extends StatelessWidget {
                     Row(
                       children: [
                         const Icon(Icons.flight_takeoff_rounded,
-                            size: 13, color: DonyColors.blue400),
+                            size: 13, color: DonyColors.green400),
                         const SizedBox(width: 5),
                         Expanded(
                           child: Text(
@@ -1003,7 +1003,7 @@ class _TravelerCard extends StatelessWidget {
                             style: GoogleFonts.sora(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: DonyColors.dark900,
+                              color: DonyColors.ink900,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -1059,14 +1059,14 @@ class _TravelerCard extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: DonyColors.white,
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: DonyColors.blue400),
+                              border: Border.all(color: DonyColors.green400),
                             ),
                             child: Text(
                               'Voir →',
                               style: GoogleFonts.sora(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
-                                color: DonyColors.blue400,
+                                color: DonyColors.green400,
                               ),
                             ),
                           ),
@@ -1097,7 +1097,7 @@ class _Pill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: primary ? DonyColors.blue100 : DonyColors.grey50,
+        color: primary ? DonyColors.green100 : DonyColors.grey50,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
@@ -1105,7 +1105,7 @@ class _Pill extends StatelessWidget {
         style: GoogleFonts.sora(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: primary ? DonyColors.blue400 : DonyColors.grey400,
+          color: primary ? DonyColors.green400 : DonyColors.grey400,
         ),
       ),
     );
@@ -1130,11 +1130,11 @@ class _EmptyView extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: const BoxDecoration(
-                color: DonyColors.blue100,
+                color: DonyColors.green100,
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.search_off_rounded,
-                  size: 48, color: DonyColors.blue400),
+                  size: 48, color: DonyColors.green400),
             ),
             const SizedBox(height: 20),
             Text(
@@ -1142,7 +1142,7 @@ class _EmptyView extends StatelessWidget {
               style: GoogleFonts.sora(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: DonyColors.dark900,
+                color: DonyColors.ink900,
               ),
               textAlign: TextAlign.center,
             ),

@@ -111,12 +111,12 @@ class _CancellationScreenState extends State<CancellationScreen> {
           elevation: 0,
           scrolledUnderElevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: DonyColors.blue400),
+            icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: DonyColors.green400),
             onPressed: () => context.pop(),
           ),
           title: Text('Annuler le trajet',
               style: GoogleFonts.sora(
-                  fontWeight: FontWeight.w700, fontSize: 18, color: DonyColors.dark900)),
+                  fontWeight: FontWeight.w700, fontSize: 18, color: DonyColors.ink900)),
           centerTitle: false,
           bottom: const PreferredSize(
             preferredSize: Size.fromHeight(1),
@@ -132,7 +132,7 @@ class _CancellationScreenState extends State<CancellationScreen> {
               const SizedBox(height: 24),
               Text('Raison de l\'annulation',
                   style: GoogleFonts.sora(
-                      fontSize: 14, fontWeight: FontWeight.w700, color: DonyColors.dark900)),
+                      fontSize: 14, fontWeight: FontWeight.w700, color: DonyColors.ink900)),
               const SizedBox(height: 12),
               ..._reasons.map((reason) => _ReasonTile(
                     label: reason,
@@ -154,7 +154,7 @@ class _CancellationScreenState extends State<CancellationScreen> {
                         borderSide: const BorderSide(color: DonyColors.grey100)),
                     focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: DonyColors.blue400, width: 1.5)),
+                        borderSide: const BorderSide(color: DonyColors.green400, width: 1.5)),
                   ),
                   style: GoogleFonts.sora(fontSize: 14),
                   maxLines: 3,
@@ -216,22 +216,22 @@ class _ReasonTile extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: selected ? DonyColors.blue100 : DonyColors.white,
+          color: selected ? DonyColors.green100 : DonyColors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? DonyColors.blue400 : DonyColors.grey100, width: selected ? 1.5 : 1),
+          border: Border.all(color: selected ? DonyColors.green400 : DonyColors.grey100, width: selected ? 1.5 : 1),
         ),
         child: Row(
           children: [
             Icon(
               selected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
-              color: selected ? DonyColors.blue400 : DonyColors.grey200,
+              color: selected ? DonyColors.green400 : DonyColors.grey200,
               size: 20,
             ),
             const SizedBox(width: 12),
             Text(label,
                 style: GoogleFonts.sora(
                     fontSize: 14,
-                    color: selected ? DonyColors.blue400 : DonyColors.dark900,
+                    color: selected ? DonyColors.green400 : DonyColors.ink900,
                     fontWeight: selected ? FontWeight.w600 : FontWeight.w400)),
           ],
         ),

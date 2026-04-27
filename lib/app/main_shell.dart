@@ -153,13 +153,13 @@ class _NavItem extends StatelessWidget {
             curve: Curves.easeOutCubic,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: _active ? DonyColors.blue100 : Colors.transparent,
+              color: _active ? DonyColors.green100 : Colors.transparent,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(
               _active ? icon : outlinedIcon,
               size: 22,
-              color: _active ? DonyColors.blue400 : DonyColors.grey400,
+              color: _active ? DonyColors.green400 : DonyColors.grey400,
             ),
           ),
           const SizedBox(height: 2),
@@ -168,7 +168,7 @@ class _NavItem extends StatelessWidget {
             style: GoogleFonts.sora(
               fontSize: 11,
               fontWeight: _active ? FontWeight.w700 : FontWeight.w500,
-              color: _active ? DonyColors.blue400 : DonyColors.grey400,
+              color: _active ? DonyColors.green400 : DonyColors.grey400,
             ),
             child: Text(label),
           ),
@@ -199,19 +199,19 @@ class _QrCenterItem extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: isActive
                   ? const LinearGradient(
-                      colors: [DonyColors.blue600, DonyColors.blue400],
+                      colors: [DonyColors.green600, DonyColors.green400],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     )
                   : const LinearGradient(
-                      colors: [DonyColors.blue400, DonyColors.blue300],
+                      colors: [DonyColors.green400, DonyColors.green300],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: DonyColors.blue400.withValues(alpha: isActive ? 0.4 : 0.25),
+                  color: DonyColors.green400.withValues(alpha: isActive ? 0.4 : 0.25),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),

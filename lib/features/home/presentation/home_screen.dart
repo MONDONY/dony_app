@@ -42,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return Scaffold(
           backgroundColor: DonyColors.grey50,
           body: RefreshIndicator(
-            color: DonyColors.blue400,
+            color: DonyColors.green400,
             onRefresh: () async {
               context
                   .read<AnnouncementBloc>()
@@ -80,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 style: GoogleFonts.sora(
                                   fontSize: 17,
                                   fontWeight: FontWeight.w700,
-                                  color: DonyColors.dark900,
+                                  color: DonyColors.ink900,
                                 ),
                               ),
                             ),
@@ -91,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: DonyColors.blue100,
+                                  color: DonyColors.green100,
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
@@ -99,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   style: GoogleFonts.sora(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700,
-                                    color: DonyColors.blue400,
+                                    color: DonyColors.green400,
                                   ),
                                 ),
                               ),
@@ -120,7 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           height: 200,
                           child: Center(
                             child: CircularProgressIndicator(
-                              color: DonyColors.blue400,
+                              color: DonyColors.green400,
                             ),
                           ),
                         );
@@ -233,7 +233,7 @@ class _Header extends StatelessWidget {
                       style: GoogleFonts.sora(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
-                        color: DonyColors.dark900,
+                        color: DonyColors.ink900,
                       ),
                     ),
                     const SizedBox(width: 6),
@@ -249,7 +249,7 @@ class _Header extends StatelessWidget {
             height: 44,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [DonyColors.blue600, DonyColors.blue400],
+                colors: [DonyColors.green600, DonyColors.green400],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -314,7 +314,7 @@ class _SearchBar extends StatelessWidget {
                     style: GoogleFonts.sora(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: DonyColors.dark900,
+                      color: DonyColors.ink900,
                     ),
                   ),
                 ],
@@ -324,7 +324,7 @@ class _SearchBar extends StatelessWidget {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: DonyColors.blue400,
+                color: DonyColors.green400,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(
@@ -392,7 +392,7 @@ class _TravelerCard extends StatelessWidget {
                   height: 40,
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [DonyColors.blue400, DonyColors.blue300],
+                      colors: [DonyColors.green400, DonyColors.green300],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -419,7 +419,7 @@ class _TravelerCard extends StatelessWidget {
                         style: GoogleFonts.sora(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          color: DonyColors.dark900,
+                          color: DonyColors.ink900,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -464,7 +464,7 @@ class _TravelerCard extends StatelessWidget {
                     style: GoogleFonts.sora(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: DonyColors.dark900,
+                      color: DonyColors.ink900,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -482,14 +482,14 @@ class _TravelerCard extends StatelessWidget {
             Row(
               children: [
                 const Icon(Icons.flight_takeoff_rounded,
-                    size: 12, color: DonyColors.blue400),
+                    size: 12, color: DonyColors.green400),
                 const SizedBox(width: 4),
                 Text(
                   '${announcement.departureCity} → ${announcement.arrivalCity}',
                   style: GoogleFonts.sora(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: DonyColors.blue400,
+                    color: DonyColors.green400,
                   ),
                 ),
               ],
@@ -534,7 +534,7 @@ class _TravelerCard extends StatelessWidget {
                             style: GoogleFonts.sora(
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
-                              color: DonyColors.dark900,
+                              color: DonyColors.ink900,
                             ),
                           ),
                           TextSpan(
@@ -555,7 +555,7 @@ class _TravelerCard extends StatelessWidget {
                     vertical: 7,
                   ),
                   decoration: BoxDecoration(
-                    color: isOwnAnnouncement ? DonyColors.grey100 : DonyColors.blue400,
+                    color: isOwnAnnouncement ? DonyColors.grey100 : DonyColors.green400,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: isOwnAnnouncement
@@ -612,12 +612,12 @@ class _EmptyTravelers extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: DonyColors.blue100,
+              color: DonyColors.green100,
               shape: BoxShape.circle,
             ),
             child: const Icon(
               Icons.flight_takeoff_rounded,
-              color: DonyColors.blue400,
+              color: DonyColors.green400,
               size: 28,
             ),
           ),
@@ -627,7 +627,7 @@ class _EmptyTravelers extends StatelessWidget {
             style: GoogleFonts.sora(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: DonyColors.dark900,
+              color: DonyColors.ink900,
             ),
           ),
           const SizedBox(height: 4),

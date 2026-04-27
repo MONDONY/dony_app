@@ -85,7 +85,7 @@ class _MatchingManagementScreenState extends State<MatchingManagementScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: DonyColors.blue400.withValues(alpha: 0.9),
+                        color: DonyColors.green400.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))

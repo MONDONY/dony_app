@@ -1,43 +1,50 @@
 import 'package:flutter/material.dart';
 
 abstract final class DonyColors {
-  static const blue50  = Color(0xFFE1F5FE);
-  static const blue100 = Color(0xFFB3E5FC);
-  static const blue200 = Color(0xFF81D4FA);
-  static const blue300 = Color(0xFF29B6F6);
-  static const blue400 = Color(0xFF0288D1); // PRIMARY ★
-  static const blue500 = Color(0xFF0277BD);
-  static const blue600 = Color(0xFF01579B);
+  // Primary — vert forêt (confiance)
+  static const green50  = Color(0xFFE8F5EE);
+  static const green100 = Color(0xFFBBDFCC);
+  static const green200 = Color(0xFF8FCAAB);
+  static const green300 = Color(0xFF4CAF7D);
+  static const green400 = Color(0xFF1A6B3C);  // PRIMARY ★
+  static const green500 = Color(0xFF145430);
+  static const green600 = Color(0xFF0E3D23);
+  static const green700 = Color(0xFF0A2E1A);
+  static const greenDark = Color(0xFF0E2318); // stats card bg
 
-  static const sand100 = Color(0xFFF5E6D3);
-  static const sand300 = Color(0xFFD4A96A);
-  static const sand400 = Color(0xFFC4956A); // SECONDARY ★
-  static const sand500 = Color(0xFFA07040);
+  // Terracotta — accent chaud africain
+  static const terra50  = Color(0xFFFCF0E9);
+  static const terra300 = Color(0xFFEA9468);
+  static const terra500 = Color(0xFFD96A3A);  // ACCENT ★
+  static const terra700 = Color(0xFF93421B);
 
-  static const white   = Color(0xFFFFFFFF);
-  static const grey50  = Color(0xFFF7FBFF);
-  static const grey100 = Color(0xFFE8F0F8);
-  static const grey200 = Color(0xFFB3C8DC);
-  static const grey400 = Color(0xFF78909C);
-  static const grey600 = Color(0xFF546E7A);
+  // Surface / background
+  static const white      = Color(0xFFFFFFFF);
+  static const bg         = Color(0xFFF4F5F0);
+  static const surfaceWarm= Color(0xFFF7F3ED);
+  static const grey50     = Color(0xFFFAFAF8);
+  static const grey100    = Color(0xFFF2F1ED);
+  static const grey200    = Color(0xFFE9ECEF);
+  static const grey300    = Color(0xFFD2CDC2);
+  static const grey400    = Color(0xFF6B7A8D);
+  static const grey500    = Color(0xFF797367);
 
-  static const dark900 = Color(0xFF011627);
-  static const dark850 = Color(0xFF012030);
-  static const dark800 = Color(0xFF01294A);
-  static const dark700 = Color(0xFF013A6B);
+  // Ink (texte principal)
+  static const ink900 = Color(0xFF0D1B2A);  // text primary ★
+  static const ink800 = Color(0xFF1A2B3C);
+  static const ink700 = Color(0xFF253545);
 
-  static const success      = Color(0xFF2E7D32);
-  static const successLight = Color(0xFFE8F5E9);
-  static const error        = Color(0xFFC62828);
-  static const errorDark    = Color(0xFFEF5350);
+  // Semantic
+  static const success      = Color(0xFF16A34A);
+  static const successLight = Color(0xFFE8F5EE);
+  static const error        = Color(0xFFE53935);
   static const errorLight   = Color(0xFFFFEBEE);
-  static const warning      = Color(0xFFE65100);
+  static const warning      = Color(0xFFF59E0B);
   static const warningLight = Color(0xFFFFF3E0);
   static const info         = Color(0xFF1565C0);
   static const infoLight    = Color(0xFFE3F2FD);
 }
 
-// Extends ColorScheme with semantic tokens not present in Material 3.
 extension DonyStatusColors on ColorScheme {
   Color get success      => DonyColors.success;
   Color get warning      => DonyColors.warning;
@@ -48,5 +55,4 @@ extension DonyStatusColors on ColorScheme {
   Color get errorLight   => brightness == Brightness.light
       ? DonyColors.errorLight
       : DonyColors.error.withValues(alpha: 0.15);
-  Color get errorDark => DonyColors.errorDark;
 }

@@ -100,7 +100,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
         },
         builder: (context, state) {
           if (state is AnnouncementLoading || state is AnnouncementInitial) {
-            return const Center(child: CircularProgressIndicator(color: DonyColors.blue400));
+            return const Center(child: CircularProgressIndicator(color: DonyColors.green400));
           }
 
           if (state is AnnouncementDetailLoaded) {
@@ -119,14 +119,14 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [DonyColors.blue600, DonyColors.blue400],
+                        colors: [DonyColors.green600, DonyColors.green400],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: DonyColors.blue400.withValues(alpha: 0.3),
+                          color: DonyColors.green400.withValues(alpha: 0.3),
                           blurRadius: 16,
                           offset: const Offset(0, 6),
                         ),
@@ -260,7 +260,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Icon(Icons.location_on_rounded, size: 14, color: DonyColors.blue400),
+                                const Icon(Icons.location_on_rounded, size: 14, color: DonyColors.green400),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
@@ -268,7 +268,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                                     style: GoogleFonts.sora(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
-                                      color: DonyColors.dark900,
+                                      color: DonyColors.ink900,
                                     ),
                                   ),
                                 ),
@@ -288,7 +288,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                                     style: GoogleFonts.sora(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
-                                      color: DonyColors.dark900,
+                                      color: DonyColors.ink900,
                                     ),
                                   ),
                                 ),
@@ -326,7 +326,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                           icon: Icons.euro_rounded,
                           label: 'Prix par kg',
                           value: '${a.pricePerKg.toStringAsFixed(2)} €',
-                          color: DonyColors.blue400,
+                          color: DonyColors.green400,
                         ),
                       ),
                       SizedBox(
@@ -352,7 +352,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                       icon: const Icon(Icons.inbox_rounded, color: Colors.white, size: 18),
                       label: Text('Voir les demandes (${a.bidsCount ?? 0})'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: DonyColors.blue400,
+                        backgroundColor: DonyColors.green400,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         minimumSize: const Size(double.infinity, 50),
@@ -464,7 +464,7 @@ class _StatusBadge extends StatelessWidget {
     final (color, label) = switch (status) {
       'ACTIVE'    => (DonyColors.success, 'Actif'),
       'FULL'      => (DonyColors.warning, 'Complet'),
-      'COMPLETED' => (DonyColors.blue600, 'Terminé'),
+      'COMPLETED' => (DonyColors.green600, 'Terminé'),
       'CANCELLED' => (DonyColors.error, 'Annulé'),
       _           => (DonyColors.grey400, status),
     };
@@ -522,7 +522,7 @@ class _StatCard extends StatelessWidget {
           Text(
             value,
             style: GoogleFonts.sora(
-              fontSize: 16, fontWeight: FontWeight.w700, color: DonyColors.dark900,
+              fontSize: 16, fontWeight: FontWeight.w700, color: DonyColors.ink900,
             ),
           ),
           Text(

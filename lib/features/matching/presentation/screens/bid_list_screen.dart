@@ -39,12 +39,12 @@ class _BidListView extends StatelessWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: DonyColors.blue400),
+          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: DonyColors.green400),
           onPressed: () => context.pop(),
         ),
         title: Text(
           'Demandes reçues',
-          style: GoogleFonts.sora(fontWeight: FontWeight.w700, fontSize: 18, color: DonyColors.dark900),
+          style: GoogleFonts.sora(fontWeight: FontWeight.w700, fontSize: 18, color: DonyColors.ink900),
         ),
         centerTitle: false,
         bottom: const PreferredSize(
@@ -75,7 +75,7 @@ class _BidListView extends StatelessWidget {
         },
         builder: (context, state) {
           if (state is BidLoading) {
-            return const Center(child: CircularProgressIndicator(color: DonyColors.blue400));
+            return const Center(child: CircularProgressIndicator(color: DonyColors.green400));
           }
           if (state is BidListLoaded) {
             if (state.bids.isEmpty) {
@@ -225,10 +225,10 @@ class _BidCard extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: DonyColors.blue100,
+                    color: DonyColors.green100,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.person_outline_rounded, color: DonyColors.blue400, size: 20),
+                  child: const Icon(Icons.person_outline_rounded, color: DonyColors.green400, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -238,7 +238,7 @@ class _BidCard extends StatelessWidget {
                       Text(
                         bid.resolvedSenderName,
                         style: GoogleFonts.sora(
-                            fontWeight: FontWeight.w600, fontSize: 14, color: DonyColors.dark900),
+                            fontWeight: FontWeight.w600, fontSize: 14, color: DonyColors.ink900),
                       ),
                       if (bid.senderName != null && bid.senderName!.isNotEmpty && bid.senderPhone != null)
                         Text(
@@ -287,7 +287,7 @@ class _BidCard extends StatelessWidget {
                   Text(
                     'Voir le détail et répondre',
                     style: GoogleFonts.sora(
-                        fontSize: 12, color: DonyColors.blue400, fontWeight: FontWeight.w600),
+                        fontSize: 12, color: DonyColors.green400, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -341,7 +341,7 @@ class _Stat extends StatelessWidget {
             style: GoogleFonts.sora(fontSize: 11, color: DonyColors.grey200, fontWeight: FontWeight.w500)),
         const SizedBox(height: 2),
         Text(value,
-            style: GoogleFonts.sora(fontSize: 13, color: DonyColors.dark900, fontWeight: FontWeight.w600)),
+            style: GoogleFonts.sora(fontSize: 13, color: DonyColors.ink900, fontWeight: FontWeight.w600)),
       ],
     );
   }
@@ -359,13 +359,13 @@ class _EmptyView extends StatelessWidget {
             Container(
               width: 72,
               height: 72,
-              decoration: BoxDecoration(color: DonyColors.blue100, borderRadius: BorderRadius.circular(20)),
-              child: const Icon(Icons.inbox_outlined, color: DonyColors.blue400, size: 36),
+              decoration: BoxDecoration(color: DonyColors.green100, borderRadius: BorderRadius.circular(20)),
+              child: const Icon(Icons.inbox_outlined, color: DonyColors.green400, size: 36),
             ),
             const SizedBox(height: 16),
             Text('Aucune demande',
                 style: GoogleFonts.sora(
-                    fontSize: 18, fontWeight: FontWeight.w700, color: DonyColors.dark900)),
+                    fontSize: 18, fontWeight: FontWeight.w700, color: DonyColors.ink900)),
             const SizedBox(height: 8),
             Text('Partagez votre annonce pour recevoir des demandes d\'expéditeurs.',
                 textAlign: TextAlign.center,

@@ -124,13 +124,13 @@ class _HandoverScreenState extends State<HandoverScreen> {
           elevation: 0,
           scrolledUnderElevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: DonyColors.blue400),
+            icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: DonyColors.green400),
             onPressed: () => context.pop(),
           ),
           title: Text(
             'Fenêtre de remise',
             style: GoogleFonts.sora(
-                fontWeight: FontWeight.w700, fontSize: 18, color: DonyColors.dark900),
+                fontWeight: FontWeight.w700, fontSize: 18, color: DonyColors.ink900),
           ),
           centerTitle: false,
           bottom: const PreferredSize(
@@ -154,7 +154,7 @@ class _HandoverScreenState extends State<HandoverScreen> {
                     validator: (v) =>
                         (v == null || v.trim().isEmpty) ? 'Lieu requis' : null,
                     decoration: _inputDecoration('Ex: Gare du Nord, Paris — Hall 2'),
-                    style: GoogleFonts.sora(fontSize: 14, color: DonyColors.dark900),
+                    style: GoogleFonts.sora(fontSize: 14, color: DonyColors.ink900),
                     maxLines: 2,
                   ),
                 ),
@@ -200,7 +200,7 @@ class _HandoverScreenState extends State<HandoverScreen> {
       enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: DonyColors.grey100)),
       focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: DonyColors.blue400, width: 1.5)),
+          borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: DonyColors.green400, width: 1.5)),
     );
   }
 }
@@ -211,19 +211,19 @@ class _InfoBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: DonyColors.blue100,
+        color: DonyColors.green100,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: DonyColors.blue400.withOpacity(0.2)),
+        border: Border.all(color: DonyColors.green400.withOpacity(0.2)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.info_outline_rounded, color: DonyColors.blue400, size: 20),
+          const Icon(Icons.info_outline_rounded, color: DonyColors.green400, size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               'L\'expéditeur recevra une notification avec le lieu et l\'heure de remise dès que vous confirmez.',
-              style: GoogleFonts.sora(fontSize: 13, color: DonyColors.blue600),
+              style: GoogleFonts.sora(fontSize: 13, color: DonyColors.green600),
             ),
           ),
         ],
@@ -244,7 +244,7 @@ class _Section extends StatelessWidget {
       children: [
         Text(title,
             style: GoogleFonts.sora(
-                fontSize: 14, fontWeight: FontWeight.w700, color: DonyColors.dark900)),
+                fontSize: 14, fontWeight: FontWeight.w700, color: DonyColors.ink900)),
         const SizedBox(height: 10),
         child,
       ],
@@ -273,11 +273,11 @@ class _DateTimeTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: DonyColors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: value != null ? DonyColors.blue400.withOpacity(0.4) : DonyColors.grey100),
+          border: Border.all(color: value != null ? DonyColors.green400.withOpacity(0.4) : DonyColors.grey100),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: value != null ? DonyColors.blue400 : DonyColors.grey200),
+            Icon(icon, size: 20, color: value != null ? DonyColors.green400 : DonyColors.grey200),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -292,7 +292,7 @@ class _DateTimeTile extends StatelessWidget {
                         : 'Sélectionner',
                     style: GoogleFonts.sora(
                       fontSize: 14,
-                      color: value != null ? DonyColors.dark900 : DonyColors.grey200,
+                      color: value != null ? DonyColors.ink900 : DonyColors.grey200,
                       fontWeight: value != null ? FontWeight.w600 : FontWeight.w400,
                     ),
                   ),
@@ -322,7 +322,7 @@ class _SubmitBar extends StatelessWidget {
           child: ElevatedButton(
             onPressed: isLoading ? null : onSubmit,
             style: ElevatedButton.styleFrom(
-              backgroundColor: DonyColors.blue400,
+              backgroundColor: DonyColors.green400,
               foregroundColor: Colors.white,
               elevation: 0,
               minimumSize: const Size(double.infinity, 52),

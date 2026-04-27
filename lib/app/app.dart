@@ -70,7 +70,6 @@ class _DonyAppState extends State<DonyApp> {
         child: MaterialApp.router(
           title: 'dony',
           theme: AppTheme.light,
-          darkTheme: AppTheme.dark,
           routerConfig: appRouter,
           debugShowCheckedModeBanner: false,
           localizationsDelegates: const [

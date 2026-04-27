@@ -144,7 +144,7 @@ class _SummaryCard extends StatelessWidget {
               style: GoogleFonts.sora(
                   fontWeight: FontWeight.w700,
                   fontSize: 15,
-                  color: DonyColors.dark900),
+                  color: DonyColors.ink900),
             ),
           ),
           const Divider(height: 1),
@@ -159,7 +159,7 @@ class _SummaryCard extends StatelessWidget {
             valueStyle: GoogleFonts.sora(
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
-                color: DonyColors.dark900),
+                color: DonyColors.ink900),
           ),
           const Divider(height: 1, indent: 16),
           _SummaryRow(
@@ -182,14 +182,14 @@ class _SummaryCard extends StatelessWidget {
                   style: GoogleFonts.sora(
                       fontWeight: FontWeight.w700,
                       fontSize: 16,
-                      color: DonyColors.dark900),
+                      color: DonyColors.ink900),
                 ),
                 Text(
                   '${amount.toStringAsFixed(2)} €',
                   style: GoogleFonts.sora(
                       fontWeight: FontWeight.w800,
                       fontSize: 18,
-                      color: DonyColors.blue400),
+                      color: DonyColors.green400),
                 ),
               ],
             ),
@@ -237,7 +237,7 @@ class _SummaryRow extends StatelessWidget {
                 GoogleFonts.sora(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: DonyColors.dark900),
+                    color: DonyColors.ink900),
           ),
         ],
       ),
@@ -251,20 +251,20 @@ class _EscrowInfoBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: DonyColors.blue100,
+        color: DonyColors.green100,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: DonyColors.blue400.withValues(alpha: 0.2)),
+        border: Border.all(color: DonyColors.green400.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.lock_rounded, color: DonyColors.blue400, size: 20),
+          const Icon(Icons.lock_rounded, color: DonyColors.green400, size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               'Votre paiement est sécurisé — libéré uniquement après confirmation de livraison par le destinataire.',
               style: GoogleFonts.sora(
                   fontSize: 13,
-                  color: DonyColors.blue600,
+                  color: DonyColors.green600,
                   fontWeight: FontWeight.w500,
                   height: 1.4),
             ),
@@ -297,7 +297,7 @@ class _PayButton extends StatelessWidget {
             : () =>
                 context.read<PaymentBloc>().add(PaymentInitiated(bidId)),
         style: ElevatedButton.styleFrom(
-          backgroundColor: DonyColors.blue400,
+          backgroundColor: DonyColors.green400,
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
@@ -393,7 +393,7 @@ class _EscrowConfirmedView extends StatelessWidget {
               style: GoogleFonts.sora(
                 fontSize: 26,
                 fontWeight: FontWeight.w800,
-                color: DonyColors.dark900,
+                color: DonyColors.ink900,
               ),
             ),
             const SizedBox(height: 12),
@@ -410,7 +410,7 @@ class _EscrowConfirmedView extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () => context.go('/home'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: DonyColors.blue400,
+                  backgroundColor: DonyColors.green400,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14)),

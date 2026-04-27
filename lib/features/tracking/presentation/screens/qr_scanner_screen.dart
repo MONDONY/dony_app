@@ -199,7 +199,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 decoration: InputDecoration(
                   hintText: 'DON-XXXXXX',
                   hintStyle: GoogleFonts.sora(color: DonyColors.grey200),
-                  prefixIcon: const Icon(Icons.local_shipping_outlined, color: DonyColors.blue400),
+                  prefixIcon: const Icon(Icons.local_shipping_outlined, color: DonyColors.green400),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -207,7 +207,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: DonyColors.blue400, width: 2),
+                    borderSide: const BorderSide(color: DonyColors.green400, width: 2),
                   ),
                 ),
                 style: GoogleFonts.sora(
@@ -260,7 +260,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       }
                     },
               style: ElevatedButton.styleFrom(
-                backgroundColor: DonyColors.blue400,
+                backgroundColor: DonyColors.green400,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -304,7 +304,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             Text(
               'Scan en attente',
               style: GoogleFonts.sora(
-                  fontSize: 18, fontWeight: FontWeight.w800, color: DonyColors.dark900),
+                  fontSize: 18, fontWeight: FontWeight.w800, color: DonyColors.ink900),
             ),
             const SizedBox(height: 6),
             Text(
@@ -359,7 +359,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             Text(
               'Scan enregistré !',
               style: GoogleFonts.sora(
-                  fontSize: 18, fontWeight: FontWeight.w800, color: DonyColors.dark900),
+                  fontSize: 18, fontWeight: FontWeight.w800, color: DonyColors.ink900),
             ),
             const SizedBox(height: 6),
             Text(
@@ -377,7 +377,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 context.pop();
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: DonyColors.blue400,
+                backgroundColor: DonyColors.green400,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -445,7 +445,7 @@ class _CornerPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = DonyColors.blue400
+      ..color = DonyColors.green400
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -622,7 +622,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                   Expanded(
                     child: Text('QR scanné',
                         style: GoogleFonts.sora(
-                            fontSize: 18, fontWeight: FontWeight.w800, color: DonyColors.dark900)),
+                            fontSize: 18, fontWeight: FontWeight.w800, color: DonyColors.ink900)),
                   ),
                   if (!isSubmitting)
                     IconButton(
@@ -654,10 +654,10 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                         margin: const EdgeInsets.only(right: 8),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: isSelected ? DonyColors.blue400 : DonyColors.grey50,
+                          color: isSelected ? DonyColors.green400 : DonyColors.grey50,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                              color: isSelected ? DonyColors.blue400 : DonyColors.grey100, width: 1.5),
+                              color: isSelected ? DonyColors.green400 : DonyColors.grey100, width: 1.5),
                         ),
                         child: Column(
                           children: [
@@ -689,19 +689,19 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: DonyColors.blue100,
+                    color: DonyColors.green100,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.info_outline_rounded, color: DonyColors.blue400, size: 15),
+                      const Icon(Icons.info_outline_rounded, color: DonyColors.green400, size: 15),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'Demandez le code à 6 chiffres au destinataire. Il l\'a reçu de l\'expéditeur.',
                           style: GoogleFonts.sora(
-                              fontSize: 12, color: DonyColors.blue600, fontWeight: FontWeight.w500),
+                              fontSize: 12, color: DonyColors.green600, fontWeight: FontWeight.w500),
                         ),
                       ),
                     ],
@@ -729,7 +729,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: DonyColors.blue400, width: 2),
+                      borderSide: const BorderSide(color: DonyColors.green400, width: 2),
                     ),
                     contentPadding: const EdgeInsets.symmetric(vertical: 16),
                   ),
@@ -757,18 +757,18 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                                 width: 20,
                                 height: 20,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: DonyColors.blue400))
+                                    strokeWidth: 2, color: DonyColors.green400))
                             : Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   const Icon(Icons.camera_alt_rounded,
-                                      color: DonyColors.blue400, size: 20),
+                                      color: DonyColors.green400, size: 20),
                                   const SizedBox(width: 8),
                                   Text('Prendre une photo',
                                       style: GoogleFonts.sora(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w600,
-                                          color: DonyColors.blue400)),
+                                          color: DonyColors.green400)),
                                 ],
                               ),
                       ),
@@ -786,10 +786,10 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Container(
                             height: 120,
-                            color: DonyColors.blue100,
+                            color: DonyColors.green100,
                             child: const Center(
                                 child: Icon(Icons.image_rounded,
-                                    color: DonyColors.blue400, size: 32)),
+                                    color: DonyColors.green400, size: 32)),
                           ),
                         ),
                       ),
@@ -868,7 +868,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                         fontWeight: FontWeight.w700, fontSize: 15),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isArrivee ? DonyColors.success : DonyColors.blue400,
+                    backgroundColor: isArrivee ? DonyColors.success : DonyColors.green400,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(

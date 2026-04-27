@@ -169,7 +169,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.light(primary: DonyColors.blue400),
+          colorScheme: const ColorScheme.light(primary: DonyColors.green400),
         ),
         child: child!,
       ),
@@ -183,7 +183,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       initialTime: _departureTime ?? const TimeOfDay(hour: 8, minute: 0),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.light(primary: DonyColors.blue400),
+          colorScheme: const ColorScheme.light(primary: DonyColors.green400),
         ),
         child: child!,
       ),
@@ -197,7 +197,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       initialTime: _arrivalTime ?? const TimeOfDay(hour: 12, minute: 0),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.light(primary: DonyColors.blue400),
+          colorScheme: const ColorScheme.light(primary: DonyColors.green400),
         ),
         child: child!,
       ),
@@ -236,7 +236,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
             elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_rounded,
-                  size: 20, color: DonyColors.blue400),
+                  size: 20, color: DonyColors.green400),
               onPressed: () => context.pop(),
             ),
             bottom: const PreferredSize(
@@ -396,7 +396,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                           style: GoogleFonts.sora(
                             fontSize: 52,
                             fontWeight: FontWeight.w800,
-                            color: DonyColors.dark900,
+                            color: DonyColors.ink900,
                           ),
                         ),
                         TextSpan(
@@ -413,10 +413,10 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 ),
                 SliderTheme(
                   data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: DonyColors.blue400,
-                    inactiveTrackColor: DonyColors.blue100,
-                    thumbColor: DonyColors.blue400,
-                    overlayColor: DonyColors.blue400.withValues(alpha: 0.1),
+                    activeTrackColor: DonyColors.green400,
+                    inactiveTrackColor: DonyColors.green100,
+                    thumbColor: DonyColors.green400,
+                    overlayColor: DonyColors.green400.withValues(alpha: 0.1),
                     trackHeight: 6,
                   ),
                   child: Slider(
@@ -466,10 +466,10 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                             duration: 180.ms,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             decoration: BoxDecoration(
-                              color: selected ? DonyColors.dark900 : DonyColors.white,
+                              color: selected ? DonyColors.ink900 : DonyColors.white,
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: selected ? DonyColors.dark900 : DonyColors.grey100,
+                                color: selected ? DonyColors.ink900 : DonyColors.grey100,
                               ),
                             ),
                             child: Column(
@@ -481,7 +481,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                                     fontWeight: FontWeight.w800,
                                     color: selected
                                         ? Colors.white
-                                        : DonyColors.dark900,
+                                        : DonyColors.ink900,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -635,7 +635,7 @@ class _CityRow extends StatelessWidget {
               height: 10,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isDeparture ? DonyColors.blue400 : DonyColors.error,
+                color: isDeparture ? DonyColors.green400 : DonyColors.error,
               ),
             ),
             const SizedBox(width: 14),
@@ -656,7 +656,7 @@ class _CityRow extends StatelessWidget {
                           style: GoogleFonts.sora(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
-                            color: DonyColors.dark900,
+                            color: DonyColors.ink900,
                           ),
                         ),
                         if (airport != null)
@@ -715,11 +715,11 @@ class _CityRow extends StatelessWidget {
                     city,
                     style: GoogleFonts.sora(
                       fontWeight: FontWeight.w500,
-                      color: value == city ? DonyColors.blue400 : DonyColors.dark900,
+                      color: value == city ? DonyColors.green400 : DonyColors.ink900,
                     ),
                   ),
                   trailing: value == city
-                      ? const Icon(Icons.check_rounded, color: DonyColors.blue400)
+                      ? const Icon(Icons.check_rounded, color: DonyColors.green400)
                       : null,
                   onTap: () {
                     onChanged(city);
@@ -750,7 +750,7 @@ class _TimeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isDeparture ? DonyColors.blue400 : DonyColors.error;
+    final color = isDeparture ? DonyColors.green400 : DonyColors.error;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -770,7 +770,7 @@ class _TimeRow extends StatelessWidget {
                 style: GoogleFonts.sora(
                   fontSize: 14,
                   fontWeight: time != null ? FontWeight.w700 : FontWeight.w400,
-                  color: time != null ? DonyColors.dark900 : DonyColors.grey200,
+                  color: time != null ? DonyColors.ink900 : DonyColors.grey200,
                 ),
               ),
             ),
@@ -815,7 +815,7 @@ class _DateRow extends StatelessWidget {
                 style: GoogleFonts.sora(
                   fontSize: 15,
                   fontWeight: date != null ? FontWeight.w700 : FontWeight.w400,
-                  color: date != null ? DonyColors.dark900 : DonyColors.grey200,
+                  color: date != null ? DonyColors.ink900 : DonyColors.grey200,
                 ),
               ),
             ),
@@ -848,7 +848,7 @@ class _LocationField extends StatelessWidget {
           Icon(
             isDeparture ? Icons.location_on_rounded : Icons.location_on_outlined,
             size: 14,
-            color: isDeparture ? DonyColors.blue400.withValues(alpha: 0.7) : DonyColors.error.withValues(alpha: 0.7),
+            color: isDeparture ? DonyColors.green400.withValues(alpha: 0.7) : DonyColors.error.withValues(alpha: 0.7),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -857,7 +857,7 @@ class _LocationField extends StatelessWidget {
               style: GoogleFonts.sora(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: DonyColors.dark900,
+                color: DonyColors.ink900,
               ),
               decoration: InputDecoration(
                 hintText: isDeparture

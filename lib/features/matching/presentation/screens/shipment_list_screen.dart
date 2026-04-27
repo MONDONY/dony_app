@@ -88,7 +88,7 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
             return Stack(
               children: [
                 RefreshIndicator(
-                  color: DonyColors.blue400,
+                  color: DonyColors.green400,
                   onRefresh: () async => context
                       .read<BidBloc>()
                       .add(const BidMyListAutoRefreshRequested(force: true)),
@@ -143,7 +143,7 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
                 if (state.isRefreshing)
                   const LinearProgressIndicator(
                     backgroundColor: Colors.transparent,
-                    color: DonyColors.blue400,
+                    color: DonyColors.green400,
                     minHeight: 2,
                   ),
               ],
@@ -209,7 +209,7 @@ class _EnvoisHeaderState extends State<_EnvoisHeader> {
                     style: GoogleFonts.sora(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
-                      color: DonyColors.dark900,
+                      color: DonyColors.ink900,
                       letterSpacing: -0.5,
                     ),
                   ).animate().fadeIn(duration: 300.ms),
@@ -224,7 +224,7 @@ class _EnvoisHeaderState extends State<_EnvoisHeader> {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: savedCount > 0 ? DonyColors.blue100 : DonyColors.grey50,
+                          color: savedCount > 0 ? DonyColors.green100 : DonyColors.grey50,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: DonyColors.grey100),
                         ),
@@ -232,7 +232,7 @@ class _EnvoisHeaderState extends State<_EnvoisHeader> {
                           savedCount > 0
                               ? Icons.bookmark_rounded
                               : Icons.bookmark_border_rounded,
-                          color: savedCount > 0 ? DonyColors.blue400 : DonyColors.grey400,
+                          color: savedCount > 0 ? DonyColors.green400 : DonyColors.grey400,
                           size: 20,
                         ),
                       ),
@@ -244,7 +244,7 @@ class _EnvoisHeaderState extends State<_EnvoisHeader> {
                             width: 18,
                             height: 18,
                             decoration: const BoxDecoration(
-                              color: DonyColors.blue400,
+                              color: DonyColors.green400,
                               shape: BoxShape.circle,
                             ),
                             child: Center(
@@ -377,14 +377,14 @@ class _ActiveShipmentBanner extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [DonyColors.blue600, DonyColors.blue400],
+            colors: [DonyColors.green600, DonyColors.green400],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: DonyColors.blue400.withValues(alpha: 0.28),
+              color: DonyColors.green400.withValues(alpha: 0.28),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -498,7 +498,7 @@ class _SegmentedTabs extends StatelessWidget {
           controller: controller,
           indicator: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [DonyColors.blue600, DonyColors.blue400],
+              colors: [DonyColors.green600, DonyColors.green400],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -594,7 +594,7 @@ class _ShipmentCard extends StatelessWidget {
         'ACCEPTED' => ('Accepté', DonyColors.success),
         'REJECTED' => ('Refusé', DonyColors.error),
         'CANCELLED' => ('Annulé', DonyColors.grey200),
-        'COMPLETED' => ('Livré', DonyColors.blue400),
+        'COMPLETED' => ('Livré', DonyColors.green400),
         _ => (bid.status, DonyColors.grey400),
       };
 
@@ -657,7 +657,7 @@ class _ShipmentCard extends StatelessWidget {
                         style: GoogleFonts.sora(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: DonyColors.dark900,
+                          color: DonyColors.ink900,
                           height: 1.3,
                         ),
                       ),
@@ -701,7 +701,7 @@ class _ShipmentCard extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: DonyColors.blue100,
+                              color: DonyColors.green100,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
@@ -712,12 +712,12 @@ class _ShipmentCard extends StatelessWidget {
                                   style: GoogleFonts.sora(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700,
-                                    color: DonyColors.blue400,
+                                    color: DonyColors.green400,
                                   ),
                                 ),
                                 const SizedBox(width: 4),
                                 const Icon(Icons.arrow_forward_rounded,
-                                    size: 12, color: DonyColors.blue400),
+                                    size: 12, color: DonyColors.green400),
                               ],
                             ),
                           ),
@@ -779,7 +779,7 @@ class _RouteRow extends StatelessWidget {
           width: 8,
           height: 8,
           decoration: const BoxDecoration(
-            color: DonyColors.blue400,
+            color: DonyColors.green400,
             shape: BoxShape.circle,
           ),
         ),
@@ -790,7 +790,7 @@ class _RouteRow extends StatelessWidget {
             style: GoogleFonts.sora(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: DonyColors.dark900,
+              color: DonyColors.ink900,
             ),
             overflow: TextOverflow.ellipsis,
           ),
@@ -802,7 +802,7 @@ class _RouteRow extends StatelessWidget {
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 6),
           child: Icon(Icons.flight_takeoff_rounded,
-              size: 14, color: DonyColors.blue400),
+              size: 14, color: DonyColors.green400),
         ),
         Expanded(
           child: Container(height: 1, color: DonyColors.grey100),
@@ -814,7 +814,7 @@ class _RouteRow extends StatelessWidget {
             style: GoogleFonts.sora(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: DonyColors.dark900,
+              color: DonyColors.ink900,
             ),
             overflow: TextOverflow.ellipsis,
           ),
@@ -825,7 +825,7 @@ class _RouteRow extends StatelessWidget {
           height: 8,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: DonyColors.blue400, width: 2),
+            border: Border.all(color: DonyColors.green400, width: 2),
           ),
         ),
       ],
@@ -893,10 +893,10 @@ class _EmptyView extends StatelessWidget {
               width: 68,
               height: 68,
               decoration: const BoxDecoration(
-                color: DonyColors.blue100,
+                color: DonyColors.green100,
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 30, color: DonyColors.blue400),
+              child: Icon(icon, size: 30, color: DonyColors.green400),
             ),
             const SizedBox(height: 16),
             Text(
@@ -904,7 +904,7 @@ class _EmptyView extends StatelessWidget {
               style: GoogleFonts.sora(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: DonyColors.dark900,
+                color: DonyColors.ink900,
               ),
               textAlign: TextAlign.center,
             ),
@@ -926,14 +926,14 @@ class _EmptyView extends StatelessWidget {
                     horizontal: 24, vertical: 13),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [DonyColors.blue600, DonyColors.blue400],
+                    colors: [DonyColors.green600, DonyColors.green400],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: DonyColors.blue400.withValues(alpha: 0.28),
+                      color: DonyColors.green400.withValues(alpha: 0.28),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -974,7 +974,7 @@ class _LoadingView extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Center(
       child:
-          CircularProgressIndicator(color: DonyColors.blue400, strokeWidth: 2.5),
+          CircularProgressIndicator(color: DonyColors.green400, strokeWidth: 2.5),
     );
   }
 }
@@ -1007,7 +1007,7 @@ class _ErrorView extends StatelessWidget {
               style: GoogleFonts.sora(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: DonyColors.dark900,
+                color: DonyColors.ink900,
               ),
             ),
             const SizedBox(height: 8),
@@ -1027,7 +1027,7 @@ class _ErrorView extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 20, vertical: 12),
                 decoration: BoxDecoration(
-                  color: DonyColors.blue100,
+                  color: DonyColors.green100,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -1035,7 +1035,7 @@ class _ErrorView extends StatelessWidget {
                   style: GoogleFonts.sora(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: DonyColors.blue400,
+                    color: DonyColors.green400,
                   ),
                 ),
               ),
@@ -1059,14 +1059,14 @@ class _SendFab extends StatelessWidget {
             const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [DonyColors.blue600, DonyColors.blue400],
+            colors: [DonyColors.green600, DonyColors.green400],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: DonyColors.blue400.withValues(alpha: 0.35),
+              color: DonyColors.green400.withValues(alpha: 0.35),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -1159,14 +1159,14 @@ class _SavedTripsSheetState extends State<_SavedTripsSheet> {
           // Titre
           Row(
             children: [
-              const Icon(Icons.bookmark_rounded, color: DonyColors.blue400, size: 20),
+              const Icon(Icons.bookmark_rounded, color: DonyColors.green400, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Trajets sauvegardés',
                 style: GoogleFonts.sora(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: DonyColors.dark900,
+                  color: DonyColors.ink900,
                 ),
               ),
               const Spacer(),
@@ -1174,7 +1174,7 @@ class _SavedTripsSheetState extends State<_SavedTripsSheet> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: DonyColors.blue100,
+                    color: DonyColors.green100,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -1182,7 +1182,7 @@ class _SavedTripsSheetState extends State<_SavedTripsSheet> {
                     style: GoogleFonts.sora(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: DonyColors.blue400,
+                      color: DonyColors.green400,
                     ),
                   ),
                 ),
@@ -1245,7 +1245,7 @@ class _SavedTripsSheetState extends State<_SavedTripsSheet> {
                         height: 42,
                         decoration: const BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [DonyColors.blue600, DonyColors.blue300],
+                            colors: [DonyColors.green600, DonyColors.green300],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
@@ -1267,7 +1267,7 @@ class _SavedTripsSheetState extends State<_SavedTripsSheet> {
                         style: GoogleFonts.sora(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: DonyColors.dark900,
+                          color: DonyColors.ink900,
                         ),
                       ),
                       subtitle: Text(
@@ -1292,7 +1292,7 @@ class _SavedTripsSheetState extends State<_SavedTripsSheet> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
-                                color: DonyColors.blue400,
+                                color: DonyColors.green400,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(

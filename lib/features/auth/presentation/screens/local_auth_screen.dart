@@ -21,8 +21,8 @@ class LocalAuthScreen extends StatefulWidget {
 
 class _LocalAuthScreenState extends State<LocalAuthScreen> {
   static const _pinLength = 6;
-  static const _kGreen = DonyColors.blue400;
-  static const _kGreenLight = DonyColors.blue100;
+  static const _kGreen = DonyColors.green400;
+  static const _kGreenLight = DonyColors.green100;
   static const _kBg = DonyColors.grey50;
 
   String _pin = '';

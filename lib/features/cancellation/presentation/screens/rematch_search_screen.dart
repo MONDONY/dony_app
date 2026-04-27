@@ -26,7 +26,7 @@ class RematchSearchScreen extends StatelessWidget {
         title: Text(
           'Alternatives disponibles',
           style: GoogleFonts.sora(
-              fontWeight: FontWeight.w700, fontSize: 18, color: DonyColors.dark900),
+              fontWeight: FontWeight.w700, fontSize: 18, color: DonyColors.ink900),
         ),
         centerTitle: false,
         bottom: const PreferredSize(
@@ -47,7 +47,7 @@ class RematchSearchScreen extends StatelessWidget {
               Text(
                 '${suggestions.length} voyageur${suggestions.length > 1 ? 's' : ''} disponible${suggestions.length > 1 ? 's' : ''}',
                 style: GoogleFonts.sora(
-                    fontSize: 16, fontWeight: FontWeight.w700, color: DonyColors.dark900),
+                    fontSize: 16, fontWeight: FontWeight.w700, color: DonyColors.ink900),
               ),
               const SizedBox(height: 14),
               ...suggestions.asMap().entries.map((e) => _SuggestionCard(
@@ -132,15 +132,15 @@ class _SuggestionCard extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                    color: DonyColors.blue100, borderRadius: BorderRadius.circular(10)),
-                child: const Icon(Icons.flight_takeoff_rounded, color: DonyColors.blue400, size: 18),
+                    color: DonyColors.green100, borderRadius: BorderRadius.circular(10)),
+                child: const Icon(Icons.flight_takeoff_rounded, color: DonyColors.green400, size: 18),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   '${suggestion.departureCity} → ${suggestion.arrivalCity}',
                   style: GoogleFonts.sora(
-                      fontWeight: FontWeight.w700, fontSize: 15, color: DonyColors.dark900),
+                      fontWeight: FontWeight.w700, fontSize: 15, color: DonyColors.ink900),
                 ),
               ),
             ],
@@ -186,7 +186,7 @@ class _SuggestionCard extends StatelessWidget {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: DonyColors.blue400,
+                backgroundColor: DonyColors.green400,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(vertical: 12),
@@ -241,7 +241,7 @@ class _NoAlternatives extends StatelessWidget {
             const SizedBox(height: 16),
             Text('Aucun voyageur disponible',
                 style: GoogleFonts.sora(
-                    fontSize: 16, fontWeight: FontWeight.w700, color: DonyColors.dark900)),
+                    fontSize: 16, fontWeight: FontWeight.w700, color: DonyColors.ink900)),
             const SizedBox(height: 8),
             Text(
               'Aucun voyageur alternatif disponible dans les 72h sur ce corridor.',

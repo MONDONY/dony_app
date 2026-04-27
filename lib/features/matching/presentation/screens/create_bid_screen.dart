@@ -140,7 +140,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
             elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_rounded,
-                  size: 20, color: DonyColors.blue400),
+                  size: 20, color: DonyColors.green400),
               onPressed: () => context.pop(),
             ),
             bottom: PreferredSize(
@@ -148,7 +148,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
               child: LinearProgressIndicator(
                 value: 1 / 3,
                 backgroundColor: DonyColors.grey50,
-                valueColor: const AlwaysStoppedAnimation<Color>(DonyColors.blue400),
+                valueColor: const AlwaysStoppedAnimation<Color>(DonyColors.green400),
                 minHeight: 3,
               ),
             ),
@@ -164,7 +164,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   style: GoogleFonts.sora(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: DonyColors.blue400,
+                    color: DonyColors.green400,
                     letterSpacing: 0.8,
                   ),
                 ).animate().fadeIn(),
@@ -184,7 +184,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   style: GoogleFonts.sora(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: DonyColors.dark900,
+                    color: DonyColors.ink900,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -205,7 +205,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   style: GoogleFonts.sora(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: DonyColors.dark900,
+                    color: DonyColors.ink900,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -229,7 +229,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   style: GoogleFonts.sora(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: DonyColors.dark900,
+                    color: DonyColors.ink900,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -269,7 +269,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   style: GoogleFonts.sora(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: DonyColors.dark900,
+                    color: DonyColors.ink900,
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -341,7 +341,7 @@ class _WeightStepper extends StatelessWidget {
                       style: GoogleFonts.sora(
                         fontSize: 52,
                         fontWeight: FontWeight.w800,
-                        color: DonyColors.dark900,
+                        color: DonyColors.ink900,
                       ),
                     ),
                     TextSpan(
@@ -411,7 +411,7 @@ class _StepperButton extends StatelessWidget {
         child: Icon(
           icon,
           size: 22,
-          color: onTap != null ? DonyColors.dark900 : DonyColors.grey200,
+          color: onTap != null ? DonyColors.ink900 : DonyColors.grey200,
         ),
       ),
     );
@@ -439,10 +439,10 @@ class _CategoryChip extends StatelessWidget {
         duration: 150.ms,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
         decoration: BoxDecoration(
-          color: selected ? DonyColors.dark900 : DonyColors.white,
+          color: selected ? DonyColors.ink900 : DonyColors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected ? DonyColors.dark900 : DonyColors.grey100,
+            color: selected ? DonyColors.ink900 : DonyColors.grey100,
           ),
         ),
         child: Text(
@@ -450,7 +450,7 @@ class _CategoryChip extends StatelessWidget {
           style: GoogleFonts.sora(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: selected ? Colors.white : DonyColors.dark900,
+            color: selected ? Colors.white : DonyColors.ink900,
           ),
         ),
       ),
@@ -553,7 +553,7 @@ class _BottomBar extends StatelessWidget {
                 style: GoogleFonts.sora(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
-                  color: DonyColors.dark900,
+                  color: DonyColors.ink900,
                 ),
               ),
             ],
@@ -621,7 +621,7 @@ class _DisclaimerPageState extends State<_DisclaimerPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_rounded,
-              size: 20, color: DonyColors.blue400),
+              size: 20, color: DonyColors.green400),
           onPressed: widget.onDecline,
         ),
       ),
@@ -702,7 +702,7 @@ class _DisclaimerPageState extends State<_DisclaimerPage> {
                         value: _checked,
                         onChanged: (v) =>
                             setState(() => _checked = v ?? false),
-                        activeColor: DonyColors.blue400,
+                        activeColor: DonyColors.green400,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -710,7 +710,7 @@ class _DisclaimerPageState extends State<_DisclaimerPage> {
                           'J\'ai lu et j\'accepte les conditions d\'envoi et la réglementation douanière',
                           style: GoogleFonts.sora(
                             fontSize: 13,
-                            color: DonyColors.dark900,
+                            color: DonyColors.ink900,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -772,7 +772,7 @@ class _LegalSection extends StatelessWidget {
           style: GoogleFonts.sora(
             fontWeight: FontWeight.w700,
             fontSize: 14,
-            color: DonyColors.dark900,
+            color: DonyColors.ink900,
           ),
         ),
         const SizedBox(height: 8),
@@ -784,7 +784,7 @@ class _LegalSection extends StatelessWidget {
                   const Text(
                     '• ',
                     style: TextStyle(
-                      color: DonyColors.blue400,
+                      color: DonyColors.green400,
                       fontWeight: FontWeight.w700,
                     ),
                   ),

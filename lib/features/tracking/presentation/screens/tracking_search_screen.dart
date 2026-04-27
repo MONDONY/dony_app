@@ -45,13 +45,13 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: DonyColors.blue400),
+          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: DonyColors.green400),
           onPressed: () => context.pop(),
         ),
         title: Text(
           'Suivre un colis',
           style: GoogleFonts.sora(
-              fontWeight: FontWeight.w700, fontSize: 18, color: DonyColors.dark900),
+              fontWeight: FontWeight.w700, fontSize: 18, color: DonyColors.ink900),
         ),
         centerTitle: false,
         bottom: const PreferredSize(
@@ -76,7 +76,7 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
                   return const Center(
                     child: Padding(
                       padding: EdgeInsets.symmetric(vertical: 40),
-                      child: CircularProgressIndicator(color: DonyColors.blue400),
+                      child: CircularProgressIndicator(color: DonyColors.green400),
                     ),
                   );
                 }
@@ -102,16 +102,16 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: DonyColors.blue100,
+            color: DonyColors.green100,
             borderRadius: BorderRadius.circular(14),
           ),
-          child: const Icon(Icons.local_shipping_outlined, color: DonyColors.blue400, size: 28),
+          child: const Icon(Icons.local_shipping_outlined, color: DonyColors.green400, size: 28),
         ),
         const SizedBox(height: 16),
         Text(
           'Numéro de suivi',
           style: GoogleFonts.sora(
-              fontSize: 22, fontWeight: FontWeight.w800, color: DonyColors.dark900),
+              fontSize: 22, fontWeight: FontWeight.w800, color: DonyColors.ink900),
         ),
         const SizedBox(height: 6),
         Text(
@@ -129,13 +129,13 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
       textCapitalization: TextCapitalization.characters,
       style: GoogleFonts.sora(
           fontSize: 18, fontWeight: FontWeight.w700,
-          letterSpacing: 2, color: DonyColors.dark900),
+          letterSpacing: 2, color: DonyColors.ink900),
       decoration: InputDecoration(
         labelText: 'Numéro de suivi',
         hintText: 'DON-XXXXXX',
         hintStyle: GoogleFonts.sora(
             fontSize: 16, color: DonyColors.grey200, letterSpacing: 1.5),
-        prefixIcon: const Icon(Icons.qr_code_rounded, color: DonyColors.blue400),
+        prefixIcon: const Icon(Icons.qr_code_rounded, color: DonyColors.green400),
         filled: true,
         fillColor: DonyColors.white,
         border: OutlineInputBorder(
@@ -148,7 +148,7 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: DonyColors.blue400, width: 2),
+          borderSide: const BorderSide(color: DonyColors.green400, width: 2),
         ),
       ),
       onSubmitted: (_) => _search(context),
@@ -167,7 +167,7 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
           style: GoogleFonts.sora(fontWeight: FontWeight.w700, fontSize: 15),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: DonyColors.blue400,
+          backgroundColor: DonyColors.green400,
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -329,8 +329,8 @@ class _TrackingResultCard extends StatelessWidget {
                           fontWeight: FontWeight.w700, fontSize: 14),
                     ),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: DonyColors.blue400,
-                      side: const BorderSide(color: DonyColors.blue400),
+                      foregroundColor: DonyColors.green400,
+                      side: const BorderSide(color: DonyColors.green400),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                     ),
@@ -347,9 +347,9 @@ class _TrackingResultCard extends StatelessWidget {
   (IconData, Color, String) _stepVisuals(String step) {
     return switch (step) {
       'DELIVERED'       => (Icons.check_circle_rounded, DonyColors.success, step),
-      'IN_TRANSIT'      => (Icons.local_shipping_rounded, DonyColors.blue400, step),
-      'DEPARTED'        => (Icons.flight_takeoff_rounded, DonyColors.blue400, step),
-      'PAYMENT_SECURED' => (Icons.lock_rounded, DonyColors.blue400, step),
+      'IN_TRANSIT'      => (Icons.local_shipping_rounded, DonyColors.green400, step),
+      'DEPARTED'        => (Icons.flight_takeoff_rounded, DonyColors.green400, step),
+      'PAYMENT_SECURED' => (Icons.lock_rounded, DonyColors.green400, step),
       'ACCEPTED'        => (Icons.handshake_outlined, DonyColors.warning, step),
       'REJECTED'        => (Icons.cancel_outlined, DonyColors.error, step),
       'CANCELLED'       => (Icons.block_outlined, DonyColors.grey400, step),
@@ -391,7 +391,7 @@ class _StepTimeline extends StatelessWidget {
           return Expanded(
             child: Container(
               height: 2,
-              color: isActive ? DonyColors.blue400 : DonyColors.grey100,
+              color: isActive ? DonyColors.green400 : DonyColors.grey100,
             ),
           );
         }
@@ -401,9 +401,9 @@ class _StepTimeline extends StatelessWidget {
 
         Color dotColor;
         if (isDone) {
-          dotColor = DonyColors.blue400;
+          dotColor = DonyColors.green400;
         } else if (isActive) {
-          dotColor = DonyColors.blue400;
+          dotColor = DonyColors.green400;
         } else {
           dotColor = DonyColors.grey100;
         }
@@ -417,7 +417,7 @@ class _StepTimeline extends StatelessWidget {
                 shape: BoxShape.circle,
                 color: dotColor,
                 border: isActive
-                    ? Border.all(color: DonyColors.blue400, width: 2)
+                    ? Border.all(color: DonyColors.green400, width: 2)
                     : null,
               ),
             ),
@@ -427,7 +427,7 @@ class _StepTimeline extends StatelessWidget {
               style: GoogleFonts.sora(
                   fontSize: 9,
                   fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
-                  color: isActive ? DonyColors.blue400 : DonyColors.grey200),
+                  color: isActive ? DonyColors.green400 : DonyColors.grey200),
             ),
           ],
         );

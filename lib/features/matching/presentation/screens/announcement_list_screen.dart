@@ -86,11 +86,11 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
                 Padding(
                   padding: const EdgeInsets.only(right: 12),
                   child: TextButton.icon(
-                    icon: const Icon(Icons.add_rounded, size: 17, color: DonyColors.blue400),
+                    icon: const Icon(Icons.add_rounded, size: 17, color: DonyColors.green400),
                     label: Text(
                       'Nouveau trajet',
                       style: GoogleFonts.sora(
-                        color: DonyColors.blue400,
+                        color: DonyColors.green400,
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
                       ),
@@ -109,7 +109,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
       floatingActionButton: hasAnnouncements
           ? null
           : FloatingActionButton(
-              backgroundColor: DonyColors.blue400,
+              backgroundColor: DonyColors.green400,
               elevation: 2,
               onPressed: () => context.push('/announcements/create'),
               child: const Icon(Icons.add_rounded, color: Colors.white),
@@ -137,7 +137,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
           if ((state is AnnouncementLoading || state is AnnouncementInitial) &&
               _lastList.isEmpty) {
             return const Center(
-              child: CircularProgressIndicator(color: DonyColors.blue400),
+              child: CircularProgressIndicator(color: DonyColors.green400),
             );
           }
 
@@ -153,7 +153,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
                     Text(
                       'Impossible de charger vos trajets',
                       style: GoogleFonts.sora(
-                        fontSize: 16, fontWeight: FontWeight.w600, color: DonyColors.dark900,
+                        fontSize: 16, fontWeight: FontWeight.w600, color: DonyColors.ink900,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -188,20 +188,20 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: const BoxDecoration(
-                        color: DonyColors.blue100,
+                        color: DonyColors.green100,
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.flight_takeoff_rounded,
                         size: 48,
-                        color: DonyColors.blue400,
+                        color: DonyColors.green400,
                       ),
                     ),
                     const SizedBox(height: 20),
                     Text(
                       'Aucun trajet publié',
                       style: GoogleFonts.sora(
-                        fontSize: 18, fontWeight: FontWeight.w700, color: DonyColors.dark900,
+                        fontSize: 18, fontWeight: FontWeight.w700, color: DonyColors.ink900,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -217,7 +217,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
           }
 
           return RefreshIndicator(
-            color: DonyColors.blue400,
+            color: DonyColors.green400,
             onRefresh: () async =>
                 context.read<AnnouncementBloc>().add(AnnouncementListRequested()),
             child: ListView.separated(
@@ -319,7 +319,7 @@ class _AnnouncementCard extends StatelessWidget {
   });
 
   ({Color bg, Color text, String label}) get _statusStyle => switch (status) {
-        'ACTIVE' => (bg: DonyColors.blue100, text: DonyColors.success, label: 'Actif'),
+        'ACTIVE' => (bg: DonyColors.green100, text: DonyColors.success, label: 'Actif'),
         'FULL' => (
           bg: const Color(0xFFFFF3E0),
           text: DonyColors.warning,
@@ -327,7 +327,7 @@ class _AnnouncementCard extends StatelessWidget {
         ),
         'COMPLETED' => (
           bg: const Color(0xFFE3F2FD),
-          text: DonyColors.blue600,
+          text: DonyColors.green600,
           label: 'Terminé'
         ),
         'CANCELLED' => (
@@ -369,7 +369,7 @@ class _AnnouncementCard extends StatelessWidget {
                 height: 44,
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [DonyColors.blue600, DonyColors.blue400],
+                    colors: [DonyColors.green600, DonyColors.green400],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -399,7 +399,7 @@ class _AnnouncementCard extends StatelessWidget {
                             style: GoogleFonts.sora(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
-                              color: DonyColors.dark900,
+                              color: DonyColors.ink900,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -494,14 +494,14 @@ class _AnnouncementCard extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: DonyColors.white,
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: DonyColors.blue400),
+                                border: Border.all(color: DonyColors.green400),
                               ),
                               child: Text(
                                 'Gérer →',
                                 style: GoogleFonts.sora(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
-                                  color: DonyColors.blue400,
+                                  color: DonyColors.green400,
                                 ),
                               ),
                             ),
@@ -534,19 +534,19 @@ class _InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        color: highlight ? DonyColors.blue100 : DonyColors.grey50,
+        color: highlight ? DonyColors.green100 : DonyColors.grey50,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 13, color: highlight ? DonyColors.blue400 : DonyColors.grey400),
+          Icon(icon, size: 13, color: highlight ? DonyColors.green400 : DonyColors.grey400),
           const SizedBox(width: 4),
           Text(
             label,
             style: GoogleFonts.sora(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: highlight ? DonyColors.blue400 : DonyColors.grey400,
+              color: highlight ? DonyColors.green400 : DonyColors.grey400,
             ),
           ),
         ],

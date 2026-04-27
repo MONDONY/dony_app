@@ -15,8 +15,8 @@ class PinSetupScreen extends StatefulWidget {
 
 class _PinSetupScreenState extends State<PinSetupScreen> {
   static const _pinLength = 6;
-  static const _kGreen = DonyColors.blue400;
-  static const _kGreenLight = DonyColors.blue100;
+  static const _kGreen = DonyColors.green400;
+  static const _kGreenLight = DonyColors.green100;
   static const _kBg = DonyColors.grey50;
 
   String _pin = '';
@@ -188,7 +188,7 @@ class _StepDot extends StatelessWidget {
       height: 32,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: active ? DonyColors.blue400 : Colors.grey.shade200,
+        color: active ? DonyColors.green400 : Colors.grey.shade200,
       ),
       child: Center(
         child: Text(

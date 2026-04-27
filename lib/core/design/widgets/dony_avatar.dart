@@ -37,7 +37,7 @@ class DonyAvatar extends StatelessWidget {
 
     return CircleAvatar(
       radius: dim / 2,
-      backgroundColor: backgroundColor ?? DonyColors.blue100,
+      backgroundColor: backgroundColor ?? DonyColors.green100,
       child: Text(
         (initials ?? '?').substring(0, 1).toUpperCase(),
         style: Theme.of(context).textTheme.titleLarge?.copyWith(

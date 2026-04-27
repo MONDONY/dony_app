@@ -53,7 +53,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       lastDate: DateTime(now.year - 16),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(primary: DonyColors.blue400),
+          colorScheme: const ColorScheme.light(primary: DonyColors.green400),
         ),
         child: child!,
       ),
@@ -128,7 +128,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               style: GoogleFonts.sora(
                 fontWeight: FontWeight.w700,
                 fontSize: 18,
-                color: DonyColors.dark900,
+                color: DonyColors.ink900,
               ),
             ),
             centerTitle: false,
@@ -137,7 +137,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             scrolledUnderElevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_rounded,
-                  size: 20, color: DonyColors.blue400),
+                  size: 20, color: DonyColors.green400),
               onPressed: () => context.pop(),
             ),
             bottom: const PreferredSize(
@@ -154,22 +154,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: DonyColors.blue400.withValues(alpha: 0.06),
+                    color: DonyColors.green400.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                        color: DonyColors.blue400.withValues(alpha: 0.2)),
+                        color: DonyColors.green400.withValues(alpha: 0.2)),
                   ),
                   child: Row(
                     children: [
                       const Icon(Icons.info_outline_rounded,
-                          color: DonyColors.blue400, size: 18),
+                          color: DonyColors.green400, size: 18),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           'Ces informations inspirent confiance aux autres membres de la communauté.',
                           style: GoogleFonts.sora(
                             fontSize: 13,
-                            color: DonyColors.blue400,
+                            color: DonyColors.green400,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -236,7 +236,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             style: GoogleFonts.sora(
                               fontSize: 15,
                               color: _birthDate != null
-                                  ? DonyColors.dark900
+                                  ? DonyColors.ink900
                                   : DonyColors.grey200,
                               fontWeight: _birthDate != null
                                   ? FontWeight.w500
@@ -265,10 +265,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   child: ElevatedButton(
                     onPressed: isLoading ? null : _save,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: DonyColors.blue400,
+                      backgroundColor: DonyColors.green400,
                       foregroundColor: Colors.white,
                       disabledBackgroundColor:
-                          DonyColors.blue400.withValues(alpha: 0.5),
+                          DonyColors.green400.withValues(alpha: 0.5),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14)),
@@ -314,7 +314,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       controller: controller,
       enabled: enabled,
       keyboardType: keyboardType,
-      style: GoogleFonts.sora(fontSize: 15, color: DonyColors.dark900),
+      style: GoogleFonts.sora(fontSize: 15, color: DonyColors.ink900),
       decoration: InputDecoration(
         labelText: label,
         labelStyle:
@@ -332,7 +332,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: DonyColors.blue400, width: 1.5),
+          borderSide: const BorderSide(color: DonyColors.green400, width: 1.5),
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

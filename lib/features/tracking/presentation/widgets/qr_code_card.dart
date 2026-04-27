@@ -58,7 +58,7 @@ class _QrCodeCardState extends State<QrCodeCard> {
                 return const Center(
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 40),
-                    child: CircularProgressIndicator(color: DonyColors.blue400),
+                    child: CircularProgressIndicator(color: DonyColors.green400),
                   ),
                 );
               }
@@ -124,21 +124,21 @@ class _QrCodeContent extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: DonyColors.blue100,
+            color: DonyColors.green100,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Icon(Icons.info_outline_rounded,
-                  color: DonyColors.blue400, size: 16),
+                  color: DonyColors.green400, size: 16),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Montrez ce QR code au voyageur lors de la remise du colis. Il le scannera pour valider la prise en charge.',
                   style: GoogleFonts.sora(
                       fontSize: 12,
-                      color: DonyColors.blue600,
+                      color: DonyColors.green600,
                       fontWeight: FontWeight.w500),
                 ),
               ),
@@ -160,7 +160,7 @@ class _QrCodeContent extends StatelessWidget {
                   style: GoogleFonts.sora(fontWeight: FontWeight.w600),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: DonyColors.blue400,
+                  backgroundColor: DonyColors.green400,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(vertical: 12),
@@ -180,8 +180,8 @@ class _QrCodeContent extends StatelessWidget {
                   style: GoogleFonts.sora(fontWeight: FontWeight.w600),
                 ),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: DonyColors.blue400,
-                  side: const BorderSide(color: DonyColors.blue400),
+                  foregroundColor: DonyColors.green400,
+                  side: const BorderSide(color: DonyColors.green400),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),

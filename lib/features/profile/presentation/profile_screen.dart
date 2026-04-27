@@ -83,7 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         style: GoogleFonts.sora(
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
-                          color: DonyColors.dark900,
+                          color: DonyColors.ink900,
                         ),
                       ),
                       centerTitle: true,
@@ -106,7 +106,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 IconButton(
                                   icon: const Icon(
                                     Icons.notifications_outlined,
-                                    color: DonyColors.dark900,
+                                    color: DonyColors.ink900,
                                     size: 22,
                                   ),
                                   onPressed: () => context.go('/messages'),
@@ -132,7 +132,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ],
                     ),
                     body: RefreshIndicator(
-                      color: DonyColors.blue400,
+                      color: DonyColors.green400,
                       onRefresh: () async {
                         context.read<BidBloc>().add(BidMyListRequested());
                         context
@@ -161,7 +161,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               style: GoogleFonts.sora(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w700,
-                                color: DonyColors.dark900,
+                                color: DonyColors.ink900,
                               ),
                               textAlign: TextAlign.center,
                             ).animate().fadeIn(delay: 80.ms),
@@ -183,7 +183,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   _Badge(
                                     icon: Icons.flight_takeoff_rounded,
                                     label: 'Voyageur',
-                                    color: DonyColors.blue400,
+                                    color: DonyColors.green400,
                                   ),
                                 if (isTraveler && isSender)
                                   const SizedBox(width: 8),
@@ -223,7 +223,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 if (isTraveler)
                                   _MenuItem(
                                     icon: Icons.flight_takeoff_rounded,
-                                    iconColor: DonyColors.blue400,
+                                    iconColor: DonyColors.green400,
                                     label: 'Mes trajets',
                                     trailing: upcomingAnnouncements > 0
                                         ? '$upcomingAnnouncements à venir'
@@ -258,7 +258,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                                 _MenuItem(
                                   icon: Icons.badge_outlined,
-                                  iconColor: DonyColors.blue400,
+                                  iconColor: DonyColors.green400,
                                   label: 'Documents KYC',
                                   trailing:
                                       isKycVerified ? 'Vérifié' : null,
@@ -294,7 +294,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                                 _MenuItem(
                                   icon: Icons.language_rounded,
-                                  iconColor: DonyColors.blue400,
+                                  iconColor: DonyColors.green400,
                                   label: 'Langue',
                                   trailing: 'Français',
                                   onTap: () {},
@@ -368,14 +368,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           height: 88,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [DonyColors.blue600, DonyColors.blue400],
+              colors: [DonyColors.green600, DonyColors.green400],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: DonyColors.blue400.withValues(alpha: 0.3),
+                color: DonyColors.green400.withValues(alpha: 0.3),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),
@@ -464,7 +464,7 @@ class _ProfileCompletionBanner extends StatelessWidget {
                         style: GoogleFonts.sora(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: DonyColors.dark900,
+                          color: DonyColors.ink900,
                         ),
                       ),
                       Text(
@@ -612,7 +612,7 @@ class _StatItem extends StatelessWidget {
           style: GoogleFonts.sora(
             fontSize: 18,
             fontWeight: FontWeight.w800,
-            color: DonyColors.dark900,
+            color: DonyColors.ink900,
           ),
         ),
         const SizedBox(height: 2),
@@ -696,7 +696,7 @@ class _MenuItem extends StatelessWidget {
                     style: GoogleFonts.sora(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: DonyColors.dark900,
+                      color: DonyColors.ink900,
                     ),
                   ),
                 ),

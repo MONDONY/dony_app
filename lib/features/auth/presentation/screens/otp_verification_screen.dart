@@ -156,7 +156,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           style: GoogleFonts.sora(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
-                            color: DonyColors.blue400,
+                            color: DonyColors.green400,
                           ),
                         ),
                       ],
@@ -206,7 +206,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: const BorderSide(
-                                color: DonyColors.blue400,
+                                color: DonyColors.green400,
                                 width: 2,
                               ),
                             ),
@@ -235,7 +235,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                             'Renvoyer le code ($_secondsLeft s)',
                             style: GoogleFonts.sora(
                               fontSize: 14,
-                              color: DonyColors.blue400,
+                              color: DonyColors.green400,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -246,7 +246,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                             'Renvoyer le code',
                             style: GoogleFonts.sora(
                               fontSize: 14,
-                              color: DonyColors.blue400,
+                              color: DonyColors.green400,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -262,7 +262,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [DonyColors.blue600, DonyColors.blue300],
+                          colors: [DonyColors.green600, DonyColors.green300],
                           begin: Alignment.centerLeft,
                           end: Alignment.centerRight,
                         ),
