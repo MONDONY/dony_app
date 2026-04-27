@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
@@ -45,7 +46,7 @@ class OnboardingScreen extends StatelessWidget {
                         .animate()
                         .fadeIn(duration: 300.ms)
                         .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: DonySpacing.xxs),
 
                     // Second line — "chez vous, autrement."
                     Text.rich(
@@ -105,14 +106,20 @@ class OnboardingScreen extends StatelessWidget {
                   // Primary CTA
                   DonyButton(
                     label: 'J\'envoie un colis',
-                    onPressed: () => context.go('/auth/phone'),
+                    onPressed: () {
+                      Hive.box('user_prefs').put('onboarding_done', true);
+                      context.go('/auth/phone');
+                    },
                   ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.06, curve: Curves.easeOutCubic),
                   const SizedBox(height: DonySpacing.sm),
 
                   // Ghost CTA
                   DonyButton(
                     label: 'Je suis voyageur',
-                    onPressed: () => context.go('/auth/phone'),
+                    onPressed: () {
+                      Hive.box('user_prefs').put('onboarding_done', true);
+                      context.go('/auth/phone');
+                    },
                     variant: DonyButtonVariant.ghost,
                   ).animate().fadeIn(delay: 340.ms),
 

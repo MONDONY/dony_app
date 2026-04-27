@@ -60,7 +60,6 @@ class _SplashScreenState extends State<SplashScreen> {
     final prefs = Hive.box('user_prefs');
     final onboardingDone = prefs.get('onboarding_done', defaultValue: false) as bool;
     if (!onboardingDone) {
-      await prefs.put('onboarding_done', true);
       if (mounted) {
         context.go('/onboarding');
       }

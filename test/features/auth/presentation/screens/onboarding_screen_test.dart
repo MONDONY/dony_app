@@ -1,13 +1,19 @@
+import 'dart:io';
+
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive/hive.dart';
 
 GoRouter _buildRouter() => GoRouter(routes: [
       GoRoute(path: '/', builder: (_, __) => const OnboardingScreen()),
-      GoRoute(path: '/auth/phone', builder: (_, __) => const Scaffold()),
+      GoRoute(
+        path: '/auth/phone',
+        builder: (_, __) => const Scaffold(body: Text('Phone Auth')),
+      ),
     ]);
 
 Future<void> _pump(WidgetTester tester) async {
@@ -20,6 +26,24 @@ Future<void> _pump(WidgetTester tester) async {
 }
 
 void main() {
+  late Directory tempDir;
+
+  setUpAll(() async {
+    tempDir = await Directory.systemTemp.createTemp('hive_test_');
+    Hive.init(tempDir.path);
+    await Hive.openBox('user_prefs');
+  });
+
+  tearDownAll(() async {
+    await Hive.close();
+    await tempDir.delete(recursive: true);
+  });
+
+  tearDown(() async {
+    final box = Hive.box('user_prefs');
+    await box.clear();
+  });
+
   testWidgets('OnboardingScreen affiche les 2 CTAs', (tester) async {
     await _pump(tester);
 
@@ -61,5 +85,14 @@ void main() {
     // CGU text is inside a Text.rich widget — textContaining matches across the full text
     expect(find.textContaining('CGU'), findsOneWidget);
     expect(find.textContaining('politique de confidentialité'), findsOneWidget);
+  });
+
+  testWidgets('tapping primary CTA navigates to /auth/phone', (tester) async {
+    await _pump(tester);
+
+    await tester.tap(find.text("J'envoie un colis"));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Phone Auth'), findsOneWidget);
   });
 }
