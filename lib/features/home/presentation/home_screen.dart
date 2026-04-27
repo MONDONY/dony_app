@@ -407,7 +407,7 @@ class _CorridorChip extends StatelessWidget {
                 if (corridor.isHot) ...[
                   const SizedBox(width: DonySpacing.xs),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs, vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs, vertical: DonySpacing.xxs),
                     decoration: BoxDecoration(
                       color: DonyColors.errorLight,
                       borderRadius: BorderRadius.circular(DonyRadius.xs),
@@ -417,14 +417,13 @@ class _CorridorChip extends StatelessWidget {
                       style: tt.labelSmall!.copyWith(
                         color: DonyColors.error,
                         fontWeight: FontWeight.w700,
-                        fontSize: 9,
                       ),
                     ),
                   ),
                 ],
               ],
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: DonySpacing.xxs),
             Text(
               '${corridor.travelers} voyageurs',
               style: tt.bodySmall!.copyWith(color: DonyColors.grey400),
@@ -556,7 +555,7 @@ class _TravelerView extends StatelessWidget {
                                 ),
                                 const SizedBox(width: DonySpacing.sm),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: DonySpacing.xxs),
                                   decoration: BoxDecoration(
                                     color: DonyColors.green50,
                                     borderRadius: BorderRadius.circular(DonyRadius.full),

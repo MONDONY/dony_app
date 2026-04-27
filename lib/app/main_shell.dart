@@ -49,7 +49,7 @@ class _DonyBottomNav extends StatelessWidget {
         border: Border(top: BorderSide(color: DonyColors.grey100)),
         boxShadow: [
           BoxShadow(
-            color: Color(0x08000000),
+            color: DonyColors.shadow,
             blurRadius: 16,
             offset: Offset(0, -4),
           ),
@@ -165,7 +165,7 @@ class _NavItem extends StatelessWidget {
               color: _active ? DonyColors.green400 : DonyColors.grey400,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: DonySpacing.xxs),
           AnimatedDefaultTextStyle(
             duration: const Duration(milliseconds: 200),
             style: Theme.of(context).textTheme.labelSmall!.copyWith(
