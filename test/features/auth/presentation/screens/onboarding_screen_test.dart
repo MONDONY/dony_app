@@ -90,7 +90,21 @@ void main() {
   testWidgets('tapping primary CTA navigates to /auth/phone', (tester) async {
     await _pump(tester);
 
-    await tester.tap(find.text("J'envoie un colis"));
+    await tester.runAsync(() async {
+      await tester.tap(find.text("J'envoie un colis"));
+    });
+    await tester.pumpAndSettle();
+
+    expect(find.text('Phone Auth'), findsOneWidget);
+    expect(Hive.box('user_prefs').get('onboarding_done'), isTrue);
+  });
+
+  testWidgets('tapping ghost CTA navigates to /auth/phone', (tester) async {
+    await _pump(tester);
+
+    await tester.runAsync(() async {
+      await tester.tap(find.text('Je suis voyageur'));
+    });
     await tester.pumpAndSettle();
 
     expect(find.text('Phone Auth'), findsOneWidget);
