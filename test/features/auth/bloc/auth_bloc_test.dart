@@ -578,4 +578,101 @@ void main() {
       expect(s, isA<AuthLocked>());
     });
   });
+
+  // ─── AuthRoleToggled ─────────────────────────────────────────────────────────
+
+  group('AuthRoleToggled', () {
+    blocTest<AuthBloc, AuthState>(
+      'adds role to empty selection',
+      build: buildBloc,
+      act: (bloc) => bloc.add(const AuthRoleToggled('SENDER')),
+      expect: () => [
+        AuthSelectingRoles(selectedRoles: const {'SENDER'}),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'removes role when already selected',
+      build: buildBloc,
+      seed: () => AuthSelectingRoles(selectedRoles: const {'SENDER'}),
+      act: (bloc) => bloc.add(const AuthRoleToggled('SENDER')),
+      expect: () => [
+        AuthSelectingRoles(selectedRoles: const {}),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'toggles two roles independently',
+      build: buildBloc,
+      act: (bloc) async {
+        bloc.add(const AuthRoleToggled('SENDER'));
+        bloc.add(const AuthRoleToggled('TRAVELER'));
+      },
+      expect: () => [
+        AuthSelectingRoles(selectedRoles: const {'SENDER'}),
+        AuthSelectingRoles(selectedRoles: const {'SENDER', 'TRAVELER'}),
+      ],
+    );
+  });
+
+  // ─── AuthDialCodeChanged ─────────────────────────────────────────────────────
+
+  group('AuthDialCodeChanged', () {
+    blocTest<AuthBloc, AuthState>(
+      'emits AuthInitial with new dial code',
+      build: buildBloc,
+      act: (bloc) => bloc.add(
+        const AuthDialCodeChanged(code: '+221', flag: '🇸🇳'),
+      ),
+      expect: () => [
+        const AuthInitial(dialCode: '+221', dialFlag: '🇸🇳'),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'preserves dial code when emitted from error state',
+      build: buildBloc,
+      seed: () => const AuthError('Erreur réseau'),
+      act: (bloc) => bloc.add(
+        const AuthDialCodeChanged(code: '+237', flag: '🇨🇲'),
+      ),
+      expect: () => [
+        const AuthInitial(dialCode: '+237', dialFlag: '🇨🇲'),
+      ],
+    );
+  });
+
+  // ─── AuthOtpTimerTicked ──────────────────────────────────────────────────────
+
+  group('AuthOtpTimerTicked', () {
+    blocTest<AuthBloc, AuthState>(
+      'decrements secondsLeft in AuthOtpSent',
+      build: buildBloc,
+      seed: () => const AuthOtpSent(
+        verificationId: 'ver-123',
+        phoneNumber: '+33612345678',
+        secondsLeft: 60,
+      ),
+      act: (bloc) => bloc.add(const AuthOtpTimerTicked()),
+      expect: () => [
+        const AuthOtpSent(
+          verificationId: 'ver-123',
+          phoneNumber: '+33612345678',
+          secondsLeft: 59,
+        ),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'does not emit when secondsLeft is already 0',
+      build: buildBloc,
+      seed: () => const AuthOtpSent(
+        verificationId: 'ver-123',
+        phoneNumber: '+33612345678',
+        secondsLeft: 0,
+      ),
+      act: (bloc) => bloc.add(const AuthOtpTimerTicked()),
+      expect: () => [],
+    );
+  });
 }

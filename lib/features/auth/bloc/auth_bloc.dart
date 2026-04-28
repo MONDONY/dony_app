@@ -15,6 +15,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final FirebaseAuth _firebaseAuth;
 
   String? _pendingPhoneNumber;
+  Timer? _otpTimer;
 
   AuthBloc(
     this._authRepository,
@@ -30,6 +31,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthDeleteAccountRequested>(_onDeleteAccountRequested);
     on<AuthUpdateProfileRequested>(_onUpdateProfileRequested);
     on<OnboardingCompleted>(_onOnboardingCompleted);
+    on<AuthRoleToggled>(_onRoleToggled);
+    on<AuthDialCodeChanged>(_onDialCodeChanged);
+    on<AuthOtpTimerTicked>(_onOtpTimerTicked);
+  }
+
+  @override
+  Future<void> close() {
+    _otpTimer?.cancel();
+    return super.close();
   }
 
   // ─── Vérification au démarrage (splash) ────────────────────────────────────
@@ -91,7 +101,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
       codeSent: (String verificationId, int? resendToken) {
         if (!emit.isDone) {
-          emit(AuthOtpSent(verificationId: verificationId, phoneNumber: event.phoneNumber));
+          emit(AuthOtpSent(
+            verificationId: verificationId,
+            phoneNumber: event.phoneNumber,
+            secondsLeft: 60,
+          ));
+          _otpTimer?.cancel();
+          _otpTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+            if (!isClosed) add(const AuthOtpTimerTicked());
+          });
         }
         if (!completer.isCompleted) completer.complete();
       },
@@ -228,6 +246,36 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     await Hive.box('user_prefs').put('onboarding_done', true);
+  }
+
+  // ─── Sélection de rôles ──────────────────────────────────────────────────
+
+  void _onRoleToggled(AuthRoleToggled event, Emitter<AuthState> emit) {
+    final currentRoles = state is AuthSelectingRoles
+        ? (state as AuthSelectingRoles).selectedRoles
+        : <String>{};
+    final updated = Set<String>.from(currentRoles);
+    if (updated.contains(event.role)) {
+      updated.remove(event.role);
+    } else {
+      updated.add(event.role);
+    }
+    emit(AuthSelectingRoles(selectedRoles: updated));
+  }
+
+  // ─── Code pays téléphone ─────────────────────────────────────────────────
+
+  void _onDialCodeChanged(AuthDialCodeChanged event, Emitter<AuthState> emit) {
+    emit(AuthInitial(dialCode: event.code, dialFlag: event.flag));
+  }
+
+  // ─── Timer OTP ───────────────────────────────────────────────────────────
+
+  void _onOtpTimerTicked(AuthOtpTimerTicked event, Emitter<AuthState> emit) {
+    final current = state;
+    if (current is AuthOtpSent && current.secondsLeft > 0) {
+      emit(current.copyWith(secondsLeft: current.secondsLeft - 1));
+    }
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────

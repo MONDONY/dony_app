@@ -1,6 +1,9 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,8 +12,13 @@ import 'package:go_router/go_router.dart';
 
 class PaymentScreen extends StatelessWidget {
   final BidModel bid;
+  final LocalAuthService? localAuthService;
 
-  const PaymentScreen({super.key, required this.bid});
+  const PaymentScreen({
+    super.key,
+    required this.bid,
+    @visibleForTesting this.localAuthService,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +32,11 @@ class PaymentScreen extends StatelessWidget {
         if (state is PaymentEscrowPending) {
           return _EscrowConfirmedView(amount: state.amount);
         }
-        return _PaymentSummaryView(bid: bid, state: state);
+        return _PaymentSummaryView(
+          bid: bid,
+          state: state,
+          localAuthService: localAuthService ?? getIt<LocalAuthService>(),
+        );
       },
     );
   }
@@ -64,11 +76,30 @@ class PaymentScreen extends StatelessWidget {
 class _PaymentSummaryView extends StatelessWidget {
   final BidModel bid;
   final PaymentState state;
+  final LocalAuthService localAuthService;
 
-  const _PaymentSummaryView({required this.bid, required this.state});
+  const _PaymentSummaryView({
+    required this.bid,
+    required this.state,
+    required this.localAuthService,
+  });
 
   double get _amount => bid.weightKg * (bid.pricePerKg ?? 0);
   double get _commission => _amount * 0.12;
+
+  Future<void> _pay(BuildContext context) async {
+    final authenticated = await localAuthService.authenticateWithBiometric();
+    if (!context.mounted) return;
+    if (!authenticated) {
+      DonySnackbar.show(
+        context,
+        message: 'Authentification requise',
+        type: DonySnackbarType.error,
+      );
+      return;
+    }
+    context.read<PaymentBloc>().add(PaymentInitiated(bid.id));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -95,11 +126,7 @@ class _PaymentSummaryView extends StatelessWidget {
             ],
             DonyButton(
               label: 'Payer ${_amount.toStringAsFixed(2)} €',
-              onPressed: isLoading
-                  ? null
-                  : () => context
-                      .read<PaymentBloc>()
-                      .add(PaymentInitiated(bid.id)),
+              onPressed: isLoading ? null : () => _pay(context),
               isLoading: isLoading,
               icon: Icons.lock_rounded,
             ),

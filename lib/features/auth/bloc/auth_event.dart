@@ -74,3 +74,22 @@ class AuthUpdateProfileRequested extends AuthEvent {
 class OnboardingCompleted extends AuthEvent {
   const OnboardingCompleted();
 }
+
+class AuthRoleToggled extends AuthEvent {
+  final String role;
+  const AuthRoleToggled(this.role);
+  @override
+  List<Object?> get props => [role];
+}
+
+class AuthDialCodeChanged extends AuthEvent {
+  final String code;
+  final String flag;
+  const AuthDialCodeChanged({required this.code, required this.flag});
+  @override
+  List<Object?> get props => [code, flag];
+}
+
+class AuthOtpTimerTicked extends AuthEvent {
+  const AuthOtpTimerTicked();
+}

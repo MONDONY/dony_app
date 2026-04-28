@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/presentation/widgets/route_map_components.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -155,7 +156,7 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Map card
-                            _RouteMapCard(
+                            RouteMapCard(
                               departureCode: corridorCodes.$1,
                               arrivalCode: corridorCodes.$3,
                               departureCity: corridorCodes.$2,
@@ -188,123 +189,6 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
     );
   }
 }
-
-// ── Route map card (private) ──────────────────────────────────────────────────
-
-class _RouteMapCard extends StatelessWidget {
-  final String departureCode;
-  final String arrivalCode;
-  final String departureCity;
-  final String arrivalCity;
-
-  const _RouteMapCard({
-    required this.departureCode,
-    required this.arrivalCode,
-    required this.departureCity,
-    required this.arrivalCity,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: DonyColors.white,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.grey200),
-      ),
-      child: Row(
-        children: [
-          // Departure chip
-          _CityChip(cityCode: departureCity, airportCode: departureCode),
-          // Dashed route line with dots
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
-              child: CustomPaint(
-                size: const Size(double.infinity, 24),
-                painter: _DashedRoutePainter(),
-              ),
-            ),
-          ),
-          // Arrival chip
-          _CityChip(cityCode: arrivalCity, airportCode: arrivalCode),
-        ],
-      ),
-    );
-  }
-}
-
-class _CityChip extends StatelessWidget {
-  final String cityCode;
-  final String airportCode;
-
-  const _CityChip({required this.cityCode, required this.airportCode});
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.md,
-        vertical: DonySpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: DonyColors.grey100,
-        borderRadius: BorderRadius.circular(DonyRadius.full),
-      ),
-      child: Text(
-        '$cityCode · $airportCode',
-        style: tt.bodySmall?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: DonyColors.ink900,
-        ),
-      ),
-    );
-  }
-}
-
-class _DashedRoutePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = DonyColors.terra500
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-
-    final dashWidth = 6.0;
-    final dashSpace = 4.0;
-    double x = 0;
-    final y = size.height / 2;
-
-    while (x < size.width) {
-      canvas.drawLine(
-        Offset(x, y),
-        Offset((x + dashWidth).clamp(0, size.width), y),
-        paint,
-      );
-      x += dashWidth + dashSpace;
-    }
-
-    // Draw dots at 25%, 50%, 75%
-    final dotPaint = Paint()
-      ..color = DonyColors.terra500
-      ..style = PaintingStyle.fill;
-
-    for (final fraction in [0.25, 0.5, 0.75]) {
-      canvas.drawCircle(
-        Offset(size.width * fraction, y),
-        3,
-        dotPaint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
 
 // ── Timeline ──────────────────────────────────────────────────────────────────
 

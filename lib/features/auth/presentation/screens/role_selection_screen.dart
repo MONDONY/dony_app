@@ -7,26 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-class RoleSelectionScreen extends StatefulWidget {
+class RoleSelectionScreen extends StatelessWidget {
   const RoleSelectionScreen({super.key});
-
-  @override
-  State<RoleSelectionScreen> createState() => _RoleSelectionScreenState();
-}
-
-class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
-  bool _isSender = false;
-  bool _isTraveler = false;
-
-  bool get _canProceed => _isSender || _isTraveler;
-
-  void _register() {
-    final roles = <String>[
-      if (_isSender) 'SENDER',
-      if (_isTraveler) 'TRAVELER',
-    ];
-    context.read<AuthBloc>().add(AuthRegisterRequested(roles));
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +16,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     final tt = Theme.of(context).textTheme;
 
     return Scaffold(
-      body: BlocListener<AuthBloc, AuthState>(
+      body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
             context.go('/auth/pin-setup');
@@ -46,64 +28,91 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
             );
           }
         },
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: DonySpacing.xl,
-              vertical: DonySpacing.xxl,
+        builder: (context, state) {
+          final selectedRoles = state is AuthSelectingRoles
+              ? state.selectedRoles
+              : <String>{};
+          final isLoading = state is AuthLoading;
+
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: DonySpacing.xl,
+                vertical: DonySpacing.xxl,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Image.asset(AppAssets.logo, height: 48),
+                  const SizedBox(height: DonySpacing.xxl),
+                  Text(
+                    'Je suis...',
+                    style: tt.headlineLarge?.copyWith(color: cs.onSurface),
+                  ),
+                  const SizedBox(height: DonySpacing.sm),
+                  Text(
+                    'Choisissez un ou plusieurs rôles. Vous pourrez toujours en ajouter plus tard.',
+                    style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 40),
+                  _RoleCard(
+                    emoji: '📦',
+                    title: 'Expéditeur',
+                    description:
+                        'J\'envoie des colis à ma famille en Afrique via des voyageurs.',
+                    selected: selectedRoles.contains('SENDER'),
+                    onTap: () => context
+                        .read<AuthBloc>()
+                        .add(const AuthRoleToggled('SENDER')),
+                  ),
+                  const SizedBox(height: DonySpacing.base),
+                  _RoleCard(
+                    emoji: '✈️',
+                    title: 'Voyageur',
+                    description:
+                        'Je voyage vers l\'Afrique et j\'ai de l\'espace dans mes bagages.',
+                    selected: selectedRoles.contains('TRAVELER'),
+                    onTap: () => context
+                        .read<AuthBloc>()
+                        .add(const AuthRoleToggled('TRAVELER')),
+                  ),
+                  const Spacer(),
+                  DonyButton(
+                    label: 'Créer mon compte',
+                    onPressed: (isLoading || selectedRoles.isEmpty)
+                        ? null
+                        : () => context.read<AuthBloc>().add(
+                              AuthRegisterRequested(selectedRoles.toList()),
+                            ),
+                    isLoading: isLoading,
+                  ),
+                ],
+              ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Image.asset(AppAssets.logo, height: 48),
-                const SizedBox(height: DonySpacing.xxl),
-                Text(
-                  'Je suis...',
-                  style: tt.headlineLarge?.copyWith(color: cs.onSurface),
-                ),
-                const SizedBox(height: DonySpacing.sm),
-                Text(
-                  'Choisissez un ou plusieurs rôles. Vous pourrez toujours en ajouter plus tard.',
-                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                ),
-                const SizedBox(height: 40),
-                _buildRoleCard(
-                  context: context,
-                  emoji: '📦',
-                  title: 'Expéditeur',
-                  description:
-                      'J\'envoie des colis à ma famille en Afrique via des voyageurs.',
-                  selected: _isSender,
-                  onTap: () => setState(() => _isSender = !_isSender),
-                ),
-                const SizedBox(height: DonySpacing.base),
-                _buildRoleCard(
-                  context: context,
-                  emoji: '✈️',
-                  title: 'Voyageur',
-                  description:
-                      'Je voyage vers l\'Afrique et j\'ai de l\'espace dans mes bagages.',
-                  selected: _isTraveler,
-                  onTap: () => setState(() => _isTraveler = !_isTraveler),
-                ),
-                const Spacer(),
-                _buildRegisterButton(context),
-              ],
-            ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
+}
 
-  Widget _buildRoleCard({
-    required BuildContext context,
-    required String emoji,
-    required String title,
-    required String description,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
+class _RoleCard extends StatelessWidget {
+  final String emoji;
+  final String title;
+  final String description;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _RoleCard({
+    required this.emoji,
+    required this.title,
+    required this.description,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -142,24 +151,10 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                 ],
               ),
             ),
-            if (selected)
-              Icon(Icons.check_circle, color: cs.primary, size: 24),
+            if (selected) Icon(Icons.check_circle, color: cs.primary, size: 24),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildRegisterButton(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        final isLoading = state is AuthLoading;
-        return DonyButton(
-          label: 'Créer mon compte',
-          onPressed: (isLoading || !_canProceed) ? null : _register,
-          isLoading: isLoading,
-        );
-      },
     );
   }
 }

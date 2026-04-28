@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -21,18 +19,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       List.generate(6, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
-  int _secondsLeft = 60;
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _startTimer();
-  }
-
   @override
   void dispose() {
-    _timer?.cancel();
     for (final c in _controllers) {
       c.dispose();
     }
@@ -40,17 +28,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       f.dispose();
     }
     super.dispose();
-  }
-
-  void _startTimer() {
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (_secondsLeft > 0) {
-        setState(() => _secondsLeft--);
-      } else {
-        _timer?.cancel();
-      }
-    });
   }
 
   String get _otpCode => _controllers.map((c) => c.text).join();
@@ -85,8 +62,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     for (final c in _controllers) {
       c.clear();
     }
-    setState(() => _secondsLeft = 60);
-    _startTimer();
     final state = context.read<AuthBloc>().state;
     final phoneNumber = state is AuthOtpSent ? state.phoneNumber : '';
     context.read<AuthBloc>().add(AuthSendOtpRequested(phoneNumber));
@@ -105,18 +80,26 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           } else if (state is AuthAuthenticated) {
             context.go('/auth/local');
           } else if (state is AuthError) {
-            DonySnackbar.show(context, message: state.message, type: DonySnackbarType.error);
+            DonySnackbar.show(
+              context,
+              message: state.message,
+              type: DonySnackbarType.error,
+            );
           }
         },
         builder: (context, state) {
           final isLoading = state is AuthLoading;
+          final secondsLeft =
+              state is AuthOtpSent ? state.secondsLeft : 60;
+
           return SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Back arrow
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(DonySpacing.sm, DonySpacing.sm, DonySpacing.sm, 0),
+                  padding: const EdgeInsets.fromLTRB(
+                    DonySpacing.sm, DonySpacing.sm, DonySpacing.sm, 0,
+                  ),
                   child: IconButton(
                     icon: Icon(
                       Icons.arrow_back_ios_rounded,
@@ -127,9 +110,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   ),
                 ),
                 const SizedBox(height: DonySpacing.base),
-                // Title
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
                   child: Text(
                     'Entrez le code',
                     style: tt.displayLarge?.copyWith(
@@ -139,12 +122,14 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   ),
                 ),
                 const SizedBox(height: DonySpacing.sm),
-                // Subtitle with phone number
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
                   child: RichText(
                     text: TextSpan(
-                      style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                      style: tt.bodyMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
                       children: [
                         const TextSpan(text: 'Code envoyé au '),
                         TextSpan(
@@ -159,9 +144,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   ),
                 ),
                 const SizedBox(height: 36),
-                // OTP boxes
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: List.generate(6, (index) {
@@ -186,15 +171,18 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                             filled: true,
                             fillColor: cs.surface,
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(DonyRadius.md),
+                              borderRadius:
+                                  BorderRadius.circular(DonyRadius.md),
                               borderSide: BorderSide(color: cs.outline),
                             ),
                             enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(DonyRadius.md),
+                              borderRadius:
+                                  BorderRadius.circular(DonyRadius.md),
                               borderSide: BorderSide(color: cs.outline),
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(DonyRadius.md),
+                              borderRadius:
+                                  BorderRadius.circular(DonyRadius.md),
                               borderSide: BorderSide(
                                 color: cs.primary,
                                 width: 2,
@@ -215,12 +203,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   ),
                 ),
                 const SizedBox(height: DonySpacing.xl),
-                // Resend
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
-                  child: _secondsLeft > 0
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
+                  child: secondsLeft > 0
                       ? Text(
-                          'Renvoyer le code ($_secondsLeft s)',
+                          'Renvoyer le code ($secondsLeft s)',
                           style: tt.bodyMedium?.copyWith(
                             color: cs.primary,
                             fontWeight: FontWeight.w500,
@@ -238,7 +226,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                         ),
                 ),
                 const Spacer(),
-                // Verify button
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
                     DonySpacing.xl, 0, DonySpacing.xl, DonySpacing.xxl,

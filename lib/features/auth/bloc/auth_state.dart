@@ -9,7 +9,11 @@ abstract class AuthState extends Equatable {
 }
 
 class AuthInitial extends AuthState {
-  const AuthInitial();
+  final String dialCode;
+  final String dialFlag;
+  const AuthInitial({this.dialCode = '+33', this.dialFlag = '🇫🇷'});
+  @override
+  List<Object?> get props => [dialCode, dialFlag];
 }
 
 class AuthLoading extends AuthState {
@@ -19,11 +23,29 @@ class AuthLoading extends AuthState {
 class AuthOtpSent extends AuthState {
   final String verificationId;
   final String phoneNumber;
+  final int secondsLeft;
 
-  const AuthOtpSent({required this.verificationId, required this.phoneNumber});
+  const AuthOtpSent({
+    required this.verificationId,
+    required this.phoneNumber,
+    this.secondsLeft = 60,
+  });
+
+  AuthOtpSent copyWith({int? secondsLeft}) => AuthOtpSent(
+        verificationId: verificationId,
+        phoneNumber: phoneNumber,
+        secondsLeft: secondsLeft ?? this.secondsLeft,
+      );
 
   @override
-  List<Object?> get props => [verificationId, phoneNumber];
+  List<Object?> get props => [verificationId, phoneNumber, secondsLeft];
+}
+
+class AuthSelectingRoles extends AuthState {
+  final Set<String> selectedRoles;
+  const AuthSelectingRoles({required this.selectedRoles});
+  @override
+  List<Object?> get props => [selectedRoles];
 }
 
 class AuthOtpVerified extends AuthState {
