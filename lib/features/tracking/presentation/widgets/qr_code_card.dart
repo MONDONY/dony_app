@@ -122,7 +122,7 @@ class _QrCodeContent extends StatelessWidget {
           padding: const EdgeInsets.all(DonySpacing.md),
           decoration: BoxDecoration(
             color: cs.primaryContainer,
-            borderRadius: BorderRadius.circular(DonyRadius.sm + 2),
+            borderRadius: BorderRadius.circular(DonyRadius.md),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,

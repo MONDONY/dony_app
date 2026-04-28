@@ -38,6 +38,7 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
 
     return Scaffold(
       appBar: const DonyAppBar(title: 'Suivre un colis'),
@@ -48,9 +49,9 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSearchHeader(context),
-            const SizedBox(height: 28),
-            _buildSearchField(context, cs),
+            _buildSearchHeader(cs, tt),
+            const SizedBox(height: DonySpacing.xl),
+            _buildSearchField(cs, tt),
             const SizedBox(height: DonySpacing.lg),
             DonyButton(
               label: 'Rechercher',
@@ -83,10 +84,7 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
     );
   }
 
-  Widget _buildSearchHeader(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
+  Widget _buildSearchHeader(ColorScheme cs, TextTheme tt) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -115,9 +113,7 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
     );
   }
 
-  Widget _buildSearchField(BuildContext context, ColorScheme cs) {
-    final tt = Theme.of(context).textTheme;
-
+  Widget _buildSearchField(ColorScheme cs, TextTheme tt) {
     return TextField(
       controller: _controller,
       focusNode: _focusNode,
@@ -234,7 +230,7 @@ class _TrackingResultCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: DonySpacing.md),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -247,10 +243,10 @@ class _TrackingResultCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: DonySpacing.base),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
                       child: Icon(Icons.arrow_forward_rounded,
-                          color: Colors.white70, size: 24),
+                          color: DonyColors.neutral0.withValues(alpha: 0.7), size: 24),
                     ),
                     Expanded(
                       child: Text(

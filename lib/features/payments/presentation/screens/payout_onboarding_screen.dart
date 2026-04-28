@@ -11,16 +11,21 @@ class PayoutOnboardingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<PaymentBloc, PaymentState>(
-      listener: (context, state) {
+      listener: (context, state) async {
         if (state is PaymentOnboardingUrlReady) {
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => _StripeOnboardingWebView(
+          await showGeneralDialog<void>(
+            context: context,
+            pageBuilder: (ctx, animation, secondaryAnimation) =>
+                _StripeOnboardingWebView(
               url: state.url,
-              onReturn: () => context
-                  .read<PaymentBloc>()
-                  .add(const PaymentOnboardingStatusChecked()),
+              onReturn: () {
+                Navigator.of(ctx).pop();
+                context
+                    .read<PaymentBloc>()
+                    .add(const PaymentOnboardingStatusChecked());
+              },
             ),
-          ));
+          );
         }
       },
       builder: (context, state) {
@@ -101,7 +106,7 @@ class _HeroSection extends StatelessWidget {
           height: 64,
           decoration: BoxDecoration(
             color: cs.primaryContainer,
-            borderRadius: BorderRadius.circular(DonyRadius.card + 2),
+            borderRadius: BorderRadius.circular(DonyRadius.xl),
           ),
           child: Icon(Icons.account_balance_wallet_rounded,
               color: cs.primary, size: 32),
@@ -160,7 +165,7 @@ class _BenefitsSection extends StatelessWidget {
                       ),
                       child: Icon(icon, color: cs.primary, size: 20),
                     ),
-                    const SizedBox(width: 14),
+                    const SizedBox(width: DonySpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
