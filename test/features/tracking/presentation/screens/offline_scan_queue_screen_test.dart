@@ -6,10 +6,8 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/tracking/presentation/screens/offline_scan_queue_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
-import 'package:path/path.dart' as p;
 
 late Directory _tempDir;
 late HiveService _hiveService;
