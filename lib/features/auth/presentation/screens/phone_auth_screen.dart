@@ -89,6 +89,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: BlocConsumer<AuthBloc, AuthState>(
+        listenWhen: (previous, current) {
+          if (current is AuthOtpSent) return previous is! AuthOtpSent;
+          return true;
+        },
         listener: (context, state) {
           if (state is AuthOtpSent) {
             context.push('/auth/otp');

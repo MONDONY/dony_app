@@ -68,9 +68,17 @@ class _BidListView extends StatelessWidget {
           DonySnackbar.show(context,
               message: 'Demande supprimée.',
               type: DonySnackbarType.success);
-          context
-              .read<BidBloc>()
-              .add(BidListRequested(announcementId));
+          context.read<BidBloc>().add(BidListRequested(announcementId));
+        } else if (state is BidAccepted) {
+          DonySnackbar.show(context,
+              message: 'Demande acceptée !',
+              type: DonySnackbarType.success);
+          context.read<BidBloc>().add(BidListRequested(announcementId));
+        } else if (state is BidRejected) {
+          DonySnackbar.show(context,
+              message: 'Demande refusée.',
+              type: DonySnackbarType.info);
+          context.read<BidBloc>().add(BidListRequested(announcementId));
         } else if (state is BidError) {
           DonySnackbar.show(context,
               message: state.message, type: DonySnackbarType.error);
@@ -365,9 +373,14 @@ class _BidCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
 
-    return Container(
+    return Material(
+      color: DonyColors.white,
+      borderRadius: BorderRadius.circular(DonyRadius.card),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        onTap: () => context.push('/bids/${bid.id}', extra: bid),
+        child: Container(
       decoration: BoxDecoration(
-        color: DonyColors.white,
         borderRadius: BorderRadius.circular(DonyRadius.card),
         border: Border.all(color: DonyColors.grey200),
       ),
@@ -469,6 +482,8 @@ class _BidCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
+        ),
       ),
     );
   }
