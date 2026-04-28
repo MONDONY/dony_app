@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class TravelerProfileScreen extends StatefulWidget {
@@ -34,12 +33,12 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
 
   AnnouncementModel get _announcement => widget.announcement;
 
-  String get _initials => _announcement.traveler?.resolvedInitials ?? '?';
-
   String get _abbreviatedName {
     final name = _announcement.traveler?.resolvedName ?? 'Voyageur';
     final parts = name.trim().split(' ');
-    if (parts.length >= 2) return '${parts[0]} ${parts[1][0]}.';
+    if (parts.length >= 2) {
+      return '${parts[0]} ${parts[1][0]}.';
+    }
     return parts[0];
   }
 
@@ -59,102 +58,66 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
     setState(() => _isSaved = !_isSaved);
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _isSaved ? 'Trajet sauvegardé' : 'Trajet retiré des sauvegardes',
-            style: GoogleFonts.sora(fontWeight: FontWeight.w500),
-          ),
-          backgroundColor: _isSaved ? DonyColors.success : DonyColors.grey400,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          duration: const Duration(seconds: 2),
-        ),
+      DonySnackbar.show(
+        context,
+        message: _isSaved ? 'Trajet sauvegardé' : 'Trajet retiré des sauvegardes',
+        type: _isSaved ? DonySnackbarType.success : DonySnackbarType.info,
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     final traveler = _announcement.traveler;
     final isKiloPro = traveler?.kiloPro ?? false;
     final consultOnly = widget.consultOnly;
 
     return Scaffold(
-      backgroundColor: DonyColors.grey50,
-      appBar: AppBar(
-        title: Text(
-          'Profil voyageur',
-          style: GoogleFonts.sora(fontWeight: FontWeight.w700, fontSize: 18),
-        ),
-        backgroundColor: DonyColors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20, color: DonyColors.green400),
-          onPressed: () => context.pop(),
-        ),
-        actions: [
-          if (!consultOnly) ...[
-            IconButton(
-              icon: Icon(
-                _isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                color: _isSaved ? DonyColors.green400 : DonyColors.grey400,
-                size: 24,
-              ),
-              onPressed: _toggleSave,
-              tooltip: _isSaved ? 'Retirer des sauvegardes' : 'Sauvegarder ce trajet',
-            ),
-            IconButton(
-              icon: const Icon(Icons.chat_bubble_outline_rounded, color: DonyColors.grey400, size: 22),
-              onPressed: () {}, // TODO: messagerie
-              tooltip: 'Contacter',
-            ),
-          ],
-        ],
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1),
-        ),
+      appBar: DonyAppBar(
+        title: 'Profil voyageur',
+        actions: consultOnly
+            ? null
+            : [
+                IconButton(
+                  icon: Icon(
+                    _isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                    color: _isSaved ? cs.primary : cs.onSurfaceVariant,
+                    size: 24,
+                  ),
+                  onPressed: _toggleSave,
+                  tooltip: _isSaved ? 'Retirer des sauvegardes' : 'Sauvegarder ce trajet',
+                ),
+                IconButton(
+                  icon: Icon(Icons.chat_bubble_outline_rounded, color: cs.onSurfaceVariant, size: 22),
+                  onPressed: () {}, // TODO: messagerie
+                  tooltip: 'Contacter',
+                ),
+              ],
       ),
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(20, 28, 20, consultOnly ? 40 : 120),
+            padding: EdgeInsets.fromLTRB(
+              DonySpacing.lg, DonySpacing.xxl, DonySpacing.lg, consultOnly ? DonySpacing.huge : 120,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // ── En-tête voyageur ────────────────────────────────────
                 Column(
                   children: [
-                    Container(
-                      width: 84,
-                      height: 84,
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [DonyColors.green600, DonyColors.green300],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          _initials,
-                          style: GoogleFonts.sora(
-                            color: Colors.white,
-                            fontSize: 30,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
+                    DonyAvatar(
+                      name: _announcement.traveler?.resolvedName ?? 'Voyageur',
+                      size: DonyAvatarSize.xl,
                     ),
                     const SizedBox(height: 14),
                     Text(
                       _abbreviatedName,
-                      style: GoogleFonts.sora(
-                        fontSize: 24,
+                      style: tt.headlineLarge?.copyWith(
                         fontWeight: FontWeight.w800,
-                        color: DonyColors.ink900,
+                        color: cs.onSurface,
                         letterSpacing: -0.3,
                       ),
                     ),
@@ -163,21 +126,18 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.phone_rounded, size: 13, color: DonyColors.grey400),
+                          Icon(Icons.phone_rounded, size: 13, color: cs.onSurfaceVariant),
                           const SizedBox(width: 5),
                           Text(
                             traveler!.phoneNumber!,
-                            style: GoogleFonts.sora(
-                              fontSize: 14,
-                              color: DonyColors.grey400,
-                            ),
+                            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                           ),
                         ],
                       ),
                     ],
                     const SizedBox(height: 10),
                     Wrap(
-                      spacing: 8,
+                      spacing: DonySpacing.sm,
                       runSpacing: 6,
                       alignment: WrapAlignment.center,
                       children: [
@@ -185,27 +145,29 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                           _Badge(
                             icon: Icons.star_rounded,
                             label: 'Kilo Pro',
-                            iconColor: const Color(0xFFB45309),
-                            bgColor: const Color(0xFFFEF3C7),
-                            textColor: const Color(0xFFB45309),
+                            iconColor: DonyColors.amberDark,
+                            bgColor: DonyColors.amberLight,
+                            textColor: DonyColors.amberDark,
+                            tt: tt,
                           ),
                         _Badge(
                           icon: Icons.verified_rounded,
                           label: 'Identité vérifiée',
-                          iconColor: DonyColors.green400,
-                          bgColor: DonyColors.green100,
-                          textColor: DonyColors.green400,
+                          iconColor: cs.primary,
+                          bgColor: cs.primaryContainer,
+                          textColor: cs.primary,
+                          tt: tt,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 22),
+                    const SizedBox(height: DonySpacing.xl),
                     // Stats
                     Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.symmetric(vertical: DonySpacing.base),
                       decoration: BoxDecoration(
-                        color: DonyColors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: DonyColors.grey100),
+                        color: cs.surface,
+                        borderRadius: BorderRadius.circular(DonyRadius.card),
+                        border: Border.all(color: cs.outline),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -215,18 +177,24 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                                 ? traveler!.averageRating!.toStringAsFixed(1)
                                 : '–',
                             label: 'Note',
+                            cs: cs,
+                            tt: tt,
                           ),
-                          Container(width: 1, height: 36, color: DonyColors.grey100),
+                          Container(width: 1, height: 36, color: cs.outline),
                           _StatItem(
                             value: traveler?.totalTrips != null
                                 ? '${traveler!.totalTrips}'
                                 : '–',
                             label: 'Trajets',
+                            cs: cs,
+                            tt: tt,
                           ),
-                          Container(width: 1, height: 36, color: DonyColors.grey100),
+                          Container(width: 1, height: 36, color: cs.outline),
                           _StatItem(
                             value: '–',
                             label: 'Livraison',
+                            cs: cs,
+                            tt: tt,
                           ),
                         ],
                       ),
@@ -234,70 +202,66 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                   ],
                 ).animate().fadeIn(duration: 280.ms),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: DonySpacing.xl),
 
                 if (!consultOnly) ...[
                   // ── Trajet proposé ─────────────────────────────────────
                   Text(
                     'Trajet proposé',
-                    style: GoogleFonts.sora(
-                      fontSize: 16,
+                    style: tt.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: DonyColors.ink900,
+                      color: cs.onSurface,
                     ),
                   ),
                   const SizedBox(height: 10),
-                  _TripCard(announcement: _announcement).animate().fadeIn(delay: 80.ms),
+                  _TripCard(announcement: _announcement, cs: cs, tt: tt).animate().fadeIn(delay: 80.ms),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: DonySpacing.lg),
 
                   // ── Lieux de remise ────────────────────────────────────
                   Text(
                     'Lieux de remise',
-                    style: GoogleFonts.sora(
-                      fontSize: 16,
+                    style: tt.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: DonyColors.ink900,
+                      color: cs.onSurface,
                     ),
                   ),
                   const SizedBox(height: 10),
-                  _HandoverCard(announcement: _announcement).animate().fadeIn(delay: 110.ms),
+                  _HandoverCard(announcement: _announcement, cs: cs, tt: tt).animate().fadeIn(delay: 110.ms),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: DonySpacing.lg),
 
                   // ── Tarif ──────────────────────────────────────────────
                   Text(
                     'Tarif',
-                    style: GoogleFonts.sora(
-                      fontSize: 16,
+                    style: tt.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: DonyColors.ink900,
+                      color: cs.onSurface,
                     ),
                   ),
                   const SizedBox(height: 10),
-                  _TarifCard(announcement: _announcement).animate().fadeIn(delay: 150.ms),
+                  _TarifCard(announcement: _announcement, cs: cs, tt: tt).animate().fadeIn(delay: 150.ms),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: DonySpacing.lg),
                 ],
 
                 // ── À propos ─────────────────────────────────────────────
-                _AboutSection(announcement: _announcement)
+                _AboutSection(announcement: _announcement, cs: cs, tt: tt)
                     .animate()
                     .fadeIn(delay: consultOnly ? 80.ms : 190.ms),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: DonySpacing.lg),
 
                 // ── Avis récents ─────────────────────────────────────────
                 Text(
                   'Avis récents',
-                  style: GoogleFonts.sora(
-                    fontSize: 16,
+                  style: tt.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: DonyColors.ink900,
+                    color: cs.onSurface,
                   ),
                 ),
                 const SizedBox(height: 10),
-                _ReviewsCard(announcement: _announcement)
+                _ReviewsCard(announcement: _announcement, cs: cs, tt: tt)
                     .animate()
                     .fadeIn(delay: consultOnly ? 130.ms : 230.ms),
               ],
@@ -312,37 +276,20 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
               right: 0,
               child: Container(
                 padding: EdgeInsets.fromLTRB(
-                  20,
+                  DonySpacing.lg,
                   14,
-                  20,
-                  MediaQuery.of(context).padding.bottom + 16,
+                  DonySpacing.lg,
+                  MediaQuery.of(context).padding.bottom + DonySpacing.base,
                 ),
-                decoration: const BoxDecoration(
-                  color: DonyColors.white,
-                  border: Border(top: BorderSide(color: DonyColors.grey100)),
+                decoration: BoxDecoration(
+                  color: cs.surface,
+                  border: Border(top: BorderSide(color: cs.outline)),
                 ),
-                child: SizedBox(
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: () => context.push(
-                      '/search/${_announcement.id}/bid',
-                      extra: _announcement,
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: DonyColors.green400,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: Text(
-                      'Envoyer un colis',
-                      style: GoogleFonts.sora(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
+                child: DonyButton(
+                  label: 'Envoyer un colis',
+                  onPressed: () => context.push(
+                    '/search/${_announcement.id}/bid',
+                    extra: _announcement,
                   ),
                 ),
               ).animate().slideY(begin: 0.5, duration: 280.ms, curve: Curves.easeOutCubic),
@@ -362,6 +309,7 @@ class _Badge extends StatelessWidget {
     required this.iconColor,
     required this.bgColor,
     required this.textColor,
+    required this.tt,
   });
 
   final IconData icon;
@@ -369,6 +317,7 @@ class _Badge extends StatelessWidget {
   final Color iconColor;
   final Color bgColor;
   final Color textColor;
+  final TextTheme tt;
 
   @override
   Widget build(BuildContext context) {
@@ -376,7 +325,7 @@ class _Badge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(DonyRadius.xl),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -385,8 +334,7 @@ class _Badge extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: GoogleFonts.sora(
-              fontSize: 12,
+            style: tt.labelMedium?.copyWith(
               fontWeight: FontWeight.w700,
               color: textColor,
             ),
@@ -398,10 +346,17 @@ class _Badge extends StatelessWidget {
 }
 
 class _StatItem extends StatelessWidget {
-  const _StatItem({required this.value, required this.label});
+  const _StatItem({
+    required this.value,
+    required this.label,
+    required this.cs,
+    required this.tt,
+  });
 
   final String value;
   final String label;
+  final ColorScheme cs;
+  final TextTheme tt;
 
   @override
   Widget build(BuildContext context) {
@@ -409,19 +364,15 @@ class _StatItem extends StatelessWidget {
       children: [
         Text(
           value,
-          style: GoogleFonts.sora(
-            fontSize: 22,
+          style: tt.headlineLarge?.copyWith(
             fontWeight: FontWeight.w800,
-            color: DonyColors.ink900,
+            color: cs.onSurface,
           ),
         ),
         const SizedBox(height: 2),
         Text(
           label,
-          style: GoogleFonts.sora(
-            fontSize: 12,
-            color: DonyColors.grey400,
-          ),
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
       ],
     );
@@ -429,17 +380,19 @@ class _StatItem extends StatelessWidget {
 }
 
 class _TripCard extends StatelessWidget {
-  const _TripCard({required this.announcement});
+  const _TripCard({required this.announcement, required this.cs, required this.tt});
   final AnnouncementModel announcement;
+  final ColorScheme cs;
+  final TextTheme tt;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
-        color: DonyColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: DonyColors.grey100),
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -450,15 +403,14 @@ class _TripCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: DonyColors.green100,
-                borderRadius: BorderRadius.circular(20),
+                color: cs.primaryContainer,
+                borderRadius: BorderRadius.circular(DonyRadius.xl),
               ),
               child: Text(
                 '${announcement.availableKg.toStringAsFixed(0)} kg dispo',
-                style: GoogleFonts.sora(
-                  fontSize: 12,
+                style: tt.labelMedium?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: DonyColors.green400,
+                  color: cs.primary,
                 ),
               ),
             ),
@@ -476,8 +428,8 @@ class _TripCard extends StatelessWidget {
                     Container(
                       width: 10,
                       height: 10,
-                      decoration: const BoxDecoration(
-                        color: DonyColors.green400,
+                      decoration: BoxDecoration(
+                        color: cs.primary,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -486,7 +438,7 @@ class _TripCard extends StatelessWidget {
                         child: Container(
                           width: 2,
                           decoration: BoxDecoration(
-                            color: DonyColors.grey100,
+                            color: cs.outline,
                             borderRadius: BorderRadius.circular(1),
                           ),
                         ),
@@ -495,8 +447,8 @@ class _TripCard extends StatelessWidget {
                     Container(
                       width: 10,
                       height: 10,
-                      decoration: const BoxDecoration(
-                        color: DonyColors.error,
+                      decoration: BoxDecoration(
+                        color: cs.error,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -513,6 +465,8 @@ class _TripCard extends StatelessWidget {
                         time: announcement.departureTime,
                         city: announcement.departureCity,
                         location: announcement.departureLocation,
+                        cs: cs,
+                        tt: tt,
                       ),
                       const SizedBox(height: 18),
                       _RouteStop(
@@ -521,6 +475,8 @@ class _TripCard extends StatelessWidget {
                         city: announcement.arrivalCity,
                         location: announcement.arrivalLocation,
                         isArrival: true,
+                        cs: cs,
+                        tt: tt,
                       ),
                     ],
                   ),
@@ -541,6 +497,8 @@ class _RouteStop extends StatelessWidget {
     required this.city,
     this.location,
     this.isArrival = false,
+    required this.cs,
+    required this.tt,
   });
 
   final DateTime date;
@@ -548,6 +506,8 @@ class _RouteStop extends StatelessWidget {
   final String city;
   final String? location;
   final bool isArrival;
+  final ColorScheme cs;
+  final TextTheme tt;
 
   @override
   Widget build(BuildContext context) {
@@ -560,20 +520,17 @@ class _RouteStop extends StatelessWidget {
       children: [
         Text(
           timeLabel,
-          style: GoogleFonts.sora(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: DonyColors.grey400,
+          style: tt.labelSmall?.copyWith(
+            color: cs.onSurfaceVariant,
             letterSpacing: 0.2,
           ),
         ),
         const SizedBox(height: 3),
         Text(
           city,
-          style: GoogleFonts.sora(
-            fontSize: 15,
+          style: tt.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
-            color: DonyColors.ink900,
+            color: cs.onSurface,
           ),
         ),
         const SizedBox(height: 3),
@@ -583,16 +540,15 @@ class _RouteStop extends StatelessWidget {
               isArrival ? Icons.location_on_rounded : Icons.location_on_outlined,
               size: 12,
               color: hasLocation
-                  ? (isArrival ? DonyColors.error : DonyColors.green400)
-                  : DonyColors.grey200,
+                  ? (isArrival ? cs.error : cs.primary)
+                  : cs.outline,
             ),
             const SizedBox(width: 4),
             Expanded(
               child: Text(
                 hasLocation ? location! : 'Lieu non précisé',
-                style: GoogleFonts.sora(
-                  fontSize: 12,
-                  color: hasLocation ? DonyColors.grey400 : DonyColors.grey200,
+                style: tt.bodySmall?.copyWith(
+                  color: hasLocation ? cs.onSurfaceVariant : cs.outline,
                   fontStyle: hasLocation ? FontStyle.normal : FontStyle.italic,
                 ),
               ),
@@ -605,8 +561,10 @@ class _RouteStop extends StatelessWidget {
 }
 
 class _HandoverCard extends StatelessWidget {
-  const _HandoverCard({required this.announcement});
+  const _HandoverCard({required this.announcement, required this.cs, required this.tt});
   final AnnouncementModel announcement;
+  final ColorScheme cs;
+  final TextTheme tt;
 
   @override
   Widget build(BuildContext context) {
@@ -616,11 +574,11 @@ class _HandoverCard extends StatelessWidget {
     final hasArrLoc = arrLoc != null && arrLoc.isNotEmpty;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
-        color: DonyColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: DonyColors.grey100),
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
       ),
       child: Column(
         children: [
@@ -632,32 +590,29 @@ class _HandoverCard extends StatelessWidget {
                 margin: const EdgeInsets.only(top: 2),
                 padding: const EdgeInsets.all(7),
                 decoration: BoxDecoration(
-                  color: DonyColors.green100,
-                  borderRadius: BorderRadius.circular(8),
+                  color: cs.primaryContainer,
+                  borderRadius: BorderRadius.circular(DonyRadius.sm),
                 ),
-                child: const Icon(Icons.location_on_rounded, size: 14, color: DonyColors.green400),
+                child: Icon(Icons.location_on_rounded, size: 14, color: cs.primary),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: DonySpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Lieu de remise (départ)',
-                      style: GoogleFonts.sora(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: DonyColors.grey400,
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.onSurfaceVariant,
                         letterSpacing: 0.3,
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       hasDepLoc ? depLoc : 'Non précisé par le voyageur',
-                      style: GoogleFonts.sora(
-                        fontSize: 14,
+                      style: tt.bodyMedium?.copyWith(
                         fontWeight: hasDepLoc ? FontWeight.w600 : FontWeight.w400,
-                        color: hasDepLoc ? DonyColors.ink900 : DonyColors.grey200,
+                        color: hasDepLoc ? cs.onSurface : cs.outline,
                         fontStyle: hasDepLoc ? FontStyle.normal : FontStyle.italic,
                       ),
                     ),
@@ -668,7 +623,7 @@ class _HandoverCard extends StatelessWidget {
           ),
 
           const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
+            padding: EdgeInsets.symmetric(vertical: DonySpacing.md),
             child: Divider(height: 1),
           ),
 
@@ -680,32 +635,29 @@ class _HandoverCard extends StatelessWidget {
                 margin: const EdgeInsets.only(top: 2),
                 padding: const EdgeInsets.all(7),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFEBEE),
-                  borderRadius: BorderRadius.circular(8),
+                  color: cs.errorContainer,
+                  borderRadius: BorderRadius.circular(DonyRadius.sm),
                 ),
-                child: const Icon(Icons.location_on_rounded, size: 14, color: DonyColors.error),
+                child: Icon(Icons.location_on_rounded, size: 14, color: cs.error),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: DonySpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Lieu de récupération (arrivée)',
-                      style: GoogleFonts.sora(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: DonyColors.grey400,
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.onSurfaceVariant,
                         letterSpacing: 0.3,
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       hasArrLoc ? arrLoc : 'Non précisé par le voyageur',
-                      style: GoogleFonts.sora(
-                        fontSize: 14,
+                      style: tt.bodyMedium?.copyWith(
                         fontWeight: hasArrLoc ? FontWeight.w600 : FontWeight.w400,
-                        color: hasArrLoc ? DonyColors.ink900 : DonyColors.grey200,
+                        color: hasArrLoc ? cs.onSurface : cs.outline,
                         fontStyle: hasArrLoc ? FontStyle.normal : FontStyle.italic,
                       ),
                     ),
@@ -721,17 +673,21 @@ class _HandoverCard extends StatelessWidget {
 }
 
 class _TarifCard extends StatelessWidget {
-  const _TarifCard({required this.announcement});
+  const _TarifCard({required this.announcement, required this.cs, required this.tt});
   final AnnouncementModel announcement;
+  final ColorScheme cs;
+  final TextTheme tt;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.base, vertical: 14,
+      ),
       decoration: BoxDecoration(
-        color: DonyColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: DonyColors.grey100),
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
       ),
       child: Column(
         children: [
@@ -740,40 +696,32 @@ class _TarifCard extends StatelessWidget {
             children: [
               Text(
                 'Prix par kilo',
-                style: GoogleFonts.sora(
-                  fontSize: 14,
-                  color: DonyColors.grey400,
-                ),
+                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               ),
               Text(
                 '${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
-                style: GoogleFonts.sora(
-                  fontSize: 20,
+                style: tt.headlineLarge?.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: DonyColors.ink900,
+                  color: cs.onSurface,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: DonySpacing.md),
           const Divider(height: 1),
-          const SizedBox(height: 12),
+          const SizedBox(height: DonySpacing.md),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 'Capacité restante',
-                style: GoogleFonts.sora(
-                  fontSize: 14,
-                  color: DonyColors.grey400,
-                ),
+                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               ),
               Text(
                 '${announcement.availableKg.toStringAsFixed(0)} kg',
-                style: GoogleFonts.sora(
-                  fontSize: 14,
+                style: tt.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: DonyColors.ink900,
+                  color: cs.onSurface,
                 ),
               ),
             ],
@@ -787,8 +735,10 @@ class _TarifCard extends StatelessWidget {
 // ── À propos ──────────────────────────────────────────────────────────────────
 
 class _AboutSection extends StatefulWidget {
-  const _AboutSection({required this.announcement});
+  const _AboutSection({required this.announcement, required this.cs, required this.tt});
   final AnnouncementModel announcement;
+  final ColorScheme cs;
+  final TextTheme tt;
 
   @override
   State<_AboutSection> createState() => _AboutSectionState();
@@ -808,35 +758,39 @@ class _AboutSectionState extends State<_AboutSection> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = widget.cs;
+    final tt = widget.tt;
+
     return Container(
       decoration: BoxDecoration(
-        color: DonyColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: DonyColors.grey100),
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
       ),
       child: Column(
         children: [
           InkWell(
             onTap: () => setState(() => _expanded = !_expanded),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(DonyRadius.card),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              padding: const EdgeInsets.symmetric(
+                horizontal: DonySpacing.base, vertical: 14,
+              ),
               child: Row(
                 children: [
                   Text(
                     'À propos',
-                    style: GoogleFonts.sora(
-                      fontSize: 16,
+                    style: tt.titleLarge?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: DonyColors.ink900,
+                      color: cs.onSurface,
                     ),
                   ),
                   const Spacer(),
                   AnimatedRotation(
                     turns: _expanded ? 0.5 : 0,
                     duration: const Duration(milliseconds: 200),
-                    child: const Icon(Icons.keyboard_arrow_down_rounded,
-                        color: DonyColors.grey400, size: 22),
+                    child: Icon(Icons.keyboard_arrow_down_rounded,
+                        color: cs.onSurfaceVariant, size: 22),
                   ),
                 ],
               ),
@@ -845,12 +799,13 @@ class _AboutSectionState extends State<_AboutSection> {
           AnimatedCrossFade(
             firstChild: const SizedBox(width: double.infinity),
             secondChild: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.base, 0, DonySpacing.base, DonySpacing.base,
+              ),
               child: Text(
                 _bio,
-                style: GoogleFonts.sora(
-                  fontSize: 14,
-                  color: DonyColors.grey400,
+                style: tt.bodyMedium?.copyWith(
+                  color: cs.onSurfaceVariant,
                   height: 1.55,
                 ),
               ),
@@ -868,8 +823,10 @@ class _AboutSectionState extends State<_AboutSection> {
 // ── Avis récents ──────────────────────────────────────────────────────────────
 
 class _ReviewsCard extends StatelessWidget {
-  const _ReviewsCard({required this.announcement});
+  const _ReviewsCard({required this.announcement, required this.cs, required this.tt});
   final AnnouncementModel announcement;
+  final ColorScheme cs;
+  final TextTheme tt;
 
   @override
   Widget build(BuildContext context) {
@@ -906,18 +863,18 @@ class _ReviewsCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: DonyColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: DonyColors.grey100),
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
       ),
       child: Column(
         children: [
           for (int i = 0; i < reviews.length; i++) ...[
-            _ReviewTile(review: reviews[i]),
+            _ReviewTile(review: reviews[i], cs: cs, tt: tt),
             if (i < reviews.length - 1)
-              const Padding(
-                padding: EdgeInsets.only(left: 56),
-                child: Divider(height: 1),
+              Padding(
+                padding: const EdgeInsets.only(left: 56),
+                child: Divider(height: 1, color: cs.outline),
               ),
           ],
         ],
@@ -942,8 +899,10 @@ class _ReviewData {
 }
 
 class _ReviewTile extends StatelessWidget {
-  const _ReviewTile({required this.review});
+  const _ReviewTile({required this.review, required this.cs, required this.tt});
   final _ReviewData review;
+  final ColorScheme cs;
+  final TextTheme tt;
 
   @override
   Widget build(BuildContext context) {
@@ -957,29 +916,15 @@ class _ReviewTile extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(DonySpacing.base),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: const BoxDecoration(
-              color: DonyColors.green100,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                review.authorInitial,
-                style: GoogleFonts.sora(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: DonyColors.green400,
-                ),
-              ),
-            ),
+          DonyAvatar(
+            name: review.authorName,
+            size: DonyAvatarSize.sm,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: DonySpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -988,19 +933,15 @@ class _ReviewTile extends StatelessWidget {
                   children: [
                     Text(
                       review.authorName,
-                      style: GoogleFonts.sora(
-                        fontSize: 13,
+                      style: tt.bodySmall?.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: DonyColors.ink900,
+                        color: cs.onSurface,
                       ),
                     ),
                     const Spacer(),
                     Text(
                       timeLabel,
-                      style: GoogleFonts.sora(
-                        fontSize: 11,
-                        color: DonyColors.grey200,
-                      ),
+                      style: tt.labelSmall?.copyWith(color: cs.outline),
                     ),
                   ],
                 ),
@@ -1013,16 +954,15 @@ class _ReviewTile extends StatelessWidget {
                           ? Icons.star_rounded
                           : Icons.star_border_rounded,
                       size: 13,
-                      color: const Color(0xFFF59E0B),
+                      color: DonyColors.warning,
                     ),
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   review.comment,
-                  style: GoogleFonts.sora(
-                    fontSize: 13,
-                    color: DonyColors.grey400,
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
                     height: 1.4,
                   ),
                 ),
@@ -1069,32 +1009,23 @@ class _TravelerProfileLoaderScreenState
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     if (_hasError) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF4F6F8),
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_rounded,
-                size: 20, color: DonyColors.green400),
-            onPressed: () => context.pop(),
-          ),
-        ),
+        appBar: DonyAppBar(title: ''),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline_rounded,
-                  size: 48, color: Color(0xFF6B7A8D)),
-              const SizedBox(height: 12),
+              Icon(Icons.error_outline_rounded, size: 48, color: cs.onSurfaceVariant),
+              const SizedBox(height: DonySpacing.md),
               Text(
                 'Impossible de charger le profil',
-                style: GoogleFonts.sora(
-                    fontSize: 15, color: const Color(0xFF6B7A8D)),
+                style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: DonySpacing.base),
               TextButton(
                 onPressed: () {
                   setState(() {
@@ -1113,19 +1044,9 @@ class _TravelerProfileLoaderScreenState
 
     if (_announcement == null) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF4F6F8),
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_rounded,
-                size: 20, color: DonyColors.green400),
-            onPressed: () => context.pop(),
-          ),
-        ),
-        body: const Center(
-          child: CircularProgressIndicator(color: DonyColors.green400),
+        appBar: DonyAppBar(title: ''),
+        body: Center(
+          child: CircularProgressIndicator(color: cs.primary),
         ),
       );
     }
@@ -1133,4 +1054,3 @@ class _TravelerProfileLoaderScreenState
     return TravelerProfileScreen(announcement: _announcement!, consultOnly: true);
   }
 }
-
