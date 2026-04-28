@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart' show Options;
 import 'package:dony/core/constants/app_assets.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -104,7 +105,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1E88E5),
+      backgroundColor: DonyColors.green400,
       body: Stack(
         children: [
           // Contenu statique — identique à l'image native splash_full.png

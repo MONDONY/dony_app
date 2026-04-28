@@ -141,7 +141,7 @@ class KycOnboardingScreen extends StatelessWidget {
                   title,
                   style: tt.titleLarge,
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: DonySpacing.xxs),
                 Text(
                   description,
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),

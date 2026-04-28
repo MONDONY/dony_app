@@ -284,7 +284,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             children: [
               Text(
                 'Entrez le numéro DON-XXXXXX du colis à scanner.',
-                style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
               ),
               const SizedBox(height: DonySpacing.md),
               TextField(
@@ -292,19 +292,19 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 textCapitalization: TextCapitalization.characters,
                 decoration: InputDecoration(
                   hintText: 'DON-XXXXXX',
-                  hintStyle: tt.bodyMedium?.copyWith(color: DonyColors.grey400),
+                  hintStyle: tt.bodyMedium?.copyWith(color: DonyColors.neutral400),
                   prefixIcon: const Icon(Icons.local_shipping_outlined,
-                      color: DonyColors.green400),
+                      color: DonyColors.primary),
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(DonyRadius.md)),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(DonyRadius.md),
-                    borderSide: const BorderSide(color: DonyColors.grey200),
+                    borderSide: const BorderSide(color: DonyColors.neutral200),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(DonyRadius.md),
                     borderSide:
-                        const BorderSide(color: DonyColors.green400, width: 2),
+                        const BorderSide(color: DonyColors.primary, width: 2),
                   ),
                 ),
                 style: tt.titleLarge?.copyWith(letterSpacing: 1.5),
@@ -320,9 +320,9 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       _scanner.start();
                     },
               child: Text('Annuler',
-                  style: tt.bodyMedium?.copyWith(color: DonyColors.grey400)),
+                  style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400)),
             ),
-            ElevatedButton(
+            FilledButton(
               onPressed: loading
                   ? null
                   : () async {
@@ -357,8 +357,8 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                         }
                       }
                     },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: DonyColors.green400,
+              style: FilledButton.styleFrom(
+                backgroundColor: DonyColors.primary,
                 foregroundColor: DonyColors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -408,19 +408,19 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             Text(
               'Pas de connexion internet. Le scan sera synchronisé automatiquement dès que vous serez en ligne.',
               textAlign: TextAlign.center,
-              style: tt.bodySmall?.copyWith(color: DonyColors.grey400, height: 1.4),
+              style: tt.bodySmall?.copyWith(color: DonyColors.neutral400, height: 1.4),
             ),
           ],
         ),
         actions: [
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
+            child: FilledButton(
               onPressed: () {
                 ctx.pop();
                 context.pop();
               },
-              style: ElevatedButton.styleFrom(
+              style: FilledButton.styleFrom(
                 backgroundColor: DonyColors.warning,
                 foregroundColor: DonyColors.white,
                 elevation: 0,
@@ -460,19 +460,19 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 style: tt.headlineMedium?.copyWith(color: DonyColors.ink900)),
             const SizedBox(height: DonySpacing.sm),
             Text(label,
-                style: tt.bodySmall?.copyWith(color: DonyColors.grey400)),
+                style: tt.bodySmall?.copyWith(color: DonyColors.neutral400)),
           ],
         ),
         actions: [
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
+            child: FilledButton(
               onPressed: () {
                 ctx.pop();
                 context.pop();
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: DonyColors.green400,
+              style: FilledButton.styleFrom(
+                backgroundColor: DonyColors.primary,
                 foregroundColor: DonyColors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -748,7 +748,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: DonyColors.grey200,
+                    color: DonyColors.neutral200,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -762,7 +762,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                   if (!isSubmitting)
                     IconButton(
                       icon: const Icon(Icons.close_rounded,
-                          color: DonyColors.grey400),
+                          color: DonyColors.neutral400),
                       onPressed: () {
                         context.pop();
                         widget.onClose();
@@ -776,7 +776,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
               // Event type selector
               Text(
                 'Type d\'étape',
-                style: tt.labelMedium?.copyWith(color: DonyColors.grey400),
+                style: tt.labelMedium?.copyWith(color: DonyColors.neutral400),
               ),
               const SizedBox(height: DonySpacing.sm),
               Row(
@@ -794,13 +794,13 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                             vertical: DonySpacing.md),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? DonyColors.green400
-                              : DonyColors.grey100,
+                              ? DonyColors.primary
+                              : DonyColors.neutral100,
                           borderRadius: BorderRadius.circular(DonyRadius.md),
                           border: Border.all(
                             color: isSelected
-                                ? DonyColors.green400
-                                : DonyColors.grey200,
+                                ? DonyColors.primary
+                                : DonyColors.neutral200,
                             width: 1.5,
                           ),
                         ),
@@ -809,7 +809,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                             Icon(type.$3,
                                 color: isSelected
                                     ? DonyColors.white
-                                    : DonyColors.grey400,
+                                    : DonyColors.neutral400,
                                 size: 20),
                             const SizedBox(height: DonySpacing.xs),
                             Text(
@@ -817,7 +817,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                               style: tt.labelSmall?.copyWith(
                                 color: isSelected
                                     ? DonyColors.white
-                                    : DonyColors.grey400,
+                                    : DonyColors.neutral400,
                               ),
                             ),
                           ],
@@ -834,7 +834,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
               if (isArrivee) ...[
                 Text(
                   'Code de confirmation',
-                  style: tt.labelMedium?.copyWith(color: DonyColors.grey400),
+                  style: tt.labelMedium?.copyWith(color: DonyColors.neutral400),
                 ),
                 const SizedBox(height: DonySpacing.sm),
                 Container(
@@ -843,20 +843,20 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                     vertical: DonySpacing.sm,
                   ),
                   decoration: BoxDecoration(
-                    color: DonyColors.green100,
+                    color: DonyColors.blue100,
                     borderRadius: BorderRadius.circular(DonyRadius.md),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Icon(Icons.info_outline_rounded,
-                          color: DonyColors.green400, size: 15),
+                          color: DonyColors.primary, size: 15),
                       const SizedBox(width: DonySpacing.sm),
                       Expanded(
                         child: Text(
                           'Demandez le code à 6 chiffres au destinataire. Il l\'a reçu de l\'expéditeur.',
                           style: tt.bodySmall?.copyWith(
-                            color: DonyColors.green600,
+                            color: DonyColors.blue700,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -876,19 +876,19 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                     counterText: '',
                     hintText: '------',
                     hintStyle: tt.displayMedium?.copyWith(
-                      color: DonyColors.grey200,
+                      color: DonyColors.neutral200,
                       letterSpacing: 10,
                     ),
                     filled: true,
-                    fillColor: DonyColors.grey100,
+                    fillColor: DonyColors.neutral100,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(DonyRadius.md),
-                      borderSide: const BorderSide(color: DonyColors.grey200),
+                      borderSide: const BorderSide(color: DonyColors.neutral200),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(DonyRadius.md),
                       borderSide: const BorderSide(
-                          color: DonyColors.green400, width: 2),
+                          color: DonyColors.primary, width: 2),
                     ),
                     contentPadding:
                         const EdgeInsets.symmetric(vertical: DonySpacing.base),
@@ -897,7 +897,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
               ] else ...[
                 Text(
                   'Photo du colis',
-                  style: tt.labelMedium?.copyWith(color: DonyColors.grey400),
+                  style: tt.labelMedium?.copyWith(color: DonyColors.neutral400),
                 ),
                 const SizedBox(height: DonySpacing.sm),
 
@@ -907,9 +907,9 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                     child: Container(
                       height: 80,
                       decoration: BoxDecoration(
-                        color: DonyColors.grey100,
+                        color: DonyColors.neutral100,
                         borderRadius: BorderRadius.circular(DonyRadius.md),
-                        border: Border.all(color: DonyColors.grey200),
+                        border: Border.all(color: DonyColors.neutral200),
                       ),
                       child: Center(
                         child: _loadingLocation
@@ -918,18 +918,18 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                                 height: 20,
                                 child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: DonyColors.green400),
+                                    color: DonyColors.primary),
                               )
                             : Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   const Icon(Icons.camera_alt_rounded,
-                                      color: DonyColors.green400, size: 20),
+                                      color: DonyColors.primary, size: 20),
                                   const SizedBox(width: DonySpacing.sm),
                                   Text(
                                     'Prendre une photo',
                                     style: tt.titleSmall
-                                        ?.copyWith(color: DonyColors.green400),
+                                        ?.copyWith(color: DonyColors.primary),
                                   ),
                                 ],
                               ),
@@ -948,10 +948,10 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Container(
                             height: 120,
-                            color: DonyColors.green100,
+                            color: DonyColors.blue100,
                             child: const Center(
                                 child: Icon(Icons.image_rounded,
-                                    color: DonyColors.green400, size: 32)),
+                                    color: DonyColors.primary, size: 32)),
                           ),
                         ),
                       ),
@@ -983,7 +983,7 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                       const SizedBox(width: DonySpacing.xs),
                       Text(
                         'GPS : ${_position!.latitude.toStringAsFixed(4)}, ${_position!.longitude.toStringAsFixed(4)}',
-                        style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                        style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
                       ),
                     ],
                   ),

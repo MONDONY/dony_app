@@ -125,7 +125,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                       ),
                     ),
                     if (traveler?.phoneNumber != null) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: DonySpacing.xs),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -334,7 +334,7 @@ class _Badge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 13, color: iconColor),
-          const SizedBox(width: 4),
+          const SizedBox(width: DonySpacing.xs),
           Text(
             label,
             style: tt.labelMedium?.copyWith(
@@ -372,7 +372,7 @@ class _StatItem extends StatelessWidget {
             color: cs.onSurface,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: DonySpacing.xxs),
         Text(
           label,
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
@@ -546,7 +546,7 @@ class _RouteStop extends StatelessWidget {
                   ? (isArrival ? cs.error : cs.primary)
                   : cs.outline,
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: DonySpacing.xs),
             Expanded(
               child: Text(
                 hasLocation ? location! : 'Lieu non précisé',
@@ -948,7 +948,7 @@ class _ReviewTile extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: DonySpacing.xs),
                 Row(
                   children: List.generate(
                     5,

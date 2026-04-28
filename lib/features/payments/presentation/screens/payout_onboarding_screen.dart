@@ -172,7 +172,7 @@ class _BenefitsSection extends StatelessWidget {
                         children: [
                           Text(title,
                               style: tt.titleMedium),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: DonySpacing.xxs),
                           Text(subtitle,
                               style: tt.bodySmall?.copyWith(
                                 color: cs.onSurfaceVariant,
@@ -210,7 +210,7 @@ class _PendingBanner extends StatelessWidget {
         children: [
           const Icon(Icons.schedule_rounded,
               color: DonyColors.amberDark, size: 20),
-          const SizedBox(width: DonySpacing.sm + 2),
+          const SizedBox(width: DonySpacing.md),
           Expanded(
             child: Text(
               'Vérification en cours — Stripe finalise votre compte. Revenez dans quelques minutes.',
@@ -245,7 +245,7 @@ class _ErrorBanner extends StatelessWidget {
       child: Row(
         children: [
           Icon(Icons.error_outline_rounded, color: cs.error, size: 20),
-          const SizedBox(width: DonySpacing.sm + 2),
+          const SizedBox(width: DonySpacing.md),
           Expanded(
             child: Text(
               message,
@@ -332,7 +332,13 @@ class _StripeOnboardingWebView extends StatefulWidget {
 
 class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
   late final WebViewController _controller;
-  bool _isLoading = true;
+  final _isLoading = ValueNotifier<bool>(true);
+
+  @override
+  void dispose() {
+    _isLoading.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -340,8 +346,8 @@ class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(NavigationDelegate(
-        onPageStarted: (_) => setState(() => _isLoading = true),
-        onPageFinished: (_) => setState(() => _isLoading = false),
+        onPageStarted: (_) => _isLoading.value = true,
+        onPageFinished: (_) => _isLoading.value = false,
         onNavigationRequest: (req) {
           if (req.url.startsWith('https://dony.app/payments/onboarding/return') ||
               req.url.startsWith('https://dony.app/payments/onboarding/refresh')) {
@@ -381,10 +387,12 @@ class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
       body: Stack(
         children: [
           WebViewWidget(controller: _controller),
-          if (_isLoading)
-            Center(
-              child: CircularProgressIndicator(color: cs.primary),
-            ),
+          ValueListenableBuilder<bool>(
+            valueListenable: _isLoading,
+            builder: (_, loading, __) => loading
+                ? Center(child: CircularProgressIndicator(color: cs.primary))
+                : const SizedBox.shrink(),
+          ),
         ],
       ),
     );

@@ -192,7 +192,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
             scrolledUnderElevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_rounded,
-                  size: 20, color: DonyColors.green400),
+                  size: 20, color: DonyColors.primary),
               onPressed: () => context.pop(),
               tooltip: 'Retour',
             ),
@@ -217,12 +217,12 @@ class _BidDetailViewState extends State<_BidDetailView> {
             ],
             bottom: const PreferredSize(
               preferredSize: Size.fromHeight(1),
-              child: Divider(height: 1, color: DonyColors.grey200),
+              child: Divider(height: 1, color: DonyColors.neutral200),
             ),
           ),
           body: _skeletonLoading
               ? const Center(
-                  child: CircularProgressIndicator(color: DonyColors.green400))
+                  child: CircularProgressIndicator(color: DonyColors.primary))
               : SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(
                     DonySpacing.lg,
@@ -418,7 +418,7 @@ class _StatusBadge extends StatelessWidget {
         label = '● Livré';
         break;
       case 'CANCELLED':
-        color = DonyColors.grey400;
+        color = DonyColors.neutral400;
         label = '● Annulé';
         break;
       default:
@@ -468,7 +468,7 @@ class _RouteMapCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: DonyColors.white,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.grey200),
+        border: Border.all(color: DonyColors.neutral200),
       ),
       child: Row(
         children: [
@@ -508,7 +508,7 @@ class _CityChip extends StatelessWidget {
         vertical: DonySpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: DonyColors.grey100,
+        color: DonyColors.neutral100,
         borderRadius: BorderRadius.circular(DonyRadius.full),
       ),
       child: Text(
@@ -574,7 +574,7 @@ class _TravelerCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: DonyColors.white,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.grey200),
+        border: Border.all(color: DonyColors.neutral200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -582,7 +582,7 @@ class _TravelerCard extends StatelessWidget {
           Text(
             'VOYAGEUR',
             style: tt.labelSmall?.copyWith(
-              color: DonyColors.grey400,
+              color: DonyColors.neutral400,
               letterSpacing: 0.8,
             ),
           ),
@@ -611,13 +611,13 @@ class _TravelerCard extends StatelessWidget {
                             vertical: DonySpacing.xxs,
                           ),
                           decoration: BoxDecoration(
-                            color: DonyColors.green50,
+                            color: DonyColors.primarySoft,
                             borderRadius: BorderRadius.circular(DonyRadius.full),
                           ),
                           child: Text(
                             'KYC',
                             style: tt.labelSmall?.copyWith(
-                              color: DonyColors.green400,
+                              color: DonyColors.primary,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -626,7 +626,7 @@ class _TravelerCard extends StatelessWidget {
                     ),
                     Text(
                       '★ — · ${bid.travelerPhone != null ? 'Vérifié' : '—'}',
-                      style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                      style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
                     ),
                   ],
                 ),
@@ -665,9 +665,9 @@ class _IconActionButton extends StatelessWidget {
         height: 40,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(DonyRadius.full),
-          border: Border.all(color: DonyColors.green400),
+          border: Border.all(color: DonyColors.primary),
         ),
-        child: Icon(icon, color: DonyColors.green400, size: 18),
+        child: Icon(icon, color: DonyColors.primary, size: 18),
       ),
     );
   }
@@ -717,7 +717,7 @@ class _StepsSection extends StatelessWidget {
         Text(
           'ÉTAPES',
           style: tt.labelMedium?.copyWith(
-            color: DonyColors.grey400,
+            color: DonyColors.neutral400,
             letterSpacing: 0.8,
           ),
         ),
@@ -758,7 +758,7 @@ class _StepItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final color = step.isDelivery ? DonyColors.success : DonyColors.green400;
+    final color = step.isDelivery ? DonyColors.success : DonyColors.primary;
 
     return IntrinsicHeight(
       child: Row(
@@ -772,7 +772,7 @@ class _StepItem extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: step.completed ? color : DonyColors.grey200,
+                    color: step.completed ? color : DonyColors.neutral200,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -785,7 +785,7 @@ class _StepItem extends StatelessWidget {
                   Expanded(
                     child: Container(
                       width: 2,
-                      color: DonyColors.grey200,
+                      color: DonyColors.neutral200,
                       margin: const EdgeInsets.symmetric(
                           vertical: DonySpacing.xs),
                     ),
@@ -806,12 +806,12 @@ class _StepItem extends StatelessWidget {
                     style: tt.titleSmall?.copyWith(
                       color: step.completed
                           ? DonyColors.ink900
-                          : DonyColors.grey400,
+                          : DonyColors.neutral400,
                     ),
                   ),
                   Text(
                     step.detail,
-                    style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                    style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
                   ),
                   const SizedBox(height: DonySpacing.sm),
                 ],
@@ -839,7 +839,7 @@ class _PaymentReleaseCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: DonyColors.white,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.grey200),
+        border: Border.all(color: DonyColors.neutral200),
       ),
       child: Row(
         children: [
@@ -853,7 +853,7 @@ class _PaymentReleaseCard extends StatelessWidget {
                 ),
                 Text(
                   'Reçu disponible · ${bid.pricePerKg != null ? (bid.pricePerKg! * bid.weightKg * 0.88).toStringAsFixed(2) : '—'} €',
-                  style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                  style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
                 ),
               ],
             ),
@@ -865,7 +865,7 @@ class _PaymentReleaseCard extends StatelessWidget {
               vertical: DonySpacing.xs,
             ),
             decoration: BoxDecoration(
-              color: DonyColors.green50,
+              color: DonyColors.primarySoft,
               borderRadius: BorderRadius.circular(DonyRadius.full),
             ),
             child: Row(
@@ -913,11 +913,11 @@ class _SenderCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: DonyColors.green100,
+              color: DonyColors.blue100,
               borderRadius: BorderRadius.circular(DonyRadius.lg),
             ),
             child: const Icon(Icons.person_rounded,
-                color: DonyColors.green400, size: 24),
+                color: DonyColors.primary, size: 24),
           ),
           const SizedBox(width: DonySpacing.md),
           Expanded(
@@ -937,17 +937,17 @@ class _SenderCard extends StatelessWidget {
                   Row(
                     children: [
                       const Icon(Icons.phone_rounded,
-                          size: 12, color: DonyColors.grey400),
+                          size: 12, color: DonyColors.neutral400),
                       const SizedBox(width: DonySpacing.xs),
                       Text(
                         bid.senderPhone!,
-                        style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                        style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
                       ),
                     ],
                   ),
                 Text(
                   'Demande soumise le ${DateFormat('dd/MM/yyyy à HH:mm').format(bid.createdAt)}',
-                  style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                  style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
                 ),
               ],
             ),
@@ -1020,7 +1020,7 @@ class _DisclaimerCard extends StatelessWidget {
               bid.disclaimerSignedAt != null
                   ? 'Disclaimer signé le ${DateFormat('dd/MM/yyyy à HH:mm').format(bid.disclaimerSignedAt!)}'
                   : 'Disclaimer signé',
-              style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+              style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
             ),
           ),
         ],
@@ -1130,7 +1130,7 @@ class _Card extends StatelessWidget {
       decoration: BoxDecoration(
         color: DonyColors.white,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.grey200),
+        border: Border.all(color: DonyColors.neutral200),
       ),
       padding: const EdgeInsets.all(DonySpacing.base),
       child: Column(
@@ -1139,7 +1139,7 @@ class _Card extends StatelessWidget {
           Text(
             title,
             style: tt.labelMedium?.copyWith(
-              color: DonyColors.grey400,
+              color: DonyColors.neutral400,
               letterSpacing: 0.5,
             ),
           ),
@@ -1166,7 +1166,7 @@ class _InfoRow extends StatelessWidget {
           width: 120,
           child: Text(
             label,
-            style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+            style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
           ),
         ),
         Expanded(
@@ -1218,7 +1218,7 @@ class _ActionBar extends StatelessWidget {
           ),
           const SizedBox(width: DonySpacing.md),
           Expanded(
-            child: ElevatedButton.icon(
+            child: FilledButton.icon(
               onPressed: isLoading
                   ? null
                   : () => context
@@ -1233,7 +1233,7 @@ class _ActionBar extends StatelessWidget {
                     )
                   : const Icon(Icons.check_rounded),
               label: const Text('Accepter'),
-              style: ElevatedButton.styleFrom(
+              style: FilledButton.styleFrom(
                 backgroundColor: DonyColors.success,
                 foregroundColor: DonyColors.white,
                 elevation: 0,
@@ -1260,7 +1260,7 @@ class _ActionBar extends StatelessWidget {
           children: [
             Text(
               'Souhaitez-vous indiquer une raison à l\'expéditeur ?',
-              style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+              style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
             ),
             const SizedBox(height: DonySpacing.md),
             TextField(
@@ -1270,7 +1270,7 @@ class _ActionBar extends StatelessWidget {
                 hintText: 'Raison (optionnelle)',
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(DonyRadius.md)),
-                hintStyle: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                hintStyle: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
               ),
             ),
           ],
@@ -1279,9 +1279,9 @@ class _ActionBar extends StatelessWidget {
           TextButton(
             onPressed: () => ctx.pop(),
             child: Text('Annuler',
-                style: tt.bodyMedium?.copyWith(color: DonyColors.grey400)),
+                style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400)),
           ),
-          ElevatedButton(
+          FilledButton(
             onPressed: () {
               ctx.pop();
               context.read<BidBloc>().add(BidRejectRequested(bid.id,
@@ -1289,7 +1289,7 @@ class _ActionBar extends StatelessWidget {
                       ? null
                       : reasonCtrl.text.trim()));
             },
-            style: ElevatedButton.styleFrom(
+            style: FilledButton.styleFrom(
               backgroundColor: DonyColors.error,
               foregroundColor: DonyColors.white,
               elevation: 0,
@@ -1376,7 +1376,7 @@ class _EscrowBadge extends StatelessWidget {
         ),
       'REFUNDED' => (
           Icons.replay_rounded,
-          DonyColors.grey400,
+          DonyColors.neutral400,
           'Remboursé — $amount €',
         ),
       'FAILED' => (
@@ -1441,8 +1441,8 @@ class _SenderActionBar extends StatelessWidget {
             child: OutlinedButton(
               onPressed: () => _openOptions(context),
               style: OutlinedButton.styleFrom(
-                foregroundColor: DonyColors.grey400,
-                side: const BorderSide(color: DonyColors.grey200),
+                foregroundColor: DonyColors.neutral400,
+                side: const BorderSide(color: DonyColors.neutral200),
                 padding: EdgeInsets.zero,
                 minimumSize: Size.zero,
                 shape: RoundedRectangleBorder(
@@ -1458,7 +1458,7 @@ class _SenderActionBar extends StatelessWidget {
                   ? Container(
                       height: 52,
                       decoration: BoxDecoration(
-                        color: DonyColors.grey100,
+                        color: DonyColors.neutral100,
                         borderRadius: BorderRadius.circular(DonyRadius.lg),
                       ),
                       child: const Center(
@@ -1466,20 +1466,20 @@ class _SenderActionBar extends StatelessWidget {
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2, color: DonyColors.grey400),
+                              strokeWidth: 2, color: DonyColors.neutral400),
                         ),
                       ),
                     )
                   : existingPayment != null
                       ? _EscrowBadge(
                           payment: existingPayment!, bidStatus: bid.status)
-                      : ElevatedButton.icon(
+                      : FilledButton.icon(
                           onPressed: () =>
                               context.push('/payments/pay', extra: bid),
                           icon: const Icon(Icons.lock_rounded, size: 18),
                           label: const Text('Payer mon envoi'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: DonyColors.green400,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: DonyColors.primary,
                             foregroundColor: DonyColors.white,
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(
@@ -1533,7 +1533,7 @@ class _SenderOptionsSheet extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                  color: DonyColors.grey200,
+                  color: DonyColors.neutral200,
                   borderRadius: BorderRadius.circular(2)),
             ),
           ),
@@ -1553,8 +1553,8 @@ class _SenderOptionsSheet extends StatelessWidget {
           const SizedBox(height: DonySpacing.sm),
           _OptionTile(
             icon: Icons.chat_bubble_outline_rounded,
-            iconColor: DonyColors.green400,
-            iconBg: DonyColors.green100,
+            iconColor: DonyColors.primary,
+            iconBg: DonyColors.blue100,
             label: 'Contacter le voyageur',
             subtitle: 'Messagerie — bientôt disponible',
             disabled: true,
@@ -1634,7 +1634,7 @@ class _SenderOptionsSheet extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: DonyColors.grey200,
+                    color: DonyColors.neutral200,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -1643,7 +1643,7 @@ class _SenderOptionsSheet extends StatelessWidget {
               const SizedBox(height: DonySpacing.xs),
               Text(
                 'Votre signalement sera traité par l\'équipe Dony.',
-                style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
               ),
               const SizedBox(height: DonySpacing.base),
               ...reasons.map((r) => RadioListTile<String>(
@@ -1651,7 +1651,7 @@ class _SenderOptionsSheet extends StatelessWidget {
                     groupValue: selected,
                     onChanged: (v) => setSheetState(() => selected = v),
                     title: Text(r, style: tt.bodyMedium),
-                    activeColor: DonyColors.green400,
+                    activeColor: DonyColors.primary,
                     contentPadding: EdgeInsets.zero,
                     dense: true,
                   )),
@@ -1694,20 +1694,20 @@ class _SenderOptionsSheet extends StatelessWidget {
         title: Text('Annuler la demande', style: tt.headlineMedium),
         content: Text(
           'Voulez-vous vraiment annuler votre demande d\'envoi ? Cette action est définitive.',
-          style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+          style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
         ),
         actions: [
           TextButton(
             onPressed: () => ctx.pop(),
             child: Text('Non',
-                style: tt.bodyMedium?.copyWith(color: DonyColors.grey400)),
+                style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400)),
           ),
-          ElevatedButton(
+          FilledButton(
             onPressed: () {
               ctx.pop();
               context.read<BidBloc>().add(BidCancelRequested(bid.id));
             },
-            style: ElevatedButton.styleFrom(
+            style: FilledButton.styleFrom(
               backgroundColor: DonyColors.error,
               foregroundColor: DonyColors.white,
               elevation: 0,
@@ -1729,20 +1729,20 @@ class _SenderOptionsSheet extends StatelessWidget {
         title: Text('Supprimer cette demande', style: tt.headlineMedium),
         content: Text(
           'Cette demande sera définitivement supprimée de votre historique.',
-          style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+          style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
         ),
         actions: [
           TextButton(
             onPressed: () => ctx.pop(),
             child: Text('Annuler',
-                style: tt.bodyMedium?.copyWith(color: DonyColors.grey400)),
+                style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400)),
           ),
-          ElevatedButton(
+          FilledButton(
             onPressed: () {
               ctx.pop();
               context.read<BidBloc>().add(BidDeleteRequested(bid.id));
             },
-            style: ElevatedButton.styleFrom(
+            style: FilledButton.styleFrom(
               backgroundColor: DonyColors.error,
               foregroundColor: DonyColors.white,
               elevation: 0,
@@ -1792,20 +1792,20 @@ class _TravelerRejectedBar extends StatelessWidget {
         title: Text('Supprimer cette demande', style: tt.headlineMedium),
         content: Text(
           'Cette demande refusée sera retirée définitivement de votre liste.',
-          style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+          style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
         ),
         actions: [
           TextButton(
             onPressed: () => ctx.pop(),
             child: Text('Annuler',
-                style: tt.bodyMedium?.copyWith(color: DonyColors.grey400)),
+                style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400)),
           ),
-          ElevatedButton(
+          FilledButton(
             onPressed: () {
               ctx.pop();
               context.read<BidBloc>().add(BidTravelerDismissRequested(bid.id));
             },
-            style: ElevatedButton.styleFrom(
+            style: FilledButton.styleFrom(
               backgroundColor: DonyColors.error,
               foregroundColor: DonyColors.white,
               elevation: 0,
@@ -1832,7 +1832,7 @@ class _TrackingNumberCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: DonyColors.white,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.grey200),
+        border: Border.all(color: DonyColors.neutral200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1840,7 +1840,7 @@ class _TrackingNumberCard extends StatelessWidget {
           Text(
             'NUMÉRO DE SUIVI',
             style: tt.labelMedium?.copyWith(
-              color: DonyColors.grey400,
+              color: DonyColors.neutral400,
               letterSpacing: 0.8,
             ),
           ),
@@ -1850,11 +1850,11 @@ class _TrackingNumberCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(DonySpacing.sm),
                 decoration: BoxDecoration(
-                  color: DonyColors.green100,
+                  color: DonyColors.blue100,
                   borderRadius: BorderRadius.circular(DonyRadius.sm),
                 ),
                 child: const Icon(Icons.local_shipping_outlined,
-                    color: DonyColors.green400, size: 20),
+                    color: DonyColors.primary, size: 20),
               ),
               const SizedBox(width: DonySpacing.md),
               Expanded(
@@ -1868,7 +1868,7 @@ class _TrackingNumberCard extends StatelessWidget {
               ),
               IconButton(
                 icon: const Icon(Icons.copy_rounded,
-                    color: DonyColors.green400, size: 20),
+                    color: DonyColors.primary, size: 20),
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: trackingNumber));
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -1890,7 +1890,7 @@ class _TrackingNumberCard extends StatelessWidget {
           const SizedBox(height: DonySpacing.sm),
           Text(
             'Partagez ce numéro avec votre destinataire pour qu\'il puisse suivre le colis.',
-            style: tt.bodySmall?.copyWith(color: DonyColors.grey400, height: 1.4),
+            style: tt.bodySmall?.copyWith(color: DonyColors.neutral400, height: 1.4),
           ),
         ],
       ),
@@ -1918,20 +1918,20 @@ class _TimelineButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(DonySpacing.base),
         decoration: BoxDecoration(
-          color: DonyColors.green100,
+          color: DonyColors.blue100,
           borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: DonyColors.green400.withValues(alpha: 0.3)),
+          border: Border.all(color: DonyColors.primary.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(DonySpacing.sm),
               decoration: BoxDecoration(
-                color: DonyColors.green400.withValues(alpha: 0.12),
+                color: DonyColors.primary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(DonyRadius.sm),
               ),
               child: const Icon(Icons.timeline_rounded,
-                  color: DonyColors.green400, size: 20),
+                  color: DonyColors.primary, size: 20),
             ),
             const SizedBox(width: DonySpacing.md),
             Expanded(
@@ -1944,13 +1944,13 @@ class _TimelineButton extends StatelessWidget {
                   ),
                   Text(
                     'Consulter l\'historique des scans',
-                    style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                    style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
                   ),
                 ],
               ),
             ),
             const Icon(Icons.chevron_right_rounded,
-                color: DonyColors.green400, size: 20),
+                color: DonyColors.primary, size: 20),
           ],
         ),
       ),
@@ -1989,9 +1989,9 @@ class _OptionTile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(DonySpacing.md),
           decoration: BoxDecoration(
-            color: DonyColors.grey100,
+            color: DonyColors.neutral100,
             borderRadius: BorderRadius.circular(DonyRadius.lg),
-            border: Border.all(color: DonyColors.grey200),
+            border: Border.all(color: DonyColors.neutral200),
           ),
           child: Row(
             children: [
@@ -2013,14 +2013,14 @@ class _OptionTile extends StatelessWidget {
                     ),
                     Text(
                       subtitle,
-                      style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                      style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
                     ),
                   ],
                 ),
               ),
               if (!disabled)
                 const Icon(Icons.chevron_right_rounded,
-                    color: DonyColors.grey400, size: 18),
+                    color: DonyColors.neutral400, size: 18),
               if (disabled)
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -2028,12 +2028,12 @@ class _OptionTile extends StatelessWidget {
                     vertical: DonySpacing.xxs,
                   ),
                   decoration: BoxDecoration(
-                    color: DonyColors.grey200,
+                    color: DonyColors.neutral200,
                     borderRadius: BorderRadius.circular(DonyRadius.sm),
                   ),
                   child: Text(
                     'Bientôt',
-                    style: tt.labelSmall?.copyWith(color: DonyColors.grey400),
+                    style: tt.labelSmall?.copyWith(color: DonyColors.neutral400),
                   ),
                 ),
             ],
@@ -2066,7 +2066,7 @@ class _TrackingLinkCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: DonyColors.white,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.grey200),
+        border: Border.all(color: DonyColors.neutral200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2074,7 +2074,7 @@ class _TrackingLinkCard extends StatelessWidget {
           Text(
             'LIEN DE SUIVI',
             style: tt.labelMedium?.copyWith(
-              color: DonyColors.grey400,
+              color: DonyColors.neutral400,
               letterSpacing: 0.8,
             ),
           ),
@@ -2082,19 +2082,19 @@ class _TrackingLinkCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(DonySpacing.md),
             decoration: BoxDecoration(
-              color: DonyColors.grey100,
+              color: DonyColors.neutral100,
               borderRadius: BorderRadius.circular(DonyRadius.sm),
-              border: Border.all(color: DonyColors.grey200),
+              border: Border.all(color: DonyColors.neutral200),
             ),
             child: Row(
               children: [
                 const Icon(Icons.link_rounded,
-                    color: DonyColors.green400, size: 16),
+                    color: DonyColors.primary, size: 16),
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Text(
                     _trackingUrl,
-                    style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                    style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -2125,10 +2125,10 @@ class _TrackingLinkCard extends StatelessWidget {
                   icon: const Icon(Icons.copy_rounded, size: 16),
                   label: Text('Copier',
                       style:
-                          tt.titleSmall?.copyWith(color: DonyColors.green400)),
+                          tt.titleSmall?.copyWith(color: DonyColors.primary)),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: DonyColors.green400,
-                    side: const BorderSide(color: DonyColors.green400),
+                    foregroundColor: DonyColors.primary,
+                    side: const BorderSide(color: DonyColors.primary),
                     padding: const EdgeInsets.symmetric(
                         vertical: DonySpacing.md),
                     shape: RoundedRectangleBorder(
@@ -2138,7 +2138,7 @@ class _TrackingLinkCard extends StatelessWidget {
               ),
               const SizedBox(width: DonySpacing.sm),
               Expanded(
-                child: ElevatedButton.icon(
+                child: FilledButton.icon(
                   onPressed: () => Share.share(
                     'Suivez votre colis dony en temps réel :\n$_trackingUrl',
                     subject:
@@ -2148,8 +2148,8 @@ class _TrackingLinkCard extends StatelessWidget {
                   label: Text('Partager',
                       style:
                           tt.titleSmall?.copyWith(color: DonyColors.white)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: DonyColors.green400,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: DonyColors.primary,
                     foregroundColor: DonyColors.white,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(
@@ -2181,7 +2181,7 @@ class _ConfirmationCodeCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: DonyColors.white,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.grey200),
+        border: Border.all(color: DonyColors.neutral200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2189,7 +2189,7 @@ class _ConfirmationCodeCard extends StatelessWidget {
           Text(
             'CODE DE CONFIRMATION',
             style: tt.labelMedium?.copyWith(
-              color: DonyColors.grey400,
+              color: DonyColors.neutral400,
               letterSpacing: 0.8,
             ),
           ),
@@ -2198,14 +2198,14 @@ class _ConfirmationCodeCard extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: DonySpacing.lg),
             decoration: BoxDecoration(
-              color: DonyColors.green100,
+              color: DonyColors.blue100,
               borderRadius: BorderRadius.circular(DonyRadius.md),
             ),
             child: Text(
               code,
               textAlign: TextAlign.center,
               style: tt.displayLarge?.copyWith(
-                color: DonyColors.green600,
+                color: DonyColors.blue700,
                 letterSpacing: 12,
               ),
             ),
@@ -2229,18 +2229,18 @@ class _ConfirmationCodeCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
               decoration: BoxDecoration(
-                border: Border.all(color: DonyColors.green400),
+                border: Border.all(color: DonyColors.primary),
                 borderRadius: BorderRadius.circular(DonyRadius.md),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(Icons.copy_rounded,
-                      size: 16, color: DonyColors.green400),
+                      size: 16, color: DonyColors.primary),
                   const SizedBox(width: DonySpacing.sm),
                   Text(
                     'Copier le code',
-                    style: tt.titleSmall?.copyWith(color: DonyColors.green400),
+                    style: tt.titleSmall?.copyWith(color: DonyColors.primary),
                   ),
                 ],
               ),
@@ -2264,7 +2264,7 @@ class _ConfirmationCodeCard extends StatelessWidget {
                   child: Text(
                     'Transmettez ce code au destinataire par vos propres moyens (SMS, WhatsApp…). Le voyageur devra le saisir à la livraison.',
                     style: tt.bodySmall
-                        ?.copyWith(color: DonyColors.grey400, height: 1.4),
+                        ?.copyWith(color: DonyColors.neutral400, height: 1.4),
                   ),
                 ),
               ],

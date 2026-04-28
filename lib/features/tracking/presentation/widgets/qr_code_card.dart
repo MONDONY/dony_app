@@ -154,7 +154,7 @@ class _QrCodeContent extends StatelessWidget {
                 icon: Icons.download_rounded,
               ),
             ),
-            const SizedBox(width: DonySpacing.sm + 2),
+            const SizedBox(width: DonySpacing.md),
             Expanded(
               child: DonyButton(
                 label: 'Partager',

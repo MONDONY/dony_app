@@ -212,7 +212,7 @@ class _EscrowInfoBanner extends StatelessWidget {
       child: Row(
         children: [
           Icon(Icons.lock_rounded, color: cs.primary, size: 20),
-          const SizedBox(width: DonySpacing.sm + 2),
+          const SizedBox(width: DonySpacing.md),
           Expanded(
             child: Text(
               'Votre paiement est sécurisé — libéré uniquement après confirmation de livraison par le destinataire.',
@@ -248,7 +248,7 @@ class _ErrorBanner extends StatelessWidget {
       child: Row(
         children: [
           Icon(Icons.error_outline_rounded, color: cs.error, size: 20),
-          const SizedBox(width: DonySpacing.sm + 2),
+          const SizedBox(width: DonySpacing.md),
           Expanded(
             child: Text(
               message,

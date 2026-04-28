@@ -231,7 +231,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                                 helperStyle: Theme.of(context)
                                     .textTheme
                                     .bodySmall
-                                    ?.copyWith(color: DonyColors.grey400),
+                                    ?.copyWith(color: DonyColors.neutral400),
                                 contentPadding: const EdgeInsets.symmetric(
                                   horizontal: DonySpacing.base,
                                   vertical: DonySpacing.md,
@@ -317,13 +317,13 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
           Text("Demande d'envoi", style: tt.headlineLarge),
           Text(
             'Avec $travelerName · $depDate',
-            style: tt.bodyMedium?.copyWith(color: DonyColors.grey400),
+            style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400),
           ),
         ],
       ),
       bottom: const PreferredSize(
         preferredSize: Size.fromHeight(1),
-        child: Divider(height: 1, color: DonyColors.grey200),
+        child: Divider(height: 1, color: DonyColors.neutral200),
       ),
     );
   }
@@ -343,7 +343,7 @@ class _SectionLabel extends StatelessWidget {
       style: Theme.of(context)
           .textTheme
           .labelMedium
-          ?.copyWith(color: DonyColors.grey400),
+          ?.copyWith(color: DonyColors.neutral400),
     );
   }
 }
@@ -381,13 +381,13 @@ class _WeightSection extends StatelessWidget {
               child: Text(
                 'kg',
                 style: tt.headlineMedium
-                    ?.copyWith(color: DonyColors.grey400),
+                    ?.copyWith(color: DonyColors.neutral400),
               ),
             ),
             const Spacer(),
             Text(
               'max ${maxKg.toStringAsFixed(0)} kg',
-              style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+              style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
             ),
           ],
         ),
@@ -395,10 +395,10 @@ class _WeightSection extends StatelessWidget {
         // Slider
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
-            activeTrackColor: DonyColors.green400,
-            inactiveTrackColor: DonyColors.grey200,
-            thumbColor: DonyColors.green400,
-            overlayColor: DonyColors.green400.withValues(alpha: 0.1),
+            activeTrackColor: DonyColors.primary,
+            inactiveTrackColor: DonyColors.neutral200,
+            thumbColor: DonyColors.primary,
+            overlayColor: DonyColors.primary.withValues(alpha: 0.1),
             trackHeight: 4,
             thumbShape: const RoundSliderThumbShape(
               enabledThumbRadius: 10,
@@ -418,11 +418,11 @@ class _WeightSection extends StatelessWidget {
           children: [
             Text(
               '1 kg',
-              style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+              style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
             ),
             Text(
               '${maxKg.toStringAsFixed(0)} kg',
-              style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+              style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
             ),
           ],
         ),
@@ -459,7 +459,7 @@ class _CategoryChip extends StatelessWidget {
           color: selected ? DonyColors.ink900 : DonyColors.white,
           borderRadius: BorderRadius.circular(DonyRadius.full),
           border: Border.all(
-            color: selected ? DonyColors.ink900 : DonyColors.grey200,
+            color: selected ? DonyColors.ink900 : DonyColors.neutral200,
           ),
         ),
         child: Row(
@@ -606,7 +606,7 @@ class _BottomBar extends StatelessWidget {
       ),
       decoration: const BoxDecoration(
         color: DonyColors.white,
-        border: Border(top: BorderSide(color: DonyColors.grey200)),
+        border: Border(top: BorderSide(color: DonyColors.neutral200)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -633,7 +633,7 @@ class _BottomBar extends StatelessWidget {
               Text(
                 'Frais de service',
                 style: tt.bodyMedium
-                    ?.copyWith(color: DonyColors.grey400),
+                    ?.copyWith(color: DonyColors.neutral400),
               ),
               Text(
                 fmt.format(serviceFee),
@@ -642,7 +642,7 @@ class _BottomBar extends StatelessWidget {
             ],
           ),
           const SizedBox(height: DonySpacing.sm),
-          const Divider(color: DonyColors.grey200),
+          const Divider(color: DonyColors.neutral200),
           const SizedBox(height: DonySpacing.sm),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -651,7 +651,7 @@ class _BottomBar extends StatelessWidget {
               Text(
                 fmt.format(totalPrice),
                 style: tt.titleLarge
-                    ?.copyWith(color: DonyColors.green400),
+                    ?.copyWith(color: DonyColors.primary),
               ),
             ],
           ),
@@ -707,13 +707,13 @@ class _DisclaimerPageState extends State<_DisclaimerPage> {
         centerTitle: false,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_rounded,
-              size: 20, color: DonyColors.green400),
+              size: 20, color: DonyColors.primary),
           onPressed: widget.onDecline,
           tooltip: 'Retour',
         ),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: DonyColors.grey200),
+          child: Divider(height: 1, color: DonyColors.neutral200),
         ),
       ),
       body: Column(
@@ -796,7 +796,7 @@ class _DisclaimerPageState extends State<_DisclaimerPage> {
               ),
               decoration: const BoxDecoration(
                 color: DonyColors.white,
-                border: Border(top: BorderSide(color: DonyColors.grey200)),
+                border: Border(top: BorderSide(color: DonyColors.neutral200)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -808,7 +808,7 @@ class _DisclaimerPageState extends State<_DisclaimerPage> {
                         Checkbox(
                           value: checked,
                           onChanged: (v) => _checkedNotifier.value = v ?? false,
-                          activeColor: DonyColors.green400,
+                          activeColor: DonyColors.primary,
                           materialTapTargetSize:
                               MaterialTapTargetSize.shrinkWrap,
                         ),
@@ -876,7 +876,7 @@ class _LegalSection extends StatelessWidget {
                   Text(
                     '• ',
                     style: tt.bodySmall?.copyWith(
-                      color: DonyColors.green400,
+                      color: DonyColors.primary,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -884,7 +884,7 @@ class _LegalSection extends StatelessWidget {
                     child: Text(
                       item,
                       style: tt.bodySmall?.copyWith(
-                        color: DonyColors.grey400,
+                        color: DonyColors.neutral400,
                         height: 1.5,
                       ),
                     ),

@@ -12,25 +12,35 @@ import 'package:dony/core/design/design_system.dart';
 
 ### Couleurs — `DonyColors`
 
+**Rôles sémantiques (à préférer dans tous les widgets) :**
+
 | Token | Valeur | Usage |
 |-------|--------|-------|
-| `DonyColors.green400` | `#1A6B3C` | Primary ★ — CTA, liens, actifs |
-| `DonyColors.green300` | `#4CAF7D` | Primary dark mode / accent secondaire |
-| `DonyColors.green50`  | `#E8F5EE` | Fond chips/badges actifs |
-| `DonyColors.green600` | `#0E3D23` | Gradients, headers sombres |
-| `DonyColors.terra500` | `#D96A3A` | Accent ★ — accents chauds, highlights |
-| `DonyColors.terra300` | `#EA9468` | Accent dark mode |
-| `DonyColors.terra50`  | `#FCF0E9` | Fond accent |
-| `DonyColors.bg`       | `#F4F5F0` | Surface light / fond d'écran |
-| `DonyColors.white`    | `#FFFFFF` | Cards, champs, appbar |
-| `DonyColors.ink900`   | `#0D1B2A` | Texte primaire (titres, corps) |
-| `DonyColors.grey400`  | `#6B7A8D` | Texte secondaire (labels, sous-titres) |
-| `DonyColors.grey300`  | `#D2CDC2` | Texte hint / placeholders |
-| `DonyColors.grey200`  | `#E9ECEF` | Bordures cards et inputs |
-| `DonyColors.success`  | `#16A34A` | Confirmations |
-| `DonyColors.warning`  | `#F59E0B` | Avertissements |
-| `DonyColors.error`    | `#E53935` | Erreurs light mode |
-| `DonyColors.shadow`   | `#1A0D1B2A` | Ombre cards (ink900 @ 10%) |
+| `DonyColors.primary`       | `#0B5FFF` (blue500) | CTA, liens, focus, actifs ★ |
+| `DonyColors.primaryHover`  | `#0A4DD9` (blue600) | Hover sur primary |
+| `DonyColors.primaryPress`  | `#083CAB` (blue700) | Pressed/active |
+| `DonyColors.primarySoft`   | `#EDF2FF` (blue50)  | Fond chips/badges actifs |
+| `DonyColors.accent`        | `#D96A3A` (terra500) | Accent ★ — highlights chauds |
+| `DonyColors.accentSoft`    | `#FCF0E9` (terra50) | Fond accent |
+| `DonyColors.bgApp`         | `#FAFAF8` (neutral50) | Fond d'écran ★ |
+| `DonyColors.surface`       | `#FFFFFF` | Cards, champs, AppBar |
+| `DonyColors.surfaceWarm`   | `#F7F3ED` (sand100) | Sections communautaires |
+| `DonyColors.textPrimary`   | `#0A2540` (ink800)  | Texte principal ★ |
+| `DonyColors.textMuted`     | `#54504A` (neutral600) | Labels, sous-titres |
+| `DonyColors.textSubtle`    | `#797367` (neutral500) | Hint, placeholders |
+| `DonyColors.textOnBrand`   | `#FFFFFF` | Texte blanc sur fond bleu |
+| `DonyColors.borderDefault` | `#E8E5DF` (neutral200) | Bordures cards/inputs |
+| `DonyColors.borderFocus`   | `#0B5FFF` (blue500) | Bordure focus input |
+| `DonyColors.success`       | `#0E8A5F` | Confirmations |
+| `DonyColors.warning`       | `#E8A23B` | Avertissements |
+| `DonyColors.error`         | `#D9342B` | Erreurs |
+| `DonyColors.shadow`        | `#1A0A2540` | Ombre cards (ink800 @ 10%) |
+
+**Palettes primitives (pour const contexts et dégradés) :**
+`DonyColors.blue{50-900}`, `DonyColors.terra{50-900}`, `DonyColors.neutral{0-900}`, `DonyColors.sand{50-500}`, `DonyColors.ink{50-900}`
+
+**Aliases legacy** (deprecated, seront supprimés en Phase 5) :
+`green400 → blue500`, `grey200 → neutral200`, `bg → neutral50`, `white → neutral0`
 
 ### Espacement — `DonySpacing`
 
@@ -66,14 +76,14 @@ Dans tout widget avec `BuildContext`, utiliser le ColorScheme pour les couleurs 
 ```dart
 final cs = Theme.of(context).colorScheme;
 
-cs.primary          // vert #1A6B3C (light) / #4CAF7D (dark)
-cs.onPrimary        // texte sur primary
-cs.secondary        // terracotta #D96A3A (light) / #E8956A (dark)
-cs.surface          // fond page
-cs.onSurface        // texte principal
-cs.onSurfaceVariant // texte secondaire
-cs.outline          // bordures
-cs.error            // rouge erreur
+cs.primary          // bleu #0B5FFF
+cs.onPrimary        // texte sur primary (blanc)
+cs.secondary        // terracotta #D96A3A
+cs.surface          // fond card/page (blanc)
+cs.onSurface        // texte principal (ink800)
+cs.onSurfaceVariant // texte secondaire (neutral600)
+cs.outline          // bordures (neutral200)
+cs.error            // rouge erreur #D9342B
 ```
 
 Pour les couleurs de statut (non Material) :

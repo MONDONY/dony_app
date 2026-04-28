@@ -164,7 +164,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                     children: [
                       if (a.departureTime != null) ...[
                         Icon(Icons.flight_takeoff_rounded, color: cs.onPrimary.withValues(alpha: 0.6), size: 13),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: DonySpacing.xs),
                         Text(
                           a.departureTime!,
                           style: tt.bodySmall?.copyWith(
@@ -183,7 +183,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                         ),
                       if (a.arrivalTime != null) ...[
                         Icon(Icons.flight_land_rounded, color: cs.onPrimary.withValues(alpha: 0.6), size: 13),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: DonySpacing.xs),
                         Text(
                           a.arrivalTime!,
                           style: tt.bodySmall?.copyWith(

@@ -308,7 +308,7 @@ class _DateTimeTile extends StatelessWidget {
                     label,
                     style: tt.labelSmall?.copyWith(color: cs.outline),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: DonySpacing.xxs),
                   Text(
                     value != null
                         ? DateFormat('EEEE d MMMM yyyy à HH:mm', 'fr').format(value!)

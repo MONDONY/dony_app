@@ -13,7 +13,13 @@ class KycWebViewScreen extends StatefulWidget {
 
 class _KycWebViewScreenState extends State<KycWebViewScreen> {
   late final WebViewController _controller;
-  bool _isLoading = true;
+  final _isLoading = ValueNotifier<bool>(true);
+
+  @override
+  void dispose() {
+    _isLoading.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -22,11 +28,11 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
         NavigationDelegate(
-          onPageStarted: (_) => setState(() => _isLoading = true),
-          onPageFinished: (_) => setState(() => _isLoading = false),
+          onPageStarted: (_) => _isLoading.value = true,
+          onPageFinished: (_) => _isLoading.value = false,
           onWebResourceError: (error) {
             if (mounted) {
-              setState(() => _isLoading = false);
+              _isLoading.value = false;
               DonySnackbar.show(
                 context,
                 message: 'Impossible de charger la page de vérification',
@@ -67,10 +73,12 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
       body: Stack(
         children: [
           WebViewWidget(controller: _controller),
-          if (_isLoading)
-            Center(
-              child: CircularProgressIndicator(color: cs.primary),
-            ),
+          ValueListenableBuilder<bool>(
+            valueListenable: _isLoading,
+            builder: (_, loading, __) => loading
+                ? Center(child: CircularProgressIndicator(color: cs.primary))
+                : const SizedBox.shrink(),
+          ),
         ],
       ),
     );

@@ -158,7 +158,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                               textAlign: TextAlign.center,
                             ).animate().fadeIn(delay: 80.ms),
-                            const SizedBox(height: DonySpacing.sm + 2),
+                            const SizedBox(height: DonySpacing.md),
 
                             // ── Badges ──────────────────────────────────
                             Row(
@@ -431,10 +431,10 @@ class _ProfileCompletionBanner extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(7),
+                  padding: const EdgeInsets.all(DonySpacing.sm),
                   decoration: BoxDecoration(
                     color: DonyColors.warning.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(DonyRadius.sm + 2),
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
                   ),
                   child: const Icon(Icons.edit_note_rounded,
                       color: DonyColors.warning, size: 18),
@@ -476,9 +476,9 @@ class _ProfileCompletionBanner extends StatelessWidget {
               ),
             ),
             if (missing.isNotEmpty) ...[
-              const SizedBox(height: DonySpacing.sm + 2),
+              const SizedBox(height: DonySpacing.md),
               Wrap(
-                spacing: DonySpacing.sm - 2,
+                spacing: DonySpacing.xs,
                 runSpacing: DonySpacing.xs,
                 children: missing.map((m) => _MissingChip(label: m, tt: tt)).toList(),
               ),
@@ -500,18 +500,18 @@ class _MissingChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: DonySpacing.sm,
-        vertical: DonySpacing.xxs + 1,
+        vertical: DonySpacing.xs,
       ),
       decoration: BoxDecoration(
         color: DonyColors.warning.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(DonyRadius.sm - 2),
+        borderRadius: BorderRadius.circular(DonyRadius.sm),
         border: Border.all(color: DonyColors.warning.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(Icons.add_rounded, color: DonyColors.warning, size: 12),
-          const SizedBox(width: DonySpacing.xxs + 1),
+          const SizedBox(width: DonySpacing.xs),
           Text(
             label,
             style: tt.labelSmall?.copyWith(
@@ -636,8 +636,8 @@ class _Badge extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.sm + 2,
-        vertical: DonySpacing.xs + 1,
+        horizontal: DonySpacing.md,
+        vertical: DonySpacing.xs,
       ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
@@ -648,7 +648,7 @@ class _Badge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: color, size: 13),
-          const SizedBox(width: DonySpacing.xs + 1),
+          const SizedBox(width: DonySpacing.xs),
           Text(
             label,
             style: tt.labelSmall?.copyWith(

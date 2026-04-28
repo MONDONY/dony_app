@@ -121,7 +121,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               children: [
                 // Info banner
                 Container(
-                  padding: const EdgeInsets.all(DonySpacing.base - 2),
+                  padding: const EdgeInsets.all(DonySpacing.md),
                   decoration: BoxDecoration(
                     color: cs.primaryContainer,
                     borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -132,7 +132,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     children: [
                       Icon(Icons.info_outline_rounded,
                           color: cs.primary, size: 18),
-                      const SizedBox(width: DonySpacing.sm + 2),
+                      const SizedBox(width: DonySpacing.md),
                       Expanded(
                         child: Text(
                           'Ces informations inspirent confiance aux autres membres de la communauté.',

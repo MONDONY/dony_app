@@ -99,7 +99,7 @@ class _InboxScreenState extends State<InboxScreen>
                     children: [
                       const Text('Notifications'),
                       if (unread > 0) ...[
-                        const SizedBox(width: DonySpacing.sm - 2),
+                        const SizedBox(width: DonySpacing.xs),
                         _UnreadBadge(count: unread, cs: cs, tt: tt),
                       ],
                     ],
@@ -271,7 +271,7 @@ class _NotificationTile extends StatelessWidget {
             : cs.primaryContainer.withValues(alpha: 0.5),
         padding: const EdgeInsets.symmetric(
           horizontal: DonySpacing.lg,
-          vertical: DonySpacing.base - 2,
+          vertical: DonySpacing.md,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,7 +299,7 @@ class _NotificationTile extends StatelessWidget {
                         Container(
                           width: 8,
                           height: 8,
-                          margin: const EdgeInsets.only(left: DonySpacing.sm - 2),
+                          margin: const EdgeInsets.only(left: DonySpacing.xs),
                           decoration: BoxDecoration(
                             color: cs.primary,
                             shape: BoxShape.circle,
@@ -307,7 +307,7 @@ class _NotificationTile extends StatelessWidget {
                         ),
                     ],
                   ),
-                  const SizedBox(height: DonySpacing.xxs + 1),
+                  const SizedBox(height: DonySpacing.xs),
                   Text(
                     notification.body,
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
@@ -396,7 +396,7 @@ class _UnreadBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.sm - 2,
+        horizontal: DonySpacing.xs,
         vertical: DonySpacing.xxs,
       ),
       decoration: BoxDecoration(

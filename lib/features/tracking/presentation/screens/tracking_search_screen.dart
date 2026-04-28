@@ -198,7 +198,7 @@ class _TrackingResultCard extends StatelessWidget {
             padding: const EdgeInsets.all(DonySpacing.lg),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF0F4C75), Color(0xFF3282B8)],
+                colors: [DonyColors.blue900, DonyColors.blue600],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -213,7 +213,7 @@ class _TrackingResultCard extends StatelessWidget {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.sm + 2,
+                        horizontal: DonySpacing.md,
                         vertical: DonySpacing.xs,
                       ),
                       decoration: BoxDecoration(
@@ -392,7 +392,7 @@ class _StepTimeline extends StatelessWidget {
                     : null,
               ),
             ),
-            const SizedBox(height: DonySpacing.xs + 2),
+            const SizedBox(height: DonySpacing.sm),
             Text(
               _steps[stepIdx].$2,
               style: tt.labelSmall?.copyWith(
