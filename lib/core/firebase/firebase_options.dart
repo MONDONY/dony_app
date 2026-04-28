@@ -1,8 +1,10 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
-import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform;
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
+    if (kIsWeb) return web;
     return switch (defaultTargetPlatform) {
       TargetPlatform.android => android,
       TargetPlatform.iOS => ios,
@@ -11,6 +13,15 @@ class DefaultFirebaseOptions {
         ),
     };
   }
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyCqLzqpzH_MKjsplBie4Xdi0xSsTWtNB-k',
+    appId: '1:449263493159:web:5f905b06af4f322f086e02',
+    messagingSenderId: '449263493159',
+    projectId: 'dony-36cb2',
+    authDomain: 'dony-36cb2.firebaseapp.com',
+    storageBucket: 'dony-36cb2.firebasestorage.app',
+  );
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyCqLzqpzH_MKjsplBie4Xdi0xSsTWtNB-k',
