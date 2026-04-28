@@ -1,9 +1,8 @@
-import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class PayoutOnboardingScreen extends StatelessWidget {
@@ -42,43 +41,42 @@ class _OnboardingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final isLoading = state is PaymentLoading;
     final isPending = state is PaymentOnboardingPending;
     final error = state is PaymentError ? (state as PaymentError).message : null;
 
     return Scaffold(
-      backgroundColor: DonyColors.grey50,
-      appBar: AppBar(
-        title: Text(
-          'Recevoir mes paiements',
-          style: GoogleFonts.sora(
-              fontWeight: FontWeight.w700, fontSize: 18),
-        ),
-        backgroundColor: DonyColors.white,
-        elevation: 0,
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1),
-        ),
-      ),
+      appBar: const DonyAppBar(title: 'Recevoir mes paiements'),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 32, 20, 40),
+        padding: const EdgeInsets.fromLTRB(
+          DonySpacing.lg, DonySpacing.xxl, DonySpacing.lg, DonySpacing.huge,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _HeroSection(),
-            const SizedBox(height: 32),
+            const SizedBox(height: DonySpacing.xxl),
             _BenefitsSection(),
-            const SizedBox(height: 32),
+            const SizedBox(height: DonySpacing.xxl),
             if (isPending) ...[
               _PendingBanner(),
-              const SizedBox(height: 24),
+              const SizedBox(height: DonySpacing.xl),
             ],
             if (error != null) ...[
-              _ErrorBanner(message: error),
-              const SizedBox(height: 24),
+              _ErrorBanner(message: error, cs: cs),
+              const SizedBox(height: DonySpacing.xl),
             ],
-            _ConnectButton(isLoading: isLoading),
+            DonyButton(
+              label: 'Connecter mon compte bancaire',
+              onPressed: isLoading
+                  ? null
+                  : () => context
+                      .read<PaymentBloc>()
+                      .add(const PaymentConnectAccountRequested()),
+              isLoading: isLoading,
+              icon: Icons.account_balance_rounded,
+            ),
           ],
         )
             .animate()
@@ -92,6 +90,9 @@ class _OnboardingView extends StatelessWidget {
 class _HeroSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -99,28 +100,24 @@ class _HeroSection extends StatelessWidget {
           width: 64,
           height: 64,
           decoration: BoxDecoration(
-            color: DonyColors.green100,
-            borderRadius: BorderRadius.circular(18),
+            color: cs.primaryContainer,
+            borderRadius: BorderRadius.circular(DonyRadius.card + 2),
           ),
-          child: const Icon(Icons.account_balance_wallet_rounded,
-              color: DonyColors.green400, size: 32),
+          child: Icon(Icons.account_balance_wallet_rounded,
+              color: cs.primary, size: 32),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: DonySpacing.lg),
         Text(
           'Connectez votre\ncompte bancaire',
-          style: GoogleFonts.sora(
-            fontSize: 28,
-            fontWeight: FontWeight.w800,
-            color: DonyColors.ink900,
-            letterSpacing: -0.5,
-            height: 1.2,
-          ),
+          style: tt.displayLarge?.copyWith(height: 1.2),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: DonySpacing.md),
         Text(
           'Recevez automatiquement votre paiement dans les 24h après chaque livraison confirmée.',
-          style: GoogleFonts.sora(
-              fontSize: 15, color: DonyColors.grey400, height: 1.5),
+          style: tt.bodyLarge?.copyWith(
+            color: cs.onSurfaceVariant,
+            height: 1.5,
+          ),
         ),
       ],
     );
@@ -130,6 +127,9 @@ class _HeroSection extends StatelessWidget {
 class _BenefitsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
     const items = [
       (Icons.lock_rounded, 'Paiement sécurisé',
           'L\'argent est retenu en escrow jusqu\'à confirmation de livraison.'),
@@ -139,12 +139,8 @@ class _BenefitsSection extends StatelessWidget {
           'La vérification d\'identité et la conformité sont gérées par Stripe.'),
     ];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: DonyColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: DonyColors.grey100),
-      ),
+    return DonyCard(
+      padding: EdgeInsets.zero,
       child: Column(
         children: items.indexed.map((entry) {
           final (i, item) = entry;
@@ -152,17 +148,17 @@ class _BenefitsSection extends StatelessWidget {
           return Column(
             children: [
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(DonySpacing.base),
                 child: Row(
                   children: [
                     Container(
-                      width: 40,
-                      height: 40,
+                      width: DonySpacing.icon,
+                      height: DonySpacing.icon,
                       decoration: BoxDecoration(
-                        color: DonyColors.green100,
-                        borderRadius: BorderRadius.circular(12),
+                        color: cs.primaryContainer,
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
                       ),
-                      child: Icon(icon, color: DonyColors.green400, size: 20),
+                      child: Icon(icon, color: cs.primary, size: 20),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -170,16 +166,13 @@ class _BenefitsSection extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(title,
-                              style: GoogleFonts.sora(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                  color: DonyColors.ink900)),
+                              style: tt.titleMedium),
                           const SizedBox(height: 2),
                           Text(subtitle,
-                              style: GoogleFonts.sora(
-                                  fontSize: 12,
-                                  color: DonyColors.grey400,
-                                  height: 1.4)),
+                              style: tt.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                                height: 1.4,
+                              )),
                         ],
                       ),
                     ),
@@ -196,67 +189,30 @@ class _BenefitsSection extends StatelessWidget {
   }
 }
 
-class _ConnectButton extends StatelessWidget {
-  final bool isLoading;
-  const _ConnectButton({required this.isLoading});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 54,
-      child: ElevatedButton(
-        onPressed: isLoading
-            ? null
-            : () => context
-                .read<PaymentBloc>()
-                .add(const PaymentConnectAccountRequested()),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: DonyColors.green400,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14)),
-        ),
-        child: isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: Colors.white),
-              )
-            : Text(
-                'Connecter mon compte bancaire',
-                style: GoogleFonts.sora(
-                    fontWeight: FontWeight.w700, fontSize: 16),
-              ),
-      ),
-    );
-  }
-}
-
 class _PendingBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(DonySpacing.md),
       decoration: BoxDecoration(
-        color: const Color(0xFFFEF3C7),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.4)),
+        color: DonyColors.amberLight,
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        border: Border.all(color: DonyColors.warning.withValues(alpha: 0.4)),
       ),
       child: Row(
         children: [
           const Icon(Icons.schedule_rounded,
-              color: Color(0xFFB45309), size: 20),
-          const SizedBox(width: 10),
+              color: DonyColors.amberDark, size: 20),
+          const SizedBox(width: DonySpacing.sm + 2),
           Expanded(
             child: Text(
               'Vérification en cours — Stripe finalise votre compte. Revenez dans quelques minutes.',
-              style: GoogleFonts.sora(
-                  fontSize: 13,
-                  color: const Color(0xFFB45309),
-                  fontWeight: FontWeight.w500),
+              style: tt.bodySmall?.copyWith(
+                color: DonyColors.amberDark,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -267,26 +223,31 @@ class _PendingBanner extends StatelessWidget {
 
 class _ErrorBanner extends StatelessWidget {
   final String message;
-  const _ErrorBanner({required this.message});
+  final ColorScheme cs;
+  const _ErrorBanner({required this.message, required this.cs});
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(DonySpacing.md),
       decoration: BoxDecoration(
-        color: DonyColors.error.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: DonyColors.error.withValues(alpha: 0.3)),
+        color: cs.errorContainer,
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        border: Border.all(color: cs.error.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline_rounded, color: DonyColors.error, size: 20),
-          const SizedBox(width: 10),
+          Icon(Icons.error_outline_rounded, color: cs.error, size: 20),
+          const SizedBox(width: DonySpacing.sm + 2),
           Expanded(
             child: Text(
               message,
-              style: GoogleFonts.sora(
-                  fontSize: 13, color: DonyColors.error, fontWeight: FontWeight.w500),
+              style: tt.bodySmall?.copyWith(
+                color: cs.error,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -302,20 +263,14 @@ class _SuccessView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: DonyColors.grey50,
-      appBar: AppBar(
-        title: Text('Recevoir mes paiements',
-            style: GoogleFonts.sora(
-                fontWeight: FontWeight.w700, fontSize: 18)),
-        backgroundColor: DonyColors.white,
-        elevation: 0,
-        bottom: const PreferredSize(
-            preferredSize: Size.fromHeight(1), child: Divider(height: 1)),
-      ),
+      appBar: const DonyAppBar(title: 'Recevoir mes paiements'),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: const EdgeInsets.all(DonySpacing.xxl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -323,27 +278,25 @@ class _SuccessView extends StatelessWidget {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: DonyColors.success.withValues(alpha: 0.1),
+                  color: cs.success.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.check_circle_rounded,
-                    color: DonyColors.success, size: 44),
+                child: Icon(Icons.check_circle_rounded,
+                    color: cs.success, size: 44),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: DonySpacing.xl),
               Text(
                 'Paiements activés ✓',
-                style: GoogleFonts.sora(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: DonyColors.ink900,
-                ),
+                style: tt.displayLarge,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: DonySpacing.md),
               Text(
                 'Votre compte bancaire est connecté. Vous recevrez vos paiements automatiquement après chaque livraison.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.sora(
-                    fontSize: 15, color: DonyColors.grey400, height: 1.5),
+                style: tt.bodyLarge?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  height: 1.5,
+                ),
               ),
             ],
           )
@@ -399,14 +352,16 @@ class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: DonyColors.white,
+        backgroundColor: cs.surface,
         elevation: 0,
         title: Text(
           'Configuration du compte',
-          style: GoogleFonts.sora(
-              fontWeight: FontWeight.w600, fontSize: 17),
+          style: tt.headlineMedium,
         ),
         leading: IconButton(
           icon: const Icon(Icons.close_rounded),
@@ -422,8 +377,8 @@ class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
         children: [
           WebViewWidget(controller: _controller),
           if (_isLoading)
-            const Center(
-              child: CircularProgressIndicator(color: DonyColors.green400),
+            Center(
+              child: CircularProgressIndicator(color: cs.primary),
             ),
         ],
       ),

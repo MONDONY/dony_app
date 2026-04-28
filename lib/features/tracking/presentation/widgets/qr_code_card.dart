@@ -2,16 +2,15 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/qr_code_model.dart';
-import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gal/gal.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -33,45 +32,41 @@ class _QrCodeCardState extends State<QrCodeCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: DonyColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: DonyColors.grey100),
-      ),
-      padding: const EdgeInsets.all(16),
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return DonyCard(
+      padding: const EdgeInsets.all(DonySpacing.base),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'QR Code de suivi',
-            style: GoogleFonts.sora(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: DonyColors.grey400,
-                letterSpacing: 0.5),
+            style: tt.labelLarge?.copyWith(
+              color: cs.onSurfaceVariant,
+              letterSpacing: 0.5,
+            ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: DonySpacing.md),
           BlocBuilder<TrackingBloc, TrackingState>(
             builder: (context, state) {
               if (state is TrackingQrLoading) {
-                return const Center(
+                return Center(
                   child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 40),
-                    child: CircularProgressIndicator(color: DonyColors.green400),
+                    padding: const EdgeInsets.symmetric(vertical: 40),
+                    child: CircularProgressIndicator(color: cs.primary),
                   ),
                 );
               }
               if (state is TrackingQrError) {
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: DonySpacing.base),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline_rounded, color: DonyColors.error, size: 18),
-                      const SizedBox(width: 8),
+                      Icon(Icons.error_outline_rounded, color: cs.error, size: 18),
+                      const SizedBox(width: DonySpacing.sm),
                       Text(state.message,
-                          style: GoogleFonts.sora(
-                              fontSize: 13, color: DonyColors.error)),
+                          style: tt.bodySmall?.copyWith(color: cs.error)),
                     ],
                   ),
                 );
@@ -98,6 +93,8 @@ class _QrCodeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     final Uint8List imageBytes = base64Decode(qrCode.qrCodeBase64);
 
     return Column(
@@ -105,11 +102,11 @@ class _QrCodeContent extends StatelessWidget {
         // QR Image
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: DonyColors.grey100),
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+            border: Border.all(color: cs.outline),
           ),
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(DonySpacing.md),
           child: Image.memory(
             imageBytes,
             width: double.infinity,
@@ -118,74 +115,52 @@ class _QrCodeContent extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: DonySpacing.md),
 
         // Instruction
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(DonySpacing.md),
           decoration: BoxDecoration(
-            color: DonyColors.green100,
-            borderRadius: BorderRadius.circular(10),
+            color: cs.primaryContainer,
+            borderRadius: BorderRadius.circular(DonyRadius.sm + 2),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.info_outline_rounded,
-                  color: DonyColors.green400, size: 16),
-              const SizedBox(width: 8),
+              Icon(Icons.info_outline_rounded,
+                  color: cs.primary, size: 16),
+              const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: Text(
                   'Montrez ce QR code au voyageur lors de la remise du colis. Il le scannera pour valider la prise en charge.',
-                  style: GoogleFonts.sora(
-                      fontSize: 12,
-                      color: DonyColors.green600,
-                      fontWeight: FontWeight.w500),
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ],
           ),
         ),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: DonySpacing.md),
 
         Row(
           children: [
-            // Enregistrer dans la galerie — reste dans l'app
             Expanded(
-              child: ElevatedButton.icon(
+              child: DonyButton(
+                label: 'Enregistrer',
                 onPressed: () => _saveToGallery(context, imageBytes),
-                icon: const Icon(Icons.download_rounded, size: 16),
-                label: Text(
-                  'Enregistrer',
-                  style: GoogleFonts.sora(fontWeight: FontWeight.w600),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: DonyColors.green400,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
+                icon: Icons.download_rounded,
               ),
             ),
-            const SizedBox(width: 10),
-            // Partager — quitte l'app vers WhatsApp etc.
+            const SizedBox(width: DonySpacing.sm + 2),
             Expanded(
-              child: OutlinedButton.icon(
+              child: DonyButton(
+                label: 'Partager',
                 onPressed: () => _shareQrCode(context, imageBytes),
-                icon: const Icon(Icons.share_rounded, size: 16),
-                label: Text(
-                  'Partager',
-                  style: GoogleFonts.sora(fontWeight: FontWeight.w600),
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: DonyColors.green400,
-                  side: const BorderSide(color: DonyColors.green400),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
+                variant: DonyButtonVariant.secondary,
+                icon: Icons.share_rounded,
               ),
             ),
           ],
@@ -198,26 +173,18 @@ class _QrCodeContent extends StatelessWidget {
     try {
       await Gal.putImageBytes(imageBytes, name: 'qr_dony.png');
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('QR code enregistré dans votre galerie',
-                style: GoogleFonts.sora(fontWeight: FontWeight.w500)),
-            backgroundColor: DonyColors.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
+        DonySnackbar.show(
+          context,
+          message: 'QR code enregistré dans votre galerie',
+          type: DonySnackbarType.success,
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Impossible d\'enregistrer : $e',
-                style: GoogleFonts.sora(fontWeight: FontWeight.w500)),
-            backgroundColor: DonyColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
+        DonySnackbar.show(
+          context,
+          message: 'Impossible d\'enregistrer : $e',
+          type: DonySnackbarType.error,
         );
       }
     }
@@ -236,14 +203,10 @@ class _QrCodeContent extends StatelessWidget {
       );
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Impossible de partager : $e',
-                style: GoogleFonts.sora(fontWeight: FontWeight.w500)),
-            backgroundColor: DonyColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
+        DonySnackbar.show(
+          context,
+          message: 'Impossible de partager : $e',
+          type: DonySnackbarType.error,
         );
       }
     }
