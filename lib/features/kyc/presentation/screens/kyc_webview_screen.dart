@@ -1,3 +1,4 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -13,8 +14,6 @@ class KycWebViewScreen extends StatefulWidget {
 class _KycWebViewScreenState extends State<KycWebViewScreen> {
   late final WebViewController _controller;
   bool _isLoading = true;
-
-  static const _kGreen = Color(0xFF1E88E5);
 
   @override
   void initState() {
@@ -42,29 +41,25 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Vérification d\'identité',
-          style: TextStyle(
-            color: Color(0xFF1A1A2E),
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
+      appBar: DonyAppBar(
+        title: 'Vérification d\'identité',
+        showBackButton: false,
+        actions: [
+          IconButton(
+            tooltip: 'Fermer',
+            icon: Icon(Icons.close, color: cs.onSurface),
+            onPressed: () => context.go('/kyc'),
           ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Color(0xFF1A1A2E)),
-          onPressed: () => context.go('/kyc'),
-        ),
+        ],
       ),
       body: Stack(
         children: [
           WebViewWidget(controller: _controller),
           if (_isLoading)
-            const Center(
-              child: CircularProgressIndicator(color: _kGreen),
+            Center(
+              child: CircularProgressIndicator(color: cs.primary),
             ),
         ],
       ),

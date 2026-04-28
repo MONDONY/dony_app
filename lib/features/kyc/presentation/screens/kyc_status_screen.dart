@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
@@ -16,9 +17,6 @@ class KycStatusScreen extends StatefulWidget {
 }
 
 class _KycStatusScreenState extends State<KycStatusScreen> {
-  static const _kGreen = Color(0xFF1E88E5);
-  static const _kBg = Color(0xFFF8F9FA);
-
   Timer? _pollingTimer;
 
   @override
@@ -55,8 +53,8 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: _kBg,
       body: BlocConsumer<KycBloc, KycState>(
         listener: (context, state) {
           if (state is KycStatusLoaded) {
@@ -70,12 +68,12 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
         builder: (context, state) {
           return SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (state is KycLoading || state is KycInitial)
-                    const CircularProgressIndicator(color: _kGreen)
+                    CircularProgressIndicator(color: cs.primary)
                   else if (state is KycStatusLoaded)
                     _buildStatusContent(context, state)
                   else if (state is KycError)
@@ -96,62 +94,13 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
       case 'REJECTED':
         return _buildRejectedContent(context);
       default:
-        return _buildPendingContent();
+        return _buildPendingContent(context);
     }
   }
 
   Widget _buildVerifiedContent(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 96,
-          height: 96,
-          decoration: const BoxDecoration(
-            color: Color(0xFFE3F2FD),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.verified, color: _kGreen, size: 52),
-        ).animate().scale(duration: 500.ms, curve: Curves.easeOutBack),
-        const SizedBox(height: 32),
-        const Text(
-          'Identité vérifiée ✓',
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1E88E5),
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 12),
-        const Text(
-          'Votre identité a été vérifiée avec succès. Vous pouvez maintenant accéder à toutes les fonctionnalités de dony.',
-          style: TextStyle(fontSize: 15, color: Color(0xFF6B7280), height: 1.5),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 48),
-        SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: ElevatedButton(
-            onPressed: () => context.go('/home'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _kGreen,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              elevation: 0,
-            ),
-            child: const Text(
-              'Accéder à l\'app',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPendingContent() {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -159,34 +108,68 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
           width: 96,
           height: 96,
           decoration: BoxDecoration(
-            color: Colors.amber.shade50,
+            color: cs.primaryContainer,
             shape: BoxShape.circle,
           ),
-          child: Icon(Icons.hourglass_empty_rounded, color: Colors.amber.shade600, size: 48),
-        ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
-        const SizedBox(height: 32),
-        const Text(
-          'Vérification en cours',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1A1A2E),
+          child: Icon(Icons.verified, color: cs.primary, size: 52),
+        ).animate().scale(duration: 500.ms, curve: Curves.easeOutBack),
+        const SizedBox(height: DonySpacing.xxl),
+        Text(
+          'Identité vérifiée ✓',
+          style: tt.headlineLarge?.copyWith(color: cs.primary),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: DonySpacing.md),
+        Text(
+          'Votre identité a été vérifiée avec succès. Vous pouvez maintenant accéder à toutes les fonctionnalités de dony.',
+          style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: DonySpacing.huge),
+        DonyButton(
+          label: 'Accéder à l\'app',
+          onPressed: () => context.go('/home'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPendingContent(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 96,
+          height: 96,
+          decoration: BoxDecoration(
+            color: cs.warningLight,
+            shape: BoxShape.circle,
           ),
+          child: Icon(Icons.hourglass_empty_rounded, color: cs.warning, size: 48),
+        ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
+        const SizedBox(height: DonySpacing.xxl),
+        Text(
+          'Vérification en cours',
+          style: tt.headlineLarge,
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 12),
-        const Text(
+        const SizedBox(height: DonySpacing.md),
+        Text(
           'Votre dossier est en cours d\'analyse. Vous serez notifié dès que la vérification sera terminée (généralement quelques minutes).',
-          style: TextStyle(fontSize: 15, color: Color(0xFF6B7280), height: 1.5),
+          style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: DonySpacing.xl),
         const _PollingIndicator(),
       ],
     );
   }
 
   Widget _buildRejectedContent(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -194,62 +177,50 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
           width: 96,
           height: 96,
           decoration: BoxDecoration(
-            color: Colors.red.shade50,
+            color: cs.errorContainer,
             shape: BoxShape.circle,
           ),
-          child: Icon(Icons.cancel_outlined, color: Colors.red.shade500, size: 48),
+          child: Icon(Icons.cancel_outlined, color: cs.error, size: 48),
         ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
-        const SizedBox(height: 32),
-        const Text(
+        const SizedBox(height: DonySpacing.xxl),
+        Text(
           'Vérification échouée',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1A1A2E),
-          ),
+          style: tt.headlineLarge,
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 12),
-        const Text(
+        const SizedBox(height: DonySpacing.md),
+        Text(
           'Nous n\'avons pas pu vérifier votre identité. Assurez-vous que votre document est lisible et réessayez.',
-          style: TextStyle(fontSize: 15, color: Color(0xFF6B7280), height: 1.5),
+          style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 48),
-        SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: ElevatedButton(
-            onPressed: () => context.go('/kyc'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _kGreen,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              elevation: 0,
-            ),
-            child: const Text(
-              'Réessayer la vérification',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-          ),
+        const SizedBox(height: DonySpacing.huge),
+        DonyButton(
+          label: 'Réessayer la vérification',
+          onPressed: () => context.go('/kyc'),
         ),
       ],
     );
   }
 
   Widget _buildErrorContent(BuildContext context, String message) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.wifi_off_rounded, color: Colors.grey.shade400, size: 64),
-        const SizedBox(height: 16),
-        Text(message,
-            style: const TextStyle(fontSize: 15, color: Color(0xFF6B7280)),
-            textAlign: TextAlign.center),
-        const SizedBox(height: 24),
-        TextButton(
+        Icon(Icons.wifi_off_rounded, color: cs.onSurfaceVariant, size: 64),
+        const SizedBox(height: DonySpacing.base),
+        Text(
+          message,
+          style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: DonySpacing.xl),
+        DonyButton(
+          label: 'Réessayer',
           onPressed: _loadStatus,
-          child: const Text('Réessayer', style: TextStyle(color: _kGreen)),
+          variant: DonyButtonVariant.ghost,
         ),
       ],
     );
@@ -261,6 +232,8 @@ class _PollingIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -269,13 +242,13 @@ class _PollingIndicator extends StatelessWidget {
           height: 14,
           child: CircularProgressIndicator(
             strokeWidth: 2,
-            color: Colors.amber.shade600,
+            color: cs.warning,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: DonySpacing.sm),
         Text(
           'Vérification automatique toutes les 30s',
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
       ],
     );
