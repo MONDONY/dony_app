@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class PhoneAuthScreen extends StatefulWidget {
   const PhoneAuthScreen({super.key});
@@ -43,89 +42,62 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
 
   String get _fullNumber {
     String local = _phoneController.text.trim();
-    if (local.startsWith('0')) local = local.substring(1);
+    if (local.startsWith('0')) {
+      local = local.substring(1);
+    }
     return '$_selectedCode$local';
   }
 
   void _submit() {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
     context.read<AuthBloc>().add(AuthSendOtpRequested(_fullNumber));
   }
 
   void _showCodePicker() {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Center(
-              child: Container(
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE9ECEF),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+    DonyBottomSheet.show<void>(
+      context,
+      title: 'Indicatif pays',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: _codes.map((c) {
+          final cs = Theme.of(context).colorScheme;
+          final tt = Theme.of(context).textTheme;
+          return ListTile(
+            leading: Text(c.$2, style: const TextStyle(fontSize: 22)),
+            title: Text(
+              '${c.$3} (${c.$1})',
+              style: tt.titleMedium,
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              child: Text(
-                'Indicatif pays',
-                style: GoogleFonts.sora(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF0D1B2A),
-                ),
-              ),
-            ),
-            ...(_codes.map((c) => ListTile(
-                  leading: Text(c.$2, style: const TextStyle(fontSize: 22)),
-                  title: Text(
-                    '${c.$3} (${c.$1})',
-                    style: GoogleFonts.sora(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 15,
-                    ),
-                  ),
-                  trailing: _selectedCode == c.$1
-                      ? const Icon(Icons.check_rounded, color: DonyColors.green400)
-                      : null,
-                  onTap: () {
-                    setState(() {
-                      _selectedCode = c.$1;
-                      _selectedFlag = c.$2;
-                    });
-                    Navigator.pop(context);
-                  },
-                ))),
-            const SizedBox(height: 16),
-          ],
-        ),
+            trailing: _selectedCode == c.$1
+                ? Icon(Icons.check_rounded, color: cs.primary)
+                : null,
+            onTap: () {
+              setState(() {
+                _selectedCode = c.$1;
+                _selectedFlag = c.$2;
+              });
+              context.pop();
+            },
+          );
+        }).toList(),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return Scaffold(
-      backgroundColor: Colors.white,
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthOtpSent) {
             context.push('/auth/otp');
           } else if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.red.shade700,
-            ));
+            DonySnackbar.show(context, message: state.message, type: DonySnackbarType.error);
           }
         },
         child: SafeArea(
@@ -134,34 +106,31 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 48),
+                const SizedBox(height: DonySpacing.huge),
                 // Logo
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
                   child: Image.asset(AppAssets.logo, height: 52),
                 ),
                 const SizedBox(height: 40),
                 // Title + subtitle
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
                   child: Text(
                     'Bienvenue',
-                    style: GoogleFonts.sora(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF0D1B2A),
+                    style: tt.displayLarge?.copyWith(
+                      color: cs.onSurface,
                       letterSpacing: -0.5,
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: DonySpacing.sm),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
                   child: Text(
                     'Entrez votre numéro pour continuer. Nous vous enverrons un code par SMS.',
-                    style: GoogleFonts.sora(
-                      fontSize: 14,
-                      color: const Color(0xFF6B7A8D),
+                    style: tt.bodyMedium?.copyWith(
+                      color: cs.onSurfaceVariant,
                       height: 1.5,
                     ),
                   ),
@@ -169,25 +138,23 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                 const SizedBox(height: 36),
                 // Phone field
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'NUMÉRO DE TÉLÉPHONE',
-                        style: GoogleFonts.sora(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF6B7A8D),
+                        style: tt.labelMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
                           letterSpacing: 0.8,
                         ),
                       ),
                       const SizedBox(height: 10),
                       Container(
                         decoration: BoxDecoration(
-                          border: Border.all(color: const Color(0xFFE9ECEF)),
-                          borderRadius: BorderRadius.circular(12),
-                          color: Colors.white,
+                          border: Border.all(color: cs.outline),
+                          borderRadius: BorderRadius.circular(DonyRadius.md),
+                          color: cs.surface,
                         ),
                         child: Row(
                           children: [
@@ -204,20 +171,18 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                       _selectedFlag,
                                       style: const TextStyle(fontSize: 20),
                                     ),
-                                    const SizedBox(width: 8),
+                                    const SizedBox(width: DonySpacing.sm),
                                     Text(
                                       _selectedCode,
-                                      style: GoogleFonts.sora(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 15,
-                                        color: const Color(0xFF0D1B2A),
+                                      style: tt.titleLarge?.copyWith(
+                                        color: cs.onSurface,
                                       ),
                                     ),
-                                    const SizedBox(width: 4),
-                                    const Icon(
+                                    const SizedBox(width: DonySpacing.xs),
+                                    Icon(
                                       Icons.keyboard_arrow_down_rounded,
                                       size: 16,
-                                      color: Color(0xFF6B7A8D),
+                                      color: cs.onSurfaceVariant,
                                     ),
                                   ],
                                 ),
@@ -226,7 +191,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             Container(
                               width: 1,
                               height: 28,
-                              color: const Color(0xFFE9ECEF),
+                              color: cs.outline,
                             ),
                             Expanded(
                               child: TextFormField(
@@ -235,16 +200,13 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                 inputFormatters: [
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
-                                style: GoogleFonts.sora(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF0D1B2A),
+                                style: tt.titleLarge?.copyWith(
+                                  color: cs.onSurface,
                                 ),
                                 decoration: InputDecoration(
                                   hintText: '06 12 34 56 78',
-                                  hintStyle: GoogleFonts.sora(
-                                    color: const Color(0xFFADB5BD),
-                                    fontSize: 15,
+                                  hintStyle: tt.bodyLarge?.copyWith(
+                                    color: cs.onSurfaceVariant,
                                   ),
                                   border: InputBorder.none,
                                   enabledBorder: InputBorder.none,
@@ -279,54 +241,29 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                 const Spacer(),
                 // CTA + footer
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
                   child: BlocBuilder<AuthBloc, AuthState>(
                     builder: (context, state) {
                       final isLoading = state is AuthLoading;
-                      return SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: ElevatedButton(
-                          onPressed: isLoading ? null : _submit,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: DonyColors.green400,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Text(
-                                  'Recevoir le code',
-                                  style: GoogleFonts.sora(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                        ),
+                      return DonyButton(
+                        label: 'Recevoir le code',
+                        onPressed: isLoading ? null : _submit,
+                        isLoading: isLoading,
                       );
                     },
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: DonySpacing.base),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                  padding: const EdgeInsets.fromLTRB(
+                    DonySpacing.xl, 0, DonySpacing.xl, DonySpacing.xl,
+                  ),
                   child: Center(
                     child: RichText(
                       textAlign: TextAlign.center,
                       text: TextSpan(
-                        style: GoogleFonts.sora(
-                          fontSize: 12,
-                          color: const Color(0xFF6B7A8D),
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
                           height: 1.6,
                         ),
                         children: [
@@ -334,18 +271,16 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                               text: 'En continuant, vous acceptez les\n'),
                           TextSpan(
                             text: 'Conditions',
-                            style: GoogleFonts.sora(
-                              fontSize: 12,
-                              color: DonyColors.green400,
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.primary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           const TextSpan(text: ' et la '),
                           TextSpan(
                             text: 'Politique de confidentialité',
-                            style: GoogleFonts.sora(
-                              fontSize: 12,
-                              color: DonyColors.green400,
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.primary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),

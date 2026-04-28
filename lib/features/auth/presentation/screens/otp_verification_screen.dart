@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   const OtpVerificationScreen({super.key});
@@ -66,8 +65,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
   void _verify() {
     if (_otpCode.length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Entrez le code à 6 chiffres')),
+      DonySnackbar.show(
+        context,
+        message: 'Entrez le code à 6 chiffres',
+        type: DonySnackbarType.error,
       );
       return;
     }
@@ -87,8 +88,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return Scaffold(
-      backgroundColor: Colors.white,
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthOtpSent) {
@@ -101,10 +104,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           } else if (state is AuthAuthenticated) {
             context.go('/auth/local');
           } else if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.red.shade700,
-            ));
+            DonySnackbar.show(context, message: state.message, type: DonySnackbarType.error);
           }
         },
         builder: (context, state) {
@@ -115,48 +115,42 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               children: [
                 // Back arrow
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                  padding: const EdgeInsets.fromLTRB(DonySpacing.sm, DonySpacing.sm, DonySpacing.sm, 0),
                   child: IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.arrow_back_ios_rounded,
                       size: 20,
-                      color: Color(0xFF0D1B2A),
+                      color: cs.onSurface,
                     ),
                     onPressed: () => context.pop(),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: DonySpacing.base),
                 // Title
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
                   child: Text(
                     'Entrez le code',
-                    style: GoogleFonts.sora(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF0D1B2A),
+                    style: tt.displayLarge?.copyWith(
+                      color: cs.onSurface,
                       letterSpacing: -0.5,
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: DonySpacing.sm),
                 // Subtitle with phone number
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
                   child: RichText(
                     text: TextSpan(
-                      style: GoogleFonts.sora(
-                        fontSize: 14,
-                        color: const Color(0xFF6B7A8D),
-                      ),
+                      style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                       children: [
                         const TextSpan(text: 'Code envoyé au '),
                         TextSpan(
                           text: _phoneNumber,
-                          style: GoogleFonts.sora(
-                            fontSize: 14,
+                          style: tt.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: DonyColors.green400,
+                            color: cs.primary,
                           ),
                         ),
                       ],
@@ -166,7 +160,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 const SizedBox(height: 36),
                 // OTP boxes
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: List.generate(6, (index) {
@@ -182,31 +176,26 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
                           ],
-                          style: GoogleFonts.sora(
-                            fontSize: 22,
+                          style: tt.headlineMedium?.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF0D1B2A),
+                            color: cs.onSurface,
                           ),
                           decoration: InputDecoration(
                             counterText: '',
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: cs.surface,
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE9ECEF),
-                              ),
+                              borderRadius: BorderRadius.circular(DonyRadius.md),
+                              borderSide: BorderSide(color: cs.outline),
                             ),
                             enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE9ECEF),
-                              ),
+                              borderRadius: BorderRadius.circular(DonyRadius.md),
+                              borderSide: BorderSide(color: cs.outline),
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: DonyColors.green400,
+                              borderRadius: BorderRadius.circular(DonyRadius.md),
+                              borderSide: BorderSide(
+                                color: cs.primary,
                                 width: 2,
                               ),
                             ),
@@ -224,29 +213,24 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     }),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: DonySpacing.xl),
                 // Resend
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
                   child: _secondsLeft > 0
-                      ? GestureDetector(
-                          onTap: null,
-                          child: Text(
-                            'Renvoyer le code ($_secondsLeft s)',
-                            style: GoogleFonts.sora(
-                              fontSize: 14,
-                              color: DonyColors.green400,
-                              fontWeight: FontWeight.w500,
-                            ),
+                      ? Text(
+                          'Renvoyer le code ($_secondsLeft s)',
+                          style: tt.bodyMedium?.copyWith(
+                            color: cs.primary,
+                            fontWeight: FontWeight.w500,
                           ),
                         )
                       : GestureDetector(
                           onTap: _resend,
                           child: Text(
                             'Renvoyer le code',
-                            style: GoogleFonts.sora(
-                              fontSize: 14,
-                              color: DonyColors.green400,
+                            style: tt.bodyMedium?.copyWith(
+                              color: cs.primary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -255,48 +239,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 const Spacer(),
                 // Verify button
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [DonyColors.green600, DonyColors.green300],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: ElevatedButton(
-                        onPressed: isLoading ? null : _verify,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text(
-                                'Vérifier',
-                                style: GoogleFonts.sora(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                      ),
-                    ),
+                  padding: const EdgeInsets.fromLTRB(
+                    DonySpacing.xl, 0, DonySpacing.xl, DonySpacing.xxl,
+                  ),
+                  child: DonyButton(
+                    label: 'Vérifier',
+                    onPressed: isLoading ? null : _verify,
+                    isLoading: isLoading,
                   ),
                 ),
               ],

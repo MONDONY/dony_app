@@ -1,4 +1,5 @@
 import 'package:dony/core/constants/app_assets.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -29,40 +30,45 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return Scaffold(
-      backgroundColor: Colors.white,
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
             context.go('/auth/pin-setup');
           } else if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red.shade700,
-              ),
+            DonySnackbar.show(
+              context,
+              message: state.message,
+              type: DonySnackbarType.error,
             );
           }
         },
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.xl,
+              vertical: DonySpacing.xxl,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Image.asset(AppAssets.logo, height: 48),
-                const SizedBox(height: 32),
-                const Text(
+                const SizedBox(height: DonySpacing.xxl),
+                Text(
                   'Je suis...',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                  style: tt.headlineLarge?.copyWith(color: cs.onSurface),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: DonySpacing.sm),
                 Text(
                   'Choisissez un ou plusieurs rôles. Vous pourrez toujours en ajouter plus tard.',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 const SizedBox(height: 40),
                 _buildRoleCard(
+                  context: context,
                   emoji: '📦',
                   title: 'Expéditeur',
                   description:
@@ -70,8 +76,9 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                   selected: _isSender,
                   onTap: () => setState(() => _isSender = !_isSender),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: DonySpacing.base),
                 _buildRoleCard(
+                  context: context,
                   emoji: '✈️',
                   title: 'Voyageur',
                   description:
@@ -80,7 +87,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                   onTap: () => setState(() => _isTraveler = !_isTraveler),
                 ),
                 const Spacer(),
-                _buildRegisterButton(),
+                _buildRegisterButton(context),
               ],
             ),
           ),
@@ -90,85 +97,67 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   }
 
   Widget _buildRoleCard({
+    required BuildContext context,
     required String emoji,
     required String title,
     required String description,
     required bool selected,
     required VoidCallback onTap,
   }) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(DonySpacing.lg),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFFE3F2FD) : Colors.white,
+          color: selected ? cs.primaryContainer : cs.surface,
           border: Border.all(
-            color: selected ? const Color(0xFF1E88E5) : Colors.grey.shade300,
+            color: selected ? cs.primary : cs.outline,
             width: selected ? 2 : 1,
           ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(DonyRadius.card),
         ),
         child: Row(
           children: [
             Text(emoji, style: const TextStyle(fontSize: 36)),
-            const SizedBox(width: 16),
+            const SizedBox(width: DonySpacing.base),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      color: selected ? const Color(0xFF1E88E5) : Colors.black87,
+                    style: tt.titleLarge?.copyWith(
+                      color: selected ? cs.primary : cs.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: DonySpacing.xs),
                   Text(
                     description,
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ],
               ),
             ),
             if (selected)
-              const Icon(Icons.check_circle, color: Color(0xFF1E88E5), size: 24),
+              Icon(Icons.check_circle, color: cs.primary, size: 24),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildRegisterButton() {
+  Widget _buildRegisterButton(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         final isLoading = state is AuthLoading;
-        return SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: ElevatedButton(
-            onPressed: (isLoading || !_canProceed) ? null : _register,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1E88E5),
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: Colors.grey.shade300,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                  )
-                : const Text(
-                    'Créer mon compte',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-          ),
+        return DonyButton(
+          label: 'Créer mon compte',
+          onPressed: (isLoading || !_canProceed) ? null : _register,
+          isLoading: isLoading,
         );
       },
     );
