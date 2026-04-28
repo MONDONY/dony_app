@@ -1,13 +1,12 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:dony/features/notifications/data/notification_model.dart';
-import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 /// Returns the GoRouter path to navigate to when tapping a notification,
@@ -58,21 +57,13 @@ class _InboxScreenState extends State<InboxScreen>
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return Scaffold(
-      backgroundColor: DonyColors.grey50,
-      appBar: AppBar(
-        title: Text(
-          'Boîte de réception',
-          style: GoogleFonts.sora(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            color: DonyColors.ink900,
-          ),
-        ),
-        centerTitle: false,
-        backgroundColor: DonyColors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
+      appBar: DonyAppBar(
+        title: 'Boîte de réception',
+        showBackButton: false,
         actions: [
           BlocBuilder<NotificationBloc, NotificationState>(
             builder: (context, state) {
@@ -83,11 +74,7 @@ class _InboxScreenState extends State<InboxScreen>
                       .add(const NotificationsMarkAllReadRequested()),
                   child: Text(
                     'Tout lire',
-                    style: GoogleFonts.sora(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: DonyColors.green400,
-                    ),
+                    style: tt.labelLarge?.copyWith(color: cs.primary),
                   ),
                 );
               }
@@ -97,18 +84,11 @@ class _InboxScreenState extends State<InboxScreen>
         ],
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: DonyColors.green400,
-          indicatorWeight: 2,
-          labelColor: DonyColors.green400,
-          unselectedLabelColor: DonyColors.grey400,
-          labelStyle: GoogleFonts.sora(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-          unselectedLabelStyle: GoogleFonts.sora(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+          indicatorColor: cs.primary,
+          labelColor: cs.primary,
+          unselectedLabelColor: cs.onSurfaceVariant,
+          labelStyle: tt.labelLarge,
+          unselectedLabelStyle: tt.labelLarge?.copyWith(fontWeight: FontWeight.w500),
           tabs: [
             Tab(
               child: BlocBuilder<NotificationBloc, NotificationState>(
@@ -119,8 +99,8 @@ class _InboxScreenState extends State<InboxScreen>
                     children: [
                       const Text('Notifications'),
                       if (unread > 0) ...[
-                        const SizedBox(width: 6),
-                        _UnreadBadge(count: unread),
+                        const SizedBox(width: DonySpacing.sm - 2),
+                        _UnreadBadge(count: unread, cs: cs, tt: tt),
                       ],
                     ],
                   );
@@ -149,17 +129,24 @@ class _NotificationsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return BlocBuilder<NotificationBloc, NotificationState>(
       builder: (context, state) {
         if (state is NotificationLoading || state is NotificationInitial) {
-          return const Center(
-            child: CircularProgressIndicator(color: DonyColors.green400),
+          return Center(
+            child: CircularProgressIndicator(color: cs.primary),
           );
         }
 
         if (state is NotificationError) {
-          return _ErrorView(
-            onRetry: () => context
+          return DonyEmptyState(
+            type: DonyEmptyStateType.error,
+            icon: Icons.wifi_off_rounded,
+            title: 'Erreur de chargement',
+            description: 'Impossible de charger vos notifications.',
+            actionLabel: 'Réessayer',
+            onAction: () => context
                 .read<NotificationBloc>()
                 .add(const NotificationsLoadRequested()),
           );
@@ -167,18 +154,26 @@ class _NotificationsTab extends StatelessWidget {
 
         if (state is NotificationLoaded) {
           if (state.notifications.isEmpty) {
-            return const _EmptyView();
+            return const DonyEmptyState(
+              icon: Icons.notifications_none_rounded,
+              title: 'Aucune notification',
+              description: 'Vos notifications apparaîtront ici.',
+            );
           }
           return RefreshIndicator(
-            color: DonyColors.green400,
+            color: cs.primary,
             onRefresh: () async => context
                 .read<NotificationBloc>()
                 .add(const NotificationsLoadRequested()),
             child: ListView.separated(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
               itemCount: state.notifications.length,
-              separatorBuilder: (_, __) =>
-                  const Divider(height: 1, color: DonyColors.grey100, indent: 20, endIndent: 20),
+              separatorBuilder: (context, index) => Divider(
+                height: 1,
+                color: cs.outline,
+                indent: DonySpacing.lg,
+                endIndent: DonySpacing.lg,
+              ),
               itemBuilder: (context, index) {
                 final notif = state.notifications[index];
                 final tile = _NotificationTile(
@@ -206,19 +201,18 @@ class _NotificationsTab extends StatelessWidget {
                   direction: DismissDirection.endToStart,
                   background: Container(
                     alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 24),
-                    color: DonyColors.error,
+                    padding: const EdgeInsets.only(right: DonySpacing.xl),
+                    color: cs.error,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.delete_outline_rounded,
-                            color: Colors.white, size: 26),
-                        const SizedBox(height: 4),
+                        Icon(Icons.delete_outline_rounded,
+                            color: cs.onError, size: 26),
+                        const SizedBox(height: DonySpacing.xs),
                         Text(
                           'Supprimer',
-                          style: GoogleFonts.sora(
-                              color: Colors.white,
-                              fontSize: 12,
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: cs.onError,
                               fontWeight: FontWeight.w600),
                         ),
                       ],
@@ -247,40 +241,10 @@ class _MessagesTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: DonyColors.green100,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Icon(Icons.chat_bubble_outline_rounded,
-                size: 32, color: DonyColors.green400),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Messagerie bientôt disponible',
-            style: GoogleFonts.sora(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: DonyColors.ink900,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Vous pourrez contacter votre\nvoyageur ou expéditeur ici.',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.sora(
-              fontSize: 13,
-              color: DonyColors.grey400,
-            ),
-          ),
-        ],
-      ),
+    return const DonyEmptyState(
+      icon: Icons.chat_bubble_outline_rounded,
+      title: 'Messagerie bientôt disponible',
+      description: 'Vous pourrez contacter votre\nvoyageur ou expéditeur ici.',
     );
   }
 }
@@ -295,17 +259,25 @@ class _NotificationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     final hasRoute = _routeForNotification(notification) != null;
+
     return InkWell(
       onTap: onTap,
       child: Container(
-        color: notification.read ? DonyColors.white : DonyColors.green100.withValues(alpha: 0.5),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        color: notification.read
+            ? cs.surface
+            : cs.primaryContainer.withValues(alpha: 0.5),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.lg,
+          vertical: DonySpacing.base - 2,
+        ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _NotificationIcon(type: notification.type),
-            const SizedBox(width: 12),
+            const SizedBox(width: DonySpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -315,12 +287,11 @@ class _NotificationTile extends StatelessWidget {
                       Expanded(
                         child: Text(
                           notification.title,
-                          style: GoogleFonts.sora(
-                            fontSize: 14,
+                          style: tt.bodyMedium?.copyWith(
                             fontWeight: notification.read
                                 ? FontWeight.w500
                                 : FontWeight.w700,
-                            color: DonyColors.ink900,
+                            color: cs.onSurface,
                           ),
                         ),
                       ),
@@ -328,30 +299,26 @@ class _NotificationTile extends StatelessWidget {
                         Container(
                           width: 8,
                           height: 8,
-                          margin: const EdgeInsets.only(left: 6),
-                          decoration: const BoxDecoration(
-                            color: DonyColors.green400,
+                          margin: const EdgeInsets.only(left: DonySpacing.sm - 2),
+                          decoration: BoxDecoration(
+                            color: cs.primary,
                             shape: BoxShape.circle,
                           ),
                         ),
                     ],
                   ),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: DonySpacing.xxs + 1),
                   Text(
                     notification.body,
-                    style: GoogleFonts.sora(
-                      fontSize: 13,
-                      color: DonyColors.grey400,
-                    ),
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: DonySpacing.xs),
                   Text(
                     _formatDate(notification.createdAt),
-                    style: GoogleFonts.sora(
-                      fontSize: 11,
-                      color: DonyColors.grey200,
+                    style: tt.labelSmall?.copyWith(
+                      color: cs.outline,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -359,8 +326,9 @@ class _NotificationTile extends StatelessWidget {
               ),
             ),
             if (hasRoute) ...[
-              const SizedBox(width: 8),
-              const Icon(Icons.chevron_right_rounded, size: 18, color: DonyColors.grey200),
+              const SizedBox(width: DonySpacing.sm),
+              Icon(Icons.chevron_right_rounded,
+                  size: 18, color: cs.onSurfaceVariant),
             ],
           ],
         ),
@@ -371,9 +339,15 @@ class _NotificationTile extends StatelessWidget {
   String _formatDate(DateTime dt) {
     final now = DateTime.now();
     final diff = now.difference(dt);
-    if (diff.inMinutes < 1) return 'À l\'instant';
-    if (diff.inMinutes < 60) return 'Il y a ${diff.inMinutes} min';
-    if (diff.inHours < 24) return 'Il y a ${diff.inHours}h';
+    if (diff.inMinutes < 1) {
+      return 'À l\'instant';
+    }
+    if (diff.inMinutes < 60) {
+      return 'Il y a ${diff.inMinutes} min';
+    }
+    if (diff.inHours < 24) {
+      return 'Il y a ${diff.inHours}h';
+    }
     return DateFormat('dd MMM HH:mm', 'fr').format(dt);
   }
 }
@@ -384,123 +358,56 @@ class _NotificationIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     final (icon, color) = switch (type) {
-      'BID_CREATED' => (Icons.inbox_rounded, DonyColors.green400),
-      'BID_ACCEPTED' => (Icons.check_circle_rounded, DonyColors.success),
-      'BID_REJECTED' => (Icons.cancel_rounded, DonyColors.error),
-      'HANDOVER_DEFINED' => (Icons.location_on_rounded, const Color(0xFFE67E22)),
-      'TRIP_CANCELLED' => (Icons.block_rounded, DonyColors.error),
-      'PAYMENT_RELEASED' => (Icons.payments_rounded, DonyColors.success),
+      'BID_CREATED'        => (Icons.inbox_rounded,          cs.primary),
+      'BID_ACCEPTED'       => (Icons.check_circle_rounded,   DonyColors.success),
+      'BID_REJECTED'       => (Icons.cancel_rounded,         cs.error),
+      'HANDOVER_DEFINED'   => (Icons.location_on_rounded,    cs.secondary),
+      'TRIP_CANCELLED'     => (Icons.block_rounded,          cs.error),
+      'PAYMENT_RELEASED'   => (Icons.payments_rounded,       DonyColors.success),
       'DELIVERY_CONFIRMED' => (Icons.local_shipping_rounded, DonyColors.success),
-      'DISPUTE_OPENED' => (Icons.warning_amber_rounded, DonyColors.warning),
-      _ => (Icons.notifications_rounded, DonyColors.grey400),
+      'DISPUTE_OPENED'     => (Icons.warning_amber_rounded,  DonyColors.warning),
+      _                    => (Icons.notifications_rounded,  cs.onSurfaceVariant),
     };
 
     return Container(
-      width: 40,
-      height: 40,
+      width: DonySpacing.icon,
+      height: DonySpacing.icon,
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(DonyRadius.md),
       ),
-      child: Icon(icon, size: 20, color: color),
+      child: Icon(icon, size: DonySpacing.iconSm, color: color),
     );
   }
 }
 
-// ── Empty / Error / Badge views ───────────────────────────────────────────────
-
-class _EmptyView extends StatelessWidget {
-  const _EmptyView();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: DonyColors.green100,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Icon(Icons.notifications_none_rounded,
-                size: 32, color: DonyColors.green400),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Aucune notification',
-            style: GoogleFonts.sora(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: DonyColors.ink900,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Vos notifications apparaîtront ici.',
-            style: GoogleFonts.sora(
-              fontSize: 13,
-              color: DonyColors.grey400,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  final VoidCallback onRetry;
-  const _ErrorView({required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.wifi_off_rounded, size: 48, color: DonyColors.grey200),
-          const SizedBox(height: 12),
-          Text(
-            'Erreur de chargement',
-            style: GoogleFonts.sora(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: DonyColors.ink900,
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: onRetry,
-            child: const Text('Réessayer'),
-          ),
-        ],
-      ),
-    );
-  }
-}
+// ── Badge ─────────────────────────────────────────────────────────────────────
 
 class _UnreadBadge extends StatelessWidget {
   final int count;
-  const _UnreadBadge({required this.count});
+  final ColorScheme cs;
+  final TextTheme tt;
+  const _UnreadBadge({required this.count, required this.cs, required this.tt});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm - 2,
+        vertical: DonySpacing.xxs,
+      ),
       decoration: BoxDecoration(
-        color: DonyColors.error,
-        borderRadius: BorderRadius.circular(8),
+        color: cs.error,
+        borderRadius: BorderRadius.circular(DonyRadius.sm),
       ),
       child: Text(
         count > 99 ? '99+' : '$count',
-        style: GoogleFonts.sora(
-          fontSize: 10,
+        style: tt.labelSmall?.copyWith(
           fontWeight: FontWeight.w700,
-          color: Colors.white,
+          color: cs.onError,
         ),
       ),
     );

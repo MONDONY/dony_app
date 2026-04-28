@@ -1,13 +1,12 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
-import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -35,7 +34,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   void _initFromUser(UserModel user) {
-    if (_initialized) return;
+    if (_initialized) {
+      return;
+    }
     _initialized = true;
     _firstNameCtrl.text = user.firstName ?? '';
     _lastNameCtrl.text = user.lastName ?? '';
@@ -53,7 +54,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       lastDate: DateTime(now.year - 16),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(primary: DonyColors.green400),
+          colorScheme: Theme.of(context).colorScheme,
         ),
         child: child!,
       ),
@@ -80,96 +81,69 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthProfileUpdated) {
           context.pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Profil mis à jour avec succès',
-                style: GoogleFonts.sora(fontWeight: FontWeight.w500),
-              ),
-              backgroundColor: DonyColors.success,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
+          DonySnackbar.show(
+            context,
+            message: 'Profil mis à jour avec succès',
+            type: DonySnackbarType.success,
           );
         }
         if (state is AuthError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                state.message,
-                style: GoogleFonts.sora(fontWeight: FontWeight.w500),
-              ),
-              backgroundColor: DonyColors.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
+          DonySnackbar.show(
+            context,
+            message: state.message,
+            type: DonySnackbarType.error,
           );
         }
       },
       builder: (context, state) {
         UserModel? user;
-        if (state is AuthAuthenticated) user = state.user;
-        if (state is AuthProfileUpdated) user = state.user;
-        if (user != null) _initFromUser(user);
+        if (state is AuthAuthenticated) {
+          user = state.user;
+        }
+        if (state is AuthProfileUpdated) {
+          user = state.user;
+        }
+        if (user != null) {
+          _initFromUser(user);
+        }
 
         final isLoading = state is AuthLoading;
 
         return Scaffold(
-          backgroundColor: DonyColors.grey50,
-          appBar: AppBar(
-            title: Text(
-              'Compléter mon profil',
-              style: GoogleFonts.sora(
-                fontWeight: FontWeight.w700,
-                fontSize: 18,
-                color: DonyColors.ink900,
-              ),
-            ),
-            centerTitle: false,
-            backgroundColor: DonyColors.white,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_rounded,
-                  size: 20, color: DonyColors.green400),
-              onPressed: () => context.pop(),
-            ),
-            bottom: const PreferredSize(
-              preferredSize: Size.fromHeight(1),
-              child: Divider(height: 1),
-            ),
-          ),
+          appBar: const DonyAppBar(title: 'Compléter mon profil'),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.lg, DonySpacing.xl, DonySpacing.lg, DonySpacing.huge,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Info banner
                 Container(
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.all(DonySpacing.base - 2),
                   decoration: BoxDecoration(
-                    color: DonyColors.green400.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(12),
+                    color: cs.primaryContainer,
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
                     border: Border.all(
-                        color: DonyColors.green400.withValues(alpha: 0.2)),
+                        color: cs.primary.withValues(alpha: 0.2)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline_rounded,
-                          color: DonyColors.green400, size: 18),
-                      const SizedBox(width: 10),
+                      Icon(Icons.info_outline_rounded,
+                          color: cs.primary, size: 18),
+                      const SizedBox(width: DonySpacing.sm + 2),
                       Expanded(
                         child: Text(
                           'Ces informations inspirent confiance aux autres membres de la communauté.',
-                          style: GoogleFonts.sora(
-                            fontSize: 13,
-                            color: DonyColors.green400,
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.primary,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -177,120 +151,94 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: DonySpacing.xxl),
 
                 // ── Section Identité ────────────────────────────────
-                _SectionLabel('Identité'),
-                const SizedBox(height: 12),
-                _buildTextField(
+                _SectionLabel(label: 'Identité', tt: tt, cs: cs),
+                const SizedBox(height: DonySpacing.md),
+                DonyTextField(
                   controller: _firstNameCtrl,
                   label: 'Prénom',
                   prefixIcon: Icons.person_outline_rounded,
                   enabled: !isLoading,
                 ),
-                const SizedBox(height: 12),
-                _buildTextField(
+                const SizedBox(height: DonySpacing.md),
+                DonyTextField(
                   controller: _lastNameCtrl,
                   label: 'Nom de famille',
                   prefixIcon: Icons.person_outline_rounded,
                   enabled: !isLoading,
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: DonySpacing.xxl),
 
                 // ── Section Contact ─────────────────────────────────
-                _SectionLabel('Contact'),
-                const SizedBox(height: 12),
-                _buildTextField(
+                _SectionLabel(label: 'Contact', tt: tt, cs: cs),
+                const SizedBox(height: DonySpacing.md),
+                DonyTextField(
                   controller: _emailCtrl,
                   label: 'Email (optionnel)',
                   prefixIcon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   enabled: !isLoading,
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: DonySpacing.xxl),
 
                 // ── Section Infos personnelles ──────────────────────
-                _SectionLabel('Informations personnelles'),
-                const SizedBox(height: 12),
+                _SectionLabel(label: 'Informations personnelles', tt: tt, cs: cs),
+                const SizedBox(height: DonySpacing.md),
                 GestureDetector(
                   onTap: isLoading ? null : _pickBirthDate,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 16),
+                      horizontal: DonySpacing.base,
+                      vertical: DonySpacing.base,
+                    ),
                     decoration: BoxDecoration(
-                      color: DonyColors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: DonyColors.grey100),
+                      color: cs.surface,
+                      borderRadius: BorderRadius.circular(DonyRadius.md),
+                      border: Border.all(color: cs.outline),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.cake_outlined,
-                            color: DonyColors.grey400, size: 20),
-                        const SizedBox(width: 12),
+                        Icon(Icons.cake_outlined,
+                            color: cs.onSurfaceVariant, size: 20),
+                        const SizedBox(width: DonySpacing.md),
                         Expanded(
                           child: Text(
                             _birthDate != null
                                 ? DateFormat('dd/MM/yyyy')
                                     .format(_birthDate!)
                                 : 'Date de naissance',
-                            style: GoogleFonts.sora(
-                              fontSize: 15,
+                            style: tt.bodyLarge?.copyWith(
                               color: _birthDate != null
-                                  ? DonyColors.ink900
-                                  : DonyColors.grey200,
+                                  ? cs.onSurface
+                                  : cs.onSurfaceVariant,
                               fontWeight: _birthDate != null
                                   ? FontWeight.w500
                                   : FontWeight.w400,
                             ),
                           ),
                         ),
-                        const Icon(Icons.chevron_right_rounded,
-                            color: DonyColors.grey200, size: 18),
+                        Icon(Icons.chevron_right_rounded,
+                            color: cs.onSurfaceVariant, size: 18),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                _buildTextField(
+                const SizedBox(height: DonySpacing.md),
+                DonyTextField(
                   controller: _cityCtrl,
                   label: "Ville / lieu d'habitation",
                   prefixIcon: Icons.location_city_outlined,
                   enabled: !isLoading,
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: DonySpacing.huge - DonySpacing.sm),
 
                 // ── Bouton sauvegarder ──────────────────────────────
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: isLoading ? null : _save,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: DonyColors.green400,
-                      foregroundColor: Colors.white,
-                      disabledBackgroundColor:
-                          DonyColors.green400.withValues(alpha: 0.5),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
-                      elevation: 0,
-                    ),
-                    child: isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Text(
-                            'Enregistrer',
-                            style: GoogleFonts.sora(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 16,
-                            ),
-                          ),
-                  ),
+                DonyButton(
+                  label: 'Enregistrer',
+                  onPressed: isLoading ? null : _save,
+                  isLoading: isLoading,
                 ),
               ],
             )
@@ -302,59 +250,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       },
     );
   }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData prefixIcon,
-    TextInputType? keyboardType,
-    bool enabled = true,
-  }) {
-    return TextField(
-      controller: controller,
-      enabled: enabled,
-      keyboardType: keyboardType,
-      style: GoogleFonts.sora(fontSize: 15, color: DonyColors.ink900),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle:
-            GoogleFonts.sora(color: DonyColors.grey400, fontSize: 14),
-        prefixIcon: Icon(prefixIcon, color: DonyColors.grey400, size: 20),
-        filled: true,
-        fillColor: DonyColors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: DonyColors.grey100),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: DonyColors.grey100),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: DonyColors.green400, width: 1.5),
-        ),
-        disabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: DonyColors.grey100.withValues(alpha: 0.5)),
-        ),
-      ),
-    );
-  }
 }
 
 class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.label);
+  const _SectionLabel({
+    required this.label,
+    required this.tt,
+    required this.cs,
+  });
   final String label;
+  final TextTheme tt;
+  final ColorScheme cs;
 
   @override
   Widget build(BuildContext context) {
     return Text(
       label.toUpperCase(),
-      style: GoogleFonts.sora(
-        fontSize: 11,
-        fontWeight: FontWeight.w700,
-        color: DonyColors.grey400,
+      style: tt.labelMedium?.copyWith(
+        color: cs.onSurfaceVariant,
         letterSpacing: 0.8,
       ),
     );

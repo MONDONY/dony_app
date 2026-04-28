@@ -1,3 +1,4 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -11,12 +12,10 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
-import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -35,6 +34,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthInitial || state is AuthAccountDeleted) {
@@ -44,13 +46,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, authState) {
           UserModel? user;
-          if (authState is AuthAuthenticated) user = authState.user;
-          if (authState is AuthProfileUpdated) user = authState.user;
+          if (authState is AuthAuthenticated) {
+            user = authState.user;
+          }
+          if (authState is AuthProfileUpdated) {
+            user = authState.user;
+          }
           final isTraveler = user?.isTraveler ?? false;
           final isSender = user?.isSender ?? false;
           final isKycVerified = user?.isKycVerified ?? false;
           final displayName = user?.displayName ?? 'Utilisateur';
-          final initials = user?.initials ?? '?';
 
           return BlocBuilder<BidBloc, BidState>(
             builder: (context, bidState) {
@@ -66,7 +71,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   final announcements = announcementState is AnnouncementListLoaded
                       ? announcementState.announcements
                       : <AnnouncementModel>[];
-                  // totalElements = total from backend pagination (tous statuts)
                   final totalAnnouncements = announcementState is AnnouncementListLoaded
                       ? announcementState.totalElements
                       : 0;
@@ -76,24 +80,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       .length;
 
                   return Scaffold(
-                    backgroundColor: DonyColors.grey50,
-                    appBar: AppBar(
-                      title: Text(
-                        'Mon profil',
-                        style: GoogleFonts.sora(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                          color: DonyColors.ink900,
-                        ),
-                      ),
-                      centerTitle: true,
-                      backgroundColor: DonyColors.white,
-                      elevation: 0,
-                      scrolledUnderElevation: 0,
-                      bottom: const PreferredSize(
-                        preferredSize: Size.fromHeight(1),
-                        child: Divider(height: 1),
-                      ),
+                    appBar: DonyAppBar(
+                      title: 'Mon profil',
+                      showBackButton: false,
                       actions: [
                         BlocBuilder<NotificationBloc, NotificationState>(
                           builder: (context, notifState) {
@@ -104,9 +93,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               alignment: Alignment.center,
                               children: [
                                 IconButton(
-                                  icon: const Icon(
+                                  icon: Icon(
                                     Icons.notifications_outlined,
-                                    color: DonyColors.ink900,
+                                    color: cs.onSurface,
                                     size: 22,
                                   ),
                                   onPressed: () => context.go('/messages'),
@@ -118,8 +107,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     child: Container(
                                       width: 8,
                                       height: 8,
-                                      decoration: const BoxDecoration(
-                                        color: DonyColors.error,
+                                      decoration: BoxDecoration(
+                                        color: cs.error,
                                         shape: BoxShape.circle,
                                       ),
                                     ),
@@ -128,11 +117,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             );
                           },
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: DonySpacing.xs),
                       ],
                     ),
                     body: RefreshIndicator(
-                      color: DonyColors.green400,
+                      color: cs.primary,
                       onRefresh: () async {
                         context.read<BidBloc>().add(BidMyListRequested());
                         context
@@ -141,61 +130,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       },
                       child: SingleChildScrollView(
                         physics: const AlwaysScrollableScrollPhysics(),
-                        padding:
-                            const EdgeInsets.fromLTRB(20, 28, 20, 40),
+                        padding: const EdgeInsets.fromLTRB(
+                          DonySpacing.lg, DonySpacing.xxl, DonySpacing.lg, DonySpacing.huge,
+                        ),
                         child: Column(
                           children: [
                             // ── Avatar ─────────────────────────────────
-                            _buildAvatar(initials, isKycVerified)
+                            DonyAvatar(
+                              name: displayName,
+                              size: DonyAvatarSize.xl,
+                              verified: isKycVerified,
+                            )
                                 .animate()
                                 .fadeIn(duration: 300.ms)
                                 .scale(
                                   begin: const Offset(0.85, 0.85),
                                   curve: Curves.easeOutBack,
                                 ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: DonySpacing.md),
 
                             // ── Nom / identifiant ───────────────────────
                             Text(
                               displayName,
-                              style: GoogleFonts.sora(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: DonyColors.ink900,
+                              style: tt.headlineMedium?.copyWith(
+                                color: cs.onSurface,
                               ),
                               textAlign: TextAlign.center,
                             ).animate().fadeIn(delay: 80.ms),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: DonySpacing.sm + 2),
 
                             // ── Badges ──────────────────────────────────
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 if (isKycVerified) ...[
-                                  _Badge(
+                                  const _Badge(
                                     icon: Icons.verified_rounded,
                                     label: 'Identité vérifiée',
                                     color: DonyColors.success,
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: DonySpacing.sm),
                                 ],
                                 if (isTraveler)
                                   _Badge(
                                     icon: Icons.flight_takeoff_rounded,
                                     label: 'Voyageur',
-                                    color: DonyColors.green400,
+                                    color: cs.primary,
                                   ),
                                 if (isTraveler && isSender)
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: DonySpacing.sm),
                                 if (isSender)
                                   _Badge(
                                     icon: Icons.send_rounded,
                                     label: 'Expéditeur',
-                                    color: const Color(0xFFE67E22),
+                                    color: cs.secondary,
                                   ),
                               ],
                             ).animate().fadeIn(delay: 120.ms),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: DonySpacing.xl),
 
                             // ── Stats ───────────────────────────────────
                             _StatsRow(
@@ -204,74 +196,103 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               totalAnnouncements: totalAnnouncements,
                               isLoading: bidState is BidLoading ||
                                   announcementState is AnnouncementLoading,
+                              cs: cs,
+                              tt: tt,
                             ).animate().fadeIn(delay: 160.ms),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: DonySpacing.lg),
 
                             // ── Bannière complétion profil ───────────────
                             if (user != null && !user.isProfileComplete) ...[
                               _ProfileCompletionBanner(
                                 user: user,
-                                onTap: () =>
-                                    context.push('/profile/edit'),
+                                onTap: () => context.push('/profile/edit'),
+                                cs: cs,
+                                tt: tt,
                               ).animate().fadeIn(delay: 180.ms),
-                              const SizedBox(height: 20),
+                              const SizedBox(height: DonySpacing.lg),
                             ],
 
                             // ── Menu principal ──────────────────────────
-                            _MenuSection(
-                              children: [
+                            DonyListSection(
+                              tiles: [
                                 if (isTraveler)
-                                  _MenuItem(
+                                  DonyListTile(
                                     icon: Icons.flight_takeoff_rounded,
-                                    iconColor: DonyColors.green400,
+                                    iconColor: cs.primary,
+                                    iconBgColor: cs.primaryContainer,
                                     label: 'Mes trajets',
                                     trailing: upcomingAnnouncements > 0
-                                        ? '$upcomingAnnouncements à venir'
+                                        ? Text(
+                                            '$upcomingAnnouncements à venir',
+                                            style: tt.labelMedium?.copyWith(
+                                              color: cs.primary,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          )
                                         : null,
-                                    onTap: () =>
-                                        context.push('/announcements'),
+                                    onTap: () => context.push('/announcements'),
                                   ),
                                 if (isSender)
-                                  _MenuItem(
+                                  DonyListTile(
                                     icon: Icons.inventory_2_outlined,
-                                    iconColor: const Color(0xFFE67E22),
+                                    iconColor: cs.secondary,
+                                    iconBgColor: cs.secondaryContainer,
                                     label: 'Mes envois',
                                     trailing: activeBids > 0
-                                        ? '$activeBids en cours'
+                                        ? Text(
+                                            '$activeBids en cours',
+                                            style: tt.labelMedium?.copyWith(
+                                              color: cs.secondary,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          )
                                         : null,
-                                    onTap: () =>
-                                        context.push('/announcements'),
+                                    onTap: () => context.push('/announcements'),
                                   ),
                                 if (isTraveler)
-                                  _MenuItem(
+                                  DonyListTile(
                                     icon: Icons.account_balance_wallet_rounded,
-                                    iconColor: const Color(0xFF16A34A),
+                                    iconColor: DonyColors.success,
+                                    iconBgColor: DonyColors.successLight,
                                     label: 'Recevoir mes paiements',
                                     onTap: () =>
                                         context.push('/payments/onboarding'),
                                   ),
-                                _MenuItem(
+                                DonyListTile(
                                   icon: Icons.credit_card_outlined,
-                                  iconColor: const Color(0xFF8E44AD),
+                                  iconColor: DonyColors.purple,
+                                  iconBgColor: DonyColors.violetLight,
                                   label: 'Paiements & factures',
                                   onTap: () {},
                                 ),
-                                _MenuItem(
+                                DonyListTile(
                                   icon: Icons.badge_outlined,
-                                  iconColor: DonyColors.green400,
+                                  iconColor: cs.primary,
+                                  iconBgColor: cs.primaryContainer,
                                   label: 'Documents KYC',
-                                  trailing:
-                                      isKycVerified ? 'Vérifié' : null,
-                                  trailingColor:
-                                      isKycVerified ? DonyColors.success : null,
+                                  trailing: isKycVerified
+                                      ? Text(
+                                          'Vérifié',
+                                          style: tt.labelMedium?.copyWith(
+                                            color: DonyColors.success,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        )
+                                      : null,
                                   onTap: () => context.push('/kyc'),
                                 ),
-                                _MenuItem(
+                                DonyListTile(
                                   icon: Icons.people_outline_rounded,
-                                  iconColor: const Color(0xFF27AE60),
+                                  iconColor: DonyColors.success,
+                                  iconBgColor: DonyColors.successLight,
                                   label: 'Parrainages',
-                                  trailing: '0 invité',
-                                  isLast: true,
+                                  trailing: Text(
+                                    '0 invité',
+                                    style: tt.labelMedium?.copyWith(
+                                      color: cs.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  showDivider: false,
                                   onTap: () {},
                                 ),
                               ],
@@ -281,35 +302,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 .slideY(
                                     begin: 0.04,
                                     curve: Curves.easeOutCubic),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: DonySpacing.base),
 
                             // ── Menu settings ───────────────────────────
-                            _MenuSection(
-                              children: [
-                                _MenuItem(
+                            DonyListSection(
+                              tiles: [
+                                DonyListTile(
                                   icon: Icons.notifications_outlined,
-                                  iconColor: const Color(0xFFF59E0B),
+                                  iconColor: DonyColors.warning,
+                                  iconBgColor: DonyColors.warningLight,
                                   label: 'Notifications',
                                   onTap: () {},
                                 ),
-                                _MenuItem(
+                                DonyListTile(
                                   icon: Icons.language_rounded,
-                                  iconColor: DonyColors.green400,
+                                  iconColor: cs.primary,
+                                  iconBgColor: cs.primaryContainer,
                                   label: 'Langue',
-                                  trailing: 'Français',
+                                  trailing: Text(
+                                    'Français',
+                                    style: tt.labelMedium?.copyWith(
+                                      color: cs.onSurfaceVariant,
+                                    ),
+                                  ),
                                   onTap: () {},
                                 ),
-                                _MenuItem(
+                                DonyListTile(
                                   icon: Icons.lock_outline_rounded,
-                                  iconColor: DonyColors.grey400,
+                                  iconColor: cs.onSurfaceVariant,
+                                  iconBgColor: cs.outline.withValues(alpha: 0.3),
                                   label: 'Sécurité & confidentialité',
                                   onTap: () {},
                                 ),
-                                _MenuItem(
+                                DonyListTile(
                                   icon: Icons.help_outline_rounded,
-                                  iconColor: DonyColors.grey400,
+                                  iconColor: cs.onSurfaceVariant,
+                                  iconBgColor: cs.outline.withValues(alpha: 0.3),
                                   label: 'Aide & support',
-                                  isLast: true,
+                                  showDivider: false,
                                   onTap: () {},
                                 ),
                               ],
@@ -319,30 +349,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 .slideY(
                                     begin: 0.04,
                                     curve: Curves.easeOutCubic),
-                            const SizedBox(height: 28),
+                            const SizedBox(height: DonySpacing.xxl),
 
                             // ── Déconnexion ─────────────────────────────
-                            GestureDetector(
-                              onTap: () => context
+                            DonyButton(
+                              label: 'Se déconnecter',
+                              onPressed: () => context
                                   .read<AuthBloc>()
                                   .add(const AuthLogoutRequested()),
-                              child: Text(
-                                'Se déconnecter',
-                                style: GoogleFonts.sora(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: DonyColors.error,
-                                ),
-                              ),
+                              variant: DonyButtonVariant.ghost,
                             ).animate().fadeIn(delay: 280.ms),
-                            const SizedBox(height: 32),
+                            const SizedBox(height: DonySpacing.xxl),
 
                             // ── Footer ──────────────────────────────────
                             Text(
                               'dony v1.0.0 · Made with ❤️ in Paris',
-                              style: GoogleFonts.sora(
-                                fontSize: 12,
-                                color: DonyColors.grey200,
+                              style: tt.bodySmall?.copyWith(
+                                color: cs.outline,
                               ),
                             ).animate().fadeIn(delay: 320.ms),
                           ],
@@ -358,53 +381,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-
-  Widget _buildAvatar(String initials, bool isKycVerified) {
-    return Stack(
-      alignment: Alignment.bottomRight,
-      children: [
-        Container(
-          width: 88,
-          height: 88,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [DonyColors.green600, DonyColors.green400],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: DonyColors.green400.withValues(alpha: 0.3),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Center(
-            child: Text(
-              initials,
-              style: GoogleFonts.sora(
-                color: Colors.white,
-                fontSize: 26,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ),
-        if (isKycVerified)
-          Container(
-            padding: const EdgeInsets.all(3),
-            decoration: const BoxDecoration(
-              color: DonyColors.white,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.verified_rounded,
-                color: DonyColors.success, size: 20),
-          ),
-      ],
-    );
-  }
 }
 
 // ── Profile completion banner ─────────────────────────────────────────────────
@@ -413,31 +389,39 @@ class _ProfileCompletionBanner extends StatelessWidget {
   const _ProfileCompletionBanner({
     required this.user,
     required this.onTap,
+    required this.cs,
+    required this.tt,
   });
 
   final UserModel user;
   final VoidCallback onTap;
+  final ColorScheme cs;
+  final TextTheme tt;
 
   @override
   Widget build(BuildContext context) {
     final completed = user.profileCompletionSteps;
-    final total = UserModel.profileTotalSteps;
+    const total = UserModel.profileTotalSteps;
 
     final missing = <String>[];
     if (!(user.firstName?.isNotEmpty ?? false) &&
         !(user.lastName?.isNotEmpty ?? false)) {
       missing.add('Votre nom');
     }
-    if (user.birthDate == null) missing.add('Date de naissance');
-    if (!(user.city?.isNotEmpty ?? false)) missing.add("Lieu d'habitation");
+    if (user.birthDate == null) {
+      missing.add('Date de naissance');
+    }
+    if (!(user.city?.isNotEmpty ?? false)) {
+      missing.add("Lieu d'habitation");
+    }
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(DonySpacing.base),
         decoration: BoxDecoration(
-          color: DonyColors.warning.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(16),
+          color: DonyColors.warningLight,
+          borderRadius: BorderRadius.circular(DonyRadius.card),
           border: Border.all(color: DonyColors.warning.withValues(alpha: 0.3)),
         ),
         child: Column(
@@ -449,28 +433,26 @@ class _ProfileCompletionBanner extends StatelessWidget {
                   padding: const EdgeInsets.all(7),
                   decoration: BoxDecoration(
                     color: DonyColors.warning.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(DonyRadius.sm + 2),
                   ),
                   child: const Icon(Icons.edit_note_rounded,
                       color: DonyColors.warning, size: 18),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: DonySpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Profil incomplet',
-                        style: GoogleFonts.sora(
-                          fontSize: 14,
+                        style: tt.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w700,
-                          color: DonyColors.ink900,
+                          color: cs.onSurface,
                         ),
                       ),
                       Text(
                         '${(completed / total * 100).round()}% complété · Compléter maintenant',
-                        style: GoogleFonts.sora(
-                          fontSize: 12,
+                        style: tt.bodySmall?.copyWith(
                           color: DonyColors.warning,
                           fontWeight: FontWeight.w500,
                         ),
@@ -478,27 +460,26 @@ class _ProfileCompletionBanner extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Icon(Icons.chevron_right_rounded,
-                    color: DonyColors.grey200, size: 18),
+                Icon(Icons.chevron_right_rounded,
+                    color: cs.onSurfaceVariant, size: 18),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: DonySpacing.md),
             ClipRRect(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(DonyRadius.xs),
               child: LinearProgressIndicator(
                 value: completed / total,
-                backgroundColor: DonyColors.grey100,
+                backgroundColor: cs.outline,
                 valueColor: const AlwaysStoppedAnimation<Color>(DonyColors.warning),
                 minHeight: 5,
               ),
             ),
             if (missing.isNotEmpty) ...[
-              const SizedBox(height: 10),
+              const SizedBox(height: DonySpacing.sm + 2),
               Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children:
-                    missing.map((m) => _MissingChip(label: m)).toList(),
+                spacing: DonySpacing.sm - 2,
+                runSpacing: DonySpacing.xs,
+                children: missing.map((m) => _MissingChip(label: m, tt: tt)).toList(),
               ),
             ],
           ],
@@ -509,27 +490,30 @@ class _ProfileCompletionBanner extends StatelessWidget {
 }
 
 class _MissingChip extends StatelessWidget {
-  const _MissingChip({required this.label});
+  const _MissingChip({required this.label, required this.tt});
   final String label;
+  final TextTheme tt;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs + 1,
+      ),
       decoration: BoxDecoration(
         color: DonyColors.warning.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(DonyRadius.sm - 2),
         border: Border.all(color: DonyColors.warning.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(Icons.add_rounded, color: DonyColors.warning, size: 12),
-          const SizedBox(width: 3),
+          const SizedBox(width: DonySpacing.xxs + 1),
           Text(
             label,
-            style: GoogleFonts.sora(
-              fontSize: 11,
+            style: tt.labelSmall?.copyWith(
               fontWeight: FontWeight.w600,
               color: DonyColors.warning,
             ),
@@ -548,12 +532,16 @@ class _StatsRow extends StatelessWidget {
     required this.totalBids,
     required this.totalAnnouncements,
     required this.isLoading,
+    required this.cs,
+    required this.tt,
   });
 
   final bool isTraveler;
   final int totalBids;
   final int totalAnnouncements;
   final bool isLoading;
+  final ColorScheme cs;
+  final TextTheme tt;
 
   @override
   Widget build(BuildContext context) {
@@ -575,22 +563,19 @@ class _StatsRow extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: DonySpacing.base),
       decoration: BoxDecoration(
-        color: DonyColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: DonyColors.grey100),
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
       ),
       child: Row(
         children: [
-          Expanded(
-              child: _StatItem(value: stat1Value, label: stat1Label)),
-          Container(width: 1, height: 32, color: DonyColors.grey100),
-          const Expanded(
-              child: _StatItem(value: '4.9', label: 'Ma note')),
-          Container(width: 1, height: 32, color: DonyColors.grey100),
-          Expanded(
-              child: _StatItem(value: stat3Value, label: stat3Label)),
+          Expanded(child: _StatItem(value: stat1Value, label: stat1Label, cs: cs, tt: tt)),
+          Container(width: 1, height: 32, color: cs.outline),
+          Expanded(child: _StatItem(value: '4.9', label: 'Ma note', cs: cs, tt: tt)),
+          Container(width: 1, height: 32, color: cs.outline),
+          Expanded(child: _StatItem(value: stat3Value, label: stat3Label, cs: cs, tt: tt)),
         ],
       ),
     );
@@ -598,10 +583,17 @@ class _StatsRow extends StatelessWidget {
 }
 
 class _StatItem extends StatelessWidget {
-  const _StatItem({required this.value, required this.label});
+  const _StatItem({
+    required this.value,
+    required this.label,
+    required this.cs,
+    required this.tt,
+  });
 
   final String value;
   final String label;
+  final ColorScheme cs;
+  final TextTheme tt;
 
   @override
   Widget build(BuildContext context) {
@@ -609,122 +601,16 @@ class _StatItem extends StatelessWidget {
       children: [
         Text(
           value,
-          style: GoogleFonts.sora(
-            fontSize: 18,
+          style: tt.headlineMedium?.copyWith(
             fontWeight: FontWeight.w800,
-            color: DonyColors.ink900,
+            color: cs.onSurface,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: DonySpacing.xxs),
         Text(
           label,
-          style: GoogleFonts.sora(
-            fontSize: 12,
-            color: DonyColors.grey400,
-          ),
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
-      ],
-    );
-  }
-}
-
-// ── Menu section ──────────────────────────────────────────────────────────────
-
-class _MenuSection extends StatelessWidget {
-  const _MenuSection({required this.children});
-
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: DonyColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: DonyColors.grey100),
-      ),
-      child: Column(children: children),
-    );
-  }
-}
-
-class _MenuItem extends StatelessWidget {
-  const _MenuItem({
-    required this.icon,
-    required this.iconColor,
-    required this.label,
-    this.trailing,
-    this.trailingColor,
-    this.isLast = false,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final Color iconColor;
-  final String label;
-  final String? trailing;
-  final Color? trailingColor;
-  final bool isLast;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: iconColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(icon, color: iconColor, size: 18),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: GoogleFonts.sora(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: DonyColors.ink900,
-                    ),
-                  ),
-                ),
-                if (trailing != null) ...[
-                  Text(
-                    trailing!,
-                    style: GoogleFonts.sora(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: trailingColor ?? DonyColors.grey400,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                ],
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  size: 18,
-                  color: DonyColors.grey200,
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (!isLast)
-          const Padding(
-            padding: EdgeInsets.only(left: 66),
-            child: Divider(height: 1),
-          ),
       ],
     );
   }
@@ -745,22 +631,26 @@ class _Badge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm + 2,
+        vertical: DonySpacing.xs + 1,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(DonyRadius.xl),
         border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: color, size: 13),
-          const SizedBox(width: 5),
+          const SizedBox(width: DonySpacing.xs + 1),
           Text(
             label,
-            style: GoogleFonts.sora(
-              fontSize: 12,
+            style: tt.labelSmall?.copyWith(
               fontWeight: FontWeight.w600,
               color: color,
             ),
