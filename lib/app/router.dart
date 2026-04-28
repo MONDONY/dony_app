@@ -35,9 +35,12 @@ import 'package:dony/features/matching/presentation/screens/handover_screen.dart
 import 'package:dony/features/matching/presentation/screens/search_announcement_screen.dart';
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
 import 'package:dony/features/notifications/presentation/inbox_screen.dart';
+import 'package:dony/features/payments/presentation/screens/escrow_explainer_screen.dart';
 import 'package:dony/features/profile/presentation/edit_profile_screen.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
+import 'package:dony/features/tracking/presentation/screens/offline_scan_queue_screen.dart';
+import 'package:dony/features/tracking/presentation/screens/reception_confirm_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -176,6 +179,27 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(
+      path: '/payments/escrow',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>;
+        return EscrowExplainerScreen(
+          amount: (extra['amount'] as num).toDouble(),
+          travelerName: extra['travelerName'] as String,
+          bidId: extra['bidId'] as String?,
+        );
+      },
+    ),
+    GoRoute(
+      path: '/tracking/confirm',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, String>;
+        return ReceptionConfirmScreen(
+          bidId: extra['bidId']!,
+          travelerName: extra['travelerName']!,
+        );
+      },
+    ),
+    GoRoute(
       path: '/payment/confirm',
       builder: (context, state) =>
           const _PlaceholderScreen(title: 'Confirmer paiement'),
@@ -305,6 +329,13 @@ final appRouter = GoRouter(
             GoRoute(
               path: '/tracking',
               builder: (context, state) => const _TrackingHubScreen(),
+              routes: [
+                GoRoute(
+                  path: 'offline-queue',
+                  builder: (context, state) =>
+                      const OfflineScanQueueScreen(),
+                ),
+              ],
             ),
           ],
         ),

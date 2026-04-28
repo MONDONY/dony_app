@@ -69,6 +69,24 @@ void main() {
       await tester.pumpWidget(_wrap(const DonyBadge(label: 'test')));
       expect(find.byType(DonyBadge), findsOneWidget);
     });
+
+    testWidgets('success type renders', (tester) async {
+      // ignore: prefer_const_constructors
+      await tester.pumpWidget(_wrap(DonyBadge(label: 'ok', type: DonyBadgeType.success)));
+      expect(find.text('OK'), findsOneWidget);
+    });
+
+    testWidgets('warning type renders', (tester) async {
+      // ignore: prefer_const_constructors
+      await tester.pumpWidget(_wrap(DonyBadge(label: 'warn', type: DonyBadgeType.warning)));
+      expect(find.text('WARN'), findsOneWidget);
+    });
+
+    testWidgets('error type renders', (tester) async {
+      // ignore: prefer_const_constructors
+      await tester.pumpWidget(_wrap(DonyBadge(label: 'err', type: DonyBadgeType.error)));
+      expect(find.text('ERR'), findsOneWidget);
+    });
   });
 
   group('DonyAvatar', () {
@@ -151,6 +169,15 @@ void main() {
         ]),
       ));
       expect(find.byType(DonyAvatar), findsNWidgets(2));
+    });
+
+    testWidgets('imageUrl shows network image widget', (tester) async {
+      // ignore: prefer_const_constructors
+      await tester.pumpWidget(_wrap(DonyAvatar(
+        name: 'Test User',
+        imageUrl: 'https://example.com/avatar.jpg',
+      )));
+      expect(find.byType(DonyAvatar), findsOneWidget);
     });
   });
 }
