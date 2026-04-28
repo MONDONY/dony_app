@@ -619,7 +619,7 @@ class _ApplessBanner extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            'Quand $travelerName sera devant votre porte, vous confirmerez avec un QR ou un code à 6 chiffres.',
+            'Quand $travelerName sera devant votre porte, vous confirmerez avec un QR ou un code à 4 chiffres.',
             style: tt.bodySmall
                 ?.copyWith(color: DonyColors.ink900, height: 1.4),
           ),
