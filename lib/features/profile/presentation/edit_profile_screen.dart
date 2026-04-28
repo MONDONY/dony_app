@@ -52,12 +52,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       initialDate: _birthDate ?? DateTime(now.year - 25),
       firstDate: DateTime(1920),
       lastDate: DateTime(now.year - 16),
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: Theme.of(context).colorScheme,
-        ),
-        child: child!,
-      ),
     );
     if (picked != null) {
       setState(() => _birthDate = picked);

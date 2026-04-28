@@ -10,6 +10,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:flutter/material.dart';
@@ -62,7 +63,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               return BlocBuilder<AnnouncementBloc, AnnouncementState>(
                 builder: (context, announcementState) {
                   // Bid stats (sender)
-                  final bids = bidState is BidListLoaded ? bidState.bids : <dynamic>[];
+                  final bids = bidState is BidListLoaded ? bidState.bids : <BidModel>[];
                   final totalBids = bids.length;
                   final activeBids =
                       bids.where((b) => b.status == 'ACCEPTED').length;
