@@ -26,6 +26,8 @@ class KycOnboardingScreen extends StatelessWidget {
           }
         },
         builder: (context, state) {
+          final cs = Theme.of(context).colorScheme;
+          final tt = Theme.of(context).textTheme;
           return SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
@@ -33,9 +35,9 @@ class KycOnboardingScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: DonySpacing.huge),
-                  _buildHeader(context),
+                  _buildHeader(cs, tt),
                   const SizedBox(height: DonySpacing.huge),
-                  _buildSteps(context),
+                  _buildSteps(cs, tt),
                   const Spacer(),
                   _buildButton(context, state),
                   const SizedBox(height: DonySpacing.xxl),
@@ -48,9 +50,7 @@ class KycOnboardingScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
+  Widget _buildHeader(ColorScheme cs, TextTheme tt) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -80,25 +80,28 @@ class KycOnboardingScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSteps(BuildContext context) {
+  Widget _buildSteps(ColorScheme cs, TextTheme tt) {
     return Column(
       children: [
         _buildStep(
-          context,
+          cs,
+          tt,
           icon: Icons.credit_card_outlined,
           title: 'Pièce d\'identité',
           description: 'Passeport, carte d\'identité ou permis de conduire',
         ),
         const SizedBox(height: DonySpacing.lg),
         _buildStep(
-          context,
+          cs,
+          tt,
           icon: Icons.face_outlined,
           title: 'Selfie liveness',
           description: 'Photo en temps réel pour confirmer votre identité',
         ),
         const SizedBox(height: DonySpacing.lg),
         _buildStep(
-          context,
+          cs,
+          tt,
           icon: Icons.check_circle_outline,
           title: 'Vérification automatique',
           description: 'Résultat dans les 24h, souvent instantané',
@@ -108,13 +111,12 @@ class KycOnboardingScreen extends StatelessWidget {
   }
 
   Widget _buildStep(
-    BuildContext context, {
+    ColorScheme cs,
+    TextTheme tt, {
     required IconData icon,
     required String title,
     required String description,
   }) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(

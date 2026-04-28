@@ -54,6 +54,7 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     return Scaffold(
       body: BlocConsumer<KycBloc, KycState>(
         listener: (context, state) {
@@ -75,9 +76,9 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
                   if (state is KycLoading || state is KycInitial)
                     CircularProgressIndicator(color: cs.primary)
                   else if (state is KycStatusLoaded)
-                    _buildStatusContent(context, state)
+                    _buildStatusContent(context, cs, tt, state)
                   else if (state is KycError)
-                    _buildErrorContent(context, state.message),
+                    _buildErrorContent(cs, tt, state.message),
                 ],
               ).animate().fadeIn(duration: 300.ms),
             ),
@@ -87,20 +88,23 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
     );
   }
 
-  Widget _buildStatusContent(BuildContext context, KycStatusLoaded state) {
+  Widget _buildStatusContent(
+    BuildContext context,
+    ColorScheme cs,
+    TextTheme tt,
+    KycStatusLoaded state,
+  ) {
     switch (state.kycStatus) {
       case 'VERIFIED':
-        return _buildVerifiedContent(context);
+        return _buildVerifiedContent(context, cs, tt);
       case 'REJECTED':
-        return _buildRejectedContent(context);
+        return _buildRejectedContent(context, cs, tt);
       default:
-        return _buildPendingContent(context);
+        return _buildPendingContent(cs, tt);
     }
   }
 
-  Widget _buildVerifiedContent(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
+  Widget _buildVerifiedContent(BuildContext context, ColorScheme cs, TextTheme tt) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -134,9 +138,7 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
     );
   }
 
-  Widget _buildPendingContent(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
+  Widget _buildPendingContent(ColorScheme cs, TextTheme tt) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -167,9 +169,7 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
     );
   }
 
-  Widget _buildRejectedContent(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
+  Widget _buildRejectedContent(BuildContext context, ColorScheme cs, TextTheme tt) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -203,9 +203,7 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
     );
   }
 
-  Widget _buildErrorContent(BuildContext context, String message) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
+  Widget _buildErrorContent(ColorScheme cs, TextTheme tt, String message) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [

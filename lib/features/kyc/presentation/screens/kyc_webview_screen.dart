@@ -24,6 +24,16 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
         NavigationDelegate(
           onPageStarted: (_) => setState(() => _isLoading = true),
           onPageFinished: (_) => setState(() => _isLoading = false),
+          onWebResourceError: (error) {
+            if (mounted) {
+              setState(() => _isLoading = false);
+              DonySnackbar.show(
+                context,
+                message: 'Impossible de charger la page de vérification',
+                type: DonySnackbarType.error,
+              );
+            }
+          },
           onNavigationRequest: (request) {
             // Intercept Stripe's return_url (https://dony.app/kyc/complete)
             if (request.url.startsWith('https://dony.app/kyc/complete')) {
