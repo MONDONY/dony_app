@@ -14,4 +14,57 @@ abstract final class AppAssets {
   static const logoMark      = 'assets/logos/logo-mark.svg';
   // Motif wax africain pour arrière-plans décoratifs
   static const patternWax    = 'assets/logos/pattern-wax.svg';
+
+  // ── Onboarding ───────────────────────────────────────────────────────────
+  static const onboarding1 = 'assets/images/onboarding-1-trips.png';
+  static const onboarding2 = 'assets/images/onboarding-2-sharing.png';
+  static const onboarding3 = 'assets/images/onboarding-3-security.png';
+
+  // ── Empty states ─────────────────────────────────────────────────────────
+  static const emptyStateTrips   = 'assets/images/empty-state-trips.png';
+  static const emptyStateProfile = 'assets/images/empty-state-profile.png';
+
+  // ── Placeholders ─────────────────────────────────────────────────────────
+  static const placeholderDriver = 'assets/images/placeholder-driver.png';
+  static const placeholderAvatar = 'assets/images/placeholder-avatar.png';
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+
+  static String getLogoForBackground({required bool isDarkBackground}) =>
+      isDarkBackground ? logoWhiteSvg : logoSvg;
+
+  static String getOnboardingImage({required int step}) {
+    switch (step) {
+      case 1:
+        return onboarding1;
+      case 2:
+        return onboarding2;
+      case 3:
+        return onboarding3;
+      default:
+        return onboarding1;
+    }
+  }
+
+  static String getEmptyState({required String context}) {
+    switch (context) {
+      case 'trips':
+        return emptyStateTrips;
+      case 'profile':
+        return emptyStateProfile;
+      default:
+        return emptyStateTrips;
+    }
+  }
+
+  static String getPlaceholder({required String type}) {
+    switch (type) {
+      case 'driver':
+        return placeholderDriver;
+      case 'avatar':
+        return placeholderAvatar;
+      default:
+        return placeholderAvatar;
+    }
+  }
 }
