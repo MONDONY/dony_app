@@ -43,7 +43,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
     final tt = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: DonyAppBar(title: 'Détail du trajet'),
+      appBar: const DonyAppBar(title: 'Détail du trajet'),
       body: BlocConsumer<AnnouncementBloc, AnnouncementState>(
         listener: (context, state) {
           if (state is AnnouncementDeleted) {
@@ -118,7 +118,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                       ),
                     ),
                     const Spacer(),
-                    _StatusBadge(status: a.status),
+                    _StatusBadge(status: a.status, cs: cs, tt: tt),
                   ],
                 ),
                 const SizedBox(height: DonySpacing.base),
@@ -149,7 +149,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                 Row(
                   children: [
                     Icon(Icons.calendar_month_rounded, color: cs.onPrimary.withValues(alpha: 0.6), size: 15),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: DonySpacing.xs),
                     Text(
                       DateFormat('EEEE d MMMM yyyy', 'fr').format(a.departureDate),
                       style: tt.bodySmall?.copyWith(
@@ -203,7 +203,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
           if (a.departureLocation != null || a.arrivalLocation != null) ...[
             const SizedBox(height: DonySpacing.md),
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(DonySpacing.md),
               decoration: BoxDecoration(
                 color: cs.surface,
                 borderRadius: BorderRadius.circular(DonyRadius.lg),
@@ -220,7 +220,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                     ),
                   ),
                   if (a.departureLocation != null) ...[
-                    const SizedBox(height: 10),
+                    const SizedBox(height: DonySpacing.sm),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -277,7 +277,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                   icon: Icons.scale_rounded,
                   label: 'Capacité dispo.',
                   value: '${a.availableKg.toStringAsFixed(1)} kg',
-                  color: const Color(0xFF0F4C75),
+                  color: DonyColors.blue800,
                   cs: cs,
                   tt: tt,
                 ),
@@ -303,7 +303,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                   icon: Icons.inbox_rounded,
                   label: 'Demandes',
                   value: '${a.bidsCount ?? 0}',
-                  color: const Color(0xFF6C3483),
+                  color: DonyColors.violet,
                   cs: cs,
                   tt: tt,
                 ),
@@ -360,16 +360,16 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
 
           if (!canEdit && !canDelete && a.status != 'ACTIVE')
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(DonySpacing.md),
               decoration: BoxDecoration(
-                color: DonyColors.warningLight,
+                color: DonyColors.warning50,
                 borderRadius: BorderRadius.circular(DonyRadius.md),
-                border: Border.all(color: const Color(0xFFFDE68A)),
+                border: Border.all(color: DonyColors.amberLight),
               ),
               child: Row(
                 children: [
                   const Icon(Icons.info_outline_rounded, color: DonyColors.warning, size: 18),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: DonySpacing.sm),
                   Expanded(
                     child: Text(
                       'Ce trajet ne peut plus être modifié.',
@@ -387,13 +387,12 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
 
 class _StatusBadge extends StatelessWidget {
   final String status;
-  const _StatusBadge({required this.status});
+  final ColorScheme cs;
+  final TextTheme tt;
+  const _StatusBadge({required this.status, required this.cs, required this.tt});
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
     final (color, label) = switch (status) {
       'ACTIVE'    => (cs.success, 'Actif'),
       'FULL'      => (cs.warning, 'Complet'),
@@ -402,7 +401,7 @@ class _StatusBadge extends StatelessWidget {
       _           => (cs.onSurfaceVariant, status),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
       decoration: BoxDecoration(
         color: cs.onPrimary.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(DonyRadius.xl),
@@ -439,7 +438,7 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(DonySpacing.md),
       decoration: BoxDecoration(
         color: cs.surface,
         borderRadius: BorderRadius.circular(DonyRadius.lg),
@@ -449,14 +448,14 @@ class _StatCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(7),
+            padding: const EdgeInsets.all(DonySpacing.xs),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(DonyRadius.sm),
             ),
             child: Icon(icon, color: color, size: 16),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: DonySpacing.sm),
           Text(
             value,
             style: tt.titleLarge?.copyWith(

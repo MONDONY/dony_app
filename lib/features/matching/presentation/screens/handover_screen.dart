@@ -114,10 +114,10 @@ class _HandoverScreenState extends State<HandoverScreen> {
         }
       },
       child: Scaffold(
-        appBar: DonyAppBar(title: 'Fenêtre de remise'),
+        appBar: const DonyAppBar(title: 'Fenêtre de remise'),
         body: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(
-            DonySpacing.lg, DonySpacing.xl, DonySpacing.lg, 100,
+            DonySpacing.lg, DonySpacing.xl, DonySpacing.lg, DonySpacing.huge + DonySpacing.xxl,
           ),
           child: Form(
             key: _formKey,
@@ -190,7 +190,7 @@ class _HandoverScreenState extends State<HandoverScreen> {
       filled: true,
       fillColor: cs.surface,
       contentPadding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.base, vertical: 14,
+        horizontal: DonySpacing.base, vertical: DonySpacing.md,
       ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -216,7 +216,7 @@ class _InfoBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(DonySpacing.md),
       decoration: BoxDecoration(
         color: cs.primaryContainer,
         borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -226,7 +226,7 @@ class _InfoBanner extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(Icons.info_outline_rounded, color: cs.primary, size: 20),
-          const SizedBox(width: 10),
+          const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text(
               "L'expéditeur recevra une notification avec le lieu et l'heure de remise dès que vous confirmez.",
@@ -258,7 +258,7 @@ class _Section extends StatelessWidget {
             color: cs.onSurface,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: DonySpacing.sm),
         child,
       ],
     );
@@ -287,7 +287,7 @@ class _DateTimeTile extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.base, vertical: 14,
+          horizontal: DonySpacing.base, vertical: DonySpacing.md,
         ),
         decoration: BoxDecoration(
           color: cs.surface,

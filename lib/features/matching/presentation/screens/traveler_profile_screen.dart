@@ -1,13 +1,16 @@
 import 'dart:async';
 
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/matching/bloc/announcement_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_event.dart';
+import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
-import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/data/services/saved_trips_service.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -112,7 +115,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                       name: _announcement.traveler?.resolvedName ?? 'Voyageur',
                       size: DonyAvatarSize.xl,
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: DonySpacing.md),
                     Text(
                       _abbreviatedName,
                       style: tt.headlineLarge?.copyWith(
@@ -127,7 +130,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.phone_rounded, size: 13, color: cs.onSurfaceVariant),
-                          const SizedBox(width: 5),
+                          const SizedBox(width: DonySpacing.xs),
                           Text(
                             traveler!.phoneNumber!,
                             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
@@ -135,7 +138,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                         ],
                       ),
                     ],
-                    const SizedBox(height: 10),
+                    const SizedBox(height: DonySpacing.sm),
                     Wrap(
                       spacing: DonySpacing.sm,
                       runSpacing: 6,
@@ -213,7 +216,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                       color: cs.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: DonySpacing.sm),
                   _TripCard(announcement: _announcement, cs: cs, tt: tt).animate().fadeIn(delay: 80.ms),
 
                   const SizedBox(height: DonySpacing.lg),
@@ -226,7 +229,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                       color: cs.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: DonySpacing.sm),
                   _HandoverCard(announcement: _announcement, cs: cs, tt: tt).animate().fadeIn(delay: 110.ms),
 
                   const SizedBox(height: DonySpacing.lg),
@@ -239,7 +242,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                       color: cs.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: DonySpacing.sm),
                   _TarifCard(announcement: _announcement, cs: cs, tt: tt).animate().fadeIn(delay: 150.ms),
 
                   const SizedBox(height: DonySpacing.lg),
@@ -322,7 +325,7 @@ class _Badge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(DonyRadius.xl),
@@ -401,7 +404,7 @@ class _TripCard extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
               decoration: BoxDecoration(
                 color: cs.primaryContainer,
                 borderRadius: BorderRadius.circular(DonyRadius.xl),
@@ -454,7 +457,7 @@ class _TripCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: DonySpacing.md),
                 // Infos départ + arrivée
                 Expanded(
                   child: Column(
@@ -468,7 +471,7 @@ class _TripCard extends StatelessWidget {
                         cs: cs,
                         tt: tt,
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: DonySpacing.base),
                       _RouteStop(
                         date: announcement.departureDate,
                         time: announcement.arrivalTime,
@@ -588,7 +591,7 @@ class _HandoverCard extends StatelessWidget {
             children: [
               Container(
                 margin: const EdgeInsets.only(top: 2),
-                padding: const EdgeInsets.all(7),
+                padding: const EdgeInsets.all(DonySpacing.xs),
                 decoration: BoxDecoration(
                   color: cs.primaryContainer,
                   borderRadius: BorderRadius.circular(DonyRadius.sm),
@@ -633,7 +636,7 @@ class _HandoverCard extends StatelessWidget {
             children: [
               Container(
                 margin: const EdgeInsets.only(top: 2),
-                padding: const EdgeInsets.all(7),
+                padding: const EdgeInsets.all(DonySpacing.xs),
                 decoration: BoxDecoration(
                   color: cs.errorContainer,
                   borderRadius: BorderRadius.circular(DonyRadius.sm),
@@ -682,7 +685,7 @@ class _TarifCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.base, vertical: 14,
+        horizontal: DonySpacing.base, vertical: DonySpacing.md,
       ),
       decoration: BoxDecoration(
         color: cs.surface,
@@ -774,7 +777,7 @@ class _AboutSectionState extends State<_AboutSection> {
             borderRadius: BorderRadius.circular(DonyRadius.card),
             child: Padding(
               padding: const EdgeInsets.symmetric(
-                horizontal: DonySpacing.base, vertical: 14,
+                horizontal: DonySpacing.base, vertical: DonySpacing.md,
               ),
               child: Row(
                 children: [
@@ -958,7 +961,7 @@ class _ReviewTile extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: DonySpacing.xs),
                 Text(
                   review.comment,
                   style: tt.bodySmall?.copyWith(
@@ -977,80 +980,52 @@ class _ReviewTile extends StatelessWidget {
 
 // ── Global loader — accessible depuis n'importe quel contexte ─────────────────
 
-class TravelerProfileLoaderScreen extends StatefulWidget {
+class TravelerProfileLoaderScreen extends StatelessWidget {
   final String announcementId;
   const TravelerProfileLoaderScreen({super.key, required this.announcementId});
 
   @override
-  State<TravelerProfileLoaderScreen> createState() =>
-      _TravelerProfileLoaderScreenState();
-}
-
-class _TravelerProfileLoaderScreenState
-    extends State<TravelerProfileLoaderScreen> {
-  AnnouncementModel? _announcement;
-  bool _hasError = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetch();
-  }
-
-  Future<void> _fetch() async {
-    try {
-      final a = await getIt<AnnouncementRepository>()
-          .getAnnouncementDetail(widget.announcementId);
-      if (mounted) setState(() => _announcement = a);
-    } catch (_) {
-      if (mounted) setState(() => _hasError = true);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    if (_hasError) {
-      return Scaffold(
-        appBar: DonyAppBar(title: ''),
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.error_outline_rounded, size: 48, color: cs.onSurfaceVariant),
-              const SizedBox(height: DonySpacing.md),
-              Text(
-                'Impossible de charger le profil',
-                style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
+    return BlocProvider(
+      create: (_) => getIt<AnnouncementBloc>()
+        ..add(AnnouncementDetailRequested(announcementId)),
+      child: BlocBuilder<AnnouncementBloc, AnnouncementState>(
+        builder: (context, state) {
+          if (state is AnnouncementInitial || state is AnnouncementLoading) {
+            return Scaffold(
+              appBar: const DonyAppBar(title: ''),
+              body: Center(
+                child: CircularProgressIndicator(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
-              const SizedBox(height: DonySpacing.base),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _hasError = false;
-                    _announcement = null;
-                  });
-                  _fetch();
-                },
-                child: const Text('Réessayer'),
+            );
+          }
+
+          if (state is AnnouncementDetailLoaded) {
+            return TravelerProfileScreen(
+              announcement: state.announcement,
+              consultOnly: true,
+            );
+          }
+
+          // Error state
+          final description = state is AnnouncementError ? state.message : 'Impossible de charger le profil';
+          return Scaffold(
+            appBar: const DonyAppBar(title: ''),
+            body: DonyEmptyState(
+              icon: Icons.error_outline_rounded,
+              type: DonyEmptyStateType.error,
+              title: 'Erreur de chargement',
+              description: description,
+              actionLabel: 'Réessayer',
+              onAction: () => context.read<AnnouncementBloc>().add(
+                AnnouncementDetailRequested(announcementId),
               ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (_announcement == null) {
-      return Scaffold(
-        appBar: DonyAppBar(title: ''),
-        body: Center(
-          child: CircularProgressIndicator(color: cs.primary),
-        ),
-      );
-    }
-
-    return TravelerProfileScreen(announcement: _announcement!, consultOnly: true);
+            ),
+          );
+        },
+      ),
+    );
   }
 }
