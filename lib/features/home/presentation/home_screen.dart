@@ -70,7 +70,6 @@ class _SenderView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
     final topPad = MediaQuery.of(context).padding.top;
 
     return Scaffold(
@@ -209,7 +208,7 @@ class _SenderView extends StatelessWidget {
                   const SizedBox(height: DonySpacing.xl),
 
                   // ── Garantie Dony card ─────────────────────────────────────
-                  _GarantieCard(cs: cs).animate().fadeIn(delay: 220.ms),
+                  const _GarantieCard().animate().fadeIn(delay: 220.ms),
 
                   const SizedBox(height: DonySpacing.huge),
                 ],
@@ -442,9 +441,7 @@ class _CorridorChip extends StatelessWidget {
 // ── Garantie Dony card ────────────────────────────────────────────────────────
 
 class _GarantieCard extends StatelessWidget {
-  const _GarantieCard({required this.cs});
-
-  final ColorScheme cs;
+  const _GarantieCard();
 
   @override
   Widget build(BuildContext context) {

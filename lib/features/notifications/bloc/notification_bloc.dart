@@ -34,14 +34,16 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   ) async {
     final current = state;
     if (current is! NotificationLoaded) return;
+    final updated = current.notifications.map((n) {
+      return n.id == event.id ? _setRead(n) : n;
+    }).toList();
+    final unread = updated.where((n) => !n.read).length;
+    emit(current.copyWith(notifications: updated, unreadCount: unread));
     try {
       await _repository.markRead(event.id);
-      final updated = current.notifications.map((n) {
-        return n.id == event.id ? _setRead(n) : n;
-      }).toList();
-      final unread = updated.where((n) => !n.read).length;
-      emit(current.copyWith(notifications: updated, unreadCount: unread));
-    } catch (_) {}
+    } catch (_) {
+      emit(current);
+    }
   }
 
   Future<void> _onMarkAllRead(
@@ -50,11 +52,13 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   ) async {
     final current = state;
     if (current is! NotificationLoaded) return;
+    final updated = current.notifications.map(_setRead).toList();
+    emit(current.copyWith(notifications: updated, unreadCount: 0));
     try {
       await _repository.markAllRead();
-      final updated = current.notifications.map(_setRead).toList();
-      emit(current.copyWith(notifications: updated, unreadCount: 0));
-    } catch (_) {}
+    } catch (_) {
+      emit(current);
+    }
   }
 
   Future<void> _onDelete(

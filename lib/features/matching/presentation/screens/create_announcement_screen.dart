@@ -2,6 +2,7 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -12,29 +13,6 @@ import 'package:intl/intl.dart';
 const _departureCities = ['Paris', 'Lyon', 'Marseille'];
 const _arrivalCities = ['Dakar', 'Abidjan', 'Bamako', 'Douala'];
 
-const _departureAirports = {
-  'Paris': 'CDG',
-  'Lyon': 'LYS',
-  'Marseille': 'MRS',
-};
-const _arrivalAirports = {
-  'Dakar': 'AIBD',
-  'Abidjan': 'ABJ',
-  'Bamako': 'BKO',
-  'Douala': 'DLA',
-};
-
-const _departureAirportCodes = {
-  'Paris': 'CDG',
-  'Lyon': 'LYS',
-  'Marseille': 'MRS',
-};
-const _arrivalAirportCodes = {
-  'Dakar': 'DSS',
-  'Abidjan': 'ABJ',
-  'Bamako': 'BKO',
-  'Douala': 'DLA',
-};
 
 // Price selector options matching maquette: 5€, 6€, 7€, 8€
 const _priceOptions = [5.0, 6.0, 7.0, 8.0];
@@ -324,10 +302,10 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                     final arrivalTime = _arrivalTimeNotifier.value;
 
                     final depCode = departureCity != null
-                        ? (_departureAirportCodes[departureCity] ?? departureCity)
+                        ? cityAirportCode(departureCity, departure: true)
                         : null;
                     final arrCode = arrivalCity != null
-                        ? (_arrivalAirportCodes[arrivalCity] ?? arrivalCity)
+                        ? cityAirportCode(arrivalCity, departure: false)
                         : null;
 
                     return Column(
@@ -406,7 +384,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                                 isDeparture: true,
                                 value: departureCity,
                                 airport: departureCity != null
-                                    ? _departureAirports[departureCity]
+                                    ? kDepartureCityCodes[departureCity]
                                     : null,
                                 cities: _departureCities,
                                 onChanged: (v) => _departureCityNotifier.value = v,
@@ -431,7 +409,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                                 isDeparture: false,
                                 value: arrivalCity,
                                 airport: arrivalCity != null
-                                    ? _arrivalAirports[arrivalCity]
+                                    ? kArrivalCityCodes[arrivalCity]
                                     : null,
                                 cities: _arrivalCities,
                                 onChanged: (v) => _arrivalCityNotifier.value = v,

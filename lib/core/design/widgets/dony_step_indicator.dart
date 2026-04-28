@@ -118,12 +118,11 @@ class _LabeledIndicator extends StatelessWidget {
 
     return Row(
       children: List.generate(steps.length, (i) {
-        final done    = i < current;
-        final active  = i == current;
-        final pending = i > current;
+        final done   = i < current;
+        final active = i == current;
 
         final circleColor = done || active ? cs.primary : DonyColors.neutral200;
-        final labelColor  = active ? cs.primary : pending ? DonyColors.textMuted : DonyColors.textMuted;
+        final labelColor  = active ? cs.primary : done ? DonyColors.textSubtle : DonyColors.textMuted;
 
         return Expanded(
           child: Row(

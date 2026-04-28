@@ -65,10 +65,19 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       return;
     }
     final state = context.read<AuthBloc>().state;
-    final verificationId =
-        state is AuthOtpSent ? state.verificationId : '';
+    if (state is! AuthOtpSent) {
+      DonySnackbar.show(
+        context,
+        message: 'Session expirée, veuillez recommencer',
+        type: DonySnackbarType.error,
+      );
+      return;
+    }
     context.read<AuthBloc>().add(
-          AuthPhoneVerified(verificationId: verificationId, smsCode: _otpCode),
+          AuthPhoneVerified(
+            verificationId: state.verificationId,
+            smsCode: _otpCode,
+          ),
         );
   }
 

@@ -107,12 +107,6 @@ void main() {
 
     testWidgets('sm size renders Container with dimension 32', (tester) async {
       await tester.pumpWidget(_wrap(const DonyAvatar(name: 'Test', size: DonyAvatarSize.sm)));
-      // The outer Container has width/height = _dimension
-      final containers = tester.widgetList<Container>(find.byType(Container));
-      final mainContainer = containers.firstWhere(
-        (c) => c.constraints == null && (c.decoration is BoxDecoration),
-        orElse: () => containers.first,
-      );
       // Verify the avatar rendered (size sm = 32)
       expect(find.byType(DonyAvatar), findsOneWidget);
       final size = tester.getSize(find.byType(DonyAvatar));

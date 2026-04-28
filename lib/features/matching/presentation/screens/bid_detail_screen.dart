@@ -10,6 +10,7 @@ import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/presentation/widgets/qr_code_card.dart';
+import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -181,8 +182,8 @@ class _BidDetailViewState extends State<_BidDetailView> {
         // Compute corridor codes for display
         final depCity = _bid.departureCity ?? 'Paris';
         final arrCity = _bid.arrivalCity ?? 'Dakar';
-        final depCode = _cityToCode(depCity, departure: true);
-        final arrCode = _cityToCode(arrCity, departure: false);
+        final depCode = cityAirportCode(depCity, departure: true);
+        final arrCode = cityAirportCode(arrCity, departure: false);
 
         return Scaffold(
           backgroundColor: DonyColors.bg,
@@ -368,27 +369,6 @@ class _BidDetailViewState extends State<_BidDetailView> {
     );
   }
 
-  String _cityToCode(String city, {required bool departure}) {
-    const departureCodes = {
-      'Paris': 'CDG',
-      'Lyon': 'LYS',
-      'Marseille': 'MRS',
-    };
-    const arrivalCodes = {
-      'Dakar': 'DSS',
-      'Abidjan': 'ABJ',
-      'Bamako': 'BKO',
-      'Douala': 'DLA',
-    };
-
-    if (departure) {
-      return departureCodes[city] ??
-          (city.length >= 3 ? city.substring(0, 3).toUpperCase() : city.toUpperCase());
-    } else {
-      return arrivalCodes[city] ??
-          (city.length >= 3 ? city.substring(0, 3).toUpperCase() : city.toUpperCase());
-    }
-  }
 }
 
 // ── Status badge ──────────────────────────────────────────────────────────────
