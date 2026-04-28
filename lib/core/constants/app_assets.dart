@@ -1,3 +1,5 @@
+enum OnboardingStep { step1, step2, step3 }
+
 enum EmptyStateContext { trips, profile }
 
 enum PlaceholderType { driver, avatar }
@@ -37,16 +39,14 @@ abstract final class AppAssets {
   static String getLogoForBackground({required bool isDarkBackground}) =>
       isDarkBackground ? logoWhiteSvg : logoSvg;
 
-  static String getOnboardingImage({required int step}) {
+  static String getOnboardingImage({required OnboardingStep step}) {
     switch (step) {
-      case 1:
+      case OnboardingStep.step1:
         return onboarding1;
-      case 2:
+      case OnboardingStep.step2:
         return onboarding2;
-      case 3:
+      case OnboardingStep.step3:
         return onboarding3;
-      default:
-        return onboarding1;
     }
   }
 

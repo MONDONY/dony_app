@@ -21,16 +21,13 @@ void main() {
 
     group('getOnboardingImage', () {
       test('returns step 1 image', () {
-        expect(AppAssets.getOnboardingImage(step: 1), AppAssets.onboarding1);
+        expect(AppAssets.getOnboardingImage(step: OnboardingStep.step1), AppAssets.onboarding1);
       });
       test('returns step 2 image', () {
-        expect(AppAssets.getOnboardingImage(step: 2), AppAssets.onboarding2);
+        expect(AppAssets.getOnboardingImage(step: OnboardingStep.step2), AppAssets.onboarding2);
       });
       test('returns step 3 image', () {
-        expect(AppAssets.getOnboardingImage(step: 3), AppAssets.onboarding3);
-      });
-      test('returns step 1 for out-of-range step', () {
-        expect(AppAssets.getOnboardingImage(step: 99), AppAssets.onboarding1);
+        expect(AppAssets.getOnboardingImage(step: OnboardingStep.step3), AppAssets.onboarding3);
       });
     });
 
