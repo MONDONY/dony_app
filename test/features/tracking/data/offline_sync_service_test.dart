@@ -54,7 +54,7 @@ void main() {
     test('adds entry to queue with required fields', () async {
       await service.queueScan(bidId: 'bid-1', eventType: 'TRANSIT');
       final entry = Map<String, dynamic>.from(
-          _hiveService.offlineQueue.values.first as Map);
+          _hiveService.offlineQueue.values.first);
       expect(entry['bidId'], 'bid-1');
       expect(entry['eventType'], 'TRANSIT');
       expect(entry['offlineTimestamp'], isNotNull);
@@ -69,7 +69,7 @@ void main() {
         photoPath: '/tmp/photo.jpg',
       );
       final entry = Map<String, dynamic>.from(
-          _hiveService.offlineQueue.values.first as Map);
+          _hiveService.offlineQueue.values.first);
       expect(entry['gpsLat'], 48.8566);
       expect(entry['gpsLon'], 2.3522);
       expect(entry['photoPath'], '/tmp/photo.jpg');
@@ -78,7 +78,7 @@ void main() {
     test('does not include null fields', () async {
       await service.queueScan(bidId: 'bid-3', eventType: 'DEPART');
       final entry = Map<String, dynamic>.from(
-          _hiveService.offlineQueue.values.first as Map);
+          _hiveService.offlineQueue.values.first);
       expect(entry.containsKey('gpsLat'), isFalse);
       expect(entry.containsKey('photoPath'), isFalse);
     });
