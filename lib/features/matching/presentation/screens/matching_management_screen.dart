@@ -80,7 +80,6 @@ class _MatchingManagementScreenState extends State<MatchingManagementScreen> {
                 top: MediaQuery.of(context).padding.top + DonySpacing.sm,
                 right: 50, // To avoid being exactly on top of other icons
                 child: Material(
-                  color: Colors.transparent,
                   child: InkWell(
                     onTap: () => setState(() => _showSendersView = !_showSendersView),
                     borderRadius: BorderRadius.circular(DonyRadius.xl),

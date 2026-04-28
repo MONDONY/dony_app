@@ -198,9 +198,6 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
                       ? (_) => _confirmDeleteDialog(context)
                       : null,
                   onDismissed: (_) {
-                    setState(() {
-                      _lastList = _lastList.where((a) => a.id != item.id).toList();
-                    });
                     context
                         .read<AnnouncementBloc>()
                         .add(AnnouncementDeleteRequested(item.id));

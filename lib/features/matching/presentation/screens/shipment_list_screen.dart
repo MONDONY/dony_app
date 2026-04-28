@@ -142,7 +142,6 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
                 ),
                 if (state.isRefreshing)
                   const LinearProgressIndicator(
-                    backgroundColor: Colors.transparent,
                     color: DonyColors.primary,
                     minHeight: 2,
                   ),
@@ -177,11 +176,9 @@ class _EnvoisHeaderState extends State<_EnvoisHeader> {
   final _savedService = getIt<SavedTripsService>();
 
   void _openSavedTrips() {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _SavedTripsSheet(
+    DonyBottomSheet.show<void>(
+      context,
+      child: _SavedTripsSheet(
         savedService: _savedService,
         onChanged: () => setState(() {}),
       ),
@@ -901,7 +898,7 @@ class _EmptyView extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       child: Padding(
         padding: const EdgeInsets.symmetric(
-            horizontal: 40, vertical: DonySpacing.xxl),
+            horizontal: DonySpacing.xxl, vertical: DonySpacing.xxl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1001,7 +998,7 @@ class _ErrorView extends StatelessWidget {
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(40),
+        padding: const EdgeInsets.all(DonySpacing.xxl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -1138,32 +1135,11 @@ class _SavedTripsSheetState extends State<_SavedTripsSheet> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final bottomPad = MediaQuery.of(context).padding.bottom;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(DonyRadius.sheet)),
-      ),
-      padding: EdgeInsets.fromLTRB(
-          DonySpacing.lg, 0, DonySpacing.lg, bottomPad + DonySpacing.xl),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Handle
-          Center(
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: cs.outline,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
           // Titre
           Row(
             children: [
@@ -1318,8 +1294,7 @@ class _SavedTripsSheetState extends State<_SavedTripsSheet> {
                 },
               ),
             ),
-        ],
-      ),
+      ],
     );
   }
 }
