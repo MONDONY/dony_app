@@ -21,20 +21,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       List.generate(6, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
-  String _verificationId = '';
-  String _phoneNumber = '';
-
   int _secondsLeft = 60;
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    final state = context.read<AuthBloc>().state;
-    if (state is AuthOtpSent) {
-      _verificationId = state.verificationId;
-      _phoneNumber = state.phoneNumber;
-    }
     _startTimer();
   }
 
@@ -72,8 +64,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       );
       return;
     }
+    final state = context.read<AuthBloc>().state;
+    final verificationId =
+        state is AuthOtpSent ? state.verificationId : '';
     context.read<AuthBloc>().add(
-          AuthPhoneVerified(verificationId: _verificationId, smsCode: _otpCode),
+          AuthPhoneVerified(verificationId: verificationId, smsCode: _otpCode),
         );
   }
 
@@ -83,7 +78,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     }
     setState(() => _secondsLeft = 60);
     _startTimer();
-    context.read<AuthBloc>().add(AuthSendOtpRequested(_phoneNumber));
+    final state = context.read<AuthBloc>().state;
+    final phoneNumber = state is AuthOtpSent ? state.phoneNumber : '';
+    context.read<AuthBloc>().add(AuthSendOtpRequested(phoneNumber));
   }
 
   @override
@@ -94,12 +91,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     return Scaffold(
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthOtpSent) {
-            setState(() {
-              _verificationId = state.verificationId;
-              _phoneNumber = state.phoneNumber;
-            });
-          } else if (state is AuthOtpVerified) {
+          if (state is AuthOtpVerified) {
             context.go('/auth/role');
           } else if (state is AuthAuthenticated) {
             context.go('/auth/local');
@@ -147,7 +139,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       children: [
                         const TextSpan(text: 'Code envoyé au '),
                         TextSpan(
-                          text: _phoneNumber,
+                          text: state is AuthOtpSent ? state.phoneNumber : '',
                           style: tt.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w700,
                             color: cs.primary,

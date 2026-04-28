@@ -59,29 +59,31 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     DonyBottomSheet.show<void>(
       context,
       title: 'Indicatif pays',
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: _codes.map((c) {
+      child: Builder(
+        builder: (context) {
           final cs = Theme.of(context).colorScheme;
           final tt = Theme.of(context).textTheme;
-          return ListTile(
-            leading: Text(c.$2, style: const TextStyle(fontSize: 22)),
-            title: Text(
-              '${c.$3} (${c.$1})',
-              style: tt.titleMedium,
-            ),
-            trailing: _selectedCode == c.$1
-                ? Icon(Icons.check_rounded, color: cs.primary)
-                : null,
-            onTap: () {
-              setState(() {
-                _selectedCode = c.$1;
-                _selectedFlag = c.$2;
-              });
-              context.pop();
-            },
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: _codes.map((c) => ListTile(
+              leading: Text(c.$2, style: const TextStyle(fontSize: 22)),
+              title: Text(
+                '${c.$3} (${c.$1})',
+                style: tt.titleMedium,
+              ),
+              trailing: _selectedCode == c.$1
+                  ? Icon(Icons.check_rounded, color: cs.primary)
+                  : null,
+              onTap: () {
+                setState(() {
+                  _selectedCode = c.$1;
+                  _selectedFlag = c.$2;
+                });
+                context.pop();
+              },
+            )).toList(),
           );
-        }).toList(),
+        },
       ),
     );
   }

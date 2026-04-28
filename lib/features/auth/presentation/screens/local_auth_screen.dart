@@ -107,7 +107,7 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
                   const SizedBox(height: 56),
                   _buildLockIcon(state, cs),
                   const SizedBox(height: DonySpacing.xl),
-                  _buildTitle(context),
+                  _buildTitle(cs),
                   const SizedBox(height: DonySpacing.huge),
                   _buildPinDots(state, cs),
                   if (state is LocalAuthPinRequired && state.attemptsLeft < 3)
@@ -155,9 +155,8 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
     ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack);
   }
 
-  Widget _buildTitle(BuildContext context) {
+  Widget _buildTitle(ColorScheme cs) {
     final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
 
     return Column(
       children: [
