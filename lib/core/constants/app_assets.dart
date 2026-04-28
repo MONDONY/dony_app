@@ -1,3 +1,7 @@
+enum EmptyStateContext { trips, profile }
+
+enum PlaceholderType { driver, avatar }
+
 abstract final class AppAssets {
   // ── Images ──────────────────────────────────────────────────────────────────
   // Logo bleu marine sur fond blanc — écrans clairs
@@ -46,24 +50,20 @@ abstract final class AppAssets {
     }
   }
 
-  static String getEmptyState({required String context}) {
+  static String getEmptyState({required EmptyStateContext context}) {
     switch (context) {
-      case 'trips':
+      case EmptyStateContext.trips:
         return emptyStateTrips;
-      case 'profile':
+      case EmptyStateContext.profile:
         return emptyStateProfile;
-      default:
-        return emptyStateTrips;
     }
   }
 
-  static String getPlaceholder({required String type}) {
+  static String getPlaceholder({required PlaceholderType type}) {
     switch (type) {
-      case 'driver':
+      case PlaceholderType.driver:
         return placeholderDriver;
-      case 'avatar':
-        return placeholderAvatar;
-      default:
+      case PlaceholderType.avatar:
         return placeholderAvatar;
     }
   }

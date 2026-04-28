@@ -36,25 +36,19 @@ void main() {
 
     group('getEmptyState', () {
       test('returns trips image for trips context', () {
-        expect(AppAssets.getEmptyState(context: 'trips'), AppAssets.emptyStateTrips);
+        expect(AppAssets.getEmptyState(context: EmptyStateContext.trips), AppAssets.emptyStateTrips);
       });
       test('returns profile image for profile context', () {
-        expect(AppAssets.getEmptyState(context: 'profile'), AppAssets.emptyStateProfile);
-      });
-      test('returns trips image as default for unknown context', () {
-        expect(AppAssets.getEmptyState(context: 'unknown'), AppAssets.emptyStateTrips);
+        expect(AppAssets.getEmptyState(context: EmptyStateContext.profile), AppAssets.emptyStateProfile);
       });
     });
 
     group('getPlaceholder', () {
       test('returns driver placeholder', () {
-        expect(AppAssets.getPlaceholder(type: 'driver'), AppAssets.placeholderDriver);
+        expect(AppAssets.getPlaceholder(type: PlaceholderType.driver), AppAssets.placeholderDriver);
       });
       test('returns avatar placeholder', () {
-        expect(AppAssets.getPlaceholder(type: 'avatar'), AppAssets.placeholderAvatar);
-      });
-      test('returns avatar for unknown type', () {
-        expect(AppAssets.getPlaceholder(type: 'unknown'), AppAssets.placeholderAvatar);
+        expect(AppAssets.getPlaceholder(type: PlaceholderType.avatar), AppAssets.placeholderAvatar);
       });
     });
 
