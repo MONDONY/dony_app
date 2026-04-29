@@ -6,10 +6,6 @@ import 'package:dony/features/auth/presentation/screens/otp_verification_screen.
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/pin_setup_screen.dart';
 import 'package:dony/features/auth/presentation/screens/role_selection_screen.dart';
-import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
-import 'package:dony/features/tracking/presentation/screens/qr_scanner_screen.dart';
-import 'package:dony/features/tracking/presentation/screens/tracking_search_screen.dart';
-import 'package:dony/features/tracking/presentation/screens/tracking_timeline_screen.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/presentation/screens/cancellation_screen.dart';
@@ -18,9 +14,6 @@ import 'package:dony/features/home/presentation/home_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_onboarding_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_status_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
-import 'package:dony/features/payments/bloc/payment_bloc.dart';
-import 'package:dony/features/payments/presentation/screens/payment_screen.dart';
-import 'package:dony/features/payments/presentation/screens/payout_onboarding_screen.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -29,18 +22,25 @@ import 'package:dony/features/matching/presentation/screens/announcement_detail_
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/create_announcement_screen.dart';
-import 'package:dony/features/matching/presentation/screens/matching_management_screen.dart';
 import 'package:dony/features/matching/presentation/screens/create_bid_screen.dart';
 import 'package:dony/features/matching/presentation/screens/handover_screen.dart';
+import 'package:dony/features/matching/presentation/screens/matching_management_screen.dart';
 import 'package:dony/features/matching/presentation/screens/search_announcement_screen.dart';
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
 import 'package:dony/features/notifications/presentation/inbox_screen.dart';
+import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/presentation/screens/escrow_explainer_screen.dart';
+import 'package:dony/features/payments/presentation/screens/payment_screen.dart';
+import 'package:dony/features/payments/presentation/screens/payout_onboarding_screen.dart';
 import 'package:dony/features/profile/presentation/edit_profile_screen.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
+import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/presentation/screens/offline_scan_queue_screen.dart';
+import 'package:dony/features/tracking/presentation/screens/qr_scanner_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/reception_confirm_screen.dart';
+import 'package:dony/features/tracking/presentation/screens/tracking_search_screen.dart';
+import 'package:dony/features/tracking/presentation/screens/tracking_timeline_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -398,7 +398,7 @@ class _TrackingHubScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Section voyageur ──────────────────────────────────────
-            _HubSectionTitle(
+            const _HubSectionTitle(
               icon: Icons.qr_code_scanner_rounded,
               label: 'Je suis voyageur',
             ),
@@ -414,7 +414,7 @@ class _TrackingHubScreen extends StatelessWidget {
             const SizedBox(height: 32),
 
             // ── Section expéditeur / destinataire ────────────────────
-            _HubSectionTitle(
+            const _HubSectionTitle(
               icon: Icons.search_rounded,
               label: 'Je suis expéditeur ou destinataire',
             ),
