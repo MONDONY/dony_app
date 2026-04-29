@@ -19,6 +19,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
+import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
+import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.dart';
 import 'package:dony/features/matching/presentation/widgets/route_map_components.dart';
 import 'package:intl/intl.dart';
@@ -34,6 +37,7 @@ class BidDetailScreen extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => getIt<BidBloc>()),
         BlocProvider(create: (_) => getIt<TrackingBloc>()),
+        BlocProvider(create: (_) => getIt<ConversationOpenBloc>()),
       ],
       child: _BidDetailView(initialBid: bid),
     );
@@ -97,7 +101,22 @@ class _BidDetailViewState extends State<_BidDetailView> {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
 
-    return BlocConsumer<BidBloc, BidState>(
+    return BlocListener<ConversationOpenBloc, ConversationOpenState>(
+      listener: (context, state) {
+        if (state is ConversationOpenSuccess) {
+          context.push(
+            '/conversations/${state.conversation.id}',
+            extra: state.conversation,
+          );
+        } else if (state is ConversationOpenError) {
+          DonySnackbar.show(
+            context,
+            message: state.message,
+            type: DonySnackbarType.error,
+          );
+        }
+      },
+      child: BlocConsumer<BidBloc, BidState>(
       listener: (context, state) {
         if (state is BidAccepted) {
           _bid = state.bid;
@@ -370,7 +389,8 @@ class _BidDetailViewState extends State<_BidDetailView> {
                           : null,
         );
       },
-    );
+    ), // BlocConsumer<BidBloc>
+    ); // BlocListener<ConversationOpenBloc>
   }
 
 }
@@ -514,9 +534,19 @@ class _TravelerCard extends StatelessWidget {
               ),
               const SizedBox(width: DonySpacing.sm),
               // Chat button
-              _IconActionButton(
-                icon: Icons.chat_bubble_outline_rounded,
-                onTap: () {},
+              BlocBuilder<ConversationOpenBloc, ConversationOpenState>(
+                builder: (context, openState) {
+                  final isOpening = openState is ConversationOpenLoading;
+                  return _IconActionButton(
+                    icon: Icons.chat_bubble_outline_rounded,
+                    isLoading: isOpening,
+                    onTap: isOpening
+                        ? null
+                        : () => context.read<ConversationOpenBloc>().add(
+                              ConversationOpenRequested(bid.id),
+                            ),
+                  );
+                },
               ),
             ],
           ),
@@ -528,22 +558,35 @@ class _TravelerCard extends StatelessWidget {
 
 class _IconActionButton extends StatelessWidget {
   final IconData icon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final bool isLoading;
 
-  const _IconActionButton({required this.icon, required this.onTap});
+  const _IconActionButton({
+    required this.icon,
+    required this.onTap,
+    this.isLoading = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 40,
-        height: 40,
+        width: 44,
+        height: 44,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(DonyRadius.full),
           border: Border.all(color: DonyColors.primary),
         ),
-        child: Icon(icon, color: DonyColors.primary, size: 18),
+        child: isLoading
+            ? const Padding(
+                padding: EdgeInsets.all(10),
+                child: CircularProgressIndicator(
+                  color: DonyColors.primary,
+                  strokeWidth: 2,
+                ),
+              )
+            : Icon(icon, color: DonyColors.primary, size: 18),
       ),
     );
   }
@@ -1294,6 +1337,7 @@ class _SenderActionBar extends StatelessWidget {
   void _openOptions(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _SenderOptionsSheet(bid: bid, outerContext: context),
     );
@@ -1432,9 +1476,13 @@ class _SenderOptionsSheet extends StatelessWidget {
             iconColor: DonyColors.primary,
             iconBg: DonyColors.blue100,
             label: 'Contacter le voyageur',
-            subtitle: 'Messagerie — bientôt disponible',
-            disabled: true,
-            onTap: null,
+            subtitle: 'Envoyer un message au voyageur',
+            onTap: () {
+              context.pop();
+              outerContext.read<ConversationOpenBloc>().add(
+                    ConversationOpenRequested(bid.id),
+                  );
+            },
           ),
           const SizedBox(height: DonySpacing.sm),
           if (bid.status == 'PENDING') ...[
@@ -1484,6 +1532,7 @@ class _SenderOptionsSheet extends StatelessWidget {
 
     showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
