@@ -1,6 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -96,13 +98,22 @@ class _DonyBottomNav extends StatelessWidget {
               ),
               // 3 — Messages
               Expanded(
-                child: _NavItem(
-                  icon: Icons.chat_bubble_rounded,
-                  outlinedIcon: Icons.chat_bubble_outline_rounded,
-                  label: 'Messages',
-                  index: 3,
-                  currentIndex: currentIndex,
-                  onTap: () => onTap(3),
+                child: StreamBuilder<int>(
+                  stream: getIt<FirestoreChatRepository>().totalUnreadStream(
+                    FirebaseAuth.instance.currentUser?.uid ?? '',
+                  ),
+                  builder: (context, snapshot) {
+                    final unreadCount = snapshot.data ?? 0;
+                    return _NavItem(
+                      icon: Icons.chat_bubble_rounded,
+                      outlinedIcon: Icons.chat_bubble_outline_rounded,
+                      label: 'Messages',
+                      index: 3,
+                      currentIndex: currentIndex,
+                      onTap: () => onTap(3),
+                      badgeCount: unreadCount,
+                    );
+                  },
                 ),
               ),
               // 4 — Moi
@@ -132,6 +143,7 @@ class _NavItem extends StatelessWidget {
     required this.index,
     required this.currentIndex,
     required this.onTap,
+    this.badgeCount = 0,
   });
 
   final IconData icon;
@@ -140,6 +152,7 @@ class _NavItem extends StatelessWidget {
   final int index;
   final int currentIndex;
   final VoidCallback onTap;
+  final int badgeCount;
 
   bool get _active => index == currentIndex;
 
@@ -151,22 +164,33 @@ class _NavItem extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.symmetric(
-              horizontal: DonySpacing.md,
-              vertical: DonySpacing.xs,
-            ),
-            decoration: BoxDecoration(
-              color: _active ? DonyColors.green100 : Colors.transparent,
-              borderRadius: BorderRadius.circular(DonyRadius.xl),
-            ),
-            child: Icon(
-              _active ? icon : outlinedIcon,
-              size: 22,
-              color: _active ? DonyColors.green400 : DonyColors.grey400,
-            ),
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutCubic,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.md,
+                  vertical: DonySpacing.xs,
+                ),
+                decoration: BoxDecoration(
+                  color: _active ? DonyColors.green100 : Colors.transparent,
+                  borderRadius: BorderRadius.circular(DonyRadius.xl),
+                ),
+                child: Icon(
+                  _active ? icon : outlinedIcon,
+                  size: 22,
+                  color: _active ? DonyColors.green400 : DonyColors.grey400,
+                ),
+              ),
+              if (badgeCount > 0)
+                Positioned(
+                  right: 2,
+                  top: 2,
+                  child: _NavBadge(count: badgeCount),
+                ),
+            ],
           ),
           const SizedBox(height: DonySpacing.xxs),
           AnimatedDefaultTextStyle(
@@ -178,6 +202,34 @@ class _NavItem extends StatelessWidget {
             child: Text(label),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _NavBadge extends StatelessWidget {
+  final int count;
+  const _NavBadge({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final label = count > 99 ? '99+' : count.toString();
+    return Container(
+      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      decoration: const BoxDecoration(
+        color: DonyColors.error,
+        borderRadius: BorderRadius.all(Radius.circular(DonyRadius.sm)),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: DonyColors.white,
+          height: 1.6,
+        ),
+        textAlign: TextAlign.center,
       ),
     );
   }
