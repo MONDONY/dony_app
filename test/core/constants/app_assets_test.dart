@@ -4,69 +4,46 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('AppAssets', () {
     group('getLogoForBackground', () {
-      test('returns logoWhiteSvg for dark background', () {
+      test('returns logoWhiteOrange for dark background', () {
         expect(
           AppAssets.getLogoForBackground(isDarkBackground: true),
-          AppAssets.logoWhiteSvg,
+          AppAssets.logoWhiteOrange,
         );
       });
 
-      test('returns logoSvg for light background', () {
+      test('returns logoBlueOrange for light background', () {
         expect(
           AppAssets.getLogoForBackground(isDarkBackground: false),
-          AppAssets.logoSvg,
+          AppAssets.logoBlueOrange,
         );
       });
     });
 
-    group('getOnboardingImage', () {
-      test('returns step 1 image', () {
-        expect(AppAssets.getOnboardingImage(step: OnboardingStep.step1), AppAssets.onboarding1);
-      });
-      test('returns step 2 image', () {
-        expect(AppAssets.getOnboardingImage(step: OnboardingStep.step2), AppAssets.onboarding2);
-      });
-      test('returns step 3 image', () {
-        expect(AppAssets.getOnboardingImage(step: OnboardingStep.step3), AppAssets.onboarding3);
-      });
+    test('logo alias points to logoBlueOrange', () {
+      expect(AppAssets.logo, AppAssets.logoBlueOrange);
     });
 
-    group('getEmptyState', () {
-      test('returns trips image for trips context', () {
-        expect(AppAssets.getEmptyState(context: EmptyStateContext.trips), AppAssets.emptyStateTrips);
-      });
-      test('returns profile image for profile context', () {
-        expect(AppAssets.getEmptyState(context: EmptyStateContext.profile), AppAssets.emptyStateProfile);
-      });
+    test('logoWhite alias points to logoWhiteOrange', () {
+      expect(AppAssets.logoWhite, AppAssets.logoWhiteOrange);
     });
 
-    group('getPlaceholder', () {
-      test('returns driver placeholder', () {
-        expect(AppAssets.getPlaceholder(type: PlaceholderType.driver), AppAssets.placeholderDriver);
-      });
-      test('returns avatar placeholder', () {
-        expect(AppAssets.getPlaceholder(type: PlaceholderType.avatar), AppAssets.placeholderAvatar);
-      });
-    });
-
-    test('all constants are non-empty strings', () {
-      final constants = [
-        AppAssets.logo,
-        AppAssets.logoWhite,
-        AppAssets.logoSvg,
-        AppAssets.logoWhiteSvg,
-        AppAssets.logoMark,
-        AppAssets.patternWax,
-        AppAssets.onboarding1,
-        AppAssets.onboarding2,
-        AppAssets.onboarding3,
-        AppAssets.emptyStateTrips,
-        AppAssets.emptyStateProfile,
-        AppAssets.placeholderDriver,
-        AppAssets.placeholderAvatar,
-      ];
-      for (final c in constants) {
-        expect(c, isNotEmpty, reason: 'Constant must not be empty');
+    test('all constants are non-empty strings pointing to assets/logos/', () {
+      final constants = {
+        'logoBlueOrange':     AppAssets.logoBlueOrange,
+        'logoBlueOrangeGlow': AppAssets.logoBlueOrangeGlow,
+        'logoBlackBlue':      AppAssets.logoBlackBlue,
+        'logoBlackOrange':    AppAssets.logoBlackOrange,
+        'logoWhiteBlue':      AppAssets.logoWhiteBlue,
+        'logoWhiteOrange':    AppAssets.logoWhiteOrange,
+        'patternWax':         AppAssets.patternWax,
+      };
+      for (final entry in constants.entries) {
+        expect(entry.value, isNotEmpty, reason: '${entry.key} must not be empty');
+        expect(
+          entry.value,
+          startsWith('assets/logos/'),
+          reason: '${entry.key} must be in assets/logos/',
+        );
       }
     });
   });

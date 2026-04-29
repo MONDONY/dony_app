@@ -114,7 +114,7 @@ class _SenderViewState extends State<_SenderView> {
     // Interpolation des couleurs
     final headerBg = Color.lerp(DonyColors.greenDark, DonyColors.white, progress)!;
     final iconColor = Color.lerp(DonyColors.white, DonyColors.ink900, progress)!;
-    final logoColor = Color.lerp(DonyColors.white, DonyColors.ink900, progress)!;
+    final logoVariant = progress > 0.5 ? DonyLogoVariant.onLight : DonyLogoVariant.onDark;
     final avatarBg = Color.lerp(
       DonyColors.white.withValues(alpha: 0.15),
       DonyColors.green50,
@@ -145,41 +145,32 @@ class _SenderViewState extends State<_SenderView> {
             centerTitle: false,
             automaticallyImplyLeading: false,
             // Barre persistante : logo + icônes
-            title: Row(
-              children: [
-                Text(
-                  'dony',
-                  style: DonyTypography.caveat(fontSize: 26, color: logoColor),
-                ),
-                Text(
-                  '.',
-                  style: DonyTypography.caveat(
-                      fontSize: 26, color: DonyColors.green400),
-                ),
-              ],
-            ),
+            title: DonyLogo(variant: logoVariant, fontSize: 26),
             actions: [
               IconButton(
                 icon: Icon(Icons.notifications_outlined, color: iconColor),
                 onPressed: () => context.push('/messages'),
                 tooltip: 'Notifications',
               ),
-              Container(
-                margin: const EdgeInsets.only(right: DonySpacing.base),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.sm,
-                  vertical: DonySpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: avatarBg,
-                  borderRadius: BorderRadius.circular(DonyRadius.full),
-                  border: Border.all(color: avatarBorder),
-                ),
-                child: Text(
-                  _initials,
-                  style: tt.labelMedium!.copyWith(
-                    color: avatarTextColor,
-                    fontWeight: FontWeight.w700,
+              GestureDetector(
+                onTap: () => context.push('/profile'),
+                child: Container(
+                  margin: const EdgeInsets.only(right: DonySpacing.base),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.sm,
+                    vertical: DonySpacing.xs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: avatarBg,
+                    borderRadius: BorderRadius.circular(DonyRadius.full),
+                    border: Border.all(color: avatarBorder),
+                  ),
+                  child: Text(
+                    _initials,
+                    style: tt.labelMedium!.copyWith(
+                      color: avatarTextColor,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),

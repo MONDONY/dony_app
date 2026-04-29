@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 80" fill="none">
+  <text x="10" y="56" font-family="Hanken Grotesk, system-ui, sans-serif" font-size="48" font-weight="800" letter-spacing="-2" fill="#0A2540">dony</text>
+  
+  <g transform="translate(118, 44)">
+    
+    <path d="M0 4 L11 0 L22 4 L22 16 L11 20 L0 16 Z" fill="#D96A3A"></path>
+    
+    <path d="M0 4 L11 8 L22 4 L11 0 Z" fill="#E27A4D"></path>
+    
+    <path d="M11 8 L22 4 L22 16 L11 20 Z" fill="#B95524"></path>
+    
+    <path d="M11 0 L11 20" stroke="#93421B" stroke-width="0.8" opacity="0.6"></path>
+  </g>
+</svg>

@@ -6,8 +6,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-const _kLogoDotSize = 34.0;
-
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
 
@@ -34,8 +32,8 @@ class OnboardingScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Logo "dony."
-                    const _DonyLogo(),
+                    // Logo dony
+                    const DonyLogo(fontSize: 36),
                     const SizedBox(height: DonySpacing.xxl),
 
                     // Headline — "Envoyez un colis"
@@ -163,38 +161,6 @@ class OnboardingScreen extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _DonyLogo extends StatelessWidget {
-  const _DonyLogo();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
-      children: [
-        Text(
-          'dony',
-          style: DonyTypography.caveat(
-            fontSize: 32,
-            fontWeight: FontWeight.w700,
-            color: DonyColors.ink900,
-          ),
-        ),
-        const Text(
-          '.',
-          style: TextStyle(
-            fontSize: _kLogoDotSize,
-            fontWeight: FontWeight.w900,
-            color: DonyColors.green400,
-            height: 1.0,
-          ),
-        ),
-      ],
     );
   }
 }

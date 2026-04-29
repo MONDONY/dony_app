@@ -9,6 +9,7 @@ export 'package:dony/core/design/tokens/typography_tokens.dart';
 // Navigation & layout
 export 'package:dony/core/design/widgets/dony_app_bar.dart';
 // Foundation components
+export 'package:dony/core/design/widgets/dony_logo.dart';
 export 'package:dony/core/design/widgets/dony_avatar.dart';
 export 'package:dony/core/design/widgets/dony_badge.dart';
 export 'package:dony/core/design/widgets/dony_bottom_sheet.dart';

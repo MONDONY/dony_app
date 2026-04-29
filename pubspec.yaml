@@ -51,6 +51,7 @@ dependencies:
 
   # UI / Design
   flutter_animate: ^4.5.0
+  flutter_svg: ^2.0.10+1
   pinput: ^5.0.0
   flutter_secure_storage: ^9.2.2
   google_fonts: ^6.2.1
@@ -84,29 +85,32 @@ dev_dependencies:
   mocktail: ^1.0.4
   flutter_launcher_icons: ^0.14.0
 
-flutter_native_splash:
-  background_image: assets/images/splash_full.png
-  background_image_dark: assets/images/splash_full.png
-  android_12:
-    color: "#1E88E5"
-    image: assets/images/icon_foreground.png
-    icon_background_color: "#1E88E5"
-  ios: true
-  android: true
-
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/images/icon_launcher.png"
-  adaptive_icon_background: "#1E88E5"
-  adaptive_icon_foreground: "assets/images/icon_foreground.png"
-  min_sdk_android: 21
-  remove_alpha_ios: true
+  image_path: "assets/logos/app_icon_source.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/logos/app_icon_source.png"
   web:
-    generate: false
+    generate: true
+    image_path: "assets/logos/app_icon_source.png"
+    background_color: "#FFFFFF"
+    theme_color: "#0B5FFF"
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  color_dark: "#FFFFFF"
+  image: assets/logos/splash_colis.png
+  android_12:
+    color: "#FFFFFF"
+    icon_background_color: "#FFFFFF"
+    image: assets/logos/splash_colis.png
+  ios: true
+  android: true
 
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/
     - assets/logos/
+    - assets/logos/2.0x/
+    - assets/logos/3.0x/

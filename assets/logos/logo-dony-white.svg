@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" fill="none">
-  <g transform="translate(8, 16)">
-    <path d="M2 40 Q 24 0, 46 16" stroke="#F2B898" stroke-width="3.5" stroke-linecap="round" fill="none"></path>
-    <rect x="10" y="14" width="36" height="34" rx="6" fill="#FFFFFF"></rect>
-    <rect x="10" y="26" width="36" height="3" fill="#D6E1FF"></rect>
-    <circle cx="44" cy="14" r="3" fill="#F2B898"></circle>
-  </g>
-  <text x="76" y="54" font-family="Hanken Grotesk, system-ui, sans-serif" font-size="44" font-weight="800" letter-spacing="-1.5" fill="#FFFFFF">dony</text>
-</svg>

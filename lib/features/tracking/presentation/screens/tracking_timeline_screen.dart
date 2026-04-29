@@ -79,29 +79,8 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // "dony." wordmark with green dot
-                  RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: 'dony',
-                          style: DonyTypography.caveat(
-                            fontSize: 24,
-                            color: DonyColors.ink900,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        TextSpan(
-                          text: '.',
-                          style: DonyTypography.caveat(
-                            fontSize: 24,
-                            color: DonyColors.green400,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  // Logo dony
+                  const DonyLogo(fontSize: 24),
                   const SizedBox(height: DonySpacing.sm),
                   // Greeting — corridor city as context
                   Text(

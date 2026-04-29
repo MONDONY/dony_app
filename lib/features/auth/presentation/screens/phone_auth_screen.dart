@@ -1,4 +1,3 @@
-import 'package:dony/core/constants/app_assets.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -121,7 +120,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                   Padding(
                     padding:
                         const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
-                    child: Image.asset(AppAssets.logo, height: 52),
+                    child: const DonyLogo(fontSize: 36),
                   ),
                   const SizedBox(height: 40),
                   Padding(

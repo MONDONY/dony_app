@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart' show Options;
-import 'package:dony/core/constants/app_assets.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/network/api_client.dart';
@@ -35,25 +34,34 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkAndNavigate() async {
-    try {
-      final response = await getIt<ApiClient>().dio.get<Map<String, dynamic>>(
-            '/actuator/health',
-            options: Options(extra: {'skipAuth': true}),
-          );
-      final status = response.data?['status'] as String? ?? '';
-      if (!mounted) {
-        return;
+    const maxAttempts = 3;
+    const retryDelay = Duration(milliseconds: 1500);
+
+    for (var attempt = 0; attempt < maxAttempts; attempt++) {
+      if (!mounted) return;
+      try {
+        final response = await getIt<ApiClient>().dio.get<Map<String, dynamic>>(
+              '/actuator/health',
+              options: Options(extra: {'skipAuth': true}),
+            );
+        final status = response.data?['status'] as String? ?? '';
+        if (!mounted) return;
+        if (status == 'UP') {
+          await _navigateNext();
+          return;
+        }
+      } catch (_) {
+        // tentative échouée — on retente silencieusement
       }
-      if (status == 'UP') {
-        await _navigateNext();
-      } else {
-        setState(() => _hasError = true);
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() => _hasError = true);
+
+      // Pause avant la prochaine tentative (sauf sur la dernière)
+      if (attempt < maxAttempts - 1) {
+        await Future.delayed(retryDelay);
       }
     }
+
+    // Toutes les tentatives épuisées
+    if (mounted) setState(() => _hasError = true);
   }
 
   Future<void> _navigateNext() async {
@@ -81,9 +89,14 @@ class _SplashScreenState extends State<SplashScreen> {
     final authBloc = context.read<AuthBloc>();
     authBloc.add(const AuthCheckRequested());
 
-    final result = await authBloc.stream.firstWhere(
-      (s) => s is AuthAuthenticated || s is AuthInitial || s is AuthError,
-    );
+    final result = await authBloc.stream
+        .firstWhere(
+          (s) => s is AuthAuthenticated || s is AuthInitial || s is AuthError,
+        )
+        .timeout(
+          const Duration(seconds: 15),
+          onTimeout: () => const AuthError(''),
+        );
 
     if (!mounted) {
       return;
@@ -105,31 +118,30 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: DonyColors.green400,
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Contenu statique — identique à l'image native splash_full.png
+          // Contenu centré — fond blanc + logo blue-orange
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Grand logo sans animation — même position que sur l'écran natif
-                Image.asset(AppAssets.logoWhite, height: 160),
+                const DonyLogo(variant: DonyLogoVariant.onLight, fontSize: 64),
                 const SizedBox(height: 28),
-                const Text(
+                Text(
                   'Livrez en confiance',
                   style: TextStyle(
-                    color: Color(0xB3FFFFFF),
+                    color: DonyColors.ink900.withValues(alpha: 0.45),
                     fontSize: 18,
                     letterSpacing: 0.4,
                     fontWeight: FontWeight.w400,
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text(
+                Text(
                   'v1.0.0',
                   style: TextStyle(
-                    color: Color(0x5DFFFFFF),
+                    color: DonyColors.ink900.withValues(alpha: 0.25),
                     fontSize: 13,
                     letterSpacing: 0.5,
                   ),
@@ -153,27 +165,27 @@ class _SplashScreenState extends State<SplashScreen> {
               right: 24,
               child: Column(
                 children: [
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.wifi_off_rounded, color: Colors.white54, size: 16),
-                      SizedBox(width: 8),
+                      Icon(Icons.wifi_off_rounded, color: DonyColors.ink900.withValues(alpha: 0.35), size: 16),
+                      const SizedBox(width: 8),
                       Text(
                         'Impossible de se connecter',
-                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                        style: TextStyle(color: DonyColors.ink900.withValues(alpha: 0.5), fontSize: 13),
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
                   OutlinedButton.icon(
                     onPressed: _retry,
-                    icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 16),
-                    label: const Text(
+                    icon: Icon(Icons.refresh_rounded, color: DonyColors.primary, size: 16),
+                    label: Text(
                       'Réessayer',
-                      style: TextStyle(color: Colors.white, fontSize: 14),
+                      style: TextStyle(color: DonyColors.primary, fontSize: 14),
                     ),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.white38),
+                      side: BorderSide(color: DonyColors.primary.withValues(alpha: 0.4)),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -199,8 +211,8 @@ class _LoadingDots extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 5),
           width: 7,
           height: 7,
-          decoration: const BoxDecoration(
-            color: Colors.white54,
+          decoration: BoxDecoration(
+            color: DonyColors.primary.withValues(alpha: 0.3),
             shape: BoxShape.circle,
           ),
         )

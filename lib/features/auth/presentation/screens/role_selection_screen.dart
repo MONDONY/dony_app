@@ -1,4 +1,3 @@
-import 'package:dony/core/constants/app_assets.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -43,7 +42,7 @@ class RoleSelectionScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Image.asset(AppAssets.logo, height: 48),
+                  const DonyLogo(fontSize: 34),
                   const SizedBox(height: DonySpacing.xxl),
                   Text(
                     'Je suis...',
