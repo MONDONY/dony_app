@@ -40,6 +40,15 @@ class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
   // showResults flag as a ValueNotifier — toggled without setState
   final _showResultsNotifier = ValueNotifier<bool>(false);
 
+  // Result-filter notifiers — hoisted to parent so they survive form↔results navigation
+  final _ratingActive = ValueNotifier<bool>(false);
+  final _priceActive = ValueNotifier<bool>(false);
+  final _weekActive = ValueNotifier<bool>(false);
+  final _weightActive = ValueNotifier<bool>(false);
+
+  // Dirty flag — true until _search() is called
+  final _searchDirtyNotifier = ValueNotifier<bool>(true);
+
   String get _departureCityShort =>
       _departureCityNotifier.value.split(' ').first;
   String get _arrivalCityShort =>
@@ -57,6 +66,11 @@ class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
     _weekendFilterNotifier.dispose();
     _priceFilterNotifier.dispose();
     _showResultsNotifier.dispose();
+    _ratingActive.dispose();
+    _priceActive.dispose();
+    _weekActive.dispose();
+    _weightActive.dispose();
+    _searchDirtyNotifier.dispose();
     super.dispose();
   }
 
@@ -65,14 +79,23 @@ class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
       departureCity: _departureCityShort,
       arrivalCity: _arrivalCityShort,
       departureDateFrom: _dateNotifier.value,
-      minAvailableKg: _weightKgNotifier.value > 1 ? _weightKgNotifier.value : null,
-      sortBy: 'date',
+      minAvailableKg:
+          _weightKgNotifier.value > 1 ? _weightKgNotifier.value : null,
+      maxPricePerKg:
+          _priceFilterNotifier.value ? _maxPricePerKgNotifier.value : null,
+      kiloProOnly: _kiloProOnlyNotifier.value,
+      minRating: _ratingFilterNotifier.value ? 4.5 : null,
+      weekendOnly: _weekendFilterNotifier.value,
+      sortBy: _priceFilterNotifier.value ? 'price' : 'date',
+      sortDir: 'asc',
     ));
+    _searchDirtyNotifier.value = false;
     _showResultsNotifier.value = true;
   }
 
   void _resetSearch() {
     _showResultsNotifier.value = false;
+    _searchDirtyNotifier.value = true;
   }
 
   @override
@@ -89,6 +112,11 @@ class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
         _weekendFilterNotifier,
         _priceFilterNotifier,
         _showResultsNotifier,
+        _ratingActive,
+        _priceActive,
+        _weekActive,
+        _weightActive,
+        _searchDirtyNotifier,
       ]),
       builder: (context, _) {
         final showResults = _showResultsNotifier.value;
@@ -98,6 +126,39 @@ class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
             departureCity: _departureCityShort,
             arrivalCity: _arrivalCityShort,
             onBack: _resetSearch,
+            ratingActive: _ratingActive,
+            priceActive: _priceActive,
+            weekActive: _weekActive,
+            weightActive: _weightActive,
+            date: _dateNotifier.value,
+            weightKg: _weightKgNotifier.value,
+            maxPricePerKg: _maxPricePerKgNotifier.value,
+            kiloProOnly: _kiloProOnlyNotifier.value,
+            ratingFilter: _ratingFilterNotifier.value,
+            weekendFilter: _weekendFilterNotifier.value,
+            priceFilter: _priceFilterNotifier.value,
+            onApply: ({
+              required departureCity,
+              required arrivalCity,
+              date,
+              required weightKg,
+              required maxPricePerKg,
+              required kiloProOnly,
+              required ratingFilter,
+              required weekendFilter,
+              required priceFilter,
+            }) {
+              _departureCityNotifier.value = departureCity;
+              _arrivalCityNotifier.value = arrivalCity;
+              _dateNotifier.value = date;
+              _weightKgNotifier.value = weightKg;
+              _maxPricePerKgNotifier.value = maxPricePerKg;
+              _kiloProOnlyNotifier.value = kiloProOnly;
+              _ratingFilterNotifier.value = ratingFilter;
+              _weekendFilterNotifier.value = weekendFilter;
+              _priceFilterNotifier.value = priceFilter;
+              _search();
+            },
           );
         }
 
@@ -111,15 +172,41 @@ class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
           ratingFilter: _ratingFilterNotifier.value,
           weekendFilter: _weekendFilterNotifier.value,
           priceFilter: _priceFilterNotifier.value,
-          onDepartureChanged: (v) => _departureCityNotifier.value = v,
-          onArrivalChanged: (v) => _arrivalCityNotifier.value = v,
-          onDateChanged: (v) => _dateNotifier.value = v,
-          onWeightChanged: (v) => _weightKgNotifier.value = v,
+          searchDirty: _searchDirtyNotifier.value,
+          onDepartureChanged: (v) {
+            _departureCityNotifier.value = v;
+            _search();
+          },
+          onArrivalChanged: (v) {
+            _arrivalCityNotifier.value = v;
+            _search();
+          },
+          onDateChanged: (v) {
+            _dateNotifier.value = v;
+            _searchDirtyNotifier.value = true;
+          },
+          onWeightChanged: (v) {
+            _weightKgNotifier.value = v;
+            _searchDirtyNotifier.value = true;
+          },
           onMaxPriceChanged: (v) => _maxPricePerKgNotifier.value = v,
-          onKiloProChanged: (v) => _kiloProOnlyNotifier.value = v,
-          onRatingChanged: (v) => _ratingFilterNotifier.value = v,
-          onWeekendChanged: (v) => _weekendFilterNotifier.value = v,
-          onPriceChanged: (v) => _priceFilterNotifier.value = v,
+          onMaxPriceChangeEnd: () => _searchDirtyNotifier.value = true,
+          onKiloProChanged: (v) {
+            _kiloProOnlyNotifier.value = v;
+            _search();
+          },
+          onRatingChanged: (v) {
+            _ratingFilterNotifier.value = v;
+            _search();
+          },
+          onWeekendChanged: (v) {
+            _weekendFilterNotifier.value = v;
+            _search();
+          },
+          onPriceChanged: (v) {
+            _priceFilterNotifier.value = v;
+            _search();
+          },
           onSearch: _search,
         );
       },
@@ -140,11 +227,13 @@ class _FilterFormView extends StatelessWidget {
     required this.ratingFilter,
     required this.weekendFilter,
     required this.priceFilter,
+    required this.searchDirty,
     required this.onDepartureChanged,
     required this.onArrivalChanged,
     required this.onDateChanged,
     required this.onWeightChanged,
     required this.onMaxPriceChanged,
+    required this.onMaxPriceChangeEnd,
     required this.onKiloProChanged,
     required this.onRatingChanged,
     required this.onWeekendChanged,
@@ -161,11 +250,13 @@ class _FilterFormView extends StatelessWidget {
   final bool ratingFilter;
   final bool weekendFilter;
   final bool priceFilter;
+  final bool searchDirty;
   final ValueChanged<String> onDepartureChanged;
   final ValueChanged<String> onArrivalChanged;
   final ValueChanged<DateTime?> onDateChanged;
   final ValueChanged<double> onWeightChanged;
   final ValueChanged<double> onMaxPriceChanged;
+  final VoidCallback onMaxPriceChangeEnd;
   final ValueChanged<bool> onKiloProChanged;
   final ValueChanged<bool> onRatingChanged;
   final ValueChanged<bool> onWeekendChanged;
@@ -321,6 +412,7 @@ class _FilterFormView extends StatelessWidget {
                 max: 25,
                 divisions: 20,
                 onChanged: onMaxPriceChanged,
+                onChangeEnd: (_) => onMaxPriceChangeEnd(),
               ),
             ),
             Row(
@@ -351,7 +443,7 @@ class _FilterFormView extends StatelessWidget {
                 ? state.results.length
                 : null;
             return DonyButton(
-              label: count != null
+              label: count != null && !searchDirty
                   ? 'Voir $count trajet${count > 1 ? 's' : ''}'
                   : 'Rechercher',
               onPressed: isLoading ? null : onSearch,
@@ -371,45 +463,323 @@ class _ResultsView extends StatefulWidget {
     required this.departureCity,
     required this.arrivalCity,
     required this.onBack,
+    required this.ratingActive,
+    required this.priceActive,
+    required this.weekActive,
+    required this.weightActive,
+    required this.date,
+    required this.weightKg,
+    required this.maxPricePerKg,
+    required this.kiloProOnly,
+    required this.ratingFilter,
+    required this.weekendFilter,
+    required this.priceFilter,
+    required this.onApply,
   });
 
   final String departureCity;
   final String arrivalCity;
   final VoidCallback onBack;
+  final ValueNotifier<bool> ratingActive;
+  final ValueNotifier<bool> priceActive;
+  final ValueNotifier<bool> weekActive;
+  final ValueNotifier<bool> weightActive;
+  final DateTime? date;
+  final double weightKg;
+  final double maxPricePerKg;
+  final bool kiloProOnly;
+  final bool ratingFilter;
+  final bool weekendFilter;
+  final bool priceFilter;
+  final void Function({
+    required String departureCity,
+    required String arrivalCity,
+    DateTime? date,
+    required double weightKg,
+    required double maxPricePerKg,
+    required bool kiloProOnly,
+    required bool ratingFilter,
+    required bool weekendFilter,
+    required bool priceFilter,
+  }) onApply;
 
   @override
   State<_ResultsView> createState() => _ResultsViewState();
 }
 
 class _ResultsViewState extends State<_ResultsView> {
-  // Quick-filter state — ValueNotifier, no setState
-  final _ratingActive = ValueNotifier<bool>(false);
-  final _priceActive = ValueNotifier<bool>(false);
-  final _weekActive = ValueNotifier<bool>(false);
-  final _weightActive = ValueNotifier<bool>(false);
-
-  @override
-  void initState() {
-    super.initState();
-    context.read<AnnouncementBloc>().add(AnnouncementSearchRequested(
-      departureCity: widget.departureCity,
-      arrivalCity: widget.arrivalCity,
-      sortBy: 'date',
-    ));
+  // ── Section 5: client-side filter logic (AND semantics) ─────────────────────
+  List<AnnouncementModel> _applyFilters(List<AnnouncementModel> all) {
+    final list = all.where((a) {
+      if (widget.ratingActive.value) {
+        final r = a.traveler?.averageRating;
+        if (r == null || r < 4.7) {
+          return false;
+        }
+      }
+      if (widget.weekActive.value) {
+        final now = DateTime.now();
+        final weekEnd = now.add(const Duration(days: 7));
+        if (a.departureDate.isBefore(now) ||
+            a.departureDate.isAfter(weekEnd)) {
+          return false;
+        }
+      }
+      if (widget.weightActive.value && a.availableKg < 10) {
+        return false;
+      }
+      return true;
+    }).toList();
+    if (widget.priceActive.value) {
+      list.sort((a, b) => a.pricePerKg.compareTo(b.pricePerKg));
+    }
+    return list;
   }
 
-  @override
-  void dispose() {
-    _ratingActive.dispose();
-    _priceActive.dispose();
-    _weekActive.dispose();
-    _weightActive.dispose();
-    super.dispose();
+  // ── Section 8: filter bottom sheet (DraggableScrollableSheet) ───────────────
+  void _showFilterBottomSheet(BuildContext ctx) {
+    String depCity = widget.departureCity;
+    String arrCity = widget.arrivalCity;
+    DateTime? date = widget.date;
+    double weightKg = widget.weightKg;
+    double maxPricePerKg = widget.maxPricePerKg;
+    bool kiloProOnly = widget.kiloProOnly;
+    bool ratingFilter = widget.ratingFilter;
+    bool weekendFilter = widget.weekendFilter;
+    bool priceFilter = widget.priceFilter;
+
+    showModalBottomSheet<void>(
+      context: ctx,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        minChildSize: 0.5,
+        maxChildSize: 0.92,
+        expand: false,
+        builder: (sheetCtx, scrollCtrl) => StatefulBuilder(
+          builder: (sbCtx, setSheet) {
+            final tt = Theme.of(sbCtx).textTheme;
+            return Container(
+              decoration: const BoxDecoration(
+                color: DonyColors.white,
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(DonyRadius.sheet),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Center(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(
+                          vertical: DonySpacing.md),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: DonyColors.grey200,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      controller: scrollCtrl,
+                      padding: const EdgeInsets.fromLTRB(
+                        DonySpacing.lg, 0, DonySpacing.lg, DonySpacing.xxl,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: DonyColors.white,
+                              borderRadius:
+                                  BorderRadius.circular(DonyRadius.card),
+                              border: Border.all(color: DonyColors.grey200),
+                            ),
+                            child: Column(
+                              children: [
+                                _LocationRow(
+                                  isDeparture: true,
+                                  value: depCity,
+                                  cities: _departureCities,
+                                  onChanged: (v) =>
+                                      setSheet(() => depCity = v),
+                                ),
+                                const Padding(
+                                  padding:
+                                      EdgeInsets.only(left: _kRowIndent),
+                                  child: Divider(
+                                      height: 1, color: DonyColors.grey200),
+                                ),
+                                _LocationRow(
+                                  isDeparture: false,
+                                  value: arrCity,
+                                  cities: _arrivalCities,
+                                  onChanged: (v) =>
+                                      setSheet(() => arrCity = v),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: DonySpacing.base),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _DateField(
+                                  date: date,
+                                  onChanged: (v) =>
+                                      setSheet(() => date = v),
+                                ),
+                              ),
+                              const SizedBox(width: DonySpacing.md),
+                              Expanded(
+                                child: _WeightField(
+                                  weightKg: weightKg,
+                                  onChanged: (v) =>
+                                      setSheet(() => weightKg = v),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: DonySpacing.xl),
+                          Text(
+                            'FILTRES RAPIDES',
+                            style: tt.labelMedium
+                                ?.copyWith(color: DonyColors.grey400),
+                          ),
+                          const SizedBox(height: DonySpacing.md),
+                          Wrap(
+                            spacing: DonySpacing.sm,
+                            runSpacing: DonySpacing.sm,
+                            children: [
+                              _QuickChip(
+                                label: 'Kilo Pro uniquement',
+                                active: kiloProOnly,
+                                onChanged: (v) =>
+                                    setSheet(() => kiloProOnly = v),
+                              ),
+                              _QuickChip(
+                                label: 'Note ≥ 4.5',
+                                active: ratingFilter,
+                                onChanged: (v) =>
+                                    setSheet(() => ratingFilter = v),
+                              ),
+                              _QuickChip(
+                                label: 'Arrivée ce week-end',
+                                active: weekendFilter,
+                                onChanged: (v) =>
+                                    setSheet(() => weekendFilter = v),
+                              ),
+                              _QuickChip(
+                                label:
+                                    'Prix ≤ ${maxPricePerKg.toStringAsFixed(0)}€/kg',
+                                active: priceFilter,
+                                onChanged: (v) =>
+                                    setSheet(() => priceFilter = v),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: DonySpacing.xxl),
+                          Row(
+                            mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Prix max par kg',
+                                  style: tt.titleMedium),
+                              Text(
+                                '${maxPricePerKg.toStringAsFixed(0)} €',
+                                style: tt.titleMedium
+                                    ?.copyWith(color: DonyColors.green400),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: DonySpacing.sm),
+                          SliderTheme(
+                            data: SliderTheme.of(sbCtx).copyWith(
+                              activeTrackColor: DonyColors.green400,
+                              inactiveTrackColor: DonyColors.grey200,
+                              thumbColor: DonyColors.green400,
+                              overlayColor: DonyColors.green400
+                                  .withValues(alpha: 0.1),
+                              trackHeight: 4,
+                            ),
+                            child: Slider(
+                              value: maxPricePerKg,
+                              min: 5,
+                              max: 25,
+                              divisions: 20,
+                              onChanged: (v) =>
+                                  setSheet(() => maxPricePerKg = v),
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('5 €',
+                                  style: tt.bodySmall?.copyWith(
+                                      color: DonyColors.grey400)),
+                              Text('25 €',
+                                  style: tt.bodySmall?.copyWith(
+                                      color: DonyColors.grey400)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.fromLTRB(
+                      DonySpacing.lg,
+                      DonySpacing.base,
+                      DonySpacing.lg,
+                      MediaQuery.of(sbCtx).padding.bottom + DonySpacing.base,
+                    ),
+                    decoration: const BoxDecoration(
+                      color: DonyColors.white,
+                      border:
+                          Border(top: BorderSide(color: DonyColors.grey200)),
+                    ),
+                    child: DonyButton(
+                      label: 'Appliquer',
+                      onPressed: () {
+                        sbCtx.pop();
+                        widget.onApply(
+                          departureCity: depCity,
+                          arrivalCity: arrCity,
+                          date: date,
+                          weightKg: weightKg,
+                          maxPricePerKg: maxPricePerKg,
+                          kiloProOnly: kiloProOnly,
+                          ratingFilter: ratingFilter,
+                          weekendFilter: weekendFilter,
+                          priceFilter: priceFilter,
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    // Section 7: badge visible when any Level-1 or Level-2 filter is active
+    final hasActiveFilters = widget.kiloProOnly ||
+        widget.ratingFilter ||
+        widget.weekendFilter ||
+        widget.priceFilter ||
+        widget.ratingActive.value ||
+        widget.priceActive.value ||
+        widget.weekActive.value ||
+        widget.weightActive.value;
 
     return Scaffold(
       backgroundColor: DonyColors.bg,
@@ -432,17 +802,45 @@ class _ResultsViewState extends State<_ResultsView> {
               '${widget.departureCity} → ${widget.arrivalCity}',
               style: tt.headlineLarge,
             ),
-            Text(
-              '23 voyageurs · cette semaine',
-              style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+            // Section 6: dynamic count from filtered results
+            BlocBuilder<AnnouncementBloc, AnnouncementState>(
+              builder: (context, state) {
+                if (state is! AnnouncementSearchLoaded) {
+                  return const SizedBox.shrink();
+                }
+                final count = _applyFilters(state.results).length;
+                return Text(
+                  '$count voyageur${count > 1 ? 's' : ''}',
+                  style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                );
+              },
             ),
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.tune_rounded, color: DonyColors.ink900),
-            onPressed: () {},
-            tooltip: 'Filtres',
+          // Section 7: green dot badge when Level-1 filters active
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.tune_rounded,
+                    color: DonyColors.ink900),
+                onPressed: () => _showFilterBottomSheet(context),
+                tooltip: 'Filtres',
+              ),
+              if (hasActiveFilters)
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: DonyColors.green400,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
         bottom: const PreferredSize(
@@ -452,15 +850,15 @@ class _ResultsViewState extends State<_ResultsView> {
       ),
       body: Column(
         children: [
-          // ── Filter chips row ────────────────────────────────────────
+          // ── Filter chips row (Section 3) ────────────────────────────
           SizedBox(
             height: 48,
             child: ListenableBuilder(
               listenable: Listenable.merge([
-                _ratingActive,
-                _priceActive,
-                _weekActive,
-                _weightActive,
+                widget.ratingActive,
+                widget.priceActive,
+                widget.weekActive,
+                widget.weightActive,
               ]),
               builder: (context, _) => ListView(
                 scrollDirection: Axis.horizontal,
@@ -472,104 +870,111 @@ class _ResultsViewState extends State<_ResultsView> {
                   _FilterChip(
                     label: '★ 4.7+',
                     icon: Icons.star_rounded,
-                    active: _ratingActive.value,
-                    onTap: () => _ratingActive.value = !_ratingActive.value,
+                    active: widget.ratingActive.value,
+                    onTap: () => widget.ratingActive.value =
+                        !widget.ratingActive.value,
                   ),
                   const SizedBox(width: DonySpacing.sm),
                   _FilterChip(
                     label: '€/kg ↓',
-                    active: _priceActive.value,
-                    onTap: () => _priceActive.value = !_priceActive.value,
+                    active: widget.priceActive.value,
+                    onTap: () => widget.priceActive.value =
+                        !widget.priceActive.value,
                   ),
                   const SizedBox(width: DonySpacing.sm),
                   _FilterChip(
                     label: 'Cette semaine',
-                    active: _weekActive.value,
-                    onTap: () => _weekActive.value = !_weekActive.value,
+                    active: widget.weekActive.value,
+                    onTap: () =>
+                        widget.weekActive.value = !widget.weekActive.value,
                   ),
                   const SizedBox(width: DonySpacing.sm),
                   _FilterChip(
                     label: '+10 kg',
-                    active: _weightActive.value,
-                    onTap: () => _weightActive.value = !_weightActive.value,
+                    active: widget.weightActive.value,
+                    onTap: () => widget.weightActive.value =
+                        !widget.weightActive.value,
                   ),
                 ],
               ),
             ),
           ),
-          // ── Results list ────────────────────────────────────────────
+          // ── Results list (Sections 4 + 5 + 9) ──────────────────────
           Expanded(
-            child: BlocBuilder<AnnouncementBloc, AnnouncementState>(
-              builder: (context, state) {
-                if (state is AnnouncementLoading ||
-                    state is AnnouncementInitial) {
-                  return const Center(
-                    child: CircularProgressIndicator(
-                        color: DonyColors.green400),
-                  );
-                }
-
-                if (state is AnnouncementError) {
-                  return _ErrorView(
-                    message: state.message,
-                    onRetry: () => context
-                        .read<AnnouncementBloc>()
-                        .add(AnnouncementSearchRequested(
-                          departureCity: widget.departureCity,
-                          arrivalCity: widget.arrivalCity,
-                          sortBy: 'date',
-                        )),
-                  );
-                }
-
-                if (state is AnnouncementSearchLoaded) {
-                  if (state.isEmpty) {
-                    return _EmptyView(onBack: widget.onBack);
+            child: ListenableBuilder(
+              listenable: Listenable.merge([
+                widget.ratingActive,
+                widget.priceActive,
+                widget.weekActive,
+                widget.weightActive,
+              ]),
+              builder: (context, _) =>
+                  BlocBuilder<AnnouncementBloc, AnnouncementState>(
+                builder: (context, state) {
+                  if (state is AnnouncementLoading ||
+                      state is AnnouncementInitial) {
+                    return const Center(
+                      child: CircularProgressIndicator(
+                          color: DonyColors.green400),
+                    );
                   }
 
-                  return ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(
-                      DonySpacing.base,
-                      DonySpacing.base,
-                      DonySpacing.base,
-                      DonySpacing.huge,
-                    ),
-                    // +1 for skeleton card at the end
-                    itemCount: state.results.length + 1,
-                    separatorBuilder: (_, __) =>
-                        const SizedBox(height: DonySpacing.md),
-                    itemBuilder: (context, i) {
-                      // Last item is skeleton
-                      if (i == state.results.length) {
-                        return const _SkeletonCard();
-                      }
+                  if (state is AnnouncementError) {
+                    return _ErrorView(
+                      message: state.message,
+                      onRetry: () => context
+                          .read<AnnouncementBloc>()
+                          .add(AnnouncementSearchRequested(
+                            departureCity: widget.departureCity,
+                            arrivalCity: widget.arrivalCity,
+                            sortBy: 'date',
+                          )),
+                    );
+                  }
 
-                      final announcement = state.results[i];
-                      final authState =
-                          context.read<AuthBloc>().state;
-                      final currentUserId =
-                          authState is AuthAuthenticated
-                              ? authState.user.id
-                              : null;
-                      final isOwn = currentUserId != null &&
-                          announcement.travelerId == currentUserId;
-                      return _TravelerCard(
-                        announcement: announcement,
-                        index: i,
-                        isOwnAnnouncement: isOwn,
-                        onTap: isOwn
-                            ? null
-                            : () => context.push(
-                                  '/search/${announcement.id}',
-                                  extra: announcement,
-                                ),
-                      );
-                    },
-                  );
-                }
+                  if (state is AnnouncementSearchLoaded) {
+                    final filtered = _applyFilters(state.results);
+                    if (filtered.isEmpty) {
+                      return _EmptyView(onBack: widget.onBack);
+                    }
 
-                return const SizedBox.shrink();
-              },
+                    return ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(
+                        DonySpacing.base,
+                        DonySpacing.base,
+                        DonySpacing.base,
+                        DonySpacing.huge,
+                      ),
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(height: DonySpacing.md),
+                      itemBuilder: (context, i) {
+                        final announcement = filtered[i];
+                        final authState = context.read<AuthBloc>().state;
+                        final currentUserId =
+                            authState is AuthAuthenticated
+                                ? authState.user.id
+                                : null;
+                        final isOwn = currentUserId != null &&
+                            announcement.travelerId == currentUserId;
+                        return _TravelerCard(
+                          announcement: announcement,
+                          index: i,
+                          isOwnAnnouncement: isOwn,
+                          onTap: isOwn
+                              ? null
+                              : () => context.push(
+                                    '/search/${announcement.id}',
+                                    extra: announcement,
+                                  ),
+                        );
+                      },
+                    );
+                  }
+
+                  return const SizedBox.shrink();
+                },
+              ),
             ),
           ),
         ],
@@ -1176,93 +1581,6 @@ class _TravelerCard extends StatelessWidget {
             curve: Curves.easeOutCubic,
           ),
     );
-  }
-}
-
-// ── Skeleton card ────────────────────────────────────────────────────────────
-
-class _SkeletonCard extends StatelessWidget {
-  const _SkeletonCard();
-
-  // Dimension constants to avoid raw literals
-  static const double _kAvatarSize = 44.0;
-  static const double _kLineHeight = 12.0;
-  static const double _kNameWidth = 120.0;
-  static const double _kSubWidth = 80.0;
-  static const double _kShortLineWidth = 160.0;
-  static const double _kNameHeight = 14.0;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: DonyColors.white,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.grey200),
-      ),
-      padding: const EdgeInsets.all(DonySpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const _SkeletonBox(
-                width: _kAvatarSize,
-                height: _kAvatarSize,
-                radius: DonyRadius.full,
-              ),
-              const SizedBox(width: DonySpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    _SkeletonBox(width: _kNameWidth, height: _kNameHeight),
-                    SizedBox(height: DonySpacing.xs),
-                    _SkeletonBox(width: _kSubWidth, height: _kLineHeight),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: DonySpacing.md),
-          const _SkeletonBox(width: double.infinity, height: _kLineHeight),
-          const SizedBox(height: DonySpacing.xs),
-          const _SkeletonBox(width: _kShortLineWidth, height: _kLineHeight),
-        ],
-      ),
-    );
-  }
-}
-
-class _SkeletonBox extends StatelessWidget {
-  const _SkeletonBox({
-    required this.width,
-    required this.height,
-    this.radius = DonyRadius.sm,
-  });
-
-  final double width;
-  final double height;
-  final double radius;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: width == double.infinity ? double.infinity : width,
-      height: height,
-      decoration: BoxDecoration(
-        color: DonyColors.grey200,
-        borderRadius: BorderRadius.circular(radius),
-      ),
-    )
-        .animate(
-          onPlay: (c) => c.repeat(reverse: true),
-        )
-        .tint(
-          color: DonyColors.grey100,
-          duration: 900.ms,
-          curve: Curves.easeInOut,
-        );
   }
 }
 
