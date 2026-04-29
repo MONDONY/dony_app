@@ -129,6 +129,13 @@ class _BidListViewState extends State<_BidListView>
       DonySnackbar.show(context,
           message: 'Demande supprimée.', type: DonySnackbarType.success);
       context.read<BidBloc>().add(BidListRequested(widget.announcementId));
+    } else if (state is BidNotFound) {
+      DonySnackbar.show(
+        context,
+        message: 'Cette annonce n\'existe plus',
+        type: DonySnackbarType.warning,
+      );
+      if (context.canPop()) context.pop(); else context.go('/home');
     } else if (state is BidError) {
       // Clear all processing bids so user can retry
       if (_processingBidIds.isNotEmpty) {

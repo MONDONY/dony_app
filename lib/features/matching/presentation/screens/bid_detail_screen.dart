@@ -122,6 +122,14 @@ class _BidDetailViewState extends State<_BidDetailView> {
         } else if (state is BidDeleted) {
           DonySnackbar.show(context, message: 'Demande supprimée.');
           context.pop();
+        } else if (state is BidNotFound) {
+          _refreshTimer?.cancel();
+          DonySnackbar.show(
+            context,
+            message: 'Ce colis n\'existe plus',
+            type: DonySnackbarType.warning,
+          );
+          if (context.canPop()) context.pop(); else context.go('/home');
         } else if (state is BidDetailLoaded) {
           final previousBidId = _bid.id;
           _bid = state.bid;
