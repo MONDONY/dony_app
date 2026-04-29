@@ -73,7 +73,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         emit(AnnouncementNotFound());
       } else {
         emit(AnnouncementError(
-            inner is AppException ? inner.message : e.toString()));
+            inner is AppException ? inner.message : inner.toString()));
       }
     }
   }
