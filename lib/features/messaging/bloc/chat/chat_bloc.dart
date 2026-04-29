@@ -23,6 +23,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   ) async {
     emit(const ChatLoading());
     await _sub?.cancel();
+
+    // Reset unread count for this conversation when the user opens it
+    if (event.currentUserUid.isNotEmpty) {
+      unawaited(
+        _firestoreRepo.markConversationRead(
+          event.firestoreConversationId,
+          event.currentUserUid,
+        ),
+      );
+    }
+
     await emit.forEach(
       _firestoreRepo.messagesStream(event.firestoreConversationId),
       onData: (messages) => ChatLoaded(messages),

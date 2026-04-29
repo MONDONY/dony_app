@@ -6,7 +6,11 @@ abstract class ChatEvent {
 
 class ChatSubscribeRequested extends ChatEvent {
   final String firestoreConversationId;
-  const ChatSubscribeRequested(this.firestoreConversationId);
+  final String currentUserUid;
+  const ChatSubscribeRequested(
+    this.firestoreConversationId, {
+    this.currentUserUid = '',
+  });
 }
 
 class ChatTextSendRequested extends ChatEvent {

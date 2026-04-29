@@ -44,6 +44,47 @@ void main() {
     );
 
     blocTest<ChatBloc, ChatState>(
+      'calls markConversationRead when subscribing with a non-empty uid',
+      build: () {
+        when(() => firestoreRepo.messagesStream(any()))
+            .thenAnswer((_) => Stream.value([]));
+        when(() => firestoreRepo.markConversationRead(any(), any()))
+            .thenAnswer((_) async {});
+        return ChatBloc(firestoreRepo, convRepo);
+      },
+      act: (b) => b.add(
+        const ChatSubscribeRequested('conv_bid1', currentUserUid: 'uid-me'),
+      ),
+      expect: () => [
+        isA<ChatLoading>(),
+        isA<ChatLoaded>(),
+      ],
+      verify: (_) {
+        verify(() => firestoreRepo.markConversationRead('conv_bid1', 'uid-me'))
+            .called(1);
+      },
+    );
+
+    blocTest<ChatBloc, ChatState>(
+      'does NOT call markConversationRead when uid is empty',
+      build: () {
+        when(() => firestoreRepo.messagesStream(any()))
+            .thenAnswer((_) => Stream.value([]));
+        return ChatBloc(firestoreRepo, convRepo);
+      },
+      act: (b) => b.add(
+        const ChatSubscribeRequested('conv_bid1'),
+      ),
+      expect: () => [
+        isA<ChatLoading>(),
+        isA<ChatLoaded>(),
+      ],
+      verify: (_) {
+        verifyNever(() => firestoreRepo.markConversationRead(any(), any()));
+      },
+    );
+
+    blocTest<ChatBloc, ChatState>(
       'sendText calls firestoreRepo and updates lastMessage',
       build: () {
         when(() => firestoreRepo.sendTextMessage(

@@ -37,7 +37,10 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     context.read<ChatBloc>().add(
-          ChatSubscribeRequested(widget.conversation.firestoreConversationId),
+          ChatSubscribeRequested(
+            widget.conversation.firestoreConversationId,
+            currentUserUid: _myUid,
+          ),
         );
   }
 
