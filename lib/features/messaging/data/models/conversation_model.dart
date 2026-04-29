@@ -31,6 +31,16 @@ class ConversationModel {
     this.hasUnread = false,
   });
 
+  ConversationModel copyWith({bool? hasUnread}) => ConversationModel(
+        id: id,
+        bidId: bidId,
+        firestoreConversationId: firestoreConversationId,
+        otherParticipant: otherParticipant,
+        lastMessagePreview: lastMessagePreview,
+        lastMessageAt: lastMessageAt,
+        hasUnread: hasUnread ?? this.hasUnread,
+      );
+
   factory ConversationModel.fromJson(Map<String, dynamic> json) => ConversationModel(
         id: json['id'] as String,
         bidId: json['bidId'] as String,

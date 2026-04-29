@@ -137,7 +137,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => FirestoreChatRepository(FirebaseFirestore.instance),
   );
   getIt.registerLazySingleton<ConversationListBloc>(
-    () => ConversationListBloc(getIt<ConversationRepository>()),
+    () => ConversationListBloc(
+      getIt<ConversationRepository>(),
+      getIt<FirestoreChatRepository>(),
+    ),
     dispose: (b) => b.close(),
   );
   getIt.registerFactory<ChatBloc>(
