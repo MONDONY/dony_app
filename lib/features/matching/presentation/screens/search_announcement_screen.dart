@@ -175,11 +175,11 @@ class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
           searchDirty: _searchDirtyNotifier.value,
           onDepartureChanged: (v) {
             _departureCityNotifier.value = v;
-            _search();
+            _searchDirtyNotifier.value = true;
           },
           onArrivalChanged: (v) {
             _arrivalCityNotifier.value = v;
-            _search();
+            _searchDirtyNotifier.value = true;
           },
           onDateChanged: (v) {
             _dateNotifier.value = v;
