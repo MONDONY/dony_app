@@ -183,7 +183,9 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     if (current is BidListLoaded) {
       final stale = DateTime.now().difference(current.fetchedAt) > _myBidsTtl;
       // Données fraîches et pas de force → rien à faire
-      if (!stale && !event.force) return;
+      if (!stale && !event.force) {
+        return;
+      }
 
       // Données périmées → refresh silencieux (pas de BidLoading, l'UI reste visible)
       emit(BidListLoaded(current.bids,

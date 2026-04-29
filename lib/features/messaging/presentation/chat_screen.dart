@@ -25,15 +25,19 @@ class _ChatScreenState extends State<ChatScreen> {
   final _scrollController = ScrollController();
   bool _isSending = false;
 
-  String get _myUid => FirebaseAuth.instance.currentUser?.uid ?? '';
+  String get _myUid {
+    try {
+      return FirebaseAuth.instance.currentUser?.uid ?? '';
+    } catch (_) {
+      return '';
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     context.read<ChatBloc>().add(
-          ChatSubscribeRequested(
-            firestoreConversationId: widget.conversation.firestoreConversationId,
-          ),
+          ChatSubscribeRequested(widget.conversation.firestoreConversationId),
         );
   }
 
@@ -145,8 +149,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     actionLabel: 'Réessayer',
                     onAction: () => context.read<ChatBloc>().add(
                           ChatSubscribeRequested(
-                            firestoreConversationId:
-                                widget.conversation.firestoreConversationId,
+                            widget.conversation.firestoreConversationId,
                           ),
                         ),
                   );

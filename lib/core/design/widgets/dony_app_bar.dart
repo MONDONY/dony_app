@@ -47,8 +47,11 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
               tooltip: 'Retour',
               icon: const Icon(Icons.arrow_back_rounded, size: 22),
               onPressed: onBack ?? () {
-                if (context.canPop()) context.pop();
-                else context.go('/home');
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/home');
+                }
               },
             )
           : null,
@@ -96,8 +99,11 @@ class DonySliverAppBar extends StatelessWidget {
               tooltip: 'Retour',
               icon: const Icon(Icons.arrow_back_rounded, size: 22),
               onPressed: onBack ?? () {
-                if (context.canPop()) context.pop();
-                else context.go('/home');
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/home');
+                }
               },
             )
           : null,

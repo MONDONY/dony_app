@@ -1,6 +1,9 @@
 import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/presentation/screens/local_auth_screen.dart';
+import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
+import 'package:dony/features/messaging/data/models/conversation_model.dart';
+import 'package:dony/features/messaging/presentation/chat_screen.dart';
 import 'package:dony/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
@@ -213,6 +216,18 @@ final appRouter = GoRouter(
       path: '/admin',
       builder: (context, state) =>
           const _PlaceholderScreen(title: 'Admin'),
+    ),
+
+    // ── Messagerie — conversation individuelle (hors shell) ─────────────
+    GoRoute(
+      path: '/conversations/:id',
+      builder: (context, state) {
+        final conversation = state.extra as ConversationModel;
+        return BlocProvider(
+          create: (_) => getIt<ChatBloc>(),
+          child: ChatScreen(conversation: conversation),
+        );
+      },
     ),
 
     // ── Profil voyageur global (hors shell, pas de duplicate key) ────────

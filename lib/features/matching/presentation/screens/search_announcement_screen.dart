@@ -175,11 +175,11 @@ class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
           searchDirty: _searchDirtyNotifier.value,
           onDepartureChanged: (v) {
             _departureCityNotifier.value = v;
-            _searchDirtyNotifier.value = true;
+            _search();
           },
           onArrivalChanged: (v) {
             _arrivalCityNotifier.value = v;
-            _searchDirtyNotifier.value = true;
+            _search();
           },
           onDateChanged: (v) {
             _dateNotifier.value = v;
@@ -1512,7 +1512,7 @@ class _TravelerCard extends StatelessWidget {
                 ),
                 const SizedBox(width: DonySpacing.sm),
                 Text(
-                  '${announcement.pricePerKg.toStringAsFixed(0)}€/kg',
+                  '${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
                   style: tt.titleLarge?.copyWith(
                     color: DonyColors.success,
                     fontWeight: FontWeight.w700,
