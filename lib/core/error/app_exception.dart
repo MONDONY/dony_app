@@ -28,8 +28,12 @@ class ForbiddenException extends AppException {
 }
 
 class NotFoundException extends AppException {
-  const NotFoundException([super.message = 'Resource not found'])
-      : super(code: 'NOT_FOUND');
+  const NotFoundException({
+    String message = 'Ressource introuvable',
+    this.resourceType,
+  }) : super(message, code: 'NOT_FOUND');
+
+  final String? resourceType;
 }
 
 class ValidationException extends AppException {
