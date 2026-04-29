@@ -79,7 +79,9 @@ class _BidDetailViewState extends State<_BidDetailView> {
   }
 
   Future<void> _loadPaymentStatus() async {
-    if (_bid.status == 'REJECTED' || _bid.status == 'CANCELLED') return;
+    if (_bid.status == 'REJECTED' || _bid.status == 'CANCELLED') {
+      return;
+    }
     try {
       final payment = await getIt<PaymentRepository>().getPaymentForBid(_bid.id);
       if (mounted) {
@@ -106,7 +108,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
         } else if (state is BidRejected) {
           _bid = state.bid;
           DonySnackbar.show(context, message: 'Demande refusée.');
-          context.pop();
+          if (context.canPop()) context.pop(); else context.go('/home');
         } else if (state is BidPresenceConfirmed) {
           _bid = state.bid;
           DonySnackbar.show(context, message: 'Présence confirmée !', type: DonySnackbarType.success);
@@ -118,10 +120,10 @@ class _BidDetailViewState extends State<_BidDetailView> {
             message: 'Demande annulée. L\'expéditeur sera remboursé.',
             type: DonySnackbarType.info,
           );
-          context.pop();
+          if (context.canPop()) context.pop(); else context.go('/home');
         } else if (state is BidDeleted) {
           DonySnackbar.show(context, message: 'Demande supprimée.');
-          context.pop();
+          if (context.canPop()) context.pop(); else context.go('/home');
         } else if (state is BidNotFound) {
           _refreshTimer?.cancel();
           DonySnackbar.show(
@@ -129,7 +131,11 @@ class _BidDetailViewState extends State<_BidDetailView> {
             message: 'Ce colis n\'existe plus',
             type: DonySnackbarType.warning,
           );
-          if (context.canPop()) context.pop(); else context.go('/home');
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/home');
+          }
         } else if (state is BidDetailLoaded) {
           final previousBidId = _bid.id;
           _bid = state.bid;
@@ -155,7 +161,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
         } else if (state is BidError) {
           if (_skeletonLoading) {
             _skeletonLoading = false;
-            context.pop();
+            if (context.canPop()) context.pop(); else context.go('/home');
           }
           DonySnackbar.show(context, message: state.message, type: DonySnackbarType.error);
         }

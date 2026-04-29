@@ -3,6 +3,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
@@ -95,9 +96,9 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       );
       emit(AnnouncementSearchLoaded(results));
     } catch (e, stacktrace) {
-      print('=== SEARCH ERROR ===');
-      print(e);
-      print(stacktrace);
+      if (kDebugMode) debugPrint('=== SEARCH ERROR ===');
+      if (kDebugMode) debugPrint(e.toString());
+      if (kDebugMode) debugPrint(stacktrace.toString());
       emit(AnnouncementError(e.toString()));
     }
   }

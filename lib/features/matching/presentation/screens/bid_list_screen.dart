@@ -135,7 +135,11 @@ class _BidListViewState extends State<_BidListView>
         message: 'Cette annonce n\'existe plus',
         type: DonySnackbarType.warning,
       );
-      if (context.canPop()) context.pop(); else context.go('/home');
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/home');
+      }
     } else if (state is BidError) {
       // Clear all processing bids so user can retry
       if (_processingBidIds.isNotEmpty) {
@@ -182,7 +186,10 @@ class _BidListViewState extends State<_BidListView>
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_rounded,
                   size: 20, color: DonyColors.green400),
-              onPressed: () => context.pop(),
+              onPressed: () {
+                if (context.canPop()) context.pop();
+                else context.go('/home');
+              },
               tooltip: 'Retour',
             ),
             title: Column(
