@@ -550,6 +550,7 @@ class _ResultsViewState extends State<_ResultsView> {
 
     showModalBottomSheet<void>(
       context: ctx,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => DraggableScrollableSheet(
@@ -1110,6 +1111,7 @@ class _LocationRow extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         decoration: const BoxDecoration(
@@ -1292,6 +1294,7 @@ class _WeightField extends StatelessWidget {
     double localWeight = weightKg;
     showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheetState) => Container(

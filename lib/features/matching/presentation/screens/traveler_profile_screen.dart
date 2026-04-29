@@ -98,7 +98,9 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
               DonySpacing.lg,
               DonySpacing.xl,
               DonySpacing.lg,
-              widget.consultOnly ? DonySpacing.huge : 120,
+              widget.consultOnly
+                  ? DonySpacing.huge
+                  : MediaQuery.of(context).padding.bottom + 100,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

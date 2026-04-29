@@ -64,6 +64,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
   void _showScanSheet(String bidId) {
     showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       isDismissible: false,

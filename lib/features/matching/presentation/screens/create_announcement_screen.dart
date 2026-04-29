@@ -344,11 +344,11 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
             ),
           ),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
               DonySpacing.lg,
               DonySpacing.xl,
               DonySpacing.lg,
-              120,
+              MediaQuery.of(context).padding.bottom + 100,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

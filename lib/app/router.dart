@@ -243,7 +243,67 @@ final appRouter = GoRouter(
       },
     ),
 
+    // ── Détail annonce + sous-écrans (hors shell — plein écran) ─────────
+    // Règle : tout écran avec ← ou ✕ est hors shell.
+    GoRoute(
+      path: '/announcements/:id',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        return BlocProvider(
+          create: (_) => getIt<AnnouncementBloc>(),
+          child: AnnouncementDetailScreen(id: id),
+        );
+      },
+      routes: [
+        GoRoute(
+          path: 'bids',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return BidListScreen(announcementId: id);
+          },
+        ),
+        GoRoute(
+          path: 'cancel',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return BlocProvider(
+              create: (_) => getIt<CancellationBloc>(),
+              child: CancellationScreen(announcementId: id),
+            );
+          },
+        ),
+      ],
+    ),
+
+    // ── Détail annonce expéditeur + envoi colis (hors shell) ─────────────
+    GoRoute(
+      path: '/search/:id',
+      builder: (context, state) {
+        final announcement = state.extra as AnnouncementModel;
+        return TravelerProfileScreen(announcement: announcement);
+      },
+      routes: [
+        GoRoute(
+          path: 'bid',
+          builder: (context, state) {
+            final announcement = state.extra as AnnouncementModel;
+            return BlocProvider(
+              create: (_) => getIt<BidBloc>(),
+              child: CreateBidScreen(announcement: announcement),
+            );
+          },
+        ),
+      ],
+    ),
+
+    // ── Suivi hors-ligne (hors shell) ────────────────────────────────────
+    GoRoute(
+      path: '/tracking/offline-queue',
+      builder: (context, state) => const OfflineScanQueueScreen(),
+    ),
+
     // ── Shell principal avec Bottom Navigation ───────────────────────────
+    // Règle : UNIQUEMENT les 5 racines de tabs, sans sous-routes.
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
           MainShell(navigationShell: navigationShell),
@@ -261,40 +321,12 @@ final appRouter = GoRouter(
           ],
         ),
 
-        // Branch 1 — Envois (annonces + recherche)
+        // Branch 1 — Envois (annonces voyageur + recherche expéditeur)
         StatefulShellBranch(
           routes: [
             GoRoute(
               path: '/announcements',
               builder: (context, state) => const MatchingManagementScreen(),
-              routes: [
-                GoRoute(
-                  path: ':id',
-                  builder: (context, state) {
-                    final id = state.pathParameters['id']!;
-                    return AnnouncementDetailScreen(id: id);
-                  },
-                  routes: [
-                    GoRoute(
-                      path: 'bids',
-                      builder: (context, state) {
-                        final id = state.pathParameters['id']!;
-                        return BidListScreen(announcementId: id);
-                      },
-                    ),
-                    GoRoute(
-                      path: 'cancel',
-                      builder: (context, state) {
-                        final id = state.pathParameters['id']!;
-                        return BlocProvider(
-                          create: (_) => getIt<CancellationBloc>(),
-                          child: CancellationScreen(announcementId: id),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
             ),
             GoRoute(
               path: '/search',
@@ -302,27 +334,6 @@ final appRouter = GoRouter(
                 create: (_) => getIt<AnnouncementBloc>(),
                 child: const SearchAnnouncementScreen(),
               ),
-              routes: [
-                GoRoute(
-                  path: ':id',
-                  builder: (context, state) {
-                    final announcement = state.extra as AnnouncementModel;
-                    return TravelerProfileScreen(announcement: announcement);
-                  },
-                  routes: [
-                    GoRoute(
-                      path: 'bid',
-                      builder: (context, state) {
-                        final announcement = state.extra as AnnouncementModel;
-                        return BlocProvider(
-                          create: (_) => getIt<BidBloc>(),
-                          child: CreateBidScreen(announcement: announcement),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
             ),
           ],
         ),
@@ -333,18 +344,11 @@ final appRouter = GoRouter(
             GoRoute(
               path: '/tracking',
               builder: (context, state) => const _TrackingHubScreen(),
-              routes: [
-                GoRoute(
-                  path: 'offline-queue',
-                  builder: (context, state) =>
-                      const OfflineScanQueueScreen(),
-                ),
-              ],
             ),
           ],
         ),
 
-        // Branch 3 — Boîte de réception (Notifications + Messages)
+        // Branch 3 — Boîte de réception
         StatefulShellBranch(
           routes: [
             GoRoute(

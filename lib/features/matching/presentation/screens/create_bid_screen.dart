@@ -21,7 +21,7 @@ const _contentCategories = [
 ];
 
 // Layout constants
-const _kScrollPad = 180.0;     // bottom padding for scroll content (clears BottomBar)
+// _kScrollPad removed — bottom padding is now dynamic (MediaQuery.padding.bottom + 160)
 const _kAccentBorder = 3.0;    // disclaimer card left accent border width
 
 class CreateBidScreen extends StatefulWidget {
@@ -140,11 +140,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   return Stack(
                     children: [
                       SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(
+                        padding: EdgeInsets.fromLTRB(
                           DonySpacing.lg,
                           DonySpacing.xl,
                           DonySpacing.lg,
-                          _kScrollPad,
+                          MediaQuery.of(context).padding.bottom + 160,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

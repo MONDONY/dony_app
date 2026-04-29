@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 void showTravelerProfileSheet(BuildContext context, TravelerProfile traveler) {
   showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (_) => DraggableScrollableSheet(

@@ -24,6 +24,7 @@ abstract final class DonyBottomSheet {
   }) {
     return showModalBottomSheet<T>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: isScrollControlled,
       isDismissible: isDismissible,
       backgroundColor: Colors.transparent,
