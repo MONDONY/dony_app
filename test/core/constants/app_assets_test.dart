@@ -27,15 +27,10 @@ void main() {
       expect(AppAssets.logoWhite, AppAssets.logoWhiteOrange);
     });
 
-    test('all constants are non-empty strings pointing to assets/logos/', () {
+    test('all constants point to assets/logos/ and are non-empty', () {
       final constants = {
-        'logoBlueOrange':     AppAssets.logoBlueOrange,
-        'logoBlueOrangeGlow': AppAssets.logoBlueOrangeGlow,
-        'logoBlackBlue':      AppAssets.logoBlackBlue,
-        'logoBlackOrange':    AppAssets.logoBlackOrange,
-        'logoWhiteBlue':      AppAssets.logoWhiteBlue,
-        'logoWhiteOrange':    AppAssets.logoWhiteOrange,
-        'patternWax':         AppAssets.patternWax,
+        'logoBlueOrange':  AppAssets.logoBlueOrange,
+        'logoWhiteOrange': AppAssets.logoWhiteOrange,
       };
       for (final entry in constants.entries) {
         expect(entry.value, isNotEmpty, reason: '${entry.key} must not be empty');

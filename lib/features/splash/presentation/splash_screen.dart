@@ -126,7 +126,7 @@ class _SplashScreenState extends State<SplashScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const DonyLogo(variant: DonyLogoVariant.onLight, fontSize: 64),
+                const DonyLogo(variant: DonyLogoVariant.onLight, fontSize: 83),
                 const SizedBox(height: 28),
                 Text(
                   'Livrez en confiance',

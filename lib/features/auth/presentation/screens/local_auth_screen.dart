@@ -159,7 +159,7 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
 
     return Column(
       children: [
-        const DonyLogo(fontSize: 42),
+        const DonyLogo(fontSize: 55),
         const SizedBox(height: 14),
         Text(
           'Saisissez votre code PIN',

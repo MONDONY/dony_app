@@ -120,7 +120,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                   Padding(
                     padding:
                         const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
-                    child: const DonyLogo(fontSize: 36),
+                    child: const DonyLogo(fontSize: 47),
                   ),
                   const SizedBox(height: 40),
                   Padding(
