@@ -224,6 +224,25 @@ final appRouter = GoRouter(
       },
     ),
 
+    // ── Création / édition trajet (hors shell — plein écran) ────────────
+    GoRoute(
+      path: '/announcements/create',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<AnnouncementBloc>(),
+        child: const CreateAnnouncementScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/announcements/:id/edit',
+      builder: (context, state) {
+        final announcement = state.extra as AnnouncementModel?;
+        return BlocProvider(
+          create: (_) => getIt<AnnouncementBloc>(),
+          child: CreateAnnouncementScreen(announcement: announcement),
+        );
+      },
+    ),
+
     // ── Shell principal avec Bottom Navigation ───────────────────────────
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
@@ -250,27 +269,12 @@ final appRouter = GoRouter(
               builder: (context, state) => const MatchingManagementScreen(),
               routes: [
                 GoRoute(
-                  path: 'create',
-                  builder: (context, state) =>
-                      const CreateAnnouncementScreen(),
-                ),
-                GoRoute(
                   path: ':id',
                   builder: (context, state) {
                     final id = state.pathParameters['id']!;
                     return AnnouncementDetailScreen(id: id);
                   },
                   routes: [
-                    GoRoute(
-                      path: 'edit',
-                      builder: (context, state) {
-                        final announcement =
-                            state.extra as AnnouncementModel?;
-                        return CreateAnnouncementScreen(
-                          announcement: announcement,
-                        );
-                      },
-                    ),
                     GoRoute(
                       path: 'bids',
                       builder: (context, state) {

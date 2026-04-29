@@ -1433,6 +1433,8 @@ class _TravelerCard extends StatelessWidget {
   final int index;
   final bool isOwnAnnouncement;
 
+  static const int _maxVisibleChips = 3;
+
   String get _displayName =>
       announcement.traveler?.resolvedName ?? 'Voyageur';
 
@@ -1444,17 +1446,18 @@ class _TravelerCard extends StatelessWidget {
     final totalTrips = traveler?.totalTrips;
     final isKiloPro = traveler?.kiloPro ?? false;
     final dateStr =
-        DateFormat('EEE d MMM', 'fr').format(announcement.departureDate);
+        DateFormat('EEE d', 'fr').format(announcement.departureDate);
+    final categories = announcement.acceptedContentTypes ?? [];
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: DonyColors.white,
+          color: DonyColors.surface,
           borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: DonyColors.grey200),
+          border: Border.all(color: DonyColors.borderDefault),
         ),
-        padding: const EdgeInsets.all(DonySpacing.md),
+        padding: const EdgeInsets.all(DonySpacing.base),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1465,7 +1468,6 @@ class _TravelerCard extends StatelessWidget {
                 DonyAvatar(
                   name: _displayName,
                   size: DonyAvatarSize.md,
-                  verified: isKiloPro,
                 ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(
@@ -1480,53 +1482,37 @@ class _TravelerCard extends StatelessWidget {
                       const SizedBox(height: DonySpacing.xxs),
                       Row(
                         children: [
-                          if (rating != null) ...[
-                            const Icon(Icons.star_rounded,
-                                size: 13,
-                                color: DonyColors.warning),
-                            const SizedBox(width: DonySpacing.xxs),
-                            Text(
-                              rating.toStringAsFixed(1),
-                              style: tt.titleSmall,
+                          const Icon(Icons.star_rounded,
+                              size: 13, color: DonyColors.warning),
+                          const SizedBox(width: DonySpacing.xxs),
+                          Text(
+                            rating != null
+                                ? rating.toStringAsFixed(1)
+                                : '—',
+                            style: tt.titleSmall,
+                          ),
+                          const SizedBox(width: DonySpacing.xxs),
+                          Text(
+                            '· ${totalTrips ?? 0} trajet${(totalTrips ?? 0) > 1 ? 's' : ''}',
+                            style: tt.bodySmall?.copyWith(
+                              color: DonyColors.textMuted,
                             ),
-                          ],
-                          if (totalTrips != null && totalTrips > 0)
-                            Text(
-                              ' · $totalTrips trajet${totalTrips > 1 ? 's' : ''}',
-                              style: tt.bodySmall?.copyWith(
-                                color: DonyColors.grey400,
-                              ),
-                            ),
+                          ),
                           if (isKiloPro) ...[
                             const SizedBox(width: DonySpacing.xs),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: DonySpacing.xs,
-                                vertical: DonySpacing.xxs,
-                              ),
-                              decoration: BoxDecoration(
-                                color: DonyColors.warningLight,
-                                borderRadius: BorderRadius.circular(
-                                    DonyRadius.xs),
-                              ),
-                              child: Text(
-                                'KYC',
-                                style: tt.labelSmall?.copyWith(
-                                  color: DonyColors.warning,
-                                ),
-                              ),
-                            ),
+                            const _KycBadge(),
                           ],
                         ],
                       ),
                     ],
                   ),
                 ),
-                // Price per kg
+                const SizedBox(width: DonySpacing.sm),
                 Text(
-                  '${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
+                  '${announcement.pricePerKg.toStringAsFixed(0)}€/kg',
                   style: tt.titleLarge?.copyWith(
-                    color: DonyColors.green400,
+                    color: DonyColors.success,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
@@ -1537,39 +1523,38 @@ class _TravelerCard extends StatelessWidget {
             Row(
               children: [
                 const Icon(Icons.calendar_today_rounded,
-                    size: 13, color: DonyColors.grey400),
-                const SizedBox(width: DonySpacing.xs),
+                    size: 13, color: DonyColors.textSubtle),
+                const SizedBox(width: DonySpacing.xxs),
                 Text(
                   dateStr,
-                  style: tt.bodySmall
-                      ?.copyWith(color: DonyColors.grey400),
+                  style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
                 ),
                 const SizedBox(width: DonySpacing.md),
                 const Icon(Icons.inventory_2_outlined,
-                    size: 13, color: DonyColors.grey400),
-                const SizedBox(width: DonySpacing.xs),
+                    size: 13, color: DonyColors.textSubtle),
+                const SizedBox(width: DonySpacing.xxs),
                 Text(
                   '${announcement.availableKg.toStringAsFixed(0)} kg dispo',
-                  style: tt.bodySmall
-                      ?.copyWith(color: DonyColors.grey400),
+                  style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
                 ),
               ],
             ),
-            const SizedBox(height: DonySpacing.sm),
 
-            // ── Row 3: content-type chips — shown only when the model
-            // exposes an acceptedContentTypes field. AnnouncementModel
-            // currently has no such field; nothing is rendered here to
-            // avoid displaying hardcoded placeholder content.
-            // TODO(matching): wire up announcement.acceptedContentTypes when added.
+            // ── Row 3: content-type chips ───────────────────────────
+            if (categories.isNotEmpty) ...[
+              const SizedBox(height: DonySpacing.sm),
+              _CategoryChips(
+                categories: categories,
+                maxVisible: _maxVisibleChips,
+              ),
+            ],
 
             // Own announcement label
             if (isOwnAnnouncement) ...[
               const SizedBox(height: DonySpacing.sm),
               Text(
                 'Votre trajet',
-                style: tt.labelMedium
-                    ?.copyWith(color: DonyColors.grey400),
+                style: tt.labelMedium?.copyWith(color: DonyColors.textMuted),
               ),
             ],
           ],
@@ -1580,6 +1565,97 @@ class _TravelerCard extends StatelessWidget {
             begin: 0.04,
             curve: Curves.easeOutCubic,
           ),
+    );
+  }
+}
+
+class _KycBadge extends StatelessWidget {
+  const _KycBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: DonyColors.successLight,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
+              color: DonyColors.success,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: DonySpacing.xxs),
+          Text(
+            'KYC',
+            style: tt.labelSmall?.copyWith(
+              color: DonyColors.success,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CategoryChips extends StatelessWidget {
+  const _CategoryChips({
+    required this.categories,
+    required this.maxVisible,
+  });
+
+  final List<String> categories;
+  final int maxVisible;
+
+  @override
+  Widget build(BuildContext context) {
+    final visible = categories.take(maxVisible).toList();
+    final overflow = categories.length - maxVisible;
+
+    return Wrap(
+      spacing: DonySpacing.xs,
+      runSpacing: DonySpacing.xs,
+      children: [
+        for (final label in visible) _CategoryChip(label: label),
+        if (overflow > 0) _CategoryChip(label: '+$overflow'),
+      ],
+    );
+  }
+}
+
+class _CategoryChip extends StatelessWidget {
+  const _CategoryChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: DonyColors.bgApp,
+        borderRadius: BorderRadius.circular(DonyRadius.xl),
+        border: Border.all(color: DonyColors.borderDefault),
+      ),
+      child: Text(
+        label,
+        style: tt.labelSmall?.copyWith(color: DonyColors.textMuted),
+      ),
     );
   }
 }

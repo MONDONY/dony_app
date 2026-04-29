@@ -17,6 +17,9 @@ class AnnouncementRemoteDatasource {
     String? arrivalLocation,
     required double availableKg,
     required double pricePerKg,
+    String? description,
+    List<String> acceptedContentTypes = const [],
+    List<String> refusedTypes = const [],
   }) async {
     final response = await _apiClient.dio.post(
       '/announcements',
@@ -32,6 +35,9 @@ class AnnouncementRemoteDatasource {
           'arrivalLocation': arrivalLocation,
         'availableKg': availableKg,
         'pricePerKg': pricePerKg,
+        if (description != null && description.isNotEmpty) 'description': description,
+        'acceptedContentTypes': acceptedContentTypes,
+        'refusedTypes': refusedTypes,
       },
     );
 
@@ -102,6 +108,9 @@ class AnnouncementRemoteDatasource {
     String? arrivalLocation,
     required double availableKg,
     required double pricePerKg,
+    String? description,
+    List<String> acceptedContentTypes = const [],
+    List<String> refusedTypes = const [],
   }) async {
     final response = await _apiClient.dio.put(
       '/announcements/$id',
@@ -117,6 +126,9 @@ class AnnouncementRemoteDatasource {
           'arrivalLocation': arrivalLocation,
         'availableKg': availableKg,
         'pricePerKg': pricePerKg,
+        if (description != null && description.isNotEmpty) 'description': description,
+        'acceptedContentTypes': acceptedContentTypes,
+        'refusedTypes': refusedTypes,
       },
     );
 

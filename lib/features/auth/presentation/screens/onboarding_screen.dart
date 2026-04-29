@@ -33,7 +33,7 @@ class OnboardingScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Logo dony
-                    const DonyLogo(fontSize: 47),
+                    const DonyLogo(fontSize: 59),
                     const SizedBox(height: DonySpacing.xxl),
 
                     // Headline — "Envoyez un colis"

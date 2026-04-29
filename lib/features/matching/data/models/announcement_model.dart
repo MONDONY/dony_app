@@ -64,6 +64,9 @@ class AnnouncementModel {
   final String status;
   final int? bidsCount;
   final TravelerProfile? traveler;
+  final String? description;
+  final List<String>? acceptedContentTypes;
+  final List<String>? refusedTypes;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -82,6 +85,9 @@ class AnnouncementModel {
     required this.status,
     this.bidsCount,
     this.traveler,
+    this.description,
+    this.acceptedContentTypes,
+    this.refusedTypes,
     required this.createdAt,
     required this.updatedAt,
   });

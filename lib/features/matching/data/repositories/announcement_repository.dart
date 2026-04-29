@@ -16,6 +16,9 @@ class AnnouncementRepository {
     String? arrivalLocation,
     required double availableKg,
     required double pricePerKg,
+    String? description,
+    List<String> acceptedContentTypes = const [],
+    List<String> refusedTypes = const [],
   }) async {
     return _remoteDatasource.createAnnouncement(
       departureCity: departureCity,
@@ -27,6 +30,9 @@ class AnnouncementRepository {
       arrivalLocation: arrivalLocation,
       availableKg: availableKg,
       pricePerKg: pricePerKg,
+      description: description,
+      acceptedContentTypes: acceptedContentTypes,
+      refusedTypes: refusedTypes,
     );
   }
 
@@ -74,6 +80,9 @@ class AnnouncementRepository {
     String? arrivalLocation,
     required double availableKg,
     required double pricePerKg,
+    String? description,
+    List<String> acceptedContentTypes = const [],
+    List<String> refusedTypes = const [],
   }) async {
     return _remoteDatasource.updateAnnouncement(
       id: id,
@@ -86,6 +95,9 @@ class AnnouncementRepository {
       arrivalLocation: arrivalLocation,
       availableKg: availableKg,
       pricePerKg: pricePerKg,
+      description: description,
+      acceptedContentTypes: acceptedContentTypes,
+      refusedTypes: refusedTypes,
     );
   }
 }

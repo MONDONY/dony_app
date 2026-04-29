@@ -32,6 +32,9 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         arrivalLocation: event.arrivalLocation,
         availableKg: event.availableKg,
         pricePerKg: event.pricePerKg,
+        description: event.description,
+        acceptedContentTypes: event.acceptedContentTypes,
+        refusedTypes: event.refusedTypes,
       );
       emit(AnnouncementCreated(announcement));
     } catch (e) {
@@ -122,6 +125,9 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         arrivalLocation: event.arrivalLocation,
         availableKg: event.availableKg,
         pricePerKg: event.pricePerKg,
+        description: event.description,
+        acceptedContentTypes: event.acceptedContentTypes,
+        refusedTypes: event.refusedTypes,
       );
       emit(AnnouncementUpdated(announcement));
     } catch (e) {

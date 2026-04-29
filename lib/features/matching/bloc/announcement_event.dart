@@ -10,6 +10,9 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
   final String? arrivalLocation;
   final double availableKg;
   final double pricePerKg;
+  final String? description;
+  final List<String> acceptedContentTypes;
+  final List<String> refusedTypes;
 
   AnnouncementCreateRequested({
     required this.departureCity,
@@ -21,6 +24,9 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
     this.arrivalLocation,
     required this.availableKg,
     required this.pricePerKg,
+    this.description,
+    this.acceptedContentTypes = const [],
+    this.refusedTypes = const [],
   });
 }
 
@@ -75,6 +81,9 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
   final String? arrivalLocation;
   final double availableKg;
   final double pricePerKg;
+  final String? description;
+  final List<String> acceptedContentTypes;
+  final List<String> refusedTypes;
 
   AnnouncementUpdateRequested({
     required this.id,
@@ -87,5 +96,8 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
     this.arrivalLocation,
     required this.availableKg,
     required this.pricePerKg,
+    this.description,
+    this.acceptedContentTypes = const [],
+    this.refusedTypes = const [],
   });
 }

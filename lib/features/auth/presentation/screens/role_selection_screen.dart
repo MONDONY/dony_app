@@ -42,7 +42,7 @@ class RoleSelectionScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const DonyLogo(fontSize: 44),
+                  const DonyLogo(fontSize: 55),
                   const SizedBox(height: DonySpacing.xxl),
                   Text(
                     'Je suis...',

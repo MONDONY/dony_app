@@ -145,7 +145,7 @@ class _SenderViewState extends State<_SenderView> {
             centerTitle: false,
             automaticallyImplyLeading: false,
             // Barre persistante : logo + icônes
-            title: DonyLogo(variant: logoVariant, fontSize: 34),
+            title: DonyLogo(variant: logoVariant, fontSize: 43),
             actions: [
               IconButton(
                 icon: Icon(Icons.notifications_outlined, color: iconColor),

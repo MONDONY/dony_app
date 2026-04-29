@@ -44,6 +44,13 @@ AnnouncementModel _$AnnouncementModelFromJson(Map<String, dynamic> json) =>
       traveler: json['traveler'] == null
           ? null
           : TravelerProfile.fromJson(json['traveler'] as Map<String, dynamic>),
+      description: json['description'] as String?,
+      acceptedContentTypes: (json['acceptedContentTypes'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
+      refusedTypes: (json['refusedTypes'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
@@ -64,6 +71,9 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'status': instance.status,
       'bidsCount': instance.bidsCount,
       'traveler': instance.traveler,
+      'description': instance.description,
+      'acceptedContentTypes': instance.acceptedContentTypes,
+      'refusedTypes': instance.refusedTypes,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
     };
