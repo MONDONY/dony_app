@@ -21,9 +21,6 @@ class LocalAuthScreen extends StatefulWidget {
 
 class _LocalAuthScreenState extends State<LocalAuthScreen> {
   static const _pinLength = 6;
-  static const _kGreen = DonyColors.blue400;
-  static const _kGreenLight = DonyColors.blue100;
-  static const _kBg = DonyColors.grey50;
 
   String _pin = '';
   int _lockSecondsLeft = 30;
@@ -85,15 +82,14 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: _kBg,
       body: BlocConsumer<LocalAuthBloc, LocalAuthState>(
         listener: (context, state) {
           if (state is LocalAuthSuccess) {
-            // PIN correct → accès accordé
             context.go('/home');
           } else if (state is LocalAuthNoPinSet) {
-            // Aucun PIN configuré (ex: effacé par ancien logout) → écran de création
             context.go('/auth/pin-setup');
           } else if (state is LocalAuthLocked) {
             _startLockCountdown(state.secondsLeft);
@@ -105,19 +101,19 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
         builder: (context, state) {
           return SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
               child: Column(
                 children: [
                   const SizedBox(height: 56),
-                  _buildLockIcon(state),
-                  const SizedBox(height: 24),
-                  _buildTitle(),
-                  const SizedBox(height: 48),
-                  _buildPinDots(state),
+                  _buildLockIcon(state, cs),
+                  const SizedBox(height: DonySpacing.xl),
+                  _buildTitle(cs),
+                  const SizedBox(height: DonySpacing.huge),
+                  _buildPinDots(state, cs),
                   if (state is LocalAuthPinRequired && state.attemptsLeft < 3)
-                    _buildAttemptsWarning(state.attemptsLeft),
+                    _buildAttemptsWarning(state.attemptsLeft, cs),
                   if (state is LocalAuthLocked)
-                    _buildLockMessage(),
+                    _buildLockMessage(cs),
                   const Spacer(),
                   if (state is LocalAuthPinRequired)
                     DonyKeypad(
@@ -130,8 +126,8 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
                   if (state is LocalAuthLocked)
                     DonyKeypad(onDigit: _onDigit, onDelete: _onDelete, enabled: false),
                   if (state is LocalAuthChecking)
-                    const CircularProgressIndicator(color: _kGreen),
-                  const SizedBox(height: 32),
+                    CircularProgressIndicator(color: cs.primary),
+                  const SizedBox(height: DonySpacing.xxl),
                 ],
               ),
             ),
@@ -141,41 +137,40 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
     );
   }
 
-  Widget _buildLockIcon(LocalAuthState state) {
+  Widget _buildLockIcon(LocalAuthState state, ColorScheme cs) {
     final isLocked = state is LocalAuthLocked;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       width: 80,
       height: 80,
       decoration: BoxDecoration(
-        color: isLocked ? Colors.red.shade50 : _kGreenLight,
+        color: isLocked ? cs.errorContainer : cs.primaryContainer,
         shape: BoxShape.circle,
       ),
       child: Icon(
         isLocked ? Icons.lock : Icons.lock_open_outlined,
-        color: isLocked ? Colors.red.shade400 : _kGreen,
+        color: isLocked ? cs.error : cs.primary,
         size: 36,
       ),
     ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack);
   }
 
-  Widget _buildTitle() {
+  Widget _buildTitle(ColorScheme cs) {
+    final tt = Theme.of(context).textTheme;
+
     return Column(
       children: [
         Image.asset(AppAssets.logo, height: 70),
         const SizedBox(height: 14),
-        const Text(
+        Text(
           'Saisissez votre code PIN',
-          style: TextStyle(
-            fontSize: 16,
-            color: Color(0xFF6B7280),
-          ),
+          style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
         ),
       ],
     ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04);
   }
 
-  Widget _buildPinDots(LocalAuthState state) {
+  Widget _buildPinDots(LocalAuthState state, ColorScheme cs) {
     final isError = state is LocalAuthPinRequired && state.attemptsLeft < 3 && _pin.isEmpty;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -189,12 +184,12 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: isError
-                ? Colors.red.shade300
+                ? cs.error
                 : filled
-                    ? _kGreen
-                    : Colors.grey.shade300,
+                    ? cs.primary
+                    : cs.outline,
             border: Border.all(
-              color: filled ? _kGreen : Colors.grey.shade400,
+              color: filled ? cs.primary : cs.outline,
               width: 1.5,
             ),
           ),
@@ -203,40 +198,47 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
     );
   }
 
-  Widget _buildAttemptsWarning(int attemptsLeft) {
+  Widget _buildAttemptsWarning(int attemptsLeft, ColorScheme cs) {
+    final tt = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.only(top: DonySpacing.md),
       child: Text(
         attemptsLeft == 1
             ? 'Dernière tentative avant blocage'
             : '$attemptsLeft tentatives restantes',
-        style: TextStyle(
-          color: Colors.red.shade500,
-          fontSize: 13,
+        style: tt.bodySmall?.copyWith(
+          color: cs.error,
           fontWeight: FontWeight.w500,
         ),
       ).animate().fadeIn(duration: 200.ms).shake(),
     );
   }
 
-  Widget _buildLockMessage() {
+  Widget _buildLockMessage(ColorScheme cs) {
+    final tt = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.only(top: DonySpacing.base),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.lg,
+          vertical: DonySpacing.md,
+        ),
         decoration: BoxDecoration(
-          color: Colors.red.shade50,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.red.shade200),
+          color: cs.errorContainer,
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+          border: Border.all(color: cs.error.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.timer_outlined, color: Colors.red.shade500, size: 18),
-            const SizedBox(width: 8),
+            Icon(Icons.timer_outlined, color: cs.error, size: 18),
+            const SizedBox(width: DonySpacing.sm),
             Text(
               'Réessayez dans $_lockSecondsLeft secondes',
-              style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.w500),
+              style: tt.bodySmall?.copyWith(
+                color: cs.onErrorContainer,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),

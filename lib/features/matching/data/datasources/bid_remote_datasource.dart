@@ -62,8 +62,11 @@ class BidRemoteDatasource {
     return BidModel.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<BidModel> cancelBid(String bidId) async {
-    final response = await _apiClient.dio.put('/bids/$bidId/cancel');
+  Future<BidModel> cancelBid(String bidId, {String? reason}) async {
+    final response = await _apiClient.dio.put(
+      '/bids/$bidId/cancel',
+      data: reason != null ? {'reason': reason} : null,
+    );
     return BidModel.fromJson(response.data as Map<String, dynamic>);
   }
 

@@ -8,16 +8,21 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
-const _categories = [
+const _contentCategories = [
   'Vêtements',
   'Médicaments',
+  'Alim. sèche',
   'Documents',
-  'Nourriture',
-  'Électronique',
-  'Cadeaux',
+  'Hi-fi',
+  'Téléphone',
+  'Autre',
 ];
+
+// Layout constants
+const _kScrollPad = 180.0;     // bottom padding for scroll content (clears BottomBar)
+const _kAccentBorder = 3.0;    // disclaimer card left accent border width
 
 class CreateBidScreen extends StatefulWidget {
   final AnnouncementModel announcement;
@@ -34,16 +39,20 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   final _recipientNameCtrl = TextEditingController();
   final _recipientPhoneCtrl = TextEditingController();
 
-  double _weightKg = 6;
-  String _category = _categories[0];
-  bool _disclaimerAccepted = false;
-  bool _showDisclaimer = false;
+  // ValueNotifiers replace setState for reactive UI — no setState needed
+  late final ValueNotifier<double> _weightNotifier;
+  final _categoriesNotifier = ValueNotifier<Set<String>>({});
+  final _disclaimerNotifier = ValueNotifier<bool>(false);
 
   double get _maxKg => widget.announcement.availableKg;
   double get _pricePerKg => widget.announcement.pricePerKg;
 
-  double get _totalPrice {
-    return _weightKg * _pricePerKg * 1.12;
+  @override
+  void initState() {
+    super.initState();
+    _weightNotifier = ValueNotifier<double>(
+      widget.announcement.availableKg >= 5 ? 5 : widget.announcement.availableKg,
+    );
   }
 
   @override
@@ -52,6 +61,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _valueCtrl.dispose();
     _recipientNameCtrl.dispose();
     _recipientPhoneCtrl.dispose();
+    _weightNotifier.dispose();
+    _categoriesNotifier.dispose();
+    _disclaimerNotifier.dispose();
     super.dispose();
   }
 
@@ -77,25 +89,20 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       _showError('Téléphone du destinataire obligatoire');
       return;
     }
-    if (!_disclaimerAccepted) {
-      setState(() => _showDisclaimer = true);
-      return;
-    }
     context.read<BidBloc>().add(BidCreateRequested(
       announcementId: widget.announcement.id,
-      weightKg: _weightKg,
+      weightKg: _weightNotifier.value,
       declaredValueEur: val,
       description: _descCtrl.text.trim(),
-      contentCategory: _category,
+      contentCategory: _categoriesNotifier.value.join(', '),
       recipientName: _recipientNameCtrl.text.trim(),
       recipientPhone: _recipientPhoneCtrl.text.trim(),
     ));
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: DonyColors.error),
-    );
+    DonySnackbar.show(context,
+        message: message, type: DonySnackbarType.error);
   }
 
   @override
@@ -103,8 +110,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     return BlocConsumer<BidBloc, BidState>(
       listener: (context, state) {
         if (state is BidCreated) {
-          // Le bid est créé — redirige immédiatement vers le paiement.
-          // context.go remplace la pile pour éviter de revenir au formulaire.
           context.go('/payments/pay', extra: state.bid);
         } else if (state is BidError) {
           _showError(state.message);
@@ -113,202 +118,218 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       builder: (context, state) {
         final isLoading = state is BidLoading;
 
-        if (_showDisclaimer) {
-          return _DisclaimerPage(
-            onAccept: () {
-              setState(() {
-                _disclaimerAccepted = true;
-                _showDisclaimer = false;
-              });
-              _submit();
-            },
-            onDecline: () => setState(() => _showDisclaimer = false),
-          );
-        }
-
         return Scaffold(
-          backgroundColor: DonyColors.grey50,
-          appBar: AppBar(
-            title: Text(
-              'Déclarer un colis',
-              style: GoogleFonts.sora(
-                fontWeight: FontWeight.w700,
-                fontSize: 17,
+              backgroundColor: DonyColors.bg,
+              appBar: _buildAppBar(context),
+              body: ListenableBuilder(
+                listenable: Listenable.merge([
+                  _weightNotifier,
+                  _categoriesNotifier,
+                  _disclaimerNotifier,
+                ]),
+                builder: (context, _) {
+                  final weightKg = _weightNotifier.value;
+                  final categories = _categoriesNotifier.value;
+                  final disclaimerAccepted = _disclaimerNotifier.value;
+                  final serviceFee = weightKg * _pricePerKg * 0.12;
+                  final basePrice = weightKg * _pricePerKg;
+                  final totalPrice = basePrice + serviceFee;
+                  final canSubmit =
+                      weightKg > 0 && categories.isNotEmpty && disclaimerAccepted;
+
+                  return Stack(
+                    children: [
+                      SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(
+                          DonySpacing.lg,
+                          DonySpacing.xl,
+                          DonySpacing.lg,
+                          _kScrollPad,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // ── SECTION: Poids estimé ─────────────────────────────
+                            _SectionLabel(label: 'POIDS ESTIMÉ'),
+                            const SizedBox(height: DonySpacing.sm),
+                            _WeightSection(
+                              weightKg: weightKg,
+                              maxKg: _maxKg,
+                              onChanged: (v) => _weightNotifier.value = v,
+                            ).animate().fadeIn(duration: 250.ms),
+                            const SizedBox(height: DonySpacing.xxl),
+
+                            // ── SECTION: Contenu du colis ─────────────────────────
+                            _SectionLabel(label: 'CONTENU DU COLIS'),
+                            const SizedBox(height: DonySpacing.md),
+                            Wrap(
+                              spacing: DonySpacing.sm,
+                              runSpacing: DonySpacing.sm,
+                              children: _contentCategories
+                                  .map((cat) => _CategoryChip(
+                                        label: cat,
+                                        selected: categories.contains(cat),
+                                        onTap: () {
+                                          final updated = Set<String>.from(categories);
+                                          if (updated.contains(cat)) {
+                                            updated.remove(cat);
+                                          } else {
+                                            updated.add(cat);
+                                          }
+                                          _categoriesNotifier.value = updated;
+                                        },
+                                      ))
+                                  .toList(),
+                            ).animate().fadeIn(delay: 60.ms),
+                            const SizedBox(height: DonySpacing.xxl),
+
+                            // ── SECTION: Description ──────────────────────────────
+                            _SectionLabel(label: 'DESCRIPTION (AU VOYAGEUR)'),
+                            const SizedBox(height: DonySpacing.sm),
+                            DonyTextField(
+                              controller: _descCtrl,
+                              hint:
+                                  'Médicaments pour diabète + 2 tee-shirts enfants',
+                            ).animate().fadeIn(delay: 100.ms),
+                            const SizedBox(height: DonySpacing.xxl),
+
+                            // ── Valeur déclarée ───────────────────────────────────
+                            _SectionLabel(label: 'VALEUR DÉCLARÉE (€)'),
+                            const SizedBox(height: DonySpacing.sm),
+                            TextFormField(
+                              controller: _valueCtrl,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(decimal: true),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                    RegExp(r'^\d+\.?\d{0,2}')),
+                              ],
+                              decoration: InputDecoration(
+                                hintText: '120',
+                                helperText:
+                                    'Plafond : 500 € — couvre l\'assurance en cas de sinistre',
+                                helperStyle: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(color: DonyColors.neutral400),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: DonySpacing.base,
+                                  vertical: DonySpacing.md,
+                                ),
+                              ),
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ).animate().fadeIn(delay: 140.ms),
+                            const SizedBox(height: DonySpacing.xxl),
+
+                            // ── Destinataire ──────────────────────────────────────
+                            _SectionLabel(label: 'DESTINATAIRE'),
+                            const SizedBox(height: DonySpacing.md),
+                            DonyTextField(
+                              controller: _recipientNameCtrl,
+                              label: 'Prénom et nom du destinataire',
+                              hint: 'ex: Amadou Diallo',
+                            ).animate().fadeIn(delay: 160.ms),
+                            const SizedBox(height: DonySpacing.md),
+                            DonyTextField(
+                              controller: _recipientPhoneCtrl,
+                              label: 'Téléphone du destinataire',
+                              hint: 'ex: +221 77 000 00 00',
+                              keyboardType: TextInputType.phone,
+                            ).animate().fadeIn(delay: 180.ms),
+                            const SizedBox(height: DonySpacing.xxl),
+
+                            // ── Disclaimer card ───────────────────────────────────
+                            _DisclaimerCard(
+                              accepted: disclaimerAccepted,
+                              onChanged: (v) => _disclaimerNotifier.value = v,
+                            ).animate().fadeIn(delay: 200.ms),
+                          ],
+                        ),
+                      ),
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: _BottomBar(
+                          weightKg: weightKg,
+                          pricePerKg: _pricePerKg,
+                          basePrice: basePrice,
+                          serviceFee: serviceFee,
+                          totalPrice: totalPrice,
+                          isLoading: isLoading,
+                          canSubmit: canSubmit,
+                          onSubmit: _submit,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
-            ),
-            backgroundColor: DonyColors.white,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_rounded,
-                  size: 20, color: DonyColors.blue400),
-              onPressed: () => context.pop(),
-            ),
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(3),
-              child: LinearProgressIndicator(
-                value: 1 / 3,
-                backgroundColor: DonyColors.grey50,
-                valueColor: const AlwaysStoppedAnimation<Color>(DonyColors.blue400),
-                minHeight: 3,
-              ),
-            ),
-          ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Indicateur étape
-                Text(
-                  'ÉTAPE 1/3 — LE COLIS',
-                  style: GoogleFonts.sora(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: DonyColors.blue400,
-                    letterSpacing: 0.8,
-                  ),
-                ).animate().fadeIn(),
-                const SizedBox(height: 20),
-
-                // Stepper poids
-                _WeightStepper(
-                  weightKg: _weightKg,
-                  maxKg: _maxKg,
-                  onChanged: (v) => setState(() => _weightKg = v),
-                ).animate().fadeIn(delay: 60.ms),
-                const SizedBox(height: 24),
-
-                // Catégorie
-                Text(
-                  'Catégorie du contenu',
-                  style: GoogleFonts.sora(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: DonyColors.dark900,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _categories.map((cat) => _CategoryChip(
-                    label: cat,
-                    selected: _category == cat,
-                    onTap: () => setState(() => _category = cat),
-                  )).toList(),
-                ).animate().fadeIn(delay: 100.ms),
-                const SizedBox(height: 24),
-
-                // Description
-                Text(
-                  'Description détaillée',
-                  style: GoogleFonts.sora(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: DonyColors.dark900,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _descCtrl,
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    hintText: 'Médicaments pour diabète + 2 tee-shirts enfants',
-                    hintStyle: GoogleFonts.sora(
-                      color: DonyColors.grey200,
-                      fontSize: 14,
-                    ),
-                  ),
-                  style: GoogleFonts.sora(fontSize: 14),
-                ).animate().fadeIn(delay: 140.ms),
-                const SizedBox(height: 20),
-
-                // Valeur déclarée
-                Text(
-                  'Valeur déclarée (€)',
-                  style: GoogleFonts.sora(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: DonyColors.dark900,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _valueCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-                  ],
-                  decoration: InputDecoration(
-                    prefixIcon: const Padding(
-                      padding: EdgeInsets.only(left: 14, right: 8),
-                      child: Icon(Icons.euro_rounded, size: 18, color: DonyColors.grey400),
-                    ),
-                    prefixIconConstraints: const BoxConstraints(minWidth: 0),
-                    hintText: '120',
-                    helperText: 'Plafond : 500 € — couvre l\'assurance en cas de sinistre',
-                    helperStyle: GoogleFonts.sora(
-                      fontSize: 12,
-                      color: DonyColors.grey400,
-                    ),
-                  ),
-                  style: GoogleFonts.sora(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ).animate().fadeIn(delay: 160.ms),
-                const SizedBox(height: 20),
-
-                // Warning contenu interdit
-                _ContentWarning().animate().fadeIn(delay: 180.ms),
-                const SizedBox(height: 28),
-
-                // Destinataire
-                Text(
-                  'Destinataire',
-                  style: GoogleFonts.sora(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: DonyColors.dark900,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                TextFormField(
-                  controller: _recipientNameCtrl,
-                  decoration: InputDecoration(
-                    labelText: 'Prénom et nom du destinataire',
-                    hintText: 'ex: Amadou Diallo',
-                  ),
-                  style: GoogleFonts.sora(fontSize: 14),
-                ).animate().fadeIn(delay: 200.ms),
-                const SizedBox(height: 14),
-                TextFormField(
-                  controller: _recipientPhoneCtrl,
-                  keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(
-                    labelText: 'Téléphone du destinataire',
-                    hintText: 'ex: +221 77 000 00 00',
-                  ),
-                  style: GoogleFonts.sora(fontSize: 14),
-                ).animate().fadeIn(delay: 220.ms),
-              ],
-            ),
-          ),
-          bottomSheet: _BottomBar(
-            totalPrice: _totalPrice,
-            isLoading: isLoading,
-            onSubmit: _submit,
-          ),
-        );
+            );
       },
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final travelerName =
+        widget.announcement.traveler?.resolvedName ?? 'Voyageur';
+    final depDate = DateFormat('d MMM', 'fr')
+        .format(widget.announcement.departureDate);
+
+    return AppBar(
+      backgroundColor: DonyColors.white,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      centerTitle: false,
+      leading: IconButton(
+        icon: const Icon(Icons.close_rounded,
+            size: 22, color: DonyColors.ink900),
+        onPressed: () => context.pop(),
+        tooltip: 'Fermer',
+      ),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text("Demande d'envoi", style: tt.headlineLarge),
+          Text(
+            'Avec $travelerName · $depDate',
+            style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400),
+          ),
+        ],
+      ),
+      bottom: const PreferredSize(
+        preferredSize: Size.fromHeight(1),
+        child: Divider(height: 1, color: DonyColors.neutral200),
+      ),
     );
   }
 }
 
-// ── Stepper poids ────────────────────────────────────────────────────────────
+// ── Section label ────────────────────────────────────────────────────────────
 
-class _WeightStepper extends StatelessWidget {
-  const _WeightStepper({
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: Theme.of(context)
+          .textTheme
+          .labelMedium
+          ?.copyWith(color: DonyColors.neutral400),
+    );
+  }
+}
+
+// ── Weight section with slider ────────────────────────────────────────────────
+
+class _WeightSection extends StatelessWidget {
+  const _WeightSection({
     required this.weightKg,
     required this.maxKg,
     required this.onChanged,
@@ -320,105 +341,75 @@ class _WeightStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _StepperButton(
-                icon: Icons.remove_rounded,
-                onTap: weightKg > 1
-                    ? () => onChanged((weightKg - 1).clamp(1, maxKg))
-                    : null,
+    final tt = Theme.of(context).textTheme;
+    return Column(
+      children: [
+        // Large weight display
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              weightKg.toStringAsFixed(0),
+              style: tt.displayLarge
+                  ?.copyWith(color: DonyColors.ink900),
+            ),
+            const SizedBox(width: DonySpacing.xs),
+            Padding(
+              padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+              child: Text(
+                'kg',
+                style: tt.headlineMedium
+                    ?.copyWith(color: DonyColors.neutral400),
               ),
-              const SizedBox(width: 28),
-              RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: weightKg.toStringAsFixed(0),
-                      style: GoogleFonts.sora(
-                        fontSize: 52,
-                        fontWeight: FontWeight.w800,
-                        color: DonyColors.dark900,
-                      ),
-                    ),
-                    TextSpan(
-                      text: 'kg',
-                      style: GoogleFonts.sora(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                        color: DonyColors.grey400,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 28),
-              _StepperButton(
-                icon: Icons.add_rounded,
-                onTap: weightKg < maxKg
-                    ? () => onChanged((weightKg + 1).clamp(1, maxKg))
-                    : null,
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Max ${maxKg.toStringAsFixed(0)} kg sur ce trajet',
-            style: GoogleFonts.sora(
-              fontSize: 13,
-              color: DonyColors.grey400,
+            ),
+            const Spacer(),
+            Text(
+              'max ${maxKg.toStringAsFixed(0)} kg',
+              style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
+            ),
+          ],
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        // Slider
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            activeTrackColor: DonyColors.primary,
+            inactiveTrackColor: DonyColors.neutral200,
+            thumbColor: DonyColors.primary,
+            overlayColor: DonyColors.primary.withValues(alpha: 0.1),
+            trackHeight: 4,
+            thumbShape: const RoundSliderThumbShape(
+              enabledThumbRadius: 10,
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StepperButton extends StatelessWidget {
-  const _StepperButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: 150.ms,
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: onTap != null ? DonyColors.white : DonyColors.grey50,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: onTap != null ? DonyColors.grey100 : DonyColors.grey50,
+          child: Slider(
+            value: weightKg,
+            min: 1,
+            max: maxKg,
+            divisions: (maxKg - 1).round(),
+            onChanged: onChanged,
           ),
-          boxShadow: onTap != null
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
         ),
-        child: Icon(
-          icon,
-          size: 22,
-          color: onTap != null ? DonyColors.dark900 : DonyColors.grey200,
+        // Range labels
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '1 kg',
+              style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
+            ),
+            Text(
+              '${maxKg.toStringAsFixed(0)} kg',
+              style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
+            ),
+          ],
         ),
-      ),
+      ],
     );
   }
 }
 
-// ── Chips catégorie ──────────────────────────────────────────────────────────
+// ── Category chip ─────────────────────────────────────────────────────────────
 
 class _CategoryChip extends StatelessWidget {
   const _CategoryChip({
@@ -433,320 +424,119 @@ class _CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: 150.ms,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.md,
+          vertical: DonySpacing.sm,
+        ),
         decoration: BoxDecoration(
-          color: selected ? DonyColors.dark900 : DonyColors.white,
-          borderRadius: BorderRadius.circular(20),
+          color: selected ? DonyColors.ink900 : DonyColors.white,
+          borderRadius: BorderRadius.circular(DonyRadius.full),
           border: Border.all(
-            color: selected ? DonyColors.dark900 : DonyColors.grey100,
+            color: selected ? DonyColors.ink900 : DonyColors.neutral200,
           ),
         ),
-        child: Text(
-          label,
-          style: GoogleFonts.sora(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: selected ? Colors.white : DonyColors.dark900,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Warning contenu interdit ─────────────────────────────────────────────────
-
-class _ContentWarning extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF8E6),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(
-            Icons.shield_outlined,
-            size: 18,
-            color: Color(0xFFF59E0B),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Contenu interdit',
-                  style: GoogleFonts.sora(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF92400E),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Pas d\'armes, drogues, liquides inflammables ou espèces. Le voyageur peut refuser au contrôle.',
-                  style: GoogleFonts.sora(
-                    fontSize: 12,
-                    color: const Color(0xFF92400E),
-                    height: 1.4,
-                  ),
-                ),
-              ],
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (selected) ...[
+              const Icon(Icons.check_rounded,
+                  size: 14, color: DonyColors.white),
+              const SizedBox(width: DonySpacing.xxs),
+            ],
+            Text(
+              label,
+              style: tt.labelMedium?.copyWith(
+                color: selected ? DonyColors.white : DonyColors.ink900,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-// ── Barre de bas ─────────────────────────────────────────────────────────────
+// ── Disclaimer card ───────────────────────────────────────────────────────────
 
-class _BottomBar extends StatelessWidget {
-  const _BottomBar({
-    required this.totalPrice,
-    required this.isLoading,
-    required this.onSubmit,
+class _DisclaimerCard extends StatelessWidget {
+  const _DisclaimerCard({
+    required this.accepted,
+    required this.onChanged,
   });
 
-  final double totalPrice;
-  final bool isLoading;
-  final VoidCallback onSubmit;
+  final bool accepted;
+  final ValueChanged<bool> onChanged;
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return Container(
-      padding: EdgeInsets.fromLTRB(
-        20,
-        16,
-        20,
-        MediaQuery.of(context).padding.bottom + 16,
+      decoration: BoxDecoration(
+        color: DonyColors.terra50,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: const Border(
+          left: BorderSide(color: DonyColors.terra500, width: _kAccentBorder),
+        ),
       ),
-      decoration: const BoxDecoration(
-        color: DonyColors.white,
-        border: Border(top: BorderSide(color: DonyColors.grey100)),
-      ),
-      child: Row(
+      padding: const EdgeInsets.all(DonySpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            mainAxisSize: MainAxisSize.min,
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Total estimé',
-                style: GoogleFonts.sora(
-                  fontSize: 12,
-                  color: DonyColors.grey400,
-                ),
+              const Icon(
+                Icons.warning_amber_rounded,
+                size: 20,
+                color: DonyColors.terra500,
               ),
-              Text(
-                '${totalPrice.toStringAsFixed(0)} €',
-                style: GoogleFonts.sora(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: DonyColors.dark900,
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Disclaimer douane.',
+                      style: tt.titleMedium
+                          ?.copyWith(color: DonyColors.terra700),
+                    ),
+                    const SizedBox(height: DonySpacing.xxs),
+                    Text(
+                      'Pas d\'armes, drogues, liquides inflammables ou espèces. '
+                      'Le voyageur peut refuser au contrôle douanier.',
+                      style: tt.bodySmall
+                          ?.copyWith(color: DonyColors.terra700, height: 1.5),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: SizedBox(
-              height: 52,
-              child: ElevatedButton(
-                onPressed: isLoading ? null : onSubmit,
-                child: isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : Text(
-                        'Continuer',
-                        style: GoogleFonts.sora(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Page disclaimer ──────────────────────────────────────────────────────────
-
-class _DisclaimerPage extends StatefulWidget {
-  final VoidCallback onAccept;
-  final VoidCallback onDecline;
-
-  const _DisclaimerPage({required this.onAccept, required this.onDecline});
-
-  @override
-  State<_DisclaimerPage> createState() => _DisclaimerPageState();
-}
-
-class _DisclaimerPageState extends State<_DisclaimerPage> {
-  bool _checked = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: DonyColors.grey50,
-      appBar: AppBar(
-        title: Text(
-          'Conditions d\'envoi',
-          style: GoogleFonts.sora(
-            fontWeight: FontWeight.w700,
-            fontSize: 17,
-          ),
-        ),
-        backgroundColor: DonyColors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded,
-              size: 20, color: DonyColors.blue400),
-          onPressed: widget.onDecline,
-        ),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF3E0),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFFDE68A)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.gavel_rounded, color: DonyColors.warning, size: 20),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'Disclaimer légal douanier',
-                            style: GoogleFonts.sora(
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF92400E),
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ).animate().fadeIn(),
-                  const SizedBox(height: 20),
-                  _LegalSection('Produits interdits', [
-                    'Stupéfiants, drogues et substances psychotropes',
-                    'Armes, munitions et explosifs',
-                    'Contrefaçons et marchandises piratées',
-                    'Denrées périssables non déclarées',
-                    'Espèces animales protégées',
-                    'Matières radioactives ou dangereuses',
-                  ]),
-                  const SizedBox(height: 16),
-                  _LegalSection('Responsabilité de l\'expéditeur', [
-                    'Vous êtes seul responsable de la conformité du contenu avec la réglementation douanière.',
-                    'Toute fausse déclaration douanière est passible de poursuites pénales.',
-                    'dony décline toute responsabilité en cas de saisie ou de litige douanier.',
-                  ]),
-                  const SizedBox(height: 16),
-                  _LegalSection('Médicaments', [
-                    'Les médicaments soumis à ordonnance doivent être accompagnés des documents médicaux requis.',
-                  ]),
-                  const SizedBox(height: 24),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            padding: EdgeInsets.fromLTRB(
-              20,
-              16,
-              20,
-              MediaQuery.of(context).padding.bottom + 16,
-            ),
-            decoration: const BoxDecoration(
-              color: DonyColors.white,
-              border: Border(top: BorderSide(color: DonyColors.grey100)),
-            ),
-            child: Column(
+          const SizedBox(height: DonySpacing.md),
+          GestureDetector(
+            onTap: () => onChanged(!accepted),
+            child: Row(
               children: [
-                GestureDetector(
-                  onTap: () => setState(() => _checked = !_checked),
-                  child: Row(
-                    children: [
-                      Checkbox(
-                        value: _checked,
-                        onChanged: (v) =>
-                            setState(() => _checked = v ?? false),
-                        activeColor: DonyColors.blue400,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'J\'ai lu et j\'accepte les conditions d\'envoi et la réglementation douanière',
-                          style: GoogleFonts.sora(
-                            fontSize: 13,
-                            color: DonyColors.dark900,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                Checkbox(
+                  value: accepted,
+                  onChanged: (v) => onChanged(v ?? false),
+                  activeColor: DonyColors.terra500,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: widget.onDecline,
-                        child: Text(
-                          'Retour',
-                          style: GoogleFonts.sora(
-                            color: DonyColors.grey400,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
+                const SizedBox(width: DonySpacing.xs),
+                Expanded(
+                  child: Text(
+                    'Je signe & j\'accepte',
+                    style: tt.bodySmall?.copyWith(
+                      color: DonyColors.ink900,
+                      fontWeight: FontWeight.w600,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _checked ? widget.onAccept : null,
-                        child: Text(
-                          'Confirmer',
-                          style: GoogleFonts.sora(
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -757,51 +547,103 @@ class _DisclaimerPageState extends State<_DisclaimerPage> {
   }
 }
 
-class _LegalSection extends StatelessWidget {
-  final String title;
-  final List<String> items;
-  const _LegalSection(this.title, this.items);
+// ── Bottom bar with price breakdown + CTA ────────────────────────────────────
+
+class _BottomBar extends StatelessWidget {
+  const _BottomBar({
+    required this.weightKg,
+    required this.pricePerKg,
+    required this.basePrice,
+    required this.serviceFee,
+    required this.totalPrice,
+    required this.isLoading,
+    required this.canSubmit,
+    required this.onSubmit,
+  });
+
+  final double weightKg;
+  final double pricePerKg;
+  final double basePrice;
+  final double serviceFee;
+  final double totalPrice;
+  final bool isLoading;
+  final bool canSubmit;
+  final VoidCallback onSubmit;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: GoogleFonts.sora(
-            fontWeight: FontWeight.w700,
-            fontSize: 14,
-            color: DonyColors.dark900,
-          ),
-        ),
-        const SizedBox(height: 8),
-        ...items.map((item) => Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '• ',
-                    style: TextStyle(
-                      color: DonyColors.blue400,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      item,
-                      style: GoogleFonts.sora(
-                        fontSize: 13,
-                        color: DonyColors.grey400,
-                        height: 1.5,
-                      ),
-                    ),
-                  ),
-                ],
+    final tt = Theme.of(context).textTheme;
+    final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: '€');
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        DonySpacing.base,
+        DonySpacing.lg,
+        MediaQuery.of(context).padding.bottom + DonySpacing.base,
+      ),
+      decoration: const BoxDecoration(
+        color: DonyColors.white,
+        border: Border(top: BorderSide(color: DonyColors.neutral200)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Price rows
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${weightKg.toStringAsFixed(0)} kg × '
+                '${pricePerKg.toStringAsFixed(0)}€',
+                style: tt.bodyMedium,
               ),
-            )),
-      ],
+              Text(
+                fmt.format(basePrice),
+                style: tt.titleMedium,
+              ),
+            ],
+          ),
+          const SizedBox(height: DonySpacing.xs),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Frais de service',
+                style: tt.bodyMedium
+                    ?.copyWith(color: DonyColors.neutral400),
+              ),
+              Text(
+                fmt.format(serviceFee),
+                style: tt.bodyMedium,
+              ),
+            ],
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          const Divider(color: DonyColors.neutral200),
+          const SizedBox(height: DonySpacing.sm),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Total', style: tt.titleLarge),
+              Text(
+                fmt.format(totalPrice),
+                style: tt.titleLarge
+                    ?.copyWith(color: DonyColors.primary),
+              ),
+            ],
+          ),
+          const SizedBox(height: DonySpacing.md),
+          // CTA
+          DonyButton(
+            label:
+                'Bloquer ${fmt.format(totalPrice)} & envoyer',
+            onPressed: canSubmit && !isLoading ? onSubmit : null,
+            isLoading: isLoading,
+            icon: Icons.lock_rounded,
+          ),
+        ],
+      ),
     );
   }
 }

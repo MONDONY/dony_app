@@ -366,5 +366,36 @@ void main() {
             s is AnnouncementError && s.message.contains('Modification impossible')),
       ],
     );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'erreur générique mise à jour → [Loading, AnnouncementError]',
+      build: () {
+        when(() => mockRepo.updateAnnouncement(
+              id: any(named: 'id'),
+              departureCity: any(named: 'departureCity'),
+              arrivalCity: any(named: 'arrivalCity'),
+              departureDate: any(named: 'departureDate'),
+              departureTime: any(named: 'departureTime'),
+              arrivalTime: any(named: 'arrivalTime'),
+              departureLocation: any(named: 'departureLocation'),
+              arrivalLocation: any(named: 'arrivalLocation'),
+              availableKg: any(named: 'availableKg'),
+              pricePerKg: any(named: 'pricePerKg'),
+            )).thenThrow(Exception('Server error'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementUpdateRequested(
+        id: 'ann-001',
+        departureCity: 'Lyon',
+        arrivalCity: 'Abidjan',
+        departureDate: DateTime.now().add(const Duration(days: 15)),
+        availableKg: 25.0,
+        pricePerKg: 6.0,
+      )),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementError>(),
+      ],
+    );
   });
 }

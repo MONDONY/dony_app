@@ -13,7 +13,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class ShipmentListScreen extends StatefulWidget {
@@ -53,8 +52,9 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: DonyColors.grey50,
       floatingActionButton: Builder(
         builder: (context) {
           final authState = context.watch<AuthBloc>().state;
@@ -88,7 +88,7 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
             return Stack(
               children: [
                 RefreshIndicator(
-                  color: DonyColors.blue400,
+                  color: cs.primary,
                   onRefresh: () async => context
                       .read<BidBloc>()
                       .add(const BidMyListAutoRefreshRequested(force: true)),
@@ -142,8 +142,7 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
                 ),
                 if (state.isRefreshing)
                   const LinearProgressIndicator(
-                    backgroundColor: Colors.transparent,
-                    color: DonyColors.blue400,
+                    color: DonyColors.primary,
                     minHeight: 2,
                   ),
               ],
@@ -177,11 +176,9 @@ class _EnvoisHeaderState extends State<_EnvoisHeader> {
   final _savedService = getIt<SavedTripsService>();
 
   void _openSavedTrips() {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _SavedTripsSheet(
+    DonyBottomSheet.show<void>(
+      context,
+      child: _SavedTripsSheet(
         savedService: _savedService,
         onChanged: () => setState(() {}),
       ),
@@ -190,26 +187,29 @@ class _EnvoisHeaderState extends State<_EnvoisHeader> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     final savedCount = _savedService.getSavedTrips().length;
     final topPad = MediaQuery.of(context).padding.top;
+
     return Container(
-      color: DonyColors.white,
+      color: cs.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: topPad + 8),
+          SizedBox(height: topPad + DonySpacing.sm),
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 16, 0),
+            padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg, DonySpacing.sm, DonySpacing.base, 0),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
                   child: Text(
                     'Mes envois',
-                    style: GoogleFonts.sora(
-                      fontSize: 28,
+                    style: tt.headlineLarge?.copyWith(
                       fontWeight: FontWeight.w800,
-                      color: DonyColors.dark900,
+                      color: cs.onSurface,
                       letterSpacing: -0.5,
                     ),
                   ).animate().fadeIn(duration: 300.ms),
@@ -224,15 +224,19 @@ class _EnvoisHeaderState extends State<_EnvoisHeader> {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: savedCount > 0 ? DonyColors.blue100 : DonyColors.grey50,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: DonyColors.grey100),
+                          color: savedCount > 0
+                              ? cs.primaryContainer
+                              : cs.surface,
+                          borderRadius: BorderRadius.circular(DonyRadius.md),
+                          border: Border.all(color: cs.outline),
                         ),
                         child: Icon(
                           savedCount > 0
                               ? Icons.bookmark_rounded
                               : Icons.bookmark_border_rounded,
-                          color: savedCount > 0 ? DonyColors.blue400 : DonyColors.grey400,
+                          color: savedCount > 0
+                              ? cs.primary
+                              : cs.onSurfaceVariant,
                           size: 20,
                         ),
                       ),
@@ -243,17 +247,17 @@ class _EnvoisHeaderState extends State<_EnvoisHeader> {
                           child: Container(
                             width: 18,
                             height: 18,
-                            decoration: const BoxDecoration(
-                              color: DonyColors.blue400,
+                            decoration: BoxDecoration(
+                              color: cs.primary,
                               shape: BoxShape.circle,
                             ),
                             child: Center(
                               child: Text(
                                 '$savedCount',
-                                style: GoogleFonts.sora(
-                                  fontSize: 10,
+                                style: tt.labelSmall?.copyWith(
                                   fontWeight: FontWeight.w800,
-                                  color: Colors.white,
+                                  color: cs.onPrimary,
+                                  fontSize: 10,
                                 ),
                               ),
                             ),
@@ -267,36 +271,38 @@ class _EnvoisHeaderState extends State<_EnvoisHeader> {
           ),
           const SizedBox(height: 14),
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+            padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg, 0, DonySpacing.lg, 0),
             child: Row(
               children: [
                 _StatChip(
                   count: widget.inProgressCount,
                   label: 'en cours',
                   color: DonyColors.success,
-                  bgColor: const Color(0xFFECFDF3),
+                  bgColor: DonyColors.successLight,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: DonySpacing.sm),
                 _StatChip(
                   count: widget.upcomingCount,
                   label: 'en attente',
                   color: DonyColors.warning,
-                  bgColor: const Color(0xFFFFF8E7),
+                  bgColor: DonyColors.warningLight,
                 ),
               ],
             ).animate().fadeIn(delay: 80.ms),
           ),
           if (widget.activeShipment != null) ...[
-            const SizedBox(height: 20),
+            const SizedBox(height: DonySpacing.lg),
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+              padding: const EdgeInsets.fromLTRB(
+                  DonySpacing.lg, 0, DonySpacing.lg, 0),
               child: _ActiveShipmentBanner(bid: widget.activeShipment!),
             )
                 .animate()
                 .fadeIn(delay: 120.ms)
                 .slideY(begin: 0.05, curve: Curves.easeOutCubic),
           ],
-          const SizedBox(height: 20),
+          const SizedBox(height: DonySpacing.lg),
         ],
       ),
     );
@@ -318,19 +324,21 @@ class _StatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.md, vertical: 7),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(DonyRadius.xl),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             '$count',
-            style: GoogleFonts.sora(
-              fontSize: 14,
+            style: tt.titleMedium?.copyWith(
               fontWeight: FontWeight.w800,
               color: color,
             ),
@@ -338,8 +346,7 @@ class _StatChip extends StatelessWidget {
           const SizedBox(width: 5),
           Text(
             label,
-            style: GoogleFonts.sora(
-              fontSize: 13,
+            style: tt.bodyMedium?.copyWith(
               fontWeight: FontWeight.w500,
               color: color,
             ),
@@ -361,6 +368,8 @@ class _ActiveShipmentBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     final shortDesc = bid.description.length > 36
         ? '${bid.description.substring(0, 36)}…'
         : bid.description;
@@ -374,17 +383,17 @@ class _ActiveShipmentBanner extends StatelessWidget {
       },
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(DonySpacing.lg),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [DonyColors.blue600, DonyColors.blue400],
+          gradient: LinearGradient(
+            colors: [DonyColors.blue700, cs.primary],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(DonyRadius.card),
           boxShadow: [
             BoxShadow(
-              color: DonyColors.blue400.withValues(alpha: 0.28),
+              color: cs.primary.withValues(alpha: 0.28),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -396,78 +405,72 @@ class _ActiveShipmentBanner extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: cs.onPrimary.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     'COLIS EN TRANSIT',
-                    style: GoogleFonts.sora(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                    style: tt.labelSmall?.copyWith(
+                      color: cs.onPrimary,
                       letterSpacing: 0.8,
                     ),
                   ),
                 ),
                 const Spacer(),
-                const Icon(
+                Icon(
                   Icons.arrow_forward_ios_rounded,
-                  color: Colors.white,
+                  color: cs.onPrimary,
                   size: 14,
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: DonySpacing.md),
             Text(
               shortDesc,
-              style: GoogleFonts.sora(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
+              style: tt.headlineMedium?.copyWith(
+                color: cs.onPrimary,
                 height: 1.2,
               ),
             ),
             const SizedBox(height: 6),
             Row(
               children: [
-                const Icon(Icons.flight_takeoff_rounded,
-                    color: Colors.white70, size: 13),
+                Icon(Icons.flight_takeoff_rounded,
+                    color: cs.onPrimary.withValues(alpha: 0.7), size: 13),
                 const SizedBox(width: 6),
                 Text(
                   '${bid.departureCity ?? '—'} → ${bid.arrivalCity ?? '—'}',
-                  style: GoogleFonts.sora(
-                      fontSize: 13, color: Colors.white70),
+                  style: tt.bodySmall?.copyWith(
+                      color: cs.onPrimary.withValues(alpha: 0.7)),
                 ),
                 const Spacer(),
                 Text(
                   '${bid.weightKg} kg',
-                  style: GoogleFonts.sora(
-                    fontSize: 13,
+                  style: tt.bodySmall?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: cs.onPrimary,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: DonySpacing.base),
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: _progress,
-                backgroundColor: Colors.white.withValues(alpha: 0.2),
-                valueColor:
-                    const AlwaysStoppedAnimation<Color>(Colors.white),
+                backgroundColor: cs.onPrimary.withValues(alpha: 0.2),
+                valueColor: AlwaysStoppedAnimation<Color>(cs.onPrimary),
                 minHeight: 4,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               _progressLabel,
-              style: GoogleFonts.sora(
-                  fontSize: 11, color: Colors.white70),
+              style: tt.bodySmall?.copyWith(
+                  color: cs.onPrimary.withValues(alpha: 0.7)),
             ),
           ],
         ),
@@ -484,21 +487,25 @@ class _SegmentedTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return Container(
-      color: DonyColors.grey50,
-      padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+      color: DonyColors.bgApp,
+      padding: const EdgeInsets.fromLTRB(
+          DonySpacing.lg, 10, DonySpacing.lg, 10),
       child: Container(
         height: 44,
         decoration: BoxDecoration(
-          color: DonyColors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: DonyColors.grey100),
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+          border: Border.all(color: cs.outline),
         ),
         child: TabBar(
           controller: controller,
           indicator: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [DonyColors.blue600, DonyColors.blue400],
+            gradient: LinearGradient(
+              colors: [DonyColors.blue700, cs.primary],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -508,13 +515,13 @@ class _SegmentedTabs extends StatelessWidget {
           dividerColor: Colors.transparent,
           labelPadding: EdgeInsets.zero,
           padding: const EdgeInsets.all(3),
-          labelColor: Colors.white,
-          unselectedLabelColor: DonyColors.grey400,
-          labelStyle: GoogleFonts.sora(
+          labelColor: cs.onPrimary,
+          unselectedLabelColor: cs.onSurfaceVariant,
+          labelStyle: tt.labelMedium?.copyWith(
             fontSize: 13,
             fontWeight: FontWeight.w700,
           ),
-          unselectedLabelStyle: GoogleFonts.sora(
+          unselectedLabelStyle: tt.labelMedium?.copyWith(
             fontSize: 13,
             fontWeight: FontWeight.w500,
           ),
@@ -573,9 +580,10 @@ class _ShipmentListView extends StatelessWidget {
       );
     }
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+      padding: const EdgeInsets.fromLTRB(
+          DonySpacing.lg, DonySpacing.base, DonySpacing.lg, 100),
       itemCount: bids.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 12),
+      separatorBuilder: (_, _) => const SizedBox(height: DonySpacing.md),
       itemBuilder: (_, i) => _ShipmentCard(bid: bids[i], index: i),
     );
   }
@@ -589,18 +597,46 @@ class _ShipmentCard extends StatelessWidget {
 
   const _ShipmentCard({required this.bid, required this.index});
 
-  (String, Color) get _statusInfo => switch (bid.status) {
-        'PENDING' => ('En attente', DonyColors.warning),
-        'ACCEPTED' => ('Accepté', DonyColors.success),
-        'REJECTED' => ('Refusé', DonyColors.error),
-        'CANCELLED' => ('Annulé', DonyColors.grey200),
-        'COMPLETED' => ('Livré', DonyColors.blue400),
-        _ => (bid.status, DonyColors.grey400),
+  ({String label, DonyBadgeType type, Color barColor}) _statusInfo(
+      ColorScheme cs) =>
+      switch (bid.status) {
+        'PENDING' => (
+            label: 'En attente',
+            type: DonyBadgeType.warning,
+            barColor: DonyColors.warning,
+          ),
+        'ACCEPTED' => (
+            label: 'Accepté',
+            type: DonyBadgeType.success,
+            barColor: DonyColors.success,
+          ),
+        'REJECTED' => (
+            label: 'Refusé',
+            type: DonyBadgeType.error,
+            barColor: cs.error,
+          ),
+        'CANCELLED' => (
+            label: 'Annulé',
+            type: DonyBadgeType.error,
+            barColor: cs.outline,
+          ),
+        'COMPLETED' => (
+            label: 'Livré',
+            type: DonyBadgeType.success,
+            barColor: cs.primary,
+          ),
+        _ => (
+            label: bid.status,
+            type: DonyBadgeType.info,
+            barColor: cs.onSurfaceVariant,
+          ),
       };
 
   @override
   Widget build(BuildContext context) {
-    final (label, color) = _statusInfo;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final info = _statusInfo(cs);
 
     return GestureDetector(
       onTap: () async {
@@ -611,12 +647,12 @@ class _ShipmentCard extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: DonyColors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: DonyColors.grey100),
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(DonyRadius.card),
+          border: Border.all(color: cs.outline),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
+              color: DonyColors.shadow,
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -627,37 +663,34 @@ class _ShipmentCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(width: 4, color: color),
+              Container(width: 4, color: info.barColor),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(DonySpacing.base),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          _StatusBadge(label: label, color: color),
+                          DonyBadge(label: info.label, type: info.type),
                           const Spacer(),
                           Text(
                             '#${bid.id.substring(0, 8).toUpperCase()}',
-                            style: GoogleFonts.sora(
-                              fontSize: 10,
+                            style: tt.labelSmall?.copyWith(
                               fontWeight: FontWeight.w600,
-                              color: DonyColors.grey200,
+                              color: cs.outline,
                               letterSpacing: 0.5,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: DonySpacing.md),
                       Text(
                         bid.description.length > 52
                             ? '${bid.description.substring(0, 52)}…'
                             : bid.description,
-                        style: GoogleFonts.sora(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: DonyColors.dark900,
+                        style: tt.titleLarge?.copyWith(
+                          color: cs.onSurface,
                           height: 1.3,
                         ),
                       ),
@@ -674,7 +707,7 @@ class _ShipmentCard extends StatelessWidget {
                             label: '${bid.weightKg} kg',
                           ),
                           if (bid.contentCategory != null) ...[
-                            const SizedBox(width: 8),
+                            const SizedBox(width: DonySpacing.sm),
                             _InfoChip(
                               icon: Icons.category_outlined,
                               label: bid.contentCategory!,
@@ -685,39 +718,38 @@ class _ShipmentCard extends StatelessWidget {
                       const SizedBox(height: 14),
                       Row(
                         children: [
-                          const Icon(Icons.calendar_today_outlined,
-                              size: 12, color: DonyColors.grey400),
+                          Icon(Icons.calendar_today_outlined,
+                              size: 12, color: cs.onSurfaceVariant),
                           const SizedBox(width: 5),
                           Text(
                             DateFormat('dd MMM yyyy', 'fr')
                                 .format(bid.createdAt),
-                            style: GoogleFonts.sora(
-                              fontSize: 12,
-                              color: DonyColors.grey400,
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
                             ),
                           ),
                           const Spacer(),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
+                                horizontal: DonySpacing.md, vertical: 6),
                             decoration: BoxDecoration(
-                              color: DonyColors.blue100,
-                              borderRadius: BorderRadius.circular(8),
+                              color: cs.primaryContainer,
+                              borderRadius:
+                                  BorderRadius.circular(DonyRadius.sm),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
                                   'Voir',
-                                  style: GoogleFonts.sora(
-                                    fontSize: 12,
+                                  style: tt.bodySmall?.copyWith(
                                     fontWeight: FontWeight.w700,
-                                    color: DonyColors.blue400,
+                                    color: cs.primary,
                                   ),
                                 ),
-                                const SizedBox(width: 4),
-                                const Icon(Icons.arrow_forward_rounded,
-                                    size: 12, color: DonyColors.blue400),
+                                const SizedBox(width: DonySpacing.xs),
+                                Icon(Icons.arrow_forward_rounded,
+                                    size: 12, color: cs.primary),
                               ],
                             ),
                           ),
@@ -738,33 +770,6 @@ class _ShipmentCard extends StatelessWidget {
   }
 }
 
-class _StatusBadge extends StatelessWidget {
-  final String label;
-  final Color color;
-
-  const _StatusBadge({required this.label, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        label.toUpperCase(),
-        style: GoogleFonts.sora(
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
-          color: color,
-          letterSpacing: 0.3,
-        ),
-      ),
-    );
-  }
-}
-
 class _RouteRow extends StatelessWidget {
   final String departure;
   final String arrival;
@@ -773,13 +778,16 @@ class _RouteRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return Row(
       children: [
         Container(
           width: 8,
           height: 8,
-          decoration: const BoxDecoration(
-            color: DonyColors.blue400,
+          decoration: BoxDecoration(
+            color: cs.primary,
             shape: BoxShape.circle,
           ),
         ),
@@ -787,34 +795,32 @@ class _RouteRow extends StatelessWidget {
         Flexible(
           child: Text(
             departure,
-            style: GoogleFonts.sora(
-              fontSize: 13,
+            style: tt.bodyMedium?.copyWith(
               fontWeight: FontWeight.w600,
-              color: DonyColors.dark900,
+              color: cs.onSurface,
             ),
             overflow: TextOverflow.ellipsis,
           ),
         ),
         const SizedBox(width: 6),
         Expanded(
-          child: Container(height: 1, color: DonyColors.grey100),
+          child: Container(height: 1, color: cs.outline),
         ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 6),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
           child: Icon(Icons.flight_takeoff_rounded,
-              size: 14, color: DonyColors.blue400),
+              size: 14, color: cs.primary),
         ),
         Expanded(
-          child: Container(height: 1, color: DonyColors.grey100),
+          child: Container(height: 1, color: cs.outline),
         ),
         const SizedBox(width: 6),
         Flexible(
           child: Text(
             arrival,
-            style: GoogleFonts.sora(
-              fontSize: 13,
+            style: tt.bodyMedium?.copyWith(
               fontWeight: FontWeight.w600,
-              color: DonyColors.dark900,
+              color: cs.onSurface,
             ),
             overflow: TextOverflow.ellipsis,
           ),
@@ -825,7 +831,7 @@ class _RouteRow extends StatelessWidget {
           height: 8,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: DonyColors.blue400, width: 2),
+            border: Border.all(color: cs.primary, width: 2),
           ),
         ),
       ],
@@ -841,24 +847,27 @@ class _InfoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
       decoration: BoxDecoration(
-        color: DonyColors.grey50,
+        color: DonyColors.bgApp,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: DonyColors.grey100),
+        border: Border.all(color: cs.outline),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 11, color: DonyColors.grey400),
-          const SizedBox(width: 4),
+          Icon(icon, size: 11, color: cs.onSurfaceVariant),
+          const SizedBox(width: DonySpacing.xs),
           Text(
             label,
-            style: GoogleFonts.sora(
-              fontSize: 11,
+            style: tt.labelSmall?.copyWith(
               fontWeight: FontWeight.w500,
-              color: DonyColors.grey400,
+              color: cs.onSurfaceVariant,
             ),
           ),
         ],
@@ -882,58 +891,57 @@ class _EmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 32),
+        padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.xxl, vertical: DonySpacing.xxl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: 68,
               height: 68,
-              decoration: const BoxDecoration(
-                color: DonyColors.blue100,
+              decoration: BoxDecoration(
+                color: cs.primaryContainer,
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 30, color: DonyColors.blue400),
+              child: Icon(icon, size: 30, color: cs.primary),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: DonySpacing.base),
             Text(
               title,
-              style: GoogleFonts.sora(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: DonyColors.dark900,
-              ),
+              style: tt.titleLarge?.copyWith(color: cs.onSurface),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 6),
             Text(
               subtitle,
-              style: GoogleFonts.sora(
-                fontSize: 13,
-                color: DonyColors.grey400,
+              style: tt.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant,
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: DonySpacing.xl),
             GestureDetector(
               onTap: () => context.push('/search'),
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 24, vertical: 13),
+                    horizontal: DonySpacing.xl, vertical: 13),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [DonyColors.blue600, DonyColors.blue400],
+                  gradient: LinearGradient(
+                    colors: [DonyColors.blue700, DonyColors.primary],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
                   boxShadow: [
                     BoxShadow(
-                      color: DonyColors.blue400.withValues(alpha: 0.28),
+                      color: DonyColors.primary.withValues(alpha: 0.28),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -942,15 +950,13 @@ class _EmptyView extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.search_rounded,
-                        color: Colors.white, size: 16),
-                    const SizedBox(width: 8),
+                    Icon(Icons.search_rounded,
+                        color: DonyColors.textOnBrand, size: 16),
+                    const SizedBox(width: DonySpacing.sm),
                     Text(
                       'Rechercher un trajet',
-                      style: GoogleFonts.sora(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                      style: tt.labelLarge?.copyWith(
+                        color: DonyColors.textOnBrand,
                       ),
                     ),
                   ],
@@ -972,9 +978,11 @@ class _LoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child:
-          CircularProgressIndicator(color: DonyColors.blue400, strokeWidth: 2.5),
+    return Center(
+      child: CircularProgressIndicator(
+        color: Theme.of(context).colorScheme.primary,
+        strokeWidth: 2.5,
+      ),
     );
   }
 }
@@ -985,58 +993,52 @@ class _ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(40),
+        padding: const EdgeInsets.all(DonySpacing.xxl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
               width: 72,
               height: 72,
-              decoration: const BoxDecoration(
-                color: Color(0xFFFFEDED),
+              decoration: BoxDecoration(
+                color: cs.errorContainer,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.wifi_off_rounded,
-                  size: 32, color: DonyColors.error),
+              child: Icon(Icons.wifi_off_rounded,
+                  size: 32, color: cs.error),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: DonySpacing.lg),
             Text(
               'Erreur de chargement',
-              style: GoogleFonts.sora(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: DonyColors.dark900,
-              ),
+              style: tt.titleLarge?.copyWith(color: cs.onSurface),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: DonySpacing.sm),
             Text(
               message,
-              style: GoogleFonts.sora(
-                fontSize: 14,
-                color: DonyColors.grey400,
+              style: tt.bodyMedium?.copyWith(
+                color: cs.onSurfaceVariant,
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: DonySpacing.xl),
             GestureDetector(
               onTap: () => context.read<BidBloc>().add(BidMyListRequested()),
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 20, vertical: 12),
+                    horizontal: DonySpacing.lg, vertical: DonySpacing.md),
                 decoration: BoxDecoration(
-                  color: DonyColors.blue100,
+                  color: cs.primaryContainer,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
                   'Réessayer',
-                  style: GoogleFonts.sora(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: DonyColors.blue400,
-                  ),
+                  style: tt.labelLarge?.copyWith(color: cs.primary),
                 ),
               ),
             ),
@@ -1052,21 +1054,24 @@ class _ErrorView extends StatelessWidget {
 class _SendFab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return GestureDetector(
       onTap: () => context.push('/search'),
       child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.lg, vertical: 14),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [DonyColors.blue600, DonyColors.blue400],
+          gradient: LinearGradient(
+            colors: [DonyColors.blue700, cs.primary],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(DonyRadius.card),
           boxShadow: [
             BoxShadow(
-              color: DonyColors.blue400.withValues(alpha: 0.35),
+              color: cs.primary.withValues(alpha: 0.35),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -1075,15 +1080,11 @@ class _SendFab extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.add_rounded, color: Colors.white, size: 20),
-            const SizedBox(width: 8),
+            Icon(Icons.add_rounded, color: cs.onPrimary, size: 20),
+            const SizedBox(width: DonySpacing.sm),
             Text(
               'Envoyer un colis',
-              style: GoogleFonts.sora(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
+              style: tt.labelLarge?.copyWith(color: cs.onPrimary),
             ),
           ],
         ),
@@ -1132,87 +1133,62 @@ class _SavedTripsSheetState extends State<_SavedTripsSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPad = MediaQuery.of(context).padding.bottom;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
 
-    return Container(
-      decoration: const BoxDecoration(
-        color: DonyColors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPad + 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Handle
-          Center(
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: DonyColors.grey100,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
           // Titre
           Row(
             children: [
-              const Icon(Icons.bookmark_rounded, color: DonyColors.blue400, size: 20),
-              const SizedBox(width: 8),
+              Icon(Icons.bookmark_rounded, color: cs.primary, size: 20),
+              const SizedBox(width: DonySpacing.sm),
               Text(
                 'Trajets sauvegardés',
-                style: GoogleFonts.sora(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: DonyColors.dark900,
-                ),
+                style: tt.headlineMedium?.copyWith(color: cs.onSurface),
               ),
               const Spacer(),
               if (_trips.isNotEmpty)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.sm, vertical: 3),
                   decoration: BoxDecoration(
-                    color: DonyColors.blue100,
+                    color: cs.primaryContainer,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     '${_trips.length}',
-                    style: GoogleFonts.sora(
-                      fontSize: 13,
+                    style: tt.labelMedium?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: DonyColors.blue400,
+                      color: cs.primary,
                     ),
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: DonySpacing.base),
 
           if (_trips.isEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 32),
+              padding: const EdgeInsets.symmetric(vertical: DonySpacing.xxl),
               child: Center(
                 child: Column(
                   children: [
-                    const Icon(Icons.bookmark_border_rounded,
-                        size: 48, color: DonyColors.grey200),
-                    const SizedBox(height: 12),
+                    Icon(Icons.bookmark_border_rounded,
+                        size: 48, color: cs.outline),
+                    const SizedBox(height: DonySpacing.md),
                     Text(
                       'Aucun trajet sauvegardé',
-                      style: GoogleFonts.sora(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: DonyColors.grey400,
-                      ),
+                      style: tt.titleLarge?.copyWith(
+                          color: cs.onSurfaceVariant),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       'Appuie sur 🔖 dans le profil d\'un voyageur pour sauvegarder.',
-                      style: GoogleFonts.sora(
-                        fontSize: 13,
-                        color: DonyColors.grey200,
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.outline,
                         height: 1.4,
                       ),
                       textAlign: TextAlign.center,
@@ -1234,18 +1210,19 @@ class _SavedTripsSheetState extends State<_SavedTripsSheet> {
                   final a = _trips[i];
                   return Container(
                     decoration: BoxDecoration(
-                      color: DonyColors.grey50,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: DonyColors.grey100),
+                      color: DonyColors.bgApp,
+                      borderRadius: BorderRadius.circular(DonyRadius.lg),
+                      border: Border.all(color: cs.outline),
                     ),
                     child: ListTile(
-                      contentPadding: const EdgeInsets.fromLTRB(14, 8, 8, 8),
+                      contentPadding:
+                          const EdgeInsets.fromLTRB(14, DonySpacing.sm, DonySpacing.sm, DonySpacing.sm),
                       leading: Container(
                         width: 42,
                         height: 42,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [DonyColors.blue600, DonyColors.blue300],
+                            colors: [DonyColors.blue700, DonyColors.blue300],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
@@ -1254,29 +1231,26 @@ class _SavedTripsSheetState extends State<_SavedTripsSheet> {
                         child: Center(
                           child: Text(
                             _initials(a),
-                            style: GoogleFonts.sora(
-                              color: Colors.white,
+                            style: tt.labelLarge?.copyWith(
+                              color: DonyColors.textOnBrand,
                               fontSize: 14,
-                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
                       ),
                       title: Text(
                         '${a.departureCity} → ${a.arrivalCity}',
-                        style: GoogleFonts.sora(
-                          fontSize: 14,
+                        style: tt.titleMedium?.copyWith(
                           fontWeight: FontWeight.w700,
-                          color: DonyColors.dark900,
+                          color: cs.onSurface,
                         ),
                       ),
                       subtitle: Text(
                         '${DateFormat('d MMM yyyy', 'fr').format(a.departureDate)} · '
                         '${a.availableKg.toStringAsFixed(0)} kg · '
                         '${a.pricePerKg.toStringAsFixed(0)} €/kg',
-                        style: GoogleFonts.sora(
-                          fontSize: 12,
-                          color: DonyColors.grey400,
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
                         ),
                       ),
                       trailing: Row(
@@ -1285,31 +1259,31 @@ class _SavedTripsSheetState extends State<_SavedTripsSheet> {
                           // Bouton voir
                           GestureDetector(
                             onTap: () {
-                              Navigator.pop(context);
+                              context.pop();
                               context.push('/search/${a.id}', extra: a);
                             },
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
-                                color: DonyColors.blue400,
-                                borderRadius: BorderRadius.circular(8),
+                                color: cs.primary,
+                                borderRadius:
+                                    BorderRadius.circular(DonyRadius.sm),
                               ),
                               child: Text(
                                 'Voir',
-                                style: GoogleFonts.sora(
-                                  fontSize: 12,
+                                style: tt.bodySmall?.copyWith(
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.white,
+                                  color: cs.onPrimary,
                                 ),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: DonySpacing.xs),
                           // Bouton supprimer
                           IconButton(
-                            icon: const Icon(Icons.bookmark_remove_rounded,
-                                color: DonyColors.grey200, size: 20),
+                            icon: Icon(Icons.bookmark_remove_rounded,
+                                color: cs.outline, size: 20),
                             onPressed: () => _remove(a.id),
                             tooltip: 'Retirer',
                           ),
@@ -1320,8 +1294,7 @@ class _SavedTripsSheetState extends State<_SavedTripsSheet> {
                 },
               ),
             ),
-        ],
-      ),
+      ],
     );
   }
 }

@@ -27,7 +27,10 @@
       "Bash(adb *)",
       "Bash(flutter analyze *)",
       "Bash(dart analyze *)",
-      "Bash(flutter pub *)"
+      "Bash(flutter pub *)",
+      "Read(//home/a-diakite/.claude/plugins/**)",
+      "Read(//home/a-diakite/.claude/**)",
+      "Bash(python3 -m json.tool)"
     ]
   }
 }

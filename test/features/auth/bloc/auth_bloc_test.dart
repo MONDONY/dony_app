@@ -307,6 +307,239 @@ void main() {
     );
   });
 
+  // ─── AuthPhoneVerified ───────────────────────────────────────────────────────
+
+  group('AuthPhoneVerified', () {
+    blocTest<AuthBloc, AuthState>(
+      'compte existant → émet [Loading, AuthAuthenticated]',
+      build: () {
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => MockUserCredential());
+        when(() => mockRepo.getProfile()).thenAnswer((_) async => testUser);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthPhoneVerified(
+        verificationId: 'ver-abc',
+        smsCode: '123456',
+      )),
+      expect: () => [
+        isA<AuthLoading>(),
+        isA<AuthAuthenticated>(),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'nouveau numéro (404) → émet [Loading, AuthOtpVerified]',
+      build: () {
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => MockUserCredential());
+        when(() => mockRepo.getProfile()).thenThrow(DioException(
+          requestOptions: RequestOptions(path: '/auth/me'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/auth/me'),
+            statusCode: 404,
+          ),
+        ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthPhoneVerified(
+        verificationId: 'ver-abc',
+        smsCode: '123456',
+      )),
+      expect: () => [
+        isA<AuthLoading>(),
+        isA<AuthOtpVerified>(),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'erreur backend non-404 → émet [Loading, AuthError]',
+      build: () {
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => MockUserCredential());
+        when(() => mockRepo.getProfile()).thenThrow(DioException(
+          requestOptions: RequestOptions(path: '/auth/me'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/auth/me'),
+            statusCode: 500,
+          ),
+        ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthPhoneVerified(
+        verificationId: 'ver-abc',
+        smsCode: '123456',
+      )),
+      expect: () => [
+        isA<AuthLoading>(),
+        isA<AuthError>(),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'autoVerified=true contourne signInWithCredential',
+      build: () {
+        when(() => mockRepo.getProfile()).thenAnswer((_) async => testUser);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthPhoneVerified(
+        verificationId: '',
+        smsCode: '',
+        autoVerified: true,
+      )),
+      expect: () => [
+        isA<AuthLoading>(),
+        isA<AuthAuthenticated>(),
+      ],
+      verify: (_) {
+        verifyNever(() => mockFirebaseAuth.signInWithCredential(any()));
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'FirebaseAuthException (code invalide) → émet AuthError localisé',
+      build: () {
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenThrow(FirebaseAuthException(code: 'invalid-verification-code'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthPhoneVerified(
+        verificationId: 'ver-abc',
+        smsCode: '000000',
+      )),
+      expect: () => [
+        isA<AuthLoading>(),
+        predicate<AuthState>((s) =>
+            s is AuthError &&
+            s.message.contains('Code de vérification incorrect')),
+      ],
+    );
+  });
+
+  // ─── AuthPhoneVerified — cas non couverts ────────────────────────────────────
+
+  group('AuthPhoneVerified — erreurs supplémentaires', () {
+    blocTest<AuthBloc, AuthState>(
+      'getProfile lance exception générique → émet AuthOtpVerified',
+      build: () {
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => MockUserCredential());
+        when(() => mockRepo.getProfile()).thenThrow(Exception('parse error'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthPhoneVerified(
+        verificationId: 'ver-abc',
+        smsCode: '123456',
+      )),
+      expect: () => [isA<AuthLoading>(), isA<AuthOtpVerified>()],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'signInWithCredential lance Exception générique → émet AuthError',
+      build: () {
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenThrow(Exception('unexpected sign-in error'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthPhoneVerified(
+        verificationId: 'ver-abc',
+        smsCode: '123456',
+      )),
+      expect: () => [isA<AuthLoading>(), isA<AuthError>()],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'FirebaseAuthException code-expired → message localisé',
+      build: () {
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenThrow(FirebaseAuthException(code: 'code-expired'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthPhoneVerified(
+        verificationId: 'ver-abc',
+        smsCode: '111111',
+      )),
+      expect: () => [
+        isA<AuthLoading>(),
+        predicate<AuthState>((s) => s is AuthError && s.message.contains('expiré')),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'FirebaseAuthException too-many-requests → message localisé',
+      build: () {
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenThrow(FirebaseAuthException(code: 'too-many-requests'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthPhoneVerified(
+        verificationId: 'ver-abc',
+        smsCode: '111111',
+      )),
+      expect: () => [
+        isA<AuthLoading>(),
+        predicate<AuthState>((s) => s is AuthError && s.message.contains('Trop')),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'FirebaseAuthException session-expired → message localisé',
+      build: () {
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenThrow(FirebaseAuthException(code: 'session-expired'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthPhoneVerified(
+        verificationId: 'ver-abc',
+        smsCode: '111111',
+      )),
+      expect: () => [
+        isA<AuthLoading>(),
+        predicate<AuthState>((s) => s is AuthError && s.message.contains('Session')),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'FirebaseAuthException code inconnu → message.message fallback',
+      build: () {
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenThrow(FirebaseAuthException(
+              code: 'unknown-error',
+              message: 'Custom firebase error',
+            ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthPhoneVerified(
+        verificationId: 'ver-abc',
+        smsCode: '111111',
+      )),
+      expect: () => [
+        isA<AuthLoading>(),
+        predicate<AuthState>((s) => s is AuthError && s.message == 'Custom firebase error'),
+      ],
+    );
+  });
+
+  // ─── AuthCheckRequested generic exception ────────────────────────────────────
+
+  group('AuthCheckRequested generic exception', () {
+    blocTest<AuthBloc, AuthState>(
+      'exception non-Dio → émet [Loading, AuthInitial]',
+      build: () {
+        final mockUser = MockUser();
+        when(() => mockFirebaseAuth.currentUser).thenReturn(mockUser);
+        when(() => mockUser.phoneNumber).thenReturn('+33699999999');
+        when(() => mockRepo.getProfile()).thenThrow(Exception('timeout'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthCheckRequested()),
+      expect: () => [
+        isA<AuthLoading>(),
+        isA<AuthInitial>(),
+      ],
+    );
+  });
+
   // ─── État initial ────────────────────────────────────────────────────────────
 
   group('État initial', () {
@@ -329,11 +562,117 @@ void main() {
 
   group('AuthOtpSent props', () {
     test('props contient verificationId et phoneNumber', () {
-      const state = AuthOtpSent(
+      // ignore: prefer_const_constructors
+      final state = AuthOtpSent(
         verificationId: 'ver-123',
         phoneNumber: '+33612345678',
       );
       expect(state.props, containsAllInOrder(['ver-123', '+33612345678']));
     });
+  });
+
+  group('AuthLocked', () {
+    test('AuthLocked constructs', () {
+      // ignore: prefer_const_constructors
+      final s = AuthLocked();
+      expect(s, isA<AuthLocked>());
+    });
+  });
+
+  // ─── AuthRoleToggled ─────────────────────────────────────────────────────────
+
+  group('AuthRoleToggled', () {
+    blocTest<AuthBloc, AuthState>(
+      'adds role to empty selection',
+      build: buildBloc,
+      act: (bloc) => bloc.add(const AuthRoleToggled('SENDER')),
+      expect: () => [
+        AuthSelectingRoles(selectedRoles: const {'SENDER'}),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'removes role when already selected',
+      build: buildBloc,
+      seed: () => AuthSelectingRoles(selectedRoles: const {'SENDER'}),
+      act: (bloc) => bloc.add(const AuthRoleToggled('SENDER')),
+      expect: () => [
+        AuthSelectingRoles(selectedRoles: const {}),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'toggles two roles independently',
+      build: buildBloc,
+      act: (bloc) async {
+        bloc.add(const AuthRoleToggled('SENDER'));
+        bloc.add(const AuthRoleToggled('TRAVELER'));
+      },
+      expect: () => [
+        AuthSelectingRoles(selectedRoles: const {'SENDER'}),
+        AuthSelectingRoles(selectedRoles: const {'SENDER', 'TRAVELER'}),
+      ],
+    );
+  });
+
+  // ─── AuthDialCodeChanged ─────────────────────────────────────────────────────
+
+  group('AuthDialCodeChanged', () {
+    blocTest<AuthBloc, AuthState>(
+      'emits AuthInitial with new dial code',
+      build: buildBloc,
+      act: (bloc) => bloc.add(
+        const AuthDialCodeChanged(code: '+221', flag: '🇸🇳'),
+      ),
+      expect: () => [
+        const AuthInitial(dialCode: '+221', dialFlag: '🇸🇳'),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'preserves dial code when emitted from error state',
+      build: buildBloc,
+      seed: () => const AuthError('Erreur réseau'),
+      act: (bloc) => bloc.add(
+        const AuthDialCodeChanged(code: '+237', flag: '🇨🇲'),
+      ),
+      expect: () => [
+        const AuthInitial(dialCode: '+237', dialFlag: '🇨🇲'),
+      ],
+    );
+  });
+
+  // ─── AuthOtpTimerTicked ──────────────────────────────────────────────────────
+
+  group('AuthOtpTimerTicked', () {
+    blocTest<AuthBloc, AuthState>(
+      'decrements secondsLeft in AuthOtpSent',
+      build: buildBloc,
+      seed: () => const AuthOtpSent(
+        verificationId: 'ver-123',
+        phoneNumber: '+33612345678',
+        secondsLeft: 60,
+      ),
+      act: (bloc) => bloc.add(const AuthOtpTimerTicked()),
+      expect: () => [
+        const AuthOtpSent(
+          verificationId: 'ver-123',
+          phoneNumber: '+33612345678',
+          secondsLeft: 59,
+        ),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'does not emit when secondsLeft is already 0',
+      build: buildBloc,
+      seed: () => const AuthOtpSent(
+        verificationId: 'ver-123',
+        phoneNumber: '+33612345678',
+        secondsLeft: 0,
+      ),
+      act: (bloc) => bloc.add(const AuthOtpTimerTicked()),
+      expect: () => [],
+    );
   });
 }

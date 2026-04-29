@@ -1,0 +1,117 @@
+import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+
+class MockAnnouncementRemoteDatasource extends Mock
+    implements AnnouncementRemoteDatasource {}
+
+AnnouncementModel _ann() => AnnouncementModel(
+      id: 'ann-1',
+      travelerId: 'traveler-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDate: DateTime(2024, 6, 1),
+      availableKg: 10.0,
+      pricePerKg: 12.0,
+      status: 'ACTIVE',
+      createdAt: DateTime(2024, 5, 1),
+      updatedAt: DateTime(2024, 5, 1),
+    );
+
+void main() {
+  late MockAnnouncementRemoteDatasource mockDs;
+  late AnnouncementRepository repo;
+
+  setUp(() {
+    mockDs = MockAnnouncementRemoteDatasource();
+    repo = AnnouncementRepository(mockDs);
+  });
+
+  test('createAnnouncement delegates correctly', () async {
+    when(() => mockDs.createAnnouncement(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          departureDate: any(named: 'departureDate'),
+          departureTime: any(named: 'departureTime'),
+          arrivalTime: any(named: 'arrivalTime'),
+          departureLocation: any(named: 'departureLocation'),
+          arrivalLocation: any(named: 'arrivalLocation'),
+          availableKg: any(named: 'availableKg'),
+          pricePerKg: any(named: 'pricePerKg'),
+        )).thenAnswer((_) async => _ann());
+
+    final result = await repo.createAnnouncement(
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDate: DateTime(2024, 6, 1),
+      availableKg: 10.0,
+      pricePerKg: 12.0,
+    );
+    expect(result.id, 'ann-1');
+  });
+
+  test('getMyAnnouncements delegates correctly', () async {
+    when(() => mockDs.getMyAnnouncements(page: any(named: 'page')))
+        .thenAnswer((_) async => (announcements: [_ann()], totalElements: 1));
+
+    final result = await repo.getMyAnnouncements();
+    expect(result.announcements, hasLength(1));
+    expect(result.totalElements, 1);
+  });
+
+  test('getAnnouncementDetail delegates correctly', () async {
+    when(() => mockDs.getAnnouncementDetail('ann-1'))
+        .thenAnswer((_) async => _ann());
+
+    final result = await repo.getAnnouncementDetail('ann-1');
+    expect(result.departureCity, 'Paris');
+  });
+
+  test('searchAnnouncements delegates correctly', () async {
+    when(() => mockDs.searchAnnouncements(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          departureDateFrom: any(named: 'departureDateFrom'),
+          departureDateTo: any(named: 'departureDateTo'),
+          minAvailableKg: any(named: 'minAvailableKg'),
+          sortBy: any(named: 'sortBy'),
+          sortDir: any(named: 'sortDir'),
+        )).thenAnswer((_) async => [_ann()]);
+
+    final result = await repo.searchAnnouncements(departureCity: 'Paris');
+    expect(result, hasLength(1));
+  });
+
+  test('deleteAnnouncement delegates correctly', () async {
+    when(() => mockDs.deleteAnnouncement('ann-1')).thenAnswer((_) async {});
+
+    await expectLater(repo.deleteAnnouncement('ann-1'), completes);
+  });
+
+  test('updateAnnouncement delegates correctly', () async {
+    when(() => mockDs.updateAnnouncement(
+          id: any(named: 'id'),
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          departureDate: any(named: 'departureDate'),
+          departureTime: any(named: 'departureTime'),
+          arrivalTime: any(named: 'arrivalTime'),
+          departureLocation: any(named: 'departureLocation'),
+          arrivalLocation: any(named: 'arrivalLocation'),
+          availableKg: any(named: 'availableKg'),
+          pricePerKg: any(named: 'pricePerKg'),
+        )).thenAnswer((_) async => _ann());
+
+    final result = await repo.updateAnnouncement(
+      id: 'ann-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDate: DateTime(2024, 6, 1),
+      availableKg: 10.0,
+      pricePerKg: 12.0,
+    );
+    expect(result.id, 'ann-1');
+  });
+}

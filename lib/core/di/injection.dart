@@ -44,6 +44,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerLazySingleton<NotificationService>(
     () => NotificationService(getIt<ApiClient>(), getIt<NotificationRepository>()),
+    dispose: (s) => s.dispose(),
   );
   getIt.registerFactory<NotificationBloc>(
     () => NotificationBloc(getIt<NotificationRepository>()),
@@ -128,6 +129,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerLazySingleton<OfflineSyncService>(
     () => OfflineSyncService(getIt<HiveService>(), getIt<TrackingRepository>()),
+    dispose: (s) => s.dispose(),
   );
   getIt.registerFactory<TrackingBloc>(
     () => TrackingBloc(getIt<TrackingRepository>(), getIt<OfflineSyncService>()),

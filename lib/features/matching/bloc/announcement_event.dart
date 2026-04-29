@@ -37,6 +37,10 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
   final DateTime? departureDateFrom;
   final DateTime? departureDateTo;
   final double? minAvailableKg;
+  final double? maxPricePerKg;
+  final bool? kiloProOnly;
+  final double? minRating;
+  final bool? weekendOnly;
   final String sortBy; // date | price | rating
   final String sortDir; // asc | desc
 
@@ -46,6 +50,10 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
     this.departureDateFrom,
     this.departureDateTo,
     this.minAvailableKg,
+    this.maxPricePerKg,
+    this.kiloProOnly,
+    this.minRating,
+    this.weekendOnly,
     this.sortBy = 'date',
     this.sortDir = 'asc',
   });

@@ -2,28 +2,31 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 const _departureCities = ['Paris', 'Lyon', 'Marseille'];
 const _arrivalCities = ['Dakar', 'Abidjan', 'Bamako', 'Douala'];
 
-const _departureAirports = {
-  'Paris': 'CDG',
-  'Lyon': 'LYS',
-  'Marseille': 'MRS',
-};
-const _arrivalAirports = {
-  'Dakar': 'AIBD',
-  'Abidjan': 'ABJ',
-  'Bamako': 'BKO',
-  'Douala': 'DLA',
-};
+
+// Price selector options matching maquette: 5€, 6€, 7€, 8€
+const _priceOptions = [5.0, 6.0, 7.0, 8.0];
+
+// Accepted content types
+const _contentTypes = [
+  'Vêtements',
+  'Médicaments',
+  'Alim. sèche',
+  'Hi-fi',
+  'Documents',
+  'Téléphone',
+  'Cosmétiques',
+];
 
 class CreateAnnouncementScreen extends StatefulWidget {
   final AnnouncementModel? announcement;
@@ -35,41 +38,43 @@ class CreateAnnouncementScreen extends StatefulWidget {
 }
 
 class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
-  String? _departureCity;
-  String? _arrivalCity;
-  DateTime? _departureDate;
-  TimeOfDay? _departureTime;
-  TimeOfDay? _arrivalTime;
+  // ValueNotifiers for UI state (no setState)
+  final _departureCityNotifier = ValueNotifier<String?>(null);
+  final _arrivalCityNotifier = ValueNotifier<String?>(null);
+  final _departureDateNotifier = ValueNotifier<DateTime?>(null);
+  final _departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+  final _arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
   final _departureLocationCtrl = TextEditingController();
   final _arrivalLocationCtrl = TextEditingController();
-  double _availableKg = 15;
-  int _priceOption = 1; // 0=éco, 1=standard, 2=premium
-  static const _priceOptions = [10.0, 12.0, 15.0];
-  static const _priceLabels = ['Économique', 'Standard', 'Premium'];
+  final _availableKgNotifier = ValueNotifier<double>(15);
+  final _priceOptionNotifier = ValueNotifier<int>(1); // index into _priceOptions
+  final _selectedContentNotifier = ValueNotifier<Set<String>>(
+    {'Vêtements', 'Médicaments', 'Alim. sèche', 'Hi-fi'},
+  );
 
   bool get _isEdit => widget.announcement != null;
-  double get _pricePerKg => _priceOptions[_priceOption];
+  double get _pricePerKg => _priceOptions[_priceOptionNotifier.value];
 
   @override
   void initState() {
     super.initState();
     if (_isEdit) {
       final a = widget.announcement!;
-      _departureCity = a.departureCity;
-      _arrivalCity = a.arrivalCity;
-      _departureDate = a.departureDate;
-      _availableKg = a.availableKg;
+      _departureCityNotifier.value = a.departureCity;
+      _arrivalCityNotifier.value = a.arrivalCity;
+      _departureDateNotifier.value = a.departureDate;
+      _availableKgNotifier.value = a.availableKg;
 
       if (a.departureTime != null) {
         final parts = a.departureTime!.split(':');
-        _departureTime = TimeOfDay(
+        _departureTimeNotifier.value = TimeOfDay(
           hour: int.parse(parts[0]),
           minute: int.parse(parts[1]),
         );
       }
       if (a.arrivalTime != null) {
         final parts = a.arrivalTime!.split(':');
-        _arrivalTime = TimeOfDay(
+        _arrivalTimeNotifier.value = TimeOfDay(
           hour: int.parse(parts[0]),
           minute: int.parse(parts[1]),
         );
@@ -87,7 +92,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
           closest = i;
         }
       }
-      _priceOption = closest;
+      _priceOptionNotifier.value = closest;
     }
   }
 
@@ -95,6 +100,14 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   void dispose() {
     _departureLocationCtrl.dispose();
     _arrivalLocationCtrl.dispose();
+    _departureCityNotifier.dispose();
+    _arrivalCityNotifier.dispose();
+    _departureDateNotifier.dispose();
+    _departureTimeNotifier.dispose();
+    _arrivalTimeNotifier.dispose();
+    _availableKgNotifier.dispose();
+    _priceOptionNotifier.dispose();
+    _selectedContentNotifier.dispose();
     super.dispose();
   }
 
@@ -105,21 +118,27 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   }
 
   void _submit() {
-    if (_departureCity == null) {
+    final departureCity = _departureCityNotifier.value;
+    final arrivalCity = _arrivalCityNotifier.value;
+    final departureDate = _departureDateNotifier.value;
+    final departureTimeVal = _departureTimeNotifier.value;
+    final arrivalTimeVal = _arrivalTimeNotifier.value;
+
+    if (departureCity == null) {
       _showError('Ville de départ obligatoire');
       return;
     }
-    if (_arrivalCity == null) {
+    if (arrivalCity == null) {
       _showError('Ville d\'arrivée obligatoire');
       return;
     }
-    if (_departureDate == null) {
+    if (departureDate == null) {
       _showError('Date de départ obligatoire');
       return;
     }
 
-    final departureTime = _departureTime != null ? _formatTime(_departureTime!) : null;
-    final arrivalTime = _arrivalTime != null ? _formatTime(_arrivalTime!) : null;
+    final departureTime = departureTimeVal != null ? _formatTime(departureTimeVal) : null;
+    final arrivalTime = arrivalTimeVal != null ? _formatTime(arrivalTimeVal) : null;
     final departureLocation = _departureLocationCtrl.text.trim().isEmpty
         ? null
         : _departureLocationCtrl.text.trim();
@@ -130,26 +149,26 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     if (_isEdit) {
       context.read<AnnouncementBloc>().add(AnnouncementUpdateRequested(
         id: widget.announcement!.id,
-        departureCity: _departureCity!,
-        arrivalCity: _arrivalCity!,
-        departureDate: _departureDate!,
+        departureCity: departureCity,
+        arrivalCity: arrivalCity,
+        departureDate: departureDate,
         departureTime: departureTime,
         arrivalTime: arrivalTime,
         departureLocation: departureLocation,
         arrivalLocation: arrivalLocation,
-        availableKg: _availableKg,
+        availableKg: _availableKgNotifier.value,
         pricePerKg: _pricePerKg,
       ));
     } else {
       context.read<AnnouncementBloc>().add(AnnouncementCreateRequested(
-        departureCity: _departureCity!,
-        arrivalCity: _arrivalCity!,
-        departureDate: _departureDate!,
+        departureCity: departureCity,
+        arrivalCity: arrivalCity,
+        departureDate: departureDate,
         departureTime: departureTime,
         arrivalTime: arrivalTime,
         departureLocation: departureLocation,
         arrivalLocation: arrivalLocation,
-        availableKg: _availableKg,
+        availableKg: _availableKgNotifier.value,
         pricePerKg: _pricePerKg,
       ));
     }
@@ -164,49 +183,53 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   Future<void> _selectDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _departureDate ?? DateTime.now().add(const Duration(days: 1)),
+      initialDate: _departureDateNotifier.value ?? DateTime.now().add(const Duration(days: 1)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.light(primary: DonyColors.blue400),
+          colorScheme: const ColorScheme.light(primary: DonyColors.green400),
         ),
         child: child!,
       ),
     );
-    if (picked != null) setState(() => _departureDate = picked);
+    if (picked != null) {
+      _departureDateNotifier.value = picked;
+    }
   }
 
   Future<void> _selectDepartureTime() async {
     final picked = await showTimePicker(
       context: context,
-      initialTime: _departureTime ?? const TimeOfDay(hour: 8, minute: 0),
+      initialTime: _departureTimeNotifier.value ?? const TimeOfDay(hour: 8, minute: 0),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.light(primary: DonyColors.blue400),
+          colorScheme: const ColorScheme.light(primary: DonyColors.green400),
         ),
         child: child!,
       ),
     );
-    if (picked != null) setState(() => _departureTime = picked);
+    if (picked != null) _departureTimeNotifier.value = picked;
   }
 
   Future<void> _selectArrivalTime() async {
     final picked = await showTimePicker(
       context: context,
-      initialTime: _arrivalTime ?? const TimeOfDay(hour: 12, minute: 0),
+      initialTime: _arrivalTimeNotifier.value ?? const TimeOfDay(hour: 12, minute: 0),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.light(primary: DonyColors.blue400),
+          colorScheme: const ColorScheme.light(primary: DonyColors.green400),
         ),
         child: child!,
       ),
     );
-    if (picked != null) setState(() => _arrivalTime = picked);
+    if (picked != null) _arrivalTimeNotifier.value = picked;
   }
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
     return BlocConsumer<AnnouncementBloc, AnnouncementState>(
       listener: (context, state) {
         if (state is AnnouncementCreated || state is AnnouncementUpdated) {
@@ -223,21 +246,29 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
         final isLoading = state is AnnouncementLoading;
 
         return Scaffold(
-          backgroundColor: DonyColors.grey50,
+          backgroundColor: DonyColors.bg,
           appBar: AppBar(
-            title: Text(
-              _isEdit ? 'Modifier le trajet' : 'Publier un trajet',
-              style: GoogleFonts.sora(
-                fontWeight: FontWeight.w700,
-                fontSize: 17,
-              ),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _isEdit ? 'Modifier le trajet' : 'Publier mon trajet',
+                  style: tt.headlineLarge,
+                ),
+                Text(
+                  'Aff. en 1 min',
+                  style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                ),
+              ],
             ),
             backgroundColor: DonyColors.white,
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_rounded,
-                  size: 20, color: DonyColors.blue400),
+              icon: const Icon(Icons.close_rounded,
+                  size: 22, color: DonyColors.ink900),
               onPressed: () => context.pop(),
+              tooltip: 'Fermer',
             ),
             bottom: const PreferredSize(
               preferredSize: Size.fromHeight(1),
@@ -245,117 +276,186 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
             ),
           ),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.lg,
+              DonySpacing.xl,
+              DonySpacing.lg,
+              120,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Bannière motivationnelle
-                if (!_isEdit)
-                  _MotivationBanner().animate().fadeIn(duration: 250.ms),
-                if (!_isEdit) const SizedBox(height: 24),
+                // ── Corridor card + Trajet section (reactive) ───────────────
+                ListenableBuilder(
+                  listenable: Listenable.merge([
+                    _departureCityNotifier,
+                    _arrivalCityNotifier,
+                    _departureDateNotifier,
+                    _departureTimeNotifier,
+                    _arrivalTimeNotifier,
+                  ]),
+                  builder: (context, _) {
+                    final departureCity = _departureCityNotifier.value;
+                    final arrivalCity = _arrivalCityNotifier.value;
+                    final departureDate = _departureDateNotifier.value;
+                    final departureTime = _departureTimeNotifier.value;
+                    final arrivalTime = _arrivalTimeNotifier.value;
 
-                // Section TRAJET
-                Text(
-                  'TRAJET',
-                  style: GoogleFonts.sora(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: DonyColors.grey400,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  decoration: BoxDecoration(
-                    color: DonyColors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: DonyColors.grey100),
-                  ),
-                  child: Column(
-                    children: [
-                      _CityRow(
-                        isDeparture: true,
-                        value: _departureCity,
-                        airport: _departureCity != null
-                            ? _departureAirports[_departureCity]
-                            : null,
-                        cities: _departureCities,
-                        onChanged: (v) => setState(() => _departureCity = v),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.only(left: 40),
-                        child: Divider(height: 1),
-                      ),
-                      _TimeRow(
-                        isDeparture: true,
-                        time: _departureTime,
-                        onTap: _selectDepartureTime,
-                        onClear: _departureTime != null
-                            ? () => setState(() => _departureTime = null)
-                            : null,
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.only(left: 40),
-                        child: Divider(height: 1),
-                      ),
-                      _CityRow(
-                        isDeparture: false,
-                        value: _arrivalCity,
-                        airport: _arrivalCity != null
-                            ? _arrivalAirports[_arrivalCity]
-                            : null,
-                        cities: _arrivalCities,
-                        onChanged: (v) => setState(() => _arrivalCity = v),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.only(left: 40),
-                        child: Divider(height: 1),
-                      ),
-                      _TimeRow(
-                        isDeparture: false,
-                        time: _arrivalTime,
-                        onTap: _selectArrivalTime,
-                        onClear: _arrivalTime != null
-                            ? () => setState(() => _arrivalTime = null)
-                            : null,
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.only(left: 40),
-                        child: Divider(height: 1),
-                      ),
-                      _DateRow(
-                        date: _departureDate,
-                        onTap: _selectDate,
-                      ),
-                    ],
-                  ),
-                ).animate().fadeIn(delay: 60.ms),
-                const SizedBox(height: 28),
+                    final depCode = departureCity != null
+                        ? cityAirportCode(departureCity, departure: true)
+                        : null;
+                    final arrCode = arrivalCity != null
+                        ? cityAirportCode(arrivalCity, departure: false)
+                        : null;
 
-                // Section LIEUX DE REMISE
-                Text(
-                  'LIEUX DE REMISE (optionnel)',
-                  style: GoogleFonts.sora(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: DonyColors.grey400,
-                    letterSpacing: 0.8,
-                  ),
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Corridor card
+                        if (departureCity != null && arrivalCity != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: DonySpacing.base,
+                              vertical: DonySpacing.md,
+                            ),
+                            decoration: BoxDecoration(
+                              color: DonyColors.white,
+                              borderRadius: BorderRadius.circular(DonyRadius.card),
+                              border: Border.all(color: DonyColors.grey200),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '$depCode → $arrCode',
+                                        style: tt.titleLarge?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      if (departureDate != null)
+                                        Text(
+                                          _formatCorridorDateTime(),
+                                          style: tt.bodyMedium?.copyWith(
+                                            color: DonyColors.grey400,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    // Scroll back or allow re-selection
+                                  },
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: DonyColors.green400,
+                                    padding: EdgeInsets.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: Text(
+                                    'Modifier',
+                                    style: tt.bodyMedium?.copyWith(
+                                      color: DonyColors.green400,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ).animate().fadeIn(duration: 250.ms),
+
+                        if (departureCity != null && arrivalCity != null)
+                          const SizedBox(height: DonySpacing.xl),
+
+                        // Trajet section
+                        _SectionLabel(label: 'TRAJET'),
+                        const SizedBox(height: DonySpacing.md),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: DonyColors.white,
+                            borderRadius: BorderRadius.circular(DonyRadius.card),
+                            border: Border.all(color: DonyColors.grey200),
+                          ),
+                          child: Column(
+                            children: [
+                              _CityRow(
+                                isDeparture: true,
+                                value: departureCity,
+                                airport: departureCity != null
+                                    ? kDepartureCityCodes[departureCity]
+                                    : null,
+                                cities: _departureCities,
+                                onChanged: (v) => _departureCityNotifier.value = v,
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.only(left: DonySpacing.icon),
+                                child: Divider(height: 1),
+                              ),
+                              _TimeRow(
+                                isDeparture: true,
+                                time: departureTime,
+                                onTap: _selectDepartureTime,
+                                onClear: departureTime != null
+                                    ? () => _departureTimeNotifier.value = null
+                                    : null,
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.only(left: DonySpacing.icon),
+                                child: Divider(height: 1),
+                              ),
+                              _CityRow(
+                                isDeparture: false,
+                                value: arrivalCity,
+                                airport: arrivalCity != null
+                                    ? kArrivalCityCodes[arrivalCity]
+                                    : null,
+                                cities: _arrivalCities,
+                                onChanged: (v) => _arrivalCityNotifier.value = v,
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.only(left: DonySpacing.icon),
+                                child: Divider(height: 1),
+                              ),
+                              _TimeRow(
+                                isDeparture: false,
+                                time: arrivalTime,
+                                onTap: _selectArrivalTime,
+                                onClear: arrivalTime != null
+                                    ? () => _arrivalTimeNotifier.value = null
+                                    : null,
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.only(left: DonySpacing.icon),
+                                child: Divider(height: 1),
+                              ),
+                              _DateRow(
+                                date: departureDate,
+                                onTap: _selectDate,
+                              ),
+                            ],
+                          ),
+                        ).animate().fadeIn(delay: 60.ms),
+                      ],
+                    );
+                  },
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: DonySpacing.xxl),
+
+                // ── LIEUX DE REMISE ─────────────────────────────────────────
+                _SectionLabel(label: 'LIEUX DE REMISE (optionnel)'),
+                const SizedBox(height: DonySpacing.xs),
                 Text(
                   'Précisez l\'endroit exact de remise / récupération des colis',
-                  style: GoogleFonts.sora(
-                    fontSize: 12,
-                    color: DonyColors.grey200,
-                  ),
+                  style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: DonySpacing.md),
                 Container(
                   decoration: BoxDecoration(
                     color: DonyColors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: DonyColors.grey100),
+                    borderRadius: BorderRadius.circular(DonyRadius.card),
+                    border: Border.all(color: DonyColors.grey200),
                   ),
                   child: Column(
                     children: [
@@ -364,7 +464,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                         controller: _departureLocationCtrl,
                       ),
                       const Padding(
-                        padding: EdgeInsets.only(left: 40),
+                        padding: EdgeInsets.only(left: DonySpacing.icon),
                         child: Divider(height: 1),
                       ),
                       _LocationField(
@@ -374,231 +474,353 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                     ],
                   ),
                 ).animate().fadeIn(delay: 80.ms),
-                const SizedBox(height: 28),
+                const SizedBox(height: DonySpacing.xxl),
 
-                // Capacité disponible
-                Text(
-                  'CAPACITÉ DISPONIBLE',
-                  style: GoogleFonts.sora(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: DonyColors.grey400,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Center(
-                  child: RichText(
-                    text: TextSpan(
+                // ── CAPACITÉ DISPONIBLE ─────────────────────────────────────
+                _SectionLabel(label: 'CAPACITÉ DISPONIBLE'),
+                const SizedBox(height: DonySpacing.base),
+                ValueListenableBuilder<double>(
+                  valueListenable: _availableKgNotifier,
+                  builder: (context, kg, _) {
+                    return Column(
                       children: [
-                        TextSpan(
-                          text: '${_availableKg.toStringAsFixed(0)}',
-                          style: GoogleFonts.sora(
-                            fontSize: 52,
-                            fontWeight: FontWeight.w800,
-                            color: DonyColors.dark900,
-                          ),
-                        ),
-                        TextSpan(
-                          text: 'kg',
-                          style: GoogleFonts.sora(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w600,
-                            color: DonyColors.grey400,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: DonyColors.blue400,
-                    inactiveTrackColor: DonyColors.blue100,
-                    thumbColor: DonyColors.blue400,
-                    overlayColor: DonyColors.blue400.withValues(alpha: 0.1),
-                    trackHeight: 6,
-                  ),
-                  child: Slider(
-                    value: _availableKg,
-                    min: 1,
-                    max: 23,
-                    divisions: 22,
-                    onChanged: (v) => setState(() => _availableKg = v),
-                  ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('1 kg',
-                        style: GoogleFonts.sora(
-                            fontSize: 12, color: DonyColors.grey200)),
-                    Text('23 kg max',
-                        style: GoogleFonts.sora(
-                            fontSize: 12, color: DonyColors.grey200)),
-                  ],
-                ),
-                const SizedBox(height: 28),
-
-                // Prix par kg
-                Text(
-                  'PRIX PAR KG',
-                  style: GoogleFonts.sora(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: DonyColors.grey400,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: List.generate(3, (i) {
-                    final selected = _priceOption == i;
-                    return Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                          left: i == 0 ? 0 : 6,
-                          right: i == 2 ? 0 : 6,
-                        ),
-                        child: GestureDetector(
-                          onTap: () => setState(() => _priceOption = i),
-                          child: AnimatedContainer(
-                            duration: 180.ms,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            decoration: BoxDecoration(
-                              color: selected ? DonyColors.dark900 : DonyColors.white,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: selected ? DonyColors.dark900 : DonyColors.grey100,
+                        // Large display row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Expanded(child: const SizedBox()),
+                            Text(
+                              kg.toStringAsFixed(0),
+                              style: tt.displayLarge?.copyWith(
+                                color: DonyColors.ink900,
+                                fontSize: 52,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  '${_priceOptions[i].toStringAsFixed(0)} €',
-                                  style: GoogleFonts.sora(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w800,
-                                    color: selected
-                                        ? Colors.white
-                                        : DonyColors.dark900,
+                            Text(
+                              ' kg',
+                              style: tt.headlineMedium?.copyWith(
+                                color: DonyColors.grey400,
+                              ),
+                            ),
+                            Expanded(
+                              child: Align(
+                                alignment: Alignment.centerRight,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: DonySpacing.sm,
+                                    vertical: DonySpacing.xs,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: DonyColors.grey100,
+                                    borderRadius: BorderRadius.circular(DonyRadius.full),
+                                  ),
+                                  child: Text(
+                                    'VALISE',
+                                    style: tt.labelSmall?.copyWith(
+                                      color: DonyColors.grey400,
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(height: 2),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: DonySpacing.sm),
+                        SliderTheme(
+                          data: SliderTheme.of(context).copyWith(
+                            activeTrackColor: DonyColors.green400,
+                            inactiveTrackColor: DonyColors.grey200,
+                            thumbColor: DonyColors.green400,
+                            overlayColor: DonyColors.green400.withValues(alpha: 0.1),
+                            trackHeight: 6,
+                          ),
+                          child: Slider(
+                            value: kg,
+                            min: 1,
+                            max: 23,
+                            divisions: 22,
+                            onChanged: (v) => _availableKgNotifier.value = v,
+                          ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '1 kg',
+                              style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                            ),
+                            Text(
+                              'max 23 kg',
+                              style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: DonySpacing.xxl),
+
+                // ── PRIX PAR KG ─────────────────────────────────────────────
+                _SectionLabel(label: 'PRIX PAR KG'),
+                const SizedBox(height: DonySpacing.md),
+                ValueListenableBuilder<int>(
+                  valueListenable: _priceOptionNotifier,
+                  builder: (context, selectedIdx, _) {
+                    final kg = _availableKgNotifier.value;
+                    final pricePerKg = _priceOptions[selectedIdx];
+                    final grossEstimate = kg * pricePerKg;
+                    final netEstimate = grossEstimate * 0.88; // 12% commission
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: List.generate(_priceOptions.length, (i) {
+                            final selected = selectedIdx == i;
+                            return Expanded(
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                  left: i == 0 ? 0 : DonySpacing.xs,
+                                  right: i == _priceOptions.length - 1
+                                      ? 0
+                                      : DonySpacing.xs,
+                                ),
+                                child: GestureDetector(
+                                  onTap: () => _priceOptionNotifier.value = i,
+                                  child: AnimatedContainer(
+                                    duration: 180.ms,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: DonySpacing.md,
+                                      vertical: DonySpacing.sm,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: selected
+                                          ? DonyColors.green50
+                                          : DonyColors.white,
+                                      borderRadius: BorderRadius.circular(DonyRadius.lg),
+                                      border: Border.all(
+                                        color: selected
+                                            ? DonyColors.green400
+                                            : DonyColors.grey200,
+                                        width: selected ? 2 : 1,
+                                      ),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        '${_priceOptions[i].toStringAsFixed(0)}€',
+                                        style: tt.titleMedium?.copyWith(
+                                          color: selected
+                                              ? DonyColors.green400
+                                              : DonyColors.ink900,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                        const SizedBox(height: DonySpacing.sm),
+                        Text(
+                          'Estimation gain : ${grossEstimate.toStringAsFixed(0)}€ · vous touchez ${netEstimate.toStringAsFixed(0)}€',
+                          style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                        ),
+                      ],
+                    );
+                  },
+                ).animate().fadeIn(delay: 140.ms),
+                const SizedBox(height: DonySpacing.xxl),
+
+                // ── LIMITE DÉPART ───────────────────────────────────────────
+                _SectionLabel(label: 'LIMITE DÉPART'),
+                const SizedBox(height: DonySpacing.md),
+                ValueListenableBuilder<DateTime?>(
+                  valueListenable: _departureDateNotifier,
+                  builder: (context, departureDate, _) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.base,
+                        vertical: DonySpacing.md,
+                      ),
+                      decoration: BoxDecoration(
+                        color: DonyColors.white,
+                        borderRadius: BorderRadius.circular(DonyRadius.card),
+                        border: Border.all(color: DonyColors.grey200),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.calendar_today_rounded,
+                            color: DonyColors.green400,
+                            size: 20,
+                          ),
+                          const SizedBox(width: DonySpacing.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
                                 Text(
-                                  _priceLabels[i],
-                                  style: GoogleFonts.sora(
-                                    fontSize: 12,
-                                    color: selected
-                                        ? Colors.white70
-                                        : DonyColors.grey400,
+                                  departureDate != null
+                                      ? _formatHandoverDate()
+                                      : 'Jeu 17 avril · 18h–20h',
+                                  style: tt.bodyMedium,
+                                ),
+                                Text(
+                                  _departureLocationCtrl.text.isNotEmpty
+                                      ? _departureLocationCtrl.text
+                                      : 'Adresse de remise · 12e arrond.',
+                                  style: tt.bodySmall?.copyWith(
+                                    color: DonyColors.grey400,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        ),
+                        ],
                       ),
+                    ).animate().fadeIn(delay: 100.ms);
+                  },
+                ),
+                const SizedBox(height: DonySpacing.xxl),
+
+                // ── CE QUE J'ACCEPTE DE TRANSPORTER ────────────────────────
+                _SectionLabel(label: 'Ce que j\'accepte de transporter'),
+                const SizedBox(height: DonySpacing.md),
+                ValueListenableBuilder<Set<String>>(
+                  valueListenable: _selectedContentNotifier,
+                  builder: (context, selected, _) {
+                    return Wrap(
+                      spacing: DonySpacing.sm,
+                      runSpacing: DonySpacing.sm,
+                      children: _contentTypes.map((type) {
+                        final isSelected = selected.contains(type);
+                        return GestureDetector(
+                          onTap: () {
+                            final updated = Set<String>.from(selected);
+                            if (isSelected) {
+                              updated.remove(type);
+                            } else {
+                              updated.add(type);
+                            }
+                            _selectedContentNotifier.value = updated;
+                          },
+                          child: AnimatedContainer(
+                            duration: 160.ms,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: DonySpacing.md,
+                              vertical: DonySpacing.sm,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? DonyColors.ink900
+                                  : DonyColors.white,
+                              borderRadius: BorderRadius.circular(DonyRadius.full),
+                              border: Border.all(
+                                color: isSelected
+                                    ? DonyColors.ink900
+                                    : DonyColors.grey200,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (isSelected) ...[
+                                  const Icon(
+                                    Icons.check_rounded,
+                                    size: 14,
+                                    color: DonyColors.white,
+                                  ),
+                                  const SizedBox(width: DonySpacing.xs),
+                                ],
+                                Text(
+                                  type,
+                                  style: tt.bodySmall?.copyWith(
+                                    color: isSelected
+                                        ? DonyColors.white
+                                        : DonyColors.ink900,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     );
-                  }),
-                ).animate().fadeIn(delay: 140.ms),
+                  },
+                ).animate().fadeIn(delay: 160.ms),
               ],
             ),
           ),
           bottomSheet: Container(
             padding: EdgeInsets.fromLTRB(
-              20,
-              16,
-              20,
-              MediaQuery.of(context).padding.bottom + 16,
+              DonySpacing.lg,
+              DonySpacing.base,
+              DonySpacing.lg,
+              MediaQuery.of(context).padding.bottom + DonySpacing.base,
             ),
             decoration: const BoxDecoration(
               color: DonyColors.white,
-              border: Border(top: BorderSide(color: DonyColors.grey100)),
+              border: Border(top: BorderSide(color: DonyColors.grey200)),
             ),
-            child: SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton(
-                onPressed: isLoading ? null : _submit,
-                child: isLoading
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2.5,
-                        ),
-                      )
-                    : Text(
-                        _isEdit
-                            ? 'Enregistrer les modifications'
-                            : 'Publier mon trajet',
-                        style: GoogleFonts.sora(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-              ),
+            child: DonyButton(
+              label: '→ Publier le trajet',
+              icon: Icons.send_rounded,
+              onPressed: isLoading ? null : _submit,
+              isLoading: isLoading,
             ),
           ),
         );
       },
     );
   }
+
+  String _formatCorridorDateTime() {
+    final departureDate = _departureDateNotifier.value;
+    final departureTime = _departureTimeNotifier.value;
+    final arrivalTime = _arrivalTimeNotifier.value;
+    if (departureDate == null) return '';
+    final date = DateFormat('EEE d MMM', 'fr').format(departureDate);
+    if (departureTime != null && arrivalTime != null) {
+      return '$date · ${departureTime.hour}h–${arrivalTime.hour}h';
+    } else if (departureTime != null) {
+      return '$date · ${departureTime.hour}h';
+    }
+    return date;
+  }
+
+  String _formatHandoverDate() {
+    final departureDate = _departureDateNotifier.value;
+    final departureTime = _departureTimeNotifier.value;
+    final arrivalTime = _arrivalTimeNotifier.value;
+    if (departureDate == null) return '';
+    final date = DateFormat('EEE d MMMM', 'fr').format(departureDate);
+    if (departureTime != null && arrivalTime != null) {
+      return '$date · ${departureTime.hour}h–${arrivalTime.hour}h';
+    }
+    return date;
+  }
 }
 
-// ── Bannière motivationnelle ─────────────────────────────────────────────────
+// ── Section label ─────────────────────────────────────────────────────────────
 
-class _MotivationBanner extends StatelessWidget {
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  const _SectionLabel({required this.label});
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFBEB),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFFDE68A)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFEF3C7),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.flight_rounded,
-              color: Color(0xFFF59E0B),
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Gagnez avec vos kilos libres',
-                  style: GoogleFonts.sora(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF92400E),
-                  ),
-                ),
-                Text(
-                  'Moyenne : 180€ par trajet · paiement en 24h',
-                  style: GoogleFonts.sora(
-                    fontSize: 12,
-                    color: const Color(0xFFB45309),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+    return Text(
+      label,
+      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+        color: DonyColors.grey400,
+        letterSpacing: 0.8,
       ),
     );
   }
@@ -623,11 +845,15 @@ class _CityRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return InkWell(
       onTap: () => _showPicker(context),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(DonyRadius.card),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.base,
+          vertical: DonySpacing.md,
+        ),
         child: Row(
           children: [
             Container(
@@ -635,42 +861,33 @@ class _CityRow extends StatelessWidget {
               height: 10,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isDeparture ? DonyColors.blue400 : DonyColors.error,
+                color: isDeparture ? DonyColors.green400 : DonyColors.error,
               ),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: DonySpacing.md),
             Expanded(
               child: value == null
                   ? Text(
                       isDeparture ? 'Ville de départ' : 'Ville d\'arrivée',
-                      style: GoogleFonts.sora(
-                        fontSize: 15,
-                        color: DonyColors.grey200,
-                      ),
+                      style: tt.bodyMedium?.copyWith(color: DonyColors.grey400),
                     )
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           value!,
-                          style: GoogleFonts.sora(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: DonyColors.dark900,
-                          ),
+                          style: tt.titleLarge,
                         ),
                         if (airport != null)
                           Text(
                             airport!,
-                            style: GoogleFonts.sora(
-                              fontSize: 12,
-                              color: DonyColors.grey400,
-                            ),
+                            style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
                           ),
                       ],
                     ),
             ),
-            const Icon(Icons.chevron_right_rounded, size: 18, color: DonyColors.grey200),
+            const Icon(Icons.chevron_right_rounded,
+                size: 18, color: DonyColors.grey400),
           ],
         ),
       ),
@@ -678,52 +895,58 @@ class _CityRow extends StatelessWidget {
   }
 
   void _showPicker(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         decoration: const BoxDecoration(
           color: DonyColors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(DonyRadius.sheet),
+          ),
         ),
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+        padding: const EdgeInsets.fromLTRB(
+          DonySpacing.lg,
+          0,
+          DonySpacing.lg,
+          DonySpacing.xxl,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Center(
               child: Container(
-                margin: const EdgeInsets.symmetric(vertical: 12),
+                margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: DonyColors.grey100,
+                  color: DonyColors.grey200,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             Text(
               isDeparture ? 'Ville de départ' : 'Ville d\'arrivée',
-              style: GoogleFonts.sora(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-              ),
+              style: tt.headlineMedium,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: DonySpacing.base),
             ...cities.map((city) => ListTile(
                   title: Text(
                     city,
-                    style: GoogleFonts.sora(
-                      fontWeight: FontWeight.w500,
-                      color: value == city ? DonyColors.blue400 : DonyColors.dark900,
+                    style: tt.titleMedium?.copyWith(
+                      color: value == city
+                          ? DonyColors.green400
+                          : DonyColors.ink900,
                     ),
                   ),
                   trailing: value == city
-                      ? const Icon(Icons.check_rounded, color: DonyColors.blue400)
+                      ? const Icon(Icons.check_rounded, color: DonyColors.green400)
                       : null,
                   onTap: () {
                     onChanged(city);
-                    Navigator.pop(context);
+                    context.pop();
                   },
                 )),
           ],
@@ -750,16 +973,21 @@ class _TimeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isDeparture ? DonyColors.blue400 : DonyColors.error;
+    final tt = Theme.of(context).textTheme;
+    final color = isDeparture ? DonyColors.green400 : DonyColors.error;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(DonyRadius.card),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.base,
+          vertical: DonySpacing.md,
+        ),
         child: Row(
           children: [
-            Icon(Icons.access_time_rounded, size: 14, color: color.withValues(alpha: 0.7)),
-            const SizedBox(width: 14),
+            Icon(Icons.access_time_rounded,
+                size: 14, color: color.withValues(alpha: 0.7)),
+            const SizedBox(width: DonySpacing.md),
             Expanded(
               child: Text(
                 time == null
@@ -767,20 +995,21 @@ class _TimeRow extends StatelessWidget {
                         ? 'Heure de départ (optionnel)'
                         : 'Heure d\'arrivée (optionnel)'
                     : '${time!.hour.toString().padLeft(2, '0')}:${time!.minute.toString().padLeft(2, '0')}',
-                style: GoogleFonts.sora(
-                  fontSize: 14,
-                  fontWeight: time != null ? FontWeight.w700 : FontWeight.w400,
-                  color: time != null ? DonyColors.dark900 : DonyColors.grey200,
+                style: tt.bodyMedium?.copyWith(
+                  fontWeight: time != null ? FontWeight.w600 : FontWeight.w400,
+                  color: time != null ? DonyColors.ink900 : DonyColors.grey400,
                 ),
               ),
             ),
             if (time != null && onClear != null)
               GestureDetector(
                 onTap: onClear,
-                child: const Icon(Icons.close_rounded, size: 16, color: DonyColors.grey200),
+                child: const Icon(Icons.close_rounded,
+                    size: 16, color: DonyColors.grey400),
               )
             else
-              const Icon(Icons.chevron_right_rounded, size: 18, color: DonyColors.grey200),
+              const Icon(Icons.chevron_right_rounded,
+                  size: 18, color: DonyColors.grey400),
           ],
         ),
       ),
@@ -798,28 +1027,33 @@ class _DateRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(DonyRadius.card),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.base,
+          vertical: DonySpacing.md,
+        ),
         child: Row(
           children: [
-            const Icon(Icons.calendar_today_rounded, size: 14, color: DonyColors.grey400),
-            const SizedBox(width: 14),
+            const Icon(Icons.calendar_today_rounded,
+                size: 14, color: DonyColors.grey400),
+            const SizedBox(width: DonySpacing.md),
             Expanded(
               child: Text(
                 date == null
                     ? 'Date de départ'
                     : DateFormat('EEE d MMM yyyy', 'fr').format(date!),
-                style: GoogleFonts.sora(
-                  fontSize: 15,
-                  fontWeight: date != null ? FontWeight.w700 : FontWeight.w400,
-                  color: date != null ? DonyColors.dark900 : DonyColors.grey200,
+                style: tt.bodyMedium?.copyWith(
+                  fontWeight: date != null ? FontWeight.w600 : FontWeight.w400,
+                  color: date != null ? DonyColors.ink900 : DonyColors.grey400,
                 ),
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, size: 18, color: DonyColors.grey200),
+            const Icon(Icons.chevron_right_rounded,
+                size: 18, color: DonyColors.grey400),
           ],
         ),
       ),
@@ -840,35 +1074,36 @@ class _LocationField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.base,
+        vertical: DonySpacing.xs,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Icon(
             isDeparture ? Icons.location_on_rounded : Icons.location_on_outlined,
             size: 14,
-            color: isDeparture ? DonyColors.blue400.withValues(alpha: 0.7) : DonyColors.error.withValues(alpha: 0.7),
+            color: isDeparture
+                ? DonyColors.green400.withValues(alpha: 0.7)
+                : DonyColors.error.withValues(alpha: 0.7),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: DonySpacing.md),
           Expanded(
             child: TextField(
               controller: controller,
-              style: GoogleFonts.sora(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: DonyColors.dark900,
-              ),
+              style: tt.bodyMedium?.copyWith(color: DonyColors.ink900),
               decoration: InputDecoration(
                 hintText: isDeparture
                     ? 'Lieu de départ (ex: Terminal 2E CDG)'
                     : 'Lieu d\'arrivée (ex: AIBD Arrière Cour)',
-                hintStyle: GoogleFonts.sora(
-                  fontSize: 14,
-                  color: DonyColors.grey200,
-                ),
+                hintStyle: tt.bodyMedium?.copyWith(color: DonyColors.grey400),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: DonySpacing.md,
+                ),
               ),
             ),
           ),

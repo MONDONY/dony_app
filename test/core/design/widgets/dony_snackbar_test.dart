@@ -65,5 +65,27 @@ void main() {
       await tester.pump();
       expect(find.byType(SnackBar), findsOneWidget);
     });
+
+    testWidgets('shows SnackBarAction when actionLabel provided', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        theme: AppTheme.light,
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: ElevatedButton(
+              onPressed: () => DonySnackbar.show(
+                context,
+                message: 'Undo action',
+                actionLabel: 'ANNULER',
+                onAction: () {},
+              ),
+              child: const Text('Show'),
+            ),
+          ),
+        ),
+      ));
+      await tester.tap(find.byType(ElevatedButton));
+      await tester.pump();
+      expect(find.byType(SnackBarAction), findsOneWidget);
+    });
   });
 }

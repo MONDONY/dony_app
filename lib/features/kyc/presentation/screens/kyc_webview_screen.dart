@@ -1,3 +1,4 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -12,9 +13,13 @@ class KycWebViewScreen extends StatefulWidget {
 
 class _KycWebViewScreenState extends State<KycWebViewScreen> {
   late final WebViewController _controller;
-  bool _isLoading = true;
+  final _isLoading = ValueNotifier<bool>(true);
 
-  static const _kGreen = Color(0xFF1E88E5);
+  @override
+  void dispose() {
+    _isLoading.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -23,8 +28,18 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
         NavigationDelegate(
-          onPageStarted: (_) => setState(() => _isLoading = true),
-          onPageFinished: (_) => setState(() => _isLoading = false),
+          onPageStarted: (_) => _isLoading.value = true,
+          onPageFinished: (_) => _isLoading.value = false,
+          onWebResourceError: (error) {
+            if (mounted) {
+              _isLoading.value = false;
+              DonySnackbar.show(
+                context,
+                message: 'Impossible de charger la page de vérification',
+                type: DonySnackbarType.error,
+              );
+            }
+          },
           onNavigationRequest: (request) {
             // Intercept Stripe's return_url (https://dony.app/kyc/complete)
             if (request.url.startsWith('https://dony.app/kyc/complete')) {
@@ -42,30 +57,28 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Vérification d\'identité',
-          style: TextStyle(
-            color: Color(0xFF1A1A2E),
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
+      appBar: DonyAppBar(
+        title: 'Vérification d\'identité',
+        showBackButton: false,
+        actions: [
+          IconButton(
+            tooltip: 'Fermer',
+            icon: Icon(Icons.close, color: cs.onSurface),
+            onPressed: () => context.go('/kyc'),
           ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Color(0xFF1A1A2E)),
-          onPressed: () => context.go('/kyc'),
-        ),
+        ],
       ),
       body: Stack(
         children: [
           WebViewWidget(controller: _controller),
-          if (_isLoading)
-            const Center(
-              child: CircularProgressIndicator(color: _kGreen),
-            ),
+          ValueListenableBuilder<bool>(
+            valueListenable: _isLoading,
+            builder: (_, loading, __) => loading
+                ? Center(child: CircularProgressIndicator(color: cs.primary))
+                : const SizedBox.shrink(),
+          ),
         ],
       ),
     );

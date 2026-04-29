@@ -212,7 +212,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
   ) async {
     emit(BidLoading());
     try {
-      final bid = await _repository.cancelBid(event.bidId);
+      final bid = await _repository.cancelBid(event.bidId, reason: event.reason);
       emit(BidCancelled(bid));
     } on DioException catch (e) {
       final detail =

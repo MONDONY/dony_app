@@ -40,8 +40,8 @@ class BidRepository {
   Future<BidModel> rejectBid(String bidId, {String? reason}) =>
       _datasource.rejectBid(bidId, reason: reason);
 
-  Future<BidModel> cancelBid(String bidId) =>
-      _datasource.cancelBid(bidId);
+  Future<BidModel> cancelBid(String bidId, {String? reason}) =>
+      _datasource.cancelBid(bidId, reason: reason);
 
   Future<void> hideBid(String bidId) =>
       _datasource.hideBid(bidId);

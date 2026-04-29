@@ -8,7 +8,6 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class MatchingManagementScreen extends StatefulWidget {
   const MatchingManagementScreen({super.key});
@@ -34,6 +33,9 @@ class _MatchingManagementScreenState extends State<MatchingManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         final user = state is AuthAuthenticated
@@ -75,37 +77,42 @@ class _MatchingManagementScreenState extends State<MatchingManagementScreen> {
                       child: const AnnouncementListScreen(),
                     ),
               Positioned(
-                top: MediaQuery.of(context).padding.top + 8,
+                top: MediaQuery.of(context).padding.top + DonySpacing.sm,
                 right: 50, // To avoid being exactly on top of other icons
                 child: Material(
-                  color: Colors.transparent,
                   child: InkWell(
                     onTap: () => setState(() => _showSendersView = !_showSendersView),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(DonyRadius.xl),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: DonySpacing.md, vertical: 6),
                       decoration: BoxDecoration(
-                        color: DonyColors.blue400.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))
+                        color: cs.primary.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(DonyRadius.xl),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: DonyColors.shadow,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
                         ],
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            _showSendersView ? Icons.flight_takeoff_rounded : Icons.inventory_2_rounded,
+                            _showSendersView
+                                ? Icons.flight_takeoff_rounded
+                                : Icons.inventory_2_rounded,
                             size: 14,
-                            color: Colors.white,
+                            color: cs.onPrimary,
                           ),
                           const SizedBox(width: 6),
                           Text(
                             _showSendersView ? 'Mode Voyageur' : 'Mode Expéditeur',
-                            style: GoogleFonts.sora(
-                              fontSize: 10,
+                            style: tt.labelSmall?.copyWith(
                               fontWeight: FontWeight.w700,
-                              color: Colors.white,
+                              color: cs.onPrimary,
                             ),
                           ),
                         ],

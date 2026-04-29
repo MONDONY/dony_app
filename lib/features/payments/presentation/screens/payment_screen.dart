@@ -1,17 +1,24 @@
+import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
-import 'package:dony/core/design/design_system.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class PaymentScreen extends StatelessWidget {
   final BidModel bid;
+  final LocalAuthService? localAuthService;
 
-  const PaymentScreen({super.key, required this.bid});
+  const PaymentScreen({
+    super.key,
+    required this.bid,
+    @visibleForTesting this.localAuthService,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +32,11 @@ class PaymentScreen extends StatelessWidget {
         if (state is PaymentEscrowPending) {
           return _EscrowConfirmedView(amount: state.amount);
         }
-        return _PaymentSummaryView(bid: bid, state: state);
+        return _PaymentSummaryView(
+          bid: bid,
+          state: state,
+          localAuthService: localAuthService ?? getIt<LocalAuthService>(),
+        );
       },
     );
   }
@@ -65,46 +76,60 @@ class PaymentScreen extends StatelessWidget {
 class _PaymentSummaryView extends StatelessWidget {
   final BidModel bid;
   final PaymentState state;
+  final LocalAuthService localAuthService;
 
-  const _PaymentSummaryView({required this.bid, required this.state});
+  const _PaymentSummaryView({
+    required this.bid,
+    required this.state,
+    required this.localAuthService,
+  });
 
   double get _amount => bid.weightKg * (bid.pricePerKg ?? 0);
   double get _commission => _amount * 0.12;
 
+  Future<void> _pay(BuildContext context) async {
+    final authenticated = await localAuthService.authenticateWithBiometric();
+    if (!context.mounted) return;
+    if (!authenticated) {
+      DonySnackbar.show(
+        context,
+        message: 'Authentification requise',
+        type: DonySnackbarType.error,
+      );
+      return;
+    }
+    context.read<PaymentBloc>().add(PaymentInitiated(bid.id));
+  }
+
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final isLoading = state is PaymentLoading;
     final error = state is PaymentError ? (state as PaymentError).message : null;
 
     return Scaffold(
-      backgroundColor: DonyColors.grey50,
-      appBar: AppBar(
-        title: Text(
-          'Payer mon envoi',
-          style: GoogleFonts.sora(
-              fontWeight: FontWeight.w700, fontSize: 18),
-        ),
-        backgroundColor: DonyColors.white,
-        elevation: 0,
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1),
-        ),
-      ),
+      appBar: const DonyAppBar(title: 'Payer mon envoi'),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
+        padding: const EdgeInsets.fromLTRB(
+          DonySpacing.lg, DonySpacing.xl, DonySpacing.lg, DonySpacing.huge,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _SummaryCard(bid: bid, amount: _amount, commission: _commission),
-            const SizedBox(height: 20),
+            const SizedBox(height: DonySpacing.lg),
             _EscrowInfoBanner(),
-            const SizedBox(height: 24),
+            const SizedBox(height: DonySpacing.xl),
             if (error != null) ...[
-              _ErrorBanner(message: error),
-              const SizedBox(height: 20),
+              _ErrorBanner(message: error, cs: cs),
+              const SizedBox(height: DonySpacing.lg),
             ],
-            _PayButton(amount: _amount, bidId: bid.id, isLoading: isLoading),
+            DonyButton(
+              label: 'Payer ${_amount.toStringAsFixed(2)} €',
+              onPressed: isLoading ? null : () => _pay(context),
+              isLoading: isLoading,
+              icon: Icons.lock_rounded,
+            ),
           ],
         )
             .animate()
@@ -128,116 +153,69 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: DonyColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: DonyColors.grey100),
-      ),
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return DonyCard(
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.base, DonySpacing.base, DonySpacing.base, DonySpacing.md,
+            ),
             child: Text(
               'Récapitulatif',
-              style: GoogleFonts.sora(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 15,
-                  color: DonyColors.dark900),
+              style: tt.titleLarge,
             ),
           ),
           const Divider(height: 1),
-          _SummaryRow('Poids', '${bid.weightKg.toStringAsFixed(1)} kg'),
-          const Divider(height: 1, indent: 16),
-          _SummaryRow(
-              'Prix/kg', '${(bid.pricePerKg ?? 0).toStringAsFixed(2)} €/kg'),
-          const Divider(height: 1, indent: 16),
-          _SummaryRow(
-            'Montant',
-            '${amount.toStringAsFixed(2)} €',
-            valueStyle: GoogleFonts.sora(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-                color: DonyColors.dark900),
-          ),
-          const Divider(height: 1, indent: 16),
-          _SummaryRow(
-            'Commission dony (12%)',
-            '− ${commission.toStringAsFixed(2)} €',
-            subtitle: 'Déduite du paiement voyageur',
-            valueStyle: GoogleFonts.sora(
-                fontWeight: FontWeight.w500,
-                fontSize: 14,
-                color: DonyColors.grey400),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.base, vertical: DonySpacing.xs,
+            ),
+            child: Column(
+              children: [
+                DonyInfoRow(
+                  label: 'Poids',
+                  value: '${bid.weightKg.toStringAsFixed(1)} kg',
+                ),
+                const DonyInfoRow.divider(),
+                DonyInfoRow(
+                  label: 'Prix/kg',
+                  value: '${(bid.pricePerKg ?? 0).toStringAsFixed(2)} €/kg',
+                ),
+                const DonyInfoRow.divider(),
+                DonyInfoRow(
+                  label: 'Montant',
+                  value: '${amount.toStringAsFixed(2)} €',
+                ),
+                const DonyInfoRow.divider(),
+                DonyInfoRow(
+                  label: 'Commission dony (12%)',
+                  value: '− ${commission.toStringAsFixed(2)} €',
+                  valueStyle: DonyInfoRowValueStyle.muted,
+                ),
+              ],
+            ),
           ),
           const Divider(height: 1),
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(DonySpacing.base),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'Vous payez',
-                  style: GoogleFonts.sora(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                      color: DonyColors.dark900),
+                  style: tt.titleMedium,
                 ),
                 Text(
                   '${amount.toStringAsFixed(2)} €',
-                  style: GoogleFonts.sora(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 18,
-                      color: DonyColors.blue400),
+                  style: tt.headlineMedium?.copyWith(color: cs.primary),
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SummaryRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final String? subtitle;
-  final TextStyle? valueStyle;
-
-  const _SummaryRow(this.label, this.value, {this.subtitle, this.valueStyle});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label,
-                    style: GoogleFonts.sora(
-                        fontSize: 14, color: DonyColors.grey400)),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 2),
-                  Text(subtitle!,
-                      style: GoogleFonts.sora(
-                          fontSize: 11, color: DonyColors.grey200)),
-                ],
-              ],
-            ),
-          ),
-          Text(
-            value,
-            style: valueStyle ??
-                GoogleFonts.sora(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: DonyColors.dark900),
           ),
         ],
       ),
@@ -248,25 +226,28 @@ class _SummaryRow extends StatelessWidget {
 class _EscrowInfoBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(DonySpacing.md),
       decoration: BoxDecoration(
-        color: DonyColors.blue100,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: DonyColors.blue400.withValues(alpha: 0.2)),
+        color: cs.primaryContainer,
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.lock_rounded, color: DonyColors.blue400, size: 20),
-          const SizedBox(width: 10),
+          Icon(Icons.lock_rounded, color: cs.primary, size: 20),
+          const SizedBox(width: DonySpacing.md),
           Expanded(
             child: Text(
               'Votre paiement est sécurisé — libéré uniquement après confirmation de livraison par le destinataire.',
-              style: GoogleFonts.sora(
-                  fontSize: 13,
-                  color: DonyColors.blue600,
-                  fontWeight: FontWeight.w500,
-                  height: 1.4),
+              style: tt.bodySmall?.copyWith(
+                color: cs.primary,
+                fontWeight: FontWeight.w500,
+                height: 1.4,
+              ),
             ),
           ),
         ],
@@ -275,75 +256,33 @@ class _EscrowInfoBanner extends StatelessWidget {
   }
 }
 
-class _PayButton extends StatelessWidget {
-  final double amount;
-  final String bidId;
-  final bool isLoading;
-
-  const _PayButton({
-    required this.amount,
-    required this.bidId,
-    required this.isLoading,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 54,
-      child: ElevatedButton(
-        onPressed: isLoading
-            ? null
-            : () =>
-                context.read<PaymentBloc>().add(PaymentInitiated(bidId)),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: DonyColors.blue400,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14)),
-        ),
-        child: isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: Colors.white),
-              )
-            : Text(
-                'Payer ${amount.toStringAsFixed(2)} €',
-                style: GoogleFonts.sora(
-                    fontWeight: FontWeight.w700, fontSize: 16),
-              ),
-      ),
-    );
-  }
-}
-
 class _ErrorBanner extends StatelessWidget {
   final String message;
-  const _ErrorBanner({required this.message});
+  final ColorScheme cs;
+  const _ErrorBanner({required this.message, required this.cs});
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(DonySpacing.md),
       decoration: BoxDecoration(
-        color: DonyColors.error.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: DonyColors.error.withValues(alpha: 0.3)),
+        color: cs.errorContainer,
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        border: Border.all(color: cs.error.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline_rounded, color: DonyColors.error, size: 20),
-          const SizedBox(width: 10),
+          Icon(Icons.error_outline_rounded, color: cs.error, size: 20),
+          const SizedBox(width: DonySpacing.md),
           Expanded(
             child: Text(
               message,
-              style: GoogleFonts.sora(
-                  fontSize: 13,
-                  color: DonyColors.error,
-                  fontWeight: FontWeight.w500),
+              style: tt.bodySmall?.copyWith(
+                color: cs.error,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -360,20 +299,18 @@ class _EscrowConfirmedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: DonyColors.grey50,
-      appBar: AppBar(
-        title: Text('Paiement confirmé',
-            style: GoogleFonts.sora(
-                fontWeight: FontWeight.w700, fontSize: 18)),
-        backgroundColor: DonyColors.white,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        bottom: const PreferredSize(
-            preferredSize: Size.fromHeight(1), child: Divider(height: 1)),
+      appBar: const DonyAppBar(
+        title: 'Paiement confirmé',
+        showBackButton: false,
       ),
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
+        padding: const EdgeInsets.fromLTRB(
+          DonySpacing.xl, 0, DonySpacing.xl, DonySpacing.huge,
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -381,48 +318,30 @@ class _EscrowConfirmedView extends StatelessWidget {
               width: 84,
               height: 84,
               decoration: BoxDecoration(
-                color: DonyColors.success.withValues(alpha: 0.1),
+                color: cs.success.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check_circle_rounded,
-                  color: DonyColors.success, size: 48),
+              child: Icon(Icons.check_circle_rounded,
+                  color: cs.success, size: 48),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: DonySpacing.xl),
             Text(
               'Envoi réservé !',
-              style: GoogleFonts.sora(
-                fontSize: 26,
-                fontWeight: FontWeight.w800,
-                color: DonyColors.dark900,
-              ),
+              style: tt.displayLarge,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: DonySpacing.md),
             Text(
               '${amount.toStringAsFixed(2)} € sont retenus en escrow et seront versés au voyageur après confirmation de livraison par le destinataire.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.sora(
-                  fontSize: 15, color: DonyColors.grey400, height: 1.5),
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton(
-                onPressed: () => context.go('/home'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: DonyColors.blue400,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                ),
-                child: Text(
-                  'Voir mes envois',
-                  style: GoogleFonts.sora(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white),
-                ),
+              style: tt.bodyLarge?.copyWith(
+                color: cs.onSurfaceVariant,
+                height: 1.5,
               ),
+            ),
+            const SizedBox(height: DonySpacing.xxl),
+            DonyButton(
+              label: 'Voir mes envois',
+              onPressed: () => context.go('/home'),
             ),
           ],
         )

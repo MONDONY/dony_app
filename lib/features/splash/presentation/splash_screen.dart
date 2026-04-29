@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart' show Options;
 import 'package:dony/core/constants/app_assets.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -11,6 +12,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -55,6 +57,16 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _navigateNext() async {
+    // First-launch check: show onboarding once
+    final prefs = Hive.box('user_prefs');
+    final onboardingDone = prefs.get('onboarding_done', defaultValue: false) as bool;
+    if (!onboardingDone) {
+      if (mounted) {
+        context.go('/onboarding');
+      }
+      return;
+    }
+
     final firebaseUser = FirebaseAuth.instance.currentUser;
     if (firebaseUser == null) {
       if (mounted) {
@@ -93,7 +105,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1E88E5),
+      backgroundColor: DonyColors.green400,
       body: Stack(
         children: [
           // Contenu statique — identique à l'image native splash_full.png

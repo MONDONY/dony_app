@@ -1,0 +1,302 @@
+import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/storage/hive_service.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+class OfflineScanQueueScreen extends StatelessWidget {
+  const OfflineScanQueueScreen({super.key});
+
+  static String _relativeTime(String isoTimestamp) {
+    final ts = DateTime.tryParse(isoTimestamp);
+    if (ts == null) {
+      return '';
+    }
+    final diff = DateTime.now().toUtc().difference(ts);
+    if (diff.inMinutes < 1) {
+      return 'il y a < 1 min';
+    }
+    if (diff.inMinutes < 60) {
+      return 'il y a ${diff.inMinutes} min';
+    }
+    return 'il y a ${diff.inHours}h';
+  }
+
+  static String _eventLabel(String eventType) {
+    return switch (eventType.toUpperCase()) {
+      'PICKUP' => 'collecte',
+      'IN_TRANSIT' => 'transit',
+      'DELIVERED' => 'livré',
+      _ => 'file',
+    };
+  }
+
+  static String _eventDescription(String eventType) {
+    return switch (eventType.toUpperCase()) {
+      'PICKUP' => 'Collecte enregistrée',
+      'IN_TRANSIT' => 'En transit sauvegardé',
+      'DELIVERED' => 'Livraison sauvegardée',
+      _ => 'Scan sauvegardé',
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final queue = getIt<HiveService>().offlineQueue;
+    final entries = queue.values
+        .map((v) => Map<String, dynamic>.from(v))
+        .toList();
+    final count = entries.length;
+
+    return Scaffold(
+      backgroundColor: DonyColors.bg,
+      appBar: AppBar(
+        backgroundColor: DonyColors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
+          color: DonyColors.ink900,
+          onPressed: () => context.pop(),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: DonySpacing.base),
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.sm,
+                  vertical: DonySpacing.xs,
+                ),
+                decoration: BoxDecoration(
+                  color: DonyColors.terra50,
+                  borderRadius: BorderRadius.circular(DonyRadius.full),
+                  border: Border.all(color: DonyColors.terra500),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.wifi_off_rounded,
+                      size: 12,
+                      color: DonyColors.terra500,
+                    ),
+                    const SizedBox(width: DonySpacing.xs),
+                    Text(
+                      'Hors-ligne',
+                      style: tt.labelMedium?.copyWith(color: DonyColors.terra500),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, color: DonyColors.grey200),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(
+          DonySpacing.lg, DonySpacing.xl, DonySpacing.lg, DonySpacing.huge,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _AlertBanner(count: count),
+            const SizedBox(height: DonySpacing.xl),
+
+            Text(
+              "FILE D'ATTENTE — $count",
+              style: tt.labelMedium?.copyWith(
+                color: DonyColors.grey400,
+                letterSpacing: 0.8,
+              ),
+            ),
+            const SizedBox(height: DonySpacing.base),
+
+            if (entries.isEmpty)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(DonySpacing.xxl),
+                  child: Text(
+                    'Aucun scan en attente.',
+                    style: tt.bodyMedium?.copyWith(color: DonyColors.grey400),
+                  ),
+                ),
+              )
+            else
+              ...entries.map((entry) => Padding(
+                    padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+                    child: _QueueItemCard(
+                      bidId: entry['bidId'] as String? ?? '',
+                      eventType: entry['eventType'] as String? ?? '',
+                      timestamp: entry['offlineTimestamp'] as String? ?? '',
+                    ),
+                  )),
+
+            const SizedBox(height: DonySpacing.xxl),
+            Center(
+              child: Text(
+                'Continuez à scanner même sans réseau.',
+                style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Alert banner ─────────────────────────────────────────────────────────────
+
+class _AlertBanner extends StatelessWidget {
+  const _AlertBanner({required this.count});
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: DonyColors.terra50,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: DonyColors.terra500),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.shield_outlined,
+            color: DonyColors.terra500,
+            size: DonySpacing.iconSm,
+          ),
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Vos scans sont en sécurité',
+                  style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: DonySpacing.xs),
+                Text(
+                  '$count scans en attente. On les enverra dès que vous récupérez du réseau.',
+                  style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Queue item card ───────────────────────────────────────────────────────────
+
+class _QueueItemCard extends StatelessWidget {
+  const _QueueItemCard({
+    required this.bidId,
+    required this.eventType,
+    required this.timestamp,
+  });
+
+  final String bidId;
+  final String eventType;
+  final String timestamp;
+
+  String get _shortCode {
+    if (bidId.length >= 4) {
+      return '#${bidId.substring(0, 4).toUpperCase()}';
+    }
+    return '#${bidId.toUpperCase()}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final label = OfflineScanQueueScreen._eventLabel(eventType);
+    final description = OfflineScanQueueScreen._eventDescription(eventType);
+    final relTime = OfflineScanQueueScreen._relativeTime(timestamp);
+
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: DonyColors.white,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: DonyColors.grey200),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.qr_code_rounded,
+            size: DonySpacing.iconSm,
+            color: DonyColors.grey400,
+          ),
+          const SizedBox(width: DonySpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'colis $_shortCode',
+                      style: tt.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(width: DonySpacing.xs),
+                    _EventChip(label: label),
+                  ],
+                ),
+                const SizedBox(height: DonySpacing.xxs),
+                Text(
+                  '$description · $relTime',
+                  style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                ),
+              ],
+            ),
+          ),
+          const Icon(
+            Icons.schedule_outlined,
+            size: 16,
+            color: DonyColors.grey400,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Event chip ────────────────────────────────────────────────────────────────
+
+class _EventChip extends StatelessWidget {
+  const _EventChip({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.xs,
+        vertical: DonySpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: DonyColors.grey200,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Text(
+        label,
+        style: tt.labelMedium?.copyWith(color: DonyColors.grey400),
+      ),
+    );
+  }
+}

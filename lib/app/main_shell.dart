@@ -1,9 +1,8 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class MainShell extends StatelessWidget {
   const MainShell({super.key, required this.navigationShell});
@@ -47,10 +46,10 @@ class _DonyBottomNav extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         color: DonyColors.white,
-        border: Border(top: BorderSide(color: DonyColors.grey100, width: 1)),
+        border: Border(top: BorderSide(color: DonyColors.grey100)),
         boxShadow: [
           BoxShadow(
-            color: Color(0x08000000),
+            color: DonyColors.shadow,
             blurRadius: 16,
             offset: Offset(0, -4),
           ),
@@ -73,21 +72,25 @@ class _DonyBottomNav extends StatelessWidget {
                   onTap: () => onTap(0),
                 ),
               ),
-              // 1 — Envois
+              // 1 — Envoyer
               Expanded(
                 child: _NavItem(
-                  icon: Icons.inventory_2_rounded,
-                  outlinedIcon: Icons.inventory_2_outlined,
-                  label: 'Envois',
+                  icon: Icons.arrow_circle_right_rounded,
+                  outlinedIcon: Icons.arrow_circle_right_outlined,
+                  label: 'Envoyer',
                   index: 1,
                   currentIndex: currentIndex,
                   onTap: () => onTap(1),
                 ),
               ),
-              // 2 — QR centre (style spécial)
+              // 2 — Trajets
               Expanded(
-                child: _QrCenterItem(
-                  isActive: currentIndex == 2,
+                child: _NavItem(
+                  icon: Icons.send_rounded,
+                  outlinedIcon: Icons.send_outlined,
+                  label: 'Trajets',
+                  index: 2,
+                  currentIndex: currentIndex,
                   onTap: () => onTap(2),
                 ),
               ),
@@ -102,12 +105,12 @@ class _DonyBottomNav extends StatelessWidget {
                   onTap: () => onTap(3),
                 ),
               ),
-              // 4 — Profil
+              // 4 — Moi
               Expanded(
                 child: _NavItem(
                   icon: Icons.person_rounded,
                   outlinedIcon: Icons.person_outline_rounded,
-                  label: 'Profil',
+                  label: 'Moi',
                   index: 4,
                   currentIndex: currentIndex,
                   onTap: () => onTap(4),
@@ -151,77 +154,28 @@ class _NavItem extends StatelessWidget {
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.md,
+              vertical: DonySpacing.xs,
+            ),
             decoration: BoxDecoration(
-              color: _active ? DonyColors.blue100 : Colors.transparent,
-              borderRadius: BorderRadius.circular(20),
+              color: _active ? DonyColors.green100 : Colors.transparent,
+              borderRadius: BorderRadius.circular(DonyRadius.xl),
             ),
             child: Icon(
               _active ? icon : outlinedIcon,
               size: 22,
-              color: _active ? DonyColors.blue400 : DonyColors.grey400,
+              color: _active ? DonyColors.green400 : DonyColors.grey400,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: DonySpacing.xxs),
           AnimatedDefaultTextStyle(
             duration: const Duration(milliseconds: 200),
-            style: GoogleFonts.sora(
-              fontSize: 11,
+            style: Theme.of(context).textTheme.labelSmall!.copyWith(
               fontWeight: _active ? FontWeight.w700 : FontWeight.w500,
-              color: _active ? DonyColors.blue400 : DonyColors.grey400,
+              color: _active ? DonyColors.green400 : DonyColors.grey400,
             ),
             child: Text(label),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _QrCenterItem extends StatelessWidget {
-  const _QrCenterItem({required this.isActive, required this.onTap});
-
-  final bool isActive;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              gradient: isActive
-                  ? const LinearGradient(
-                      colors: [DonyColors.blue600, DonyColors.blue400],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    )
-                  : const LinearGradient(
-                      colors: [DonyColors.blue400, DonyColors.blue300],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: DonyColors.blue400.withValues(alpha: isActive ? 0.4 : 0.25),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.qr_code_scanner_rounded,
-              color: Colors.white,
-              size: 24,
-            ),
           ),
         ],
       ),

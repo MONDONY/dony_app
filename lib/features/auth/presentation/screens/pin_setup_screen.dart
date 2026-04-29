@@ -15,9 +15,6 @@ class PinSetupScreen extends StatefulWidget {
 
 class _PinSetupScreenState extends State<PinSetupScreen> {
   static const _pinLength = 6;
-  static const _kGreen = DonyColors.blue400;
-  static const _kGreenLight = DonyColors.blue100;
-  static const _kBg = DonyColors.grey50;
 
   String _pin = '';
   String? _firstPin;
@@ -78,22 +75,24 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return Scaffold(
-      backgroundColor: _kBg,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
           child: Column(
             children: [
-              const SizedBox(height: 48),
-              _buildHeader(),
-              const SizedBox(height: 48),
-              _buildStepIndicator(),
+              const SizedBox(height: DonySpacing.huge),
+              _buildHeader(cs, tt),
+              const SizedBox(height: DonySpacing.huge),
+              _buildStepIndicator(cs),
               const SizedBox(height: 40),
-              _buildPinDots(),
+              _buildPinDots(cs),
               const Spacer(),
               DonyKeypad(onDigit: _onDigit, onDelete: _onDelete),
-              const SizedBox(height: 32),
+              const SizedBox(height: DonySpacing.xxl),
             ],
           ),
         ),
@@ -101,73 +100,72 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(ColorScheme cs, TextTheme tt) {
     return Column(
       children: [
         Container(
           width: 64,
           height: 64,
-          decoration: const BoxDecoration(
-            color: _kGreenLight,
+          decoration: BoxDecoration(
+            color: cs.primaryContainer,
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.lock_outline, color: _kGreen, size: 32),
+          child: Icon(Icons.lock_outline, color: cs.primary, size: 32),
         ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
-        const SizedBox(height: 20),
+        const SizedBox(height: DonySpacing.lg),
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 250),
           child: Text(
             _isConfirming ? 'Confirmez votre code PIN' : 'Créez votre code PIN',
             key: ValueKey(_isConfirming),
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1A1A2E),
-            ),
+            style: tt.headlineLarge?.copyWith(color: cs.onSurface),
             textAlign: TextAlign.center,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: DonySpacing.sm),
         Text(
           _isConfirming
               ? 'Saisissez le même code pour confirmer'
               : 'Ce code vous servira à déverrouiller l\'app',
-          style: const TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+          style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           textAlign: TextAlign.center,
         ),
       ],
     ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04);
   }
 
-  Widget _buildStepIndicator() {
+  Widget _buildStepIndicator(ColorScheme cs) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const _StepDot(active: true, label: '1'),
-        Container(width: 32, height: 2, color: _isConfirming ? _kGreen : Colors.grey.shade300),
+        Container(
+          width: 32,
+          height: 2,
+          color: _isConfirming ? cs.primary : cs.outline,
+        ),
         _StepDot(active: _isConfirming, label: '2'),
       ],
     );
   }
 
-  Widget _buildPinDots() {
+  Widget _buildPinDots(ColorScheme cs) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(_pinLength, (i) {
         final filled = i < _pin.length;
-        final isError = _hasError;
         return AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.symmetric(horizontal: 8),
+          margin: const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
           width: 16,
           height: 16,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: isError
-                ? Colors.red.shade400
+            color: _hasError
+                ? cs.error
                 : filled
-                    ? _kGreen
-                    : Colors.grey.shade300,
+                    ? cs.primary
+                    : cs.outline,
           ),
         );
       }),
@@ -182,21 +180,23 @@ class _StepDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       width: 32,
       height: 32,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: active ? DonyColors.blue400 : Colors.grey.shade200,
+        color: active ? cs.primary : cs.outline,
       ),
       child: Center(
         child: Text(
           label,
-          style: TextStyle(
-            color: active ? Colors.white : Colors.grey.shade500,
+          style: tt.labelMedium?.copyWith(
+            color: active ? cs.onPrimary : cs.onSurfaceVariant,
             fontWeight: FontWeight.w600,
-            fontSize: 14,
           ),
         ),
       ),

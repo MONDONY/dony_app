@@ -170,6 +170,17 @@ void main() {
         predicate<BidState>((s) => s is BidError && s.message == 'Accès refusé'),
       ],
     );
+
+    blocTest<BidBloc, BidState>(
+      'erreur générique → [Loading, BidError]',
+      build: () {
+        when(() => mockRepo.getBidsForAnnouncement(any()))
+            .thenThrow(Exception('timeout'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidListRequested('ann-001')),
+      expect: () => [isA<BidLoading>(), isA<BidError>()],
+    );
   });
 
   // ─── BidMyListRequested ──────────────────────────────────────────────────────
@@ -187,6 +198,36 @@ void main() {
         isA<BidLoading>(),
         predicate<BidState>((s) => s is BidListLoaded && s.bids.length == 1),
       ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'DioException → [Loading, BidError]',
+      build: () {
+        when(() => mockRepo.getMyBids()).thenThrow(DioException(
+          requestOptions: RequestOptions(path: '/bids/me'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/bids/me'),
+            statusCode: 500,
+            data: {'detail': 'Serveur indisponible'},
+          ),
+        ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidMyListRequested()),
+      expect: () => [
+        isA<BidLoading>(),
+        predicate<BidState>((s) => s is BidError && s.message == 'Serveur indisponible'),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'erreur générique → [Loading, BidError]',
+      build: () {
+        when(() => mockRepo.getMyBids()).thenThrow(Exception('connection lost'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidMyListRequested()),
+      expect: () => [isA<BidLoading>(), isA<BidError>()],
     );
   });
 
@@ -256,6 +297,16 @@ void main() {
         predicate<BidState>((s) => s is BidError && s.message == 'Capacité insuffisante'),
       ],
     );
+
+    blocTest<BidBloc, BidState>(
+      'erreur générique → [Loading, BidError]',
+      build: () {
+        when(() => mockRepo.acceptBid(any())).thenThrow(Exception('timeout'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidAcceptRequested('bid-001')),
+      expect: () => [isA<BidLoading>(), isA<BidError>()],
+    );
   });
 
   // ─── BidRejectRequested ──────────────────────────────────────────────────────
@@ -274,19 +325,54 @@ void main() {
         predicate<BidState>((s) => s is BidRejected && s.bid.status == 'REJECTED'),
       ],
     );
+
+    blocTest<BidBloc, BidState>(
+      'DioException → [Loading, BidError avec detail]',
+      build: () {
+        when(() => mockRepo.rejectBid(any(), reason: any(named: 'reason')))
+            .thenThrow(DioException(
+          requestOptions: RequestOptions(path: '/bids/bid-001/reject'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/bids/bid-001/reject'),
+            statusCode: 409,
+            data: {'detail': 'Déjà rejeté'},
+          ),
+        ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidRejectRequested('bid-001', reason: 'reason')),
+      expect: () => [
+        isA<BidLoading>(),
+        predicate<BidState>((s) => s is BidError && s.message == 'Déjà rejeté'),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'erreur générique → [Loading, BidError]',
+      build: () {
+        when(() => mockRepo.rejectBid(any(), reason: any(named: 'reason')))
+            .thenThrow(Exception('timeout'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidRejectRequested('bid-001', reason: 'reason')),
+      expect: () => [isA<BidLoading>(), isA<BidError>()],
+    );
   });
 
   // ─── BidCancelRequested ──────────────────────────────────────────────────────
 
   group('BidCancelRequested', () {
     blocTest<BidBloc, BidState>(
-      'annulation réussie → [Loading, BidCancelled]',
+      'annulation sans motif → [Loading, BidCancelled]',
       build: () {
-        when(() => mockRepo.cancelBid('bid-001'))
+        when(() => mockRepo.cancelBid('bid-001', reason: null))
             .thenAnswer((_) async => buildBid(status: 'CANCELLED'));
         return buildBloc();
       },
       act: (bloc) => bloc.add(BidCancelRequested('bid-001')),
+      verify: (_) {
+        verify(() => mockRepo.cancelBid('bid-001', reason: null)).called(1);
+      },
       expect: () => [
         isA<BidLoading>(),
         predicate<BidState>((s) =>
@@ -295,9 +381,30 @@ void main() {
     );
 
     blocTest<BidBloc, BidState>(
-      'erreur annulation → [Loading, BidError]',
+      'annulation avec motif → [Loading, BidCancelled]',
       build: () {
-        when(() => mockRepo.cancelBid(any())).thenThrow(DioException(
+        when(() => mockRepo.cancelBid('bid-001', reason: 'Colis trop lourd'))
+            .thenAnswer((_) async => buildBid(status: 'CANCELLED'));
+        return buildBloc();
+      },
+      act: (bloc) =>
+          bloc.add(BidCancelRequested('bid-001', reason: 'Colis trop lourd')),
+      verify: (_) {
+        verify(() => mockRepo.cancelBid('bid-001', reason: 'Colis trop lourd'))
+            .called(1);
+      },
+      expect: () => [
+        isA<BidLoading>(),
+        predicate<BidState>((s) =>
+            s is BidCancelled && s.bid.status == 'CANCELLED'),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'erreur annulation → [Loading, BidError avec detail]',
+      build: () {
+        when(() => mockRepo.cancelBid(any(), reason: any(named: 'reason')))
+            .thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/bid-001/cancel'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids/bid-001/cancel'),
@@ -305,6 +412,21 @@ void main() {
             data: {'detail': 'Bid déjà terminé'},
           ),
         ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidCancelRequested('bid-001')),
+      expect: () => [
+        isA<BidLoading>(),
+        predicate<BidState>(
+            (s) => s is BidError && s.message == 'Bid déjà terminé'),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'erreur générique → [Loading, BidError]',
+      build: () {
+        when(() => mockRepo.cancelBid(any(), reason: any(named: 'reason')))
+            .thenThrow(Exception('timeout'));
         return buildBloc();
       },
       act: (bloc) => bloc.add(BidCancelRequested('bid-001')),
@@ -324,6 +446,36 @@ void main() {
       act: (bloc) => bloc.add(BidHideRequested('bid-001')),
       expect: () => [isA<BidLoading>(), isA<BidHidden>()],
     );
+
+    blocTest<BidBloc, BidState>(
+      'DioException → [Loading, BidError avec detail]',
+      build: () {
+        when(() => mockRepo.hideBid(any())).thenThrow(DioException(
+          requestOptions: RequestOptions(path: '/bids/bid-001/me'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/bids/bid-001/me'),
+            statusCode: 404,
+            data: {'detail': 'Bid introuvable'},
+          ),
+        ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidHideRequested('bid-001')),
+      expect: () => [
+        isA<BidLoading>(),
+        predicate<BidState>((s) => s is BidError && s.message == 'Bid introuvable'),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'erreur générique → [Loading, BidError]',
+      build: () {
+        when(() => mockRepo.hideBid(any())).thenThrow(Exception('timeout'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidHideRequested('bid-001')),
+      expect: () => [isA<BidLoading>(), isA<BidError>()],
+    );
   });
 
   // ─── BidTravelerDismissRequested ─────────────────────────────────────────────
@@ -338,6 +490,37 @@ void main() {
       },
       act: (bloc) => bloc.add(BidTravelerDismissRequested('bid-001')),
       expect: () => [isA<BidLoading>(), isA<BidDeleted>()],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'DioException → [Loading, BidError avec detail]',
+      build: () {
+        when(() => mockRepo.dismissBidAsTraveler(any())).thenThrow(DioException(
+          requestOptions: RequestOptions(path: '/bids/bid-001/traveler'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/bids/bid-001/traveler'),
+            statusCode: 403,
+            data: {'detail': 'Action non autorisée'},
+          ),
+        ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidTravelerDismissRequested('bid-001')),
+      expect: () => [
+        isA<BidLoading>(),
+        predicate<BidState>((s) => s is BidError && s.message == 'Action non autorisée'),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'erreur générique → [Loading, BidError]',
+      build: () {
+        when(() => mockRepo.dismissBidAsTraveler(any()))
+            .thenThrow(Exception('timeout'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidTravelerDismissRequested('bid-001')),
+      expect: () => [isA<BidLoading>(), isA<BidError>()],
     );
   });
 
@@ -362,6 +545,291 @@ void main() {
         windowEnd: DateTime.now().add(const Duration(days: 5, hours: 2)),
       )),
       expect: () => [isA<BidLoading>(), isA<BidHandoverSet>()],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'DioException → [Loading, BidError avec detail]',
+      build: () {
+        when(() => mockRepo.setHandover(
+              bidId: any(named: 'bidId'),
+              location: any(named: 'location'),
+              windowStart: any(named: 'windowStart'),
+              windowEnd: any(named: 'windowEnd'),
+            )).thenThrow(DioException(
+          requestOptions: RequestOptions(path: '/bids/bid-001/handover'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/bids/bid-001/handover'),
+            statusCode: 422,
+            data: {'detail': 'Fenêtre invalide'},
+          ),
+        ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidHandoverRequested(
+        bidId: 'bid-001',
+        location: 'Gare du Nord',
+        windowStart: DateTime.now(),
+        windowEnd: DateTime.now().add(const Duration(hours: 2)),
+      )),
+      expect: () => [
+        isA<BidLoading>(),
+        predicate<BidState>((s) => s is BidError && s.message == 'Fenêtre invalide'),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'erreur générique → [Loading, BidError]',
+      build: () {
+        when(() => mockRepo.setHandover(
+              bidId: any(named: 'bidId'),
+              location: any(named: 'location'),
+              windowStart: any(named: 'windowStart'),
+              windowEnd: any(named: 'windowEnd'),
+            )).thenThrow(Exception('timeout'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidHandoverRequested(
+        bidId: 'bid-001',
+        location: 'Gare du Nord',
+        windowStart: DateTime.now(),
+        windowEnd: DateTime.now().add(const Duration(hours: 2)),
+      )),
+      expect: () => [isA<BidLoading>(), isA<BidError>()],
+    );
+  });
+
+  // ─── BidConfirmPresenceRequested ─────────────────────────────────────────────
+
+  group('BidConfirmPresenceRequested', () {
+    blocTest<BidBloc, BidState>(
+      'confirmation présence réussie → [Loading, BidPresenceConfirmed]',
+      build: () {
+        when(() => mockRepo.confirmPresence('bid-001'))
+            .thenAnswer((_) async => buildBid(status: 'PRESENT'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidConfirmPresenceRequested('bid-001')),
+      expect: () => [
+        isA<BidLoading>(),
+        isA<BidPresenceConfirmed>(),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'DioException → [Loading, BidError avec detail]',
+      build: () {
+        when(() => mockRepo.confirmPresence(any())).thenThrow(DioException(
+          requestOptions: RequestOptions(path: '/bids/bid-001/presence'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/bids/bid-001/presence'),
+            statusCode: 409,
+            data: {'detail': 'Présence déjà confirmée'},
+          ),
+        ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidConfirmPresenceRequested('bid-001')),
+      expect: () => [
+        isA<BidLoading>(),
+        predicate<BidState>(
+            (s) => s is BidError && s.message == 'Présence déjà confirmée'),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'erreur générique → [Loading, BidError]',
+      build: () {
+        when(() => mockRepo.confirmPresence(any()))
+            .thenThrow(Exception('timeout'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidConfirmPresenceRequested('bid-001')),
+      expect: () => [isA<BidLoading>(), isA<BidError>()],
+    );
+  });
+
+  // ─── BidDeleteRequested ──────────────────────────────────────────────────────
+
+  group('BidDeleteRequested', () {
+    blocTest<BidBloc, BidState>(
+      'suppression réussie → [Loading, BidDeleted]',
+      build: () {
+        when(() => mockRepo.hideBid('bid-001')).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidDeleteRequested('bid-001')),
+      expect: () => [isA<BidLoading>(), isA<BidDeleted>()],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'DioException → [Loading, BidError]',
+      build: () {
+        when(() => mockRepo.hideBid(any())).thenThrow(DioException(
+          requestOptions: RequestOptions(path: '/bids/bid-001'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/bids/bid-001'),
+            statusCode: 404,
+            data: {'detail': 'Bid introuvable'},
+          ),
+        ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidDeleteRequested('bid-001')),
+      expect: () => [
+        isA<BidLoading>(),
+        predicate<BidState>(
+            (s) => s is BidError && s.message == 'Bid introuvable'),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'erreur générique → [Loading, BidError]',
+      build: () {
+        when(() => mockRepo.hideBid(any())).thenThrow(Exception('timeout'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidDeleteRequested('bid-001')),
+      expect: () => [isA<BidLoading>(), isA<BidError>()],
+    );
+  });
+
+  // ─── BidMyListAutoRefreshRequested ───────────────────────────────────────────
+
+  group('BidMyListAutoRefreshRequested', () {
+    blocTest<BidBloc, BidState>(
+      'sans données existantes → comportement identique à BidMyListRequested',
+      build: () {
+        when(() => mockRepo.getMyBids())
+            .thenAnswer((_) async => [buildBid()]);
+        return buildBloc();
+      },
+      act: (bloc) =>
+          bloc.add(const BidMyListAutoRefreshRequested(force: false)),
+      expect: () => [
+        isA<BidLoading>(),
+        isA<BidListLoaded>(),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'données fraîches sans force → aucun état émis',
+      build: () => buildBloc(),
+      seed: () => BidListLoaded([buildBid()],
+          fetchedAt: DateTime.now().subtract(const Duration(minutes: 1))),
+      act: (bloc) =>
+          bloc.add(const BidMyListAutoRefreshRequested(force: false)),
+      expect: () => [],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'données périmées → refresh silencieux, émet isRefreshing puis liste fraîche',
+      build: () {
+        when(() => mockRepo.getMyBids())
+            .thenAnswer((_) async => [buildBid(id: 'new-bid')]);
+        return buildBloc();
+      },
+      seed: () => BidListLoaded([buildBid()],
+          fetchedAt:
+              DateTime.now().subtract(const Duration(minutes: 5))),
+      act: (bloc) =>
+          bloc.add(const BidMyListAutoRefreshRequested(force: false)),
+      expect: () => [
+        predicate<BidState>((s) => s is BidListLoaded && s.isRefreshing),
+        predicate<BidState>((s) =>
+            s is BidListLoaded &&
+            !s.isRefreshing &&
+            s.bids.first.id == 'new-bid'),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'force=true avec données fraîches → force le refresh',
+      build: () {
+        when(() => mockRepo.getMyBids())
+            .thenAnswer((_) async => [buildBid(id: 'forced')]);
+        return buildBloc();
+      },
+      seed: () => BidListLoaded([buildBid()],
+          fetchedAt: DateTime.now().subtract(const Duration(seconds: 30))),
+      act: (bloc) => bloc.add(const BidMyListAutoRefreshRequested(force: true)),
+      expect: () => [
+        predicate<BidState>((s) => s is BidListLoaded && s.isRefreshing),
+        predicate<BidState>((s) =>
+            s is BidListLoaded &&
+            !s.isRefreshing &&
+            s.bids.first.id == 'forced'),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'données périmées + DioException → conserve anciennes données',
+      build: () {
+        when(() => mockRepo.getMyBids()).thenThrow(DioException(
+          requestOptions: RequestOptions(path: '/bids/my'),
+        ));
+        return buildBloc();
+      },
+      seed: () => BidListLoaded(
+        [buildBid(id: 'old')],
+        fetchedAt: DateTime.now().subtract(const Duration(minutes: 5)),
+      ),
+      act: (bloc) =>
+          bloc.add(const BidMyListAutoRefreshRequested(force: false)),
+      expect: () => [
+        predicate<BidState>((s) => s is BidListLoaded && s.isRefreshing),
+        predicate<BidState>((s) =>
+            s is BidListLoaded &&
+            !s.isRefreshing &&
+            s.bids.first.id == 'old'),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'sans données + DioException → émet BidError',
+      build: () {
+        when(() => mockRepo.getMyBids()).thenThrow(DioException(
+          requestOptions: RequestOptions(path: '/bids/my'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/bids/my'),
+            statusCode: 503,
+            data: {'detail': 'Service unavailable'},
+          ),
+        ));
+        return buildBloc();
+      },
+      act: (bloc) =>
+          bloc.add(const BidMyListAutoRefreshRequested(force: false)),
+      expect: () => [isA<BidLoading>(), isA<BidError>()],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'données périmées + erreur générique → conserve anciennes données',
+      build: () {
+        when(() => mockRepo.getMyBids()).thenThrow(Exception('timeout'));
+        return buildBloc();
+      },
+      seed: () => BidListLoaded(
+        [buildBid(id: 'old')],
+        fetchedAt: DateTime.now().subtract(const Duration(minutes: 5)),
+      ),
+      act: (bloc) =>
+          bloc.add(const BidMyListAutoRefreshRequested(force: false)),
+      expect: () => [
+        predicate<BidState>((s) => s is BidListLoaded && s.isRefreshing),
+        predicate<BidState>(
+            (s) => s is BidListLoaded && s.bids.first.id == 'old'),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'sans données + erreur générique → émet BidError',
+      build: () {
+        when(() => mockRepo.getMyBids()).thenThrow(Exception('timeout'));
+        return buildBloc();
+      },
+      act: (bloc) =>
+          bloc.add(const BidMyListAutoRefreshRequested(force: false)),
+      expect: () => [isA<BidLoading>(), isA<BidError>()],
     );
   });
 

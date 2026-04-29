@@ -9,7 +9,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 // Must be top-level — Firebase requirement for background handler
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  debugPrint('[FCM] Background message: ${message.messageId}');
+  if (kDebugMode) debugPrint('[FCM] Background message: ${message.messageId}');
 }
 
 const _criticalTypes = {
@@ -46,7 +46,7 @@ class NotificationService {
       badge: true,
       sound: true,
     );
-    debugPrint('[FCM] Auth status: ${settings.authorizationStatus}');
+    if (kDebugMode) debugPrint('[FCM] Auth status: ${settings.authorizationStatus}');
 
     // Create Android notification channel
     await _localNotifications
@@ -94,9 +94,9 @@ class NotificationService {
   Future<void> _uploadToken(String token) async {
     try {
       await _apiClient.dio.put('/auth/me/fcm-token', data: {'fcmToken': token});
-      debugPrint('[FCM] Token uploaded to backend');
+      if (kDebugMode) debugPrint('[FCM] Token uploaded to backend');
     } catch (e) {
-      debugPrint('[FCM] Token upload failed: $e');
+      if (kDebugMode) debugPrint('[FCM] Token upload failed: $e');
     }
   }
 
@@ -107,9 +107,9 @@ class NotificationService {
     if (!_criticalTypes.contains(type)) return;
     try {
       await _repository.ack(notificationId);
-      debugPrint('[FCM] ACK sent for $type / $notificationId');
+      if (kDebugMode) debugPrint('[FCM] ACK sent for $type / $notificationId');
     } catch (e) {
-      debugPrint('[FCM] ACK failed: $e');
+      if (kDebugMode) debugPrint('[FCM] ACK failed: $e');
     }
   }
 
