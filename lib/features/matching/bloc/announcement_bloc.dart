@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
@@ -67,7 +68,13 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       final announcement = await _repository.getAnnouncementDetail(event.id);
       emit(AnnouncementDetailLoaded(announcement));
     } catch (e) {
-      emit(AnnouncementError(e.toString()));
+      final inner = e is DioException ? e.error : e;
+      if (inner is NotFoundException) {
+        emit(AnnouncementNotFound());
+      } else {
+        emit(AnnouncementError(
+            inner is AppException ? inner.message : e.toString()));
+      }
     }
   }
 
