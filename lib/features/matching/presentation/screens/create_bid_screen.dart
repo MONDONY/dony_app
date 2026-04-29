@@ -43,7 +43,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
   late final ValueNotifier<double> _weightNotifier;
   final _categoriesNotifier = ValueNotifier<Set<String>>({});
   final _disclaimerNotifier = ValueNotifier<bool>(false);
-  final _showDisclaimerNotifier = ValueNotifier<bool>(false);
 
   double get _maxKg => widget.announcement.availableKg;
   double get _pricePerKg => widget.announcement.pricePerKg;
@@ -65,7 +64,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     _weightNotifier.dispose();
     _categoriesNotifier.dispose();
     _disclaimerNotifier.dispose();
-    _showDisclaimerNotifier.dispose();
     super.dispose();
   }
 
@@ -89,10 +87,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
     }
     if (_recipientPhoneCtrl.text.trim().isEmpty) {
       _showError('Téléphone du destinataire obligatoire');
-      return;
-    }
-    if (!_disclaimerNotifier.value) {
-      _showDisclaimerNotifier.value = true;
       return;
     }
     context.read<BidBloc>().add(BidCreateRequested(
@@ -124,21 +118,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       builder: (context, state) {
         final isLoading = state is BidLoading;
 
-        return ValueListenableBuilder<bool>(
-          valueListenable: _showDisclaimerNotifier,
-          builder: (context, showDisclaimer, _) {
-            if (showDisclaimer) {
-              return _DisclaimerPage(
-                onAccept: () {
-                  _disclaimerNotifier.value = true;
-                  _showDisclaimerNotifier.value = false;
-                  _submit();
-                },
-                onDecline: () => _showDisclaimerNotifier.value = false,
-              );
-            }
-
-            return Scaffold(
+        return Scaffold(
               backgroundColor: DonyColors.bg,
               appBar: _buildAppBar(context),
               body: ListenableBuilder(
@@ -286,8 +266,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 },
               ),
             );
-          },
-        );
       },
     );
   }
@@ -666,233 +644,6 @@ class _BottomBar extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-// ── Disclaimer full page ──────────────────────────────────────────────────────
-
-class _DisclaimerPage extends StatefulWidget {
-  final VoidCallback onAccept;
-  final VoidCallback onDecline;
-
-  const _DisclaimerPage(
-      {required this.onAccept, required this.onDecline});
-
-  @override
-  State<_DisclaimerPage> createState() => _DisclaimerPageState();
-}
-
-class _DisclaimerPageState extends State<_DisclaimerPage> {
-  // ValueNotifier for checkbox — no setState
-  final _checkedNotifier = ValueNotifier<bool>(false);
-
-  @override
-  void dispose() {
-    _checkedNotifier.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-
-    return Scaffold(
-      backgroundColor: DonyColors.bg,
-      appBar: AppBar(
-        title: Text("Conditions d'envoi", style: tt.headlineLarge),
-        backgroundColor: DonyColors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded,
-              size: 20, color: DonyColors.primary),
-          onPressed: widget.onDecline,
-          tooltip: 'Retour',
-        ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: DonyColors.neutral200),
-        ),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg,
-                DonySpacing.xl,
-                DonySpacing.lg,
-                0,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(DonySpacing.md),
-                    decoration: BoxDecoration(
-                      color: DonyColors.warningLight,
-                      borderRadius:
-                          BorderRadius.circular(DonyRadius.card),
-                      border:
-                          Border.all(color: DonyColors.warning.withValues(alpha: 0.4)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.gavel_rounded,
-                            color: DonyColors.warning, size: 20),
-                        const SizedBox(width: DonySpacing.sm),
-                        Expanded(
-                          child: Text(
-                            'Disclaimer légal douanier',
-                            style: tt.titleMedium,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ).animate().fadeIn(),
-                  const SizedBox(height: DonySpacing.xl),
-                  _LegalSection(
-                    title: 'Produits interdits',
-                    items: const [
-                      'Stupéfiants, drogues et substances psychotropes',
-                      'Armes, munitions et explosifs',
-                      'Contrefaçons et marchandises piratées',
-                      'Denrées périssables non déclarées',
-                      'Espèces animales protégées',
-                      'Matières radioactives ou dangereuses',
-                    ],
-                  ),
-                  const SizedBox(height: DonySpacing.base),
-                  _LegalSection(
-                    title: 'Responsabilité de l\'expéditeur',
-                    items: const [
-                      'Vous êtes seul responsable de la conformité du contenu avec la réglementation douanière.',
-                      'Toute fausse déclaration douanière est passible de poursuites pénales.',
-                      'dony décline toute responsabilité en cas de saisie ou de litige douanier.',
-                    ],
-                  ),
-                  const SizedBox(height: DonySpacing.base),
-                  _LegalSection(
-                    title: 'Médicaments',
-                    items: const [
-                      'Les médicaments soumis à ordonnance doivent être accompagnés des documents médicaux requis.',
-                    ],
-                  ),
-                  const SizedBox(height: DonySpacing.xl),
-                ],
-              ),
-            ),
-          ),
-          ValueListenableBuilder<bool>(
-            valueListenable: _checkedNotifier,
-            builder: (context, checked, _) => Container(
-              padding: EdgeInsets.fromLTRB(
-                DonySpacing.lg,
-                DonySpacing.base,
-                DonySpacing.lg,
-                MediaQuery.of(context).padding.bottom + DonySpacing.base,
-              ),
-              decoration: const BoxDecoration(
-                color: DonyColors.white,
-                border: Border(top: BorderSide(color: DonyColors.neutral200)),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: () => _checkedNotifier.value = !_checkedNotifier.value,
-                    child: Row(
-                      children: [
-                        Checkbox(
-                          value: checked,
-                          onChanged: (v) => _checkedNotifier.value = v ?? false,
-                          activeColor: DonyColors.primary,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        const SizedBox(width: DonySpacing.sm),
-                        Expanded(
-                          child: Text(
-                            'J\'ai lu et j\'accepte les conditions d\'envoi '
-                            'et la réglementation douanière',
-                            style: tt.bodySmall?.copyWith(
-                              color: DonyColors.ink900,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: DonySpacing.md),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: DonyButton(
-                          label: 'Retour',
-                          onPressed: widget.onDecline,
-                          variant: DonyButtonVariant.ghost,
-                        ),
-                      ),
-                      const SizedBox(width: DonySpacing.md),
-                      Expanded(
-                        child: DonyButton(
-                          label: 'Confirmer',
-                          onPressed: checked ? widget.onAccept : null,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LegalSection extends StatelessWidget {
-  final String title;
-  final List<String> items;
-  const _LegalSection({required this.title, required this.items});
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: tt.titleMedium),
-        const SizedBox(height: DonySpacing.sm),
-        ...items.map((item) => Padding(
-              padding: const EdgeInsets.only(bottom: DonySpacing.sm),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '• ',
-                    style: tt.bodySmall?.copyWith(
-                      color: DonyColors.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      item,
-                      style: tt.bodySmall?.copyWith(
-                        color: DonyColors.neutral400,
-                        height: 1.5,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )),
-      ],
     );
   }
 }
