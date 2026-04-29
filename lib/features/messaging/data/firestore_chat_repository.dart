@@ -82,7 +82,7 @@ class FirestoreChatRepository {
                     e.key.startsWith('unread_') && (e.value as int? ?? 0) > 0)
                 .map((e) => MapEntry(
                       e.key.replaceFirst('unread_', ''),
-                      e.value as int,
+                      (e.value as num).toInt(),
                     )),
           );
         });
