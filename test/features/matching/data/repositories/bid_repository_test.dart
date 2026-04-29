@@ -91,12 +91,25 @@ void main() {
       expect(result.status, 'REJECTED');
     });
 
-    test('cancelBid delegates correctly', () async {
-      when(() => mockDs.cancelBid('bid-001'))
+    test('cancelBid without reason delegates to datasource with null reason',
+        () async {
+      when(() => mockDs.cancelBid('bid-001', reason: null))
           .thenAnswer((_) async => _bid(status: 'CANCELLED'));
 
       final result = await repo.cancelBid('bid-001');
       expect(result.status, 'CANCELLED');
+      verify(() => mockDs.cancelBid('bid-001', reason: null)).called(1);
+    });
+
+    test('cancelBid with reason delegates to datasource with reason', () async {
+      when(() => mockDs.cancelBid('bid-001', reason: 'Colis trop lourd'))
+          .thenAnswer((_) async => _bid(status: 'CANCELLED'));
+
+      final result =
+          await repo.cancelBid('bid-001', reason: 'Colis trop lourd');
+      expect(result.status, 'CANCELLED');
+      verify(() => mockDs.cancelBid('bid-001', reason: 'Colis trop lourd'))
+          .called(1);
     });
 
     test('hideBid delegates correctly', () async {

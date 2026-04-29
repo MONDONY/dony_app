@@ -145,14 +145,48 @@ void main() {
   // ── cancelBid ────────────────────────────────────────────────────────────────
 
   group('cancelBid', () {
-    test('returns cancelled BidModel', () async {
+    test('returns cancelled BidModel (no reason)', () async {
       final cancelled = {..._bidJson, 'status': 'CANCELLED'};
-      when(() => mockDio.put('/bids/bid-001/cancel'))
+      when(() => mockDio.put('/bids/bid-001/cancel',
+              data: any(named: 'data')))
           .thenAnswer((_) async => _ok(cancelled, '/bids/bid-001/cancel'));
 
       final result = await datasource.cancelBid('bid-001');
 
       expect(result.status, 'CANCELLED');
+    });
+
+    test('cancelBid without reason sends null data body', () async {
+      final cancelled = {..._bidJson, 'status': 'CANCELLED'};
+      dynamic capturedData;
+      when(() => mockDio.put('/bids/bid-001/cancel',
+              data: any(named: 'data')))
+          .thenAnswer((invocation) async {
+        capturedData = invocation.namedArguments[const Symbol('data')];
+        return _ok(cancelled, '/bids/bid-001/cancel');
+      });
+
+      await datasource.cancelBid('bid-001');
+
+      expect(capturedData, isNull);
+    });
+
+    test('cancelBid with reason sends reason in PUT body', () async {
+      final cancelled = {..._bidJson, 'status': 'CANCELLED'};
+      dynamic capturedData;
+      when(() => mockDio.put('/bids/bid-001/cancel',
+              data: any(named: 'data')))
+          .thenAnswer((invocation) async {
+        capturedData = invocation.namedArguments[const Symbol('data')];
+        return _ok(cancelled, '/bids/bid-001/cancel');
+      });
+
+      final result =
+          await datasource.cancelBid('bid-001', reason: 'Colis trop lourd');
+
+      expect(result.status, 'CANCELLED');
+      expect(capturedData, isA<Map>());
+      expect((capturedData as Map)['reason'], 'Colis trop lourd');
     });
   });
 

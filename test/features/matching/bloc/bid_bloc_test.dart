@@ -363,13 +363,16 @@ void main() {
 
   group('BidCancelRequested', () {
     blocTest<BidBloc, BidState>(
-      'annulation réussie → [Loading, BidCancelled]',
+      'annulation sans motif → [Loading, BidCancelled]',
       build: () {
-        when(() => mockRepo.cancelBid('bid-001'))
+        when(() => mockRepo.cancelBid('bid-001', reason: null))
             .thenAnswer((_) async => buildBid(status: 'CANCELLED'));
         return buildBloc();
       },
       act: (bloc) => bloc.add(BidCancelRequested('bid-001')),
+      verify: (_) {
+        verify(() => mockRepo.cancelBid('bid-001', reason: null)).called(1);
+      },
       expect: () => [
         isA<BidLoading>(),
         predicate<BidState>((s) =>
@@ -378,9 +381,30 @@ void main() {
     );
 
     blocTest<BidBloc, BidState>(
-      'erreur annulation → [Loading, BidError]',
+      'annulation avec motif → [Loading, BidCancelled]',
       build: () {
-        when(() => mockRepo.cancelBid(any())).thenThrow(DioException(
+        when(() => mockRepo.cancelBid('bid-001', reason: 'Colis trop lourd'))
+            .thenAnswer((_) async => buildBid(status: 'CANCELLED'));
+        return buildBloc();
+      },
+      act: (bloc) =>
+          bloc.add(BidCancelRequested('bid-001', reason: 'Colis trop lourd')),
+      verify: (_) {
+        verify(() => mockRepo.cancelBid('bid-001', reason: 'Colis trop lourd'))
+            .called(1);
+      },
+      expect: () => [
+        isA<BidLoading>(),
+        predicate<BidState>((s) =>
+            s is BidCancelled && s.bid.status == 'CANCELLED'),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'erreur annulation → [Loading, BidError avec detail]',
+      build: () {
+        when(() => mockRepo.cancelBid(any(), reason: any(named: 'reason')))
+            .thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/bid-001/cancel'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids/bid-001/cancel'),
@@ -391,13 +415,18 @@ void main() {
         return buildBloc();
       },
       act: (bloc) => bloc.add(BidCancelRequested('bid-001')),
-      expect: () => [isA<BidLoading>(), isA<BidError>()],
+      expect: () => [
+        isA<BidLoading>(),
+        predicate<BidState>(
+            (s) => s is BidError && s.message == 'Bid déjà terminé'),
+      ],
     );
 
     blocTest<BidBloc, BidState>(
       'erreur générique → [Loading, BidError]',
       build: () {
-        when(() => mockRepo.cancelBid(any())).thenThrow(Exception('timeout'));
+        when(() => mockRepo.cancelBid(any(), reason: any(named: 'reason')))
+            .thenThrow(Exception('timeout'));
         return buildBloc();
       },
       act: (bloc) => bloc.add(BidCancelRequested('bid-001')),

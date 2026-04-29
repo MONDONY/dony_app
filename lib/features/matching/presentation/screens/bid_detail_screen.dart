@@ -19,6 +19,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.dart';
 import 'package:dony/features/matching/presentation/widgets/route_map_components.dart';
 import 'package:intl/intl.dart';
 
@@ -62,7 +63,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
     _skeletonLoading = _bid.isSkeleton;
     context.read<BidBloc>().add(BidDetailRequested(_bid.id));
     _loadPaymentStatus();
-    if (_bid.status == 'ACCEPTED') {
+    if (_bid.status == 'ACCEPTED' || _bid.status == 'IN_TRANSIT') {
       _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
         if (mounted) context.read<BidBloc>().add(BidDetailRequested(_bid.id));
       });
@@ -98,52 +99,28 @@ class _BidDetailViewState extends State<_BidDetailView> {
       listener: (context, state) {
         if (state is BidAccepted) {
           _bid = state.bid;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Demande acceptée ! Définissez maintenant la fenêtre de remise.'),
-              backgroundColor: DonyColors.success,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          DonySnackbar.show(context,
+              message: 'Demande acceptée ! Définissez maintenant la fenêtre de remise.',
+              type: DonySnackbarType.success);
           context.push('/bids/${_bid.id}/handover', extra: _bid);
         } else if (state is BidRejected) {
           _bid = state.bid;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Demande refusée.'),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          DonySnackbar.show(context, message: 'Demande refusée.');
           context.pop();
         } else if (state is BidPresenceConfirmed) {
           _bid = state.bid;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Présence confirmée !'),
-              backgroundColor: DonyColors.success,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          DonySnackbar.show(context, message: 'Présence confirmée !', type: DonySnackbarType.success);
         } else if (state is BidCancelled) {
+          _refreshTimer?.cancel();
           _bid = state.bid;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Demande annulée.'),
-              behavior: SnackBarBehavior.floating,
-            ),
+          DonySnackbar.show(
+            context,
+            message: 'Demande annulée. L\'expéditeur sera remboursé.',
+            type: DonySnackbarType.info,
           );
+          context.pop();
         } else if (state is BidDeleted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Demande supprimée.',
-                style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-              ),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(DonyRadius.sm)),
-            ),
-          );
+          DonySnackbar.show(context, message: 'Demande supprimée.');
           context.pop();
         } else if (state is BidDetailLoaded) {
           final previousBidId = _bid.id;
@@ -157,18 +134,22 @@ class _BidDetailViewState extends State<_BidDetailView> {
               !_paymentLoadedNotifier.value) {
             _loadPaymentStatus();
           }
+          // Restart timer if bid transitioned to IN_TRANSIT
+          if ((state.bid.status == 'ACCEPTED' || state.bid.status == 'IN_TRANSIT')
+              && _refreshTimer == null) {
+            _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+              if (mounted) context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+            });
+          } else if (state.bid.status != 'ACCEPTED' && state.bid.status != 'IN_TRANSIT') {
+            _refreshTimer?.cancel();
+            _refreshTimer = null;
+          }
         } else if (state is BidError) {
           if (_skeletonLoading) {
             _skeletonLoading = false;
             context.pop();
           }
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: DonyColors.error,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          DonySnackbar.show(context, message: state.message, type: DonySnackbarType.error);
         }
       },
       builder: (context, state) {
@@ -332,6 +313,14 @@ class _BidDetailViewState extends State<_BidDetailView> {
                         const SizedBox(height: DonySpacing.base),
                         _PaymentReleaseCard(bid: _bid),
                       ],
+
+                      // Cancel section (traveler only, ACCEPTED or IN_TRANSIT)
+                      if (!isSender &&
+                          (_bid.status == 'ACCEPTED' ||
+                              _bid.status == 'IN_TRANSIT')) ...[
+                        const SizedBox(height: DonySpacing.xl),
+                        _TravelerCancelSection(bid: _bid, isLoading: isLoading),
+                      ],
                     ],
                   ).animate().fadeIn(duration: 300.ms).slideY(
                       begin: 0.04, curve: Curves.easeOutCubic),
@@ -401,6 +390,10 @@ class _StatusBadge extends StatelessWidget {
       case 'CANCELLED':
         color = DonyColors.neutral400;
         label = '● Annulé';
+        break;
+      case 'IN_TRANSIT':
+        color = DonyColors.primary;
+        label = '● En transit';
         break;
       default:
         color = DonyColors.warning;
@@ -2142,5 +2135,55 @@ class _ConfirmationCodeCard extends StatelessWidget {
         ],
       ),
     ).animate().fadeIn(duration: 300.ms);
+  }
+}
+
+// ── Traveler cancel section ───────────────────────────────────────────────────
+
+class _TravelerCancelSection extends StatelessWidget {
+  final BidModel bid;
+  final bool isLoading;
+  const _TravelerCancelSection({required this.bid, required this.isLoading});
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'ANNULATION',
+          style: tt.labelMedium?.copyWith(
+            color: DonyColors.neutral400,
+            letterSpacing: 0.8,
+          ),
+        ),
+        const SizedBox(height: DonySpacing.md),
+        DonyButton(
+          label: 'Annuler la demande',
+          icon: Icons.cancel_outlined,
+          onPressed: isLoading ? null : () => _showCancellationDialog(context),
+          variant: DonyButtonVariant.ghost,
+          isLoading: isLoading,
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showCancellationDialog(BuildContext context) async {
+    final isInTransit = bid.status == 'IN_TRANSIT';
+    final reason =
+        await CancellationDialog.show(context, isInTransit: isInTransit);
+    if (reason == null) {
+      return;
+    }
+    if (!context.mounted) {
+      return;
+    }
+    // reason == "" means no reason given (ACCEPTED case)
+    // reason.isNotEmpty means reason was provided
+    context.read<BidBloc>().add(
+          BidCancelRequested(bid.id, reason: reason.isEmpty ? null : reason),
+        );
   }
 }

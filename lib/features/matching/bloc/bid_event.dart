@@ -73,7 +73,8 @@ class BidConfirmPresenceRequested extends BidEvent {
 
 class BidCancelRequested extends BidEvent {
   final String bidId;
-  BidCancelRequested(this.bidId);
+  final String? reason;
+  BidCancelRequested(this.bidId, {this.reason});
 }
 
 class BidHideRequested extends BidEvent {
