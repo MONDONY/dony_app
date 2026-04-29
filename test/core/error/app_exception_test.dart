@@ -82,6 +82,17 @@ void main() {
       expect(a, isNot(equals(c)));
     });
 
+    test('NotFoundException equality inclut resourceType', () {
+      // ignore: prefer_const_constructors
+      final a = NotFoundException(resourceType: 'bid');
+      // ignore: prefer_const_constructors
+      final b = NotFoundException(resourceType: 'bid');
+      // ignore: prefer_const_constructors
+      final c = NotFoundException(resourceType: 'announcement');
+      expect(a, equals(b));
+      expect(a, isNot(equals(c)));
+    });
+
     test('toString includes code and message', () {
       const e = NetworkException('net error', code: 'NET');
       expect(e.toString(), 'AppException(NET): net error');

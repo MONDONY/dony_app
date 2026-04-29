@@ -34,6 +34,9 @@ class NotFoundException extends AppException {
   }) : super(message, code: 'NOT_FOUND');
 
   final String? resourceType;
+
+  @override
+  List<Object?> get props => [message, code, resourceType];
 }
 
 class ValidationException extends AppException {
