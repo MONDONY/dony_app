@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -830,6 +831,59 @@ void main() {
       act: (bloc) =>
           bloc.add(const BidMyListAutoRefreshRequested(force: false)),
       expect: () => [isA<BidLoading>(), isA<BidError>()],
+    );
+  });
+
+  // ─── BidListRequested — 404 ──────────────────────────────────────────────────
+
+  group('BidListRequested — 404', () {
+    blocTest<BidBloc, BidState>(
+      '404 annonce supprimée → [Loading, BidNotFound]',
+      build: () {
+        when(() => mockRepo.getBidsForAnnouncement(any()))
+            .thenThrow(DioException(
+              requestOptions: RequestOptions(path: '/announcements/missing/bids'),
+              error: const NotFoundException(),
+            ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidListRequested('missing')),
+      expect: () => [
+        isA<BidLoading>(),
+        isA<BidNotFound>(),
+      ],
+    );
+  });
+
+  // ─── BidDetailRequested — 404 (refresh silencieux) ───────────────────────────
+
+  group('BidDetailRequested — 404', () {
+    blocTest<BidBloc, BidState>(
+      '404 bid supprimé → [BidNotFound] sans BidLoading préalable',
+      build: () {
+        when(() => mockRepo.getBidById(any()))
+            .thenThrow(DioException(
+              requestOptions: RequestOptions(path: '/bids/missing'),
+              error: const NotFoundException(),
+            ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidDetailRequested('missing')),
+      expect: () => [isA<BidNotFound>()],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'erreur réseau sur BidDetailRequested → aucun état émis (silence)',
+      build: () {
+        when(() => mockRepo.getBidById(any()))
+            .thenThrow(DioException(
+              requestOptions: RequestOptions(path: '/bids/bid-001'),
+              type: DioExceptionType.connectionTimeout,
+            ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidDetailRequested('bid-001')),
+      expect: () => [],
     );
   });
 

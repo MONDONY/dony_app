@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
@@ -58,8 +59,12 @@ class BidBloc extends Bloc<BidEvent, BidState> {
       final bids = await _repository.getBidsForAnnouncement(event.announcementId);
       emit(BidListLoaded(bids));
     } on DioException catch (e) {
-      final detail = e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
-      emit(BidError(detail));
+      if (e.error is NotFoundException) {
+        emit(BidNotFound());
+      } else {
+        final detail = e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
+        emit(BidError(detail));
+      }
     } catch (e) {
       emit(BidError(e.toString()));
     }
@@ -69,15 +74,17 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     BidDetailRequested event,
     Emitter<BidState> emit,
   ) async {
-    // Pas de BidLoading ici : c'est un refresh silencieux en arrière-plan.
-    // Émettre BidLoading désactiverait les boutons d'action pendant le fetch.
+    // Pas de BidLoading : refresh silencieux — ne pas désactiver les boutons.
     try {
       final bid = await _repository.getBidById(event.bidId);
       emit(BidDetailLoaded(bid));
-    } on DioException catch (_) {
-      // On garde les données déjà affichées en cas d'erreur réseau
+    } on DioException catch (e) {
+      if (e.error is NotFoundException) {
+        emit(BidNotFound());
+      }
+      // Autres erreurs réseau : silence intentionnel
     } catch (_) {
-      // idem
+      // silence
     }
   }
 
