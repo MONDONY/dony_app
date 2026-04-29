@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
@@ -192,6 +193,22 @@ void main() {
           'message',
           contains('Session expirée'),
         ),
+      ],
+    );
+
+    blocTest<TrackingBloc, TrackingState>(
+      '404 → TrackingEventsError avec message archivage',
+      build: buildBloc,
+      setUp: () => when(() => mockRepo.getEvents(any()))
+          .thenThrow(DioException(
+            requestOptions: RequestOptions(path: '/bids/bid-1/events'),
+            error: const NotFoundException(),
+          )),
+      act: (bloc) => bloc.add(TrackingEventsRequested('bid-1')),
+      expect: () => [
+        isA<TrackingEventsLoading>(),
+        predicate<TrackingState>((s) =>
+            s is TrackingEventsError && s.message.contains('archivé')),
       ],
     );
   });
