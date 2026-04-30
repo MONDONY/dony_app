@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
+import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_state.dart';
 import 'package:dony/features/messaging/presentation/conversation_list_screen.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
@@ -51,12 +52,7 @@ class _InboxScreenState extends State<InboxScreen>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     context.read<NotificationBloc>().add(const NotificationsLoadRequested());
-    _tabController.addListener(() {
-      if (_tabController.index == 1 && _tabController.indexIsChanging) {
-        getIt<ConversationListBloc>()
-            .add(const ConversationsLoadRequested());
-      }
-    });
+    getIt<ConversationListBloc>().add(const ConversationsLoadRequested());
   }
 
   @override
@@ -101,6 +97,26 @@ class _InboxScreenState extends State<InboxScreen>
           unselectedLabelStyle: tt.labelLarge?.copyWith(fontWeight: FontWeight.w500),
           tabs: [
             Tab(
+              child: BlocBuilder<ConversationListBloc, ConversationListState>(
+                bloc: getIt<ConversationListBloc>(),
+                builder: (context, state) {
+                  final unread = state is ConversationListLoaded
+                      ? state.conversations.where((c) => c.hasUnread).length
+                      : 0;
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Messages'),
+                      if (unread > 0) ...[
+                        const SizedBox(width: DonySpacing.xs),
+                        _UnreadBadge(count: unread, cs: cs, tt: tt),
+                      ],
+                    ],
+                  );
+                },
+              ),
+            ),
+            Tab(
               child: BlocBuilder<NotificationBloc, NotificationState>(
                 builder: (context, state) {
                   final unread = state is NotificationLoaded ? state.unreadCount : 0;
@@ -117,15 +133,14 @@ class _InboxScreenState extends State<InboxScreen>
                 },
               ),
             ),
-            const Tab(text: 'Messages'),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: const [
-          _NotificationsTab(),
           _MessagesTab(),
+          _NotificationsTab(),
         ],
       ),
     );
