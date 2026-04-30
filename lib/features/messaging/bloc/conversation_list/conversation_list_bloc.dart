@@ -20,6 +20,8 @@ class ConversationListBloc
       : super(const ConversationListInitial()) {
     on<ConversationsLoadRequested>(_onLoad);
     on<ConversationsUnreadUpdated>(_onUnreadUpdated);
+    on<ConversationDeleteRequested>(_onDelete);
+    on<ConversationRemovedLocally>(_onRemovedLocally);
   }
 
   Future<void> _onLoad(
@@ -58,9 +60,35 @@ class ConversationListBloc
     if (conversations == null) return;
     final updated = conversations.map((c) {
       final count = event.unreadMap[c.firestoreConversationId] ?? 0;
-      return c.copyWith(hasUnread: count > 0);
+      return c.copyWith(hasUnread: count > 0, unreadCount: count);
     }).toList();
     emit(ConversationListLoaded(updated));
+  }
+
+  Future<void> _onDelete(
+    ConversationDeleteRequested event,
+    Emitter<ConversationListState> emit,
+  ) async {
+    _removeFromLoaded(event.conversationId, emit);
+    try {
+      await _repository.deleteConversation(event.conversationId);
+    } catch (_) {
+      // Reload on failure to restore the removed item
+      add(const ConversationsLoadRequested());
+    }
+  }
+
+  void _onRemovedLocally(
+    ConversationRemovedLocally event,
+    Emitter<ConversationListState> emit,
+  ) {
+    _removeFromLoaded(event.conversationId, emit);
+  }
+
+  void _removeFromLoaded(String id, Emitter<ConversationListState> emit) {
+    if (_loaded == null) return;
+    _loaded = _loaded!.where((c) => c.id != id).toList();
+    emit(ConversationListLoaded(_loaded!));
   }
 
   @override

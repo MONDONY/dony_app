@@ -1,4 +1,4 @@
-enum MessageType { text, image, system }
+enum MessageType { text, image, location, system }
 
 class MessageModel {
   final String id;
@@ -9,6 +9,9 @@ class MessageModel {
   final DateTime sentAt;
   final DateTime? readAt;
   final String? deletedAt;
+  // Location message fields
+  final double? latitude;
+  final double? longitude;
 
   const MessageModel({
     required this.id,
@@ -19,6 +22,8 @@ class MessageModel {
     required this.sentAt,
     this.readAt,
     this.deletedAt,
+    this.latitude,
+    this.longitude,
   });
 
   bool get isDeleted => deletedAt != null;
@@ -27,6 +32,7 @@ class MessageModel {
     final typeStr = data['type'] as String? ?? 'TEXT';
     final type = switch (typeStr) {
       'IMAGE' => MessageType.image,
+      'LOCATION' => MessageType.location,
       'SYSTEM' => MessageType.system,
       _ => MessageType.text,
     };
@@ -39,16 +45,14 @@ class MessageModel {
       sentAt: _parseTs(data['sentAt']),
       readAt: data['readAt'] != null ? _parseTs(data['readAt']) : null,
       deletedAt: data['deletedAt'] as String?,
+      latitude: (data['latitude'] as num?)?.toDouble(),
+      longitude: (data['longitude'] as num?)?.toDouble(),
     );
   }
 
   static DateTime _parseTs(dynamic val) {
-    if (val == null) {
-      return DateTime.now();
-    }
-    if (val is String) {
-      return DateTime.tryParse(val) ?? DateTime.now();
-    }
+    if (val == null) return DateTime.now();
+    if (val is String) return DateTime.tryParse(val) ?? DateTime.now();
     return DateTime.now();
   }
 }

@@ -21,3 +21,11 @@ class ChatError extends ChatState {
   final String message;
   const ChatError(this.message);
 }
+
+class ChatDeletingConversation extends ChatState {
+  const ChatDeletingConversation();
+}
+
+class ChatConversationDeleted extends ChatState {
+  const ChatConversationDeleted();
+}

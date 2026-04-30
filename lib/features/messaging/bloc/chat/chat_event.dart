@@ -40,3 +40,28 @@ class ChatImageSendRequested extends ChatEvent {
     required this.filename,
   });
 }
+
+class ChatLocationSendRequested extends ChatEvent {
+  final String firestoreConversationId;
+  final String conversationId;
+  final String senderFirebaseUid;
+  final double latitude;
+  final double longitude;
+  const ChatLocationSendRequested({
+    required this.firestoreConversationId,
+    required this.conversationId,
+    required this.senderFirebaseUid,
+    required this.latitude,
+    required this.longitude,
+  });
+}
+
+class ChatConversationDeleteRequested extends ChatEvent {
+  final String conversationId;
+  final String firestoreConversationId;
+  const ChatConversationDeleteRequested({
+    required this.conversationId,
+    required this.firestoreConversationId,
+  });
+}
+

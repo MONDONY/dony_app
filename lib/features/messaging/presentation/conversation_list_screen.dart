@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_state.dart';
@@ -28,13 +29,11 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: DonyColors.bgApp,
       body: BlocBuilder<ConversationListBloc, ConversationListState>(
         builder: (context, state) {
           if (state is ConversationListLoading || state is ConversationListInitial) {
-            return Center(
-              child: CircularProgressIndicator(color: cs.primary),
-            );
+            return Center(child: CircularProgressIndicator(color: cs.primary));
           }
 
           if (state is ConversationListError) {
@@ -55,8 +54,7 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
               return const DonyEmptyState(
                 icon: Icons.chat_bubble_outline_rounded,
                 title: 'Aucun message',
-                description:
-                    'Vos conversations apparaîtront ici\naprès l\'acceptation d\'une offre.',
+                description: 'Vos conversations apparaîtront ici\naprès l\'acceptation d\'une offre.',
               );
             }
 
@@ -66,31 +64,53 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
                   .read<ConversationListBloc>()
                   .add(const ConversationsLoadRequested()),
               child: ListView.separated(
-                padding: const EdgeInsets.only(top: DonySpacing.sm),
+                padding: EdgeInsets.zero,
                 itemCount: state.conversations.length,
-                separatorBuilder: (_, __) => Divider(
-                  height: 1,
-                  indent: DonySpacing.lg + DonySpacing.icon + DonySpacing.md,
-                  endIndent: DonySpacing.lg,
-                  color: cs.outline,
-                ),
+                separatorBuilder: (_, __) =>
+                    Divider(height: 1, color: cs.outlineVariant),
                 itemBuilder: (context, index) {
-                  return _ConversationTile(
-                    conversation: state.conversations[index],
-                  )
+                  final conv = state.conversations[index];
+                  final tile = _ConversationTile(conversation: conv)
                       .animate()
                       .fadeIn(
-                        delay: Duration(milliseconds: 60 * index),
-                        duration: 280.ms,
+                        delay: Duration(milliseconds: 50 * index),
+                        duration: 260.ms,
                         curve: Curves.easeOutCubic,
                       )
                       .slideY(
-                        begin: 0.04,
+                        begin: 0.03,
                         end: 0,
-                        delay: Duration(milliseconds: 60 * index),
-                        duration: 280.ms,
+                        delay: Duration(milliseconds: 50 * index),
+                        duration: 260.ms,
                         curve: Curves.easeOutCubic,
                       );
+
+                  return Dismissible(
+                    key: ValueKey(conv.id),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: DonySpacing.xl),
+                      color: cs.error,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.delete_outline_rounded,
+                              color: cs.onError, size: 26),
+                          const SizedBox(height: DonySpacing.xs),
+                          Text(
+                            'Supprimer',
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: cs.onError,
+                                fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ),
+                    onDismissed: (_) => getIt<ConversationListBloc>()
+                        .add(ConversationDeleteRequested(conv.id)),
+                    child: tile,
+                  );
                 },
               ),
             );
@@ -103,6 +123,8 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
   }
 }
 
+// ── Conversation tile ──────────────────────────────────────────────────────────
+
 class _ConversationTile extends StatelessWidget {
   final ConversationModel conversation;
   const _ConversationTile({required this.conversation});
@@ -113,116 +135,184 @@ class _ConversationTile extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final participant = conversation.otherParticipant;
 
-    return InkWell(
-      onTap: () => context.push(
-        '/conversations/${conversation.id}',
-        extra: conversation,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.lg,
-          vertical: DonySpacing.md,
+    return Material(
+      color: conversation.hasUnread
+          ? cs.primaryContainer.withValues(alpha: 0.07)
+          : cs.surface,
+      child: InkWell(
+        onTap: () => context.push(
+          '/conversations/${conversation.id}',
+          extra: conversation,
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            DonyAvatar(
-              name: participant.name.isNotEmpty ? participant.name : '?',
-              imageUrl: participant.avatarUrl,
-              size: DonyAvatarSize.md,
-            ),
-            const SizedBox(width: DonySpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          participant.name.isNotEmpty
-                              ? participant.name
-                              : 'Utilisateur',
-                          style: tt.titleLarge?.copyWith(
-                            fontWeight: conversation.hasUnread
-                                ? FontWeight.w700
-                                : FontWeight.w600,
-                            color: cs.onSurface,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: DonySpacing.xs),
-                      if (conversation.lastMessageAt != null)
-                        Text(
-                          _formatTime(conversation.lastMessageAt!),
-                          style: tt.bodySmall?.copyWith(
-                            color: conversation.hasUnread
-                                ? cs.primary
-                                : cs.onSurfaceVariant,
-                            fontWeight: conversation.hasUnread
-                                ? FontWeight.w600
-                                : FontWeight.w400,
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: DonySpacing.xxs),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          conversation.lastMessagePreview ?? 'Conversation démarrée',
-                          style: tt.bodySmall?.copyWith(
-                            color: conversation.hasUnread
-                                ? cs.onSurface
-                                : cs.onSurfaceVariant,
-                            fontWeight: conversation.hasUnread
-                                ? FontWeight.w600
-                                : FontWeight.w400,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (conversation.hasUnread) ...[
-                        const SizedBox(width: DonySpacing.xs),
-                        _UnreadDot(color: cs.primary),
-                      ],
-                    ],
-                  ),
-                ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.lg,
+            vertical: 14,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              DonyAvatar(
+                name: participant.name.isNotEmpty ? participant.name : '?',
+                imageUrl: participant.avatarUrl,
+                size: DonyAvatarSize.md,
               ),
-            ),
-          ],
+              const SizedBox(width: DonySpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Row 1: name + timestamp
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            participant.name.isNotEmpty
+                                ? participant.name
+                                : 'Utilisateur',
+                            style: tt.bodyLarge?.copyWith(
+                              fontWeight: conversation.hasUnread
+                                  ? FontWeight.w700
+                                  : FontWeight.w600,
+                              color: cs.onSurface,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (conversation.lastMessageAt != null) ...[
+                          const SizedBox(width: DonySpacing.xs),
+                          Text(
+                            _formatTime(conversation.lastMessageAt!),
+                            style: tt.labelSmall?.copyWith(
+                              color: conversation.hasUnread
+                                  ? cs.primary
+                                  : cs.onSurfaceVariant,
+                              fontWeight: conversation.hasUnread
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    // Row 2: trip label (if available)
+                    if (conversation.tripLabel != null) ...[
+                      const SizedBox(height: 3),
+                      _TripLabel(label: conversation.tripLabel!, cs: cs, tt: tt),
+                    ],
+                    const SizedBox(height: 3),
+                    // Row 3: preview + unread badge
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _previewText(),
+                            style: tt.bodySmall?.copyWith(
+                              color: conversation.hasUnread
+                                  ? cs.onSurface
+                                  : cs.onSurfaceVariant,
+                              fontWeight: conversation.hasUnread
+                                  ? FontWeight.w500
+                                  : FontWeight.w400,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (conversation.unreadCount > 0) ...[
+                          const SizedBox(width: DonySpacing.xs),
+                          _UnreadBadge(count: conversation.unreadCount, cs: cs, tt: tt),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  String _previewText() {
+    final preview = conversation.lastMessagePreview;
+    if (preview == null || preview.isEmpty) return 'Conversation démarrée';
+    return preview;
+  }
+
   String _formatTime(DateTime dt) {
     final now = DateTime.now();
-    final diff = now.difference(dt);
-    if (diff.inMinutes < 1) return 'maintenant';
-    if (diff.inHours < 1) return '${diff.inMinutes}min';
-    if (diff.inHours < 24) return '${diff.inHours}h';
-    if (diff.inDays < 7) return DateFormat('EEE', 'fr').format(dt);
-    return DateFormat('dd/MM', 'fr').format(dt);
+    final isToday =
+        now.year == dt.year && now.month == dt.month && now.day == dt.day;
+    if (isToday) return DateFormat('HH:mm').format(dt);
+    if (now.difference(dt).inDays < 7) return DateFormat('EEE', 'fr').format(dt);
+    return DateFormat('d MMM', 'fr').format(dt);
   }
 }
 
-class _UnreadDot extends StatelessWidget {
-  final Color color;
-  const _UnreadDot({required this.color});
+// ── Trip label chip ────────────────────────────────────────────────────────────
+
+class _TripLabel extends StatelessWidget {
+  final String label;
+  final ColorScheme cs;
+  final TextTheme tt;
+
+  const _TripLabel({required this.label, required this.cs, required this.tt});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.flight_rounded, size: 11, color: cs.primary),
+        const SizedBox(width: 4),
+        Flexible(
+          child: Text(
+            label,
+            style: tt.labelSmall?.copyWith(
+              color: cs.primary,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Unread count badge ─────────────────────────────────────────────────────────
+
+class _UnreadBadge extends StatelessWidget {
+  final int count;
+  final ColorScheme cs;
+  final TextTheme tt;
+
+  const _UnreadBadge({required this.count, required this.cs, required this.tt});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 9,
-      height: 9,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      constraints: const BoxConstraints(minWidth: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: cs.primary,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        count > 99 ? '99+' : '$count',
+        style: tt.labelSmall?.copyWith(
+          color: cs.onPrimary,
+          fontWeight: FontWeight.w700,
+          fontSize: 11,
+        ),
+        textAlign: TextAlign.center,
+      ),
     );
   }
 }

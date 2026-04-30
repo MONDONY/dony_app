@@ -28,6 +28,10 @@ class ConversationRepository {
     await _api.dio.post('/conversations/$id/last-message', data: {'preview': preview});
   }
 
+  Future<void> deleteConversation(String id) async {
+    await _api.dio.delete('/conversations/$id');
+  }
+
   Future<Map<String, String>> uploadImage(
       String conversationId, List<int> bytes, String filename) async {
     final formData = FormData.fromMap({

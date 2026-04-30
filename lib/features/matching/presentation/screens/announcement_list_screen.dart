@@ -78,6 +78,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
       floatingActionButton: hasAnnouncements
           ? null
           : FloatingActionButton(
+              heroTag: null,
               backgroundColor: cs.primary,
               elevation: 2,
               onPressed: () => context.push('/announcements/create'),
