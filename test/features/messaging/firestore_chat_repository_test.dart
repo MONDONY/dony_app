@@ -59,4 +59,67 @@ void main() {
     final doc = await fakeFirestore.collection('userMeta').doc('uid-1').get();
     expect(doc.data()?['totalUnreadMessages'], 0);
   });
+
+  test('perConversationUnreadStream returns empty map when doc does not exist', () async {
+    final result = await repo.perConversationUnreadStream('uid-no-doc').first;
+    expect(result, <String, int>{});
+  });
+
+  test('messagesStream emits empty list when no messages', () async {
+    final result = await repo.messagesStream('conv-empty').first;
+    expect(result, isEmpty);
+  });
+
+  test('messagesStream emits messages ordered by sentAt descending', () async {
+    await fakeFirestore
+        .collection('conversations')
+        .doc('conv-1')
+        .collection('messages')
+        .add({
+      'senderId': 'uid-a',
+      'body': 'Bonjour',
+      'imageUrl': null,
+      'type': 'TEXT',
+      'sentAt': '2026-04-30T10:00:00.000',
+      'readAt': null,
+    });
+    final result = await repo.messagesStream('conv-1').first;
+    expect(result, hasLength(1));
+    expect(result.first.body, 'Bonjour');
+    expect(result.first.senderId, 'uid-a');
+  });
+
+  test('sendTextMessage adds a TEXT message document', () async {
+    await repo.sendTextMessage(
+      firestoreConversationId: 'conv-send-text',
+      senderFirebaseUid: 'uid-sender',
+      body: 'Hello world',
+    );
+    final snap = await fakeFirestore
+        .collection('conversations')
+        .doc('conv-send-text')
+        .collection('messages')
+        .get();
+    expect(snap.docs, hasLength(1));
+    expect(snap.docs.first.data()['body'], 'Hello world');
+    expect(snap.docs.first.data()['type'], 'TEXT');
+    expect(snap.docs.first.data()['senderId'], 'uid-sender');
+  });
+
+  test('sendImageMessage adds an IMAGE message document', () async {
+    await repo.sendImageMessage(
+      firestoreConversationId: 'conv-send-img',
+      senderFirebaseUid: 'uid-sender',
+      imageUrl: 'https://s3.example.com/photo.jpg',
+    );
+    final snap = await fakeFirestore
+        .collection('conversations')
+        .doc('conv-send-img')
+        .collection('messages')
+        .get();
+    expect(snap.docs, hasLength(1));
+    expect(snap.docs.first.data()['type'], 'IMAGE');
+    expect(snap.docs.first.data()['imageUrl'], 'https://s3.example.com/photo.jpg');
+    expect(snap.docs.first.data()['body'], isNull);
+  });
 }

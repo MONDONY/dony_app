@@ -1,3 +1,4 @@
+// ignore_for_file: prefer_const_constructors
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:dony/features/notifications/data/notification_model.dart';
@@ -16,20 +17,20 @@ void main() {
 
   group('NotificationEvent', () {
     test('NotificationsLoadRequested is instantiable', () {
-      expect(const NotificationsLoadRequested(), isA<NotificationEvent>());
+      expect(NotificationsLoadRequested(), isA<NotificationEvent>());
     });
 
     test('NotificationMarkReadRequested stores id', () {
-      const event = NotificationMarkReadRequested('n1');
+      final event = NotificationMarkReadRequested('n1');
       expect(event.id, 'n1');
     });
 
     test('NotificationsMarkAllReadRequested is instantiable', () {
-      expect(const NotificationsMarkAllReadRequested(), isA<NotificationEvent>());
+      expect(NotificationsMarkAllReadRequested(), isA<NotificationEvent>());
     });
 
     test('NotificationDeleteRequested stores id', () {
-      const event = NotificationDeleteRequested('n1');
+      final event = NotificationDeleteRequested('n1');
       expect(event.id, 'n1');
     });
   });

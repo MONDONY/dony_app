@@ -295,6 +295,25 @@ void main() {
     );
   });
 
+  // ── QrScanSubmitRequested ─────────────────────────────────────────────────────
+
+  group('QrScanSubmitRequested', () {
+    // Connectivity() uses a platform channel — in unit tests it throws
+    // MissingPluginException, landing in the catch block and emitting QrScanError.
+    blocTest<TrackingBloc, TrackingState>(
+      'emits [QrScanSubmitting, QrScanError] when connectivity platform channel unavailable',
+      build: buildBloc,
+      act: (b) => b.add(QrScanSubmitRequested(
+        bidId: 'bid-1',
+        eventType: 'TRANSIT',
+      )),
+      expect: () => [
+        isA<QrScanSubmitting>(),
+        isA<QrScanError>(),
+      ],
+    );
+  });
+
   // ── OfflineSyncRequested ──────────────────────────────────────────────────────
 
   group('OfflineSyncRequested', () {

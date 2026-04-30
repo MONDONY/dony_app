@@ -41,6 +41,16 @@ void main() {
       expect(container.constraints?.maxWidth, 72.0);
     });
 
+    testWidgets('xxl size renders 80x80 container with 44px icon', (tester) async {
+      await tester.pumpWidget(wrap(
+        const DonyIconContainer(icon: Icons.check_circle_rounded, size: DonyIconContainerSize.xxl),
+      ));
+      final container = tester.widget<Container>(find.byType(Container).first);
+      expect(container.constraints?.maxWidth, 80.0);
+      final icon = tester.widget<Icon>(find.byType(Icon));
+      expect(icon.size, 44.0);
+    });
+
     testWidgets('custom colors are applied', (tester) async {
       await tester.pumpWidget(wrap(
         const DonyIconContainer(

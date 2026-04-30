@@ -79,4 +79,29 @@ void main() {
       expect(OnboardingCompleted().props, isEmpty);
     });
   });
+
+  group('AuthRoleToggled', () {
+    test('props contains role', () {
+      final e = AuthRoleToggled('TRAVELER');
+      expect(e.props, ['TRAVELER']);
+    });
+
+    test('equality', () {
+      expect(AuthRoleToggled('SENDER'), AuthRoleToggled('SENDER'));
+    });
+  });
+
+  group('AuthDialCodeChanged', () {
+    test('props contains code and flag', () {
+      final e = AuthDialCodeChanged(code: '+33', flag: '🇫🇷');
+      expect(e.props, ['+33', '🇫🇷']);
+    });
+
+    test('equality', () {
+      expect(
+        AuthDialCodeChanged(code: '+221', flag: '🇸🇳'),
+        AuthDialCodeChanged(code: '+221', flag: '🇸🇳'),
+      );
+    });
+  });
 }

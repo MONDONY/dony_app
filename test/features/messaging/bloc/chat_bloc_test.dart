@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
@@ -111,6 +113,65 @@ void main() {
             )).called(1);
         verify(() => convRepo.updateLastMessage('conv-id-1', 'Hello world'))
             .called(1);
+      },
+    );
+
+    blocTest<ChatBloc, ChatState>(
+      'sendText truncates preview to 77 chars when body exceeds 80 characters',
+      build: () {
+        when(() => firestoreRepo.sendTextMessage(
+              firestoreConversationId: any(named: 'firestoreConversationId'),
+              senderFirebaseUid: any(named: 'senderFirebaseUid'),
+              body: any(named: 'body'),
+            )).thenAnswer((_) async {});
+        when(() => convRepo.updateLastMessage(any(), any()))
+            .thenAnswer((_) async {});
+        return ChatBloc(firestoreRepo, convRepo);
+      },
+      act: (b) => b.add(const ChatTextSendRequested(
+        firestoreConversationId: 'conv_bid1',
+        conversationId: 'conv-id-1',
+        senderFirebaseUid: 'uid-1',
+        // 81-char body so body.length > 80 triggers the truncation branch
+        body: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      )),
+      expect: () => [],
+      verify: (_) {
+        verify(() => convRepo.updateLastMessage(
+              'conv-id-1',
+              '${'a' * 77}...',
+            )).called(1);
+      },
+    );
+
+    blocTest<ChatBloc, ChatState>(
+      'sendImage calls uploadImage then sendImageMessage',
+      build: () {
+        when(() => convRepo.uploadImage(any(), any(), any()))
+            .thenAnswer((_) async => {'presignedUrl': 'https://cdn.example.com/img.jpg'});
+        when(() => firestoreRepo.sendImageMessage(
+              firestoreConversationId: any(named: 'firestoreConversationId'),
+              senderFirebaseUid: any(named: 'senderFirebaseUid'),
+              imageUrl: any(named: 'imageUrl'),
+            )).thenAnswer((_) async {});
+        return ChatBloc(firestoreRepo, convRepo);
+      },
+      act: (b) => b.add(ChatImageSendRequested(
+        conversationId: 'conv-id-1',
+        firestoreConversationId: 'conv_bid1',
+        senderFirebaseUid: 'uid-1',
+        bytes: Uint8List.fromList([1, 2, 3]),
+        filename: 'photo.jpg',
+      )),
+      expect: () => [],
+      verify: (_) {
+        verify(() => convRepo.uploadImage('conv-id-1', any(), 'photo.jpg'))
+            .called(1);
+        verify(() => firestoreRepo.sendImageMessage(
+              firestoreConversationId: 'conv_bid1',
+              senderFirebaseUid: 'uid-1',
+              imageUrl: 'https://cdn.example.com/img.jpg',
+            )).called(1);
       },
     );
   });

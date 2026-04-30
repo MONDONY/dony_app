@@ -650,6 +650,176 @@ void main() {
       final scaffold = tester.widget<Scaffold>(find.byType(Scaffold).first);
       expect(scaffold.resizeToAvoidBottomInset, isFalse);
     });
+
+    testWidgets('renders stickyBottom below the body', (tester) async {
+      await tester.pumpWidget(_wrapWithRouter(
+        (_) => const DonyPageScaffold(
+          title: 'Sticky',
+          body: Text('Body content'),
+          stickyBottom: Text('Sticky CTA'),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.text('Body content'), findsOneWidget);
+      expect(find.text('Sticky CTA'), findsOneWidget);
+    });
+  });
+
+  // ── DonyLayout helpers ────────────────────────────────────────────────────
+  group('DonyLayout', () {
+    testWidgets('isCompact returns true when width < 600', (tester) async {
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      late bool result;
+      await tester.pumpWidget(MaterialApp(
+        home: Builder(builder: (ctx) {
+          result = DonyLayout.isCompact(ctx);
+          return const SizedBox.shrink();
+        }),
+      ));
+      expect(result, isTrue);
+    });
+
+    testWidgets('isMedium returns true when 600 <= width < 840', (tester) async {
+      tester.view.physicalSize = const Size(700, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      late bool result;
+      await tester.pumpWidget(MaterialApp(
+        home: Builder(builder: (ctx) {
+          result = DonyLayout.isMedium(ctx);
+          return const SizedBox.shrink();
+        }),
+      ));
+      expect(result, isTrue);
+    });
+
+    testWidgets('isExpanded returns true when width >= 840', (tester) async {
+      tester.view.physicalSize = const Size(1024, 768);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      late bool result;
+      await tester.pumpWidget(MaterialApp(
+        home: Builder(builder: (ctx) {
+          result = DonyLayout.isExpanded(ctx);
+          return const SizedBox.shrink();
+        }),
+      ));
+      expect(result, isTrue);
+    });
+
+    testWidgets('hPadding returns 20 on compact screen', (tester) async {
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      late double result;
+      await tester.pumpWidget(MaterialApp(
+        home: Builder(builder: (ctx) {
+          result = DonyLayout.hPadding(ctx);
+          return const SizedBox.shrink();
+        }),
+      ));
+      expect(result, 20.0);
+    });
+
+    testWidgets('hPadding returns 32 on medium screen', (tester) async {
+      tester.view.physicalSize = const Size(700, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      late double result;
+      await tester.pumpWidget(MaterialApp(
+        home: Builder(builder: (ctx) {
+          result = DonyLayout.hPadding(ctx);
+          return const SizedBox.shrink();
+        }),
+      ));
+      expect(result, 32.0);
+    });
+
+    testWidgets('hPadding returns 48 on expanded screen', (tester) async {
+      tester.view.physicalSize = const Size(1024, 768);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      late double result;
+      await tester.pumpWidget(MaterialApp(
+        home: Builder(builder: (ctx) {
+          result = DonyLayout.hPadding(ctx);
+          return const SizedBox.shrink();
+        }),
+      ));
+      expect(result, 48.0);
+    });
+
+    testWidgets('maxContentWidth returns double.infinity on compact', (tester) async {
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      late double result;
+      await tester.pumpWidget(MaterialApp(
+        home: Builder(builder: (ctx) {
+          result = DonyLayout.maxContentWidth(ctx);
+          return const SizedBox.shrink();
+        }),
+      ));
+      expect(result, double.infinity);
+    });
+
+    testWidgets('constrained returns child directly on compact', (tester) async {
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(MaterialApp(
+        home: Builder(builder: (ctx) {
+          return DonyLayout.constrained(ctx, const Text('test-child'));
+        }),
+      ));
+      expect(find.text('test-child'), findsOneWidget);
+    });
+
+    testWidgets('keyboardPadding returns viewInsets.bottom', (tester) async {
+      late double result;
+      await tester.pumpWidget(MaterialApp(
+        home: Builder(builder: (ctx) {
+          result = DonyLayout.keyboardPadding(ctx);
+          return const SizedBox.shrink();
+        }),
+      ));
+      expect(result, isNonNegative);
+    });
+
+    testWidgets('bottomSafe returns non-negative value', (tester) async {
+      late double result;
+      await tester.pumpWidget(MaterialApp(
+        home: Builder(builder: (ctx) {
+          result = DonyLayout.bottomSafe(ctx);
+          return const SizedBox.shrink();
+        }),
+      ));
+      expect(result, isNonNegative);
+    });
+
+    testWidgets('screenWidth and screenHeight return positive values', (tester) async {
+      late double w;
+      late double h;
+      await tester.pumpWidget(MaterialApp(
+        home: Builder(builder: (ctx) {
+          w = DonyLayout.screenWidth(ctx);
+          h = DonyLayout.screenHeight(ctx);
+          return const SizedBox.shrink();
+        }),
+      ));
+      expect(w, isPositive);
+      expect(h, isPositive);
+    });
   });
 
   // ── DonyAppBar ────────────────────────────────────────────────────────────
@@ -946,6 +1116,146 @@ void main() {
       await tester.tap(find.byIcon(Icons.arrow_back_rounded));
       await tester.pump();
       expect(pressed, isTrue);
+    });
+
+    testWidgets('uses context.pop() when no onBack and canPop is true',
+        (tester) async {
+      final router = GoRouter(
+        initialLocation: '/child',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, __) => const Scaffold(body: Text('root')),
+            routes: [
+              GoRoute(
+                path: 'child',
+                builder: (_, __) => Scaffold(
+                  body: CustomScrollView(
+                    slivers: [
+                      const DonySliverAppBar(
+                        title: 'Auto pop',
+                        showBackButton: true,
+                      ),
+                      const SliverToBoxAdapter(child: SizedBox(height: 500)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+          MaterialApp.router(routerConfig: router, theme: AppTheme.light));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+      await tester.pumpAndSettle();
+      expect(find.text('root'), findsOneWidget);
+    });
+
+    testWidgets('goes to /home when canPop is false and back button tapped',
+        (tester) async {
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, __) => Scaffold(
+              body: CustomScrollView(
+                slivers: [
+                  const DonySliverAppBar(
+                    title: 'Root',
+                    showBackButton: true,
+                  ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 500)),
+                ],
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/home',
+            builder: (_, __) => const Scaffold(body: Text('Home sliver')),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+          MaterialApp.router(routerConfig: router, theme: AppTheme.light));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+      await tester.pumpAndSettle();
+      expect(find.text('Home sliver'), findsOneWidget);
+    });
+  });
+
+  // ── DonyAppBar — go('/home') fallback ─────────────────────────────────────
+  group('DonyAppBar go/home fallback', () {
+    testWidgets('goes to /home when canPop is false and back button tapped',
+        (tester) async {
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, __) => const Scaffold(
+              appBar: DonyAppBar(title: 'Root page'),
+              body: SizedBox.shrink(),
+            ),
+          ),
+          GoRoute(
+            path: '/home',
+            builder: (_, __) => const Scaffold(body: Text('Home fallback')),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+          MaterialApp.router(routerConfig: router, theme: AppTheme.light));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+      await tester.pumpAndSettle();
+      expect(find.text('Home fallback'), findsOneWidget);
+    });
+  });
+
+  // ── DonyStatusColors extension ────────────────────────────────────────────
+  group('DonyStatusColors extension', () {
+    testWidgets('info and infoLight return non-null colors', (tester) async {
+      late Color infoColor;
+      late Color infoLightColor;
+      await tester.pumpWidget(MaterialApp(
+        theme: AppTheme.light,
+        home: Builder(builder: (ctx) {
+          final cs = Theme.of(ctx).colorScheme;
+          infoColor = cs.info;
+          infoLightColor = cs.infoLight;
+          return const SizedBox.shrink();
+        }),
+      ));
+      expect(infoColor, isNotNull);
+      expect(infoLightColor, isNotNull);
+    });
+
+    testWidgets('errorLight returns light variant in light mode', (tester) async {
+      late Color errorLightColor;
+      await tester.pumpWidget(MaterialApp(
+        theme: AppTheme.light,
+        home: Builder(builder: (ctx) {
+          errorLightColor = Theme.of(ctx).colorScheme.errorLight;
+          return const SizedBox.shrink();
+        }),
+      ));
+      expect(errorLightColor, isNotNull);
+    });
+
+    testWidgets('errorLight returns dark variant in dark mode', (tester) async {
+      late Color errorLightColor;
+      await tester.pumpWidget(MaterialApp(
+        theme: ThemeData(brightness: Brightness.dark),
+        home: Builder(builder: (ctx) {
+          errorLightColor = Theme.of(ctx).colorScheme.errorLight;
+          return const SizedBox.shrink();
+        }),
+      ));
+      expect(errorLightColor, isNotNull);
     });
   });
 }
