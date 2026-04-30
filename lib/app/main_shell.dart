@@ -48,7 +48,7 @@ class _DonyBottomNav extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         color: DonyColors.white,
-        border: Border(top: BorderSide(color: DonyColors.grey100)),
+        border: Border(top: BorderSide(color: DonyColors.borderDefault)),
         boxShadow: [
           BoxShadow(
             color: DonyColors.shadow,
@@ -175,13 +175,13 @@ class _NavItem extends StatelessWidget {
                   vertical: DonySpacing.xs,
                 ),
                 decoration: BoxDecoration(
-                  color: _active ? DonyColors.green100 : Colors.transparent,
+                  color: _active ? DonyColors.primarySoft : Colors.transparent,
                   borderRadius: BorderRadius.circular(DonyRadius.xl),
                 ),
                 child: Icon(
                   _active ? icon : outlinedIcon,
                   size: 22,
-                  color: _active ? DonyColors.green400 : DonyColors.grey400,
+                  color: _active ? DonyColors.primary : DonyColors.textSubtle,
                 ),
               ),
               if (badgeCount > 0)
@@ -197,7 +197,7 @@ class _NavItem extends StatelessWidget {
             duration: const Duration(milliseconds: 200),
             style: Theme.of(context).textTheme.labelSmall!.copyWith(
               fontWeight: _active ? FontWeight.w700 : FontWeight.w500,
-              color: _active ? DonyColors.green400 : DonyColors.grey400,
+              color: _active ? DonyColors.primary : DonyColors.textSubtle,
             ),
             child: Text(label),
           ),

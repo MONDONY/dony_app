@@ -70,10 +70,10 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
           children: [
             // ── Custom header (no AppBar) ─────────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg,
+              padding: EdgeInsets.fromLTRB(
+                DonyLayout.hPadding(context),
                 DonySpacing.base,
-                DonySpacing.lg,
+                DonyLayout.hPadding(context),
                 DonySpacing.sm,
               ),
               child: Column(
@@ -93,7 +93,7 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
                   const SizedBox(height: DonySpacing.xs),
                   Text(
                     'Un colis vous est envoyé depuis ${corridorCodes.$2}.',
-                    style: tt.bodyMedium?.copyWith(color: DonyColors.grey400),
+                    style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400),
                   ),
                 ],
               ),
@@ -106,7 +106,7 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
                   if (state is TrackingEventsLoading) {
                     return const Center(
                       child: CircularProgressIndicator(
-                          color: DonyColors.green400),
+                          color: DonyColors.primary),
                     );
                   }
                   if (state is TrackingEventsError) {
@@ -118,44 +118,45 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
                   }
                   if (state is TrackingEventsLoaded) {
                     return RefreshIndicator(
-                      color: DonyColors.green400,
+                      color: DonyColors.primary,
                       onRefresh: () async {
                         context.read<TrackingBloc>().add(
                             TrackingEventsRequested(widget.bidId));
                       },
-                      child: SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(
-                          DonySpacing.lg,
-                          DonySpacing.md,
-                          DonySpacing.lg,
-                          DonySpacing.huge,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Map card
-                            RouteMapCard(
-                              departureCode: corridorCodes.$1,
-                              arrivalCode: corridorCodes.$3,
-                              departureCity: corridorCodes.$2,
-                              arrivalCity: corridorCodes.$4,
-                            ),
-                            const SizedBox(height: DonySpacing.base),
+                      child: Builder(builder: (context) {
+                        final h = DonyLayout.hPadding(context);
+                        return SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: EdgeInsets.fromLTRB(h, DonySpacing.md, h, DonySpacing.huge),
+                          child: DonyLayout.constrained(
+                            context,
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Map card
+                                RouteMapCard(
+                                  departureCode: corridorCodes.$1,
+                                  arrivalCode: corridorCodes.$3,
+                                  departureCity: corridorCodes.$2,
+                                  arrivalCity: corridorCodes.$4,
+                                ),
+                                const SizedBox(height: DonySpacing.base),
 
-                            // Timeline
-                            _Timeline(events: state.events),
+                                // Timeline
+                                _Timeline(events: state.events),
 
-                            const SizedBox(height: DonySpacing.base),
+                                const SizedBox(height: DonySpacing.base),
 
-                            // "Pas besoin d'app !" banner
-                            _ApplessBanner(
-                              travelerName: 'le voyageur',
-                            ),
-                          ],
-                        ).animate().fadeIn(duration: 300.ms).slideY(
-                            begin: 0.04, curve: Curves.easeOutCubic),
-                      ),
+                                // "Pas besoin d'app !" banner
+                                _ApplessBanner(
+                                  travelerName: 'le voyageur',
+                                ),
+                              ],
+                            ).animate().fadeIn(duration: 300.ms).slideY(
+                                begin: 0.04, curve: Curves.easeOutCubic),
+                          ),
+                        );
+                      }),
                     );
                   }
                   return const SizedBox.shrink();
@@ -191,7 +192,7 @@ class _Timeline extends StatelessWidget {
         Text(
           'ÉTAPES',
           style: tt.labelMedium?.copyWith(
-            color: DonyColors.grey400,
+            color: DonyColors.neutral400,
             letterSpacing: 0.8,
           ),
         ),
@@ -225,7 +226,7 @@ class _TimelineItem extends StatelessWidget {
 
   Color get _stepColor => switch (event.eventType) {
         'ARRIVEE' => DonyColors.success,
-        _ => DonyColors.green400,
+        _ => DonyColors.primary,
       };
 
   @override
@@ -258,7 +259,7 @@ class _TimelineItem extends StatelessWidget {
                   Expanded(
                     child: Container(
                       width: 2,
-                      color: DonyColors.grey200,
+                      color: DonyColors.neutral200,
                       margin: const EdgeInsets.symmetric(
                           vertical: DonySpacing.xs),
                     ),
@@ -277,7 +278,7 @@ class _TimelineItem extends StatelessWidget {
               decoration: BoxDecoration(
                 color: DonyColors.white,
                 borderRadius: BorderRadius.circular(DonyRadius.lg),
-                border: Border.all(color: DonyColors.grey200),
+                border: Border.all(color: DonyColors.neutral200),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -290,19 +291,19 @@ class _TimelineItem extends StatelessWidget {
                   Text(
                     DateFormat('dd/MM/yyyy à HH:mm')
                         .format(event.scannedAt.toLocal()),
-                    style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                    style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
                   ),
                   if (event.gpsLat != null && event.gpsLon != null) ...[
                     const SizedBox(height: DonySpacing.xs),
                     Row(
                       children: [
                         const Icon(Icons.location_on_rounded,
-                            size: 12, color: DonyColors.grey400),
+                            size: 12, color: DonyColors.neutral400),
                         const SizedBox(width: DonySpacing.xs),
                         Text(
                           '${event.gpsLat!.toStringAsFixed(4)}, ${event.gpsLon!.toStringAsFixed(4)}',
                           style: tt.bodySmall
-                              ?.copyWith(color: DonyColors.grey400),
+                              ?.copyWith(color: DonyColors.neutral400),
                         ),
                       ],
                     ),
@@ -324,17 +325,17 @@ class _TimelineItem extends StatelessWidget {
                             color: DonyColors.green100,
                             child: const Center(
                               child: CircularProgressIndicator(
-                                  color: DonyColors.green400,
+                                  color: DonyColors.primary,
                                   strokeWidth: 2),
                             ),
                           );
                         },
                         errorBuilder: (_, __, ___) => Container(
                           height: 60,
-                          color: DonyColors.grey100,
+                          color: DonyColors.neutral100,
                           child: const Center(
                               child: Icon(Icons.broken_image_rounded,
-                                  color: DonyColors.grey400)),
+                                  color: DonyColors.neutral400)),
                         ),
                       ),
                     ),
@@ -395,7 +396,7 @@ class _PendingConfirmationBanner extends StatelessWidget {
                 Text(
                   'Le destinataire doit confirmer la réception via le code SMS.',
                   style: tt.bodySmall
-                      ?.copyWith(color: DonyColors.grey400, height: 1.4),
+                      ?.copyWith(color: DonyColors.neutral400, height: 1.4),
                 ),
               ],
             ),
@@ -416,7 +417,7 @@ class _EmptyTimeline extends StatelessWidget {
       decoration: BoxDecoration(
         color: DonyColors.white,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.grey200),
+        border: Border.all(color: DonyColors.neutral200),
       ),
       child: Column(
         children: [
@@ -427,7 +428,7 @@ class _EmptyTimeline extends StatelessWidget {
               borderRadius: BorderRadius.circular(DonyRadius.lg),
             ),
             child: const Icon(Icons.hourglass_empty_rounded,
-                color: DonyColors.green400, size: 32),
+                color: DonyColors.primary, size: 32),
           ),
           const SizedBox(height: DonySpacing.base),
           Text(
@@ -438,7 +439,7 @@ class _EmptyTimeline extends StatelessWidget {
           Text(
             'Le voyageur scannera le QR code lors de la remise du colis.',
             textAlign: TextAlign.center,
-            style: tt.bodySmall?.copyWith(color: DonyColors.grey400, height: 1.4),
+            style: tt.bodySmall?.copyWith(color: DonyColors.neutral400, height: 1.4),
           ),
         ],
       ),
@@ -521,7 +522,7 @@ class _ErrorView extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: tt.bodyMedium?.copyWith(color: DonyColors.grey400),
+              style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400),
             ),
             const SizedBox(height: DonySpacing.lg),
             DonyButton(

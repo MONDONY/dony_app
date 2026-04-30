@@ -16,6 +16,7 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.variant = DonyAppBarVariant.compact,
     this.onBack,
     this.showBackButton = true,
+    this.leadingIcon,
     this.actions,
     this.bottom,
   }) : assert(
@@ -27,6 +28,8 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
   final DonyAppBarVariant variant;
   final VoidCallback? onBack;
   final bool showBackButton;
+  /// Override l'icône du bouton retour (ex: Icons.close_rounded pour les modals).
+  final IconData? leadingIcon;
   final List<Widget>? actions;
   final PreferredSizeWidget? bottom;
 
@@ -44,8 +47,8 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
       centerTitle: false,
       leading: showBackButton
           ? IconButton(
-              tooltip: 'Retour',
-              icon: const Icon(Icons.arrow_back_rounded, size: 22),
+              tooltip: leadingIcon != null ? 'Fermer' : 'Retour',
+              icon: Icon(leadingIcon ?? Icons.arrow_back_rounded, size: 22),
               onPressed: onBack ?? () {
                 if (context.canPop()) {
                   context.pop();

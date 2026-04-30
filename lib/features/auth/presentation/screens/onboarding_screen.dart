@@ -10,160 +10,126 @@ class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
 
   static const _features = [
-    (Icons.verified_user_outlined, 'Vérifié', 'KYC + selfie animé pour chaque profil'),
-    (Icons.qr_code_2_outlined, 'Tracé', 'QR scanné à chaque étape, jusqu\'à la remise'),
-    (Icons.lock_outline_rounded, 'Garanti', 'Paiement bloqué, libéré seulement à l\'arrivée'),
+    (Icons.verified_user_outlined, 'Vérifié',
+        'KYC + selfie animé pour chaque profil'),
+    (Icons.qr_code_2_outlined, 'Tracé',
+        'QR scanné à chaque étape, jusqu\'à la remise'),
+    (Icons.lock_outline_rounded, 'Garanti',
+        'Paiement bloqué, libéré seulement à l\'arrivée'),
   ];
+
+  void _proceed(BuildContext context) {
+    context.read<AuthBloc>().add(const OnboardingCompleted());
+    context.go('/auth/phone');
+  }
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final h = DonyLayout.hPadding(context);
+
     return Scaffold(
-      backgroundColor: DonyColors.bg,
+      backgroundColor: DonyColors.bgApp,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Scrollable content area
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                  DonySpacing.lg, DonySpacing.xxl, DonySpacing.lg, DonySpacing.xl,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Logo dony
-                    const DonyLogo(fontSize: 59),
-                    const SizedBox(height: DonySpacing.xxl),
+        child: DonyLayout.constrained(
+          context,
+          Column(
+            children: [
+              // ── Scrollable content ─────────────────────────────────────
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  padding: EdgeInsets.fromLTRB(h, DonySpacing.xxl, h, DonySpacing.xl),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const DonyLogo(fontSize: 48),
+                      const SizedBox(height: DonySpacing.xxl),
 
-                    // Headline — "Envoyez un colis"
-                    Text(
-                      'Envoyez un colis',
-                      style: tt.displaySmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: DonyColors.ink900,
-                        letterSpacing: -0.5,
-                      ),
-                    )
-                        .animate()
-                        .fadeIn(duration: 300.ms)
-                        .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-                    const SizedBox(height: DonySpacing.xxs),
-
-                    // Second line — "chez vous, autrement."
-                    Text.rich(
-                      TextSpan(children: [
-                        TextSpan(
-                          text: 'chez vous',
-                          style: DonyTypography.caveat(
-                            fontSize: 26,
-                            color: DonyColors.green400,
-                          ),
+                      // Headline
+                      Text(
+                        'Envoyez un colis',
+                        style: tt.displayLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: DonyColors.textPrimary,
+                          letterSpacing: -0.8,
                         ),
-                        TextSpan(
-                          text: ', autrement.',
-                          style: tt.displaySmall?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: DonyColors.ink900,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                      ]),
-                    ).animate().fadeIn(delay: 60.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
-                    const SizedBox(height: DonySpacing.base),
-
-                    // Subtitle
-                    Text(
-                      'Voyageurs vérifiés. Suivi en temps réel. Et le sourire de votre famille à l\'arrivée.',
-                      style: tt.bodyMedium?.copyWith(color: DonyColors.grey400),
-                    ).animate().fadeIn(delay: 100.ms),
-
-                    const SizedBox(height: DonySpacing.xl),
-
-                    // Feature cards
-                    ..._features.asMap().entries.map((e) => Padding(
-                      padding: const EdgeInsets.only(bottom: DonySpacing.sm),
-                      child: _FeatureCard(
-                        icon: e.value.$1,
-                        title: e.value.$2,
-                        subtitle: e.value.$3,
                       )
                           .animate()
-                          .fadeIn(delay: Duration(milliseconds: 120 + e.key * 60))
-                          .slideX(begin: 0.04),
-                    )),
-                  ],
+                          .fadeIn(duration: 300.ms)
+                          .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+
+                      const SizedBox(height: DonySpacing.xxs),
+
+                      // Tagline "chez vous, autrement."
+                      Text.rich(
+                        TextSpan(children: [
+                          TextSpan(
+                            text: 'chez vous',
+                            style: DonyTypography.caveat(
+                              fontSize: 28,
+                              color: DonyColors.primary,
+                            ),
+                          ),
+                          TextSpan(
+                            text: ', autrement.',
+                            style: tt.displayLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: DonyColors.textPrimary,
+                              letterSpacing: -0.8,
+                            ),
+                          ),
+                        ]),
+                      )
+                          .animate()
+                          .fadeIn(delay: 60.ms)
+                          .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+
+                      const SizedBox(height: DonySpacing.base),
+
+                      Text(
+                        'Voyageurs vérifiés. Suivi en temps réel. Et le sourire de votre famille à l\'arrivée.',
+                        style: tt.bodyLarge?.copyWith(
+                          color: DonyColors.textMuted,
+                          height: 1.55,
+                        ),
+                      ).animate().fadeIn(delay: 100.ms),
+
+                      const SizedBox(height: DonySpacing.xl),
+
+                      // Feature cards
+                      ..._features.asMap().entries.map((e) => Padding(
+                            padding:
+                                const EdgeInsets.only(bottom: DonySpacing.sm),
+                            child: _FeatureCard(
+                              icon: e.value.$1,
+                              title: e.value.$2,
+                              subtitle: e.value.$3,
+                            )
+                                .animate()
+                                .fadeIn(
+                                    delay: Duration(
+                                        milliseconds: 140 + e.key * 60))
+                                .slideX(begin: 0.03),
+                          )),
+
+                      const SizedBox(height: DonySpacing.lg),
+                    ],
+                  ),
                 ),
               ),
-            ),
 
-            // Pinned bottom CTAs + footer
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg, 0, DonySpacing.lg, DonySpacing.xl,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Primary CTA
-                  DonyButton(
-                    label: 'J\'envoie un colis',
-                    onPressed: () {
-                      context.read<AuthBloc>().add(const OnboardingCompleted());
-                      context.go('/auth/phone');
-                    },
-                  ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.06, curve: Curves.easeOutCubic),
-                  const SizedBox(height: DonySpacing.sm),
-
-                  // Ghost CTA
-                  DonyButton(
-                    label: 'Je suis voyageur',
-                    onPressed: () {
-                      context.read<AuthBloc>().add(const OnboardingCompleted());
-                      context.go('/auth/phone');
-                    },
-                    variant: DonyButtonVariant.ghost,
-                  ).animate().fadeIn(delay: 340.ms),
-
-                  const SizedBox(height: DonySpacing.base),
-
-                  // CGU footer
-                  Text.rich(
-                    TextSpan(
-                      text: 'En continuant vous acceptez nos ',
-                      style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
-                      children: [
-                        TextSpan(
-                          text: 'CGU',
-                          style: tt.bodySmall?.copyWith(
-                            color: DonyColors.green400,
-                            decoration: TextDecoration.underline,
-                            decorationColor: DonyColors.green400,
-                          ),
-                        ),
-                        const TextSpan(text: ' et notre '),
-                        TextSpan(
-                          text: 'politique de confidentialité',
-                          style: tt.bodySmall?.copyWith(
-                            color: DonyColors.green400,
-                            decoration: TextDecoration.underline,
-                            decorationColor: DonyColors.green400,
-                          ),
-                        ),
-                        const TextSpan(text: '.'),
-                      ],
-                    ),
-                    textAlign: TextAlign.center,
-                  ).animate().fadeIn(delay: 380.ms),
-                ],
-              ),
-            ),
-          ],
+              // ── Pinned CTAs ────────────────────────────────────────────
+              _OnboardingFooter(onSender: () => _proceed(context)),
+            ],
+          ),
         ),
       ),
     );
   }
 }
+
+// ── Feature card ─────────────────────────────────────────────────────────────
 
 class _FeatureCard extends StatelessWidget {
   const _FeatureCard({
@@ -182,9 +148,10 @@ class _FeatureCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
-        color: DonyColors.white,
+        color: DonyColors.surface,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.grey200),
+        border: Border.all(color: DonyColors.borderDefault),
+        boxShadow: DonyShadow.xs,
       ),
       child: Row(
         children: [
@@ -192,10 +159,10 @@ class _FeatureCard extends StatelessWidget {
             width: DonySpacing.icon,
             height: DonySpacing.icon,
             decoration: BoxDecoration(
-              color: DonyColors.green50,
+              color: DonyColors.primarySoft,
               borderRadius: BorderRadius.circular(DonyRadius.md),
             ),
-            child: Icon(icon, size: DonySpacing.iconSm, color: DonyColors.green400),
+            child: Icon(icon, size: DonySpacing.iconSm, color: DonyColors.primary),
           ),
           const SizedBox(width: DonySpacing.md),
           Expanded(
@@ -204,16 +171,85 @@ class _FeatureCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: tt.titleSmall?.copyWith(color: DonyColors.ink900),
+                  style: tt.titleSmall?.copyWith(color: DonyColors.textPrimary),
                 ),
                 const SizedBox(height: DonySpacing.xxs),
                 Text(
                   subtitle,
-                  style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                  style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
                 ),
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Bottom CTAs + footer ──────────────────────────────────────────────────────
+
+class _OnboardingFooter extends StatelessWidget {
+  const _OnboardingFooter({required this.onSender});
+  final VoidCallback onSender;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final h = DonyLayout.hPadding(context);
+    final bottom = MediaQuery.paddingOf(context).bottom;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: DonyColors.bgApp,
+        border: Border(top: BorderSide(color: DonyColors.borderDefault)),
+      ),
+      padding: EdgeInsets.fromLTRB(h, DonySpacing.base, h, DonySpacing.md + bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DonyButton(
+            label: 'J\'envoie un colis',
+            onPressed: onSender,
+          ).animate().fadeIn(delay: 320.ms).slideY(begin: 0.05, curve: Curves.easeOutCubic),
+
+          const SizedBox(height: DonySpacing.sm),
+
+          DonyButton(
+            label: 'Je suis voyageur',
+            onPressed: onSender,
+            variant: DonyButtonVariant.ghost,
+          ).animate().fadeIn(delay: 360.ms),
+
+          const SizedBox(height: DonySpacing.md),
+
+          Text.rich(
+            TextSpan(
+              text: 'En continuant vous acceptez nos ',
+              style: tt.bodySmall?.copyWith(color: DonyColors.textSubtle),
+              children: [
+                TextSpan(
+                  text: 'CGU',
+                  style: tt.bodySmall?.copyWith(
+                    color: DonyColors.primary,
+                    decoration: TextDecoration.underline,
+                    decorationColor: DonyColors.primary,
+                  ),
+                ),
+                const TextSpan(text: ' et notre '),
+                TextSpan(
+                  text: 'politique de confidentialité',
+                  style: tt.bodySmall?.copyWith(
+                    color: DonyColors.primary,
+                    decoration: TextDecoration.underline,
+                    decorationColor: DonyColors.primary,
+                  ),
+                ),
+                const TextSpan(text: '.'),
+              ],
+            ),
+            textAlign: TextAlign.center,
+          ).animate().fadeIn(delay: 400.ms),
         ],
       ),
     );

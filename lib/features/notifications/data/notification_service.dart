@@ -178,6 +178,8 @@ class NotificationService {
       'DELIVERY_CONFIRMED' when bidId != null  => '/bids/$bidId',
       'PAYMENT_RELEASED' when bidId != null    => '/bids/$bidId',
       'DISPUTE_OPENED' when bidId != null      => '/bids/$bidId',
+      // Nouveau message → liste des conversations
+      'NEW_MESSAGE'                            => '/messages',
       // Trajet annulé → pas de navigation (le trajet n'existe plus)
       'TRIP_CANCELLED'                         => null,
       _                                        => null,

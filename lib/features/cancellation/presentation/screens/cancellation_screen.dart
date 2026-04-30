@@ -92,38 +92,42 @@ class _CancellationScreenState extends State<CancellationScreen> {
       },
       child: Scaffold(
         appBar: const DonyAppBar(title: 'Annuler le trajet'),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            DonySpacing.lg, DonySpacing.xl, DonySpacing.lg, 100,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _WarningBanner(cs: cs, tt: tt),
-              const SizedBox(height: DonySpacing.xl),
-              Text(
-                'Raison de l\'annulation',
-                style: tt.titleMedium?.copyWith(color: cs.onSurface),
-              ),
-              const SizedBox(height: DonySpacing.md),
-              DonyRadioGroup<String>(
-                value: _selectedReason,
-                onChanged: (v) => setState(() => _selectedReason = v),
-                options: _reasons
-                    .map((r) => DonyRadioOption(value: r, label: r))
-                    .toList(),
-              ),
-              if (_selectedReason == 'Autre') ...[
-                const SizedBox(height: DonySpacing.md),
-                DonyTextField(
-                  controller: _otherCtrl,
-                  label: 'Précisez...',
-                  hint: 'Décrivez votre raison',
-                ),
-              ],
-            ],
-          ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
-        ),
+        body: Builder(builder: (context) {
+          final h = DonyLayout.hPadding(context);
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(h, DonySpacing.xl, h, 100),
+            child: DonyLayout.constrained(
+              context,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _WarningBanner(cs: cs, tt: tt),
+                  const SizedBox(height: DonySpacing.xl),
+                  Text(
+                    'Raison de l\'annulation',
+                    style: tt.titleMedium?.copyWith(color: cs.onSurface),
+                  ),
+                  const SizedBox(height: DonySpacing.md),
+                  DonyRadioGroup<String>(
+                    value: _selectedReason,
+                    onChanged: (v) => setState(() => _selectedReason = v),
+                    options: _reasons
+                        .map((r) => DonyRadioOption(value: r, label: r))
+                        .toList(),
+                  ),
+                  if (_selectedReason == 'Autre') ...[
+                    const SizedBox(height: DonySpacing.md),
+                    DonyTextField(
+                      controller: _otherCtrl,
+                      label: 'Précisez...',
+                      hint: 'Décrivez votre raison',
+                    ),
+                  ],
+                ],
+              ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+            ),
+          );
+        }),
         bottomNavigationBar: _BottomBar(onConfirm: () => _confirm(context)),
       ),
     );

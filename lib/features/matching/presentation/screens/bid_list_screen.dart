@@ -185,7 +185,7 @@ class _BidListViewState extends State<_BidListView>
             centerTitle: false,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_rounded,
-                  size: 20, color: DonyColors.green400),
+                  size: 20, color: DonyColors.primary),
               onPressed: () {
                 if (context.canPop()) context.pop();
                 else context.go('/home');
@@ -210,7 +210,7 @@ class _BidListViewState extends State<_BidListView>
                   Text(
                     subtitle,
                     style:
-                        tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                        tt.bodySmall?.copyWith(color: DonyColors.neutral400),
                   ),
               ],
             ),
@@ -230,9 +230,9 @@ class _BidListViewState extends State<_BidListView>
                 children: [
                   TabBar(
                     controller: _tabController,
-                    labelColor: DonyColors.green400,
-                    unselectedLabelColor: DonyColors.grey400,
-                    indicatorColor: DonyColors.green400,
+                    labelColor: DonyColors.primary,
+                    unselectedLabelColor: DonyColors.neutral400,
+                    indicatorColor: DonyColors.primary,
                     indicatorSize: TabBarIndicatorSize.tab,
                     labelStyle: tt.labelLarge,
                     unselectedLabelStyle: tt.labelLarge,
@@ -249,7 +249,7 @@ class _BidListViewState extends State<_BidListView>
                       ),
                     ],
                   ),
-                  const Divider(height: 1, color: DonyColors.grey200),
+                  const Divider(height: 1, color: DonyColors.neutral200),
                 ],
               ),
             ),
@@ -270,7 +270,7 @@ class _BidListViewState extends State<_BidListView>
   ) {
     if (state is BidLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: DonyColors.green400),
+        child: CircularProgressIndicator(color: DonyColors.primary),
       );
     }
 
@@ -374,10 +374,10 @@ class _BidTabContent extends StatelessWidget {
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(
-        DonySpacing.lg,
+      padding: EdgeInsets.fromLTRB(
+        DonyLayout.hPadding(context),
         DonySpacing.xl,
-        DonySpacing.lg,
+        DonyLayout.hPadding(context),
         DonySpacing.huge,
       ),
       itemCount: bids.length,
@@ -463,7 +463,7 @@ class _BidCard extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(DonyRadius.card),
-            border: Border.all(color: DonyColors.grey200),
+            border: Border.all(color: DonyColors.neutral200),
           ),
           padding: const EdgeInsets.all(DonySpacing.base),
           child: Column(
@@ -495,13 +495,13 @@ class _BidCard extends StatelessWidget {
                             Text(
                               '—',
                               style: tt.bodySmall
-                                  ?.copyWith(color: DonyColors.grey400),
+                                  ?.copyWith(color: DonyColors.neutral400),
                             ),
                             const SizedBox(width: DonySpacing.xs),
                             Text(
                               '· ${bid.weightKg.toStringAsFixed(0)} kg',
                               style: tt.bodySmall
-                                  ?.copyWith(color: DonyColors.grey400),
+                                  ?.copyWith(color: DonyColors.neutral400),
                             ),
                           ],
                         ),
@@ -514,7 +514,7 @@ class _BidCard extends StatelessWidget {
                         ? '${(bid.weightKg * bid.pricePerKg!).toStringAsFixed(0)} €'
                         : '—',
                     style: tt.titleLarge
-                        ?.copyWith(color: DonyColors.green400),
+                        ?.copyWith(color: DonyColors.primary),
                   ),
                 ],
               ),
@@ -523,7 +523,7 @@ class _BidCard extends StatelessWidget {
               // ── Content label ────────────────────────────────────
               Text(
                 'CONTENU DÉCLARÉ',
-                style: tt.labelSmall?.copyWith(color: DonyColors.grey400),
+                style: tt.labelSmall?.copyWith(color: DonyColors.neutral400),
               ),
               const SizedBox(height: DonySpacing.xxs),
               Text(
@@ -533,7 +533,7 @@ class _BidCard extends StatelessWidget {
               const SizedBox(height: DonySpacing.md),
 
               // ── Divider ──────────────────────────────────────────
-              const Divider(color: DonyColors.grey200, height: 1),
+              const Divider(color: DonyColors.neutral200, height: 1),
               const SizedBox(height: DonySpacing.md),
 
               // ── Bottom area: actions OR status badge ─────────────
@@ -720,7 +720,7 @@ class _ScannerChipButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: DonyColors.white,
           borderRadius: BorderRadius.circular(DonyRadius.full),
-          border: Border.all(color: DonyColors.grey200),
+          border: Border.all(color: DonyColors.neutral200),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -759,12 +759,12 @@ class _ErrorView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.error_outline_rounded,
-                size: 48, color: DonyColors.grey200),
+                size: 48, color: DonyColors.neutral200),
             const SizedBox(height: DonySpacing.md),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: tt.bodyMedium?.copyWith(color: DonyColors.grey400),
+              style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400),
             ),
             const SizedBox(height: DonySpacing.base),
             DonyButton(

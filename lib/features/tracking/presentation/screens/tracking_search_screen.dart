@@ -42,45 +42,49 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
 
     return Scaffold(
       appBar: const DonyAppBar(title: 'Suivre un colis'),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
-          DonySpacing.lg, DonySpacing.xxl, DonySpacing.lg, DonySpacing.huge,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSearchHeader(cs, tt),
-            const SizedBox(height: DonySpacing.xl),
-            _buildSearchField(cs, tt),
-            const SizedBox(height: DonySpacing.lg),
-            DonyButton(
-              label: 'Rechercher',
-              onPressed: () => _search(context),
-              icon: Icons.search_rounded,
-            ),
-            const SizedBox(height: DonySpacing.xxl),
-            BlocBuilder<TrackingBloc, TrackingState>(
-              builder: (context, state) {
-                if (state is TrackingSearchLoading) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 40),
-                      child: CircularProgressIndicator(color: cs.primary),
-                    ),
-                  );
-                }
-                if (state is TrackingSearchError) {
-                  return _buildError(state.message, cs, context);
-                }
-                if (state is TrackingSearchLoaded) {
-                  return _TrackingResultCard(result: state.result);
-                }
-                return const SizedBox.shrink();
-              },
-            ),
-          ],
-        ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
-      ),
+      body: Builder(builder: (context) {
+        final h = DonyLayout.hPadding(context);
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(h, DonySpacing.xxl, h, DonySpacing.huge),
+          child: DonyLayout.constrained(
+            context,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSearchHeader(cs, tt),
+                const SizedBox(height: DonySpacing.xl),
+                _buildSearchField(cs, tt),
+                const SizedBox(height: DonySpacing.lg),
+                DonyButton(
+                  label: 'Rechercher',
+                  onPressed: () => _search(context),
+                  icon: Icons.search_rounded,
+                ),
+                const SizedBox(height: DonySpacing.xxl),
+                BlocBuilder<TrackingBloc, TrackingState>(
+                  builder: (context, state) {
+                    if (state is TrackingSearchLoading) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 40),
+                          child: CircularProgressIndicator(color: cs.primary),
+                        ),
+                      );
+                    }
+                    if (state is TrackingSearchError) {
+                      return _buildError(state.message, cs, context);
+                    }
+                    if (state is TrackingSearchLoaded) {
+                      return _TrackingResultCard(result: state.result);
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ],
+            ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+          ),
+        );
+      }),
     );
   }
 

@@ -103,39 +103,50 @@ class _PaymentSummaryView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final isLoading = state is PaymentLoading;
     final error = state is PaymentError ? (state as PaymentError).message : null;
 
     return Scaffold(
       appBar: const DonyAppBar(title: 'Payer mon envoi'),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
-          DonySpacing.lg, DonySpacing.xl, DonySpacing.lg, DonySpacing.huge,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _SummaryCard(bid: bid, amount: _amount, commission: _commission),
-            const SizedBox(height: DonySpacing.lg),
-            _EscrowInfoBanner(),
-            const SizedBox(height: DonySpacing.xl),
-            if (error != null) ...[
-              _ErrorBanner(message: error, cs: cs),
-              const SizedBox(height: DonySpacing.lg),
-            ],
-            DonyButton(
-              label: 'Payer ${_amount.toStringAsFixed(2)} €',
-              onPressed: isLoading ? null : () => _pay(context),
-              isLoading: isLoading,
-              icon: Icons.lock_rounded,
-            ),
-          ],
-        )
-            .animate()
-            .fadeIn(duration: 300.ms)
-            .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-      ),
+      body: Builder(builder: (context) {
+        final h = DonyLayout.hPadding(context);
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(h, DonySpacing.xl, h, DonySpacing.huge),
+          child: DonyLayout.constrained(
+            context,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _SummaryCard(bid: bid, amount: _amount, commission: _commission),
+                const SizedBox(height: DonySpacing.lg),
+                const DonyStatusBanner(
+                  type: DonyStatusBannerType.info,
+                  icon: Icons.lock_rounded,
+                  message:
+                      'Votre paiement est sécurisé — libéré uniquement après confirmation de livraison par le destinataire.',
+                ),
+                const SizedBox(height: DonySpacing.xl),
+                if (error != null) ...[
+                  DonyStatusBanner(
+                    type: DonyStatusBannerType.error,
+                    message: error,
+                  ),
+                  const SizedBox(height: DonySpacing.lg),
+                ],
+                DonyButton(
+                  label: 'Payer ${_amount.toStringAsFixed(2)} €',
+                  onPressed: isLoading ? null : () => _pay(context),
+                  isLoading: isLoading,
+                  icon: Icons.lock_rounded,
+                ),
+              ],
+            )
+                .animate()
+                .fadeIn(duration: 300.ms)
+                .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+          ),
+        );
+      }),
     );
   }
 }
@@ -223,74 +234,6 @@ class _SummaryCard extends StatelessWidget {
   }
 }
 
-class _EscrowInfoBanner extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(DonySpacing.md),
-      decoration: BoxDecoration(
-        color: cs.primaryContainer,
-        borderRadius: BorderRadius.circular(DonyRadius.md),
-        border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.lock_rounded, color: cs.primary, size: 20),
-          const SizedBox(width: DonySpacing.md),
-          Expanded(
-            child: Text(
-              'Votre paiement est sécurisé — libéré uniquement après confirmation de livraison par le destinataire.',
-              style: tt.bodySmall?.copyWith(
-                color: cs.primary,
-                fontWeight: FontWeight.w500,
-                height: 1.4,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ErrorBanner extends StatelessWidget {
-  final String message;
-  final ColorScheme cs;
-  const _ErrorBanner({required this.message, required this.cs});
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.all(DonySpacing.md),
-      decoration: BoxDecoration(
-        color: cs.errorContainer,
-        borderRadius: BorderRadius.circular(DonyRadius.md),
-        border: Border.all(color: cs.error.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.error_outline_rounded, color: cs.error, size: 20),
-          const SizedBox(width: DonySpacing.md),
-          Expanded(
-            child: Text(
-              message,
-              style: tt.bodySmall?.copyWith(
-                color: cs.error,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ── Vue confirmation escrow ───────────────────────────────────────────────────
 
 class _EscrowConfirmedView extends StatelessWidget {
@@ -307,48 +250,49 @@ class _EscrowConfirmedView extends StatelessWidget {
         title: 'Paiement confirmé',
         showBackButton: false,
       ),
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          DonySpacing.xl, 0, DonySpacing.xl, DonySpacing.huge,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 84,
-              height: 84,
-              decoration: BoxDecoration(
-                color: cs.success.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.check_circle_rounded,
-                  color: cs.success, size: 48),
-            ),
-            const SizedBox(height: DonySpacing.xl),
-            Text(
-              'Envoi réservé !',
-              style: tt.displayLarge,
-            ),
-            const SizedBox(height: DonySpacing.md),
-            Text(
-              '${amount.toStringAsFixed(2)} € sont retenus en escrow et seront versés au voyageur après confirmation de livraison par le destinataire.',
-              textAlign: TextAlign.center,
-              style: tt.bodyLarge?.copyWith(
-                color: cs.onSurfaceVariant,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: DonySpacing.xxl),
-            DonyButton(
-              label: 'Voir mes envois',
-              onPressed: () => context.go('/home'),
-            ),
-          ],
-        )
-            .animate()
-            .fadeIn(duration: 400.ms)
-            .scale(begin: const Offset(0.92, 0.92), curve: Curves.easeOutCubic),
-      ),
+      body: Builder(builder: (context) {
+        final h = DonyLayout.hPadding(context);
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(h, DonySpacing.xxl, h, DonySpacing.huge),
+          child: DonyLayout.constrained(
+            context,
+            Column(
+              children: [
+                const SizedBox(height: DonySpacing.xxl),
+                DonyIconContainer(
+                  icon: Icons.check_circle_rounded,
+                  size: DonyIconContainerSize.xxl,
+                  backgroundColor: cs.success.withValues(alpha: 0.1),
+                  iconColor: cs.success,
+                ),
+                const SizedBox(height: DonySpacing.xl),
+                Text(
+                  'Envoi réservé !',
+                  style: tt.displayLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: DonySpacing.md),
+                Text(
+                  '${amount.toStringAsFixed(2)} € sont retenus en escrow et seront versés au voyageur après confirmation de livraison par le destinataire.',
+                  textAlign: TextAlign.center,
+                  style: tt.bodyLarge?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: DonySpacing.xxl),
+                DonyButton(
+                  label: 'Voir mes envois',
+                  onPressed: () => context.go('/home'),
+                ),
+              ],
+            )
+                .animate()
+                .fadeIn(duration: 400.ms)
+                .scale(begin: const Offset(0.92, 0.92), curve: Curves.easeOutCubic),
+          ),
+        );
+      }),
     );
   }
 }

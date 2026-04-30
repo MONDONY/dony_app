@@ -28,21 +28,39 @@ class KycOnboardingScreen extends StatelessWidget {
         builder: (context, state) {
           final cs = Theme.of(context).colorScheme;
           final tt = Theme.of(context).textTheme;
+          final h = DonyLayout.hPadding(context);
+          final bottom = MediaQuery.paddingOf(context).bottom;
           return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            bottom: false,
+            child: DonyLayout.constrained(
+              context,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: DonySpacing.huge),
-                  _buildHeader(cs, tt),
-                  const SizedBox(height: DonySpacing.huge),
-                  _buildSteps(cs, tt),
-                  const Spacer(),
-                  _buildButton(context, state),
-                  const SizedBox(height: DonySpacing.xxl),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      physics: const ClampingScrollPhysics(),
+                      padding: EdgeInsets.fromLTRB(h, DonySpacing.huge, h, DonySpacing.xl),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHeader(cs, tt),
+                          const SizedBox(height: DonySpacing.huge),
+                          _buildSteps(cs, tt),
+                        ],
+                      ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04),
+                    ),
+                  ),
+                  Container(
+                    decoration: const BoxDecoration(
+                      color: DonyColors.bgApp,
+                      border: Border(top: BorderSide(color: DonyColors.borderDefault)),
+                    ),
+                    padding: EdgeInsets.fromLTRB(h, DonySpacing.base, h, DonySpacing.base + bottom),
+                    child: _buildButton(context, state),
+                  ),
                 ],
-              ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04),
+              ),
             ),
           );
         },

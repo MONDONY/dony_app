@@ -67,20 +67,24 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
           }
         },
         builder: (context, state) {
+          final h = DonyLayout.hPadding(context);
           return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (state is KycLoading || state is KycInitial)
-                    CircularProgressIndicator(color: cs.primary)
-                  else if (state is KycStatusLoaded)
-                    _buildStatusContent(context, cs, tt, state)
-                  else if (state is KycError)
-                    _buildErrorContent(cs, tt, state.message),
-                ],
-              ).animate().fadeIn(duration: 300.ms),
+            child: DonyLayout.constrained(
+              context,
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: h),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (state is KycLoading || state is KycInitial)
+                      CircularProgressIndicator(color: cs.primary)
+                    else if (state is KycStatusLoaded)
+                      _buildStatusContent(context, cs, tt, state)
+                    else if (state is KycError)
+                      _buildErrorContent(cs, tt, state.message),
+                  ],
+                ).animate().fadeIn(duration: 300.ms),
+              ),
             ),
           );
         },

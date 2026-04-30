@@ -17,8 +17,8 @@ const List<_Corridor> _corridors = [
   (code: 'PAR → DLA', travelers: 14, isHot: false),
 ];
 
-// Couleur accent vert clair pour le texte caveat sur fond sombre
-const _kGreenAccent = Color(0xFF4CAF7D);
+// Accent clair sur fond ink pour le texte de mise en valeur (compatible design system)
+const _kAccentOnDark = DonyColors.blue200;
 
 // ── HomeScreen ───────────────────────────────────────────────────────────────
 
@@ -112,21 +112,21 @@ class _SenderViewState extends State<_SenderView> {
     final progress = (offset / _kContentHeight).clamp(0.0, 1.0);
 
     // Interpolation des couleurs
-    final headerBg = Color.lerp(DonyColors.greenDark, DonyColors.white, progress)!;
+    final headerBg = Color.lerp(DonyColors.ink800, DonyColors.surface, progress)!;
     final iconColor = Color.lerp(DonyColors.white, DonyColors.ink900, progress)!;
     final logoVariant = progress > 0.5 ? DonyLogoVariant.onLight : DonyLogoVariant.onDark;
     final avatarBg = Color.lerp(
       DonyColors.white.withValues(alpha: 0.15),
-      DonyColors.green50,
+      DonyColors.primarySoft,
       progress,
     )!;
     final avatarBorder = Color.lerp(
       DonyColors.white.withValues(alpha: 0.3),
-      DonyColors.green200,
+      DonyColors.blue200,
       progress,
     )!;
     final avatarTextColor =
-        Color.lerp(DonyColors.white, DonyColors.green400, progress)!;
+        Color.lerp(DonyColors.white, DonyColors.primary, progress)!;
 
     return Scaffold(
       backgroundColor: DonyColors.bg,
@@ -180,7 +180,7 @@ class _SenderViewState extends State<_SenderView> {
               preferredSize: const Size.fromHeight(1),
               child: Opacity(
                 opacity: progress,
-                child: const Divider(height: 1, color: DonyColors.grey200),
+                child: const Divider(height: 1, color: DonyColors.borderDefault),
               ),
             ),
             // Zone flexible : dégradé vert + salutation + titre
@@ -196,8 +196,8 @@ class _SenderViewState extends State<_SenderView> {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          DonyColors.greenDark,
-                          Color(0xFF1E7A44),
+                          DonyColors.ink800,
+                          DonyColors.ink600,
                         ],
                       ),
                     ),
@@ -262,7 +262,7 @@ class _SenderViewState extends State<_SenderView> {
                                   "aujourd'hui",
                                   style: DonyTypography.caveat(
                                     fontSize: 22,
-                                    color: _kGreenAccent,
+                                    color: _kAccentOnDark,
                                   ),
                                 ),
                               ),
@@ -314,14 +314,14 @@ class _SenderViewState extends State<_SenderView> {
                     Text(
                       'CORRIDORS POPULAIRES',
                       style: tt.labelMedium!.copyWith(
-                        color: DonyColors.grey400,
+                        color: DonyColors.textMuted,
                         letterSpacing: 0.8,
                       ),
                     ),
                     const Spacer(),
                     Text(
                       'cette semaine',
-                      style: tt.bodySmall!.copyWith(color: DonyColors.grey400),
+                      style: tt.bodySmall!.copyWith(color: DonyColors.textMuted),
                     ),
                   ],
                 ),
@@ -372,7 +372,7 @@ class _SearchFormCardState extends State<_SearchFormCard> {
       decoration: BoxDecoration(
         color: DonyColors.white,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.grey200),
+        border: Border.all(color: DonyColors.borderDefault),
       ),
       child: Column(
         children: [
@@ -388,7 +388,7 @@ class _SearchFormCardState extends State<_SearchFormCard> {
                     children: [
                       Text(
                         'DÉPART',
-                        style: tt.labelSmall!.copyWith(color: DonyColors.grey400),
+                        style: tt.labelSmall!.copyWith(color: DonyColors.textMuted),
                       ),
                       const SizedBox(height: DonySpacing.xxs),
                       Text(
@@ -403,7 +403,7 @@ class _SearchFormCardState extends State<_SearchFormCard> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.swap_vert_rounded,
-                      color: DonyColors.green400),
+                      color: DonyColors.primary),
                   onPressed: _swap,
                   tooltip: 'Inverser',
                 ),
@@ -422,7 +422,7 @@ class _SearchFormCardState extends State<_SearchFormCard> {
                     children: [
                       Text(
                         'ARRIVÉE',
-                        style: tt.labelSmall!.copyWith(color: DonyColors.grey400),
+                        style: tt.labelSmall!.copyWith(color: DonyColors.textMuted),
                       ),
                       const SizedBox(height: DonySpacing.xxs),
                       Text(
@@ -440,7 +440,7 @@ class _SearchFormCardState extends State<_SearchFormCard> {
                   child: Text(
                     'Modifier',
                     style: tt.bodySmall!.copyWith(
-                      color: DonyColors.green400,
+                      color: DonyColors.primary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -448,14 +448,14 @@ class _SearchFormCardState extends State<_SearchFormCard> {
               ],
             ),
           ),
-          const Divider(height: 1, color: DonyColors.grey200),
+          const Divider(height: 1, color: DonyColors.borderDefault),
           // Row 3: Date + Poids
           Padding(
             padding: const EdgeInsets.all(DonySpacing.base),
             child: Row(
               children: [
                 const Icon(Icons.calendar_today_outlined,
-                    size: 12, color: DonyColors.grey400),
+                    size: 12, color: DonyColors.textMuted),
                 const SizedBox(width: DonySpacing.xs),
                 Text(
                   'Cette semaine',
@@ -532,7 +532,7 @@ class _CorridorChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: DonyColors.white,
           borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: DonyColors.grey200),
+          border: Border.all(color: DonyColors.borderDefault),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -573,7 +573,7 @@ class _CorridorChip extends StatelessWidget {
             const SizedBox(height: DonySpacing.xxs),
             Text(
               '${corridor.travelers} voyageurs',
-              style: tt.bodySmall!.copyWith(color: DonyColors.grey400),
+              style: tt.bodySmall!.copyWith(color: DonyColors.textMuted),
             ),
           ],
         ),
@@ -593,14 +593,14 @@ class _GarantieCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
-        color: DonyColors.grey50,
+        color: DonyColors.bgApp,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.green200),
+        border: Border.all(color: DonyColors.blue200),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.shield_outlined, color: DonyColors.green400, size: 22),
+          const Icon(Icons.shield_outlined, color: DonyColors.primary, size: 22),
           const SizedBox(width: DonySpacing.md),
           Expanded(
             child: Column(
@@ -616,7 +616,7 @@ class _GarantieCard extends StatelessWidget {
                 const SizedBox(height: DonySpacing.xxs),
                 Text(
                   "Remboursé jusqu'à 200 € si le colis n'arrive pas.",
-                  style: tt.bodySmall!.copyWith(color: DonyColors.grey400),
+                  style: tt.bodySmall!.copyWith(color: DonyColors.textMuted),
                 ),
               ],
             ),
@@ -672,7 +672,7 @@ class _TravelerViewState extends State<_TravelerView> {
         : 0.0;
     final progress = (offset / _kContentHeight).clamp(0.0, 1.0);
 
-    final headerBg = Color.lerp(DonyColors.greenDark, DonyColors.white, progress)!;
+    final headerBg = Color.lerp(DonyColors.ink800, DonyColors.surface, progress)!;
     final iconColor = Color.lerp(DonyColors.white, DonyColors.ink900, progress)!;
     final titleColor = Color.lerp(
       DonyColors.white.withValues(alpha: 0.0),
@@ -717,7 +717,7 @@ class _TravelerViewState extends State<_TravelerView> {
               preferredSize: const Size.fromHeight(1),
               child: Opacity(
                 opacity: progress,
-                child: const Divider(height: 1, color: DonyColors.grey200),
+                child: const Divider(height: 1, color: DonyColors.borderDefault),
               ),
             ),
             flexibleSpace: FlexibleSpaceBar(
@@ -732,8 +732,8 @@ class _TravelerViewState extends State<_TravelerView> {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          DonyColors.greenDark,
-                          Color(0xFF1E7A44),
+                          DonyColors.ink800,
+                          DonyColors.ink600,
                         ],
                       ),
                     ),
@@ -805,7 +805,7 @@ class _TravelerViewState extends State<_TravelerView> {
                                         const Icon(
                                           Icons.check_circle_rounded,
                                           size: 11,
-                                          color: _kGreenAccent,
+                                          color: _kAccentOnDark,
                                         ),
                                         const SizedBox(width: DonySpacing.xxs),
                                         Text(
@@ -854,7 +854,7 @@ class _TravelerViewState extends State<_TravelerView> {
                 Text(
                   'MES TRAJETS ACTIFS',
                   style: tt.labelMedium!.copyWith(
-                    color: DonyColors.grey400,
+                    color: DonyColors.textMuted,
                     letterSpacing: 0.8,
                   ),
                 ),
@@ -897,7 +897,7 @@ class _StatsCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(DonySpacing.xl),
       decoration: BoxDecoration(
-        color: DonyColors.greenDark,
+        color: DonyColors.ink800,
         borderRadius: BorderRadius.circular(DonyRadius.card),
       ),
       child: Column(
@@ -988,7 +988,7 @@ class _ActiveTripCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: DonyColors.white,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.grey200),
+        border: Border.all(color: DonyColors.borderDefault),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1023,7 +1023,7 @@ class _ActiveTripCard extends StatelessWidget {
           const SizedBox(height: DonySpacing.xs),
           Text(
             'Ven 18 · 14h05 · 5 kg réservés',
-            style: tt.bodySmall!.copyWith(color: DonyColors.grey400),
+            style: tt.bodySmall!.copyWith(color: DonyColors.textMuted),
           ),
           const SizedBox(height: DonySpacing.sm),
           ClipRRect(
@@ -1031,8 +1031,8 @@ class _ActiveTripCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: reserved / total,
               minHeight: 6,
-              color: DonyColors.green400,
-              backgroundColor: DonyColors.grey200,
+              color: DonyColors.primary,
+              backgroundColor: DonyColors.borderDefault,
             ),
           ),
           const SizedBox(height: DonySpacing.xxs),
@@ -1040,7 +1040,7 @@ class _ActiveTripCard extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: Text(
               '${reserved.toStringAsFixed(0)} / ${total.toStringAsFixed(0)} kg',
-              style: tt.bodySmall!.copyWith(color: DonyColors.grey400),
+              style: tt.bodySmall!.copyWith(color: DonyColors.textMuted),
             ),
           ),
         ],
@@ -1059,7 +1059,7 @@ class _PayoutFooter extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     return Row(
       children: [
-        const Icon(Icons.access_time_rounded, color: DonyColors.grey400, size: 16),
+        const Icon(Icons.access_time_rounded, color: DonyColors.textMuted, size: 16),
         const SizedBox(width: DonySpacing.xs),
         Text(
           'Prochain payout · mer. 23/04',
@@ -1069,7 +1069,7 @@ class _PayoutFooter extends StatelessWidget {
         Text(
           '248,50 €',
           style: tt.titleMedium!.copyWith(
-            color: DonyColors.green400,
+            color: DonyColors.primary,
             fontWeight: FontWeight.w700,
           ),
         ),

@@ -11,72 +11,93 @@ class RoleSelectionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
     return Scaffold(
+      resizeToAvoidBottomInset: false,
+      backgroundColor: DonyColors.bgApp,
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
             context.go('/auth/pin-setup');
           } else if (state is AuthError) {
-            DonySnackbar.show(
-              context,
-              message: state.message,
-              type: DonySnackbarType.error,
-            );
+            DonySnackbar.show(context,
+                message: state.message, type: DonySnackbarType.error);
           }
         },
         builder: (context, state) {
-          final selectedRoles = state is AuthSelectingRoles
-              ? state.selectedRoles
-              : <String>{};
+          final selectedRoles =
+              state is AuthSelectingRoles ? state.selectedRoles : <String>{};
           final isLoading = state is AuthLoading;
+          final tt = Theme.of(context).textTheme;
+          final h = DonyLayout.hPadding(context);
+          final bottom = MediaQuery.paddingOf(context).bottom;
+          final top = MediaQuery.paddingOf(context).top;
 
-          return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: DonySpacing.xl,
-                vertical: DonySpacing.xxl,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const DonyLogo(fontSize: 55),
-                  const SizedBox(height: DonySpacing.xxl),
-                  Text(
-                    'Je suis...',
-                    style: tt.headlineLarge?.copyWith(color: cs.onSurface),
+          return DonyLayout.constrained(
+            context,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // ── Scrollable content ─────────────────────────
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    padding: EdgeInsets.fromLTRB(
+                        h, top + DonySpacing.huge, h, DonySpacing.xl),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const DonyLogo(fontSize: 48),
+                        const SizedBox(height: DonySpacing.xxl),
+                        Text(
+                          'Je suis...',
+                          style: tt.displayMedium?.copyWith(
+                            color: DonyColors.textPrimary,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: DonySpacing.sm),
+                        Text(
+                          'Choisissez un ou plusieurs rôles. Vous pourrez toujours en ajouter plus tard.',
+                          style: tt.bodyLarge?.copyWith(
+                              color: DonyColors.textMuted, height: 1.55),
+                        ),
+                        const SizedBox(height: DonySpacing.xxl),
+                        _RoleCard(
+                          emoji: '📦',
+                          title: 'Expéditeur',
+                          description:
+                              'J\'envoie des colis à ma famille en Afrique via des voyageurs.',
+                          selected: selectedRoles.contains('SENDER'),
+                          onTap: () => context
+                              .read<AuthBloc>()
+                              .add(const AuthRoleToggled('SENDER')),
+                        ),
+                        const SizedBox(height: DonySpacing.base),
+                        _RoleCard(
+                          emoji: '✈️',
+                          title: 'Voyageur',
+                          description:
+                              'Je voyage vers l\'Afrique et j\'ai de l\'espace dans mes bagages.',
+                          selected: selectedRoles.contains('TRAVELER'),
+                          onTap: () => context
+                              .read<AuthBloc>()
+                              .add(const AuthRoleToggled('TRAVELER')),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: DonySpacing.sm),
-                  Text(
-                    'Choisissez un ou plusieurs rôles. Vous pourrez toujours en ajouter plus tard.',
-                    style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                ),
+
+                // ── Pinned CTA ─────────────────────────────────
+                Container(
+                  decoration: const BoxDecoration(
+                    color: DonyColors.bgApp,
+                    border: Border(
+                        top: BorderSide(color: DonyColors.borderDefault)),
                   ),
-                  const SizedBox(height: 40),
-                  _RoleCard(
-                    emoji: '📦',
-                    title: 'Expéditeur',
-                    description:
-                        'J\'envoie des colis à ma famille en Afrique via des voyageurs.',
-                    selected: selectedRoles.contains('SENDER'),
-                    onTap: () => context
-                        .read<AuthBloc>()
-                        .add(const AuthRoleToggled('SENDER')),
-                  ),
-                  const SizedBox(height: DonySpacing.base),
-                  _RoleCard(
-                    emoji: '✈️',
-                    title: 'Voyageur',
-                    description:
-                        'Je voyage vers l\'Afrique et j\'ai de l\'espace dans mes bagages.',
-                    selected: selectedRoles.contains('TRAVELER'),
-                    onTap: () => context
-                        .read<AuthBloc>()
-                        .add(const AuthRoleToggled('TRAVELER')),
-                  ),
-                  const Spacer(),
-                  DonyButton(
+                  padding: EdgeInsets.fromLTRB(
+                      h, DonySpacing.base, h, DonySpacing.base + bottom),
+                  child: DonyButton(
                     label: 'Créer mon compte',
                     onPressed: (isLoading || selectedRoles.isEmpty)
                         ? null
@@ -85,8 +106,8 @@ class RoleSelectionScreen extends StatelessWidget {
                             ),
                     isLoading: isLoading,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },
@@ -121,12 +142,13 @@ class _RoleCard extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(DonySpacing.lg),
         decoration: BoxDecoration(
-          color: selected ? cs.primaryContainer : cs.surface,
+          color: selected ? DonyColors.primarySoft : DonyColors.surface,
           border: Border.all(
-            color: selected ? cs.primary : cs.outline,
+            color: selected ? DonyColors.primary : DonyColors.borderDefault,
             width: selected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(DonyRadius.card),
+          boxShadow: selected ? DonyShadow.sm : DonyShadow.xs,
         ),
         child: Row(
           children: [
@@ -139,18 +161,22 @@ class _RoleCard extends StatelessWidget {
                   Text(
                     title,
                     style: tt.titleLarge?.copyWith(
-                      color: selected ? cs.primary : cs.onSurface,
+                      color: selected
+                          ? DonyColors.primary
+                          : DonyColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: DonySpacing.xs),
                   Text(
                     description,
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    style:
+                        tt.bodySmall?.copyWith(color: DonyColors.textMuted),
                   ),
                 ],
               ),
             ),
-            if (selected) Icon(Icons.check_circle, color: cs.primary, size: 24),
+            if (selected)
+              Icon(Icons.check_circle, color: cs.primary, size: 24),
           ],
         ),
       ),

@@ -94,11 +94,12 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
     final isCancelled = a.status == 'CANCELLED';
     final canDelete = (a.status == 'ACTIVE' && (a.bidsCount ?? 0) == 0) || isCancelled;
 
+    final h = DonyLayout.hPadding(context);
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(
-        DonySpacing.lg, DonySpacing.xl, DonySpacing.lg, DonySpacing.huge,
-      ),
-      child: Column(
+      padding: EdgeInsets.fromLTRB(h, DonySpacing.xl, h, DonySpacing.huge),
+      child: DonyLayout.constrained(
+      context,
+      Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Hero card — corridor + date
@@ -280,14 +281,9 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
           const SizedBox(height: DonySpacing.base),
 
           // Stats row
-          Wrap(
-            spacing: DonySpacing.md,
-            runSpacing: DonySpacing.md,
+          Row(
             children: [
-              SizedBox(
-                width: (MediaQuery.of(context).size.width - 40 - 24) / 3 > 100
-                    ? (MediaQuery.of(context).size.width - 40 - 24) / 3
-                    : double.infinity,
+              Expanded(
                 child: _StatCard(
                   icon: Icons.scale_rounded,
                   label: 'Capacité dispo.',
@@ -297,10 +293,8 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                   tt: tt,
                 ),
               ),
-              SizedBox(
-                width: (MediaQuery.of(context).size.width - 40 - 24) / 3 > 100
-                    ? (MediaQuery.of(context).size.width - 40 - 24) / 3
-                    : double.infinity,
+              const SizedBox(width: DonySpacing.md),
+              Expanded(
                 child: _StatCard(
                   icon: Icons.euro_rounded,
                   label: 'Prix par kg',
@@ -310,10 +304,8 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                   tt: tt,
                 ),
               ),
-              SizedBox(
-                width: (MediaQuery.of(context).size.width - 40 - 24) / 3 > 100
-                    ? (MediaQuery.of(context).size.width - 40 - 24) / 3
-                    : double.infinity,
+              const SizedBox(width: DonySpacing.md),
+              Expanded(
                 child: _StatCard(
                   icon: Icons.inbox_rounded,
                   label: 'Demandes',
@@ -395,6 +387,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
               ),
             ).animate().fadeIn(delay: 150.ms),
         ],
+      ),
       ),
     );
   }

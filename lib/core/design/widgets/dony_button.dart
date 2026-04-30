@@ -30,7 +30,7 @@ class DonyButton extends StatelessWidget {
       DonyButtonVariant.primary     => DonyColors.white,
       DonyButtonVariant.destructive => DonyColors.white,
       DonyButtonVariant.secondary   => DonyColors.ink900,
-      DonyButtonVariant.ghost       => DonyColors.green400,
+      DonyButtonVariant.ghost       => DonyColors.primary,
     };
 
     final child = isLoading

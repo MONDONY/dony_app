@@ -22,70 +22,56 @@ class EscrowExplainerScreen extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: DonyColors.bg,
-      appBar: AppBar(
-        backgroundColor: DonyColors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
-          color: DonyColors.ink900,
-          onPressed: () => context.pop(),
-        ),
-        title: Text(
-          'Garde de confiance',
-          style: tt.headlineLarge,
-        ),
-        centerTitle: false,
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: DonyColors.grey200),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
-          DonySpacing.lg, DonySpacing.xl, DonySpacing.lg, DonySpacing.huge,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Amount card ──────────────────────────────────────────
-            _AmountCard(amount: _amountStr, travelerName: travelerName),
+      backgroundColor: DonyColors.bgApp,
+      appBar: const DonyAppBar(title: 'Garde de confiance'),
+      body: Builder(builder: (context) {
+        final h = DonyLayout.hPadding(context);
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(h, DonySpacing.xl, h, DonySpacing.huge),
+          child: DonyLayout.constrained(
+            context,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Amount card ──────────────────────────────────────────
+                _AmountCard(amount: _amountStr, travelerName: travelerName),
 
-            const SizedBox(height: DonySpacing.xl),
+                const SizedBox(height: DonySpacing.xl),
 
-            // ── How it works ─────────────────────────────────────────
-            Text(
-              'COMMENT ÇA MARCHE',
-              style: tt.labelMedium?.copyWith(
-                color: DonyColors.grey400,
-                letterSpacing: 0.8,
-              ),
+                // ── How it works ─────────────────────────────────────────
+                Text(
+                  'COMMENT ÇA MARCHE',
+                  style: tt.labelMedium?.copyWith(
+                    color: DonyColors.neutral400,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(height: DonySpacing.base),
+                _HowItWorksCard(amount: _amountStr, travelerName: travelerName),
+
+                const SizedBox(height: DonySpacing.xl),
+
+                // ── Insurance card ───────────────────────────────────────
+                const _InsuranceCard(),
+
+                const SizedBox(height: DonySpacing.xxl),
+
+                // ── CTA ──────────────────────────────────────────────────
+                DonyButton(
+                  label: 'Voir le suivi',
+                  onPressed: () {
+                    if (bidId != null) {
+                      context.go('/bids/$bidId');
+                    } else {
+                      context.pop();
+                    }
+                  },
+                ),
+              ],
             ),
-            const SizedBox(height: DonySpacing.base),
-            _HowItWorksCard(amount: _amountStr, travelerName: travelerName),
-
-            const SizedBox(height: DonySpacing.xl),
-
-            // ── Insurance card ───────────────────────────────────────
-            _InsuranceCard(),
-
-            const SizedBox(height: DonySpacing.xxl),
-
-            // ── CTA ──────────────────────────────────────────────────
-            DonyButton(
-              label: 'Voir le suivi',
-              onPressed: () {
-                if (bidId != null) {
-                  context.go('/bids/$bidId');
-                } else {
-                  context.pop();
-                }
-              },
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      }),
     );
   }
 }
@@ -101,21 +87,16 @@ class _AmountCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: DonyColors.white,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.grey200),
-      ),
+    final cs = Theme.of(context).colorScheme;
+
+    return DonyCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'BLOQUÉS EN ESCROW',
             style: tt.labelMedium?.copyWith(
-              color: DonyColors.grey400,
+              color: DonyColors.neutral400,
               letterSpacing: 0.8,
             ),
           ),
@@ -124,15 +105,15 @@ class _AmountCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text(amount, style: tt.displayLarge?.copyWith(color: DonyColors.ink900)),
+              Text(amount, style: tt.displayLarge?.copyWith(color: cs.onSurface)),
               const SizedBox(width: DonySpacing.xs),
-              Text(' €', style: tt.headlineMedium?.copyWith(color: DonyColors.ink900)),
+              Text(' €', style: tt.headlineMedium?.copyWith(color: cs.onSurface)),
             ],
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(
             'Pour $travelerName · libérés à la remise',
-            style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+            style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
           ),
         ],
       ),
@@ -177,24 +158,22 @@ class _HowItWorksCard extends StatelessWidget {
       ),
     ];
 
-    return Container(
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: DonyColors.white,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.grey200),
-      ),
+    return DonyCard(
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
           for (int i = 0; i < steps.length; i++) ...[
-            _StepRow(step: steps[i]),
+            Padding(
+              padding: const EdgeInsets.all(DonySpacing.base),
+              child: _StepRow(step: steps[i]),
+            ),
             if (i < steps.length - 1)
               Padding(
                 padding: const EdgeInsets.only(left: DonySpacing.xl + DonySpacing.xs),
                 child: Container(
                   width: 2,
                   height: DonySpacing.base,
-                  color: DonyColors.grey200,
+                  color: DonyColors.borderDefault,
                 ),
               ),
           ],
@@ -225,29 +204,37 @@ class _StepRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Circle indicator
-        Container(
-          width: DonySpacing.icon,
-          height: DonySpacing.icon,
-          decoration: BoxDecoration(
-            color: step.done ? DonyColors.green400 : Colors.transparent,
-            shape: BoxShape.circle,
-            border: step.done
-                ? null
-                : Border.all(color: DonyColors.grey400, width: 2),
+        // Circle indicator — DonyIconContainer pour les étapes validées,
+        // Container natif pour les étapes numérotées (DonyIconContainer ne
+        // supporte pas de contenu texte).
+        if (step.done)
+          DonyIconContainer(
+            icon: Icons.check_rounded,
+            size: DonyIconContainerSize.md,
+            backgroundColor: cs.primary,
+            iconColor: DonyColors.surface,
+            borderRadius: DonyRadius.full,
+          )
+        else
+          Container(
+            width: DonySpacing.icon,
+            height: DonySpacing.icon,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: DonyColors.neutral400, width: 2),
+            ),
+            child: Center(
+              child: Text(
+                '${step.stepNumber}',
+                style: tt.labelMedium?.copyWith(color: DonyColors.neutral400),
+              ),
+            ),
           ),
-          child: Center(
-            child: step.done
-                ? const Icon(Icons.check_rounded, color: DonyColors.white, size: DonySpacing.iconSm)
-                : Text(
-                    '${step.stepNumber}',
-                    style: tt.labelMedium?.copyWith(color: DonyColors.grey400),
-                  ),
-          ),
-        ),
         const SizedBox(width: DonySpacing.md),
         // Text content
         Expanded(
@@ -258,7 +245,7 @@ class _StepRow extends StatelessWidget {
               const SizedBox(height: DonySpacing.xxs),
               Text(
                 step.description,
-                style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
               ),
             ],
           ),
@@ -276,22 +263,23 @@ class _InsuranceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
-        color: DonyColors.green50,
+        color: DonyColors.primarySoft,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.green400),
+        border: Border.all(color: DonyColors.primary),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.shield_outlined, color: DonyColors.green400, size: DonySpacing.iconSm),
+          const Icon(Icons.shield_outlined, color: DonyColors.primary, size: DonySpacing.iconSm),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text.rich(
               TextSpan(
-                style: tt.bodySmall?.copyWith(color: DonyColors.ink900),
+                style: tt.bodySmall?.copyWith(color: DonyColors.textPrimary),
                 children: const [
                   TextSpan(text: "Si le colis n'arrive pas, on vous rembourse "),
                   TextSpan(

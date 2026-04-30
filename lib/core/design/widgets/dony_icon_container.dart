@@ -23,14 +23,15 @@ class DonyIconContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (containerSize, iconSize) = switch (size) {
-      DonyIconContainerSize.sm => (32.0, 16.0),
-      DonyIconContainerSize.md => (DonySpacing.icon, DonySpacing.iconSm),
-      DonyIconContainerSize.lg => (56.0, 28.0),
-      DonyIconContainerSize.xl => (72.0, 36.0),
+      DonyIconContainerSize.sm  => (32.0, 16.0),
+      DonyIconContainerSize.md  => (DonySpacing.icon, DonySpacing.iconSm),
+      DonyIconContainerSize.lg  => (56.0, 28.0),
+      DonyIconContainerSize.xl  => (72.0, 36.0),
+      DonyIconContainerSize.xxl => (80.0, 44.0),
     };
 
     final bg = backgroundColor ?? DonyColors.green50;
-    final ic = iconColor ?? DonyColors.green400;
+    final ic = iconColor ?? DonyColors.primary;
     final radius = borderRadius ?? containerSize / 2;
 
     return Container(
@@ -45,4 +46,4 @@ class DonyIconContainer extends StatelessWidget {
   }
 }
 
-enum DonyIconContainerSize { sm, md, lg, xl }
+enum DonyIconContainerSize { sm, md, lg, xl, xxl }

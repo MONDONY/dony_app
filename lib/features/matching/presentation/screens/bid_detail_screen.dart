@@ -239,14 +239,13 @@ class _BidDetailViewState extends State<_BidDetailView> {
           body: _skeletonLoading
               ? const Center(
                   child: CircularProgressIndicator(color: DonyColors.primary))
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(
-                    DonySpacing.lg,
-                    DonySpacing.lg,
-                    DonySpacing.lg,
-                    100,
-                  ),
-                  child: Column(
+              : Builder(builder: (context) {
+                  final h = DonyLayout.hPadding(context);
+                  return SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(h, DonySpacing.lg, h, 100),
+                  child: DonyLayout.constrained(
+                    context,
+                    Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Status badge below title
@@ -357,7 +356,9 @@ class _BidDetailViewState extends State<_BidDetailView> {
                     ],
                   ).animate().fadeIn(duration: 300.ms).slideY(
                       begin: 0.04, curve: Curves.easeOutCubic),
-                ),
+                  ),
+                  );
+                }),
           bottomNavigationBar: (isSender &&
                   (_bid.status == 'PENDING' || _bid.status == 'ACCEPTED'))
               ? ListenableBuilder(
@@ -493,10 +494,13 @@ class _TravelerCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          name,
-                          style: tt.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
+                        Flexible(
+                          child: Text(
+                            name,
+                            overflow: TextOverflow.ellipsis,
+                            style: tt.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                         const SizedBox(width: DonySpacing.sm),
@@ -1111,12 +1115,13 @@ class _ActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final h = DonyLayout.hPadding(context);
     return Container(
       color: DonyColors.white,
       padding: EdgeInsets.fromLTRB(
-        DonySpacing.lg,
+        h,
         DonySpacing.base,
-        DonySpacing.lg,
+        h,
         MediaQuery.of(context).padding.bottom + DonySpacing.base,
       ),
       child: Row(
@@ -1229,12 +1234,13 @@ class _ConfirmPresenceBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final h = DonyLayout.hPadding(context);
     return Container(
       color: DonyColors.white,
       padding: EdgeInsets.fromLTRB(
-        DonySpacing.lg,
+        h,
         DonySpacing.base,
-        DonySpacing.lg,
+        h,
         MediaQuery.of(context).padding.bottom + DonySpacing.base,
       ),
       child: DonyButton(
@@ -1345,12 +1351,13 @@ class _SenderActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final h = DonyLayout.hPadding(context);
     return Container(
       color: DonyColors.white,
       padding: EdgeInsets.fromLTRB(
-        DonySpacing.lg,
+        h,
         DonySpacing.base,
-        DonySpacing.lg,
+        h,
         MediaQuery.of(context).padding.bottom + DonySpacing.base,
       ),
       child: Row(
@@ -1430,6 +1437,7 @@ class _SenderOptionsSheet extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
+    final h = DonyLayout.hPadding(context);
     return Container(
       decoration: const BoxDecoration(
         color: DonyColors.white,
@@ -1438,9 +1446,9 @@ class _SenderOptionsSheet extends StatelessWidget {
         ),
       ),
       padding: EdgeInsets.fromLTRB(
-        DonySpacing.lg,
+        h,
         0,
-        DonySpacing.lg,
+        h,
         bottomPad + DonySpacing.xl,
       ),
       child: Column(
@@ -1689,12 +1697,13 @@ class _TravelerRejectedBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final h = DonyLayout.hPadding(context);
     return Container(
       color: DonyColors.white,
       padding: EdgeInsets.fromLTRB(
-        DonySpacing.lg,
+        h,
         DonySpacing.base,
-        DonySpacing.lg,
+        h,
         MediaQuery.of(context).padding.bottom + DonySpacing.base,
       ),
       child: DonyButton(
@@ -2126,12 +2135,15 @@ class _ConfirmationCodeCard extends StatelessWidget {
               color: DonyColors.blue100,
               borderRadius: BorderRadius.circular(DonyRadius.md),
             ),
-            child: Text(
-              code,
-              textAlign: TextAlign.center,
-              style: tt.displayLarge?.copyWith(
-                color: DonyColors.blue700,
-                letterSpacing: 12,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                code,
+                textAlign: TextAlign.center,
+                style: tt.displayLarge?.copyWith(
+                  color: DonyColors.blue700,
+                  letterSpacing: 10,
+                ),
               ),
             ),
           ),

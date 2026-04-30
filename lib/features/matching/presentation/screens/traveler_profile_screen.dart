@@ -95,9 +95,9 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
         children: [
           SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
-              DonySpacing.lg,
+              DonyLayout.hPadding(context),
               DonySpacing.xl,
-              DonySpacing.lg,
+              DonyLayout.hPadding(context),
               widget.consultOnly
                   ? DonySpacing.huge
                   : MediaQuery.of(context).padding.bottom + 100,
@@ -188,9 +188,9 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
               right: 0,
               child: Container(
                 padding: EdgeInsets.fromLTRB(
-                  DonySpacing.lg,
+                  DonyLayout.hPadding(context),
                   14,
-                  DonySpacing.lg,
+                  DonyLayout.hPadding(context),
                   MediaQuery.of(context).padding.bottom + DonySpacing.base,
                 ),
                 decoration: BoxDecoration(

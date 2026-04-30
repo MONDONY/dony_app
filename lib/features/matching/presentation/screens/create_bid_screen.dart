@@ -141,9 +141,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                     children: [
                       SingleChildScrollView(
                         padding: EdgeInsets.fromLTRB(
-                          DonySpacing.lg,
+                          DonyLayout.hPadding(context),
                           DonySpacing.xl,
-                          DonySpacing.lg,
+                          DonyLayout.hPadding(context),
                           MediaQuery.of(context).padding.bottom + 160,
                         ),
                         child: Column(
@@ -577,9 +577,9 @@ class _BottomBar extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.fromLTRB(
-        DonySpacing.lg,
+        DonyLayout.hPadding(context),
         DonySpacing.base,
-        DonySpacing.lg,
+        DonyLayout.hPadding(context),
         MediaQuery.of(context).padding.bottom + DonySpacing.base,
       ),
       decoration: const BoxDecoration(

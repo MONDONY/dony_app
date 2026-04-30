@@ -191,11 +191,11 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 right: 0,
                 child: Container(
                   color: DonyColors.ink900.withValues(alpha: 0.7),
-                  padding: const EdgeInsets.fromLTRB(
+                  padding: EdgeInsets.fromLTRB(
                     DonySpacing.lg,
                     DonySpacing.base,
                     DonySpacing.lg,
-                    DonySpacing.xl,
+                    MediaQuery.of(context).padding.bottom + DonySpacing.xl,
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,

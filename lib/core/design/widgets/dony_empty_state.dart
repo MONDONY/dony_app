@@ -43,9 +43,9 @@ class DonyEmptyState extends StatelessWidget {
     }
 
     final (bg, ic, defaultIcon) = switch (type) {
-      DonyEmptyStateType.empty => (DonyColors.green50, DonyColors.green400, Icons.inbox_outlined),
+      DonyEmptyStateType.empty => (DonyColors.primarySoft, DonyColors.primary, Icons.inbox_outlined),
       DonyEmptyStateType.error => (DonyColors.errorLight, DonyColors.error, Icons.error_outline_rounded),
-      DonyEmptyStateType.loading => (DonyColors.green50, DonyColors.green400, Icons.sync_rounded),
+      DonyEmptyStateType.loading => (DonyColors.primarySoft, DonyColors.primary, Icons.sync_rounded),
     };
 
     return Center(
@@ -70,7 +70,7 @@ class DonyEmptyState extends StatelessWidget {
               const SizedBox(height: DonySpacing.sm),
               Text(
                 description!,
-                style: tt.bodyMedium?.copyWith(color: DonyColors.grey400),
+                style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400),
                 textAlign: TextAlign.center,
               ),
             ],
