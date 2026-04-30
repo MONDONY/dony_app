@@ -78,22 +78,28 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
+    final h = DonyLayout.hPadding(context);
+    final bottom = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
+      backgroundColor: DonyColors.bgApp,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
-          child: Column(
-            children: [
-              const SizedBox(height: DonySpacing.huge),
-              _buildHeader(cs, tt),
-              const SizedBox(height: DonySpacing.huge),
-              _buildStepIndicator(cs),
-              const SizedBox(height: 40),
-              _buildPinDots(cs),
-              const Spacer(),
-              DonyKeypad(onDigit: _onDigit, onDelete: _onDelete),
-              const SizedBox(height: DonySpacing.xxl),
-            ],
+        child: DonyLayout.constrained(
+          context,
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: h),
+            child: Column(
+              children: [
+                const SizedBox(height: DonySpacing.huge),
+                _buildHeader(cs, tt),
+                const SizedBox(height: DonySpacing.huge),
+                _buildStepIndicator(cs),
+                const SizedBox(height: DonySpacing.xxl),
+                _buildPinDots(cs),
+                const Spacer(),
+                DonyKeypad(onDigit: _onDigit, onDelete: _onDelete),
+                SizedBox(height: DonySpacing.xxl + bottom),
+              ],
+            ),
           ),
         ),
       ),

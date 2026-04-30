@@ -127,7 +127,19 @@ void main() {
     });
 
     testWidgets('renders Garantie Dony card', (tester) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await _pump(tester, mockAuthBloc);
+
+      // Scroll down to ensure _GarantieCard is laid out in the SliverList
+      await tester.scrollUntilVisible(
+        find.text('Garantie Dony'),
+        100,
+        scrollable: find.byType(Scrollable).first,
+      );
 
       expect(find.text('Garantie Dony'), findsOneWidget);
     });

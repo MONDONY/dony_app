@@ -1,7 +1,7 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
-import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -48,7 +48,22 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
         listener: (context, state) {
           if (state is AnnouncementDeleted) {
             DonySnackbar.show(context, message: 'Trajet supprimé', type: DonySnackbarType.success);
-            context.pop();
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/home');
+            }
+          } else if (state is AnnouncementNotFound) {
+            DonySnackbar.show(
+              context,
+              message: 'Cette annonce n\'existe plus',
+              type: DonySnackbarType.warning,
+            );
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/home');
+            }
           } else if (state is AnnouncementError) {
             DonySnackbar.show(context, message: state.message, type: DonySnackbarType.error);
           }
@@ -79,11 +94,12 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
     final isCancelled = a.status == 'CANCELLED';
     final canDelete = (a.status == 'ACTIVE' && (a.bidsCount ?? 0) == 0) || isCancelled;
 
+    final h = DonyLayout.hPadding(context);
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(
-        DonySpacing.lg, DonySpacing.xl, DonySpacing.lg, DonySpacing.huge,
-      ),
-      child: Column(
+      padding: EdgeInsets.fromLTRB(h, DonySpacing.xl, h, DonySpacing.huge),
+      child: DonyLayout.constrained(
+      context,
+      Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Hero card — corridor + date
@@ -265,14 +281,9 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
           const SizedBox(height: DonySpacing.base),
 
           // Stats row
-          Wrap(
-            spacing: DonySpacing.md,
-            runSpacing: DonySpacing.md,
+          Row(
             children: [
-              SizedBox(
-                width: (MediaQuery.of(context).size.width - 40 - 24) / 3 > 100
-                    ? (MediaQuery.of(context).size.width - 40 - 24) / 3
-                    : double.infinity,
+              Expanded(
                 child: _StatCard(
                   icon: Icons.scale_rounded,
                   label: 'Capacité dispo.',
@@ -282,10 +293,8 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                   tt: tt,
                 ),
               ),
-              SizedBox(
-                width: (MediaQuery.of(context).size.width - 40 - 24) / 3 > 100
-                    ? (MediaQuery.of(context).size.width - 40 - 24) / 3
-                    : double.infinity,
+              const SizedBox(width: DonySpacing.md),
+              Expanded(
                 child: _StatCard(
                   icon: Icons.euro_rounded,
                   label: 'Prix par kg',
@@ -295,10 +304,8 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                   tt: tt,
                 ),
               ),
-              SizedBox(
-                width: (MediaQuery.of(context).size.width - 40 - 24) / 3 > 100
-                    ? (MediaQuery.of(context).size.width - 40 - 24) / 3
-                    : double.infinity,
+              const SizedBox(width: DonySpacing.md),
+              Expanded(
                 child: _StatCard(
                   icon: Icons.inbox_rounded,
                   label: 'Demandes',
@@ -380,6 +387,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
               ),
             ).animate().fadeIn(delay: 150.ms),
         ],
+      ),
       ),
     );
   }

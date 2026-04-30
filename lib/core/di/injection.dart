@@ -1,4 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
+import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
+import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
+import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
+import 'package:dony/features/messaging/data/conversation_repository.dart';
+import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -121,6 +127,30 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<CancellationBloc>(
     () => CancellationBloc(getIt<CancellationRepository>()),
+  );
+
+  // Messaging
+  getIt.registerLazySingleton<ConversationRepository>(
+    () => ConversationRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<FirestoreChatRepository>(
+    () => FirestoreChatRepository(FirebaseFirestore.instance),
+  );
+  getIt.registerLazySingleton<ConversationListBloc>(
+    () => ConversationListBloc(
+      getIt<ConversationRepository>(),
+      getIt<FirestoreChatRepository>(),
+    ),
+    dispose: (b) => b.close(),
+  );
+  getIt.registerFactory<ChatBloc>(
+    () => ChatBloc(
+      getIt<FirestoreChatRepository>(),
+      getIt<ConversationRepository>(),
+    ),
+  );
+  getIt.registerFactory<ConversationOpenBloc>(
+    () => ConversationOpenBloc(getIt<ConversationRepository>()),
   );
 
   // Tracking

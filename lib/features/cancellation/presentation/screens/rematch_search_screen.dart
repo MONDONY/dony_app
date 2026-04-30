@@ -22,13 +22,15 @@ class RematchSearchScreen extends StatelessWidget {
         title: 'Alternatives disponibles',
         showBackButton: false,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
-          DonySpacing.lg, DonySpacing.lg, DonySpacing.lg, DonySpacing.huge,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      body: Builder(builder: (context) {
+        final h = DonyLayout.hPadding(context);
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(h, DonySpacing.lg, h, DonySpacing.huge),
+          child: DonyLayout.constrained(
+            context,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
             _ConfirmationBanner(
               affectedCount: cancellation.affectedBidsCount,
               cs: cs,
@@ -60,8 +62,10 @@ class RematchSearchScreen extends StatelessWidget {
               variant: DonyButtonVariant.ghost,
             ),
           ],
-        ),
-      ),
+            ),
+          ),
+        );
+      }),
     );
   }
 }

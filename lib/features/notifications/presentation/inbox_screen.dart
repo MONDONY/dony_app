@@ -1,4 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
+import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
+import 'package:dony/features/messaging/presentation/conversation_list_screen.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
@@ -47,6 +51,12 @@ class _InboxScreenState extends State<InboxScreen>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     context.read<NotificationBloc>().add(const NotificationsLoadRequested());
+    _tabController.addListener(() {
+      if (_tabController.index == 1 && _tabController.indexIsChanging) {
+        getIt<ConversationListBloc>()
+            .add(const ConversationsLoadRequested());
+      }
+    });
   }
 
   @override
@@ -234,17 +244,16 @@ class _NotificationsTab extends StatelessWidget {
   }
 }
 
-// ── Messages tab (placeholder) ────────────────────────────────────────────────
+// ── Messages tab ──────────────────────────────────────────────────────────────
 
 class _MessagesTab extends StatelessWidget {
   const _MessagesTab();
 
   @override
   Widget build(BuildContext context) {
-    return const DonyEmptyState(
-      icon: Icons.chat_bubble_outline_rounded,
-      title: 'Messagerie bientôt disponible',
-      description: 'Vous pourrez contacter votre\nvoyageur ou expéditeur ici.',
+    return BlocProvider.value(
+      value: getIt<ConversationListBloc>(),
+      child: const ConversationListScreen(),
     );
   }
 }

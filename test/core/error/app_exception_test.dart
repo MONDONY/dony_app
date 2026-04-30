@@ -35,6 +35,20 @@ void main() {
       expect(e.code, 'NOT_FOUND');
     });
 
+    test('NotFoundException stocke resourceType optionnel', () {
+      // ignore: prefer_const_constructors
+      final e = NotFoundException(message: 'Annonce introuvable', resourceType: 'announcement');
+      expect(e.code, 'NOT_FOUND');
+      expect(e.message, 'Annonce introuvable');
+      expect(e.resourceType, 'announcement');
+    });
+
+    test('NotFoundException sans resourceType reste null', () {
+      // ignore: prefer_const_constructors
+      final e = NotFoundException();
+      expect(e.resourceType, isNull);
+    });
+
     test('ServerException has SERVER_ERROR code', () {
       // ignore: prefer_const_constructors
       final e = ServerException();
@@ -64,6 +78,17 @@ void main() {
       final b = NetworkException('err', code: 'X');
       // ignore: prefer_const_constructors
       final c = NetworkException('other', code: 'X');
+      expect(a, equals(b));
+      expect(a, isNot(equals(c)));
+    });
+
+    test('NotFoundException equality inclut resourceType', () {
+      // ignore: prefer_const_constructors
+      final a = NotFoundException(resourceType: 'bid');
+      // ignore: prefer_const_constructors
+      final b = NotFoundException(resourceType: 'bid');
+      // ignore: prefer_const_constructors
+      final c = NotFoundException(resourceType: 'announcement');
       expect(a, equals(b));
       expect(a, isNot(equals(c)));
     });

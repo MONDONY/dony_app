@@ -180,8 +180,8 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
             onRefresh: () async =>
                 context.read<AnnouncementBloc>().add(AnnouncementListRequested()),
             child: ListView.separated(
-              padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg, DonySpacing.lg, DonySpacing.lg, 100,
+              padding: EdgeInsets.fromLTRB(
+                DonyLayout.hPadding(context), DonySpacing.lg, DonyLayout.hPadding(context), 100,
               ),
               itemCount: list.length,
               separatorBuilder: (_, __) => const SizedBox(height: DonySpacing.md),

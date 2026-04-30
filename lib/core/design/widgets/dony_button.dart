@@ -30,7 +30,7 @@ class DonyButton extends StatelessWidget {
       DonyButtonVariant.primary     => DonyColors.white,
       DonyButtonVariant.destructive => DonyColors.white,
       DonyButtonVariant.secondary   => DonyColors.ink900,
-      DonyButtonVariant.ghost       => DonyColors.green400,
+      DonyButtonVariant.ghost       => DonyColors.primary,
     };
 
     final child = isLoading
@@ -51,20 +51,31 @@ class DonyButton extends StatelessWidget {
 
     final minSize = fullWidth ? const Size.fromHeight(52) : const Size(120, 52);
 
+    const contentPadding = EdgeInsets.symmetric(horizontal: 16);
+
     return switch (variant) {
       DonyButtonVariant.primary => FilledButton(
           onPressed: isLoading ? null : onPressed,
-          style: FilledButton.styleFrom(minimumSize: minSize),
+          style: FilledButton.styleFrom(
+            minimumSize: minSize,
+            padding: contentPadding,
+          ),
           child: child,
         ),
       DonyButtonVariant.secondary => OutlinedButton(
           onPressed: isLoading ? null : onPressed,
-          style: OutlinedButton.styleFrom(minimumSize: minSize),
+          style: OutlinedButton.styleFrom(
+            minimumSize: minSize,
+            padding: contentPadding,
+          ),
           child: child,
         ),
       DonyButtonVariant.ghost => TextButton(
           onPressed: isLoading ? null : onPressed,
-          style: TextButton.styleFrom(minimumSize: minSize),
+          style: TextButton.styleFrom(
+            minimumSize: minSize,
+            padding: contentPadding,
+          ),
           child: child,
         ),
       DonyButtonVariant.destructive => FilledButton(
@@ -72,6 +83,7 @@ class DonyButton extends StatelessWidget {
           style: FilledButton.styleFrom(
             backgroundColor: DonyColors.error,
             minimumSize: minSize,
+            padding: contentPadding,
           ),
           child: child,
         ),

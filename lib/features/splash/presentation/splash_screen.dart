@@ -117,85 +117,89 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    final h = DonyLayout.hPadding(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          // Contenu centré — fond blanc + logo blue-orange
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const DonyLogo(variant: DonyLogoVariant.onLight, fontSize: 104),
-                const SizedBox(height: 28),
-                Text(
-                  'Livrez en confiance',
-                  style: TextStyle(
-                    color: DonyColors.ink900.withValues(alpha: 0.45),
-                    fontSize: 18,
-                    letterSpacing: 0.4,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'v1.0.0',
-                  style: TextStyle(
-                    color: DonyColors.ink900.withValues(alpha: 0.25),
-                    fontSize: 13,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Points de chargement animés en bas
-          if (!_hasError)
-            Positioned(
-              bottom: 64,
-              left: 0,
-              right: 0,
-              child: _LoadingDots(),
-            ),
-          // Erreur réseau
-          if (_hasError)
-            Positioned(
-              bottom: 48,
-              left: 24,
-              right: 24,
+      backgroundColor: DonyColors.surface,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Center(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.wifi_off_rounded, color: DonyColors.ink900.withValues(alpha: 0.35), size: 16),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Impossible de se connecter',
-                        style: TextStyle(color: DonyColors.ink900.withValues(alpha: 0.5), fontSize: 13),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  OutlinedButton.icon(
-                    onPressed: _retry,
-                    icon: Icon(Icons.refresh_rounded, color: DonyColors.primary, size: 16),
-                    label: Text(
-                      'Réessayer',
-                      style: TextStyle(color: DonyColors.primary, fontSize: 14),
+                  const DonyLogo(variant: DonyLogoVariant.onLight, fontSize: 104),
+                  const SizedBox(height: 28),
+                  Text(
+                    'Livrez en confiance',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: DonyColors.textPrimary.withValues(alpha: 0.45),
+                      letterSpacing: 0.4,
                     ),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: DonyColors.primary.withValues(alpha: 0.4)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'v1.0.0',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: DonyColors.textSubtle.withValues(alpha: 0.6),
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ],
-              ).animate().fadeIn(duration: 300.ms),
+              ),
             ),
-        ],
+            if (!_hasError)
+              Positioned(
+                bottom: 48 + bottom,
+                left: 0,
+                right: 0,
+                child: _LoadingDots(),
+              ),
+            if (_hasError)
+              Positioned(
+                bottom: 40 + bottom,
+                left: h,
+                right: h,
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.wifi_off_rounded,
+                            color: DonyColors.textSubtle, size: 16),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Impossible de se connecter',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: DonyColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    OutlinedButton.icon(
+                      onPressed: _retry,
+                      icon: Icon(Icons.refresh_rounded,
+                          color: DonyColors.primary, size: 16),
+                      label: const Text('Réessayer'),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(
+                            color: DonyColors.primary.withValues(alpha: 0.4)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(DonyRadius.md),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: DonySpacing.xl,
+                            vertical: DonySpacing.md),
+                      ),
+                    ),
+                  ],
+                ).animate().fadeIn(duration: 300.ms),
+              ),
+          ],
+        ),
       ),
     );
   }

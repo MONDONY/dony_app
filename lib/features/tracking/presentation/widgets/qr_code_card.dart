@@ -86,16 +86,24 @@ class _QrCodeCardState extends State<QrCodeCard> {
   }
 }
 
-class _QrCodeContent extends StatelessWidget {
+class _QrCodeContent extends StatefulWidget {
   final QrCodeModel qrCode;
 
   const _QrCodeContent({required this.qrCode});
 
   @override
+  State<_QrCodeContent> createState() => _QrCodeContentState();
+}
+
+class _QrCodeContentState extends State<_QrCodeContent> {
+  bool _saving = false;
+  bool _sharing = false;
+
+  @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final Uint8List imageBytes = base64Decode(qrCode.qrCodeBase64);
+    final Uint8List imageBytes = base64Decode(widget.qrCode.qrCodeBase64);
 
     return Column(
       children: [
@@ -127,8 +135,7 @@ class _QrCodeContent extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.info_outline_rounded,
-                  color: cs.primary, size: 16),
+              Icon(Icons.info_outline_rounded, color: cs.primary, size: 16),
               const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: Text(
@@ -150,7 +157,8 @@ class _QrCodeContent extends StatelessWidget {
             Expanded(
               child: DonyButton(
                 label: 'Enregistrer',
-                onPressed: () => _saveToGallery(context, imageBytes),
+                onPressed: _saving || _sharing ? null : () => _saveToGallery(imageBytes),
+                isLoading: _saving,
                 icon: Icons.download_rounded,
               ),
             ),
@@ -158,7 +166,8 @@ class _QrCodeContent extends StatelessWidget {
             Expanded(
               child: DonyButton(
                 label: 'Partager',
-                onPressed: () => _shareQrCode(context, imageBytes),
+                onPressed: _saving || _sharing ? null : () => _shareQrCode(imageBytes),
+                isLoading: _sharing,
                 variant: DonyButtonVariant.secondary,
                 icon: Icons.share_rounded,
               ),
@@ -169,10 +178,13 @@ class _QrCodeContent extends StatelessWidget {
     );
   }
 
-  Future<void> _saveToGallery(BuildContext context, Uint8List imageBytes) async {
+  Future<void> _saveToGallery(Uint8List imageBytes) async {
+    setState(() {
+      _saving = true;
+    });
     try {
       await Gal.putImageBytes(imageBytes, name: 'qr_dony.png');
-      if (context.mounted) {
+      if (mounted) {
         DonySnackbar.show(
           context,
           message: 'QR code enregistré dans votre galerie',
@@ -180,34 +192,47 @@ class _QrCodeContent extends StatelessWidget {
         );
       }
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         DonySnackbar.show(
           context,
           message: 'Impossible d\'enregistrer : $e',
           type: DonySnackbarType.error,
         );
       }
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
     }
   }
 
-  Future<void> _shareQrCode(BuildContext context, Uint8List imageBytes) async {
+  Future<void> _shareQrCode(Uint8List imageBytes) async {
+    setState(() {
+      _sharing = true;
+    });
     try {
-      // XFile.fromData ne fonctionne pas sur Android avec la plupart des apps.
-      // On écrit d'abord dans un fichier temporaire pour obtenir un vrai chemin.
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/qr_dony_${DateTime.now().millisecondsSinceEpoch}.png');
       await file.writeAsBytes(imageBytes);
-      await Share.shareXFiles(
-        [XFile(file.path, name: 'qr_dony.png', mimeType: 'image/png')],
-        text: 'QR code de suivi Dony — À montrer au voyageur lors de la remise.',
+      final result = await Share.shareXFiles(
+        [XFile(file.path, mimeType: 'image/png')],
+        subject: 'QR code de suivi Dony',
+        text: 'À montrer au voyageur lors de la remise du colis.',
       );
+      if (mounted && result.status == ShareResultStatus.dismissed) {
+        // Partage annulé — rien à faire
+      }
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         DonySnackbar.show(
           context,
           message: 'Impossible de partager : $e',
           type: DonySnackbarType.error,
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _sharing = false);
       }
     }
   }

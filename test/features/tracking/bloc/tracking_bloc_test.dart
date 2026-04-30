@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
@@ -194,6 +195,22 @@ void main() {
         ),
       ],
     );
+
+    blocTest<TrackingBloc, TrackingState>(
+      '404 → TrackingEventsError avec message archivage',
+      build: buildBloc,
+      setUp: () => when(() => mockRepo.getEvents(any()))
+          .thenThrow(DioException(
+            requestOptions: RequestOptions(path: '/bids/bid-1/events'),
+            error: const NotFoundException(),
+          )),
+      act: (bloc) => bloc.add(TrackingEventsRequested('bid-1')),
+      expect: () => [
+        isA<TrackingEventsLoading>(),
+        predicate<TrackingState>((s) =>
+            s is TrackingEventsError && s.message.contains('archivé')),
+      ],
+    );
   });
 
   // ── TrackingConfirmCodeRequested ─────────────────────────────────────────────
@@ -274,6 +291,25 @@ void main() {
           'message',
           'Code invalide',
         ),
+      ],
+    );
+  });
+
+  // ── QrScanSubmitRequested ─────────────────────────────────────────────────────
+
+  group('QrScanSubmitRequested', () {
+    // Connectivity() uses a platform channel — in unit tests it throws
+    // MissingPluginException, landing in the catch block and emitting QrScanError.
+    blocTest<TrackingBloc, TrackingState>(
+      'emits [QrScanSubmitting, QrScanError] when connectivity platform channel unavailable',
+      build: buildBloc,
+      act: (b) => b.add(QrScanSubmitRequested(
+        bidId: 'bid-1',
+        eventType: 'TRANSIT',
+      )),
+      expect: () => [
+        isA<QrScanSubmitting>(),
+        isA<QrScanError>(),
       ],
     );
   });

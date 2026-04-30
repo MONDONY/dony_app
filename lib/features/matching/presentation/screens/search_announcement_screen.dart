@@ -175,11 +175,11 @@ class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
           searchDirty: _searchDirtyNotifier.value,
           onDepartureChanged: (v) {
             _departureCityNotifier.value = v;
-            _searchDirtyNotifier.value = true;
+            _search();
           },
           onArrivalChanged: (v) {
             _arrivalCityNotifier.value = v;
-            _searchDirtyNotifier.value = true;
+            _search();
           },
           onDateChanged: (v) {
             _dateNotifier.value = v;
@@ -280,22 +280,19 @@ class _FilterFormView extends StatelessWidget {
         centerTitle: false,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_rounded,
-              size: 20, color: DonyColors.green400),
+              size: 20, color: DonyColors.primary),
           onPressed: () => context.pop(),
           tooltip: 'Retour',
         ),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: DonyColors.grey200),
+          child: Divider(height: 1, color: DonyColors.neutral200),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
-          DonySpacing.lg,
-          DonySpacing.xl,
-          DonySpacing.lg,
-          120,
-        ),
+      body: Builder(builder: (context) {
+        final h = DonyLayout.hPadding(context);
+        return SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(h, DonySpacing.xl, h, 120),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -304,7 +301,7 @@ class _FilterFormView extends StatelessWidget {
               decoration: BoxDecoration(
                 color: DonyColors.white,
                 borderRadius: BorderRadius.circular(DonyRadius.card),
-                border: Border.all(color: DonyColors.grey200),
+                border: Border.all(color: DonyColors.neutral200),
               ),
               child: Column(
                 children: [
@@ -316,7 +313,7 @@ class _FilterFormView extends StatelessWidget {
                   ),
                   const Padding(
                     padding: EdgeInsets.only(left: _kRowIndent),
-                    child: Divider(height: 1, color: DonyColors.grey200),
+                    child: Divider(height: 1, color: DonyColors.neutral200),
                   ),
                   _LocationRow(
                     isDeparture: false,
@@ -352,7 +349,7 @@ class _FilterFormView extends StatelessWidget {
             // Filtres rapides
             Text(
               'FILTRES RAPIDES',
-              style: tt.labelMedium?.copyWith(color: DonyColors.grey400),
+              style: tt.labelMedium?.copyWith(color: DonyColors.neutral400),
             ),
             const SizedBox(height: DonySpacing.md),
             Wrap(
@@ -393,17 +390,17 @@ class _FilterFormView extends StatelessWidget {
                 ),
                 Text(
                   '${maxPricePerKg.toStringAsFixed(0)} €',
-                  style: tt.titleMedium?.copyWith(color: DonyColors.green400),
+                  style: tt.titleMedium?.copyWith(color: DonyColors.primary),
                 ),
               ],
             ),
             const SizedBox(height: DonySpacing.sm),
             SliderTheme(
               data: SliderTheme.of(context).copyWith(
-                activeTrackColor: DonyColors.green400,
-                inactiveTrackColor: DonyColors.grey200,
-                thumbColor: DonyColors.green400,
-                overlayColor: DonyColors.green400.withValues(alpha: 0.1),
+                activeTrackColor: DonyColors.primary,
+                inactiveTrackColor: DonyColors.neutral200,
+                thumbColor: DonyColors.primary,
+                overlayColor: DonyColors.primary.withValues(alpha: 0.1),
                 trackHeight: 4,
               ),
               child: Slider(
@@ -418,23 +415,24 @@ class _FilterFormView extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('5 €', style: tt.bodySmall?.copyWith(color: DonyColors.grey400)),
-                Text('25 €', style: tt.bodySmall?.copyWith(color: DonyColors.grey400)),
+                Text('5 €', style: tt.bodySmall?.copyWith(color: DonyColors.neutral400)),
+                Text('25 €', style: tt.bodySmall?.copyWith(color: DonyColors.neutral400)),
               ],
             ),
           ],
         ),
-      ),
+        );
+      }),
       bottomSheet: Container(
         padding: EdgeInsets.fromLTRB(
-          DonySpacing.lg,
+          DonyLayout.hPadding(context),
           DonySpacing.base,
-          DonySpacing.lg,
+          DonyLayout.hPadding(context),
           MediaQuery.of(context).padding.bottom + DonySpacing.base,
         ),
         decoration: const BoxDecoration(
           color: DonyColors.white,
-          border: Border(top: BorderSide(color: DonyColors.grey200)),
+          border: Border(top: BorderSide(color: DonyColors.neutral200)),
         ),
         child: BlocBuilder<AnnouncementBloc, AnnouncementState>(
           builder: (context, state) {
@@ -577,7 +575,7 @@ class _ResultsViewState extends State<_ResultsView> {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: DonyColors.grey200,
+                        color: DonyColors.neutral200,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -596,7 +594,7 @@ class _ResultsViewState extends State<_ResultsView> {
                               color: DonyColors.white,
                               borderRadius:
                                   BorderRadius.circular(DonyRadius.card),
-                              border: Border.all(color: DonyColors.grey200),
+                              border: Border.all(color: DonyColors.neutral200),
                             ),
                             child: Column(
                               children: [
@@ -611,7 +609,7 @@ class _ResultsViewState extends State<_ResultsView> {
                                   padding:
                                       EdgeInsets.only(left: _kRowIndent),
                                   child: Divider(
-                                      height: 1, color: DonyColors.grey200),
+                                      height: 1, color: DonyColors.neutral200),
                                 ),
                                 _LocationRow(
                                   isDeparture: false,
@@ -647,7 +645,7 @@ class _ResultsViewState extends State<_ResultsView> {
                           Text(
                             'FILTRES RAPIDES',
                             style: tt.labelMedium
-                                ?.copyWith(color: DonyColors.grey400),
+                                ?.copyWith(color: DonyColors.neutral400),
                           ),
                           const SizedBox(height: DonySpacing.md),
                           Wrap(
@@ -691,17 +689,17 @@ class _ResultsViewState extends State<_ResultsView> {
                               Text(
                                 '${maxPricePerKg.toStringAsFixed(0)} €',
                                 style: tt.titleMedium
-                                    ?.copyWith(color: DonyColors.green400),
+                                    ?.copyWith(color: DonyColors.primary),
                               ),
                             ],
                           ),
                           const SizedBox(height: DonySpacing.sm),
                           SliderTheme(
                             data: SliderTheme.of(sbCtx).copyWith(
-                              activeTrackColor: DonyColors.green400,
-                              inactiveTrackColor: DonyColors.grey200,
-                              thumbColor: DonyColors.green400,
-                              overlayColor: DonyColors.green400
+                              activeTrackColor: DonyColors.primary,
+                              inactiveTrackColor: DonyColors.neutral200,
+                              thumbColor: DonyColors.primary,
+                              overlayColor: DonyColors.primary
                                   .withValues(alpha: 0.1),
                               trackHeight: 4,
                             ),
@@ -720,10 +718,10 @@ class _ResultsViewState extends State<_ResultsView> {
                             children: [
                               Text('5 €',
                                   style: tt.bodySmall?.copyWith(
-                                      color: DonyColors.grey400)),
+                                      color: DonyColors.neutral400)),
                               Text('25 €',
                                   style: tt.bodySmall?.copyWith(
-                                      color: DonyColors.grey400)),
+                                      color: DonyColors.neutral400)),
                             ],
                           ),
                         ],
@@ -740,7 +738,7 @@ class _ResultsViewState extends State<_ResultsView> {
                     decoration: const BoxDecoration(
                       color: DonyColors.white,
                       border:
-                          Border(top: BorderSide(color: DonyColors.grey200)),
+                          Border(top: BorderSide(color: DonyColors.neutral200)),
                     ),
                     child: DonyButton(
                       label: 'Appliquer',
@@ -791,7 +789,7 @@ class _ResultsViewState extends State<_ResultsView> {
         centerTitle: false,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_rounded,
-              size: 20, color: DonyColors.green400),
+              size: 20, color: DonyColors.primary),
           onPressed: widget.onBack,
           tooltip: 'Retour',
         ),
@@ -812,7 +810,7 @@ class _ResultsViewState extends State<_ResultsView> {
                 final count = _applyFilters(state.results).length;
                 return Text(
                   '$count voyageur${count > 1 ? 's' : ''}',
-                  style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                  style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
                 );
               },
             ),
@@ -836,7 +834,7 @@ class _ResultsViewState extends State<_ResultsView> {
                     width: 8,
                     height: 8,
                     decoration: const BoxDecoration(
-                      color: DonyColors.green400,
+                      color: DonyColors.primary,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -846,7 +844,7 @@ class _ResultsViewState extends State<_ResultsView> {
         ],
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: DonyColors.grey200),
+          child: Divider(height: 1, color: DonyColors.neutral200),
         ),
       ),
       body: Column(
@@ -916,7 +914,7 @@ class _ResultsViewState extends State<_ResultsView> {
                       state is AnnouncementInitial) {
                     return const Center(
                       child: CircularProgressIndicator(
-                          color: DonyColors.green400),
+                          color: DonyColors.primary),
                     );
                   }
 
@@ -1011,10 +1009,10 @@ class _FilterChip extends StatelessWidget {
           vertical: DonySpacing.sm,
         ),
         decoration: BoxDecoration(
-          color: active ? DonyColors.green50 : DonyColors.white,
+          color: active ? DonyColors.primarySoft : DonyColors.white,
           borderRadius: BorderRadius.circular(DonyRadius.full),
           border: Border.all(
-            color: active ? DonyColors.green400 : DonyColors.grey200,
+            color: active ? DonyColors.primary : DonyColors.neutral200,
           ),
         ),
         child: Row(
@@ -1024,16 +1022,16 @@ class _FilterChip extends StatelessWidget {
               Icon(icon,
                   size: 14,
                   color: active
-                      ? DonyColors.green400
-                      : DonyColors.grey400),
+                      ? DonyColors.primary
+                      : DonyColors.neutral400),
               const SizedBox(width: DonySpacing.xs),
             ],
             Text(
               label,
               style: tt.labelMedium?.copyWith(
                 color: active
-                    ? DonyColors.green400
-                    : DonyColors.grey400,
+                    ? DonyColors.primary
+                    : DonyColors.neutral400,
               ),
             ),
           ],
@@ -1077,7 +1075,7 @@ class _LocationRow extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isDeparture
-                    ? DonyColors.green400
+                    ? DonyColors.primary
                     : DonyColors.error,
               ),
             ),
@@ -1089,7 +1087,7 @@ class _LocationRow extends StatelessWidget {
                   Text(
                     isDeparture ? 'DÉPART' : 'ARRIVÉE',
                     style: tt.labelSmall
-                        ?.copyWith(color: DonyColors.grey400),
+                        ?.copyWith(color: DonyColors.neutral400),
                   ),
                   const SizedBox(height: DonySpacing.xxs),
                   Text(
@@ -1100,7 +1098,7 @@ class _LocationRow extends StatelessWidget {
               ),
             ),
             const Icon(Icons.chevron_right_rounded,
-                size: 18, color: DonyColors.grey400),
+                size: 18, color: DonyColors.neutral400),
           ],
         ),
       ),
@@ -1136,7 +1134,7 @@ class _LocationRow extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: DonyColors.grey200,
+                  color: DonyColors.neutral200,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -1151,7 +1149,7 @@ class _LocationRow extends StatelessWidget {
                     city,
                     style: tt.bodyMedium?.copyWith(
                       color: value == city
-                          ? DonyColors.green400
+                          ? DonyColors.primary
                           : DonyColors.ink900,
                       fontWeight: value == city
                           ? FontWeight.w700
@@ -1160,7 +1158,7 @@ class _LocationRow extends StatelessWidget {
                   ),
                   trailing: value == city
                       ? const Icon(Icons.check_rounded,
-                          color: DonyColors.green400)
+                          color: DonyColors.primary)
                       : null,
                   onTap: () {
                     onChanged(city);
@@ -1193,7 +1191,7 @@ class _DateField extends StatelessWidget {
           builder: (c, child) => Theme(
             data: Theme.of(c).copyWith(
               colorScheme: const ColorScheme.light(
-                primary: DonyColors.green400,
+                primary: DonyColors.primary,
               ),
             ),
             child: child!,
@@ -1209,20 +1207,20 @@ class _DateField extends StatelessWidget {
         decoration: BoxDecoration(
           color: DonyColors.white,
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          border: Border.all(color: DonyColors.grey200),
+          border: Border.all(color: DonyColors.neutral200),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'DATE',
-              style: tt.labelSmall?.copyWith(color: DonyColors.grey400),
+              style: tt.labelSmall?.copyWith(color: DonyColors.neutral400),
             ),
             const SizedBox(height: DonySpacing.xs),
             Row(
               children: [
                 const Icon(Icons.calendar_today_rounded,
-                    size: 14, color: DonyColors.green400),
+                    size: 14, color: DonyColors.primary),
                 const SizedBox(width: DonySpacing.xs),
                 Text(
                   date != null
@@ -1231,7 +1229,7 @@ class _DateField extends StatelessWidget {
                   style: tt.titleSmall?.copyWith(
                     color: date != null
                         ? DonyColors.ink900
-                        : DonyColors.grey400,
+                        : DonyColors.neutral400,
                   ),
                 ),
               ],
@@ -1262,20 +1260,20 @@ class _WeightField extends StatelessWidget {
         decoration: BoxDecoration(
           color: DonyColors.white,
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          border: Border.all(color: DonyColors.grey200),
+          border: Border.all(color: DonyColors.neutral200),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'POIDS',
-              style: tt.labelSmall?.copyWith(color: DonyColors.grey400),
+              style: tt.labelSmall?.copyWith(color: DonyColors.neutral400),
             ),
             const SizedBox(height: DonySpacing.xs),
             Row(
               children: [
                 const Icon(Icons.scale_rounded,
-                    size: 14, color: DonyColors.green400),
+                    size: 14, color: DonyColors.primary),
                 const SizedBox(width: DonySpacing.xs),
                 Text(
                   '${weightKg.toStringAsFixed(0)} kg',
@@ -1321,7 +1319,7 @@ class _WeightField extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: DonyColors.grey200,
+                    color: DonyColors.neutral200,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -1334,7 +1332,7 @@ class _WeightField extends StatelessWidget {
                   Text(
                     localWeight.toStringAsFixed(0),
                     style: tt.displayLarge?.copyWith(
-                      color: DonyColors.green400,
+                      color: DonyColors.primary,
                     ),
                   ),
                   const SizedBox(width: DonySpacing.sm),
@@ -1343,7 +1341,7 @@ class _WeightField extends StatelessWidget {
                     child: Text(
                       'kg',
                       style: tt.headlineMedium?.copyWith(
-                        color: DonyColors.grey400,
+                        color: DonyColors.neutral400,
                       ),
                     ),
                   ),
@@ -1351,9 +1349,9 @@ class _WeightField extends StatelessWidget {
               ),
               SliderTheme(
                 data: SliderTheme.of(ctx).copyWith(
-                  activeTrackColor: DonyColors.green400,
-                  inactiveTrackColor: DonyColors.grey200,
-                  thumbColor: DonyColors.green400,
+                  activeTrackColor: DonyColors.primary,
+                  inactiveTrackColor: DonyColors.neutral200,
+                  thumbColor: DonyColors.primary,
                   trackHeight: 4,
                 ),
                 child: Slider(
@@ -1404,16 +1402,16 @@ class _QuickChip extends StatelessWidget {
           vertical: DonySpacing.sm,
         ),
         decoration: BoxDecoration(
-          color: active ? DonyColors.green50 : DonyColors.white,
+          color: active ? DonyColors.primarySoft : DonyColors.white,
           borderRadius: BorderRadius.circular(DonyRadius.full),
           border: Border.all(
-            color: active ? DonyColors.green400 : DonyColors.grey200,
+            color: active ? DonyColors.primary : DonyColors.neutral200,
           ),
         ),
         child: Text(
           label,
           style: tt.labelMedium?.copyWith(
-            color: active ? DonyColors.green400 : DonyColors.ink900,
+            color: active ? DonyColors.primary : DonyColors.ink900,
           ),
         ),
       ),
@@ -1512,7 +1510,7 @@ class _TravelerCard extends StatelessWidget {
                 ),
                 const SizedBox(width: DonySpacing.sm),
                 Text(
-                  '${announcement.pricePerKg.toStringAsFixed(0)}€/kg',
+                  '${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
                   style: tt.titleLarge?.copyWith(
                     color: DonyColors.success,
                     fontWeight: FontWeight.w700,
@@ -1682,11 +1680,11 @@ class _EmptyView extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(DonySpacing.xl),
               decoration: const BoxDecoration(
-                color: DonyColors.green50,
+                color: DonyColors.primarySoft,
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.search_off_rounded,
-                  size: 48, color: DonyColors.green400),
+                  size: 48, color: DonyColors.primary),
             ),
             const SizedBox(height: DonySpacing.lg),
             Text(
@@ -1697,7 +1695,7 @@ class _EmptyView extends StatelessWidget {
             const SizedBox(height: DonySpacing.sm),
             Text(
               'Essayez avec d\'autres critères de recherche.',
-              style: tt.bodyMedium?.copyWith(color: DonyColors.grey400),
+              style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: DonySpacing.xl),
@@ -1730,7 +1728,7 @@ class _ErrorView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.wifi_off_rounded,
-                size: 56, color: DonyColors.grey200),
+                size: 56, color: DonyColors.neutral200),
             const SizedBox(height: DonySpacing.base),
             Text(
               'Connexion impossible',
@@ -1739,7 +1737,7 @@ class _ErrorView extends StatelessWidget {
             const SizedBox(height: DonySpacing.sm),
             Text(
               message,
-              style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+              style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: DonySpacing.xl),

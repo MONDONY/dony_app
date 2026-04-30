@@ -61,7 +61,9 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
       if (kDebugMode) debugPrint('[TrackingBloc] getEvents error: $e');
       final inner = e is DioException ? e.error : e;
       String message = 'Impossible de charger les événements de tracking';
-      if (inner is ForbiddenException) {
+      if (inner is NotFoundException) {
+        message = 'Ce suivi n\'existe plus ou a été archivé';
+      } else if (inner is ForbiddenException) {
         message = 'Accès refusé — vous n\'êtes pas autorisé à voir ce suivi';
       } else if (inner is UnauthorizedException) {
         message = 'Session expirée — reconnectez-vous';

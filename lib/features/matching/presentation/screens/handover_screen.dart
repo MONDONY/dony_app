@@ -116,8 +116,8 @@ class _HandoverScreenState extends State<HandoverScreen> {
       child: Scaffold(
         appBar: const DonyAppBar(title: 'Fenêtre de remise'),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            DonySpacing.lg, DonySpacing.xl, DonySpacing.lg, DonySpacing.huge + DonySpacing.xxl,
+          padding: EdgeInsets.fromLTRB(
+            DonyLayout.hPadding(context), DonySpacing.xl, DonyLayout.hPadding(context), DonySpacing.huge + DonySpacing.xxl,
           ),
           child: Form(
             key: _formKey,
@@ -342,8 +342,8 @@ class _SubmitBar extends StatelessWidget {
         return Container(
           color: cs.surface,
           padding: EdgeInsets.fromLTRB(
-            DonySpacing.lg, DonySpacing.base,
-            DonySpacing.lg, MediaQuery.of(context).padding.bottom + DonySpacing.base,
+            DonyLayout.hPadding(context), DonySpacing.base,
+            DonyLayout.hPadding(context), MediaQuery.of(context).padding.bottom + DonySpacing.base,
           ),
           child: DonyButton(
             label: 'Confirmer la fenêtre de remise',

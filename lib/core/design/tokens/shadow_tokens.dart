@@ -40,4 +40,11 @@ abstract final class DonyShadow {
   static const List<BoxShadow> card = sm;
   // Convenience — bottom sheet / modal
   static const List<BoxShadow> sheet = lg;
+  // Convenience — sticky bottom bar (shadow upward)
+  static const List<BoxShadow> sticky = [
+    BoxShadow(color: Color(0x0A0A2540), blurRadius: 8, offset: Offset(0, -2)),
+  ];
 }
+
+/// Alias for backwards-compatibility with widgets using DonyShadows.
+typedef DonyShadows = DonyShadow;

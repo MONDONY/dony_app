@@ -19,6 +19,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
+import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
+import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.dart';
 import 'package:dony/features/matching/presentation/widgets/route_map_components.dart';
 import 'package:intl/intl.dart';
@@ -34,6 +37,7 @@ class BidDetailScreen extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => getIt<BidBloc>()),
         BlocProvider(create: (_) => getIt<TrackingBloc>()),
+        BlocProvider(create: (_) => getIt<ConversationOpenBloc>()),
       ],
       child: _BidDetailView(initialBid: bid),
     );
@@ -79,7 +83,9 @@ class _BidDetailViewState extends State<_BidDetailView> {
   }
 
   Future<void> _loadPaymentStatus() async {
-    if (_bid.status == 'REJECTED' || _bid.status == 'CANCELLED') return;
+    if (_bid.status == 'REJECTED' || _bid.status == 'CANCELLED') {
+      return;
+    }
     try {
       final payment = await getIt<PaymentRepository>().getPaymentForBid(_bid.id);
       if (mounted) {
@@ -95,7 +101,22 @@ class _BidDetailViewState extends State<_BidDetailView> {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
 
-    return BlocConsumer<BidBloc, BidState>(
+    return BlocListener<ConversationOpenBloc, ConversationOpenState>(
+      listener: (context, state) {
+        if (state is ConversationOpenSuccess) {
+          context.push(
+            '/conversations/${state.conversation.id}',
+            extra: state.conversation,
+          );
+        } else if (state is ConversationOpenError) {
+          DonySnackbar.show(
+            context,
+            message: state.message,
+            type: DonySnackbarType.error,
+          );
+        }
+      },
+      child: BlocConsumer<BidBloc, BidState>(
       listener: (context, state) {
         if (state is BidAccepted) {
           _bid = state.bid;
@@ -106,7 +127,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
         } else if (state is BidRejected) {
           _bid = state.bid;
           DonySnackbar.show(context, message: 'Demande refusée.');
-          context.pop();
+          if (context.canPop()) context.pop(); else context.go('/home');
         } else if (state is BidPresenceConfirmed) {
           _bid = state.bid;
           DonySnackbar.show(context, message: 'Présence confirmée !', type: DonySnackbarType.success);
@@ -118,10 +139,22 @@ class _BidDetailViewState extends State<_BidDetailView> {
             message: 'Demande annulée. L\'expéditeur sera remboursé.',
             type: DonySnackbarType.info,
           );
-          context.pop();
+          if (context.canPop()) context.pop(); else context.go('/home');
         } else if (state is BidDeleted) {
           DonySnackbar.show(context, message: 'Demande supprimée.');
-          context.pop();
+          if (context.canPop()) context.pop(); else context.go('/home');
+        } else if (state is BidNotFound) {
+          _refreshTimer?.cancel();
+          DonySnackbar.show(
+            context,
+            message: 'Ce colis n\'existe plus',
+            type: DonySnackbarType.warning,
+          );
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/home');
+          }
         } else if (state is BidDetailLoaded) {
           final previousBidId = _bid.id;
           _bid = state.bid;
@@ -147,7 +180,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
         } else if (state is BidError) {
           if (_skeletonLoading) {
             _skeletonLoading = false;
-            context.pop();
+            if (context.canPop()) context.pop(); else context.go('/home');
           }
           DonySnackbar.show(context, message: state.message, type: DonySnackbarType.error);
         }
@@ -206,14 +239,13 @@ class _BidDetailViewState extends State<_BidDetailView> {
           body: _skeletonLoading
               ? const Center(
                   child: CircularProgressIndicator(color: DonyColors.primary))
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(
-                    DonySpacing.lg,
-                    DonySpacing.lg,
-                    DonySpacing.lg,
-                    100,
-                  ),
-                  child: Column(
+              : Builder(builder: (context) {
+                  final h = DonyLayout.hPadding(context);
+                  return SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(h, DonySpacing.lg, h, 100),
+                  child: DonyLayout.constrained(
+                    context,
+                    Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Status badge below title
@@ -324,7 +356,9 @@ class _BidDetailViewState extends State<_BidDetailView> {
                     ],
                   ).animate().fadeIn(duration: 300.ms).slideY(
                       begin: 0.04, curve: Curves.easeOutCubic),
-                ),
+                  ),
+                  );
+                }),
           bottomNavigationBar: (isSender &&
                   (_bid.status == 'PENDING' || _bid.status == 'ACCEPTED'))
               ? ListenableBuilder(
@@ -356,7 +390,8 @@ class _BidDetailViewState extends State<_BidDetailView> {
                           : null,
         );
       },
-    );
+    ), // BlocConsumer<BidBloc>
+    ); // BlocListener<ConversationOpenBloc>
   }
 
 }
@@ -459,10 +494,13 @@ class _TravelerCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          name,
-                          style: tt.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
+                        Flexible(
+                          child: Text(
+                            name,
+                            overflow: TextOverflow.ellipsis,
+                            style: tt.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                         const SizedBox(width: DonySpacing.sm),
@@ -500,9 +538,19 @@ class _TravelerCard extends StatelessWidget {
               ),
               const SizedBox(width: DonySpacing.sm),
               // Chat button
-              _IconActionButton(
-                icon: Icons.chat_bubble_outline_rounded,
-                onTap: () {},
+              BlocBuilder<ConversationOpenBloc, ConversationOpenState>(
+                builder: (context, openState) {
+                  final isOpening = openState is ConversationOpenLoading;
+                  return _IconActionButton(
+                    icon: Icons.chat_bubble_outline_rounded,
+                    isLoading: isOpening,
+                    onTap: isOpening
+                        ? null
+                        : () => context.read<ConversationOpenBloc>().add(
+                              ConversationOpenRequested(bid.id),
+                            ),
+                  );
+                },
               ),
             ],
           ),
@@ -514,22 +562,35 @@ class _TravelerCard extends StatelessWidget {
 
 class _IconActionButton extends StatelessWidget {
   final IconData icon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final bool isLoading;
 
-  const _IconActionButton({required this.icon, required this.onTap});
+  const _IconActionButton({
+    required this.icon,
+    required this.onTap,
+    this.isLoading = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 40,
-        height: 40,
+        width: 44,
+        height: 44,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(DonyRadius.full),
           border: Border.all(color: DonyColors.primary),
         ),
-        child: Icon(icon, color: DonyColors.primary, size: 18),
+        child: isLoading
+            ? const Padding(
+                padding: EdgeInsets.all(10),
+                child: CircularProgressIndicator(
+                  color: DonyColors.primary,
+                  strokeWidth: 2,
+                ),
+              )
+            : Icon(icon, color: DonyColors.primary, size: 18),
       ),
     );
   }
@@ -1054,12 +1115,13 @@ class _ActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final h = DonyLayout.hPadding(context);
     return Container(
       color: DonyColors.white,
       padding: EdgeInsets.fromLTRB(
-        DonySpacing.lg,
+        h,
         DonySpacing.base,
-        DonySpacing.lg,
+        h,
         MediaQuery.of(context).padding.bottom + DonySpacing.base,
       ),
       child: Row(
@@ -1113,53 +1175,99 @@ class _ActionBar extends StatelessWidget {
   void _showRejectDialog(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final reasonCtrl = TextEditingController();
-    showDialog(
+    showModalBottomSheet<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Refuser la demande', style: tt.headlineMedium),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Souhaitez-vous indiquer une raison à l\'expéditeur ?',
-              style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
-            ),
-            const SizedBox(height: DonySpacing.md),
-            TextField(
-              controller: reasonCtrl,
-              maxLines: 3,
-              decoration: InputDecoration(
-                hintText: 'Raison (optionnelle)',
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(DonyRadius.md)),
-                hintStyle: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
-              ),
-            ),
-          ],
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(ctx).bottom,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => ctx.pop(),
-            child: Text('Annuler',
-                style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400)),
-          ),
-          FilledButton(
-            onPressed: () {
-              ctx.pop();
-              context.read<BidBloc>().add(BidRejectRequested(bid.id,
-                  reason: reasonCtrl.text.trim().isEmpty
-                      ? null
-                      : reasonCtrl.text.trim()));
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: DonyColors.error,
-              foregroundColor: DonyColors.white,
-              elevation: 0,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(ctx).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(DonyRadius.xl),
             ),
-            child: Text('Confirmer le refus',
-                style: tt.labelLarge?.copyWith(color: DonyColors.white)),
           ),
-        ],
+          padding: const EdgeInsets.fromLTRB(
+            DonySpacing.base,
+            DonySpacing.base,
+            DonySpacing.base,
+            DonySpacing.xl,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: DonyColors.neutral200,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: DonySpacing.base),
+              Text('Refuser la demande', style: tt.headlineMedium),
+              const SizedBox(height: DonySpacing.sm),
+              Text(
+                'Souhaitez-vous indiquer une raison à l\'expéditeur ?',
+                style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
+              ),
+              const SizedBox(height: DonySpacing.md),
+              TextField(
+                controller: reasonCtrl,
+                maxLines: 3,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'Raison (optionnelle)',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                  ),
+                  hintStyle:
+                      tt.bodySmall?.copyWith(color: DonyColors.neutral400),
+                ),
+              ),
+              const SizedBox(height: DonySpacing.base),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => ctx.pop(),
+                    child: Text(
+                      'Annuler',
+                      style: tt.bodyMedium?.copyWith(
+                        color: DonyColors.neutral400,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: DonySpacing.sm),
+                  FilledButton(
+                    onPressed: () {
+                      ctx.pop();
+                      context.read<BidBloc>().add(BidRejectRequested(bid.id,
+                          reason: reasonCtrl.text.trim().isEmpty
+                              ? null
+                              : reasonCtrl.text.trim()));
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: DonyColors.error,
+                      foregroundColor: DonyColors.white,
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      'Confirmer le refus',
+                      style: tt.labelLarge?.copyWith(color: DonyColors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -1172,12 +1280,13 @@ class _ConfirmPresenceBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final h = DonyLayout.hPadding(context);
     return Container(
       color: DonyColors.white,
       padding: EdgeInsets.fromLTRB(
-        DonySpacing.lg,
+        h,
         DonySpacing.base,
-        DonySpacing.lg,
+        h,
         MediaQuery.of(context).padding.bottom + DonySpacing.base,
       ),
       child: DonyButton(
@@ -1280,6 +1389,7 @@ class _SenderActionBar extends StatelessWidget {
   void _openOptions(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _SenderOptionsSheet(bid: bid, outerContext: context),
     );
@@ -1287,12 +1397,13 @@ class _SenderActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final h = DonyLayout.hPadding(context);
     return Container(
       color: DonyColors.white,
       padding: EdgeInsets.fromLTRB(
-        DonySpacing.lg,
+        h,
         DonySpacing.base,
-        DonySpacing.lg,
+        h,
         MediaQuery.of(context).padding.bottom + DonySpacing.base,
       ),
       child: Row(
@@ -1372,6 +1483,7 @@ class _SenderOptionsSheet extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
+    final h = DonyLayout.hPadding(context);
     return Container(
       decoration: const BoxDecoration(
         color: DonyColors.white,
@@ -1380,9 +1492,9 @@ class _SenderOptionsSheet extends StatelessWidget {
         ),
       ),
       padding: EdgeInsets.fromLTRB(
-        DonySpacing.lg,
+        h,
         0,
-        DonySpacing.lg,
+        h,
         bottomPad + DonySpacing.xl,
       ),
       child: Column(
@@ -1418,9 +1530,13 @@ class _SenderOptionsSheet extends StatelessWidget {
             iconColor: DonyColors.primary,
             iconBg: DonyColors.blue100,
             label: 'Contacter le voyageur',
-            subtitle: 'Messagerie — bientôt disponible',
-            disabled: true,
-            onTap: null,
+            subtitle: 'Envoyer un message au voyageur',
+            onTap: () {
+              context.pop();
+              outerContext.read<ConversationOpenBloc>().add(
+                    ConversationOpenRequested(bid.id),
+                  );
+            },
           ),
           const SizedBox(height: DonySpacing.sm),
           if (bid.status == 'PENDING') ...[
@@ -1470,6 +1586,7 @@ class _SenderOptionsSheet extends StatelessWidget {
 
     showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
@@ -1626,12 +1743,13 @@ class _TravelerRejectedBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final h = DonyLayout.hPadding(context);
     return Container(
       color: DonyColors.white,
       padding: EdgeInsets.fromLTRB(
-        DonySpacing.lg,
+        h,
         DonySpacing.base,
-        DonySpacing.lg,
+        h,
         MediaQuery.of(context).padding.bottom + DonySpacing.base,
       ),
       child: DonyButton(
@@ -2063,12 +2181,15 @@ class _ConfirmationCodeCard extends StatelessWidget {
               color: DonyColors.blue100,
               borderRadius: BorderRadius.circular(DonyRadius.md),
             ),
-            child: Text(
-              code,
-              textAlign: TextAlign.center,
-              style: tt.displayLarge?.copyWith(
-                color: DonyColors.blue700,
-                letterSpacing: 12,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                code,
+                textAlign: TextAlign.center,
+                style: tt.displayLarge?.copyWith(
+                  color: DonyColors.blue700,
+                  letterSpacing: 10,
+                ),
               ),
             ),
           ),

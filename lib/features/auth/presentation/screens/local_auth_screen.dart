@@ -98,36 +98,46 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
           }
         },
         builder: (context, state) {
+          final h = DonyLayout.hPadding(context);
+          final bottom = MediaQuery.paddingOf(context).bottom;
           return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xl),
-              child: Column(
-                children: [
-                  const SizedBox(height: 56),
-                  _buildLockIcon(state, cs),
-                  const SizedBox(height: DonySpacing.xl),
-                  _buildTitle(cs),
-                  const SizedBox(height: DonySpacing.huge),
-                  _buildPinDots(state, cs),
-                  if (state is LocalAuthPinRequired && state.attemptsLeft < 3)
-                    _buildAttemptsWarning(state.attemptsLeft, cs),
-                  if (state is LocalAuthLocked)
-                    _buildLockMessage(cs),
-                  const Spacer(),
-                  if (state is LocalAuthPinRequired)
-                    DonyKeypad(
-                      onDigit: _onDigit,
-                      onDelete: _onDelete,
-                      onBiometric: state.biometricAvailable
-                          ? () => context.read<LocalAuthBloc>().add(const LocalAuthBiometricRequested())
-                          : null,
-                    ),
-                  if (state is LocalAuthLocked)
-                    DonyKeypad(onDigit: _onDigit, onDelete: _onDelete, enabled: false),
-                  if (state is LocalAuthChecking)
-                    CircularProgressIndicator(color: cs.primary),
-                  const SizedBox(height: DonySpacing.xxl),
-                ],
+            child: DonyLayout.constrained(
+              context,
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: h),
+                child: Column(
+                  children: [
+                    const Spacer(flex: 2),
+                    _buildLockIcon(state, cs),
+                    const SizedBox(height: DonySpacing.xl),
+                    _buildTitle(cs),
+                    const SizedBox(height: DonySpacing.xxl),
+                    _buildPinDots(state, cs),
+                    if (state is LocalAuthPinRequired &&
+                        state.attemptsLeft < 3)
+                      _buildAttemptsWarning(state.attemptsLeft, cs),
+                    if (state is LocalAuthLocked) _buildLockMessage(cs),
+                    const Spacer(flex: 3),
+                    if (state is LocalAuthPinRequired)
+                      DonyKeypad(
+                        onDigit: _onDigit,
+                        onDelete: _onDelete,
+                        onBiometric: state.biometricAvailable
+                            ? () => context
+                                .read<LocalAuthBloc>()
+                                .add(const LocalAuthBiometricRequested())
+                            : null,
+                      ),
+                    if (state is LocalAuthLocked)
+                      DonyKeypad(
+                          onDigit: _onDigit,
+                          onDelete: _onDelete,
+                          enabled: false),
+                    if (state is LocalAuthChecking)
+                      CircularProgressIndicator(color: cs.primary),
+                    SizedBox(height: DonySpacing.xxl + bottom),
+                  ],
+                ),
               ),
             ),
           );

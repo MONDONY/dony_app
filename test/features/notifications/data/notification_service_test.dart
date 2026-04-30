@@ -134,5 +134,9 @@ void main() {
     test('BID_ACCEPTED without bidId returns null', () {
       expect(service.testRouteForMessage({'type': 'BID_ACCEPTED'}), isNull);
     });
+
+    test('NEW_MESSAGE routes to /messages', () {
+      expect(service.testRouteForMessage({'type': 'NEW_MESSAGE'}), '/messages');
+    });
   });
 }

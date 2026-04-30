@@ -95,23 +95,25 @@ class OfflineScanQueueScreen extends StatelessWidget {
         ],
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: DonyColors.grey200),
+          child: Divider(height: 1, color: DonyColors.neutral200),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
-          DonySpacing.lg, DonySpacing.xl, DonySpacing.lg, DonySpacing.huge,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      body: Builder(builder: (context) {
+        final h = DonyLayout.hPadding(context);
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(h, DonySpacing.xl, h, DonySpacing.huge),
+          child: DonyLayout.constrained(
+            context,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
             _AlertBanner(count: count),
             const SizedBox(height: DonySpacing.xl),
 
             Text(
               "FILE D'ATTENTE — $count",
               style: tt.labelMedium?.copyWith(
-                color: DonyColors.grey400,
+                color: DonyColors.neutral400,
                 letterSpacing: 0.8,
               ),
             ),
@@ -123,7 +125,7 @@ class OfflineScanQueueScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(DonySpacing.xxl),
                   child: Text(
                     'Aucun scan en attente.',
-                    style: tt.bodyMedium?.copyWith(color: DonyColors.grey400),
+                    style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400),
                   ),
                 ),
               )
@@ -141,13 +143,15 @@ class OfflineScanQueueScreen extends StatelessWidget {
             Center(
               child: Text(
                 'Continuez à scanner même sans réseau.',
-                style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
                 textAlign: TextAlign.center,
               ),
             ),
           ],
-        ),
-      ),
+            ),
+          ),
+        );
+      }),
     );
   }
 }
@@ -188,7 +192,7 @@ class _AlertBanner extends StatelessWidget {
                 const SizedBox(height: DonySpacing.xs),
                 Text(
                   '$count scans en attente. On les enverra dès que vous récupérez du réseau.',
-                  style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                  style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
                 ),
               ],
             ),
@@ -231,14 +235,14 @@ class _QueueItemCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: DonyColors.white,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.grey200),
+        border: Border.all(color: DonyColors.neutral200),
       ),
       child: Row(
         children: [
           const Icon(
             Icons.qr_code_rounded,
             size: DonySpacing.iconSm,
-            color: DonyColors.grey400,
+            color: DonyColors.neutral400,
           ),
           const SizedBox(width: DonySpacing.md),
           Expanded(
@@ -259,7 +263,7 @@ class _QueueItemCard extends StatelessWidget {
                 const SizedBox(height: DonySpacing.xxs),
                 Text(
                   '$description · $relTime',
-                  style: tt.bodySmall?.copyWith(color: DonyColors.grey400),
+                  style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
                 ),
               ],
             ),
@@ -267,7 +271,7 @@ class _QueueItemCard extends StatelessWidget {
           const Icon(
             Icons.schedule_outlined,
             size: 16,
-            color: DonyColors.grey400,
+            color: DonyColors.neutral400,
           ),
         ],
       ),
@@ -290,12 +294,12 @@ class _EventChip extends StatelessWidget {
         vertical: DonySpacing.xxs,
       ),
       decoration: BoxDecoration(
-        color: DonyColors.grey200,
+        color: DonyColors.neutral200,
         borderRadius: BorderRadius.circular(DonyRadius.full),
       ),
       child: Text(
         label,
-        style: tt.labelMedium?.copyWith(color: DonyColors.grey400),
+        style: tt.labelMedium?.copyWith(color: DonyColors.neutral400),
       ),
     );
   }

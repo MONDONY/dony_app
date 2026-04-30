@@ -18,11 +18,14 @@ class PayoutOnboardingScreen extends StatelessWidget {
             pageBuilder: (ctx, animation, secondaryAnimation) =>
                 _StripeOnboardingWebView(
               url: state.url,
+              // Bug #1 fix: le dialog est déjà fermé par _StripeOnboardingWebView
+              // avant d'appeler onReturn — ne pas re-popper ici.
               onReturn: () {
-                Navigator.of(ctx).pop();
-                context
-                    .read<PaymentBloc>()
-                    .add(const PaymentOnboardingStatusChecked());
+                if (context.mounted) {
+                  context
+                      .read<PaymentBloc>()
+                      .add(const PaymentOnboardingStatusChecked());
+                }
               },
             ),
           );
@@ -46,53 +49,66 @@ class _OnboardingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final isLoading = state is PaymentLoading;
     final isPending = state is PaymentOnboardingPending;
     final error = state is PaymentError ? (state as PaymentError).message : null;
 
     return Scaffold(
       appBar: const DonyAppBar(title: 'Recevoir mes paiements'),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
-          DonySpacing.lg, DonySpacing.xxl, DonySpacing.lg, DonySpacing.huge,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _HeroSection(),
-            const SizedBox(height: DonySpacing.xxl),
-            _BenefitsSection(),
-            const SizedBox(height: DonySpacing.xxl),
-            if (isPending) ...[
-              _PendingBanner(),
-              const SizedBox(height: DonySpacing.xl),
-            ],
-            if (error != null) ...[
-              _ErrorBanner(message: error, cs: cs),
-              const SizedBox(height: DonySpacing.xl),
-            ],
-            DonyButton(
-              label: 'Connecter mon compte bancaire',
-              onPressed: isLoading
-                  ? null
-                  : () => context
-                      .read<PaymentBloc>()
-                      .add(const PaymentConnectAccountRequested()),
-              isLoading: isLoading,
-              icon: Icons.account_balance_rounded,
-            ),
-          ],
-        )
-            .animate()
-            .fadeIn(duration: 300.ms)
-            .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-      ),
+      body: Builder(builder: (context) {
+        final h = DonyLayout.hPadding(context);
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(h, DonySpacing.xxl, h, DonySpacing.huge),
+          child: DonyLayout.constrained(
+            context,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _HeroSection(),
+                const SizedBox(height: DonySpacing.xxl),
+                const _BenefitsSection(),
+                const SizedBox(height: DonySpacing.xxl),
+                if (isPending) ...[
+                  const DonyStatusBanner(
+                    type: DonyStatusBannerType.warning,
+                    icon: Icons.schedule_rounded,
+                    message:
+                        'Vérification en cours — Stripe finalise votre compte. Revenez dans quelques minutes.',
+                  ),
+                  const SizedBox(height: DonySpacing.xl),
+                ],
+                if (error != null) ...[
+                  DonyStatusBanner(
+                    type: DonyStatusBannerType.error,
+                    message: error,
+                  ),
+                  const SizedBox(height: DonySpacing.xl),
+                ],
+                DonyButton(
+                  label: 'Connecter mon compte bancaire',
+                  onPressed: isLoading
+                      ? null
+                      : () => context
+                          .read<PaymentBloc>()
+                          .add(const PaymentConnectAccountRequested()),
+                  isLoading: isLoading,
+                  icon: Icons.account_balance_rounded,
+                ),
+              ],
+            )
+                .animate()
+                .fadeIn(duration: 300.ms)
+                .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+          ),
+        );
+      }),
     );
   }
 }
 
 class _HeroSection extends StatelessWidget {
+  const _HeroSection();
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
@@ -101,15 +117,12 @@ class _HeroSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            color: cs.primaryContainer,
-            borderRadius: BorderRadius.circular(DonyRadius.xl),
-          ),
-          child: Icon(Icons.account_balance_wallet_rounded,
-              color: cs.primary, size: 32),
+        DonyIconContainer(
+          icon: Icons.account_balance_wallet_rounded,
+          size: DonyIconContainerSize.xl,
+          borderRadius: DonyRadius.xl,
+          backgroundColor: cs.primaryContainer,
+          iconColor: cs.primary,
         ),
         const SizedBox(height: DonySpacing.lg),
         Text(
@@ -130,6 +143,8 @@ class _HeroSection extends StatelessWidget {
 }
 
 class _BenefitsSection extends StatelessWidget {
+  const _BenefitsSection();
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
@@ -156,22 +171,19 @@ class _BenefitsSection extends StatelessWidget {
                 padding: const EdgeInsets.all(DonySpacing.base),
                 child: Row(
                   children: [
-                    Container(
-                      width: DonySpacing.icon,
-                      height: DonySpacing.icon,
-                      decoration: BoxDecoration(
-                        color: cs.primaryContainer,
-                        borderRadius: BorderRadius.circular(DonyRadius.md),
-                      ),
-                      child: Icon(icon, color: cs.primary, size: 20),
+                    DonyIconContainer(
+                      icon: icon,
+                      size: DonyIconContainerSize.md,
+                      borderRadius: DonyRadius.md,
+                      backgroundColor: cs.primaryContainer,
+                      iconColor: cs.primary,
                     ),
                     const SizedBox(width: DonySpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(title,
-                              style: tt.titleMedium),
+                          Text(title, style: tt.titleMedium),
                           const SizedBox(height: DonySpacing.xxs),
                           Text(subtitle,
                               style: tt.bodySmall?.copyWith(
@@ -194,73 +206,6 @@ class _BenefitsSection extends StatelessWidget {
   }
 }
 
-class _PendingBanner extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.all(DonySpacing.md),
-      decoration: BoxDecoration(
-        color: DonyColors.amberLight,
-        borderRadius: BorderRadius.circular(DonyRadius.md),
-        border: Border.all(color: DonyColors.warning.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.schedule_rounded,
-              color: DonyColors.amberDark, size: 20),
-          const SizedBox(width: DonySpacing.md),
-          Expanded(
-            child: Text(
-              'Vérification en cours — Stripe finalise votre compte. Revenez dans quelques minutes.',
-              style: tt.bodySmall?.copyWith(
-                color: DonyColors.amberDark,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ErrorBanner extends StatelessWidget {
-  final String message;
-  final ColorScheme cs;
-  const _ErrorBanner({required this.message, required this.cs});
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.all(DonySpacing.md),
-      decoration: BoxDecoration(
-        color: cs.errorContainer,
-        borderRadius: BorderRadius.circular(DonyRadius.md),
-        border: Border.all(color: cs.error.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.error_outline_rounded, color: cs.error, size: 20),
-          const SizedBox(width: DonySpacing.md),
-          Expanded(
-            child: Text(
-              message,
-              style: tt.bodySmall?.copyWith(
-                color: cs.error,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ── Vue succès ────────────────────────────────────────────────────────────────
 
 class _SuccessView extends StatelessWidget {
@@ -274,41 +219,42 @@ class _SuccessView extends StatelessWidget {
     return Scaffold(
       appBar: const DonyAppBar(title: 'Recevoir mes paiements'),
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(DonySpacing.xxl),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: cs.success.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.check_circle_rounded,
-                    color: cs.success, size: 44),
-              ),
-              const SizedBox(height: DonySpacing.xl),
-              Text(
-                'Paiements activés ✓',
-                style: tt.displayLarge,
-              ),
-              const SizedBox(height: DonySpacing.md),
-              Text(
-                'Votre compte bancaire est connecté. Vous recevrez vos paiements automatiquement après chaque livraison.',
-                textAlign: TextAlign.center,
-                style: tt.bodyLarge?.copyWith(
-                  color: cs.onSurfaceVariant,
-                  height: 1.5,
-                ),
-              ),
-            ],
-          )
-              .animate()
-              .fadeIn(duration: 400.ms)
-              .scale(begin: const Offset(0.9, 0.9), curve: Curves.easeOutCubic),
-        ),
+        child: Builder(builder: (context) {
+          return Padding(
+            padding: EdgeInsets.all(DonyLayout.hPadding(context)),
+            child: DonyLayout.constrained(
+              context,
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DonyIconContainer(
+                    icon: Icons.check_circle_rounded,
+                    size: DonyIconContainerSize.xxl,
+                    backgroundColor: cs.success.withValues(alpha: 0.1),
+                    iconColor: cs.success,
+                  ),
+                  const SizedBox(height: DonySpacing.xl),
+                  Text(
+                    'Paiements activés ✓',
+                    style: tt.displayLarge,
+                  ),
+                  const SizedBox(height: DonySpacing.md),
+                  Text(
+                    'Votre compte bancaire est connecté. Vous recevrez vos paiements automatiquement après chaque livraison.',
+                    textAlign: TextAlign.center,
+                    style: tt.bodyLarge?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              )
+                  .animate()
+                  .fadeIn(duration: 400.ms)
+                  .scale(begin: const Offset(0.9, 0.9), curve: Curves.easeOutCubic),
+            ),
+          );
+        }),
       ),
     );
   }
@@ -335,12 +281,6 @@ class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
   final _isLoading = ValueNotifier<bool>(true);
 
   @override
-  void dispose() {
-    _isLoading.dispose();
-    super.dispose();
-  }
-
-  @override
   void initState() {
     super.initState();
     _controller = WebViewController()
@@ -362,27 +302,25 @@ class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
   }
 
   @override
+  void dispose() {
+    _isLoading.dispose();
+    super.dispose();
+  }
+
+  void _close() {
+    Navigator.of(context).pop();
+    widget.onReturn();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: cs.surface,
-        elevation: 0,
-        title: Text(
-          'Configuration du compte',
-          style: tt.headlineMedium,
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
-          onPressed: () {
-            Navigator.of(context).pop();
-            widget.onReturn();
-          },
-        ),
-        bottom: const PreferredSize(
-            preferredSize: Size.fromHeight(1), child: Divider(height: 1)),
+      appBar: DonyAppBar(
+        title: 'Configuration du compte',
+        leadingIcon: Icons.close_rounded,
+        onBack: _close,
       ),
       body: Stack(
         children: [

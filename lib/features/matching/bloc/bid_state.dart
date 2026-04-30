@@ -61,3 +61,5 @@ class BidError extends BidState {
   final String message;
   BidError(this.message);
 }
+
+class BidNotFound extends BidState {}

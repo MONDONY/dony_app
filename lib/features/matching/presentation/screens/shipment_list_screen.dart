@@ -580,8 +580,8 @@ class _ShipmentListView extends StatelessWidget {
       );
     }
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(
-          DonySpacing.lg, DonySpacing.base, DonySpacing.lg, 100),
+      padding: EdgeInsets.fromLTRB(
+          DonyLayout.hPadding(context), DonySpacing.base, DonyLayout.hPadding(context), 100),
       itemCount: bids.length,
       separatorBuilder: (_, _) => const SizedBox(height: DonySpacing.md),
       itemBuilder: (_, i) => _ShipmentCard(bid: bids[i], index: i),

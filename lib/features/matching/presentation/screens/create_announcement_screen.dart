@@ -345,9 +345,9 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
           ),
           body: SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
-              DonySpacing.lg,
+              DonyLayout.hPadding(context),
               DonySpacing.xl,
-              DonySpacing.lg,
+              DonyLayout.hPadding(context),
               MediaQuery.of(context).padding.bottom + 100,
             ),
             child: Column(
@@ -920,9 +920,9 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
           ),
           bottomSheet: Container(
             padding: EdgeInsets.fromLTRB(
-              DonySpacing.lg,
+              DonyLayout.hPadding(context),
               DonySpacing.base,
-              DonySpacing.lg,
+              DonyLayout.hPadding(context),
               MediaQuery.of(context).padding.bottom + DonySpacing.base,
             ),
             decoration: const BoxDecoration(

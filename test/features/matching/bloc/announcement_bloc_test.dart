@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -287,6 +288,44 @@ void main() {
         return buildBloc();
       },
       act: (bloc) => bloc.add(AnnouncementDeleteRequested('ann-001')),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementError>(),
+      ],
+    );
+  });
+
+  // ─── AnnouncementDetailRequested — 404 ───────────────────────────────────────
+
+  group('AnnouncementDetailRequested — 404', () {
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      '404 → [Loading, AnnouncementNotFound]',
+      build: () {
+        when(() => mockRepo.getAnnouncementDetail(any()))
+            .thenThrow(DioException(
+              requestOptions: RequestOptions(path: '/announcements/missing'),
+              error: const NotFoundException(),
+            ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementDetailRequested('missing')),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementNotFound>(),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'erreur réseau générique → [Loading, AnnouncementError] (pas NotFound)',
+      build: () {
+        when(() => mockRepo.getAnnouncementDetail(any()))
+            .thenThrow(DioException(
+              requestOptions: RequestOptions(path: '/announcements/ann-001'),
+              type: DioExceptionType.connectionTimeout,
+            ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementDetailRequested('ann-001')),
       expect: () => [
         isA<AnnouncementLoading>(),
         isA<AnnouncementError>(),

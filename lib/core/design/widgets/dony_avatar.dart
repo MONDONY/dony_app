@@ -40,7 +40,7 @@ class DonyAvatar extends StatelessWidget {
   }
 
   static const _avatarColors = [
-    DonyColors.green400,
+    DonyColors.primary,
     DonyColors.terra500,
     DonyColors.ink900,
     DonyColors.info,
@@ -62,7 +62,7 @@ class DonyAvatar extends StatelessWidget {
           width: dim,
           height: dim,
           decoration: BoxDecoration(
-            color: imageUrl != null ? DonyColors.grey100 : _bgColor,
+            color: imageUrl != null ? DonyColors.neutral100 : _bgColor,
             shape: BoxShape.circle,
           ),
           child: imageUrl != null

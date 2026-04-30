@@ -65,7 +65,7 @@ class _AuthInterceptor extends Interceptor {
     } else if (statusCode == 403) {
       appException = ForbiddenException(detail ?? 'Accès refusé');
     } else if (statusCode == 404) {
-      appException = NotFoundException(detail ?? 'Ressource introuvable');
+      appException = NotFoundException(message: detail ?? 'Ressource introuvable');
     } else if (statusCode == 422) {
       appException = ValidationException(detail ?? 'Données invalides');
     } else if (statusCode != null && statusCode >= 500) {

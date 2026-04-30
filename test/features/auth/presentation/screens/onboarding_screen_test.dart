@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/core/design/widgets/dony_logo.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -97,10 +98,8 @@ void main() {
   testWidgets('OnboardingScreen affiche le logo dony', (tester) async {
     await _pump(tester, mockAuthBloc);
 
-    // "dony" is a standalone Text widget in _DonyLogo
-    expect(find.text('dony'), findsOneWidget);
-    // "." is the green dot beside "dony"
-    expect(find.text('.'), findsOneWidget);
+    // DonyLogo is an Image.asset widget — verify it is present
+    expect(find.byType(DonyLogo), findsOneWidget);
   });
 
   testWidgets('OnboardingScreen affiche le headline principal', (tester) async {
