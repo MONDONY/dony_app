@@ -1175,53 +1175,99 @@ class _ActionBar extends StatelessWidget {
   void _showRejectDialog(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final reasonCtrl = TextEditingController();
-    showDialog(
+    showModalBottomSheet<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Refuser la demande', style: tt.headlineMedium),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Souhaitez-vous indiquer une raison à l\'expéditeur ?',
-              style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
-            ),
-            const SizedBox(height: DonySpacing.md),
-            TextField(
-              controller: reasonCtrl,
-              maxLines: 3,
-              decoration: InputDecoration(
-                hintText: 'Raison (optionnelle)',
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(DonyRadius.md)),
-                hintStyle: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
-              ),
-            ),
-          ],
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(ctx).bottom,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => ctx.pop(),
-            child: Text('Annuler',
-                style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400)),
-          ),
-          FilledButton(
-            onPressed: () {
-              ctx.pop();
-              context.read<BidBloc>().add(BidRejectRequested(bid.id,
-                  reason: reasonCtrl.text.trim().isEmpty
-                      ? null
-                      : reasonCtrl.text.trim()));
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: DonyColors.error,
-              foregroundColor: DonyColors.white,
-              elevation: 0,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(ctx).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(DonyRadius.xl),
             ),
-            child: Text('Confirmer le refus',
-                style: tt.labelLarge?.copyWith(color: DonyColors.white)),
           ),
-        ],
+          padding: const EdgeInsets.fromLTRB(
+            DonySpacing.base,
+            DonySpacing.base,
+            DonySpacing.base,
+            DonySpacing.xl,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: DonyColors.neutral200,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: DonySpacing.base),
+              Text('Refuser la demande', style: tt.headlineMedium),
+              const SizedBox(height: DonySpacing.sm),
+              Text(
+                'Souhaitez-vous indiquer une raison à l\'expéditeur ?',
+                style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
+              ),
+              const SizedBox(height: DonySpacing.md),
+              TextField(
+                controller: reasonCtrl,
+                maxLines: 3,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'Raison (optionnelle)',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                  ),
+                  hintStyle:
+                      tt.bodySmall?.copyWith(color: DonyColors.neutral400),
+                ),
+              ),
+              const SizedBox(height: DonySpacing.base),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => ctx.pop(),
+                    child: Text(
+                      'Annuler',
+                      style: tt.bodyMedium?.copyWith(
+                        color: DonyColors.neutral400,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: DonySpacing.sm),
+                  FilledButton(
+                    onPressed: () {
+                      ctx.pop();
+                      context.read<BidBloc>().add(BidRejectRequested(bid.id,
+                          reason: reasonCtrl.text.trim().isEmpty
+                              ? null
+                              : reasonCtrl.text.trim()));
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: DonyColors.error,
+                      foregroundColor: DonyColors.white,
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      'Confirmer le refus',
+                      style: tt.labelLarge?.copyWith(color: DonyColors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

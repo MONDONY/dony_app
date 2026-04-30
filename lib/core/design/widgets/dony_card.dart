@@ -21,6 +21,7 @@ class DonyCard extends StatelessWidget {
     );
     if (onTap != null) {
       return Card(
+        margin: EdgeInsets.zero,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(DonyRadius.card),
@@ -28,6 +29,6 @@ class DonyCard extends StatelessWidget {
         ),
       );
     }
-    return Card(child: inner);
+    return Card(margin: EdgeInsets.zero, child: inner);
   }
 }
