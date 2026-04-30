@@ -1,32 +1,68 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
+import 'package:dony/features/notifications/bloc/notification_bloc.dart';
+import 'package:dony/features/notifications/bloc/notification_event.dart';
+import 'package:dony/features/notifications/bloc/notification_state.dart';
+import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-class MainShell extends StatelessWidget {
+class MainShell extends StatefulWidget {
   const MainShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
+
+  @override
+  State<MainShell> createState() => _MainShellState();
+}
+
+class _MainShellState extends State<MainShell> {
+  StreamSubscription<void>? _fcmSub;
 
   void _onTap(int index) {
     if (index == 1) {
       getIt<EnvoisRefreshNotifier>().requestRefresh();
     }
-    navigationShell.goBranch(
+    widget.navigationShell.goBranch(
       index,
-      initialLocation: index == navigationShell.currentIndex,
+      initialLocation: index == widget.navigationShell.currentIndex,
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      context.read<NotificationBloc>().add(const NotificationsLoadRequested());
+      _fcmSub = getIt<NotificationService>().newNotificationStream.listen((_) {
+        if (mounted) {
+          context.read<NotificationBloc>().add(const NotificationsLoadRequested());
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _fcmSub?.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: navigationShell,
+      body: widget.navigationShell,
       bottomNavigationBar: _DonyBottomNav(
-        currentIndex: navigationShell.currentIndex,
+        currentIndex: widget.navigationShell.currentIndex,
         onTap: _onTap,
       ),
     );
@@ -98,20 +134,27 @@ class _DonyBottomNav extends StatelessWidget {
               ),
               // 3 — Messages
               Expanded(
-                child: StreamBuilder<int>(
-                  stream: getIt<FirestoreChatRepository>().totalUnreadStream(
-                    FirebaseAuth.instance.currentUser?.uid ?? '',
-                  ),
-                  builder: (context, snapshot) {
-                    final unreadCount = snapshot.data ?? 0;
-                    return _NavItem(
-                      icon: Icons.chat_bubble_rounded,
-                      outlinedIcon: Icons.chat_bubble_outline_rounded,
-                      label: 'Messages',
-                      index: 3,
-                      currentIndex: currentIndex,
-                      onTap: () => onTap(3),
-                      badgeCount: unreadCount,
+                child: BlocBuilder<NotificationBloc, NotificationState>(
+                  builder: (context, notifState) {
+                    return StreamBuilder<int>(
+                      stream: getIt<FirestoreChatRepository>().totalUnreadStream(
+                        FirebaseAuth.instance.currentUser?.uid ?? '',
+                      ),
+                      builder: (context, snapshot) {
+                        final notifUnread = notifState is NotificationLoaded
+                            ? notifState.unreadCount
+                            : 0;
+                        final badgeCount = (snapshot.data ?? 0) + notifUnread;
+                        return _NavItem(
+                          icon: Icons.chat_bubble_rounded,
+                          outlinedIcon: Icons.chat_bubble_outline_rounded,
+                          label: 'Messages',
+                          index: 3,
+                          currentIndex: currentIndex,
+                          onTap: () => onTap(3),
+                          badgeCount: badgeCount,
+                        );
+                      },
                     );
                   },
                 ),

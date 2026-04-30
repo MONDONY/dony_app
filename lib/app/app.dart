@@ -8,7 +8,6 @@ import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
-import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -32,11 +31,9 @@ class _DonyAppState extends State<DonyApp> {
     _navSub = getIt<NotificationService>().navigationStream.listen((route) {
       appRouter.go(route);
     });
-    // Upload FCM token + load notifications as soon as Firebase confirms sign-in.
     _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
       if (user != null) {
         getIt<NotificationService>().uploadCurrentToken();
-        getIt<NotificationBloc>().add(const NotificationsLoadRequested());
       }
     });
   }

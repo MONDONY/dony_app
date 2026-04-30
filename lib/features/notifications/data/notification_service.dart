@@ -32,6 +32,10 @@ class NotificationService {
   final _navigationController = StreamController<String>.broadcast();
   Stream<String> get navigationStream => _navigationController.stream;
 
+  // Emits void whenever a new foreground notification arrives (for badge refresh)
+  final _newNotificationController = StreamController<void>.broadcast();
+  Stream<void> get newNotificationStream => _newNotificationController.stream;
+
   static const _androidChannel = AndroidNotificationChannel(
     'dony_transactional',
     'Notifications dony',
@@ -121,6 +125,7 @@ class NotificationService {
 
   void _handleForegroundMessage(RemoteMessage message) {
     _ackIfCritical(message.data);
+    _newNotificationController.add(null);
     final notification = message.notification;
     if (notification == null) return;
 
@@ -188,5 +193,6 @@ class NotificationService {
 
   void dispose() {
     _navigationController.close();
+    _newNotificationController.close();
   }
 }

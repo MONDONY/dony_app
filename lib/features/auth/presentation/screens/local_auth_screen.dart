@@ -107,17 +107,17 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
                 padding: EdgeInsets.symmetric(horizontal: h),
                 child: Column(
                   children: [
-                    const SizedBox(height: 56),
+                    const Spacer(flex: 2),
                     _buildLockIcon(state, cs),
                     const SizedBox(height: DonySpacing.xl),
                     _buildTitle(cs),
-                    const SizedBox(height: DonySpacing.huge),
+                    const SizedBox(height: DonySpacing.xxl),
                     _buildPinDots(state, cs),
                     if (state is LocalAuthPinRequired &&
                         state.attemptsLeft < 3)
                       _buildAttemptsWarning(state.attemptsLeft, cs),
                     if (state is LocalAuthLocked) _buildLockMessage(cs),
-                    const Spacer(),
+                    const Spacer(flex: 3),
                     if (state is LocalAuthPinRequired)
                       DonyKeypad(
                         onDigit: _onDigit,
