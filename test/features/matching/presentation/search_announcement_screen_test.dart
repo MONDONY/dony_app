@@ -687,4 +687,36 @@ void main() {
           .called(greaterThan(0));
     });
   });
+
+  // ── 9. Toggle Liste/Carte ─────────────────────────────────────────────────
+
+  group('Toggle Liste/Map', () {
+    final ann = [
+      _makeAnn(id: 'a1'),
+      _makeAnn(id: 'a2', rating: 4.8),
+    ];
+
+    testWidgets('toggle buttons are visible in results view', (tester) async {
+      stubLoaded(ann);
+
+      await tester.pumpWidget(
+          _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
+      await tester.pump();
+      await _goToResults(tester);
+
+      expect(find.byIcon(Icons.list_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.map_outlined), findsOneWidget);
+    });
+
+    testWidgets('filter button remains visible in list view', (tester) async {
+      stubLoaded(ann);
+
+      await tester.pumpWidget(
+          _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
+      await tester.pump();
+      await _goToResults(tester);
+
+      expect(find.byIcon(Icons.tune_rounded), findsOneWidget);
+    });
+  });
 }
