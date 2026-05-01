@@ -4,6 +4,8 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
+import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -507,6 +509,8 @@ class _ResultsView extends StatefulWidget {
 
 class _ResultsViewState extends State<_ResultsView> {
   // ── Section 5: client-side filter logic (AND semantics) ─────────────────────
+  bool _isMapView = false;
+
   List<AnnouncementModel> _applyFilters(List<AnnouncementModel> all) {
     final list = all.where((a) {
       if (widget.ratingActive.value) {
@@ -817,7 +821,33 @@ class _ResultsViewState extends State<_ResultsView> {
           ],
         ),
         actions: [
-          // Section 7: green dot badge when Level-1 filters active
+          // Toggle segmenté Liste | Carte
+          Container(
+            margin: const EdgeInsets.only(right: DonySpacing.sm),
+            decoration: BoxDecoration(
+              color: DonyColors.bg,
+              borderRadius: BorderRadius.circular(DonyRadius.sm),
+              border: Border.all(color: DonyColors.neutral200),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _ToggleTab(
+                  icon: Icons.list_rounded,
+                  label: 'Liste',
+                  isActive: !_isMapView,
+                  onTap: () => setState(() => _isMapView = false),
+                ),
+                _ToggleTab(
+                  icon: Icons.map_outlined,
+                  label: 'Carte',
+                  isActive: _isMapView,
+                  onTap: () => setState(() => _isMapView = true),
+                ),
+              ],
+            ),
+          ),
+          // Bouton filtre toujours visible
           Stack(
             children: [
               IconButton(
@@ -847,7 +877,21 @@ class _ResultsViewState extends State<_ResultsView> {
           child: Divider(height: 1, color: DonyColors.neutral200),
         ),
       ),
-      body: Column(
+      body: _isMapView
+          ? BlocBuilder<AnnouncementBloc, AnnouncementState>(
+              builder: (context, state) {
+                final announcements = state is AnnouncementSearchLoaded
+                    ? state.results
+                    : <AnnouncementModel>[];
+                return AnnouncementMapView(
+                  key: ValueKey('map-${announcements.length}'),
+                  announcements: announcements,
+                  searchDepartureCity: widget.departureCity,
+                  searchArrivalCity: widget.arrivalCity,
+                );
+              },
+            )
+          : Column(
         children: [
           // ── Filter chips row (Section 3) ────────────────────────────
           SizedBox(
@@ -956,7 +1000,7 @@ class _ResultsViewState extends State<_ResultsView> {
                                 : null;
                         final isOwn = currentUserId != null &&
                             announcement.travelerId == currentUserId;
-                        return _TravelerCard(
+                        return TravelerCard(
                           announcement: announcement,
                           index: i,
                           isOwnAnnouncement: isOwn,
@@ -977,6 +1021,57 @@ class _ResultsViewState extends State<_ResultsView> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Toggle tab ───────────────────────────────────────────────────────────────
+
+class _ToggleTab extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _ToggleTab({
+    required this.icon,
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.md,
+          vertical: DonySpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: isActive ? DonyColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(DonyRadius.sm),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 15,
+                color: isActive ? Colors.white : DonyColors.neutral400),
+            const SizedBox(width: DonySpacing.xxs),
+            Text(
+              label,
+              style: tt.labelMedium?.copyWith(
+                color: isActive ? Colors.white : DonyColors.neutral400,
+                fontWeight:
+                    isActive ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1414,248 +1509,6 @@ class _QuickChip extends StatelessWidget {
             color: active ? DonyColors.primary : DonyColors.ink900,
           ),
         ),
-      ),
-    );
-  }
-}
-
-// ── Traveler card (résultats) ────────────────────────────────────────────────
-
-class _TravelerCard extends StatelessWidget {
-  const _TravelerCard({
-    required this.announcement,
-    required this.index,
-    required this.isOwnAnnouncement,
-    required this.onTap,
-  });
-
-  final AnnouncementModel announcement;
-  final VoidCallback? onTap;
-  final int index;
-  final bool isOwnAnnouncement;
-
-  static const int _maxVisibleChips = 3;
-
-  String get _displayName =>
-      announcement.traveler?.resolvedName ?? 'Voyageur';
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final traveler = announcement.traveler;
-    final rating = traveler?.averageRating;
-    final totalTrips = traveler?.totalTrips;
-    final isKiloPro = traveler?.kiloPro ?? false;
-    final dateStr =
-        DateFormat('EEE d', 'fr').format(announcement.departureDate);
-    final categories = announcement.acceptedContentTypes ?? [];
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: DonyColors.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: DonyColors.borderDefault),
-        ),
-        padding: const EdgeInsets.all(DonySpacing.base),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Row 1: avatar + info + price ───────────────────────
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                DonyAvatar(
-                  name: _displayName,
-                  size: DonyAvatarSize.md,
-                ),
-                const SizedBox(width: DonySpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _displayName,
-                        style: tt.titleLarge,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: DonySpacing.xxs),
-                      Row(
-                        children: [
-                          const Icon(Icons.star_rounded,
-                              size: 13, color: DonyColors.warning),
-                          const SizedBox(width: DonySpacing.xxs),
-                          Text(
-                            rating != null
-                                ? rating.toStringAsFixed(1)
-                                : '—',
-                            style: tt.titleSmall,
-                          ),
-                          const SizedBox(width: DonySpacing.xxs),
-                          Text(
-                            '· ${totalTrips ?? 0} trajet${(totalTrips ?? 0) > 1 ? 's' : ''}',
-                            style: tt.bodySmall?.copyWith(
-                              color: DonyColors.textMuted,
-                            ),
-                          ),
-                          if (isKiloPro) ...[
-                            const SizedBox(width: DonySpacing.xs),
-                            const _KycBadge(),
-                          ],
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: DonySpacing.sm),
-                Text(
-                  '${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
-                  style: tt.titleLarge?.copyWith(
-                    color: DonyColors.success,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: DonySpacing.sm),
-
-            // ── Row 2: date + capacity ──────────────────────────────
-            Row(
-              children: [
-                const Icon(Icons.calendar_today_rounded,
-                    size: 13, color: DonyColors.textSubtle),
-                const SizedBox(width: DonySpacing.xxs),
-                Text(
-                  dateStr,
-                  style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
-                ),
-                const SizedBox(width: DonySpacing.md),
-                const Icon(Icons.inventory_2_outlined,
-                    size: 13, color: DonyColors.textSubtle),
-                const SizedBox(width: DonySpacing.xxs),
-                Text(
-                  '${announcement.availableKg.toStringAsFixed(0)} kg dispo',
-                  style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
-                ),
-              ],
-            ),
-
-            // ── Row 3: content-type chips ───────────────────────────
-            if (categories.isNotEmpty) ...[
-              const SizedBox(height: DonySpacing.sm),
-              _CategoryChips(
-                categories: categories,
-                maxVisible: _maxVisibleChips,
-              ),
-            ],
-
-            // Own announcement label
-            if (isOwnAnnouncement) ...[
-              const SizedBox(height: DonySpacing.sm),
-              Text(
-                'Votre trajet',
-                style: tt.labelMedium?.copyWith(color: DonyColors.textMuted),
-              ),
-            ],
-          ],
-        ),
-      ).animate().fadeIn(
-            delay: Duration(milliseconds: 60 * index),
-          ).slideY(
-            begin: 0.04,
-            curve: Curves.easeOutCubic,
-          ),
-    );
-  }
-}
-
-class _KycBadge extends StatelessWidget {
-  const _KycBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.sm,
-        vertical: DonySpacing.xxs,
-      ),
-      decoration: BoxDecoration(
-        color: DonyColors.successLight,
-        borderRadius: BorderRadius.circular(DonyRadius.full),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: const BoxDecoration(
-              color: DonyColors.success,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: DonySpacing.xxs),
-          Text(
-            'KYC',
-            style: tt.labelSmall?.copyWith(
-              color: DonyColors.success,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CategoryChips extends StatelessWidget {
-  const _CategoryChips({
-    required this.categories,
-    required this.maxVisible,
-  });
-
-  final List<String> categories;
-  final int maxVisible;
-
-  @override
-  Widget build(BuildContext context) {
-    final visible = categories.take(maxVisible).toList();
-    final overflow = categories.length - maxVisible;
-
-    return Wrap(
-      spacing: DonySpacing.xs,
-      runSpacing: DonySpacing.xs,
-      children: [
-        for (final label in visible) _CategoryChip(label: label),
-        if (overflow > 0) _CategoryChip(label: '+$overflow'),
-      ],
-    );
-  }
-}
-
-class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.sm,
-        vertical: DonySpacing.xxs,
-      ),
-      decoration: BoxDecoration(
-        color: DonyColors.bgApp,
-        borderRadius: BorderRadius.circular(DonyRadius.xl),
-        border: Border.all(color: DonyColors.borderDefault),
-      ),
-      child: Text(
-        label,
-        style: tt.labelSmall?.copyWith(color: DonyColors.textMuted),
       ),
     );
   }

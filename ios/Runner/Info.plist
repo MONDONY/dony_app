@@ -68,5 +68,7 @@
 		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>Dony utilise ta position pour trouver les trajets depuis ta ville.</string>
 	</dict>
 </plist>
