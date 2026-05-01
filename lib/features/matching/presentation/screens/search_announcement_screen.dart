@@ -4,6 +4,7 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
@@ -508,6 +509,8 @@ class _ResultsView extends StatefulWidget {
 
 class _ResultsViewState extends State<_ResultsView> {
   // ── Section 5: client-side filter logic (AND semantics) ─────────────────────
+  bool _isMapView = false;
+
   List<AnnouncementModel> _applyFilters(List<AnnouncementModel> all) {
     final list = all.where((a) {
       if (widget.ratingActive.value) {
@@ -818,7 +821,33 @@ class _ResultsViewState extends State<_ResultsView> {
           ],
         ),
         actions: [
-          // Section 7: green dot badge when Level-1 filters active
+          // Toggle segmenté Liste | Carte
+          Container(
+            margin: const EdgeInsets.only(right: DonySpacing.sm),
+            decoration: BoxDecoration(
+              color: DonyColors.bg,
+              borderRadius: BorderRadius.circular(DonyRadius.sm),
+              border: Border.all(color: DonyColors.neutral200),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _ToggleTab(
+                  icon: Icons.list_rounded,
+                  label: 'Liste',
+                  isActive: !_isMapView,
+                  onTap: () => setState(() => _isMapView = false),
+                ),
+                _ToggleTab(
+                  icon: Icons.map_outlined,
+                  label: 'Carte',
+                  isActive: _isMapView,
+                  onTap: () => setState(() => _isMapView = true),
+                ),
+              ],
+            ),
+          ),
+          // Bouton filtre toujours visible
           Stack(
             children: [
               IconButton(
@@ -848,7 +877,21 @@ class _ResultsViewState extends State<_ResultsView> {
           child: Divider(height: 1, color: DonyColors.neutral200),
         ),
       ),
-      body: Column(
+      body: _isMapView
+          ? BlocBuilder<AnnouncementBloc, AnnouncementState>(
+              builder: (context, state) {
+                final announcements = state is AnnouncementSearchLoaded
+                    ? state.results
+                    : <AnnouncementModel>[];
+                return AnnouncementMapView(
+                  key: ValueKey('map-${announcements.length}'),
+                  announcements: announcements,
+                  searchDepartureCity: widget.departureCity,
+                  searchArrivalCity: widget.arrivalCity,
+                );
+              },
+            )
+          : Column(
         children: [
           // ── Filter chips row (Section 3) ────────────────────────────
           SizedBox(
@@ -978,6 +1021,57 @@ class _ResultsViewState extends State<_ResultsView> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Toggle tab ───────────────────────────────────────────────────────────────
+
+class _ToggleTab extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _ToggleTab({
+    required this.icon,
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.md,
+          vertical: DonySpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: isActive ? DonyColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(DonyRadius.sm),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 15,
+                color: isActive ? Colors.white : DonyColors.neutral400),
+            const SizedBox(width: DonySpacing.xxs),
+            Text(
+              label,
+              style: tt.labelMedium?.copyWith(
+                color: isActive ? Colors.white : DonyColors.neutral400,
+                fontWeight:
+                    isActive ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
