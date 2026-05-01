@@ -6,7 +6,6 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
-import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -134,27 +133,19 @@ class _DonyBottomNav extends StatelessWidget {
               ),
               // 3 — Messages
               Expanded(
-                child: BlocBuilder<NotificationBloc, NotificationState>(
-                  builder: (context, notifState) {
-                    return StreamBuilder<int>(
-                      stream: getIt<FirestoreChatRepository>().totalUnreadStream(
-                        FirebaseAuth.instance.currentUser?.uid ?? '',
-                      ),
-                      builder: (context, snapshot) {
-                        final notifUnread = notifState is NotificationLoaded
-                            ? notifState.unreadCount
-                            : 0;
-                        final badgeCount = (snapshot.data ?? 0) + notifUnread;
-                        return _NavItem(
-                          icon: Icons.chat_bubble_rounded,
-                          outlinedIcon: Icons.chat_bubble_outline_rounded,
-                          label: 'Messages',
-                          index: 3,
-                          currentIndex: currentIndex,
-                          onTap: () => onTap(3),
-                          badgeCount: badgeCount,
-                        );
-                      },
+                child: StreamBuilder<int>(
+                  stream: getIt<FirestoreChatRepository>().totalUnreadStream(
+                    FirebaseAuth.instance.currentUser?.uid ?? '',
+                  ),
+                  builder: (context, snapshot) {
+                    return _NavItem(
+                      icon: Icons.chat_bubble_rounded,
+                      outlinedIcon: Icons.chat_bubble_outline_rounded,
+                      label: 'Messages',
+                      index: 3,
+                      currentIndex: currentIndex,
+                      onTap: () => onTap(3),
+                      badgeCount: snapshot.data ?? 0,
                     );
                   },
                 ),

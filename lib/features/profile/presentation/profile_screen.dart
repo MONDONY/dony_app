@@ -11,8 +11,6 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/notifications/bloc/notification_bloc.dart';
-import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -84,42 +82,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     appBar: DonyAppBar(
                       title: 'Mon profil',
                       showBackButton: false,
-                      actions: [
-                        BlocBuilder<NotificationBloc, NotificationState>(
-                          builder: (context, notifState) {
-                            final unread = notifState is NotificationLoaded
-                                ? notifState.unreadCount
-                                : 0;
-                            return Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                IconButton(
-                                  icon: Icon(
-                                    Icons.notifications_outlined,
-                                    color: cs.onSurface,
-                                    size: 22,
-                                  ),
-                                  onPressed: () => context.go('/messages'),
-                                ),
-                                if (unread > 0)
-                                  Positioned(
-                                    top: 8,
-                                    right: 8,
-                                    child: Container(
-                                      width: 8,
-                                      height: 8,
-                                      decoration: BoxDecoration(
-                                        color: cs.error,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            );
-                          },
-                        ),
-                        const SizedBox(width: DonySpacing.xs),
-                      ],
                     ),
                     body: RefreshIndicator(
                       color: cs.primary,

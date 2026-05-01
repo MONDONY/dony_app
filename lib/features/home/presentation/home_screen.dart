@@ -1,6 +1,9 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/notifications/bloc/notification_bloc.dart';
+import 'package:dony/features/notifications/bloc/notification_state.dart';
+import 'package:dony/features/notifications/presentation/notification_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -147,10 +150,29 @@ class _SenderViewState extends State<_SenderView> {
             // Barre persistante : logo + icônes
             title: DonyLogo(variant: logoVariant, fontSize: 43),
             actions: [
-              IconButton(
-                icon: Icon(Icons.notifications_outlined, color: iconColor),
-                onPressed: () => context.push('/messages'),
-                tooltip: 'Notifications',
+              BlocBuilder<NotificationBloc, NotificationState>(
+                builder: (context, notifState) {
+                  final unread = notifState is NotificationLoaded
+                      ? notifState.unreadCount
+                      : 0;
+                  return Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.notifications_outlined,
+                            color: iconColor),
+                        onPressed: () => showNotificationBottomSheet(context),
+                        tooltip: 'Notifications',
+                      ),
+                      if (unread > 0)
+                        Positioned(
+                          right: 6,
+                          top: 6,
+                          child: _NotifBadge(count: unread),
+                        ),
+                    ],
+                  );
+                },
               ),
               GestureDetector(
                 onTap: () => context.push('/profile'),
@@ -707,10 +729,29 @@ class _TravelerViewState extends State<_TravelerView> {
               overflow: TextOverflow.ellipsis,
             ),
             actions: [
-              IconButton(
-                icon: Icon(Icons.notifications_outlined, color: iconColor),
-                onPressed: () => context.push('/messages'),
-                tooltip: 'Notifications',
+              BlocBuilder<NotificationBloc, NotificationState>(
+                builder: (context, notifState) {
+                  final unread = notifState is NotificationLoaded
+                      ? notifState.unreadCount
+                      : 0;
+                  return Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.notifications_outlined,
+                            color: iconColor),
+                        onPressed: () => showNotificationBottomSheet(context),
+                        tooltip: 'Notifications',
+                      ),
+                      if (unread > 0)
+                        Positioned(
+                          right: 6,
+                          top: 6,
+                          child: _NotifBadge(count: unread),
+                        ),
+                    ],
+                  );
+                },
               ),
             ],
             bottom: PreferredSize(
@@ -1044,6 +1085,36 @@ class _ActiveTripCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Notification bell badge ────────────────────────────────────────────────────
+
+class _NotifBadge extends StatelessWidget {
+  final int count;
+  const _NotifBadge({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final label = count > 99 ? '99+' : count.toString();
+    return Container(
+      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      decoration: const BoxDecoration(
+        color: DonyColors.error,
+        borderRadius: BorderRadius.all(Radius.circular(DonyRadius.sm)),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: DonyColors.white,
+          height: 1.6,
+        ),
+        textAlign: TextAlign.center,
       ),
     );
   }
