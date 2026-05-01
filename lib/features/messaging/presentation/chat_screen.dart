@@ -45,6 +45,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ChatSubscribeRequested(
             widget.conversation.firestoreConversationId,
             currentUserUid: _myUid,
+            isReadOnly: widget.conversation.readOnly,
           ),
         );
   }
@@ -231,15 +232,12 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: BlocConsumer<ChatBloc, ChatState>(
         listenWhen: (_, current) =>
-            current is ChatConversationDeleted ||
-            current is ChatError,
+            current is ChatConversationDeleted || current is ChatError,
         listener: (context, state) {
           if (state is ChatConversationDeleted) {
-            // Remove from the list before popping so the tile vanishes immediately
             getIt<ConversationListBloc>().add(
               ConversationRemovedLocally(widget.conversation.id),
             );
-            // Defer the pop one frame to avoid Hero animation assertion failures
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
@@ -254,11 +252,22 @@ class _ChatScreenState extends State<ChatScreen> {
             );
           }
         },
-        builder: (context, _) => Column(
+        builder: (context, state) {
+          final isReadOnly = state is ChatReadOnly;
+          return Column(
         children: [
-          // Sticky trip banner — clickable → /bids/:id
+          // Sticky trip banner — disabled (not clickable) in read-only mode
           if (conversation.tripLabel != null)
-            _TripBanner(conversation: conversation, cs: cs, tt: tt),
+            _TripBanner(
+              conversation: conversation,
+              cs: cs,
+              tt: tt,
+              disabled: isReadOnly,
+            ),
+
+          // Read-only info banner
+          if (isReadOnly)
+            _ReadOnlyBanner(cs: cs, tt: tt),
 
           // Sticky bid status banner (informational, no actions)
           if (conversation.bidStatus != null)
@@ -266,95 +275,96 @@ class _ChatScreenState extends State<ChatScreen> {
 
           // Message list
           Expanded(
-            child: BlocBuilder<ChatBloc, ChatState>(
-              builder: (context, state) {
-                if (state is ChatLoading || state is ChatInitial) {
-                  return Center(child: CircularProgressIndicator(color: cs.primary));
-                }
+            child: Builder(builder: (context) {
+              if (state is ChatLoading || state is ChatInitial) {
+                return Center(child: CircularProgressIndicator(color: cs.primary));
+              }
 
-                if (state is ChatError) {
-                  return DonyEmptyState(
-                    type: DonyEmptyStateType.error,
-                    icon: Icons.wifi_off_rounded,
-                    title: 'Connexion interrompue',
-                    description: state.message,
-                    actionLabel: 'Réessayer',
-                    onAction: () => context.read<ChatBloc>().add(
-                          ChatSubscribeRequested(
-                            widget.conversation.firestoreConversationId,
-                          ),
+              if (state is ChatError) {
+                return DonyEmptyState(
+                  type: DonyEmptyStateType.error,
+                  icon: Icons.wifi_off_rounded,
+                  title: 'Connexion interrompue',
+                  description: state.message,
+                  actionLabel: 'Réessayer',
+                  onAction: () => context.read<ChatBloc>().add(
+                        ChatSubscribeRequested(
+                          widget.conversation.firestoreConversationId,
                         ),
-                  );
-                }
-
-                if (state is ChatLoaded) {
-                  if (state.messages.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.chat_bubble_outline_rounded,
-                            size: 48,
-                            color: cs.onSurfaceVariant.withValues(alpha: 0.35),
-                          ),
-                          const SizedBox(height: DonySpacing.md),
-                          Text(
-                            'Démarrez la conversation !',
-                            style: tt.bodyMedium?.copyWith(
-                              color: cs.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
                       ),
-                    );
-                  }
+                );
+              }
 
-                  return ListView.builder(
-                    controller: _scrollController,
-                    reverse: true,
-                    padding: const EdgeInsets.fromLTRB(
-                      DonySpacing.lg,
-                      DonySpacing.sm,
-                      DonySpacing.lg,
-                      DonySpacing.md,
+              final messages = switch (state) {
+                ChatLoaded(:final messages) => messages,
+                ChatReadOnly(:final messages) => messages,
+                _ => null,
+              };
+
+              if (messages != null) {
+                if (messages.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.chat_bubble_outline_rounded,
+                          size: 48,
+                          color: cs.onSurfaceVariant.withValues(alpha: 0.35),
+                        ),
+                        const SizedBox(height: DonySpacing.md),
+                        Text(
+                          'Démarrez la conversation !',
+                          style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                        ),
+                      ],
                     ),
-                    itemCount: state.messages.length,
-                    itemBuilder: (context, index) {
-                      final message = state.messages[index];
-                      final isMe = message.senderId == _myUid;
-                      final showDateSeparator = _showDateSeparator(
-                        state.messages,
-                        index,
-                      );
-                      return Column(
-                        children: [
-                          if (showDateSeparator)
-                            _DateSeparator(date: message.sentAt, cs: cs, tt: tt),
-                          _MessageBubble(message: message, isMe: isMe)
-                              .animate()
-                              .fadeIn(duration: 180.ms, curve: Curves.easeOutCubic),
-                        ],
-                      );
-                    },
                   );
                 }
 
-                return const SizedBox.shrink();
-              },
-            ),
+                return ListView.builder(
+                  controller: _scrollController,
+                  reverse: true,
+                  padding: const EdgeInsets.fromLTRB(
+                    DonySpacing.lg,
+                    DonySpacing.sm,
+                    DonySpacing.lg,
+                    DonySpacing.md,
+                  ),
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final message = messages[index];
+                    final isMe = message.senderId == _myUid;
+                    final showSep = _showDateSeparator(messages, index);
+                    return Column(
+                      children: [
+                        if (showSep)
+                          _DateSeparator(date: message.sentAt, cs: cs, tt: tt),
+                        _MessageBubble(message: message, isMe: isMe)
+                            .animate()
+                            .fadeIn(duration: 180.ms, curve: Curves.easeOutCubic),
+                      ],
+                    );
+                  },
+                );
+              }
+
+              return const SizedBox.shrink();
+            }),
           ),
 
-          // Input bar
+          // Input bar — disabled in read-only mode
           _InputBar(
             controller: _controller,
             isSending: _isSending,
+            disabled: isReadOnly,
             onSendText: _sendText,
             onPickImage: _pickAndSendImage,
             onSendLocation: _sendLocation,
           ),
         ],
-        ),
+        );
+        },
       ),
     );
   }
@@ -369,25 +379,58 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 }
 
+// ── Read-only info banner ──────────────────────────────────────────────────────
+
+class _ReadOnlyBanner extends StatelessWidget {
+  final ColorScheme cs;
+  final TextTheme tt;
+  const _ReadOnlyBanner({required this.cs, required this.tt});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: cs.surfaceContainerHighest,
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.lg,
+        vertical: DonySpacing.sm,
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.lock_outline_rounded, size: 14, color: cs.onSurfaceVariant),
+          const SizedBox(width: DonySpacing.xs),
+          Expanded(
+            child: Text(
+              'Votre interlocuteur a quitté cette conversation. Vous êtes en lecture seule.',
+              style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Trip banner ────────────────────────────────────────────────────────────────
 
 class _TripBanner extends StatelessWidget {
   final ConversationModel conversation;
   final ColorScheme cs;
   final TextTheme tt;
+  final bool disabled;
 
   const _TripBanner({
     required this.conversation,
     required this.cs,
     required this.tt,
+    this.disabled = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: cs.surface,
+      color: disabled ? cs.surfaceContainerLowest : cs.surface,
       child: InkWell(
-        onTap: () => context.push('/bids/${conversation.bidId}'),
+        onTap: disabled ? null : () => context.push('/bids/${conversation.bidId}'),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -835,6 +878,7 @@ class _DeletedContent extends StatelessWidget {
 class _InputBar extends StatelessWidget {
   final TextEditingController controller;
   final bool isSending;
+  final bool disabled;
   final VoidCallback onSendText;
   final VoidCallback onPickImage;
   final VoidCallback onSendLocation;
@@ -842,6 +886,7 @@ class _InputBar extends StatelessWidget {
   const _InputBar({
     required this.controller,
     required this.isSending,
+    this.disabled = false,
     required this.onSendText,
     required this.onPickImage,
     required this.onSendLocation,
@@ -852,6 +897,32 @@ class _InputBar extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final bottom = MediaQuery.of(context).viewInsets.bottom;
+
+    if (disabled) {
+      return Container(
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest,
+          border: Border(top: BorderSide(color: cs.outlineVariant)),
+        ),
+        padding: EdgeInsets.fromLTRB(
+          DonySpacing.lg,
+          DonySpacing.sm,
+          DonySpacing.lg,
+          DonySpacing.sm + MediaQuery.of(context).padding.bottom,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.lock_rounded, size: 14, color: cs.onSurfaceVariant),
+            const SizedBox(width: DonySpacing.xs),
+            Text(
+              'Envoi de messages désactivé',
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ],
+        ),
+      );
+    }
 
     return AnimatedPadding(
       padding: EdgeInsets.only(bottom: bottom),

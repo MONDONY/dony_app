@@ -18,7 +18,10 @@ class ConversationOpenBloc
     if (state is ConversationOpenLoading) return;
     emit(const ConversationOpenLoading());
     try {
-      final conversation = await _repository.getByBidId(event.bidId);
+      var conversation = await _repository.getByBidId(event.bidId);
+      if (conversation.deletedBySelf) {
+        conversation = await _repository.restoreConversation(conversation.id);
+      }
       emit(ConversationOpenSuccess(conversation));
     } catch (_) {
       emit(const ConversationOpenError('Impossible d\'ouvrir la conversation'));

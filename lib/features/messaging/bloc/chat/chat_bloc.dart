@@ -3,6 +3,7 @@ import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
+import 'package:dony/features/messaging/data/models/message_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class _DeletedByOtherParty extends ChatEvent {
@@ -33,7 +34,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     await _messageSub?.cancel();
     await _deletedSub?.cancel();
 
-    if (event.currentUserUid.isNotEmpty) {
+    if (event.currentUserUid.isNotEmpty && !event.isReadOnly) {
       unawaited(
         _firestoreRepo.markConversationRead(
           event.firestoreConversationId,
@@ -48,18 +49,20 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       );
     }
 
-    // Watch for deletion by the other party
-    _deletedSub = _firestoreRepo
-        .conversationDeletedStream(event.firestoreConversationId)
-        .listen((deleted) {
-      if (deleted && !isClosed) {
-        add(const _DeletedByOtherParty());
-      }
-    });
+    // Only watch deletion stream when NOT already in read-only
+    // (if already read-only, the other party already deleted — stream would fire immediately)
+    if (!event.isReadOnly) {
+      _deletedSub = _firestoreRepo
+          .conversationDeletedStream(event.firestoreConversationId)
+          .listen((deleted) {
+        if (deleted && !isClosed) add(const _DeletedByOtherParty());
+      });
+    }
 
-    await emit.forEach(
+    await emit.forEach<List<MessageModel>>(
       _firestoreRepo.messagesStream(event.firestoreConversationId),
-      onData: (messages) => ChatLoaded(messages),
+      onData: (messages) =>
+          event.isReadOnly ? ChatReadOnly(messages) : ChatLoaded(messages),
       onError: (e, st) => const ChatError('Erreur de connexion au chat'),
     );
   }
@@ -117,8 +120,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     Emitter<ChatState> emit,
   ) async {
     emit(const ChatDeletingConversation());
-    // Cancel the deletion stream first to avoid a double-emit when Firestore
-    // echoes back the deletedAt field we're about to set via the API.
+    // Cancel deletion stream BEFORE the API call so Firestore echo doesn't
+    // trigger _DeletedByOtherParty after we already handle the deletion ourselves.
     await _deletedSub?.cancel();
     _deletedSub = null;
     try {
@@ -133,7 +136,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     _DeletedByOtherParty event,
     Emitter<ChatState> emit,
   ) {
-    emit(const ChatConversationDeleted());
+    // The other party deleted — transition to read-only (keep showing messages)
+    final current = state;
+    final messages = current is ChatLoaded ? current.messages : <MessageModel>[];
+    emit(ChatReadOnly(messages));
   }
 
   @override

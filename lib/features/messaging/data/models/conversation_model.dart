@@ -30,6 +30,10 @@ class ConversationModel {
   final double? tripWeightKg;
   // BID_ACCEPTED | DELIVERY_CONFIRMED | TRIP_CANCELLED
   final String? bidStatus;
+  // True when the other party deleted: current user can read but not send
+  final bool readOnly;
+  // True when the current user deleted their own copy (restorable)
+  final bool deletedBySelf;
 
   const ConversationModel({
     required this.id,
@@ -45,6 +49,8 @@ class ConversationModel {
     this.tripDate,
     this.tripWeightKg,
     this.bidStatus,
+    this.readOnly = false,
+    this.deletedBySelf = false,
   });
 
   /// Formatted trip label for display, e.g. "Paris → Dakar · 12 jan · 5 kg"
@@ -61,6 +67,7 @@ class ConversationModel {
     int? unreadCount,
     String? lastMessagePreview,
     DateTime? lastMessageAt,
+    bool? readOnly,
   }) =>
       ConversationModel(
         id: id,
@@ -76,6 +83,7 @@ class ConversationModel {
         tripDate: tripDate,
         tripWeightKg: tripWeightKg,
         bidStatus: bidStatus,
+        readOnly: readOnly ?? this.readOnly,
       );
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) => ConversationModel(
@@ -97,5 +105,7 @@ class ConversationModel {
             : null,
         tripWeightKg: (json['tripWeightKg'] as num?)?.toDouble(),
         bidStatus: json['bidStatus'] as String?,
+        readOnly: json['readOnly'] as bool? ?? false,
+        deletedBySelf: json['deletedBySelf'] as bool? ?? false,
       );
 }

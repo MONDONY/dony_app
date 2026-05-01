@@ -32,6 +32,11 @@ class ConversationRepository {
     await _api.dio.delete('/conversations/$id');
   }
 
+  Future<ConversationModel> restoreConversation(String id) async {
+    final response = await _api.dio.post('/conversations/$id/restore');
+    return ConversationModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Future<Map<String, String>> uploadImage(
       String conversationId, List<int> bytes, String filename) async {
     final formData = FormData.fromMap({

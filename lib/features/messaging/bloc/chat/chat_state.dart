@@ -22,6 +22,11 @@ class ChatError extends ChatState {
   const ChatError(this.message);
 }
 
+class ChatReadOnly extends ChatState {
+  final List<MessageModel> messages;
+  const ChatReadOnly(this.messages);
+}
+
 class ChatDeletingConversation extends ChatState {
   const ChatDeletingConversation();
 }

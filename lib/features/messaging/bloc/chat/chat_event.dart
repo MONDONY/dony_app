@@ -7,9 +7,11 @@ abstract class ChatEvent {
 class ChatSubscribeRequested extends ChatEvent {
   final String firestoreConversationId;
   final String currentUserUid;
+  final bool isReadOnly;
   const ChatSubscribeRequested(
     this.firestoreConversationId, {
     this.currentUserUid = '',
+    this.isReadOnly = false,
   });
 }
 
