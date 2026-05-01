@@ -246,10 +246,12 @@ class _ConversationTile extends StatelessWidget {
 
   String _formatTime(DateTime dt) {
     final now = DateTime.now();
+    final diff = now.difference(dt);
+    if (diff.inMinutes < 1) return 'maintenant';
     final isToday =
         now.year == dt.year && now.month == dt.month && now.day == dt.day;
     if (isToday) return DateFormat('HH:mm').format(dt);
-    if (now.difference(dt).inDays < 7) return DateFormat('EEE', 'fr').format(dt);
+    if (diff.inDays < 7) return DateFormat('EEE', 'fr').format(dt);
     return DateFormat('d MMM', 'fr').format(dt);
   }
 }

@@ -137,14 +137,15 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   final canSubmit =
                       weightKg > 0 && categories.isNotEmpty && disclaimerAccepted;
 
-                  return Stack(
+                  return Column(
                     children: [
-                      SingleChildScrollView(
+                      Expanded(
+                        child: SingleChildScrollView(
                         padding: EdgeInsets.fromLTRB(
                           DonyLayout.hPadding(context),
                           DonySpacing.xl,
                           DonyLayout.hPadding(context),
-                          MediaQuery.of(context).padding.bottom + 160,
+                          DonySpacing.xl,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -200,6 +201,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                               controller: _valueCtrl,
                               keyboardType:
                                   const TextInputType.numberWithOptions(decimal: true),
+                              scrollPadding: const EdgeInsets.only(bottom: 120),
                               inputFormatters: [
                                 FilteringTextInputFormatter.allow(
                                     RegExp(r'^\d+\.?\d{0,2}')),
@@ -246,20 +248,16 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                           ],
                         ),
                       ),
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        child: _BottomBar(
-                          weightKg: weightKg,
-                          pricePerKg: _pricePerKg,
-                          basePrice: basePrice,
-                          serviceFee: serviceFee,
-                          totalPrice: totalPrice,
-                          isLoading: isLoading,
-                          canSubmit: canSubmit,
-                          onSubmit: _submit,
-                        ),
+                      ),
+                      _BottomBar(
+                        weightKg: weightKg,
+                        pricePerKg: _pricePerKg,
+                        basePrice: basePrice,
+                        serviceFee: serviceFee,
+                        totalPrice: totalPrice,
+                        isLoading: isLoading,
+                        canSubmit: canSubmit,
+                        onSubmit: _submit,
                       ),
                     ],
                   );

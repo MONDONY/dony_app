@@ -1222,6 +1222,7 @@ class _ActionBar extends StatelessWidget {
                 controller: reasonCtrl,
                 maxLines: 3,
                 autofocus: true,
+                scrollPadding: const EdgeInsets.only(bottom: 120),
                 decoration: InputDecoration(
                   hintText: 'Raison (optionnelle)',
                   border: OutlineInputBorder(

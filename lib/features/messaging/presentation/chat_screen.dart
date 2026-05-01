@@ -170,6 +170,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final participant = conversation.otherParticipant;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: DonyColors.bgApp,
       appBar: AppBar(
         backgroundColor: cs.surface,

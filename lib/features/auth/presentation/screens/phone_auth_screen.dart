@@ -201,6 +201,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                     child: TextFormField(
                                       controller: _phoneController,
                                       keyboardType: TextInputType.phone,
+                                      scrollPadding: const EdgeInsets.only(bottom: 120),
                                       inputFormatters: [
                                         FilteringTextInputFormatter
                                             .digitsOnly,

@@ -38,6 +38,7 @@ class DonyTextField extends StatelessWidget {
       onChanged: onChanged,
       validator: validator,
       enabled: enabled,
+      scrollPadding: const EdgeInsets.only(bottom: 120),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,

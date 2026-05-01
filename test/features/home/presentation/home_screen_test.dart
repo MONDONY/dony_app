@@ -6,6 +6,9 @@ import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/home/presentation/home_screen.dart';
+import 'package:dony/features/notifications/bloc/notification_bloc.dart';
+import 'package:dony/features/notifications/bloc/notification_event.dart';
+import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,6 +18,7 @@ import 'package:mocktail/mocktail.dart';
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
+class MockNotificationBloc extends MockBloc<NotificationEvent, NotificationState> implements NotificationBloc {}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -28,13 +32,16 @@ UserModel _makeUser({List<String> roles = const ['ROLE_SENDER']}) => UserModel(
       status: 'ACTIVE',
     );
 
-GoRouter _buildRouter(AuthBloc authBloc) => GoRouter(
+GoRouter _buildRouter(AuthBloc authBloc, NotificationBloc notificationBloc) => GoRouter(
       initialLocation: '/',
       routes: [
         GoRoute(
           path: '/',
-          builder: (context, state) => BlocProvider<AuthBloc>.value(
-            value: authBloc,
+          builder: (context, state) => MultiBlocProvider(
+            providers: [
+              BlocProvider<AuthBloc>.value(value: authBloc),
+              BlocProvider<NotificationBloc>.value(value: notificationBloc),
+            ],
             child: const HomeScreen(),
           ),
         ),
@@ -53,11 +60,11 @@ GoRouter _buildRouter(AuthBloc authBloc) => GoRouter(
       ],
     );
 
-Future<void> _pump(WidgetTester tester, AuthBloc authBloc) async {
+Future<void> _pump(WidgetTester tester, AuthBloc authBloc, NotificationBloc notificationBloc) async {
   await tester.pumpWidget(
     MaterialApp.router(
       theme: AppTheme.light,
-      routerConfig: _buildRouter(authBloc),
+      routerConfig: _buildRouter(authBloc, notificationBloc),
     ),
   );
   // Allow flutter_animate animations to settle
@@ -68,14 +75,19 @@ Future<void> _pump(WidgetTester tester, AuthBloc authBloc) async {
 
 void main() {
   late MockAuthBloc mockAuthBloc;
+  late MockNotificationBloc mockNotificationBloc;
 
   setUp(() {
     mockAuthBloc = MockAuthBloc();
     when(() => mockAuthBloc.stream).thenAnswer((_) => const Stream.empty());
+    mockNotificationBloc = MockNotificationBloc();
+    when(() => mockNotificationBloc.stream).thenAnswer((_) => const Stream.empty());
+    when(() => mockNotificationBloc.state).thenReturn(const NotificationInitial());
   });
 
   tearDown(() {
     mockAuthBloc.close();
+    mockNotificationBloc.close();
   });
 
   group('HomeScreen — Sender view (ROLE_SENDER)', () {
@@ -85,33 +97,33 @@ void main() {
     });
 
     testWidgets('renders sender headline text', (tester) async {
-      await _pump(tester, mockAuthBloc);
+      await _pump(tester, mockAuthBloc, mockNotificationBloc);
 
       // "on envoie quoi" is a TextSpan inside Text.rich — textContaining works
       expect(find.textContaining('on envoie quoi'), findsOneWidget);
     });
 
     testWidgets('renders "Trouver un voyageur" CTA button', (tester) async {
-      await _pump(tester, mockAuthBloc);
+      await _pump(tester, mockAuthBloc, mockNotificationBloc);
 
       expect(find.text('Trouver un voyageur'), findsOneWidget);
       expect(find.byType(DonyButton), findsAtLeastNWidgets(1));
     });
 
     testWidgets('renders greeting with first name', (tester) async {
-      await _pump(tester, mockAuthBloc);
+      await _pump(tester, mockAuthBloc, mockNotificationBloc);
 
       expect(find.textContaining('Bonjour Ibrahima'), findsOneWidget);
     });
 
     testWidgets('renders corridors section header', (tester) async {
-      await _pump(tester, mockAuthBloc);
+      await _pump(tester, mockAuthBloc, mockNotificationBloc);
 
       expect(find.text('CORRIDORS POPULAIRES'), findsOneWidget);
     });
 
     testWidgets('renders 4 corridor chips', (tester) async {
-      await _pump(tester, mockAuthBloc);
+      await _pump(tester, mockAuthBloc, mockNotificationBloc);
 
       // Each corridor has its code as a text widget
       expect(find.text('PAR → DKR'), findsOneWidget);
@@ -121,7 +133,7 @@ void main() {
     });
 
     testWidgets('HOT badge appears only on first corridor', (tester) async {
-      await _pump(tester, mockAuthBloc);
+      await _pump(tester, mockAuthBloc, mockNotificationBloc);
 
       expect(find.text('HOT'), findsOneWidget);
     });
@@ -132,7 +144,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      await _pump(tester, mockAuthBloc);
+      await _pump(tester, mockAuthBloc, mockNotificationBloc);
 
       // Scroll down to ensure _GarantieCard is laid out in the SliverList
       await tester.scrollUntilVisible(
@@ -146,7 +158,7 @@ void main() {
 
     testWidgets('does NOT render traveler-specific text in sender view',
         (tester) async {
-      await _pump(tester, mockAuthBloc);
+      await _pump(tester, mockAuthBloc, mockNotificationBloc);
 
       expect(find.text('CE MOIS-CI'), findsNothing);
       expect(find.text('Publier un trajet'), findsNothing);
@@ -160,38 +172,38 @@ void main() {
     });
 
     testWidgets('renders "CE MOIS-CI" stats label', (tester) async {
-      await _pump(tester, mockAuthBloc);
+      await _pump(tester, mockAuthBloc, mockNotificationBloc);
 
       expect(find.text('CE MOIS-CI'), findsOneWidget);
     });
 
     testWidgets('renders "Publier un trajet" CTA button', (tester) async {
-      await _pump(tester, mockAuthBloc);
+      await _pump(tester, mockAuthBloc, mockNotificationBloc);
 
       expect(find.text('Publier un trajet'), findsOneWidget);
       expect(find.byType(DonyButton), findsAtLeastNWidgets(1));
     });
 
     testWidgets('renders earnings amount', (tester) async {
-      await _pump(tester, mockAuthBloc);
+      await _pump(tester, mockAuthBloc, mockNotificationBloc);
 
       expect(find.textContaining('248,50'), findsAtLeastNWidgets(1));
     });
 
     testWidgets('renders active trips section label', (tester) async {
-      await _pump(tester, mockAuthBloc);
+      await _pump(tester, mockAuthBloc, mockNotificationBloc);
 
       expect(find.text('MES TRAJETS ACTIFS'), findsOneWidget);
     });
 
     testWidgets('renders payout footer', (tester) async {
-      await _pump(tester, mockAuthBloc);
+      await _pump(tester, mockAuthBloc, mockNotificationBloc);
 
       expect(find.textContaining('Prochain payout'), findsOneWidget);
     });
 
     testWidgets('does NOT render sender CTA in traveler view', (tester) async {
-      await _pump(tester, mockAuthBloc);
+      await _pump(tester, mockAuthBloc, mockNotificationBloc);
 
       expect(find.text('Trouver un voyageur'), findsNothing);
     });
@@ -202,7 +214,7 @@ void main() {
     testWidgets('shows sender view when auth state is AuthInitial',
         (tester) async {
       when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
-      await _pump(tester, mockAuthBloc);
+      await _pump(tester, mockAuthBloc, mockNotificationBloc);
 
       // Fallback to sender view — headline present
       expect(find.textContaining('on envoie quoi'), findsOneWidget);

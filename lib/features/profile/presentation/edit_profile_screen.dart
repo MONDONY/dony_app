@@ -113,8 +113,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         return Scaffold(
           appBar: const DonyAppBar(title: 'Compléter mon profil'),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.lg, DonySpacing.xl, DonySpacing.lg, DonySpacing.huge,
+            padding: EdgeInsets.fromLTRB(
+              DonyLayout.hPadding(context), DonySpacing.xl,
+              DonyLayout.hPadding(context), DonySpacing.huge,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

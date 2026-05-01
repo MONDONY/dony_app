@@ -36,6 +36,8 @@ void main() {
       build: () {
         when(() => firestoreRepo.messagesStream('conv_bid1'))
             .thenAnswer((_) => Stream.value([msg]));
+        when(() => firestoreRepo.conversationDeletedStream(any()))
+            .thenAnswer((_) => const Stream.empty());
         return ChatBloc(firestoreRepo, convRepo);
       },
       act: (b) => b.add(const ChatSubscribeRequested('conv_bid1')),
@@ -52,6 +54,12 @@ void main() {
             .thenAnswer((_) => Stream.value([]));
         when(() => firestoreRepo.markConversationRead(any(), any()))
             .thenAnswer((_) async {});
+        when(() => firestoreRepo.markMessagesRead(
+              firestoreConversationId: any(named: 'firestoreConversationId'),
+              currentUserUid: any(named: 'currentUserUid'),
+            )).thenAnswer((_) async {});
+        when(() => firestoreRepo.conversationDeletedStream(any()))
+            .thenAnswer((_) => const Stream.empty());
         return ChatBloc(firestoreRepo, convRepo);
       },
       act: (b) => b.add(
@@ -72,6 +80,8 @@ void main() {
       build: () {
         when(() => firestoreRepo.messagesStream(any()))
             .thenAnswer((_) => Stream.value([]));
+        when(() => firestoreRepo.conversationDeletedStream(any()))
+            .thenAnswer((_) => const Stream.empty());
         return ChatBloc(firestoreRepo, convRepo);
       },
       act: (b) => b.add(
@@ -154,6 +164,8 @@ void main() {
               senderFirebaseUid: any(named: 'senderFirebaseUid'),
               imageUrl: any(named: 'imageUrl'),
             )).thenAnswer((_) async {});
+        when(() => convRepo.updateLastMessage(any(), any()))
+            .thenAnswer((_) async {});
         return ChatBloc(firestoreRepo, convRepo);
       },
       act: (b) => b.add(ChatImageSendRequested(

@@ -134,6 +134,7 @@ class _HandoverScreenState extends State<HandoverScreen> {
                     controller: _locationCtrl,
                     validator: (v) =>
                         (v == null || v.trim().isEmpty) ? 'Lieu requis' : null,
+                    scrollPadding: const EdgeInsets.only(bottom: 120),
                     decoration: _inputDecoration(
                       'Ex: Gare du Nord, Paris — Hall 2',
                       cs: cs,

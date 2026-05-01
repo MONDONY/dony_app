@@ -343,16 +343,19 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
               child: Container(height: 0.5, color: DonyColors.borderDefault),
             ),
           ),
-          body: SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(
-              DonyLayout.hPadding(context),
-              DonySpacing.xl,
-              DonyLayout.hPadding(context),
-              MediaQuery.of(context).padding.bottom + 100,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          body: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(
+                    DonyLayout.hPadding(context),
+                    DonySpacing.xl,
+                    DonyLayout.hPadding(context),
+                    DonySpacing.xl,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                 // ── Corridor preview ────────────────────────────────────────
                 ListenableBuilder(
                   listenable: Listenable.merge([
@@ -884,6 +887,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                               controller: _descriptionCtrl,
                               maxLines: 4,
                               maxLength: 500,
+                              scrollPadding: const EdgeInsets.only(bottom: 120),
                               buildCounter: (_, {required currentLength, required isFocused, maxLength}) => null,
                               style: tt.bodyMedium
                                   ?.copyWith(color: DonyColors.textPrimary),
@@ -918,23 +922,26 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
               ],
             ),
           ),
-          bottomSheet: Container(
-            padding: EdgeInsets.fromLTRB(
-              DonyLayout.hPadding(context),
-              DonySpacing.base,
-              DonyLayout.hPadding(context),
-              MediaQuery.of(context).padding.bottom + DonySpacing.base,
-            ),
-            decoration: const BoxDecoration(
-              color: DonyColors.surface,
-              border: Border(
-                  top: BorderSide(color: DonyColors.borderDefault)),
-            ),
-            child: DonyButton(
-              label: _isEdit ? 'Enregistrer les modifications' : 'Publier le trajet',
-              onPressed: isLoading ? null : _submit,
-              isLoading: isLoading,
-            ),
+              ),
+              Container(
+                padding: EdgeInsets.fromLTRB(
+                  DonyLayout.hPadding(context),
+                  DonySpacing.base,
+                  DonyLayout.hPadding(context),
+                  MediaQuery.of(context).padding.bottom + DonySpacing.base,
+                ),
+                decoration: const BoxDecoration(
+                  color: DonyColors.surface,
+                  border: Border(
+                      top: BorderSide(color: DonyColors.borderDefault)),
+                ),
+                child: DonyButton(
+                  label: _isEdit ? 'Enregistrer les modifications' : 'Publier le trajet',
+                  onPressed: isLoading ? null : _submit,
+                  isLoading: isLoading,
+                ),
+              ),
+            ],
           ),
         );
       },
@@ -1022,6 +1029,7 @@ class _InlineAddRow extends StatelessWidget {
                   tt.bodyMedium?.copyWith(color: DonyColors.textPrimary),
               onSubmitted: (_) => onAdd(),
               textInputAction: TextInputAction.done,
+              scrollPadding: const EdgeInsets.only(bottom: 120),
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle:
@@ -1376,6 +1384,7 @@ class _LocationField extends StatelessWidget {
               controller: controller,
               style:
                   tt.bodyMedium?.copyWith(color: DonyColors.textPrimary),
+              scrollPadding: const EdgeInsets.only(bottom: 120),
               decoration: InputDecoration(
                 hintText: isDeparture
                     ? 'Lieu de départ (ex: Terminal 2E CDG)'
