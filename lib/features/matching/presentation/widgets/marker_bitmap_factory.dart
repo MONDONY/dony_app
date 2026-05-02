@@ -7,8 +7,11 @@ import 'package:dony/core/design/design_system.dart';
 class MarkerBitmapFactory {
   MarkerBitmapFactory._();
 
-  static const double _markerSize = 96; // logical px before pixel ratio
-  static const double _clusterSize = 110;
+  // Bitmap canvases — kept small so markers are visually compact AND
+  // accurate (the pin tip aligns with the bottom-centre, which is the
+  // default Marker anchor → lat/lng exact).
+  static const double _markerSize = 56;
+  static const double _clusterSize = 64;
 
   static Future<BitmapDescriptor> luggagePickup() =>
       _renderLuggage(DonyColors.primary);
@@ -22,26 +25,23 @@ class MarkerBitmapFactory {
     const size = _clusterSize;
     const center = Offset(size / 2, size / 2);
 
-    // Outer halo
     final halo = Paint()
-      ..color = DonyColors.primary.withValues(alpha: 0.25)
+      ..color = DonyColors.primary.withValues(alpha: 0.20)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, size / 2, halo);
 
-    // Solid primary circle
     final fill = Paint()
       ..color = DonyColors.primary
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, size / 2 - 14, fill);
+    canvas.drawCircle(center, size / 2 - 8, fill);
 
-    // White number
     final label = count > 99 ? '99+' : '$count';
     final tp = TextPainter(
       text: TextSpan(
         text: label,
         style: TextStyle(
           color: Colors.white,
-          fontSize: count > 99 ? 26 : 32,
+          fontSize: count > 99 ? 16 : 20,
           fontWeight: FontWeight.w800,
         ),
       ),
@@ -59,36 +59,37 @@ class MarkerBitmapFactory {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
     const size = _markerSize;
-    const center = Offset(size / 2, size / 2);
 
-    // Pin teardrop (circle + triangle pointing down)
+    // Pin geometry: head circle on top, tail tip at the very bottom
+    // (y = size) so the default anchor (0.5, 1.0) lands exactly on the
+    // real lat/lng coordinate.
+    const headRadius = 18.0;
+    const headCenter = Offset(size / 2, headRadius + 2);
+
     final pinPaint = Paint()
       ..color = color
       ..style = PaintingStyle.fill;
-    const pinRadius = size / 2 - 8;
-    canvas.drawCircle(Offset(center.dx, pinRadius + 4), pinRadius, pinPaint);
+    canvas.drawCircle(headCenter, headRadius, pinPaint);
 
     final tail = Path()
-      ..moveTo(center.dx - 12, pinRadius * 1.5)
-      ..lineTo(center.dx, size - 4)
-      ..lineTo(center.dx + 12, pinRadius * 1.5)
+      ..moveTo(headCenter.dx - 8, headCenter.dy + headRadius - 4)
+      ..lineTo(size / 2, size) // tip exactly at bottom-centre
+      ..lineTo(headCenter.dx + 8, headCenter.dy + headRadius - 4)
       ..close();
     canvas.drawPath(tail, pinPaint);
 
-    // White inner circle for icon contrast
     final innerCircle = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(center.dx, pinRadius + 4), pinRadius * 0.6, innerCircle);
+    canvas.drawCircle(headCenter, headRadius * 0.62, innerCircle);
 
-    // Luggage icon (using TextPainter on the Material icon glyph)
     final tp = TextPainter(
       text: TextSpan(
         text: String.fromCharCode(Icons.luggage_rounded.codePoint),
         style: TextStyle(
           fontFamily: Icons.luggage_rounded.fontFamily,
           package: Icons.luggage_rounded.fontPackage,
-          fontSize: pinRadius * 0.9,
+          fontSize: headRadius * 0.95,
           color: color,
         ),
       ),
@@ -96,7 +97,7 @@ class MarkerBitmapFactory {
     )..layout();
     tp.paint(
       canvas,
-      Offset(center.dx - tp.width / 2, pinRadius + 4 - tp.height / 2),
+      Offset(headCenter.dx - tp.width / 2, headCenter.dy - tp.height / 2),
     );
 
     final picture = recorder.endRecording();

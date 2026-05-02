@@ -1,11 +1,14 @@
 import 'dart:math' as math;
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/same_address_announcements_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -91,22 +94,28 @@ List<_Cluster> _gridCluster(
 }
 
 double _cellDegForZoom(double zoom) {
+  // Smaller cells than before so individual points stay distinct sooner
+  // when zooming in. Markers are 56px wide → ~0.7° at zoom 4 still groups
+  // visually overlapping pins, but separates Paris/Lyon (≈3.5° apart).
   if (zoom < 4) {
-    return 10.0;
+    return 3.0;
   }
   if (zoom < 6) {
-    return 5.0;
+    return 1.0;
   }
   if (zoom < 8) {
-    return 2.0;
+    return 0.3;
   }
   if (zoom < 10) {
-    return 0.5;
-  }
-  if (zoom < 12) {
     return 0.1;
   }
-  return 0.01;
+  if (zoom < 12) {
+    return 0.03;
+  }
+  if (zoom < 14) {
+    return 0.01;
+  }
+  return 0.003;
 }
 
 // ── Widget ────────────────────────────────────────────────────────────────────
@@ -159,6 +168,18 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     if (oldWidget.announcements != widget.announcements) {
       _rebuildMarkers();
     }
+    // Auto-fit when "Près de moi" turns on or its radius/position changes
+    // (e.g. user toggled it from the filter sheet).
+    final nearMeChanged =
+        oldWidget.isNearMeActive != widget.isNearMeActive ||
+            oldWidget.activeRadiusKm != widget.activeRadiusKm ||
+            oldWidget.userPosition != widget.userPosition;
+    if (nearMeChanged &&
+        widget.isNearMeActive &&
+        widget.userPosition != null &&
+        widget.activeRadiusKm != null) {
+      _fitNearMeBounds(widget.userPosition!, widget.activeRadiusKm!);
+    }
   }
 
   Future<void> _preloadIcons() async {
@@ -202,6 +223,8 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
             'cluster_${cluster.centroid.latitude}_${cluster.centroid.longitude}_${cluster.count}'),
         position: cluster.centroid,
         icon: icon,
+        // Circle badge → centred on the position
+        anchor: const Offset(0.5, 0.5),
         onTap: () => _onClusterTapped(cluster),
       );
     }
@@ -209,6 +232,8 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     final icon = item.side == _MarkerSide.pickup
         ? (_luggagePickup ?? BitmapDescriptor.defaultMarker)
         : (_luggageDelivery ?? BitmapDescriptor.defaultMarker);
+    // Default anchor (0.5, 1.0) lands the pin tip — drawn at the very
+    // bottom-centre of the bitmap — exactly on the lat/lng coordinate.
     return Marker(
       markerId: MarkerId('${item.side.name}_${item.announcement.id}'),
       position: item.location,
@@ -227,7 +252,14 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   }
 
   void _onMarkerTapped(AnnouncementModel a) {
-    context.push('/announcements/${a.id}');
+    final authState = context.read<AuthBloc>().state;
+    final currentUserId =
+        authState is AuthAuthenticated ? authState.user.id : null;
+    final isOwn = currentUserId != null && a.travelerId == currentUserId;
+    // Match the list view: own trips have no nav, others go to the
+    // sender-side announcement detail.
+    if (isOwn) return;
+    context.push('/search/${a.id}', extra: a);
   }
 
   void _onClusterTapped(_Cluster cluster) {
@@ -242,6 +274,9 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       final addr = firstItem.side == _MarkerSide.pickup
           ? firstItem.announcement.pickupAddress
           : firstItem.announcement.deliveryAddress;
+      final authState = context.read<AuthBloc>().state;
+      final currentUserId =
+          authState is AuthAuthenticated ? authState.user.id : null;
       showModalBottomSheet<void>(
         context: context,
         useRootNavigator: true,
@@ -250,9 +285,10 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
         builder: (_) => SameAddressAnnouncementsSheet(
           addressLabel: addr?.label ?? 'Adresse',
           announcements: cluster.items.map((it) => it.announcement).toList(),
+          currentUserId: currentUserId,
           onTap: (a) {
             Navigator.pop(context);
-            context.push('/announcements/${a.id}');
+            context.push('/search/${a.id}', extra: a);
           },
         ),
       );
@@ -302,9 +338,8 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       );
       if (radiusKm != null && mounted) {
         widget.onNearMeRequested!(pos.latitude, pos.longitude, radiusKm);
-        await _mapController?.animateCamera(
-            CameraUpdate.newLatLngZoom(
-                LatLng(pos.latitude, pos.longitude), 11));
+        await _fitNearMeBounds(
+            LatLng(pos.latitude, pos.longitude), radiusKm);
       }
     } finally {
       if (mounted) {
@@ -387,6 +422,24 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
         fillColor: DonyColors.primary.withValues(alpha: 0.08),
       ),
     };
+  }
+
+  Future<void> _fitNearMeBounds(LatLng center, double radiusKm) async {
+    final controller = _mapController;
+    if (controller == null) {
+      return;
+    }
+    // 1° latitude ≈ 111 km ; longitude shrinks by cos(lat) towards the poles.
+    final latDelta = radiusKm / 111.0;
+    final lngDelta = radiusKm /
+        (111.0 * math.cos(center.latitude * math.pi / 180).abs());
+    final bounds = LatLngBounds(
+      southwest:
+          LatLng(center.latitude - latDelta, center.longitude - lngDelta),
+      northeast:
+          LatLng(center.latitude + latDelta, center.longitude + lngDelta),
+    );
+    await controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 60.0));
   }
 
   Future<void> _fitInitialBounds() async {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/same_address_announcements_sheet.dart';
@@ -20,6 +21,8 @@ AnnouncementModel _ann(String id, String dep, String arr) => AnnouncementModel(
     );
 
 void main() {
+  setUpAll(() => initializeDateFormatting('fr'));
+
   testWidgets('lists all announcements', (tester) async {
     final list = [_ann('a1', 'Paris', 'Dakar'), _ann('a2', 'Paris', 'Dakar')];
     await tester.pumpWidget(MaterialApp(
@@ -31,6 +34,7 @@ void main() {
         ),
       ),
     ));
+    await tester.pumpAndSettle();
     expect(find.text('12 rue Hugo, Paris'), findsOneWidget);
     expect(find.text('Sékou Ba'), findsNWidgets(2));
   });
@@ -47,8 +51,29 @@ void main() {
         ),
       ),
     ));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Sékou Ba').last);
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(tappedId, 'a2');
+  });
+
+  testWidgets('isOwnAnnouncement: own card disables tap', (tester) async {
+    String? tappedId;
+    final list = [_ann('a1', 'Paris', 'Dakar')]; // travelerId == 't1'
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: SameAddressAnnouncementsSheet(
+          addressLabel: 'X',
+          announcements: list,
+          currentUserId: 't1', // matches the traveler — it's "own"
+          onTap: (a) => tappedId = a.id,
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('Votre trajet'), findsOneWidget);
+    await tester.tap(find.text('Sékou Ba'));
+    await tester.pumpAndSettle();
+    expect(tappedId, isNull);
   });
 }
