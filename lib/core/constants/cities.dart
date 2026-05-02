@@ -1,4 +1,5 @@
-import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 enum CityType { departure, arrival }
 
@@ -45,12 +46,17 @@ class CityConstants {
   }
 
   static City? findNearest(LatLng position, {double maxDistanceKm = 50}) {
-    const distanceFn = Distance();
     City? nearest;
     double minDist = double.infinity;
 
     for (final city in departures) {
-      final km = distanceFn.as(LengthUnit.Kilometer, position, city.coordinates);
+      final meters = Geolocator.distanceBetween(
+        position.latitude,
+        position.longitude,
+        city.coordinates.latitude,
+        city.coordinates.longitude,
+      );
+      final km = meters / 1000.0;
       if (km < minDist) {
         minDist = km;
         nearest = city;

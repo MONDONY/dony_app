@@ -1,6 +1,6 @@
 import 'package:dony/core/constants/cities.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 void main() {
   group('CityConstants', () {
