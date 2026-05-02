@@ -216,7 +216,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
           ).animate().fadeIn().slideY(begin: 0.04, curve: Curves.easeOutCubic),
 
           // Lieux de remise
-          if (a.departureLocation != null || a.arrivalLocation != null) ...[
+          if (a.pickupAddress != null || a.deliveryAddress != null) ...[
             const SizedBox(height: DonySpacing.md),
             Container(
               padding: const EdgeInsets.all(DonySpacing.md),
@@ -235,7 +235,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                       letterSpacing: 0.5,
                     ),
                   ),
-                  if (a.departureLocation != null) ...[
+                  if (a.pickupAddress?.label != null) ...[
                     const SizedBox(height: DonySpacing.sm),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -244,7 +244,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                         const SizedBox(width: DonySpacing.sm),
                         Expanded(
                           child: Text(
-                            a.departureLocation!,
+                            a.pickupAddress!.label,
                             style: tt.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w500,
                               color: cs.onSurface,
@@ -254,7 +254,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                       ],
                     ),
                   ],
-                  if (a.arrivalLocation != null) ...[
+                  if (a.deliveryAddress?.label != null) ...[
                     const SizedBox(height: DonySpacing.sm),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,7 +263,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                         const SizedBox(width: DonySpacing.sm),
                         Expanded(
                           child: Text(
-                            a.arrivalLocation!,
+                            a.deliveryAddress!.label,
                             style: tt.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w500,
                               color: cs.onSurface,

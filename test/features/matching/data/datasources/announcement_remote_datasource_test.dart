@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -27,6 +28,9 @@ Response<dynamic> _ok(dynamic data, String path) => Response(
       requestOptions: RequestOptions(path: path),
     );
 
+const kPickup = AddressData(label: 'CDG Terminal 2', lat: 49.0097, lng: 2.5479);
+const kDelivery = AddressData(label: 'Aéroport LSS', lat: 14.7397, lng: -17.4902);
+
 void main() {
   late MockApiClient mockClient;
   late MockDio mockDio;
@@ -50,6 +54,8 @@ void main() {
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
         departureDate: DateTime(2024, 6, 1),
+        pickupAddress: kPickup,
+        deliveryAddress: kDelivery,
         availableKg: 10.0,
         pricePerKg: 12.0,
       );
@@ -58,7 +64,7 @@ void main() {
       expect(result.departureCity, 'Paris');
     });
 
-    test('includes optional time/location fields when provided', () async {
+    test('includes optional time/address fields when provided', () async {
       when(() => mockDio.post('/announcements', data: any(named: 'data')))
           .thenAnswer((_) async => _ok(_announcementJson, '/announcements'));
 
@@ -68,8 +74,8 @@ void main() {
         departureDate: DateTime(2024, 6, 1),
         departureTime: '10:00',
         arrivalTime: '20:00',
-        departureLocation: 'CDG',
-        arrivalLocation: 'DSS',
+        pickupAddress: kPickup,
+        deliveryAddress: kDelivery,
         availableKg: 10.0,
         pricePerKg: 12.0,
       );
@@ -179,6 +185,8 @@ void main() {
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
         departureDate: DateTime(2024, 6, 1),
+        pickupAddress: kPickup,
+        deliveryAddress: kDelivery,
         availableKg: 10.0,
         pricePerKg: 12.0,
       );
@@ -186,7 +194,7 @@ void main() {
       expect(result.id, 'ann-001');
     });
 
-    test('with optional time and location fields', () async {
+    test('with optional time and address fields', () async {
       when(() => mockDio.put('/announcements/ann-001',
               data: any(named: 'data')))
           .thenAnswer((_) async => _ok(_announcementJson, '/announcements/ann-001'));
@@ -198,8 +206,8 @@ void main() {
         departureDate: DateTime(2024, 6, 1),
         departureTime: '08:00',
         arrivalTime: '20:00',
-        departureLocation: 'CDG Terminal 2',
-        arrivalLocation: 'AIBD',
+        pickupAddress: kPickup,
+        deliveryAddress: kDelivery,
         availableKg: 10.0,
         pricePerKg: 12.0,
       );

@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 
 class AnnouncementRepository {
@@ -12,8 +13,8 @@ class AnnouncementRepository {
     required DateTime departureDate,
     String? departureTime,
     String? arrivalTime,
-    String? departureLocation,
-    String? arrivalLocation,
+    required AddressData pickupAddress,
+    required AddressData deliveryAddress,
     required double availableKg,
     required double pricePerKg,
     String? description,
@@ -26,8 +27,8 @@ class AnnouncementRepository {
       departureDate: departureDate,
       departureTime: departureTime,
       arrivalTime: arrivalTime,
-      departureLocation: departureLocation,
-      arrivalLocation: arrivalLocation,
+      pickupAddress: pickupAddress,
+      deliveryAddress: deliveryAddress,
       availableKg: availableKg,
       pricePerKg: pricePerKg,
       description: description,
@@ -76,8 +77,8 @@ class AnnouncementRepository {
     required DateTime departureDate,
     String? departureTime,
     String? arrivalTime,
-    String? departureLocation,
-    String? arrivalLocation,
+    required AddressData pickupAddress,
+    required AddressData deliveryAddress,
     required double availableKg,
     required double pricePerKg,
     String? description,
@@ -91,8 +92,8 @@ class AnnouncementRepository {
       departureDate: departureDate,
       departureTime: departureTime,
       arrivalTime: arrivalTime,
-      departureLocation: departureLocation,
-      arrivalLocation: arrivalLocation,
+      pickupAddress: pickupAddress,
+      deliveryAddress: deliveryAddress,
       availableKg: availableKg,
       pricePerKg: pricePerKg,
       description: description,

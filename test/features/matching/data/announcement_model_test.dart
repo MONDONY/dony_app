@@ -9,8 +9,16 @@ final _fullJson = {
   'departureDate': '2024-06-01T00:00:00.000Z',
   'departureTime': '10:00',
   'arrivalTime': '20:00',
-  'departureLocation': 'CDG Terminal 2',
-  'arrivalLocation': 'Aéroport Léopold Sédar Senghor',
+  'pickupAddress': {
+    'label': 'CDG Terminal 2',
+    'lat': 49.0097,
+    'lng': 2.5479,
+  },
+  'deliveryAddress': {
+    'label': 'Aéroport Léopold Sédar Senghor',
+    'lat': 14.7397,
+    'lng': -17.4902,
+  },
   'availableKg': 12.5,
   'pricePerKg': 10.0,
   'status': 'OPEN',
@@ -50,8 +58,10 @@ void main() {
       expect(model.arrivalCity, 'Dakar');
       expect(model.departureTime, '10:00');
       expect(model.arrivalTime, '20:00');
-      expect(model.departureLocation, 'CDG Terminal 2');
-      expect(model.arrivalLocation, 'Aéroport Léopold Sédar Senghor');
+      expect(model.pickupAddress, isNotNull);
+      expect(model.pickupAddress!.label, 'CDG Terminal 2');
+      expect(model.deliveryAddress, isNotNull);
+      expect(model.deliveryAddress!.label, 'Aéroport Léopold Sédar Senghor');
       expect(model.availableKg, 12.5);
       expect(model.pricePerKg, 10.0);
       expect(model.status, 'OPEN');
@@ -66,8 +76,8 @@ void main() {
       expect(model.id, 'ann-002');
       expect(model.departureTime, isNull);
       expect(model.arrivalTime, isNull);
-      expect(model.departureLocation, isNull);
-      expect(model.arrivalLocation, isNull);
+      expect(model.pickupAddress, isNull);
+      expect(model.deliveryAddress, isNull);
       expect(model.bidsCount, isNull);
       expect(model.traveler, isNull);
     });

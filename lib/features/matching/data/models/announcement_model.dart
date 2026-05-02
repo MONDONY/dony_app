@@ -1,5 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 
+import 'address_data.dart';
+
 part 'announcement_model.g.dart';
 
 @JsonSerializable()
@@ -57,8 +59,8 @@ class AnnouncementModel {
   // "HH:mm" format, null if not set
   final String? departureTime;
   final String? arrivalTime;
-  final String? departureLocation;
-  final String? arrivalLocation;
+  final AddressData? pickupAddress;
+  final AddressData? deliveryAddress;
   final double availableKg;
   final double pricePerKg;
   final String status;
@@ -78,8 +80,8 @@ class AnnouncementModel {
     required this.departureDate,
     this.departureTime,
     this.arrivalTime,
-    this.departureLocation,
-    this.arrivalLocation,
+    this.pickupAddress,
+    this.deliveryAddress,
     required this.availableKg,
     required this.pricePerKg,
     required this.status,

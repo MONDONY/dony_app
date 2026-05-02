@@ -4,12 +4,16 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockAnnouncementRepository extends Mock implements AnnouncementRepository {}
+
+const kTestPickupAddress = AddressData(label: 'CDG Terminal 2', lat: 49.0097, lng: 2.5479);
+const kTestDeliveryAddress = AddressData(label: 'Aéroport LSS', lat: 14.7397, lng: -17.4902);
 
 AnnouncementModel buildAnnouncement({String id = 'ann-001'}) => AnnouncementModel(
       id: id,
@@ -26,6 +30,10 @@ AnnouncementModel buildAnnouncement({String id = 'ann-001'}) => AnnouncementMode
 
 void main() {
   late MockAnnouncementRepository mockRepo;
+
+  setUpAll(() {
+    registerFallbackValue(kTestPickupAddress);
+  });
 
   setUp(() {
     mockRepo = MockAnnouncementRepository();
@@ -55,8 +63,8 @@ void main() {
               departureDate: any(named: 'departureDate'),
               departureTime: any(named: 'departureTime'),
               arrivalTime: any(named: 'arrivalTime'),
-              departureLocation: any(named: 'departureLocation'),
-              arrivalLocation: any(named: 'arrivalLocation'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
               availableKg: any(named: 'availableKg'),
               pricePerKg: any(named: 'pricePerKg'),
             )).thenAnswer((_) async => ann);
@@ -66,6 +74,8 @@ void main() {
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
         departureDate: DateTime.now().add(const Duration(days: 10)),
+        pickupAddress: kTestPickupAddress,
+        deliveryAddress: kTestDeliveryAddress,
         availableKg: 20.0,
         pricePerKg: 5.0,
       )),
@@ -85,8 +95,8 @@ void main() {
               departureDate: any(named: 'departureDate'),
               departureTime: any(named: 'departureTime'),
               arrivalTime: any(named: 'arrivalTime'),
-              departureLocation: any(named: 'departureLocation'),
-              arrivalLocation: any(named: 'arrivalLocation'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
               availableKg: any(named: 'availableKg'),
               pricePerKg: any(named: 'pricePerKg'),
             )).thenThrow(Exception('Server error'));
@@ -96,6 +106,8 @@ void main() {
         departureCity: 'Paris',
         arrivalCity: 'Dakar',
         departureDate: DateTime.now().add(const Duration(days: 10)),
+        pickupAddress: kTestPickupAddress,
+        deliveryAddress: kTestDeliveryAddress,
         availableKg: 20.0,
         pricePerKg: 5.0,
       )),
@@ -347,8 +359,8 @@ void main() {
               departureDate: any(named: 'departureDate'),
               departureTime: any(named: 'departureTime'),
               arrivalTime: any(named: 'arrivalTime'),
-              departureLocation: any(named: 'departureLocation'),
-              arrivalLocation: any(named: 'arrivalLocation'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
               availableKg: any(named: 'availableKg'),
               pricePerKg: any(named: 'pricePerKg'),
             )).thenAnswer((_) async => updated);
@@ -359,6 +371,8 @@ void main() {
         departureCity: 'Lyon',
         arrivalCity: 'Abidjan',
         departureDate: DateTime.now().add(const Duration(days: 15)),
+        pickupAddress: kTestPickupAddress,
+        deliveryAddress: kTestDeliveryAddress,
         availableKg: 25.0,
         pricePerKg: 6.0,
       )),
@@ -378,8 +392,8 @@ void main() {
               departureDate: any(named: 'departureDate'),
               departureTime: any(named: 'departureTime'),
               arrivalTime: any(named: 'arrivalTime'),
-              departureLocation: any(named: 'departureLocation'),
-              arrivalLocation: any(named: 'arrivalLocation'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
               availableKg: any(named: 'availableKg'),
               pricePerKg: any(named: 'pricePerKg'),
             )).thenThrow(DioException(
@@ -396,6 +410,8 @@ void main() {
         departureCity: 'Lyon',
         arrivalCity: 'Abidjan',
         departureDate: DateTime.now().add(const Duration(days: 15)),
+        pickupAddress: kTestPickupAddress,
+        deliveryAddress: kTestDeliveryAddress,
         availableKg: 25.0,
         pricePerKg: 6.0,
       )),
@@ -416,8 +432,8 @@ void main() {
               departureDate: any(named: 'departureDate'),
               departureTime: any(named: 'departureTime'),
               arrivalTime: any(named: 'arrivalTime'),
-              departureLocation: any(named: 'departureLocation'),
-              arrivalLocation: any(named: 'arrivalLocation'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
               availableKg: any(named: 'availableKg'),
               pricePerKg: any(named: 'pricePerKg'),
             )).thenThrow(Exception('Server error'));
@@ -428,6 +444,8 @@ void main() {
         departureCity: 'Lyon',
         arrivalCity: 'Abidjan',
         departureDate: DateTime.now().add(const Duration(days: 15)),
+        pickupAddress: kTestPickupAddress,
+        deliveryAddress: kTestDeliveryAddress,
         availableKg: 25.0,
         pricePerKg: 6.0,
       )),

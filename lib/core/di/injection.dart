@@ -24,6 +24,7 @@ import 'package:dony/features/matching/data/datasources/bid_remote_datasource.da
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/data/services/saved_trips_service.dart';
+import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/data/notification_remote_datasource.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
@@ -58,6 +59,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<EnvoisRefreshNotifier>(() => EnvoisRefreshNotifier());
   getIt.registerLazySingleton<SavedTripsService>(
     () => SavedTripsService(getIt<HiveService>()),
+  );
+  getIt.registerLazySingleton<AddressAutocompleteService>(
+    () => AddressAutocompleteService(dio: getIt<ApiClient>().dio),
   );
 
   // Auth

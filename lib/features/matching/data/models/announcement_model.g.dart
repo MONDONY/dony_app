@@ -35,8 +35,14 @@ AnnouncementModel _$AnnouncementModelFromJson(Map<String, dynamic> json) =>
       departureDate: DateTime.parse(json['departureDate'] as String),
       departureTime: json['departureTime'] as String?,
       arrivalTime: json['arrivalTime'] as String?,
-      departureLocation: json['departureLocation'] as String?,
-      arrivalLocation: json['arrivalLocation'] as String?,
+      pickupAddress: json['pickupAddress'] == null
+          ? null
+          : AddressData.fromJson(json['pickupAddress'] as Map<String, dynamic>),
+      deliveryAddress: json['deliveryAddress'] == null
+          ? null
+          : AddressData.fromJson(
+              json['deliveryAddress'] as Map<String, dynamic>,
+            ),
       availableKg: (json['availableKg'] as num).toDouble(),
       pricePerKg: (json['pricePerKg'] as num).toDouble(),
       status: json['status'] as String,
@@ -64,8 +70,8 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'departureDate': instance.departureDate.toIso8601String(),
       'departureTime': instance.departureTime,
       'arrivalTime': instance.arrivalTime,
-      'departureLocation': instance.departureLocation,
-      'arrivalLocation': instance.arrivalLocation,
+      'pickupAddress': instance.pickupAddress,
+      'deliveryAddress': instance.deliveryAddress,
       'availableKg': instance.availableKg,
       'pricePerKg': instance.pricePerKg,
       'status': instance.status,

@@ -1,3 +1,5 @@
+import 'package:dony/features/matching/data/models/address_data.dart';
+
 abstract class AnnouncementEvent {}
 
 class AnnouncementCreateRequested extends AnnouncementEvent {
@@ -6,8 +8,8 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
   final DateTime departureDate;
   final String? departureTime;
   final String? arrivalTime;
-  final String? departureLocation;
-  final String? arrivalLocation;
+  final AddressData pickupAddress;
+  final AddressData deliveryAddress;
   final double availableKg;
   final double pricePerKg;
   final String? description;
@@ -20,8 +22,8 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
     required this.departureDate,
     this.departureTime,
     this.arrivalTime,
-    this.departureLocation,
-    this.arrivalLocation,
+    required this.pickupAddress,
+    required this.deliveryAddress,
     required this.availableKg,
     required this.pricePerKg,
     this.description,
@@ -77,8 +79,8 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
   final DateTime departureDate;
   final String? departureTime;
   final String? arrivalTime;
-  final String? departureLocation;
-  final String? arrivalLocation;
+  final AddressData pickupAddress;
+  final AddressData deliveryAddress;
   final double availableKg;
   final double pricePerKg;
   final String? description;
@@ -92,8 +94,8 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
     required this.departureDate,
     this.departureTime,
     this.arrivalTime,
-    this.departureLocation,
-    this.arrivalLocation,
+    required this.pickupAddress,
+    required this.deliveryAddress,
     required this.availableKg,
     required this.pricePerKg,
     this.description,

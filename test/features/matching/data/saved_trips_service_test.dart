@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/services/saved_trips_service.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,8 +19,8 @@ final _announcement = AnnouncementModel(
   departureDate: DateTime(2024, 6, 1),
   departureTime: '10:00',
   arrivalTime: '20:00',
-  departureLocation: 'CDG',
-  arrivalLocation: 'DSS',
+  pickupAddress: const AddressData(label: 'CDG', lat: 49.0097, lng: 2.5479),
+  deliveryAddress: const AddressData(label: 'DSS', lat: 14.7397, lng: -17.4902),
   availableKg: 10.0,
   pricePerKg: 12.0,
   status: 'OPEN',

@@ -545,8 +545,8 @@ class _HandoverCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final depLoc = announcement.departureLocation;
-    final arrLoc = announcement.arrivalLocation;
+    final depLoc = announcement.pickupAddress?.label;
+    final arrLoc = announcement.deliveryAddress?.label;
     final hasDepLoc = depLoc != null && depLoc.isNotEmpty;
     final hasArrLoc = arrLoc != null && arrLoc.isNotEmpty;
 

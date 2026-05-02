@@ -7,25 +7,54 @@ enum DonyStatusBannerType { info, success, warning, error }
 
 /// A horizontal status banner used to convey contextual messages (info, warning, error, success).
 ///
+/// Supports optional [title], [onDismiss] close button, [action] widget, and [messageSpan]
+/// for rich text content.
+///
 /// Usage:
 /// ```dart
 /// DonyStatusBanner(
 ///   type: DonyStatusBannerType.warning,
-///   message: 'Votre compte n'est pas encore vérifié.',
+///   message: 'Votre compte n\'est pas encore vérifié.',
 ///   icon: Icons.warning_amber_rounded,
+///   title: 'Attention',
+///   onDismiss: () {},
+///   action: TextButton(onPressed: () {}, child: Text('Vérifier')),
 /// )
 /// ```
 class DonyStatusBanner extends StatelessWidget {
   const DonyStatusBanner({
     super.key,
     required this.type,
-    required this.message,
+    this.message,
+    this.messageSpan,
     this.icon,
-  });
+    this.title,
+    this.onDismiss,
+    this.action,
+  }) : assert(
+          message != null || messageSpan != null,
+          'Either message or messageSpan must be provided.',
+        );
 
   final DonyStatusBannerType type;
-  final String message;
+
+  /// Plain-text message. Use [messageSpan] for rich text.
+  final String? message;
+
+  /// Rich text content. Takes precedence over [message] when both are provided.
+  final TextSpan? messageSpan;
+
+  /// Optional custom icon. Defaults to the type's standard icon.
   final IconData? icon;
+
+  /// Optional title displayed above the message in bold.
+  final String? title;
+
+  /// When provided, shows a close (×) icon button on the right.
+  final VoidCallback? onDismiss;
+
+  /// Optional action widget (e.g. a TextButton) displayed below the message.
+  final Widget? action;
 
   _BannerStyle get _style => switch (type) {
         DonyStatusBannerType.info => _BannerStyle(
@@ -60,6 +89,24 @@ class DonyStatusBanner extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final effectiveIcon = icon ?? style.defaultIcon;
 
+    final baseTextStyle = tt.bodySmall?.copyWith(color: DonyColors.textPrimary);
+    Widget messageWidget;
+    if (messageSpan != null) {
+      // Use Text.rich so find.textContaining works in widget tests.
+      // Merge the base style with the provided span so child spans inherit it.
+      final mergedSpan = TextSpan(
+        style: baseTextStyle,
+        children: messageSpan!.children ?? [messageSpan!],
+        text: messageSpan!.children == null ? messageSpan!.text : null,
+      );
+      messageWidget = Text.rich(mergedSpan);
+    } else {
+      messageWidget = Text(
+        message!,
+        style: baseTextStyle,
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(DonySpacing.md),
       decoration: BoxDecoration(
@@ -73,11 +120,35 @@ class DonyStatusBanner extends StatelessWidget {
           Icon(effectiveIcon, size: 18, color: style.iconColor),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
-            child: Text(
-              message,
-              style: tt.bodySmall?.copyWith(color: DonyColors.textPrimary),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (title != null) ...[
+                  Text(
+                    title!,
+                    style: tt.bodySmall?.copyWith(
+                      color: DonyColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: DonySpacing.xs),
+                ],
+                messageWidget,
+                if (action != null) ...[
+                  const SizedBox(height: DonySpacing.xs),
+                  action!,
+                ],
+              ],
             ),
           ),
+          if (onDismiss != null) ...[
+            const SizedBox(width: DonySpacing.xs),
+            GestureDetector(
+              onTap: onDismiss,
+              child: Icon(Icons.close_rounded, size: 16, color: style.iconColor),
+            ),
+          ],
         ],
       ),
     );

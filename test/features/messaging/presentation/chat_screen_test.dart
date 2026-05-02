@@ -9,6 +9,7 @@ import 'package:dony/features/messaging/presentation/chat_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockChatBloc extends MockBloc<ChatEvent, ChatState> implements ChatBloc {}
@@ -50,6 +51,10 @@ Future<void> _pump(WidgetTester tester, ChatBloc bloc) async {
 
 void main() {
   late MockChatBloc bloc;
+
+  setUpAll(() async {
+    await initializeDateFormatting('fr');
+  });
 
   setUp(() {
     bloc = MockChatBloc();

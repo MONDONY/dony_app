@@ -54,3 +54,7 @@ env.dev.json
 env.prod.json
 
 CLAUDE.md
+.worktrees/
+
+# Worktrees
+.worktrees/

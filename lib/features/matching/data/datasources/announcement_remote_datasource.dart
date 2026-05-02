@@ -1,4 +1,5 @@
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:intl/intl.dart';
 
@@ -13,8 +14,8 @@ class AnnouncementRemoteDatasource {
     required DateTime departureDate,
     String? departureTime,
     String? arrivalTime,
-    String? departureLocation,
-    String? arrivalLocation,
+    required AddressData pickupAddress,
+    required AddressData deliveryAddress,
     required double availableKg,
     required double pricePerKg,
     String? description,
@@ -29,10 +30,8 @@ class AnnouncementRemoteDatasource {
         'departureDate': DateFormat('yyyy-MM-dd').format(departureDate),
         if (departureTime != null) 'departureTime': departureTime,
         if (arrivalTime != null) 'arrivalTime': arrivalTime,
-        if (departureLocation != null && departureLocation.isNotEmpty)
-          'departureLocation': departureLocation,
-        if (arrivalLocation != null && arrivalLocation.isNotEmpty)
-          'arrivalLocation': arrivalLocation,
+        'pickupAddress': pickupAddress.toJson(),
+        'deliveryAddress': deliveryAddress.toJson(),
         'availableKg': availableKg,
         'pricePerKg': pricePerKg,
         if (description != null && description.isNotEmpty) 'description': description,
@@ -104,8 +103,8 @@ class AnnouncementRemoteDatasource {
     required DateTime departureDate,
     String? departureTime,
     String? arrivalTime,
-    String? departureLocation,
-    String? arrivalLocation,
+    required AddressData pickupAddress,
+    required AddressData deliveryAddress,
     required double availableKg,
     required double pricePerKg,
     String? description,
@@ -120,10 +119,8 @@ class AnnouncementRemoteDatasource {
         'departureDate': DateFormat('yyyy-MM-dd').format(departureDate),
         if (departureTime != null) 'departureTime': departureTime,
         if (arrivalTime != null) 'arrivalTime': arrivalTime,
-        if (departureLocation != null && departureLocation.isNotEmpty)
-          'departureLocation': departureLocation,
-        if (arrivalLocation != null && arrivalLocation.isNotEmpty)
-          'arrivalLocation': arrivalLocation,
+        'pickupAddress': pickupAddress.toJson(),
+        'deliveryAddress': deliveryAddress.toJson(),
         'availableKg': availableKg,
         'pricePerKg': pricePerKg,
         if (description != null && description.isNotEmpty) 'description': description,

@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,6 +7,9 @@ import 'package:mocktail/mocktail.dart';
 
 class MockAnnouncementRemoteDatasource extends Mock
     implements AnnouncementRemoteDatasource {}
+
+const kPickup = AddressData(label: 'CDG Terminal 2', lat: 49.0097, lng: 2.5479);
+const kDelivery = AddressData(label: 'Aéroport LSS', lat: 14.7397, lng: -17.4902);
 
 AnnouncementModel _ann() => AnnouncementModel(
       id: 'ann-1',
@@ -24,6 +28,10 @@ void main() {
   late MockAnnouncementRemoteDatasource mockDs;
   late AnnouncementRepository repo;
 
+  setUpAll(() {
+    registerFallbackValue(kPickup);
+  });
+
   setUp(() {
     mockDs = MockAnnouncementRemoteDatasource();
     repo = AnnouncementRepository(mockDs);
@@ -36,8 +44,8 @@ void main() {
           departureDate: any(named: 'departureDate'),
           departureTime: any(named: 'departureTime'),
           arrivalTime: any(named: 'arrivalTime'),
-          departureLocation: any(named: 'departureLocation'),
-          arrivalLocation: any(named: 'arrivalLocation'),
+          pickupAddress: any(named: 'pickupAddress'),
+          deliveryAddress: any(named: 'deliveryAddress'),
           availableKg: any(named: 'availableKg'),
           pricePerKg: any(named: 'pricePerKg'),
         )).thenAnswer((_) async => _ann());
@@ -46,6 +54,8 @@ void main() {
       departureCity: 'Paris',
       arrivalCity: 'Dakar',
       departureDate: DateTime(2024, 6, 1),
+      pickupAddress: kPickup,
+      deliveryAddress: kDelivery,
       availableKg: 10.0,
       pricePerKg: 12.0,
     );
@@ -98,8 +108,8 @@ void main() {
           departureDate: any(named: 'departureDate'),
           departureTime: any(named: 'departureTime'),
           arrivalTime: any(named: 'arrivalTime'),
-          departureLocation: any(named: 'departureLocation'),
-          arrivalLocation: any(named: 'arrivalLocation'),
+          pickupAddress: any(named: 'pickupAddress'),
+          deliveryAddress: any(named: 'deliveryAddress'),
           availableKg: any(named: 'availableKg'),
           pricePerKg: any(named: 'pricePerKg'),
         )).thenAnswer((_) async => _ann());
@@ -109,6 +119,8 @@ void main() {
       departureCity: 'Paris',
       arrivalCity: 'Dakar',
       departureDate: DateTime(2024, 6, 1),
+      pickupAddress: kPickup,
+      deliveryAddress: kDelivery,
       availableKg: 10.0,
       pricePerKg: 12.0,
     );
