@@ -1,8 +1,21 @@
+import groovy.json.JsonSlurper
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
     id("com.google.gms.google-services")
+}
+
+// Read GOOGLE_MAPS_API_KEY: env var first (CI/release), then env.dev.json (local dev fallback)
+val googleMapsApiKey: String = run {
+    System.getenv("GOOGLE_MAPS_API_KEY")?.takeIf { it.isNotBlank() }?.let { return@run it }
+    val envFile = rootProject.file("../env.dev.json")
+    if (envFile.exists()) {
+        @Suppress("UNCHECKED_CAST")
+        val json = JsonSlurper().parse(envFile) as Map<String, Any?>
+        (json["GOOGLE_MAPS_API_KEY"] as? String).orEmpty()
+    } else ""
 }
 
 android {
@@ -29,7 +42,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        manifestPlaceholders["GOOGLE_MAPS_API_KEY"] = (System.getenv("GOOGLE_MAPS_API_KEY") ?: "")
+        manifestPlaceholders["GOOGLE_MAPS_API_KEY"] = googleMapsApiKey
     }
 
     buildTypes {
