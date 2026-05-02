@@ -10,7 +10,9 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 
 const _departureCities = ['Paris · CDG, ORY', 'Lyon · LYS', 'Marseille · MRS'];
@@ -51,6 +53,11 @@ class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
   // Dirty flag — true until _search() is called
   final _searchDirtyNotifier = ValueNotifier<bool>(true);
 
+  // Near-me filter state — shared between map FAB and filter sheet
+  final _isNearMeActiveNotifier = ValueNotifier<bool>(false);
+  final _radiusKmNotifier = ValueNotifier<double>(25.0);
+  final _userPositionNotifier = ValueNotifier<({double lat, double lng})?>(null);
+
   String get _departureCityShort =>
       _departureCityNotifier.value.split(' ').first;
   String get _arrivalCityShort =>
@@ -73,6 +80,9 @@ class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
     _weekActive.dispose();
     _weightActive.dispose();
     _searchDirtyNotifier.dispose();
+    _isNearMeActiveNotifier.dispose();
+    _radiusKmNotifier.dispose();
+    _userPositionNotifier.dispose();
     super.dispose();
   }
 
@@ -90,6 +100,10 @@ class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
       weekendOnly: _weekendFilterNotifier.value,
       sortBy: _priceFilterNotifier.value ? 'price' : 'date',
       sortDir: 'asc',
+      // Near me: only set when active and we have a known position
+      userLat: _isNearMeActiveNotifier.value ? _userPositionNotifier.value?.lat : null,
+      userLng: _isNearMeActiveNotifier.value ? _userPositionNotifier.value?.lng : null,
+      radiusKm: _isNearMeActiveNotifier.value ? _radiusKmNotifier.value : null,
     ));
     _searchDirtyNotifier.value = false;
     _showResultsNotifier.value = true;
@@ -139,6 +153,9 @@ class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
             ratingFilter: _ratingFilterNotifier.value,
             weekendFilter: _weekendFilterNotifier.value,
             priceFilter: _priceFilterNotifier.value,
+            isNearMeActive: _isNearMeActiveNotifier,
+            radiusKm: _radiusKmNotifier,
+            userPosition: _userPositionNotifier,
             onApply: ({
               required departureCity,
               required arrivalCity,
@@ -160,6 +177,14 @@ class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
               _weekendFilterNotifier.value = weekendFilter;
               _priceFilterNotifier.value = priceFilter;
               _search();
+            },
+            onNearMeChanged: ({required bool isActive, double? lat, double? lng, required double radius}) {
+              if (lat != null && lng != null) {
+                _userPositionNotifier.value = (lat: lat, lng: lng);
+              }
+              _radiusKmNotifier.value = radius;
+              _isNearMeActiveNotifier.value = isActive;
+              if (isActive) _search();
             },
           );
         }
@@ -474,7 +499,11 @@ class _ResultsView extends StatefulWidget {
     required this.ratingFilter,
     required this.weekendFilter,
     required this.priceFilter,
+    required this.isNearMeActive,
+    required this.radiusKm,
+    required this.userPosition,
     required this.onApply,
+    required this.onNearMeChanged,
   });
 
   final String departureCity;
@@ -491,6 +520,9 @@ class _ResultsView extends StatefulWidget {
   final bool ratingFilter;
   final bool weekendFilter;
   final bool priceFilter;
+  final ValueNotifier<bool> isNearMeActive;
+  final ValueNotifier<double> radiusKm;
+  final ValueNotifier<({double lat, double lng})?> userPosition;
   final void Function({
     required String departureCity,
     required String arrivalCity,
@@ -502,6 +534,12 @@ class _ResultsView extends StatefulWidget {
     required bool weekendFilter,
     required bool priceFilter,
   }) onApply;
+  final void Function({
+    required bool isActive,
+    double? lat,
+    double? lng,
+    required double radius,
+  }) onNearMeChanged;
 
   @override
   State<_ResultsView> createState() => _ResultsViewState();
@@ -538,6 +576,21 @@ class _ResultsViewState extends State<_ResultsView> {
     return list;
   }
 
+  // ── GPS permission helper ─────────────────────────────────────────────────
+  Future<Position?> _ensureUserPosition() async {
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      return null;
+    }
+    return Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.low),
+    );
+  }
+
   // ── Section 8: filter bottom sheet (DraggableScrollableSheet) ───────────────
   void _showFilterBottomSheet(BuildContext ctx) {
     String depCity = widget.departureCity;
@@ -549,6 +602,9 @@ class _ResultsViewState extends State<_ResultsView> {
     bool ratingFilter = widget.ratingFilter;
     bool weekendFilter = widget.weekendFilter;
     bool priceFilter = widget.priceFilter;
+    // Near me — initialise from parent notifiers
+    bool nearMeActive = widget.isNearMeActive.value;
+    double nearMeRadius = widget.radiusKm.value;
 
     showModalBottomSheet<void>(
       context: ctx,
@@ -728,6 +784,78 @@ class _ResultsViewState extends State<_ResultsView> {
                                       color: DonyColors.neutral400)),
                             ],
                           ),
+
+                          // ── Filtre "Près de moi" ──────────────────────────
+                          const SizedBox(height: DonySpacing.xxl),
+                          const Divider(height: 1, color: DonyColors.neutral200),
+                          const SizedBox(height: DonySpacing.md),
+                          SwitchListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text('Près de moi',
+                                style: tt.titleMedium),
+                            subtitle: Text(
+                              'Annonces dont le point de remise est dans le rayon',
+                              style: tt.bodySmall?.copyWith(
+                                  color: DonyColors.neutral400),
+                            ),
+                            value: nearMeActive,
+                            activeThumbColor: DonyColors.primary,
+                            onChanged: (on) async {
+                              if (on) {
+                                final pos = await _ensureUserPosition();
+                                if (pos != null) {
+                                  setSheet(() => nearMeActive = true);
+                                }
+                              } else {
+                                setSheet(() => nearMeActive = false);
+                              }
+                            },
+                          ),
+                          if (nearMeActive) ...[
+                            const SizedBox(height: DonySpacing.sm),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Rayon', style: tt.titleMedium),
+                                Text(
+                                  '${nearMeRadius.round()} km',
+                                  style: tt.titleMedium?.copyWith(
+                                      color: DonyColors.primary,
+                                      fontWeight: FontWeight.w700),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: DonySpacing.sm),
+                            SliderTheme(
+                              data: SliderTheme.of(sbCtx).copyWith(
+                                activeTrackColor: DonyColors.primary,
+                                inactiveTrackColor: DonyColors.neutral200,
+                                thumbColor: DonyColors.primary,
+                                overlayColor: DonyColors.primary
+                                    .withValues(alpha: 0.1),
+                                trackHeight: 4,
+                              ),
+                              child: Slider(
+                                value: nearMeRadius,
+                                min: 5,
+                                max: 200,
+                                divisions: 39,
+                                onChanged: (v) =>
+                                    setSheet(() => nearMeRadius = v),
+                              ),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('5 km',
+                                    style: tt.bodySmall?.copyWith(
+                                        color: DonyColors.neutral400)),
+                                Text('200 km',
+                                    style: tt.bodySmall?.copyWith(
+                                        color: DonyColors.neutral400)),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -746,8 +874,28 @@ class _ResultsViewState extends State<_ResultsView> {
                     ),
                     child: DonyButton(
                       label: 'Appliquer',
-                      onPressed: () {
+                      onPressed: () async {
+                        // Resolve GPS position if near-me was turned on in sheet
+                        double? resolvedLat;
+                        double? resolvedLng;
+                        if (nearMeActive) {
+                          final pos = await _ensureUserPosition();
+                          if (pos != null) {
+                            resolvedLat = pos.latitude;
+                            resolvedLng = pos.longitude;
+                          } else {
+                            // Permission denied — silently disable near-me
+                            nearMeActive = false;
+                          }
+                        }
+                        if (!sbCtx.mounted) return;
                         sbCtx.pop();
+                        widget.onNearMeChanged(
+                          isActive: nearMeActive,
+                          lat: resolvedLat,
+                          lng: resolvedLng,
+                          radius: nearMeRadius,
+                        );
                         widget.onApply(
                           departureCity: depCity,
                           arrivalCity: arrCity,
@@ -878,18 +1026,40 @@ class _ResultsViewState extends State<_ResultsView> {
         ),
       ),
       body: _isMapView
-          ? BlocBuilder<AnnouncementBloc, AnnouncementState>(
-              builder: (context, state) {
-                final announcements = state is AnnouncementSearchLoaded
-                    ? state.results
-                    : <AnnouncementModel>[];
-                return AnnouncementMapView(
-                  key: ValueKey('map-${announcements.length}'),
-                  announcements: announcements,
-                  searchDepartureCity: widget.departureCity,
-                  searchArrivalCity: widget.arrivalCity,
-                );
-              },
+          ? ListenableBuilder(
+              listenable: Listenable.merge([
+                widget.isNearMeActive,
+                widget.radiusKm,
+                widget.userPosition,
+              ]),
+              builder: (context, _) =>
+                  BlocBuilder<AnnouncementBloc, AnnouncementState>(
+                builder: (context, state) {
+                  final announcements = state is AnnouncementSearchLoaded
+                      ? state.results
+                      : <AnnouncementModel>[];
+                  final pos = widget.userPosition.value;
+                  return AnnouncementMapView(
+                    key: ValueKey('map-${announcements.length}'),
+                    announcements: announcements,
+                    searchDepartureCity: widget.departureCity,
+                    searchArrivalCity: widget.arrivalCity,
+                    onNearMeRequested: (lat, lng, radius) {
+                      widget.onNearMeChanged(
+                        isActive: true,
+                        lat: lat,
+                        lng: lng,
+                        radius: radius,
+                      );
+                    },
+                    isNearMeActive: widget.isNearMeActive.value,
+                    activeRadiusKm: widget.radiusKm.value,
+                    userPosition: pos != null
+                        ? LatLng(pos.lat, pos.lng)
+                        : null,
+                  );
+                },
+              ),
             )
           : Column(
         children: [
