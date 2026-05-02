@@ -30,8 +30,7 @@ dependencies:
   geolocator: ^13.0.0
 
   # Map
-  flutter_map: ^7.0.2
-  latlong2: ^0.9.1
+  google_maps_flutter: ^2.9.0
 
   # Media
   image_picker: ^1.1.0
@@ -78,6 +77,7 @@ dependencies:
   equatable: ^2.0.7
   json_annotation: ^4.9.0
   share_plus: ^10.0.0
+  uuid: ^4.4.0
   path_provider: ^2.1.0
   flutter_localizations:
     sdk: flutter
