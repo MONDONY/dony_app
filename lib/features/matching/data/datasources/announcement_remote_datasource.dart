@@ -1,6 +1,7 @@
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:intl/intl.dart';
 
 class AnnouncementRemoteDatasource {
@@ -18,6 +19,7 @@ class AnnouncementRemoteDatasource {
     required AddressData deliveryAddress,
     required double availableKg,
     required double pricePerKg,
+    required TransportMode transportMode,
     String? description,
     List<String> acceptedContentTypes = const [],
     List<String> refusedTypes = const [],
@@ -34,6 +36,7 @@ class AnnouncementRemoteDatasource {
         'deliveryAddress': deliveryAddress.toJson(),
         'availableKg': availableKg,
         'pricePerKg': pricePerKg,
+        'transportMode': transportModeToWire(transportMode),
         if (description != null && description.isNotEmpty) 'description': description,
         'acceptedContentTypes': acceptedContentTypes,
         'refusedTypes': refusedTypes,
@@ -113,6 +116,7 @@ class AnnouncementRemoteDatasource {
     required AddressData deliveryAddress,
     required double availableKg,
     required double pricePerKg,
+    required TransportMode transportMode,
     String? description,
     List<String> acceptedContentTypes = const [],
     List<String> refusedTypes = const [],
@@ -129,6 +133,7 @@ class AnnouncementRemoteDatasource {
         'deliveryAddress': deliveryAddress.toJson(),
         'availableKg': availableKg,
         'pricePerKg': pricePerKg,
+        'transportMode': transportModeToWire(transportMode),
         if (description != null && description.isNotEmpty) 'description': description,
         'acceptedContentTypes': acceptedContentTypes,
         'refusedTypes': refusedTypes,

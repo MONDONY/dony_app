@@ -1,6 +1,8 @@
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
+import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
@@ -116,4 +118,44 @@ void main() {
       expect(find.byType(AnnouncementMapView), findsOneWidget);
     });
   });
+
+  testWidgets(
+    'builds markers for announcements with each transport mode',
+    (tester) async {
+      MarkerBitmapFactory.clearCache();
+
+      final announcements = [
+        for (final mode in TransportMode.values)
+          AnnouncementModel(
+            id: 'a-${mode.name}',
+            travelerId: 't-1',
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+            departureDate: DateTime.now().add(const Duration(days: 5)),
+            availableKg: 5.0,
+            pricePerKg: 10.0,
+            status: 'ACTIVE',
+            pickupAddress: const AddressData(label: 'Lyon', lat: 45.748, lng: 4.846),
+            deliveryAddress: const AddressData(label: 'Dakar', lat: 14.693, lng: -17.447),
+            transportMode: mode,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+      ];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AnnouncementMapView(announcements: announcements),
+          ),
+        ),
+      );
+      // Allow async marker building to complete
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // Smoke check: widget mounted, no crash on building markers for any mode
+      expect(find.byType(AnnouncementMapView), findsOneWidget);
+    },
+  );
 }

@@ -7,6 +7,7 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/address_picker_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -49,6 +50,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   AddressData? _deliveryAddress;
   final _availableKgNotifier = ValueNotifier<double>(15);
   final _priceOptionNotifier = ValueNotifier<int>(1);
+  final _transportModeNotifier = ValueNotifier<TransportMode?>(null);
   final _selectedContentNotifier = ValueNotifier<Set<String>>(
     {'Vêtements', 'Médicaments', 'Alim. sèche', 'Hi-fi'},
   );
@@ -87,6 +89,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       }
       _pickupAddress = a.pickupAddress;
       _deliveryAddress = a.deliveryAddress;
+      _transportModeNotifier.value = a.transportMode;
 
       if (a.description != null) {
         _descriptionCtrl.text = a.description!;
@@ -135,6 +138,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     _selectedContentNotifier.dispose();
     _customAcceptedNotifier.dispose();
     _refusedTypesNotifier.dispose();
+    _transportModeNotifier.dispose();
     super.dispose();
   }
 
@@ -174,6 +178,10 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       _showError('Lieu de récupération obligatoire');
       return;
     }
+    if (_transportModeNotifier.value == null) {
+      _showError('Mode de transport obligatoire');
+      return;
+    }
 
     final departureTime =
         departureTimeVal != null ? _formatTime(departureTimeVal) : null;
@@ -189,6 +197,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
         ? null
         : _descriptionCtrl.text.trim();
 
+    final transportMode = _transportModeNotifier.value!;
+
     if (_isEdit) {
       context.read<AnnouncementBloc>().add(AnnouncementUpdateRequested(
             id: widget.announcement!.id,
@@ -201,6 +211,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
             deliveryAddress: _deliveryAddress!,
             availableKg: _availableKgNotifier.value,
             pricePerKg: _pricePerKg,
+            transportMode: transportMode,
             description: description,
             acceptedContentTypes: allAccepted,
             refusedTypes: refused,
@@ -216,6 +227,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
             deliveryAddress: _deliveryAddress!,
             availableKg: _availableKgNotifier.value,
             pricePerKg: _pricePerKg,
+            transportMode: transportMode,
             description: description,
             acceptedContentTypes: allAccepted,
             refusedTypes: refused,
@@ -700,6 +712,33 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 ).animate().fadeIn(delay: 100.ms),
                 const SizedBox(height: DonySpacing.xxl),
 
+                // ── MODE DE TRANSPORT ───────────────────────────────────────
+                const _SectionLabel(
+                  label: 'MODE DE TRANSPORT',
+                  icon: Icons.commute_rounded,
+                ),
+                const SizedBox(height: DonySpacing.sm),
+                ValueListenableBuilder<TransportMode?>(
+                  valueListenable: _transportModeNotifier,
+                  builder: (context, current, _) {
+                    return Wrap(
+                      spacing: DonySpacing.sm,
+                      runSpacing: DonySpacing.sm,
+                      children: [
+                        for (final mode in TransportMode.values)
+                          DonyChip(
+                            key: Key('transport-chip-${mode.name}'),
+                            label: mode.label,
+                            icon: mode.icon,
+                            selected: current == mode,
+                            onTap: () => _transportModeNotifier.value = mode,
+                          ),
+                      ],
+                    );
+                  },
+                ).animate().fadeIn(delay: 110.ms),
+                const SizedBox(height: DonySpacing.xxl),
+
                 // ── CE QUE J'ACCEPTE ────────────────────────────────────────
                 const _SectionLabel(label: 'CE QUE J\'ACCEPTE', icon: Icons.check_circle_outline_rounded),
                 const SizedBox(height: DonySpacing.sm),
@@ -946,10 +985,19 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                   border: Border(
                       top: BorderSide(color: DonyColors.borderDefault)),
                 ),
-                child: DonyButton(
-                  label: _isEdit ? 'Enregistrer les modifications' : 'Publier le trajet',
-                  onPressed: isLoading ? null : _submit,
-                  isLoading: isLoading,
+                child: ValueListenableBuilder<TransportMode?>(
+                  valueListenable: _transportModeNotifier,
+                  builder: (context, transportMode, _) {
+                    final canSubmit = !isLoading && transportMode != null;
+                    return DonyButton(
+                      key: const Key('create-announcement-submit'),
+                      label: _isEdit
+                          ? 'Enregistrer les modifications'
+                          : 'Publier le trajet',
+                      onPressed: canSubmit ? _submit : null,
+                      isLoading: isLoading,
+                    );
+                  },
                 ),
               ),
             ],

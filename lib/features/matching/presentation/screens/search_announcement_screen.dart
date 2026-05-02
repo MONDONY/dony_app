@@ -548,6 +548,7 @@ class _ResultsView extends StatefulWidget {
 class _ResultsViewState extends State<_ResultsView> {
   // ── Section 5: client-side filter logic (AND semantics) ─────────────────────
   bool _isMapView = false;
+  bool _errorBannerDismissed = false;
 
   List<AnnouncementModel> _applyFilters(List<AnnouncementModel> all) {
     final list = all.where((a) {
@@ -574,6 +575,125 @@ class _ResultsViewState extends State<_ResultsView> {
       list.sort((a, b) => a.pricePerKg.compareTo(b.pricePerKg));
     }
     return list;
+  }
+
+  Widget _buildListColumn(
+    BuildContext context,
+    AnnouncementState state, {
+    required List<AnnouncementModel> results,
+  }) {
+    return Column(
+      children: [
+        // ── Filter chips row ────────────────────────────────────────────
+        SizedBox(
+          height: 48,
+          child: ListenableBuilder(
+            listenable: Listenable.merge([
+              widget.ratingActive,
+              widget.priceActive,
+              widget.weekActive,
+              widget.weightActive,
+            ]),
+            builder: (context, _) => ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(
+                horizontal: DonySpacing.lg,
+                vertical: DonySpacing.sm,
+              ),
+              children: [
+                _FilterChip(
+                  label: '★ 4.7+',
+                  icon: Icons.star_rounded,
+                  active: widget.ratingActive.value,
+                  onTap: () => widget.ratingActive.value =
+                      !widget.ratingActive.value,
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                _FilterChip(
+                  label: '€/kg ↓',
+                  active: widget.priceActive.value,
+                  onTap: () => widget.priceActive.value =
+                      !widget.priceActive.value,
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                _FilterChip(
+                  label: 'Cette semaine',
+                  active: widget.weekActive.value,
+                  onTap: () =>
+                      widget.weekActive.value = !widget.weekActive.value,
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                _FilterChip(
+                  label: '+10 kg',
+                  active: widget.weightActive.value,
+                  onTap: () => widget.weightActive.value =
+                      !widget.weightActive.value,
+                ),
+              ],
+            ),
+          ),
+        ),
+        Expanded(
+          child: _buildResultsBody(context, state, results: results),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildResultsBody(
+    BuildContext context,
+    AnnouncementState state, {
+    required List<AnnouncementModel> results,
+  }) {
+    if (state is AnnouncementLoading || state is AnnouncementInitial) {
+      return const Center(
+        child: CircularProgressIndicator(color: DonyColors.primary),
+      );
+    }
+    if (state is AnnouncementError && state.previousResults == null) {
+      return _ErrorView(
+        message: state.message,
+        onRetry: () => context.read<AnnouncementBloc>().add(
+              AnnouncementSearchRequested(
+                departureCity: widget.departureCity,
+                arrivalCity: widget.arrivalCity,
+                sortBy: 'date',
+              ),
+            ),
+      );
+    }
+    if (results.isEmpty) {
+      return _EmptyView(onBack: widget.onBack);
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.base,
+        DonySpacing.base,
+        DonySpacing.base,
+        DonySpacing.huge,
+      ),
+      itemCount: results.length,
+      separatorBuilder: (_, __) => const SizedBox(height: DonySpacing.md),
+      itemBuilder: (context, i) {
+        final announcement = results[i];
+        final authState = context.read<AuthBloc>().state;
+        final currentUserId =
+            authState is AuthAuthenticated ? authState.user.id : null;
+        final isOwn = currentUserId != null &&
+            announcement.travelerId == currentUserId;
+        return TravelerCard(
+          announcement: announcement,
+          index: i,
+          isOwnAnnouncement: isOwn,
+          onTap: isOwn
+              ? null
+              : () => context.push(
+                    '/search/${announcement.id}',
+                    extra: announcement,
+                  ),
+        );
+      },
+    );
   }
 
   // ── GPS permission helper ─────────────────────────────────────────────────
@@ -1025,172 +1145,114 @@ class _ResultsViewState extends State<_ResultsView> {
           child: Divider(height: 1, color: DonyColors.neutral200),
         ),
       ),
-      body: _isMapView
-          ? ListenableBuilder(
-              listenable: Listenable.merge([
-                widget.isNearMeActive,
-                widget.radiusKm,
-                widget.userPosition,
-              ]),
-              builder: (context, _) =>
-                  BlocBuilder<AnnouncementBloc, AnnouncementState>(
-                builder: (context, state) {
-                  final announcements = state is AnnouncementSearchLoaded
-                      ? state.results
-                      : <AnnouncementModel>[];
-                  final pos = widget.userPosition.value;
-                  return AnnouncementMapView(
-                    key: ValueKey('map-${announcements.length}'),
-                    announcements: announcements,
-                    searchDepartureCity: widget.departureCity,
-                    searchArrivalCity: widget.arrivalCity,
-                    onNearMeRequested: (lat, lng, radius) {
-                      widget.onNearMeChanged(
-                        isActive: true,
-                        lat: lat,
-                        lng: lng,
-                        radius: radius,
-                      );
-                    },
-                    isNearMeActive: widget.isNearMeActive.value,
-                    activeRadiusKm: widget.radiusKm.value,
-                    userPosition: pos != null
-                        ? LatLng(pos.lat, pos.lng)
-                        : null,
-                  );
-                },
-              ),
-            )
-          : Column(
-        children: [
-          // ── Filter chips row (Section 3) ────────────────────────────
-          SizedBox(
-            height: 48,
-            child: ListenableBuilder(
-              listenable: Listenable.merge([
-                widget.ratingActive,
-                widget.priceActive,
-                widget.weekActive,
-                widget.weightActive,
-              ]),
-              builder: (context, _) => ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.lg,
-                  vertical: DonySpacing.sm,
-                ),
+      body: BlocConsumer<AnnouncementBloc, AnnouncementState>(
+        listener: (context, state) {
+          if (state is AnnouncementError && state.previousResults != null) {
+            setState(() => _errorBannerDismissed = false);
+          }
+        },
+        builder: (context, state) {
+          // Cas 1 — pas encore de résultats : vue liste-seule (loading | error | initial).
+          final hasResults =
+              state is AnnouncementSearchLoaded ||
+              (state is AnnouncementError && state.previousResults != null);
+          if (!hasResults) {
+            return _buildListColumn(context, state, results: const []);
+          }
+
+          // Cas 2 — résultats disponibles : monter la liste ET la map.
+          final List<AnnouncementModel> rawResults =
+              state is AnnouncementSearchLoaded
+                  ? state.results
+                  : (state as AnnouncementError).previousResults!;
+
+          return ListenableBuilder(
+            listenable: Listenable.merge([
+              widget.ratingActive,
+              widget.priceActive,
+              widget.weekActive,
+              widget.weightActive,
+              widget.isNearMeActive,
+              widget.radiusKm,
+              widget.userPosition,
+            ]),
+            builder: (context, _) {
+              final filtered = _applyFilters(rawResults);
+              final pos = widget.userPosition.value;
+              return Stack(
                 children: [
-                  _FilterChip(
-                    label: '★ 4.7+',
-                    icon: Icons.star_rounded,
-                    active: widget.ratingActive.value,
-                    onTap: () => widget.ratingActive.value =
-                        !widget.ratingActive.value,
-                  ),
-                  const SizedBox(width: DonySpacing.sm),
-                  _FilterChip(
-                    label: '€/kg ↓',
-                    active: widget.priceActive.value,
-                    onTap: () => widget.priceActive.value =
-                        !widget.priceActive.value,
-                  ),
-                  const SizedBox(width: DonySpacing.sm),
-                  _FilterChip(
-                    label: 'Cette semaine',
-                    active: widget.weekActive.value,
-                    onTap: () =>
-                        widget.weekActive.value = !widget.weekActive.value,
-                  ),
-                  const SizedBox(width: DonySpacing.sm),
-                  _FilterChip(
-                    label: '+10 kg',
-                    active: widget.weightActive.value,
-                    onTap: () => widget.weightActive.value =
-                        !widget.weightActive.value,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // ── Results list (Sections 4 + 5 + 9) ──────────────────────
-          Expanded(
-            child: ListenableBuilder(
-              listenable: Listenable.merge([
-                widget.ratingActive,
-                widget.priceActive,
-                widget.weekActive,
-                widget.weightActive,
-              ]),
-              builder: (context, _) =>
-                  BlocBuilder<AnnouncementBloc, AnnouncementState>(
-                builder: (context, state) {
-                  if (state is AnnouncementLoading ||
-                      state is AnnouncementInitial) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                          color: DonyColors.primary),
-                    );
-                  }
-
-                  if (state is AnnouncementError) {
-                    return _ErrorView(
-                      message: state.message,
-                      onRetry: () => context
-                          .read<AnnouncementBloc>()
-                          .add(AnnouncementSearchRequested(
-                            departureCity: widget.departureCity,
-                            arrivalCity: widget.arrivalCity,
-                            sortBy: 'date',
-                          )),
-                    );
-                  }
-
-                  if (state is AnnouncementSearchLoaded) {
-                    final filtered = _applyFilters(state.results);
-                    if (filtered.isEmpty) {
-                      return _EmptyView(onBack: widget.onBack);
-                    }
-
-                    return ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(
-                        DonySpacing.base,
-                        DonySpacing.base,
-                        DonySpacing.base,
-                        DonySpacing.huge,
+                  IndexedStack(
+                    index: _isMapView ? 1 : 0,
+                    sizing: StackFit.expand,
+                    children: [
+                      _buildListColumn(context, state, results: filtered),
+                      AnnouncementMapView(
+                        announcements: filtered,
+                        searchDepartureCity: widget.departureCity,
+                        searchArrivalCity: widget.arrivalCity,
+                        onNearMeRequested: (lat, lng, radius) {
+                          widget.onNearMeChanged(
+                            isActive: true,
+                            lat: lat,
+                            lng: lng,
+                            radius: radius,
+                          );
+                        },
+                        isNearMeActive: widget.isNearMeActive.value,
+                        activeRadiusKm: widget.radiusKm.value,
+                        userPosition:
+                            pos != null ? LatLng(pos.lat, pos.lng) : null,
                       ),
-                      itemCount: filtered.length,
-                      separatorBuilder: (_, __) =>
-                          const SizedBox(height: DonySpacing.md),
-                      itemBuilder: (context, i) {
-                        final announcement = filtered[i];
-                        final authState = context.read<AuthBloc>().state;
-                        final currentUserId =
-                            authState is AuthAuthenticated
-                                ? authState.user.id
-                                : null;
-                        final isOwn = currentUserId != null &&
-                            announcement.travelerId == currentUserId;
-                        return TravelerCard(
-                          announcement: announcement,
-                          index: i,
-                          isOwnAnnouncement: isOwn,
-                          onTap: isOwn
-                              ? null
-                              : () => context.push(
-                                    '/search/${announcement.id}',
-                                    extra: announcement,
-                                  ),
-                        );
-                      },
-                    );
-                  }
-
-                  return const SizedBox.shrink();
-                },
-              ),
-            ),
-          ),
-        ],
+                    ],
+                  ),
+                  if (state is AnnouncementSearchLoaded && state.isReloading)
+                    Positioned(
+                      top: DonySpacing.md,
+                      right: DonySpacing.md,
+                      child: Container(
+                        key: const Key('search-reload-overlay'),
+                        padding: const EdgeInsets.all(DonySpacing.sm),
+                        decoration: BoxDecoration(
+                          color: DonyColors.surface,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x1A000000),
+                              blurRadius: 8,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            color: DonyColors.primary,
+                            strokeWidth: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (state is AnnouncementError &&
+                      state.previousResults != null &&
+                      !_errorBannerDismissed)
+                    Positioned(
+                      key: const Key('search-error-banner'),
+                      left: DonySpacing.md,
+                      right: DonySpacing.md,
+                      bottom: DonySpacing.md,
+                      child: DonyStatusBanner(
+                        type: DonyStatusBannerType.error,
+                        message: state.message,
+                        onDismiss: () =>
+                            setState(() => _errorBannerDismissed = true),
+                      ),
+                    ),
+                ],
+              );
+            },
+          );
+        },
       ),
     );
   }

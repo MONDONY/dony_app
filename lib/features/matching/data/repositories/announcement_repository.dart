@@ -1,6 +1,7 @@
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 
 class AnnouncementRepository {
   final AnnouncementRemoteDatasource _remoteDatasource;
@@ -17,6 +18,7 @@ class AnnouncementRepository {
     required AddressData deliveryAddress,
     required double availableKg,
     required double pricePerKg,
+    required TransportMode transportMode,
     String? description,
     List<String> acceptedContentTypes = const [],
     List<String> refusedTypes = const [],
@@ -31,6 +33,7 @@ class AnnouncementRepository {
       deliveryAddress: deliveryAddress,
       availableKg: availableKg,
       pricePerKg: pricePerKg,
+      transportMode: transportMode,
       description: description,
       acceptedContentTypes: acceptedContentTypes,
       refusedTypes: refusedTypes,
@@ -87,6 +90,7 @@ class AnnouncementRepository {
     required AddressData deliveryAddress,
     required double availableKg,
     required double pricePerKg,
+    required TransportMode transportMode,
     String? description,
     List<String> acceptedContentTypes = const [],
     List<String> refusedTypes = const [],
@@ -102,6 +106,7 @@ class AnnouncementRepository {
       deliveryAddress: deliveryAddress,
       availableKg: availableKg,
       pricePerKg: pricePerKg,
+      transportMode: transportMode,
       description: description,
       acceptedContentTypes: acceptedContentTypes,
       refusedTypes: refusedTypes,

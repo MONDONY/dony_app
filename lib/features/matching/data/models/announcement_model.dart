@@ -1,6 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 
 import 'address_data.dart';
+import 'transport_mode.dart';
 
 part 'announcement_model.g.dart';
 
@@ -63,6 +64,8 @@ class AnnouncementModel {
   final AddressData? deliveryAddress;
   final double availableKg;
   final double pricePerKg;
+  @JsonKey(fromJson: transportModeFromWire, toJson: _transportModeToWireOrNull)
+  final TransportMode? transportMode;
   final String status;
   final int? bidsCount;
   final TravelerProfile? traveler;
@@ -84,6 +87,7 @@ class AnnouncementModel {
     this.deliveryAddress,
     required this.availableKg,
     required this.pricePerKg,
+    this.transportMode,
     required this.status,
     this.bidsCount,
     this.traveler,
@@ -99,3 +103,6 @@ class AnnouncementModel {
 
   Map<String, dynamic> toJson() => _$AnnouncementModelToJson(this);
 }
+
+String? _transportModeToWireOrNull(TransportMode? mode) =>
+    mode == null ? null : transportModeToWire(mode);

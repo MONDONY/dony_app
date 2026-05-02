@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/same_address_announcements_sheet.dart';
@@ -150,8 +151,6 @@ class AnnouncementMapView extends StatefulWidget {
 class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   GoogleMapController? _mapController;
   Set<Marker> _markers = {};
-  BitmapDescriptor? _luggagePickup;
-  BitmapDescriptor? _luggageDelivery;
   final Map<int, BitmapDescriptor> _clusterIcons = {};
   bool _isLocating = false;
   double _currentZoom = 3.5;
@@ -159,7 +158,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   @override
   void initState() {
     super.initState();
-    _preloadIcons();
+    _prewarmCommonIcons();
   }
 
   @override
@@ -182,16 +181,19 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     }
   }
 
-  Future<void> _preloadIcons() async {
-    final pickup = await MarkerBitmapFactory.luggagePickup();
-    final delivery = await MarkerBitmapFactory.luggageDelivery();
-    if (!mounted) {
-      return;
+  Future<void> _prewarmCommonIcons() async {
+    final futures = <Future<BitmapDescriptor>>[];
+    for (final mode in TransportMode.values) {
+      for (final side in MarkerSide.values) {
+        futures.add(MarkerBitmapFactory.pin(
+          mode: mode,
+          side: side,
+          rating: null,
+        ));
+      }
     }
-    setState(() {
-      _luggagePickup = pickup;
-      _luggageDelivery = delivery;
-    });
+    await Future.wait(futures);
+    if (!mounted) return;
     await _rebuildMarkers();
   }
 
@@ -229,9 +231,13 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       );
     }
     final item = cluster.items.first;
-    final icon = item.side == _MarkerSide.pickup
-        ? (_luggagePickup ?? BitmapDescriptor.defaultMarker)
-        : (_luggageDelivery ?? BitmapDescriptor.defaultMarker);
+    final icon = await MarkerBitmapFactory.pin(
+      mode: item.announcement.transportMode,
+      side: item.side == _MarkerSide.pickup
+          ? MarkerSide.pickup
+          : MarkerSide.delivery,
+      rating: item.announcement.traveler?.averageRating,
+    );
     // Default anchor (0.5, 1.0) lands the pin tip — drawn at the very
     // bottom-centre of the bitmap — exactly on the lat/lng coordinate.
     return Marker(

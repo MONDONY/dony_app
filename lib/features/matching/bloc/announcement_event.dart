@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 
 abstract class AnnouncementEvent {}
 
@@ -12,6 +13,7 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
   final AddressData deliveryAddress;
   final double availableKg;
   final double pricePerKg;
+  final TransportMode transportMode;
   final String? description;
   final List<String> acceptedContentTypes;
   final List<String> refusedTypes;
@@ -26,6 +28,7 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
     required this.deliveryAddress,
     required this.availableKg,
     required this.pricePerKg,
+    required this.transportMode,
     this.description,
     this.acceptedContentTypes = const [],
     this.refusedTypes = const [],
@@ -89,6 +92,7 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
   final AddressData deliveryAddress;
   final double availableKg;
   final double pricePerKg;
+  final TransportMode transportMode;
   final String? description;
   final List<String> acceptedContentTypes;
   final List<String> refusedTypes;
@@ -104,6 +108,7 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
     required this.deliveryAddress,
     required this.availableKg,
     required this.pricePerKg,
+    required this.transportMode,
     this.description,
     this.acceptedContentTypes = const [],
     this.refusedTypes = const [],

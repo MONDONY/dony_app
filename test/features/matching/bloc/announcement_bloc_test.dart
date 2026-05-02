@@ -6,6 +6,7 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -33,6 +34,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(kTestPickupAddress);
+    registerFallbackValue(TransportMode.other);
   });
 
   setUp(() {
@@ -67,6 +69,7 @@ void main() {
               deliveryAddress: any(named: 'deliveryAddress'),
               availableKg: any(named: 'availableKg'),
               pricePerKg: any(named: 'pricePerKg'),
+              transportMode: any(named: 'transportMode'),
             )).thenAnswer((_) async => ann);
         return buildBloc();
       },
@@ -78,6 +81,7 @@ void main() {
         deliveryAddress: kTestDeliveryAddress,
         availableKg: 20.0,
         pricePerKg: 5.0,
+        transportMode: TransportMode.plane,
       )),
       expect: () => [
         isA<AnnouncementLoading>(),
@@ -99,6 +103,7 @@ void main() {
               deliveryAddress: any(named: 'deliveryAddress'),
               availableKg: any(named: 'availableKg'),
               pricePerKg: any(named: 'pricePerKg'),
+              transportMode: any(named: 'transportMode'),
             )).thenThrow(Exception('Server error'));
         return buildBloc();
       },
@@ -110,6 +115,7 @@ void main() {
         deliveryAddress: kTestDeliveryAddress,
         availableKg: 20.0,
         pricePerKg: 5.0,
+        transportMode: TransportMode.plane,
       )),
       expect: () => [
         isA<AnnouncementLoading>(),
@@ -284,6 +290,77 @@ void main() {
     );
 
     blocTest<AnnouncementBloc, AnnouncementState>(
+      'recherche relancée après Loaded → [Loaded(isReloading:true), Loaded]',
+      build: () {
+        when(() => mockRepo.searchAnnouncements(
+              departureCity: any(named: 'departureCity'),
+              arrivalCity: any(named: 'arrivalCity'),
+              departureDateFrom: any(named: 'departureDateFrom'),
+              departureDateTo: any(named: 'departureDateTo'),
+              minAvailableKg: any(named: 'minAvailableKg'),
+              userLat: any(named: 'userLat'),
+              userLng: any(named: 'userLng'),
+              radiusKm: any(named: 'radiusKm'),
+              sortBy: any(named: 'sortBy'),
+              sortDir: any(named: 'sortDir'),
+            )).thenAnswer((_) async => [buildAnnouncement(id: 'new')]);
+        return buildBloc();
+      },
+      seed: () => AnnouncementSearchLoaded([buildAnnouncement(id: 'old')]),
+      act: (bloc) => bloc.add(AnnouncementSearchRequested(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        sortBy: 'date',
+      )),
+      expect: () => [
+        predicate<AnnouncementState>((s) =>
+            s is AnnouncementSearchLoaded &&
+            s.isReloading == true &&
+            s.results.length == 1 &&
+            s.results.first.id == 'old'),
+        predicate<AnnouncementState>((s) =>
+            s is AnnouncementSearchLoaded &&
+            s.isReloading == false &&
+            s.results.length == 1 &&
+            s.results.first.id == 'new'),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'erreur après Loaded → AnnouncementError avec previousResults',
+      build: () {
+        when(() => mockRepo.searchAnnouncements(
+              departureCity: any(named: 'departureCity'),
+              arrivalCity: any(named: 'arrivalCity'),
+              departureDateFrom: any(named: 'departureDateFrom'),
+              departureDateTo: any(named: 'departureDateTo'),
+              minAvailableKg: any(named: 'minAvailableKg'),
+              userLat: any(named: 'userLat'),
+              userLng: any(named: 'userLng'),
+              radiusKm: any(named: 'radiusKm'),
+              sortBy: any(named: 'sortBy'),
+              sortDir: any(named: 'sortDir'),
+            )).thenThrow(Exception('network down'));
+        return buildBloc();
+      },
+      seed: () => AnnouncementSearchLoaded([buildAnnouncement(id: 'cached')]),
+      act: (bloc) => bloc.add(AnnouncementSearchRequested(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        sortBy: 'date',
+      )),
+      expect: () => [
+        predicate<AnnouncementState>((s) =>
+            s is AnnouncementSearchLoaded && s.isReloading == true),
+        predicate<AnnouncementState>((s) =>
+            s is AnnouncementError &&
+            s.previousResults != null &&
+            s.previousResults!.length == 1 &&
+            s.previousResults!.first.id == 'cached'),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
       'AnnouncementSearchRequested with radius → repo called with userLat/userLng/radiusKm',
       build: () {
         when(() => mockRepo.searchAnnouncements(
@@ -412,6 +489,7 @@ void main() {
               deliveryAddress: any(named: 'deliveryAddress'),
               availableKg: any(named: 'availableKg'),
               pricePerKg: any(named: 'pricePerKg'),
+              transportMode: any(named: 'transportMode'),
             )).thenAnswer((_) async => updated);
         return buildBloc();
       },
@@ -424,6 +502,7 @@ void main() {
         deliveryAddress: kTestDeliveryAddress,
         availableKg: 25.0,
         pricePerKg: 6.0,
+        transportMode: TransportMode.plane,
       )),
       expect: () => [
         isA<AnnouncementLoading>(),
@@ -445,6 +524,7 @@ void main() {
               deliveryAddress: any(named: 'deliveryAddress'),
               availableKg: any(named: 'availableKg'),
               pricePerKg: any(named: 'pricePerKg'),
+              transportMode: any(named: 'transportMode'),
             )).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/announcements/ann-001'),
           response: Response(
@@ -463,6 +543,7 @@ void main() {
         deliveryAddress: kTestDeliveryAddress,
         availableKg: 25.0,
         pricePerKg: 6.0,
+        transportMode: TransportMode.plane,
       )),
       expect: () => [
         isA<AnnouncementLoading>(),
@@ -485,6 +566,7 @@ void main() {
               deliveryAddress: any(named: 'deliveryAddress'),
               availableKg: any(named: 'availableKg'),
               pricePerKg: any(named: 'pricePerKg'),
+              transportMode: any(named: 'transportMode'),
             )).thenThrow(Exception('Server error'));
         return buildBloc();
       },
@@ -497,11 +579,46 @@ void main() {
         deliveryAddress: kTestDeliveryAddress,
         availableKg: 25.0,
         pricePerKg: 6.0,
+        transportMode: TransportMode.plane,
       )),
       expect: () => [
         isA<AnnouncementLoading>(),
         isA<AnnouncementError>(),
       ],
     );
+  });
+
+  // ─── État Loaded reloading flag ──────────────────────────────────────────────
+
+  group('AnnouncementSearchLoaded.isReloading', () {
+    test('par défaut isReloading = false', () {
+      final state = AnnouncementSearchLoaded([buildAnnouncement()]);
+      expect(state.isReloading, isFalse);
+    });
+
+    test('peut être créé avec isReloading = true', () {
+      final state = AnnouncementSearchLoaded(
+        [buildAnnouncement()],
+        isReloading: true,
+      );
+      expect(state.isReloading, isTrue);
+      expect(state.results, hasLength(1));
+    });
+  });
+
+  // ─── AnnouncementError carries previousResults ──────────────────────────────
+
+  group('AnnouncementError.previousResults', () {
+    test('par défaut previousResults = null', () {
+      final state = AnnouncementError('boom');
+      expect(state.previousResults, isNull);
+    });
+
+    test('peut transporter les résultats précédents', () {
+      final ann = buildAnnouncement();
+      final state = AnnouncementError('boom', previousResults: [ann]);
+      expect(state.previousResults, hasLength(1));
+      expect(state.previousResults!.first.id, ann.id);
+    });
   });
 }

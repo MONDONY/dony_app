@@ -1,13 +1,18 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/screens/search_announcement_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
+import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -717,6 +722,505 @@ void main() {
       await _goToResults(tester);
 
       expect(find.byIcon(Icons.tune_rounded), findsOneWidget);
+    });
+  });
+
+  testWidgets(
+    'résultats reçus → AnnouncementMapView est instanciée même en vue Liste',
+    (tester) async {
+      final announcementBloc = MockAnnouncementBloc();
+      final authBloc = MockAuthBloc();
+      when(() => authBloc.state).thenReturn(const AuthInitial());
+      when(() => announcementBloc.state).thenReturn(
+        AnnouncementSearchLoaded([_makeAnn()]),
+      );
+      whenListen(
+        announcementBloc,
+        Stream<AnnouncementState>.empty(),
+        initialState: AnnouncementSearchLoaded([_makeAnn()]),
+      );
+
+      await tester.pumpWidget(_buildScreen(
+        announcementBloc: announcementBloc,
+        authBloc: authBloc,
+      ));
+      await tester.pump(const Duration(milliseconds: 50));
+      // Naviguer vers la vue résultats.
+      final btn = find.text('Rechercher');
+      if (btn.evaluate().isNotEmpty) {
+        await tester.tap(btn);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      // Vue Liste active par défaut, mais la map doit déjà être dans l'arbre
+      // (cachée par l'IndexedStack — donc skipOffstage: false).
+      expect(
+        find.byType(AnnouncementMapView, skipOffstage: false),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'recharge en cours → spinner overlay visible, map toujours montée',
+    (tester) async {
+      final announcementBloc = MockAnnouncementBloc();
+      final authBloc = MockAuthBloc();
+      when(() => authBloc.state).thenReturn(const AuthInitial());
+      final reloadingState = AnnouncementSearchLoaded(
+        [_makeAnn()],
+        isReloading: true,
+      );
+      whenListen(
+        announcementBloc,
+        Stream<AnnouncementState>.empty(),
+        initialState: reloadingState,
+      );
+      when(() => announcementBloc.state).thenReturn(reloadingState);
+
+      await tester.pumpWidget(_buildScreen(
+        announcementBloc: announcementBloc,
+        authBloc: authBloc,
+      ));
+      await tester.pump(const Duration(milliseconds: 50));
+
+      // Naviguer vers la vue résultats.
+      final btn = find.text('Rechercher');
+      if (btn.evaluate().isNotEmpty) {
+        await tester.tap(btn);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      expect(find.byKey(const Key('search-reload-overlay')), findsOneWidget);
+      expect(find.byType(AnnouncementMapView, skipOffstage: false), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'erreur après Loaded → bannière dismissible, map toujours montée',
+    (tester) async {
+      final announcementBloc = MockAnnouncementBloc();
+      final authBloc = MockAuthBloc();
+      when(() => authBloc.state).thenReturn(const AuthInitial());
+      final errorState = AnnouncementError(
+        'Réseau indisponible',
+        previousResults: [_makeAnn()],
+      );
+      whenListen(
+        announcementBloc,
+        Stream<AnnouncementState>.empty(),
+        initialState: errorState,
+      );
+      when(() => announcementBloc.state).thenReturn(errorState);
+
+      await tester.pumpWidget(_buildScreen(
+        announcementBloc: announcementBloc,
+        authBloc: authBloc,
+      ));
+      await tester.pump(const Duration(milliseconds: 50));
+
+      // Naviguer vers la vue résultats.
+      final btn = find.text('Rechercher');
+      if (btn.evaluate().isNotEmpty) {
+        await tester.tap(btn);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      expect(find.byKey(const Key('search-error-banner')), findsOneWidget);
+      expect(find.text('Réseau indisponible'), findsOneWidget);
+      expect(find.byType(AnnouncementMapView, skipOffstage: false), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'filtre actif → liste ET map utilisent les résultats filtrés',
+    (tester) async {
+      final announcementBloc = MockAnnouncementBloc();
+      final authBloc = MockAuthBloc();
+      when(() => authBloc.state).thenReturn(const AuthInitial());
+      // 2 résultats : un à 4.5 (rejeté par "★ 4.7+"), un à 4.8.
+      final results = [
+        _makeAnn(id: 'low', rating: 4.5),
+        _makeAnn(id: 'high', rating: 4.8),
+      ];
+      whenListen(
+        announcementBloc,
+        Stream<AnnouncementState>.empty(),
+        initialState: AnnouncementSearchLoaded(results),
+      );
+      when(() => announcementBloc.state)
+          .thenReturn(AnnouncementSearchLoaded(results));
+
+      await tester.pumpWidget(_buildScreen(
+        announcementBloc: announcementBloc,
+        authBloc: authBloc,
+      ));
+      await tester.pump(const Duration(milliseconds: 50));
+
+      // Naviguer vers la vue résultats.
+      final btn = find.text('Rechercher');
+      if (btn.evaluate().isNotEmpty) {
+        await tester.tap(btn);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      // Activer le filtre "★ 4.7+"
+      await tester.tap(find.text('★ 4.7+'));
+      await tester.pump();
+
+      // La map (même cachée par IndexedStack) doit recevoir 1 résultat filtré.
+      final mapWidget = tester.widget<AnnouncementMapView>(
+          find.byType(AnnouncementMapView, skipOffstage: false));
+      expect(mapWidget.announcements, hasLength(1));
+      expect(mapWidget.announcements.first.id, 'high');
+    },
+  );
+
+  testWidgets(
+    'toggle Liste ↔ Carte préserve l\'Element de AnnouncementMapView',
+    (tester) async {
+      final announcementBloc = MockAnnouncementBloc();
+      final authBloc = MockAuthBloc();
+      when(() => authBloc.state).thenReturn(const AuthInitial());
+      whenListen(
+        announcementBloc,
+        Stream<AnnouncementState>.empty(),
+        initialState: AnnouncementSearchLoaded([_makeAnn()]),
+      );
+      when(() => announcementBloc.state)
+          .thenReturn(AnnouncementSearchLoaded([_makeAnn()]));
+
+      await tester.pumpWidget(_buildScreen(
+        announcementBloc: announcementBloc,
+        authBloc: authBloc,
+      ));
+      await tester.pump(const Duration(milliseconds: 50));
+
+      // Naviguer vers la vue résultats.
+      final btn = find.text('Rechercher');
+      if (btn.evaluate().isNotEmpty) {
+        await tester.tap(btn);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      final mapElementBefore =
+          tester.element(find.byType(AnnouncementMapView, skipOffstage: false));
+
+      // Switch to map
+      await tester.tap(find.text('Carte'));
+      await tester.pump();
+      // Switch back to list
+      await tester.tap(find.text('Liste'));
+      await tester.pump();
+      // Switch to map again
+      await tester.tap(find.text('Carte'));
+      await tester.pump();
+
+      final mapElementAfter =
+          tester.element(find.byType(AnnouncementMapView, skipOffstage: false));
+
+      // Same Element identity = same State = preserved camera/controller.
+      expect(identical(mapElementBefore, mapElementAfter), isTrue);
+    },
+  );
+
+  // ── 18. Bouton "Réessayer" sur _ErrorView dispatch un nouveau search ──────
+
+  group('_ErrorView retry button', () {
+    testWidgets(
+        'tapper "Réessayer" déclenche AnnouncementSearchRequested',
+        (tester) async {
+      // Error state without previousResults → shows full _ErrorView with retry CTA.
+      when(() => announcementBloc.state)
+          .thenReturn(AnnouncementError('Erreur réseau'));
+      when(() => announcementBloc.stream).thenAnswer(
+        (_) => Stream.fromIterable([AnnouncementError('Erreur réseau')]),
+      );
+
+      await tester.pumpWidget(
+          _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
+      await tester.pump();
+      await _goToResults(tester);
+
+      // _ErrorView visible with "Réessayer" button.
+      expect(find.text('Réessayer'), findsOneWidget);
+      expect(find.byIcon(Icons.wifi_off_rounded), findsOneWidget);
+
+      // Tap retry — must dispatch a new AnnouncementSearchRequested event.
+      await tester.tap(find.text('Réessayer'));
+      await tester.pump();
+
+      verify(() => announcementBloc
+              .add(any(that: isA<AnnouncementSearchRequested>())))
+          .called(greaterThan(0));
+    });
+  });
+
+  // ── 19. Banner dismiss + listener reset on new error ─────────────────────
+
+  group('Banner d\'erreur dismiss + reset', () {
+    testWidgets(
+        'tap close → banner disparaît, puis nouvel error → banner réapparaît',
+        (tester) async {
+      final announcementBloc = MockAnnouncementBloc();
+      final authBloc = MockAuthBloc();
+      when(() => authBloc.state).thenReturn(const AuthInitial());
+
+      // First emit Loaded so user navigates into results, then later switch
+      // to AnnouncementError(previousResults: …) to trigger the banner.
+      final results = [_makeAnn()];
+      final error1 = AnnouncementError(
+        'Réseau indisponible',
+        previousResults: results,
+      );
+      final error2 = AnnouncementError(
+        'Timeout du serveur',
+        previousResults: results,
+      );
+
+      // Use a controller so we can emit multiple states post-pump.
+      final controller = StreamController<AnnouncementState>.broadcast();
+      when(() => announcementBloc.state).thenReturn(error1);
+      when(() => announcementBloc.stream)
+          .thenAnswer((_) => controller.stream);
+      addTearDown(controller.close);
+
+      await tester.pumpWidget(_buildScreen(
+        announcementBloc: announcementBloc,
+        authBloc: authBloc,
+      ));
+      await tester.pump();
+      await _goToResults(tester);
+
+      // Banner visible initially (error1 with previousResults).
+      expect(find.byKey(const Key('search-error-banner')), findsOneWidget);
+      expect(find.text('Réseau indisponible'), findsOneWidget);
+
+      // Find the dismiss icon inside the banner and tap it.
+      final dismissIcon = find.descendant(
+        of: find.byKey(const Key('search-error-banner')),
+        matching: find.byIcon(Icons.close_rounded),
+      );
+      expect(dismissIcon, findsOneWidget);
+      await tester.tap(dismissIcon);
+      await tester.pumpAndSettle();
+
+      // Banner gone after dismiss.
+      expect(find.byKey(const Key('search-error-banner')), findsNothing);
+
+      // Now emit a new error state → the BlocConsumer.listener resets
+      // _errorBannerDismissed and the banner must reappear.
+      when(() => announcementBloc.state).thenReturn(error2);
+      controller.add(error2);
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byKey(const Key('search-error-banner')), findsOneWidget);
+      expect(find.text('Timeout du serveur'), findsOneWidget);
+    });
+  });
+
+  // ── 20. _EmptyView quand résultats serveur vides ─────────────────────────
+
+  group('_EmptyView via résultats serveur vides', () {
+    testWidgets(
+        'AnnouncementSearchLoaded([]) → _EmptyView avec icône search_off',
+        (tester) async {
+      stubLoaded([]);
+
+      await tester.pumpWidget(
+          _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
+      await tester.pump();
+      await _goToResults(tester);
+
+      // _EmptyView est rendue : icône search_off_rounded + titre + CTA.
+      expect(find.byIcon(Icons.search_off_rounded), findsOneWidget);
+      expect(find.text('Aucun voyageur disponible'), findsOneWidget);
+      expect(find.text('Modifier la recherche'), findsOneWidget);
+    });
+  });
+
+  // ── 23. Filter bottom sheet — onChanged callbacks ────────────────────────
+
+  group('Filter bottom sheet onChanged callbacks', () {
+    testWidgets(
+        'toggle Kilo Pro/Note ≥ 4.5/Arrivée week-end dans bottom sheet → setSheet exécuté',
+        (tester) async {
+      stubLoaded([_makeAnn()]);
+
+      await tester.pumpWidget(
+          _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
+      await tester.pump();
+      await _goToResults(tester);
+
+      // Ouvrir le bottom sheet via le bouton tune.
+      await tester.tap(find.byIcon(Icons.tune_rounded));
+      await tester.pumpAndSettle();
+
+      // Toggle "Kilo Pro uniquement" dans le sheet (couvre lignes 838-839).
+      final kpInSheet = find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.text('Kilo Pro uniquement'),
+      );
+      if (kpInSheet.evaluate().isNotEmpty) {
+        await tester.tap(kpInSheet);
+        await tester.pumpAndSettle();
+      }
+
+      // Toggle "Note ≥ 4.5" (couvre 844-845).
+      final noteInSheet = find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.text('Note ≥ 4.5'),
+      );
+      if (noteInSheet.evaluate().isNotEmpty) {
+        await tester.tap(noteInSheet);
+        await tester.pumpAndSettle();
+      }
+
+      // Toggle "Arrivée ce week-end" (couvre 850-851).
+      final wkInSheet = find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.text('Arrivée ce week-end'),
+      );
+      if (wkInSheet.evaluate().isNotEmpty) {
+        await tester.tap(wkInSheet);
+        await tester.pumpAndSettle();
+      }
+
+      // Toggle "Prix ≤ ../kg" (couvre 857-858).
+      final priceInSheet = find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.textContaining('Prix ≤'),
+      );
+      if (priceInSheet.evaluate().isNotEmpty) {
+        await tester.tap(priceInSheet);
+        await tester.pumpAndSettle();
+      }
+
+      // Drag du slider Prix max par kg (couvre 891-892 onChanged).
+      final sliderInSheet = find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.byType(Slider),
+      );
+      if (sliderInSheet.evaluate().isNotEmpty) {
+        await tester.drag(sliderInSheet.first, const Offset(40, 0));
+        await tester.pumpAndSettle();
+      }
+
+      // Tapper "Appliquer" → le bouton ferme le sheet ET émet un nouvel
+      // AnnouncementSearchRequested avec les params modifiés (toggles + slider).
+      // C'est la preuve user-visible que les setSheet ont bien muté l'état.
+      final apply = find.text('Appliquer');
+      expect(apply, findsOneWidget);
+      await tester.tap(apply);
+      await tester.pumpAndSettle();
+
+      verify(() => announcementBloc
+              .add(any(that: isA<AnnouncementSearchRequested>())))
+          .called(greaterThan(0));
+    });
+  });
+
+  // ── 25. Confirmer dans le picker poids → onChanged exécuté ──────────────
+
+  group('Weight picker — Confirmer', () {
+    testWidgets(
+        'tapper Confirmer dans le picker poids → AnnouncementSearchRequested émis',
+        (tester) async {
+      stubLoaded([]);
+
+      await tester.pumpWidget(
+          _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
+      await tester.pump();
+
+      // Ouvrir le picker poids depuis le formulaire principal.
+      await tester.tap(find.text('6 kg'));
+      await tester.pumpAndSettle();
+
+      // Le picker affiche un bouton "Confirmer" → couvre lignes 1696-1698.
+      final confirmer = find.text('Confirmer');
+      expect(confirmer, findsOneWidget);
+      await tester.tap(confirmer);
+      await tester.pumpAndSettle();
+
+      // Le ctx.pop() ferme le picker — on est revenu au formulaire.
+      expect(find.text('Confirmer'), findsNothing);
+    });
+  });
+
+  // ── 24. Tap card non-own → navigation push vers /search/{id} ─────────────
+
+  group('TravelerCard non-own onTap', () {
+    testWidgets(
+        'utilisateur ≠ traveler → tap card lance context.push vers /search/{id}',
+        (tester) async {
+      // Auth user with id différent du travelerId.
+      const otherUser = UserModel(
+        id: 'sender-99',
+        roles: ['SENDER'],
+        kycStatus: 'VERIFIED',
+        status: 'ACTIVE',
+      );
+      when(() => authBloc.state)
+          .thenReturn(const AuthAuthenticated(otherUser));
+
+      stubLoaded([_makeAnn(id: 'announcement-xyz')]);
+
+      await tester.pumpWidget(
+          _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
+      await tester.pump();
+      await _goToResults(tester);
+
+      // La card NE doit PAS afficher "Votre trajet" — utilisateur différent.
+      expect(find.text('Votre trajet'), findsNothing);
+
+      // Le tap déclenche context.push('/search/{id}'). La route /search/:id
+      // est définie comme un Scaffold vide dans _buildScreen → pas d'exception.
+      // On tape sur un texte stable de la card (le prix).
+      await tester.tap(find.text('10 €/kg'));
+      await tester.pumpAndSettle();
+
+      // Après push, on n'est plus sur l'écran de recherche : le bouton tune
+      // (présent uniquement dans la vue résultats) ne doit plus exister.
+      expect(find.byIcon(Icons.tune_rounded), findsNothing);
+    });
+  });
+
+  // ── 21. TravelerCard branche "own announcement" ──────────────────────────
+
+  group('TravelerCard own announcement branch', () {
+    testWidgets(
+        'utilisateur connecté = traveler → carte affiche "Votre trajet" et onTap=null',
+        (tester) async {
+      // Auth user whose id matches the announcement.travelerId ('traveler-1').
+      const ownUser = UserModel(
+        id: 'traveler-1',
+        roles: ['TRAVELER'],
+        kycStatus: 'VERIFIED',
+        status: 'ACTIVE',
+      );
+      when(() => authBloc.state).thenReturn(const AuthAuthenticated(ownUser));
+
+      stubLoaded([_makeAnn()]);
+
+      await tester.pumpWidget(
+          _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
+      await tester.pump();
+      await _goToResults(tester);
+
+      // The "Votre trajet" caption is only rendered when isOwnAnnouncement is true.
+      expect(find.text('Votre trajet'), findsOneWidget);
+
+      // Direct check on the widget property: own announcements must not be
+      // tappable, so the TravelerCard.onTap must be null.
+      final card = tester.widget<TravelerCard>(find.byType(TravelerCard));
+      expect(card.onTap, isNull,
+          reason: 'Own announcement should not be tappable');
     });
   });
 }

@@ -34,6 +34,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         deliveryAddress: event.deliveryAddress,
         availableKg: event.availableKg,
         pricePerKg: event.pricePerKg,
+        transportMode: event.transportMode,
         description: event.description,
         acceptedContentTypes: event.acceptedContentTypes,
         refusedTypes: event.refusedTypes,
@@ -83,7 +84,12 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     AnnouncementSearchRequested event,
     Emitter<AnnouncementState> emit,
   ) async {
-    emit(AnnouncementLoading());
+    final current = state;
+    if (current is AnnouncementSearchLoaded) {
+      emit(AnnouncementSearchLoaded(current.results, isReloading: true));
+    } else {
+      emit(AnnouncementLoading());
+    }
     try {
       final results = await _repository.searchAnnouncements(
         departureCity: event.departureCity,
@@ -102,7 +108,10 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       if (kDebugMode) debugPrint('=== SEARCH ERROR ===');
       if (kDebugMode) debugPrint(e.toString());
       if (kDebugMode) debugPrint(stacktrace.toString());
-      emit(AnnouncementError(e.toString()));
+      emit(AnnouncementError(
+        e.toString(),
+        previousResults: current is AnnouncementSearchLoaded ? current.results : null,
+      ));
     }
   }
 
@@ -136,6 +145,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         deliveryAddress: event.deliveryAddress,
         availableKg: event.availableKg,
         pricePerKg: event.pricePerKg,
+        transportMode: event.transportMode,
         description: event.description,
         acceptedContentTypes: event.acceptedContentTypes,
         refusedTypes: event.refusedTypes,

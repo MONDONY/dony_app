@@ -45,6 +45,7 @@ AnnouncementModel _$AnnouncementModelFromJson(Map<String, dynamic> json) =>
             ),
       availableKg: (json['availableKg'] as num).toDouble(),
       pricePerKg: (json['pricePerKg'] as num).toDouble(),
+      transportMode: transportModeFromWire(json['transportMode'] as String?),
       status: json['status'] as String,
       bidsCount: (json['bidsCount'] as num?)?.toInt(),
       traveler: json['traveler'] == null
@@ -74,6 +75,7 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'deliveryAddress': instance.deliveryAddress,
       'availableKg': instance.availableKg,
       'pricePerKg': instance.pricePerKg,
+      'transportMode': _transportModeToWireOrNull(instance.transportMode),
       'status': instance.status,
       'bidsCount': instance.bidsCount,
       'traveler': instance.traveler,

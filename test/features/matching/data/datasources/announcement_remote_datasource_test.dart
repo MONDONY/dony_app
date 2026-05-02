@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -58,6 +59,7 @@ void main() {
         deliveryAddress: kDelivery,
         availableKg: 10.0,
         pricePerKg: 12.0,
+        transportMode: TransportMode.plane,
       );
 
       expect(result.id, 'ann-001');
@@ -78,9 +80,34 @@ void main() {
         deliveryAddress: kDelivery,
         availableKg: 10.0,
         pricePerKg: 12.0,
+        transportMode: TransportMode.plane,
       );
 
       expect(result.id, 'ann-001');
+    });
+
+    test('sends transportMode wire value in payload', () async {
+      Map<String, dynamic>? capturedData;
+      when(() => mockDio.post('/announcements', data: any(named: 'data')))
+          .thenAnswer((inv) async {
+        capturedData = inv.namedArguments[const Symbol('data')]
+            as Map<String, dynamic>;
+        return _ok(_announcementJson, '/announcements');
+      });
+
+      await datasource.createAnnouncement(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2024, 6, 1),
+        pickupAddress: kPickup,
+        deliveryAddress: kDelivery,
+        availableKg: 10.0,
+        pricePerKg: 12.0,
+        transportMode: TransportMode.train,
+      );
+
+      expect(capturedData, isNotNull);
+      expect(capturedData!['transportMode'], 'TRAIN');
     });
   });
 
@@ -189,6 +216,7 @@ void main() {
         deliveryAddress: kDelivery,
         availableKg: 10.0,
         pricePerKg: 12.0,
+        transportMode: TransportMode.plane,
       );
 
       expect(result.id, 'ann-001');
@@ -210,9 +238,36 @@ void main() {
         deliveryAddress: kDelivery,
         availableKg: 10.0,
         pricePerKg: 12.0,
+        transportMode: TransportMode.plane,
       );
 
       expect(result.id, 'ann-001');
+    });
+
+    test('sends transportMode wire value in payload', () async {
+      Map<String, dynamic>? capturedData;
+      when(() => mockDio.put('/announcements/ann-001',
+              data: any(named: 'data')))
+          .thenAnswer((inv) async {
+        capturedData = inv.namedArguments[const Symbol('data')]
+            as Map<String, dynamic>;
+        return _ok(_announcementJson, '/announcements/ann-001');
+      });
+
+      await datasource.updateAnnouncement(
+        id: 'ann-001',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2024, 6, 1),
+        pickupAddress: kPickup,
+        deliveryAddress: kDelivery,
+        availableKg: 10.0,
+        pricePerKg: 12.0,
+        transportMode: TransportMode.boat,
+      );
+
+      expect(capturedData, isNotNull);
+      expect(capturedData!['transportMode'], 'BOAT');
     });
   });
 }

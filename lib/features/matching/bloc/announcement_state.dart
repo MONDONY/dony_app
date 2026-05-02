@@ -14,8 +14,9 @@ class AnnouncementCreated extends AnnouncementState {
 
 class AnnouncementError extends AnnouncementState {
   final String message;
+  final List<AnnouncementModel>? previousResults;
 
-  AnnouncementError(this.message);
+  AnnouncementError(this.message, {this.previousResults});
 }
 
 class AnnouncementListLoaded extends AnnouncementState {
@@ -39,7 +40,12 @@ class AnnouncementDeleted extends AnnouncementState {}
 class AnnouncementSearchLoaded extends AnnouncementState {
   final List<AnnouncementModel> results;
   final bool isEmpty;
-  AnnouncementSearchLoaded(this.results) : isEmpty = results.isEmpty;
+  final bool isReloading;
+
+  AnnouncementSearchLoaded(
+    this.results, {
+    this.isReloading = false,
+  }) : isEmpty = results.isEmpty;
 }
 
 class AnnouncementNotFound extends AnnouncementState {}

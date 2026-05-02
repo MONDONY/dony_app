@@ -1,6 +1,7 @@
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -30,6 +31,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(kPickup);
+    registerFallbackValue(TransportMode.other);
   });
 
   setUp(() {
@@ -48,6 +50,7 @@ void main() {
           deliveryAddress: any(named: 'deliveryAddress'),
           availableKg: any(named: 'availableKg'),
           pricePerKg: any(named: 'pricePerKg'),
+          transportMode: any(named: 'transportMode'),
         )).thenAnswer((_) async => _ann());
 
     final result = await repo.createAnnouncement(
@@ -58,8 +61,42 @@ void main() {
       deliveryAddress: kDelivery,
       availableKg: 10.0,
       pricePerKg: 12.0,
+      transportMode: TransportMode.plane,
     );
     expect(result.id, 'ann-1');
+  });
+
+  test('createAnnouncement forwards transportMode to datasource', () async {
+    TransportMode? capturedMode;
+    when(() => mockDs.createAnnouncement(
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          departureDate: any(named: 'departureDate'),
+          departureTime: any(named: 'departureTime'),
+          arrivalTime: any(named: 'arrivalTime'),
+          pickupAddress: any(named: 'pickupAddress'),
+          deliveryAddress: any(named: 'deliveryAddress'),
+          availableKg: any(named: 'availableKg'),
+          pricePerKg: any(named: 'pricePerKg'),
+          transportMode: any(named: 'transportMode'),
+        )).thenAnswer((inv) async {
+      capturedMode =
+          inv.namedArguments[const Symbol('transportMode')] as TransportMode;
+      return _ann();
+    });
+
+    await repo.createAnnouncement(
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDate: DateTime(2024, 6, 1),
+      pickupAddress: kPickup,
+      deliveryAddress: kDelivery,
+      availableKg: 10.0,
+      pricePerKg: 12.0,
+      transportMode: TransportMode.train,
+    );
+
+    expect(capturedMode, TransportMode.train);
   });
 
   test('getMyAnnouncements delegates correctly', () async {
@@ -112,6 +149,7 @@ void main() {
           deliveryAddress: any(named: 'deliveryAddress'),
           availableKg: any(named: 'availableKg'),
           pricePerKg: any(named: 'pricePerKg'),
+          transportMode: any(named: 'transportMode'),
         )).thenAnswer((_) async => _ann());
 
     final result = await repo.updateAnnouncement(
@@ -123,7 +161,43 @@ void main() {
       deliveryAddress: kDelivery,
       availableKg: 10.0,
       pricePerKg: 12.0,
+      transportMode: TransportMode.car,
     );
     expect(result.id, 'ann-1');
+  });
+
+  test('updateAnnouncement forwards transportMode to datasource', () async {
+    TransportMode? capturedMode;
+    when(() => mockDs.updateAnnouncement(
+          id: any(named: 'id'),
+          departureCity: any(named: 'departureCity'),
+          arrivalCity: any(named: 'arrivalCity'),
+          departureDate: any(named: 'departureDate'),
+          departureTime: any(named: 'departureTime'),
+          arrivalTime: any(named: 'arrivalTime'),
+          pickupAddress: any(named: 'pickupAddress'),
+          deliveryAddress: any(named: 'deliveryAddress'),
+          availableKg: any(named: 'availableKg'),
+          pricePerKg: any(named: 'pricePerKg'),
+          transportMode: any(named: 'transportMode'),
+        )).thenAnswer((inv) async {
+      capturedMode =
+          inv.namedArguments[const Symbol('transportMode')] as TransportMode;
+      return _ann();
+    });
+
+    await repo.updateAnnouncement(
+      id: 'ann-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDate: DateTime(2024, 6, 1),
+      pickupAddress: kPickup,
+      deliveryAddress: kDelivery,
+      availableKg: 10.0,
+      pricePerKg: 12.0,
+      transportMode: TransportMode.bus,
+    );
+
+    expect(capturedMode, TransportMode.bus);
   });
 }
