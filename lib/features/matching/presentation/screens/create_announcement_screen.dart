@@ -1,9 +1,13 @@
 import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/widgets/address_picker_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -35,13 +39,14 @@ class CreateAnnouncementScreen extends StatefulWidget {
 }
 
 class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _departureCityNotifier = ValueNotifier<String?>(null);
   final _arrivalCityNotifier = ValueNotifier<String?>(null);
   final _departureDateNotifier = ValueNotifier<DateTime?>(null);
   final _departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
   final _arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
-  final _departureLocationCtrl = TextEditingController();
-  final _arrivalLocationCtrl = TextEditingController();
+  AddressData? _pickupAddress;
+  AddressData? _deliveryAddress;
   final _availableKgNotifier = ValueNotifier<double>(15);
   final _priceOptionNotifier = ValueNotifier<int>(1);
   final _selectedContentNotifier = ValueNotifier<Set<String>>(
@@ -80,8 +85,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
           minute: int.parse(parts[1]),
         );
       }
-      _departureLocationCtrl.text = a.departureLocation ?? '';
-      _arrivalLocationCtrl.text = a.arrivalLocation ?? '';
+      _pickupAddress = a.pickupAddress;
+      _deliveryAddress = a.deliveryAddress;
 
       if (a.description != null) {
         _descriptionCtrl.text = a.description!;
@@ -117,8 +122,6 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
 
   @override
   void dispose() {
-    _departureLocationCtrl.dispose();
-    _arrivalLocationCtrl.dispose();
     _descriptionCtrl.dispose();
     _customAcceptedCtrl.dispose();
     _refusedCtrl.dispose();
@@ -161,16 +164,21 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       return;
     }
 
+    _formKey.currentState!.save();
+
+    if (_pickupAddress == null) {
+      _showError('Lieu de remise du colis obligatoire');
+      return;
+    }
+    if (_deliveryAddress == null) {
+      _showError('Lieu de récupération obligatoire');
+      return;
+    }
+
     final departureTime =
         departureTimeVal != null ? _formatTime(departureTimeVal) : null;
     final arrivalTime =
         arrivalTimeVal != null ? _formatTime(arrivalTimeVal) : null;
-    final departureLocation = _departureLocationCtrl.text.trim().isEmpty
-        ? null
-        : _departureLocationCtrl.text.trim();
-    final arrivalLocation = _arrivalLocationCtrl.text.trim().isEmpty
-        ? null
-        : _arrivalLocationCtrl.text.trim();
 
     final allAccepted = {
       ..._selectedContentNotifier.value,
@@ -189,8 +197,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
             departureDate: departureDate,
             departureTime: departureTime,
             arrivalTime: arrivalTime,
-            departureLocation: departureLocation,
-            arrivalLocation: arrivalLocation,
+            pickupAddress: _pickupAddress!,
+            deliveryAddress: _deliveryAddress!,
             availableKg: _availableKgNotifier.value,
             pricePerKg: _pricePerKg,
             description: description,
@@ -204,8 +212,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
             departureDate: departureDate,
             departureTime: departureTime,
             arrivalTime: arrivalTime,
-            departureLocation: departureLocation,
-            arrivalLocation: arrivalLocation,
+            pickupAddress: _pickupAddress!,
+            deliveryAddress: _deliveryAddress!,
             availableKg: _availableKgNotifier.value,
             pricePerKg: _pricePerKg,
             description: description,
@@ -312,7 +320,9 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       builder: (context, state) {
         final isLoading = state is AnnouncementLoading;
 
-        return Scaffold(
+        return Form(
+          key: _formKey,
+          child: Scaffold(
           backgroundColor: DonyColors.bgApp,
           appBar: AppBar(
             title: Column(
@@ -436,7 +446,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 ),
 
                 // ── TRAJET ──────────────────────────────────────────────────
-                const _SectionLabel(label: 'TRAJET'),
+                const _SectionLabel(label: 'TRAJET', icon: Icons.flight_takeoff_rounded),
                 const SizedBox(height: DonySpacing.sm),
                 ListenableBuilder(
                   listenable: Listenable.merge([
@@ -502,32 +512,33 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 const SizedBox(height: DonySpacing.xxl),
 
                 // ── LIEUX DE REMISE ─────────────────────────────────────────
-                const _SectionLabel(label: 'LIEUX DE REMISE'),
+                const _SectionLabel(label: 'LIEUX DE REMISE', icon: Icons.swap_horiz_rounded),
                 const SizedBox(height: DonySpacing.xs),
                 Text(
                   'Précisez l\'endroit exact de remise et récupération',
                   style: tt.bodySmall?.copyWith(color: DonyColors.textSubtle),
                 ),
                 const SizedBox(height: DonySpacing.sm),
-                _SectionCard(
-                  child: Column(
-                    children: [
-                      _LocationField(
-                        isDeparture: true,
-                        controller: _departureLocationCtrl,
-                      ),
-                      const _RowDivider(),
-                      _LocationField(
-                        isDeparture: false,
-                        controller: _arrivalLocationCtrl,
-                      ),
-                    ],
-                  ),
+                AddressPickerField(
+                  fieldLabel: 'Lieu de remise du colis *',
+                  isRequired: true,
+                  initialValue: widget.announcement?.pickupAddress,
+                  onSaved: (v) => _pickupAddress = v,
+                  autocompleteService: getIt<AddressAutocompleteService>(),
                 ).animate().fadeIn(delay: 80.ms),
+                const SizedBox(height: 16),
+                AddressPickerField(
+                  fieldLabel: 'Lieu de récupération *',
+                  isRequired: true,
+                  showGpsButton: false,
+                  initialValue: widget.announcement?.deliveryAddress,
+                  onSaved: (v) => _deliveryAddress = v,
+                  autocompleteService: getIt<AddressAutocompleteService>(),
+                ).animate().fadeIn(delay: 90.ms),
                 const SizedBox(height: DonySpacing.xxl),
 
                 // ── CAPACITÉ DISPONIBLE ─────────────────────────────────────
-                const _SectionLabel(label: 'CAPACITÉ DISPONIBLE'),
+                const _SectionLabel(label: 'CAPACITÉ DISPONIBLE', icon: Icons.luggage_rounded),
                 const SizedBox(height: DonySpacing.base),
                 ValueListenableBuilder<double>(
                   valueListenable: _availableKgNotifier,
@@ -615,7 +626,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 const SizedBox(height: DonySpacing.xxl),
 
                 // ── PRIX PAR KG ─────────────────────────────────────────────
-                const _SectionLabel(label: 'PRIX PAR KG'),
+                const _SectionLabel(label: 'PRIX PAR KG', icon: Icons.sell_rounded),
                 const SizedBox(height: DonySpacing.md),
                 ValueListenableBuilder<int>(
                   valueListenable: _priceOptionNotifier,
@@ -690,7 +701,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 const SizedBox(height: DonySpacing.xxl),
 
                 // ── CE QUE J'ACCEPTE ────────────────────────────────────────
-                const _SectionLabel(label: 'CE QUE J\'ACCEPTE'),
+                const _SectionLabel(label: 'CE QUE J\'ACCEPTE', icon: Icons.check_circle_outline_rounded),
                 const SizedBox(height: DonySpacing.sm),
                 ListenableBuilder(
                   listenable: Listenable.merge([
@@ -816,7 +827,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 const SizedBox(height: DonySpacing.xxl),
 
                 // ── CE QUE JE REFUSE ────────────────────────────────────────
-                const _SectionLabel(label: 'CE QUE JE REFUSE'),
+                const _SectionLabel(label: 'CE QUE JE REFUSE', icon: Icons.block_rounded),
                 const SizedBox(height: DonySpacing.sm),
                 ValueListenableBuilder<Set<String>>(
                   valueListenable: _refusedTypesNotifier,
@@ -869,7 +880,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 const SizedBox(height: DonySpacing.xxl),
 
                 // ── NOTE AUX EXPÉDITEURS ────────────────────────────────────
-                const _SectionLabel(label: 'NOTE AUX EXPÉDITEURS'),
+                const _SectionLabel(label: 'NOTE AUX EXPÉDITEURS', icon: Icons.edit_note_rounded),
                 const SizedBox(height: DonySpacing.sm),
                 ValueListenableBuilder<TextEditingValue>(
                   valueListenable: _descriptionCtrl,
@@ -943,7 +954,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
               ),
             ],
           ),
-        );
+        ));
       },
     );
   }
@@ -982,17 +993,28 @@ class _RowDivider extends StatelessWidget {
 
 class _SectionLabel extends StatelessWidget {
   final String label;
-  const _SectionLabel({required this.label});
+  final IconData? icon;
+  const _SectionLabel({required this.label, this.icon});
 
   @override
   Widget build(BuildContext context) {
-    return Text(
+    final tt = Theme.of(context).textTheme;
+    final labelWidget = Text(
       label,
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: DonyColors.textSubtle,
-            letterSpacing: 0.8,
-            fontWeight: FontWeight.w600,
-          ),
+      style: tt.labelSmall?.copyWith(
+        color: DonyColors.textSubtle,
+        letterSpacing: 0.8,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+    if (icon == null) return labelWidget;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 13, color: DonyColors.textSubtle),
+        const SizedBox(width: DonySpacing.xs),
+        labelWidget,
+      ],
     );
   }
 }
@@ -1144,7 +1166,7 @@ class _CityRow extends StatelessWidget {
               height: 10,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isDeparture ? DonyColors.primary : DonyColors.error,
+                color: isDeparture ? DonyColors.primary : DonyColors.accent,
               ),
             ),
             const SizedBox(width: DonySpacing.md),
@@ -1258,7 +1280,7 @@ class _TimeRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final color = isDeparture ? DonyColors.primary : DonyColors.error;
+    final color = isDeparture ? DonyColors.primary : DonyColors.accent;
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -1349,57 +1371,3 @@ class _DateRow extends StatelessWidget {
   }
 }
 
-// ─── Champ lieu ───────────────────────────────────────────────────────────────
-
-class _LocationField extends StatelessWidget {
-  final bool isDeparture;
-  final TextEditingController controller;
-
-  const _LocationField({
-    required this.isDeparture,
-    required this.controller,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.base,
-        vertical: DonySpacing.xs,
-      ),
-      child: Row(
-        children: [
-          Icon(
-            isDeparture
-                ? Icons.location_on_rounded
-                : Icons.location_on_outlined,
-            size: 14,
-            color: (isDeparture ? DonyColors.primary : DonyColors.error)
-                .withValues(alpha: 0.7),
-          ),
-          const SizedBox(width: DonySpacing.md),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              style:
-                  tt.bodyMedium?.copyWith(color: DonyColors.textPrimary),
-              scrollPadding: const EdgeInsets.only(bottom: 120),
-              decoration: InputDecoration(
-                hintText: isDeparture
-                    ? 'Lieu de départ (ex: Terminal 2E CDG)'
-                    : 'Lieu d\'arrivée (ex: AIBD Arrière Cour)',
-                hintStyle:
-                    tt.bodyMedium?.copyWith(color: DonyColors.textSubtle),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: DonySpacing.md,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
