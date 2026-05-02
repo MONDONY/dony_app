@@ -3,12 +3,11 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/route_bottom_sheet.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-// ── LocationService abstraction ───────────────────────────────────────────────
+// ── LocationService abstraction (inchangée) ───────────────────────────────────
 
 abstract interface class LocationService {
   Future<LocationPermission> checkPermission();
@@ -56,46 +55,13 @@ class AnnouncementMapView extends StatefulWidget {
 }
 
 class _AnnouncementMapViewState extends State<AnnouncementMapView> {
-  final _mapController = MapController();
+  GoogleMapController? _mapController;
   City? _selectedDepartureCity;
   bool _isNearMeActive = false;
   String? _nearMeCityName;
   bool _isLocating = false;
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _fitInitialBounds());
-  }
-
-  void _fitInitialBounds() {
-    final dep = widget.searchDepartureCity;
-    final arr = widget.searchArrivalCity;
-    final depCity =
-        dep != null ? CityConstants.findById(dep.toLowerCase()) : null;
-    final arrCity =
-        arr != null ? CityConstants.findById(arr.toLowerCase()) : null;
-
-    if (depCity != null && arrCity != null) {
-      final bounds = LatLngBounds.fromPoints(
-        [depCity.coordinates, arrCity.coordinates],
-      );
-      _mapController.fitCamera(
-        CameraFit.bounds(
-          bounds: bounds,
-          padding: const EdgeInsets.all(80),
-        ),
-      );
-    } else {
-      final allPoints = CityConstants.all.map((c) => c.coordinates).toList();
-      final bounds = LatLngBounds.fromPoints(allPoints);
-      _mapController.fitCamera(
-        CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(40)),
-      );
-    }
-  }
-
-  // ── Groupement ───────────────────────────────────────────────────────────────
+  // ── Comptages ───────────────────────────────────────────────────────────────
 
   Map<String, int> get _departureCounts {
     final map = <String, int>{};
@@ -117,56 +83,30 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       .map((a) => '${a.departureCity}→${a.arrivalCity}')
       .toSet();
 
-  // ── Couches map ──────────────────────────────────────────────────────────────
+  // ── Marqueurs ───────────────────────────────────────────────────────────────
 
-  List<Polyline> _buildPolylines() {
-    final lines = <Polyline>[];
-    final selectedDep = _selectedDepartureCity;
-
-    for (final pair in _allRoutePairs) {
-      final parts = pair.split('→');
-      final depCity = CityConstants.findById(parts[0].toLowerCase());
-      final arrCity = CityConstants.findById(parts[1].toLowerCase());
-      if (depCity == null || arrCity == null) continue;
-
-      final isActive = selectedDep != null && depCity.id == selectedDep.id;
-      lines.add(Polyline(
-        points: [depCity.coordinates, arrCity.coordinates],
-        color: isActive
-            ? DonyColors.primary
-            : DonyColors.neutral200.withValues(alpha: 0.6),
-        strokeWidth: isActive ? 3.0 : 1.5,
-      ));
-    }
-    return lines;
-  }
-
-  List<Marker> _buildDepartureMarkers() {
+  Set<Marker> _buildDepartureMarkers() {
     final counts = _departureCounts;
     return CityConstants.departures
         .where((c) => counts.containsKey(c.displayName))
-        .map(
-          (c) => Marker(
-            point: c.coordinates,
-            width: 44,
-            height: 44,
-            child: GestureDetector(
-              onTap: () => _onDepartureTapped(c),
-              child: _CityMarker(
-                label: counts[c.displayName].toString(),
-                color: DonyColors.primary,
-                isSelected: _selectedDepartureCity?.id == c.id,
+        .map((c) => Marker(
+              markerId: MarkerId('dep_${c.id}'),
+              position: c.coordinates,
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueAzure,
               ),
-            ),
-          ),
-        )
-        .toList();
+              infoWindow: InfoWindow(
+                title: c.displayName,
+                snippet: '${counts[c.displayName]} trajet(s)',
+              ),
+              onTap: () => _onDepartureTapped(c),
+            ))
+        .toSet();
   }
 
-  List<Marker> _buildArrivalMarkers() {
+  Set<Marker> _buildArrivalMarkers() {
     final counts = _arrivalCounts;
     final selected = _selectedDepartureCity;
-
     return CityConstants.arrivals
         .where((c) {
           if (selected != null) {
@@ -175,80 +115,22 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
           }
           return counts.containsKey(c.displayName);
         })
-        .map(
-          (c) => Marker(
-            point: c.coordinates,
-            width: 44,
-            height: 44,
-            child: GestureDetector(
+        .map((c) => Marker(
+              markerId: MarkerId('arr_${c.id}'),
+              position: c.coordinates,
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueOrange,
+              ),
+              infoWindow: InfoWindow(
+                title: c.displayName,
+                snippet: '${counts[c.displayName] ?? 0} trajet(s)',
+              ),
               onTap: () => _onArrivalTapped(c),
-              child: _CityMarker(
-                label: (counts[c.displayName] ?? 0).toString(),
-                color: DonyColors.warning,
-                isSelected: false,
-              ),
-            ),
-          ),
-        )
-        .toList();
-  }
-
-  List<Marker> _buildRouteMarkers() {
-    final dep = _selectedDepartureCity;
-    if (dep == null) return [];
-
-    final arrivals = widget.announcements
-        .where((a) => a.departureCity == dep.displayName)
-        .map((a) => a.arrivalCity)
+            ))
         .toSet();
-
-    final markers = <Marker>[];
-    for (final arrName in arrivals) {
-      final arrCity = CityConstants.findById(arrName.toLowerCase());
-      if (arrCity == null) continue;
-
-      final count = widget.announcements
-          .where(
-            (a) =>
-                a.departureCity == dep.displayName &&
-                a.arrivalCity == arrName,
-          )
-          .length;
-
-      final mid = LatLng(
-        (dep.coordinates.latitude + arrCity.coordinates.latitude) / 2,
-        (dep.coordinates.longitude + arrCity.coordinates.longitude) / 2,
-      );
-
-      markers.add(Marker(
-        point: mid,
-        width: 72,
-        height: 24,
-        child: GestureDetector(
-          onTap: () => _onRouteTapped(dep, arrCity),
-          child: Container(
-            decoration: BoxDecoration(
-              color: DonyColors.primary,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Text(
-                '$count trajet${count != 1 ? 's' : ''}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ));
-    }
-    return markers;
   }
 
-  // ── Interactions ─────────────────────────────────────────────────────────────
+  // ── Interactions ────────────────────────────────────────────────────────────
 
   void _onDepartureTapped(City city) {
     final isDeselecting = _selectedDepartureCity?.id == city.id;
@@ -264,10 +146,6 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     _showRouteBottomSheet(ArrivalCityFilter(city));
   }
 
-  void _onRouteTapped(City from, City to) {
-    _showRouteBottomSheet(ExactRouteFilter(from, to));
-  }
-
   void _showRouteBottomSheet(TripFilter filter) {
     showModalBottomSheet<void>(
       context: context,
@@ -281,7 +159,50 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     );
   }
 
-  // ── Géolocalisation ──────────────────────────────────────────────────────────
+  // ── Caméra ──────────────────────────────────────────────────────────────────
+
+  Future<void> _fitInitialBounds() async {
+    final controller = _mapController;
+    if (controller == null) return;
+
+    final dep = widget.searchDepartureCity;
+    final arr = widget.searchArrivalCity;
+    final depCity =
+        dep != null ? CityConstants.findById(dep.toLowerCase()) : null;
+    final arrCity =
+        arr != null ? CityConstants.findById(arr.toLowerCase()) : null;
+
+    final List<LatLng> points;
+    if (depCity != null && arrCity != null) {
+      points = [depCity.coordinates, arrCity.coordinates];
+    } else {
+      points = CityConstants.all.map((c) => c.coordinates).toList();
+    }
+    if (points.isEmpty) return;
+
+    final bounds = _boundsFromPoints(points);
+    await controller
+        .animateCamera(CameraUpdate.newLatLngBounds(bounds, 60.0));
+  }
+
+  LatLngBounds _boundsFromPoints(List<LatLng> points) {
+    double minLat = points.first.latitude;
+    double maxLat = points.first.latitude;
+    double minLng = points.first.longitude;
+    double maxLng = points.first.longitude;
+    for (final p in points) {
+      if (p.latitude < minLat) minLat = p.latitude;
+      if (p.latitude > maxLat) maxLat = p.latitude;
+      if (p.longitude < minLng) minLng = p.longitude;
+      if (p.longitude > maxLng) maxLng = p.longitude;
+    }
+    return LatLngBounds(
+      southwest: LatLng(minLat, minLng),
+      northeast: LatLng(maxLat, maxLng),
+    );
+  }
+
+  // ── Géolocalisation ─────────────────────────────────────────────────────────
 
   Future<void> _onNearMeTapped() async {
     if (_isNearMeActive) {
@@ -329,7 +250,9 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
         _selectedDepartureCity = nearestCity;
       });
 
-      _mapController.move(nearestCity.coordinates, 8.0);
+      await _mapController?.animateCamera(
+        CameraUpdate.newLatLngZoom(nearestCity.coordinates, 8.0),
+      );
 
       if (mounted) {
         _showRouteBottomSheet(DepartureCityFilter(nearestCity));
@@ -363,30 +286,32 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     );
   }
 
-  // ── Build ────────────────────────────────────────────────────────────────────
+  // ── Build ───────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
+    final markers = <Marker>{
+      ..._buildDepartureMarkers(),
+      ..._buildArrivalMarkers(),
+    };
+
     return Stack(
       children: [
-        FlutterMap(
-          mapController: _mapController,
-          options: const MapOptions(
-            initialCenter: LatLng(30.0, -5.0),
-            initialZoom: 3.5,
+        GoogleMap(
+          initialCameraPosition: const CameraPosition(
+            target: LatLng(30.0, -5.0),
+            zoom: 3.5,
           ),
-          children: [
-            TileLayer(
-              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.dony.app',
-            ),
-            PolylineLayer(polylines: _buildPolylines()),
-            MarkerLayer(markers: [
-              ..._buildDepartureMarkers(),
-              ..._buildArrivalMarkers(),
-              ..._buildRouteMarkers(),
-            ]),
-          ],
+          onMapCreated: (controller) {
+            _mapController = controller;
+            _fitInitialBounds();
+          },
+          markers: markers,
+          myLocationEnabled: false,
+          myLocationButtonEnabled: false,
+          zoomControlsEnabled: false,
+          mapToolbarEnabled: false,
+          compassEnabled: false,
         ),
         Positioned(
           bottom: DonySpacing.lg,
@@ -404,49 +329,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   }
 }
 
-// ── Composants privés ─────────────────────────────────────────────────────────
-
-class _CityMarker extends StatelessWidget {
-  final String label;
-  final Color color;
-  final bool isSelected;
-
-  const _CityMarker({
-    required this.label,
-    required this.color,
-    required this.isSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: isSelected ? color : color.withValues(alpha: 0.75),
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 4,
-          ),
-        ],
-      ),
-      child: Center(
-        child: Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-            fontSize: 14,
-          ),
-        ),
-      ),
-    );
-  }
-}
+// ── Composants privés (inchangés sauf _CityMarker supprimé) ───────────────────
 
 class _NearMeFab extends StatelessWidget {
   final bool isActive;
