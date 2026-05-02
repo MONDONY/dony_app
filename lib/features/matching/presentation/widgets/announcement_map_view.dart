@@ -1,13 +1,16 @@
-import 'package:dony/core/constants/cities.dart';
+import 'dart:math' as math;
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
-import 'package:dony/features/matching/presentation/widgets/route_bottom_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
+import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/same_address_announcements_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-// ── LocationService abstraction (inchangée) ───────────────────────────────────
+// ── LocationService (unchanged) ───────────────────────────────────────────────
 
 abstract interface class LocationService {
   Future<LocationPermission> checkPermission();
@@ -18,37 +21,118 @@ abstract interface class LocationService {
 
 class GeolocatorLocationService implements LocationService {
   const GeolocatorLocationService();
-
   @override
   Future<LocationPermission> checkPermission() => Geolocator.checkPermission();
-
   @override
   Future<LocationPermission> requestPermission() =>
       Geolocator.requestPermission();
-
   @override
   Future<Position> getCurrentPosition() =>
       Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
-
   @override
   Future<bool> openAppSettings() => Geolocator.openAppSettings();
 }
 
-// ── Widget principal ──────────────────────────────────────────────────────────
+// ── Internal types ────────────────────────────────────────────────────────────
+
+enum _MarkerSide { pickup, delivery }
+
+class _AnnouncementPoint {
+  const _AnnouncementPoint(this.announcement, this.side);
+
+  final AnnouncementModel announcement;
+  final _MarkerSide side;
+
+  LatLng get location {
+    final addr = side == _MarkerSide.pickup
+        ? announcement.pickupAddress
+        : announcement.deliveryAddress;
+    return LatLng(addr!.lat, addr.lng); // ! safe: callers filter null
+  }
+}
+
+/// A lightweight cluster: one or more [_AnnouncementPoint]s with a centroid.
+class _Cluster {
+  _Cluster(this.items, this.centroid);
+
+  final List<_AnnouncementPoint> items;
+  final LatLng centroid;
+
+  bool get isMultiple => items.length > 1;
+  int get count => items.length;
+}
+
+// ── Lightweight grid clustering ───────────────────────────────────────────────
+//
+// Groups points whose lat/lng are within `cellDeg` degrees of each other.
+// At zoom 3 we use ~5° cells; at zoom 10 we use 0.1° cells.
+
+List<_Cluster> _gridCluster(
+    List<_AnnouncementPoint> points, double zoom) {
+  if (points.isEmpty) {
+    return [];
+  }
+  final double cellDeg = _cellDegForZoom(zoom);
+  final Map<String, List<_AnnouncementPoint>> grid = {};
+  for (final p in points) {
+    final lat = p.location.latitude;
+    final lng = p.location.longitude;
+    final key =
+        '${(lat / cellDeg).floor()}_${(lng / cellDeg).floor()}';
+    grid.putIfAbsent(key, () => []).add(p);
+  }
+  return grid.values.map((pts) {
+    final avgLat =
+        pts.fold<double>(0, (s, p) => s + p.location.latitude) / pts.length;
+    final avgLng =
+        pts.fold<double>(0, (s, p) => s + p.location.longitude) / pts.length;
+    return _Cluster(pts, LatLng(avgLat, avgLng));
+  }).toList();
+}
+
+double _cellDegForZoom(double zoom) {
+  if (zoom < 4) {
+    return 10.0;
+  }
+  if (zoom < 6) {
+    return 5.0;
+  }
+  if (zoom < 8) {
+    return 2.0;
+  }
+  if (zoom < 10) {
+    return 0.5;
+  }
+  if (zoom < 12) {
+    return 0.1;
+  }
+  return 0.01;
+}
+
+// ── Widget ────────────────────────────────────────────────────────────────────
 
 class AnnouncementMapView extends StatefulWidget {
-  final List<AnnouncementModel> announcements;
-  final String? searchDepartureCity;
-  final String? searchArrivalCity;
-  final LocationService locationService;
-
   const AnnouncementMapView({
     super.key,
     required this.announcements,
     this.searchDepartureCity,
     this.searchArrivalCity,
     this.locationService = const GeolocatorLocationService(),
+    this.onNearMeRequested,
+    this.isNearMeActive = false,
+    this.activeRadiusKm,
+    this.userPosition,
   });
+
+  final List<AnnouncementModel> announcements;
+  final String? searchDepartureCity;
+  final String? searchArrivalCity;
+  final LocationService locationService;
+  final void Function(double userLat, double userLng, double radiusKm)?
+      onNearMeRequested;
+  final bool isNearMeActive;
+  final double? activeRadiusKm;
+  final LatLng? userPosition;
 
   @override
   State<AnnouncementMapView> createState() => _AnnouncementMapViewState();
@@ -56,213 +140,180 @@ class AnnouncementMapView extends StatefulWidget {
 
 class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   GoogleMapController? _mapController;
-  City? _selectedDepartureCity;
-  bool _isNearMeActive = false;
-  String? _nearMeCityName;
+  Set<Marker> _markers = {};
+  BitmapDescriptor? _luggagePickup;
+  BitmapDescriptor? _luggageDelivery;
+  final Map<int, BitmapDescriptor> _clusterIcons = {};
   bool _isLocating = false;
+  double _currentZoom = 3.5;
 
-  // ── Comptages ───────────────────────────────────────────────────────────────
-
-  Map<String, int> get _departureCounts {
-    final map = <String, int>{};
-    for (final a in widget.announcements) {
-      map[a.departureCity] = (map[a.departureCity] ?? 0) + 1;
-    }
-    return map;
+  @override
+  void initState() {
+    super.initState();
+    _preloadIcons();
   }
 
-  Map<String, int> get _arrivalCounts {
-    final map = <String, int>{};
-    for (final a in widget.announcements) {
-      map[a.arrivalCity] = (map[a.arrivalCity] ?? 0) + 1;
-    }
-    return map;
-  }
-
-  Set<String> get _allRoutePairs => widget.announcements
-      .map((a) => '${a.departureCity}→${a.arrivalCity}')
-      .toSet();
-
-  // ── Marqueurs ───────────────────────────────────────────────────────────────
-
-  Set<Marker> _buildDepartureMarkers() {
-    final counts = _departureCounts;
-    return CityConstants.departures
-        .where((c) => counts.containsKey(c.displayName))
-        .map((c) => Marker(
-              markerId: MarkerId('dep_${c.id}'),
-              position: c.coordinates,
-              icon: BitmapDescriptor.defaultMarkerWithHue(
-                BitmapDescriptor.hueAzure,
-              ),
-              infoWindow: InfoWindow(
-                title: c.displayName,
-                snippet: '${counts[c.displayName]} trajet(s)',
-              ),
-              onTap: () => _onDepartureTapped(c),
-            ))
-        .toSet();
-  }
-
-  Set<Marker> _buildArrivalMarkers() {
-    final counts = _arrivalCounts;
-    final selected = _selectedDepartureCity;
-    return CityConstants.arrivals
-        .where((c) {
-          if (selected != null) {
-            return _allRoutePairs
-                .contains('${selected.displayName}→${c.displayName}');
-          }
-          return counts.containsKey(c.displayName);
-        })
-        .map((c) => Marker(
-              markerId: MarkerId('arr_${c.id}'),
-              position: c.coordinates,
-              icon: BitmapDescriptor.defaultMarkerWithHue(
-                BitmapDescriptor.hueOrange,
-              ),
-              infoWindow: InfoWindow(
-                title: c.displayName,
-                snippet: '${counts[c.displayName] ?? 0} trajet(s)',
-              ),
-              onTap: () => _onArrivalTapped(c),
-            ))
-        .toSet();
-  }
-
-  // ── Interactions ────────────────────────────────────────────────────────────
-
-  void _onDepartureTapped(City city) {
-    final isDeselecting = _selectedDepartureCity?.id == city.id;
-    setState(() {
-      _selectedDepartureCity = isDeselecting ? null : city;
-    });
-    if (!isDeselecting) {
-      _showRouteBottomSheet(DepartureCityFilter(city));
+  @override
+  void didUpdateWidget(covariant AnnouncementMapView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.announcements != widget.announcements) {
+      _rebuildMarkers();
     }
   }
 
-  void _onArrivalTapped(City city) {
-    _showRouteBottomSheet(ArrivalCityFilter(city));
-  }
-
-  void _showRouteBottomSheet(TripFilter filter) {
-    showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => RouteBottomSheet(
-        announcements: widget.announcements,
-        filter: filter,
-      ),
-    );
-  }
-
-  // ── Caméra ──────────────────────────────────────────────────────────────────
-
-  Future<void> _fitInitialBounds() async {
-    final controller = _mapController;
-    if (controller == null) return;
-
-    final dep = widget.searchDepartureCity;
-    final arr = widget.searchArrivalCity;
-    final depCity =
-        dep != null ? CityConstants.findById(dep.toLowerCase()) : null;
-    final arrCity =
-        arr != null ? CityConstants.findById(arr.toLowerCase()) : null;
-
-    final List<LatLng> points;
-    if (depCity != null && arrCity != null) {
-      points = [depCity.coordinates, arrCity.coordinates];
-    } else {
-      points = CityConstants.all.map((c) => c.coordinates).toList();
-    }
-    if (points.isEmpty) return;
-
-    final bounds = _boundsFromPoints(points);
-    await controller
-        .animateCamera(CameraUpdate.newLatLngBounds(bounds, 60.0));
-  }
-
-  LatLngBounds _boundsFromPoints(List<LatLng> points) {
-    double minLat = points.first.latitude;
-    double maxLat = points.first.latitude;
-    double minLng = points.first.longitude;
-    double maxLng = points.first.longitude;
-    for (final p in points) {
-      if (p.latitude < minLat) minLat = p.latitude;
-      if (p.latitude > maxLat) maxLat = p.latitude;
-      if (p.longitude < minLng) minLng = p.longitude;
-      if (p.longitude > maxLng) maxLng = p.longitude;
-    }
-    return LatLngBounds(
-      southwest: LatLng(minLat, minLng),
-      northeast: LatLng(maxLat, maxLng),
-    );
-  }
-
-  // ── Géolocalisation ─────────────────────────────────────────────────────────
-
-  Future<void> _onNearMeTapped() async {
-    if (_isNearMeActive) {
-      setState(() {
-        _isNearMeActive = false;
-        _nearMeCityName = null;
-        _selectedDepartureCity = null;
-      });
+  Future<void> _preloadIcons() async {
+    final pickup = await MarkerBitmapFactory.luggagePickup();
+    final delivery = await MarkerBitmapFactory.luggageDelivery();
+    if (!mounted) {
       return;
     }
+    setState(() {
+      _luggagePickup = pickup;
+      _luggageDelivery = delivery;
+    });
+    await _rebuildMarkers();
+  }
 
+  List<_AnnouncementPoint> _pickupPoints() => widget.announcements
+      .where((a) => a.pickupAddress != null)
+      .map((a) => _AnnouncementPoint(a, _MarkerSide.pickup))
+      .toList();
+
+  List<_AnnouncementPoint> _deliveryPoints() => widget.announcements
+      .where((a) => a.deliveryAddress != null)
+      .map((a) => _AnnouncementPoint(a, _MarkerSide.delivery))
+      .toList();
+
+  Future<void> _rebuildMarkers() async {
+    final allPoints = [..._pickupPoints(), ..._deliveryPoints()];
+    final clusters = _gridCluster(allPoints, _currentZoom);
+    final futures = clusters.map((c) => _buildMarker(c));
+    final built = await Future.wait(futures);
+    if (mounted) {
+      setState(() => _markers = built.toSet());
+    }
+  }
+
+  Future<Marker> _buildMarker(_Cluster cluster) async {
+    if (cluster.isMultiple) {
+      final icon = await _getClusterIcon(cluster.count);
+      return Marker(
+        markerId: MarkerId(
+            'cluster_${cluster.centroid.latitude}_${cluster.centroid.longitude}_${cluster.count}'),
+        position: cluster.centroid,
+        icon: icon,
+        onTap: () => _onClusterTapped(cluster),
+      );
+    }
+    final item = cluster.items.first;
+    final icon = item.side == _MarkerSide.pickup
+        ? (_luggagePickup ?? BitmapDescriptor.defaultMarker)
+        : (_luggageDelivery ?? BitmapDescriptor.defaultMarker);
+    return Marker(
+      markerId: MarkerId('${item.side.name}_${item.announcement.id}'),
+      position: item.location,
+      icon: icon,
+      onTap: () => _onMarkerTapped(item.announcement),
+    );
+  }
+
+  Future<BitmapDescriptor> _getClusterIcon(int count) async {
+    if (_clusterIcons.containsKey(count)) {
+      return _clusterIcons[count]!;
+    }
+    final icon = await MarkerBitmapFactory.clusterBadge(count);
+    _clusterIcons[count] = icon;
+    return icon;
+  }
+
+  void _onMarkerTapped(AnnouncementModel a) {
+    context.push('/announcements/${a.id}');
+  }
+
+  void _onClusterTapped(_Cluster cluster) {
+    final firstLoc = cluster.items.first.location;
+    final allSameSpot = cluster.items.every((it) =>
+        (it.location.latitude - firstLoc.latitude).abs() < 1e-6 &&
+        (it.location.longitude - firstLoc.longitude).abs() < 1e-6);
+
+    if (allSameSpot) {
+      // Same exact address → list sheet
+      final firstItem = cluster.items.first;
+      final addr = firstItem.side == _MarkerSide.pickup
+          ? firstItem.announcement.pickupAddress
+          : firstItem.announcement.deliveryAddress;
+      showModalBottomSheet<void>(
+        context: context,
+        useRootNavigator: true,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => SameAddressAnnouncementsSheet(
+          addressLabel: addr?.label ?? 'Adresse',
+          announcements: cluster.items.map((it) => it.announcement).toList(),
+          onTap: (a) {
+            Navigator.pop(context);
+            context.push('/announcements/${a.id}');
+          },
+        ),
+      );
+    } else {
+      // Different positions → zoom in
+      _mapController?.animateCamera(
+        CameraUpdate.newLatLngZoom(cluster.centroid, math.min(_currentZoom + 2, 18)),
+      );
+    }
+  }
+
+  // ── "Près de moi" flow ──────────────────────────────────────────────────────
+
+  Future<void> _onNearMeTapped() async {
+    if (widget.onNearMeRequested == null) {
+      return;
+    }
     setState(() => _isLocating = true);
     try {
       var permission = await widget.locationService.checkPermission();
-
       if (permission == LocationPermission.deniedForever) {
-        _showPermissionDeniedSheet(isPermanent: true);
+        _showPermissionDeniedSheet(true);
         return;
       }
-
       if (permission == LocationPermission.denied) {
         permission = await widget.locationService.requestPermission();
       }
-
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
         _showPermissionDeniedSheet(
-          isPermanent: permission == LocationPermission.deniedForever,
-        );
+            permission == LocationPermission.deniedForever);
+        return;
+      }
+      final pos = await widget.locationService.getCurrentPosition();
+      if (!mounted) {
         return;
       }
 
-      final position = await widget.locationService.getCurrentPosition();
-      final userLatLng = LatLng(position.latitude, position.longitude);
-      final nearestCity = CityConstants.findNearest(userLatLng);
-
-      if (nearestCity == null) {
-        _showNoServiceBottomSheet();
-        return;
-      }
-
-      setState(() {
-        _isNearMeActive = true;
-        _nearMeCityName = nearestCity.displayName;
-        _selectedDepartureCity = nearestCity;
-      });
-
-      await _mapController?.animateCamera(
-        CameraUpdate.newLatLngZoom(nearestCity.coordinates, 8.0),
+      final radiusKm = await showModalBottomSheet<double>(
+        context: context,
+        useRootNavigator: true,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => NearMeRadiusSheet(
+          initialRadiusKm: widget.activeRadiusKm ?? 25,
+        ),
       );
-
-      if (mounted) {
-        _showRouteBottomSheet(DepartureCityFilter(nearestCity));
+      if (radiusKm != null && mounted) {
+        widget.onNearMeRequested!(pos.latitude, pos.longitude, radiusKm);
+        await _mapController?.animateCamera(
+            CameraUpdate.newLatLngZoom(
+                LatLng(pos.latitude, pos.longitude), 11));
       }
     } finally {
-      if (mounted) setState(() => _isLocating = false);
+      if (mounted) {
+        setState(() => _isLocating = false);
+      }
     }
   }
 
-  void _showPermissionDeniedSheet({required bool isPermanent}) {
+  void _showPermissionDeniedSheet(bool isPermanent) {
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
@@ -277,24 +328,10 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     );
   }
 
-  void _showNoServiceBottomSheet() {
-    showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const _NoServiceSheet(key: Key('no-service-sheet')),
-    );
-  }
-
   // ── Build ───────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    final markers = <Marker>{
-      ..._buildDepartureMarkers(),
-      ..._buildArrivalMarkers(),
-    };
-
     return Stack(
       children: [
         GoogleMap(
@@ -306,8 +343,14 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
             _mapController = controller;
             _fitInitialBounds();
           },
-          markers: markers,
-          myLocationEnabled: false,
+          onCameraMove: (position) {
+            _currentZoom = position.zoom;
+          },
+          onCameraIdle: () {
+            _rebuildMarkers();
+          },
+          markers: _markers,
+          circles: _radiusCircle(),
           myLocationButtonEnabled: false,
           zoomControlsEnabled: false,
           mapToolbarEnabled: false,
@@ -318,37 +361,88 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
           right: DonySpacing.lg,
           child: _NearMeFab(
             key: const Key('near-me-fab'),
-            isActive: _isNearMeActive,
+            isActive: widget.isNearMeActive,
             isLoading: _isLocating,
-            cityName: _nearMeCityName,
+            radiusKm: widget.activeRadiusKm,
             onTap: _onNearMeTapped,
           ),
         ),
       ],
     );
   }
+
+  Set<Circle> _radiusCircle() {
+    if (!widget.isNearMeActive ||
+        widget.userPosition == null ||
+        widget.activeRadiusKm == null) {
+      return {};
+    }
+    return {
+      Circle(
+        circleId: const CircleId('near-me-radius'),
+        center: widget.userPosition!,
+        radius: widget.activeRadiusKm! * 1000,
+        strokeColor: DonyColors.primary,
+        strokeWidth: 2,
+        fillColor: DonyColors.primary.withValues(alpha: 0.08),
+      ),
+    };
+  }
+
+  Future<void> _fitInitialBounds() async {
+    final controller = _mapController;
+    if (controller == null) {
+      return;
+    }
+    final allPoints = <LatLng>[
+      ..._pickupPoints().map((it) => it.location),
+      ..._deliveryPoints().map((it) => it.location),
+    ];
+    if (allPoints.isEmpty) {
+      return;
+    }
+    final bounds = _boundsFromPoints(allPoints);
+    await controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 60.0));
+  }
+
+  LatLngBounds _boundsFromPoints(List<LatLng> points) {
+    double minLat = points.first.latitude, maxLat = points.first.latitude;
+    double minLng = points.first.longitude, maxLng = points.first.longitude;
+    for (final p in points) {
+      minLat = p.latitude < minLat ? p.latitude : minLat;
+      maxLat = p.latitude > maxLat ? p.latitude : maxLat;
+      minLng = p.longitude < minLng ? p.longitude : minLng;
+      maxLng = p.longitude > maxLng ? p.longitude : maxLng;
+    }
+    return LatLngBounds(
+      southwest: LatLng(minLat, minLng),
+      northeast: LatLng(maxLat, maxLng),
+    );
+  }
 }
 
-// ── Composants privés (inchangés sauf _CityMarker supprimé) ───────────────────
+// ── _NearMeFab ────────────────────────────────────────────────────────────────
 
 class _NearMeFab extends StatelessWidget {
-  final bool isActive;
-  final bool isLoading;
-  final String? cityName;
-  final VoidCallback onTap;
-
   const _NearMeFab({
     super.key,
     required this.isActive,
     required this.isLoading,
-    required this.cityName,
+    required this.radiusKm,
     required this.onTap,
   });
+
+  final bool isActive;
+  final bool isLoading;
+  final double? radiusKm;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-
+    final label = isActive && radiusKm != null
+        ? '${radiusKm!.round()} km'
+        : 'Près de moi';
     return GestureDetector(
       onTap: isLoading ? null : onTap,
       child: AnimatedContainer(
@@ -391,24 +485,14 @@ class _NearMeFab extends StatelessWidget {
                 size: 16,
                 color: isActive ? Colors.white : DonyColors.primary,
               ),
-            if (cityName != null) ...[
-              const SizedBox(width: DonySpacing.xs),
-              Text(
-                cityName!,
-                style: tt.labelMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
+            const SizedBox(width: DonySpacing.xs),
+            Text(
+              label,
+              style: tt.labelMedium?.copyWith(
+                color: isActive ? Colors.white : DonyColors.primary,
+                fontWeight: FontWeight.w600,
               ),
-            ] else ...[
-              const SizedBox(width: DonySpacing.xs),
-              Text(
-                'Près de moi',
-                style: tt.labelMedium?.copyWith(
-                  color: isActive ? Colors.white : DonyColors.primary,
-                ),
-              ),
-            ],
+            ),
           ],
         ),
       ),
@@ -416,13 +500,11 @@ class _NearMeFab extends StatelessWidget {
   }
 }
 
-class _PermissionDeniedSheet extends StatelessWidget {
-  final VoidCallback onOpenSettings;
+// ── _PermissionDeniedSheet ───────────────────────────────────────────────────
 
-  const _PermissionDeniedSheet({
-    super.key,
-    required this.onOpenSettings,
-  });
+class _PermissionDeniedSheet extends StatelessWidget {
+  const _PermissionDeniedSheet({super.key, required this.onOpenSettings});
+  final VoidCallback onOpenSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -436,9 +518,8 @@ class _PermissionDeniedSheet extends StatelessWidget {
       ),
       decoration: const BoxDecoration(
         color: DonyColors.surface,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(DonyRadius.sheet),
-        ),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -454,17 +535,11 @@ class _PermissionDeniedSheet extends StatelessWidget {
               ),
             ),
           ),
-          const Icon(
-            Icons.location_off_rounded,
-            size: 48,
-            color: DonyColors.primary,
-          ),
+          const Icon(Icons.location_off_rounded,
+              size: 48, color: DonyColors.primary),
           const SizedBox(height: DonySpacing.md),
-          Text(
-            'Géolocalisation désactivée',
-            style: tt.titleLarge,
-            textAlign: TextAlign.center,
-          ),
+          Text('Géolocalisation désactivée',
+              style: tt.titleLarge, textAlign: TextAlign.center),
           const SizedBox(height: DonySpacing.sm),
           Text(
             "Autorise l'accès à ta position dans les réglages pour utiliser \"Près de moi\".",
@@ -473,63 +548,6 @@ class _PermissionDeniedSheet extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.xl),
           DonyButton(label: 'Ouvrir les réglages', onPressed: onOpenSettings),
-        ],
-      ),
-    );
-  }
-}
-
-class _NoServiceSheet extends StatelessWidget {
-  const _NoServiceSheet({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        DonySpacing.lg,
-        0,
-        DonySpacing.lg,
-        MediaQuery.of(context).padding.bottom + DonySpacing.lg,
-      ),
-      decoration: const BoxDecoration(
-        color: DonyColors.surface,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(DonyRadius.sheet),
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Center(
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: DonyColors.neutral200,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const Icon(
-            Icons.location_searching_rounded,
-            size: 48,
-            color: DonyColors.primary,
-          ),
-          const SizedBox(height: DonySpacing.md),
-          Text(
-            'Aucune ville desservie près de toi',
-            style: tt.titleLarge,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: DonySpacing.sm),
-          Text(
-            'Les départs se font depuis Paris, Lyon ou Marseille.',
-            style: tt.bodyMedium?.copyWith(color: DonyColors.textMuted),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: DonySpacing.md),
         ],
       ),
     );
