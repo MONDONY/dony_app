@@ -52,6 +52,9 @@ class AnnouncementRepository {
     DateTime? departureDateFrom,
     DateTime? departureDateTo,
     double? minAvailableKg,
+    double? userLat,
+    double? userLng,
+    double? radiusKm,
     String sortBy = 'date',
     String sortDir = 'asc',
   }) {
@@ -61,6 +64,9 @@ class AnnouncementRepository {
       departureDateFrom: departureDateFrom,
       departureDateTo: departureDateTo,
       minAvailableKg: minAvailableKg,
+      userLat: userLat,
+      userLng: userLng,
+      radiusKm: radiusKm,
       sortBy: sortBy,
       sortDir: sortDir,
     );

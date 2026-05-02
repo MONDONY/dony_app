@@ -215,6 +215,9 @@ void main() {
               departureDateFrom: any(named: 'departureDateFrom'),
               departureDateTo: any(named: 'departureDateTo'),
               minAvailableKg: any(named: 'minAvailableKg'),
+              userLat: any(named: 'userLat'),
+              userLng: any(named: 'userLng'),
+              radiusKm: any(named: 'radiusKm'),
               sortBy: any(named: 'sortBy'),
               sortDir: any(named: 'sortDir'),
             )).thenAnswer((_) async => [buildAnnouncement()]);
@@ -240,6 +243,9 @@ void main() {
               departureDateFrom: any(named: 'departureDateFrom'),
               departureDateTo: any(named: 'departureDateTo'),
               minAvailableKg: any(named: 'minAvailableKg'),
+              userLat: any(named: 'userLat'),
+              userLng: any(named: 'userLng'),
+              radiusKm: any(named: 'radiusKm'),
               sortBy: any(named: 'sortBy'),
               sortDir: any(named: 'sortDir'),
             )).thenAnswer((_) async => []);
@@ -262,6 +268,9 @@ void main() {
               departureDateFrom: any(named: 'departureDateFrom'),
               departureDateTo: any(named: 'departureDateTo'),
               minAvailableKg: any(named: 'minAvailableKg'),
+              userLat: any(named: 'userLat'),
+              userLng: any(named: 'userLng'),
+              radiusKm: any(named: 'radiusKm'),
               sortBy: any(named: 'sortBy'),
               sortDir: any(named: 'sortDir'),
             )).thenThrow(Exception('Network error'));
@@ -272,6 +281,46 @@ void main() {
         isA<AnnouncementLoading>(),
         isA<AnnouncementError>(),
       ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'AnnouncementSearchRequested with radius → repo called with userLat/userLng/radiusKm',
+      build: () {
+        when(() => mockRepo.searchAnnouncements(
+              departureCity: any(named: 'departureCity'),
+              arrivalCity: any(named: 'arrivalCity'),
+              departureDateFrom: any(named: 'departureDateFrom'),
+              departureDateTo: any(named: 'departureDateTo'),
+              minAvailableKg: any(named: 'minAvailableKg'),
+              userLat: any(named: 'userLat'),
+              userLng: any(named: 'userLng'),
+              radiusKm: any(named: 'radiusKm'),
+              sortBy: any(named: 'sortBy'),
+              sortDir: any(named: 'sortDir'),
+            )).thenAnswer((_) async => const []);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementSearchRequested(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        userLat: 48.8566,
+        userLng: 2.3522,
+        radiusKm: 25,
+      )),
+      verify: (_) {
+        verify(() => mockRepo.searchAnnouncements(
+              departureCity: 'Paris',
+              arrivalCity: 'Dakar',
+              departureDateFrom: any(named: 'departureDateFrom'),
+              departureDateTo: any(named: 'departureDateTo'),
+              minAvailableKg: any(named: 'minAvailableKg'),
+              userLat: 48.8566,
+              userLng: 2.3522,
+              radiusKm: 25,
+              sortBy: any(named: 'sortBy'),
+              sortDir: any(named: 'sortDir'),
+            )).called(1);
+      },
     );
   });
 

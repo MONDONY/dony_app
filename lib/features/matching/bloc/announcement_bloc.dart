@@ -91,6 +91,9 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         departureDateFrom: event.departureDateFrom,
         departureDateTo: event.departureDateTo,
         minAvailableKg: event.minAvailableKg,
+        userLat: event.userLat,
+        userLng: event.userLng,
+        radiusKm: event.radiusKm,
         sortBy: event.sortBy,
         sortDir: event.sortDir,
       );

@@ -49,6 +49,9 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
   final bool? kiloProOnly;
   final double? minRating;
   final bool? weekendOnly;
+  final double? userLat;
+  final double? userLng;
+  final double? radiusKm;
   final String sortBy; // date | price | rating
   final String sortDir; // asc | desc
 
@@ -62,6 +65,9 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
     this.kiloProOnly,
     this.minRating,
     this.weekendOnly,
+    this.userLat,
+    this.userLng,
+    this.radiusKm,
     this.sortBy = 'date',
     this.sortDir = 'asc',
   });

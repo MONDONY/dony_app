@@ -68,6 +68,9 @@ class AnnouncementRemoteDatasource {
     DateTime? departureDateFrom,
     DateTime? departureDateTo,
     double? minAvailableKg,
+    double? userLat,
+    double? userLng,
+    double? radiusKm,
     String sortBy = 'date',
     String sortDir = 'asc',
     int page = 0,
@@ -84,6 +87,9 @@ class AnnouncementRemoteDatasource {
       if (departureDateTo != null)
         'departureDateTo': DateFormat('yyyy-MM-dd').format(departureDateTo),
       if (minAvailableKg != null) 'minAvailableKg': minAvailableKg,
+      if (userLat != null) 'userLat': userLat,
+      if (userLng != null) 'userLng': userLng,
+      if (radiusKm != null) 'radiusKm': radiusKm,
     };
     final response =
         await _apiClient.dio.get('/announcements', queryParameters: params);
