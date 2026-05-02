@@ -1,0 +1,54 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/widgets/same_address_announcements_sheet.dart';
+
+AnnouncementModel _ann(String id, String dep, String arr) => AnnouncementModel(
+      id: id,
+      travelerId: 't1',
+      departureCity: dep,
+      arrivalCity: arr,
+      departureDate: DateTime(2026, 6, 15),
+      availableKg: 8,
+      pricePerKg: 12,
+      status: 'ACTIVE',
+      createdAt: DateTime(2026, 5, 1),
+      updatedAt: DateTime(2026, 5, 1),
+      pickupAddress: const AddressData(label: 'Same', lat: 48.85, lng: 2.35),
+      traveler: TravelerProfile(id: 't1', displayName: 'Sékou Ba', kiloPro: false),
+    );
+
+void main() {
+  testWidgets('lists all announcements', (tester) async {
+    final list = [_ann('a1', 'Paris', 'Dakar'), _ann('a2', 'Paris', 'Dakar')];
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: SameAddressAnnouncementsSheet(
+          addressLabel: '12 rue Hugo, Paris',
+          announcements: list,
+          onTap: (_) {},
+        ),
+      ),
+    ));
+    expect(find.text('12 rue Hugo, Paris'), findsOneWidget);
+    expect(find.text('Sékou Ba'), findsNWidgets(2));
+  });
+
+  testWidgets('tap on item invokes onTap with that announcement', (tester) async {
+    String? tappedId;
+    final list = [_ann('a1', 'Paris', 'Dakar'), _ann('a2', 'Paris', 'Dakar')];
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: SameAddressAnnouncementsSheet(
+          addressLabel: 'X',
+          announcements: list,
+          onTap: (a) => tappedId = a.id,
+        ),
+      ),
+    ));
+    await tester.tap(find.text('Sékou Ba').last);
+    await tester.pump();
+    expect(tappedId, 'a2');
+  });
+}
