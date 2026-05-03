@@ -6,6 +6,23 @@ sealed class PaymentEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+/// Initiate payment sheet for bid checkout flow.
+/// Used when user completes the checkout and is ready to pay.
+class BidCheckoutPaymentRequested extends PaymentEvent {
+  final String clientSecret;
+  final String publishableKey;
+  final String bidId;
+
+  const BidCheckoutPaymentRequested({
+    required this.clientSecret,
+    required this.publishableKey,
+    required this.bidId,
+  });
+
+  @override
+  List<Object?> get props => [clientSecret, publishableKey, bidId];
+}
+
 /// Lance la création du compte Stripe puis génère le lien d'onboarding.
 class PaymentConnectAccountRequested extends PaymentEvent {
   const PaymentConnectAccountRequested();

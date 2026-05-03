@@ -1,10 +1,30 @@
 import 'package:dony/features/matching/data/datasources/bid_remote_datasource.dart';
+import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 
 class BidRepository {
   final BidRemoteDatasource _datasource;
 
   BidRepository(this._datasource);
+
+  Future<BidCheckoutResponseModel> checkoutBid({
+    required String announcementId,
+    required double weightKg,
+    required double declaredValueEur,
+    required String description,
+    required String contentCategory,
+    required String recipientName,
+    required String recipientPhone,
+  }) =>
+      _datasource.checkoutBid(
+        announcementId: announcementId,
+        weightKg: weightKg,
+        declaredValueEur: declaredValueEur,
+        description: description,
+        contentCategory: contentCategory,
+        recipientName: recipientName,
+        recipientPhone: recipientPhone,
+      );
 
   Future<BidModel> createBid({
     required String announcementId,

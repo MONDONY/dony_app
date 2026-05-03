@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 
 abstract class BidState {}
@@ -5,6 +6,11 @@ abstract class BidState {}
 class BidInitial extends BidState {}
 
 class BidLoading extends BidState {}
+
+class BidCheckoutReady extends BidState {
+  final BidCheckoutResponseModel response;
+  BidCheckoutReady(this.response);
+}
 
 class BidCreated extends BidState {
   final BidModel bid;

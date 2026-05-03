@@ -14,6 +14,22 @@ class PaymentLoading extends PaymentState {
   const PaymentLoading();
 }
 
+/// Payment sheet ready for bid checkout flow.
+class CheckoutPaymentSheetReady extends PaymentState {
+  final String clientSecret;
+  final String publishableKey;
+  final String bidId;
+
+  const CheckoutPaymentSheetReady({
+    required this.clientSecret,
+    required this.publishableKey,
+    required this.bidId,
+  });
+
+  @override
+  List<Object?> get props => [clientSecret, publishableKey, bidId];
+}
+
 /// URL d'onboarding Stripe prête — naviguer vers la WebView.
 class PaymentOnboardingUrlReady extends PaymentState {
   final String url;

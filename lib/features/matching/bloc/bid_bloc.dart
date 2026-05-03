@@ -11,6 +11,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
   static const _myBidsTtl = Duration(minutes: 3);
 
   BidBloc(this._repository) : super(BidInitial()) {
+    on<BidCheckoutRequested>(_onCheckoutRequested);
     on<BidCreateRequested>(_onCreateRequested);
     on<BidListRequested>(_onListRequested);
     on<BidDetailRequested>(_onDetailRequested);
@@ -24,6 +25,30 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     on<BidHideRequested>(_onHideRequested);
     on<BidDeleteRequested>(_onDeleteRequested);
     on<BidTravelerDismissRequested>(_onTravelerDismissRequested);
+  }
+
+  Future<void> _onCheckoutRequested(
+    BidCheckoutRequested event,
+    Emitter<BidState> emit,
+  ) async {
+    emit(BidLoading());
+    try {
+      final response = await _repository.checkoutBid(
+        announcementId: event.announcementId,
+        weightKg: event.weightKg,
+        declaredValueEur: event.declaredValueEur,
+        description: event.description,
+        contentCategory: event.contentCategory,
+        recipientName: event.recipientName,
+        recipientPhone: event.recipientPhone,
+      );
+      emit(BidCheckoutReady(response));
+    } on DioException catch (e) {
+      final detail = e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
+      emit(BidError(detail));
+    } catch (e) {
+      emit(BidError(e.toString()));
+    }
   }
 
   Future<void> _onCreateRequested(

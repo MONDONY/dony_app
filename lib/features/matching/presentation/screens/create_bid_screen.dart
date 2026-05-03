@@ -3,10 +3,12 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -89,7 +91,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       _showError('Téléphone du destinataire obligatoire');
       return;
     }
-    context.read<BidBloc>().add(BidCreateRequested(
+    context.read<BidBloc>().add(BidCheckoutRequested(
       announcementId: widget.announcement.id,
       weightKg: _weightNotifier.value,
       declaredValueEur: val,
@@ -107,18 +109,33 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<BidBloc, BidState>(
-      listener: (context, state) {
-        if (state is BidCreated) {
-          context.go('/payments/pay', extra: state.bid);
-        } else if (state is BidError) {
-          _showError(state.message);
-        }
-      },
-      builder: (context, state) {
-        final isLoading = state is BidLoading;
-
-        return Scaffold(
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<BidBloc, BidState>(
+          listener: (context, state) {
+            if (state is BidCheckoutReady) {
+              context.read<PaymentBloc>().add(BidCheckoutPaymentRequested(
+                clientSecret: state.response.clientSecret,
+                publishableKey: state.response.publishableKey,
+                bidId: state.response.bidId,
+              ));
+            } else if (state is BidError) {
+              _showError(state.message);
+            }
+          },
+        ),
+        BlocListener<PaymentBloc, PaymentState>(
+          listener: (context, state) async {
+            if (state is CheckoutPaymentSheetReady) {
+              await _presentPaymentSheet(context, state);
+            }
+          },
+        ),
+      ],
+      child: BlocBuilder<BidBloc, BidState>(
+        builder: (context, bidState) {
+          final isLoading = bidState is BidLoading;
+          return Scaffold(
               backgroundColor: DonyColors.bg,
               appBar: _buildAppBar(context),
               body: ListenableBuilder(
@@ -264,8 +281,36 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 },
               ),
             );
-      },
+        },
+      ),
     );
+  }
+
+  Future<void> _presentPaymentSheet(
+    BuildContext context,
+    CheckoutPaymentSheetReady state,
+  ) async {
+    try {
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: state.clientSecret,
+          merchantDisplayName: 'Dony',
+        ),
+      );
+
+      await Stripe.instance.presentPaymentSheet();
+
+      if (!context.mounted) return;
+      context.go('/bids/${state.bidId}');
+    } on StripeException catch (e) {
+      if (e.error.code == FailureCode.Canceled) {
+        _showError('Paiement annulé');
+      } else {
+        _showError('Erreur de paiement: ${e.error.message}');
+      }
+    } catch (e) {
+      _showError('Erreur: ${e.toString()}');
+    }
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {

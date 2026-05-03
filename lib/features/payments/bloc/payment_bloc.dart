@@ -9,11 +9,23 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
   final PaymentRepository _repository;
 
   PaymentBloc(this._repository) : super(const PaymentInitial()) {
+    on<BidCheckoutPaymentRequested>(_onBidCheckoutPaymentRequested);
     on<PaymentConnectAccountRequested>(_onConnectAccountRequested);
     on<PaymentOnboardingStatusChecked>(_onOnboardingStatusChecked);
     on<PaymentInitiated>(_onPaymentInitiated);
     on<PaymentSheetCompleted>(_onPaymentSheetCompleted);
     on<PaymentFailed>(_onPaymentFailed);
+  }
+
+  Future<void> _onBidCheckoutPaymentRequested(
+    BidCheckoutPaymentRequested event,
+    Emitter<PaymentState> emit,
+  ) async {
+    emit(CheckoutPaymentSheetReady(
+      clientSecret: event.clientSecret,
+      publishableKey: event.publishableKey,
+      bidId: event.bidId,
+    ));
   }
 
   Future<void> _onConnectAccountRequested(

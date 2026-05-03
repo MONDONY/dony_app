@@ -2,6 +2,26 @@ abstract class BidEvent {
   const BidEvent();
 }
 
+class BidCheckoutRequested extends BidEvent {
+  final String announcementId;
+  final double weightKg;
+  final double declaredValueEur;
+  final String description;
+  final String contentCategory;
+  final String recipientName;
+  final String recipientPhone;
+
+  BidCheckoutRequested({
+    required this.announcementId,
+    required this.weightKg,
+    required this.declaredValueEur,
+    required this.description,
+    required this.contentCategory,
+    required this.recipientName,
+    required this.recipientPhone,
+  });
+}
+
 class BidCreateRequested extends BidEvent {
   final String announcementId;
   final double weightKg;

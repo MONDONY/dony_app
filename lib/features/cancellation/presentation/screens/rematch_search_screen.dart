@@ -20,7 +20,6 @@ class RematchSearchScreen extends StatelessWidget {
     return Scaffold(
       appBar: const DonyAppBar(
         title: 'Alternatives disponibles',
-        showBackButton: false,
       ),
       body: Builder(builder: (context) {
         final h = DonyLayout.hPadding(context);

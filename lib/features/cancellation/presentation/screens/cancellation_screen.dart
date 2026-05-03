@@ -80,8 +80,20 @@ class _CancellationScreenState extends State<CancellationScreen> {
     return BlocListener<CancellationBloc, CancellationState>(
       listener: (context, state) {
         if (state is CancellationSuccess) {
-          context.pushReplacement('/cancellations/rematch',
-              extra: state.cancellation);
+          // Le voyageur revient sur sa liste "Mes trajets" après l'annulation.
+          // L'écran "Alternatives disponibles" (RematchSearchScreen) est
+          // destiné aux expéditeurs concernés et sera atteint via leur
+          // notification FCM — pas par le voyageur lui-même.
+          final n = state.cancellation.affectedBidsCount;
+          DonySnackbar.show(
+            context,
+            message: n > 0
+                ? 'Trajet annulé · $n expéditeur${n > 1 ? 's' : ''} '
+                    'remboursé${n > 1 ? 's' : ''}'
+                : 'Trajet annulé',
+            type: DonySnackbarType.success,
+          );
+          context.go('/announcements');
         } else if (state is CancellationError) {
           DonySnackbar.show(
             context,

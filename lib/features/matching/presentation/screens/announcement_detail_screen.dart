@@ -48,11 +48,11 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
         listener: (context, state) {
           if (state is AnnouncementDeleted) {
             DonySnackbar.show(context, message: 'Trajet supprimé', type: DonySnackbarType.success);
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/home');
-            }
+            // Toujours retourner explicitement sur "Mes trajets" pour éviter
+            // de retomber sur un écran intermédiaire (ex: RematchSearchScreen
+            // si l'utilisateur a été poussé là via une ancienne version du
+            // flow d'annulation).
+            context.go('/announcements');
           } else if (state is AnnouncementNotFound) {
             DonySnackbar.show(
               context,

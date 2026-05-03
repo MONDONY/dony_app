@@ -1,10 +1,36 @@
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 
 class BidRemoteDatasource {
   final ApiClient _apiClient;
 
   BidRemoteDatasource(this._apiClient);
+
+  Future<BidCheckoutResponseModel> checkoutBid({
+    required String announcementId,
+    required double weightKg,
+    required double declaredValueEur,
+    required String description,
+    required String contentCategory,
+    required String recipientName,
+    required String recipientPhone,
+  }) async {
+    final response = await _apiClient.dio.post(
+      '/bids/checkout',
+      data: {
+        'announcementId': announcementId,
+        'weightKg': weightKg,
+        'declaredValueEur': declaredValueEur,
+        'description': description,
+        'contentCategory': contentCategory,
+        'recipientName': recipientName,
+        'recipientPhone': recipientPhone,
+        'disclaimerSigned': true,
+      },
+    );
+    return BidCheckoutResponseModel.fromJson(response.data as Map<String, dynamic>);
+  }
 
   Future<BidModel> createBid({
     required String announcementId,
