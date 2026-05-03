@@ -714,6 +714,42 @@ void main() {
     expect(find.text('Carte'), findsNothing);
   });
 
+  // ── Filter chips row has list and map icons as first items ───────────────
+
+  testWidgets('Filter chips row has list and map icons as first items', (WidgetTester tester) async {
+    final mockResults = [
+      _makeAnn(),
+    ];
+
+    stubLoaded(mockResults);
+
+    await tester.pumpWidget(
+        _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
+    await tester.pump();
+    await _goToResults(tester);
+
+    // Find the horizontal ListView of filter chips (the results view chips row)
+    // The ListView has scrollDirection: Axis.horizontal
+    final chipsListView = find.byType(ListView).at(1);  // Second ListView is the chips row
+    expect(chipsListView, findsOneWidget);
+
+    // Find icons that are descendants of the chips ListView
+    final listIconInChips = find.descendant(
+      of: chipsListView,
+      matching: find.byIcon(Icons.list_rounded),
+    );
+    final mapIconInChips = find.descendant(
+      of: chipsListView,
+      matching: find.byIcon(Icons.map_outlined),
+    );
+
+    // Verify list icon is present in chips row
+    expect(listIconInChips, findsWidgets);
+
+    // Verify map icon is present in chips row
+    expect(mapIconInChips, findsWidgets);
+  });
+
   // ── 9. Toggle Liste/Carte ─────────────────────────────────────────────────
 
   group('Toggle Liste/Map', () {
