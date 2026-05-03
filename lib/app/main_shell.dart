@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
@@ -80,7 +82,34 @@ class _DonyBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-    return Container(
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        final user = authState is AuthAuthenticated
+            ? authState.user
+            : authState is AuthProfileUpdated
+                ? authState.user
+                : null;
+        final isTraveler = user?.isTraveler ?? false;
+        final isSender = user?.isSender ?? false;
+        // Priorité voyageur en cas de dual-role (cohérent avec home_screen.dart)
+        final showTravelerNav = isTraveler;
+        final isDualRole = isTraveler && isSender;
+
+        // Tab 1 — Envoyer (sender) ou Trajets (traveler)
+        final tab1Label = showTravelerNav ? 'Trajets' : 'Envoyer';
+        final tab1Icon = showTravelerNav
+            ? Icons.send_rounded
+            : Icons.arrow_circle_right_rounded;
+        final tab1IconOutlined = showTravelerNav
+            ? Icons.send_outlined
+            : Icons.arrow_circle_right_outlined;
+
+        // Tab 2 — Suivi (libellé fixe, icône role-aware)
+        final tab2Icon = showTravelerNav
+            ? Icons.qr_code_scanner_rounded
+            : Icons.track_changes_rounded;
+
+        return Container(
       decoration: const BoxDecoration(
         color: DonyColors.white,
         border: Border(top: BorderSide(color: DonyColors.borderDefault)),
@@ -109,26 +138,36 @@ class _DonyBottomNav extends StatelessWidget {
                   onTap: () => onTap(0),
                 ),
               ),
-              // 1 — Envoyer
+              // 1 — Envoyer (sender) | Trajets (traveler)
               Expanded(
                 child: _NavItem(
-                  icon: Icons.arrow_circle_right_rounded,
-                  outlinedIcon: Icons.arrow_circle_right_outlined,
-                  label: 'Envoyer',
+                  icon: tab1Icon,
+                  outlinedIcon: tab1IconOutlined,
+                  label: tab1Label,
                   index: 1,
                   currentIndex: currentIndex,
                   onTap: () => onTap(1),
                 ),
               ),
-              // 2 — Trajets
+              // 2 — Suivi (QR scan pour voyageur, recherche pour expéditeur)
               Expanded(
                 child: _NavItem(
-                  icon: Icons.send_rounded,
-                  outlinedIcon: Icons.send_outlined,
-                  label: 'Trajets',
+                  icon: tab2Icon,
+                  outlinedIcon: tab2Icon,
+                  label: 'Suivi',
                   index: 2,
                   currentIndex: currentIndex,
-                  onTap: () => onTap(2),
+                  onTap: () {
+                    if (isDualRole) {
+                      onTap(2);
+                    } else if (showTravelerNav) {
+                      context.push('/tracking/scan');
+                    } else if (isSender) {
+                      context.push('/tracking/search');
+                    } else {
+                      onTap(2);
+                    }
+                  },
                 ),
               ),
               // 3 — Messages
@@ -165,6 +204,8 @@ class _DonyBottomNav extends StatelessWidget {
           ),
         ),
       ),
+        );
+      },
     );
   }
 }
