@@ -5,6 +5,7 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -30,6 +31,23 @@ Future<void> _bootstrap() async {
   // Maintient la native splash visible jusqu'à ce que Flutter soit prêt
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await initializeDateFormatting('fr');
+
+  // Fail-fast on misconfigured release builds (a release shipped without
+  // --dart-define-from-file would silently call http://localhost and use
+  // an empty Stripe key).
+  if (!kDebugMode) {
+    if (!_apiBaseUrl.startsWith('https://')) {
+      throw StateError(
+        'API_BASE_URL must use https in release builds (got "$_apiBaseUrl")',
+      );
+    }
+    if (!_stripePublishableKey.startsWith('pk_')) {
+      throw StateError(
+        'STRIPE_PUBLISHABLE_KEY missing or malformed in release build',
+      );
+    }
+  }
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Stripe doit être initialisé avant runApp

@@ -20,8 +20,29 @@ class ApiClient {
     _dio.interceptors.add(_AuthInterceptor());
 
     if (kDebugMode) {
+      // Log only method/path/status. Bodies and headers contain Firebase
+      // ID tokens, Stripe client secrets, FCM tokens and KYC data — never
+      // dump them to logcat / Xcode console.
       _dio.interceptors.add(
-        LogInterceptor(requestBody: true, responseBody: true),
+        InterceptorsWrapper(
+          onRequest: (options, handler) {
+            debugPrint('[HTTP] → ${options.method} ${options.uri.path}');
+            handler.next(options);
+          },
+          onResponse: (response, handler) {
+            debugPrint(
+              '[HTTP] ← ${response.statusCode} ${response.requestOptions.uri.path}',
+            );
+            handler.next(response);
+          },
+          onError: (err, handler) {
+            debugPrint(
+              '[HTTP] ✗ ${err.response?.statusCode ?? 'no-response'} '
+              '${err.requestOptions.uri.path}',
+            );
+            handler.next(err);
+          },
+        ),
       );
     }
   }

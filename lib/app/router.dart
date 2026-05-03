@@ -91,8 +91,18 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/kyc/verify',
       builder: (context, state) {
-        final stripeUrl = state.extra as String;
-        return KycWebViewScreen(stripeUrl: stripeUrl);
+        final raw = state.extra;
+        if (raw is! String) {
+          return const KycOnboardingScreen();
+        }
+        final uri = Uri.tryParse(raw);
+        final host = uri?.host ?? '';
+        final isStripe = uri?.scheme == 'https' &&
+            (host == 'verify.stripe.com' || host.endsWith('.stripe.com'));
+        if (!isStripe) {
+          return const KycOnboardingScreen();
+        }
+        return KycWebViewScreen(stripeUrl: raw);
       },
     ),
     GoRoute(

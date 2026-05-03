@@ -48,7 +48,19 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
               }
               return NavigationDecision.prevent;
             }
-            return NavigationDecision.navigate;
+            // Allow only Stripe-hosted pages. Reject any other navigation
+            // (phishing, open redirect, file://, intent://, ...).
+            final uri = Uri.tryParse(request.url);
+            if (uri == null || uri.scheme != 'https') {
+              return NavigationDecision.prevent;
+            }
+            final host = uri.host;
+            final isStripe = host == 'verify.stripe.com' ||
+                host == 'stripe.com' ||
+                host.endsWith('.stripe.com');
+            return isStripe
+                ? NavigationDecision.navigate
+                : NavigationDecision.prevent;
           },
         ),
       )

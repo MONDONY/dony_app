@@ -45,7 +45,7 @@ class SavedTripsService {
         'travelerId': a.travelerId,
         'departureCity': a.departureCity,
         'arrivalCity': a.arrivalCity,
-        'departureDate': a.departureDate.toIso8601String(),
+        'departureDate': a.departureDate.toUtc().toIso8601String(),
         'departureTime': a.departureTime,
         'arrivalTime': a.arrivalTime,
         'pickupAddress': a.pickupAddress?.toJson(),
@@ -63,7 +63,7 @@ class SavedTripsService {
                 'kiloPro': a.traveler!.kiloPro,
               }
             : null,
-        'createdAt': a.createdAt.toIso8601String(),
-        'updatedAt': a.updatedAt.toIso8601String(),
+        'createdAt': a.createdAt.toUtc().toIso8601String(),
+        'updatedAt': a.updatedAt.toUtc().toIso8601String(),
       };
 }

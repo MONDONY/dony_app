@@ -32,7 +32,7 @@ class FirestoreChatRepository {
       'body': body,
       'imageUrl': null,
       'type': 'TEXT',
-      'sentAt': DateTime.now().toIso8601String(),
+      'sentAt': DateTime.now().toUtc().toIso8601String(),
       'readAt': null,
     });
   }
@@ -51,7 +51,7 @@ class FirestoreChatRepository {
       'body': null,
       'imageUrl': imageUrl,
       'type': 'IMAGE',
-      'sentAt': DateTime.now().toIso8601String(),
+      'sentAt': DateTime.now().toUtc().toIso8601String(),
       'readAt': null,
     });
   }
@@ -73,7 +73,7 @@ class FirestoreChatRepository {
       'type': 'LOCATION',
       'latitude': latitude,
       'longitude': longitude,
-      'sentAt': DateTime.now().toIso8601String(),
+      'sentAt': DateTime.now().toUtc().toIso8601String(),
       'readAt': null,
     });
   }
@@ -100,7 +100,7 @@ class FirestoreChatRepository {
 
     final batch = _firestore.batch();
     for (final doc in unread) {
-      batch.update(doc.reference, {'readAt': DateTime.now().toIso8601String()});
+      batch.update(doc.reference, {'readAt': DateTime.now().toUtc().toIso8601String()});
     }
     await batch.commit();
   }

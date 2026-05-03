@@ -51,8 +51,12 @@ class MessageModel {
   }
 
   static DateTime _parseTs(dynamic val) {
-    if (val == null) return DateTime.now();
-    if (val is String) return DateTime.tryParse(val) ?? DateTime.now();
-    return DateTime.now();
+    if (val == null) return DateTime.now().toUtc();
+    if (val is String) {
+      final parsed = DateTime.tryParse(val);
+      if (parsed == null) return DateTime.now().toUtc();
+      return parsed.isUtc ? parsed : parsed.toUtc();
+    }
+    return DateTime.now().toUtc();
   }
 }
