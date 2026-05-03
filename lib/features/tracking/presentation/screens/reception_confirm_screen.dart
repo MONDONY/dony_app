@@ -69,7 +69,7 @@ class _ReceptionConfirmScreenState extends State<ReceptionConfirmScreen> {
   }
 
   void _confirm(BuildContext context) {
-    context.go('/bids/${widget.bidId}');
+    context.push('/bids/${widget.bidId}');
   }
 
   @override

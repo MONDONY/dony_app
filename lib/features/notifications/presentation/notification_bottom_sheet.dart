@@ -177,7 +177,8 @@ class _NotificationList extends StatelessWidget {
                     final route = routeForNotification(notif);
                     if (route != null) {
                       Navigator.of(context, rootNavigator: true).pop();
-                      if (route.startsWith('/bids/')) {
+                      // Use push() for detail routes to preserve navigation stack
+                      if (route.startsWith('/bids/') || route.contains('/bids')) {
                         context.push(route);
                       } else {
                         context.go(route);
