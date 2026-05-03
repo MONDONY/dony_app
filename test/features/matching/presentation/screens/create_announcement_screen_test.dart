@@ -46,6 +46,7 @@ AnnouncementModel _editingAnnouncement({
       pickupAddress: _pickup,
       deliveryAddress: _delivery,
       availableKg: 12,
+      totalKg: 12,
       pricePerKg: 6,
       transportMode: mode,
       status: 'ACTIVE',

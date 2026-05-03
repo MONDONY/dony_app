@@ -12,6 +12,7 @@ AnnouncementModel _ann(String id, String dep, String arr) => AnnouncementModel(
       arrivalCity: arr,
       departureDate: DateTime(2026, 6, 15),
       availableKg: 8,
+      totalKg: 8,
       pricePerKg: 12,
       status: 'ACTIVE',
       createdAt: DateTime(2026, 5, 1),

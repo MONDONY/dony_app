@@ -17,6 +17,7 @@ final _announcementJson = {
   'arrivalCity': 'Dakar',
   'departureDate': '2024-06-01T00:00:00.000Z',
   'availableKg': 10.0,
+  'totalKg': 10.0,
   'pricePerKg': 12.0,
   'status': 'OPEN',
   'createdAt': '2024-05-01T00:00:00.000Z',

@@ -9,6 +9,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+enum _TripsTab { upcoming, history, cancelled }
+
 class AnnouncementListScreen extends StatefulWidget {
   const AnnouncementListScreen({super.key});
 
@@ -19,9 +21,8 @@ class AnnouncementListScreen extends StatefulWidget {
 class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
   List<AnnouncementModel> _lastList = [];
   bool _tickerWasActive = false;
+  _TripsTab _tab = _TripsTab.upcoming;
 
-  // Détecte l'activation du tab (StatefulShellRoute.indexedStack change
-  // TickerMode pour le branch inactif → actif, ce qui appelle didChangeDependencies).
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -44,52 +45,84 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
     );
   }
 
+  bool _isUpcoming(AnnouncementModel a) {
+    final today = DateUtils.dateOnly(DateTime.now());
+    final dep = DateUtils.dateOnly(a.departureDate);
+    return (a.status == 'ACTIVE' || a.status == 'FULL') && !dep.isBefore(today);
+  }
+
+  bool _isHistory(AnnouncementModel a) {
+    if (a.status == 'CANCELLED') return false;
+    if (a.status == 'COMPLETED') return true;
+    final today = DateUtils.dateOnly(DateTime.now());
+    final dep = DateUtils.dateOnly(a.departureDate);
+    return dep.isBefore(today);
+  }
+
+  List<AnnouncementModel> _filtered() {
+    final list = switch (_tab) {
+      _TripsTab.upcoming => _lastList.where(_isUpcoming).toList()
+        ..sort((a, b) => a.departureDate.compareTo(b.departureDate)),
+      _TripsTab.history => _lastList.where(_isHistory).toList()
+        ..sort((a, b) => b.departureDate.compareTo(a.departureDate)),
+      _TripsTab.cancelled =>
+        _lastList.where((a) => a.status == 'CANCELLED').toList()
+          ..sort((a, b) => b.departureDate.compareTo(a.departureDate)),
+    };
+    return list;
+  }
+
+  ({int upcoming, int history, int cancelled}) _counts() {
+    int u = 0, h = 0, c = 0;
+    for (final a in _lastList) {
+      if (a.status == 'CANCELLED') {
+        c++;
+      } else if (_isUpcoming(a)) {
+        u++;
+      } else if (_isHistory(a)) {
+        h++;
+      }
+    }
+    return (upcoming: u, history: h, cancelled: c);
+  }
+
+  String _emptyTitle() => switch (_tab) {
+        _TripsTab.upcoming => 'Aucun trajet à venir',
+        _TripsTab.history => 'Aucun historique',
+        _TripsTab.cancelled => 'Aucune annulation',
+      };
+
+  String _emptyDescription() => switch (_tab) {
+        _TripsTab.upcoming =>
+          'Publiez votre premier trajet et commencez à transporter des colis.',
+        _TripsTab.history => 'Vos trajets passés et terminés apparaîtront ici.',
+        _TripsTab.cancelled => 'Vos trajets annulés apparaîtront ici.',
+      };
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final hasAnnouncements = _lastList.isNotEmpty;
 
     return Scaffold(
-      appBar: DonyAppBar(
+      appBar: const DonyAppBar(
         title: 'Mes trajets',
         showBackButton: false,
-        actions: hasAnnouncements
-            ? [
-                Padding(
-                  padding: const EdgeInsets.only(right: DonySpacing.md),
-                  child: TextButton.icon(
-                    icon: Icon(Icons.add_rounded, size: 17, color: cs.primary),
-                    label: Text(
-                      'Nouveau trajet',
-                      style: tt.labelMedium?.copyWith(
-                        color: cs.primary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                    onPressed: () => context.push('/announcements/create'),
-                  ),
-                ),
-              ]
-            : null,
       ),
-      // FAB icône seule sur l'état vide pour permettre la création du premier trajet
-      floatingActionButton: hasAnnouncements
-          ? null
-          : FloatingActionButton(
-              heroTag: null,
-              backgroundColor: cs.primary,
-              elevation: 2,
-              onPressed: () => context.push('/announcements/create'),
-              child: Icon(Icons.add_rounded, color: cs.onPrimary),
-            ),
+      floatingActionButton: FloatingActionButton(
+        heroTag: null,
+        backgroundColor: cs.primary,
+        elevation: 2,
+        onPressed: () => context.push('/announcements/create'),
+        child: Icon(Icons.add_rounded, color: cs.onPrimary),
+      ),
       body: BlocConsumer<AnnouncementBloc, AnnouncementState>(
         listener: (context, state) {
           if (state is AnnouncementDeleted) {
             context.read<AnnouncementBloc>().add(AnnouncementListRequested());
           } else if (state is AnnouncementError && _lastList.isNotEmpty) {
-            DonySnackbar.show(context, message: state.message, type: DonySnackbarType.error);
+            DonySnackbar.show(context,
+                message: state.message, type: DonySnackbarType.error);
             context.read<AnnouncementBloc>().add(AnnouncementListRequested());
           }
         },
@@ -100,152 +133,106 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
 
           if ((state is AnnouncementLoading || state is AnnouncementInitial) &&
               _lastList.isEmpty) {
-            return Center(
-              child: CircularProgressIndicator(color: cs.primary),
-            );
+            return Center(child: CircularProgressIndicator(color: cs.primary));
           }
 
           if (state is AnnouncementError && _lastList.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(DonySpacing.xxl),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.wifi_off_rounded, size: 56, color: cs.outline),
-                    const SizedBox(height: DonySpacing.base),
-                    Text(
-                      'Impossible de charger vos trajets',
-                      style: tt.titleLarge?.copyWith(color: cs.onSurface),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: DonySpacing.sm),
-                    Text(
-                      state.message,
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: DonySpacing.xl),
-                    OutlinedButton.icon(
-                      icon: const Icon(Icons.refresh_rounded),
-                      label: const Text('Réessayer'),
-                      onPressed: () =>
-                          context.read<AnnouncementBloc>().add(AnnouncementListRequested()),
-                    ),
-                  ],
-                ),
-              ),
-            );
+            return _ErrorView(message: state.message);
           }
 
-          final list = _lastList;
+          final counts = _counts();
+          final filtered = _filtered();
 
-          if (list.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(DonySpacing.xxl),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(DonySpacing.xl),
-                      decoration: BoxDecoration(
-                        color: cs.primaryContainer,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.flight_takeoff_rounded,
-                        size: 48,
+          return Column(
+            children: [
+              _TabBar(
+                current: _tab,
+                upcomingCount: counts.upcoming,
+                historyCount: counts.history,
+                cancelledCount: counts.cancelled,
+                onChanged: (t) => setState(() => _tab = t),
+              ),
+              Expanded(
+                child: filtered.isEmpty
+                    ? _EmptyView(
+                        title: _emptyTitle(),
+                        description: _emptyDescription(),
+                      )
+                    : RefreshIndicator(
                         color: cs.primary,
-                      ),
-                    ),
-                    const SizedBox(height: DonySpacing.lg),
-                    Text(
-                      'Aucun trajet publié',
-                      style: tt.headlineMedium?.copyWith(color: cs.onSurface),
-                    ),
-                    const SizedBox(height: DonySpacing.sm),
-                    Text(
-                      'Publiez votre premier trajet et commencez à transporter des colis.',
-                      style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            ).animate().fadeIn();
-          }
-
-          return RefreshIndicator(
-            color: cs.primary,
-            onRefresh: () async =>
-                context.read<AnnouncementBloc>().add(AnnouncementListRequested()),
-            child: ListView.separated(
-              padding: EdgeInsets.fromLTRB(
-                DonyLayout.hPadding(context), DonySpacing.lg, DonyLayout.hPadding(context), 100,
-              ),
-              itemCount: list.length,
-              separatorBuilder: (_, __) => const SizedBox(height: DonySpacing.md),
-              itemBuilder: (context, index) {
-                final item = list[index];
-                final isCancelled = item.status == 'CANCELLED';
-
-                return Dismissible(
-                  key: ValueKey(item.id),
-                  direction: isCancelled
-                      ? DismissDirection.endToStart
-                      : DismissDirection.none,
-                  confirmDismiss: isCancelled
-                      ? (_) => _confirmDeleteDialog(context)
-                      : null,
-                  onDismissed: (_) {
-                    context
-                        .read<AnnouncementBloc>()
-                        .add(AnnouncementDeleteRequested(item.id));
-                  },
-                  background: Container(
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: DonySpacing.xl),
-                    decoration: BoxDecoration(
-                      color: cs.error,
-                      borderRadius: BorderRadius.circular(DonyRadius.card),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.delete_rounded, color: cs.onError, size: 26),
-                        const SizedBox(height: DonySpacing.xs),
-                        Text(
-                          'Supprimer',
-                          style: tt.labelMedium?.copyWith(
-                            color: cs.onError,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  child: _AnnouncementCard(
-                    departureCity: item.departureCity,
-                    arrivalCity: item.arrivalCity,
-                    departureDate: item.departureDate,
-                    availableKg: item.availableKg,
-                    pricePerKg: item.pricePerKg,
-                    status: item.status,
-                    bidsCount: item.bidsCount ?? 0,
-                    onTap: () async {
-                      await context.push('/announcements/${item.id}');
-                      if (context.mounted) {
-                        context
+                        onRefresh: () async => context
                             .read<AnnouncementBloc>()
-                            .add(AnnouncementListRequested());
-                      }
-                    },
-                    index: index,
-                  ),
-                );
-              },
-            ),
+                            .add(AnnouncementListRequested()),
+                        child: ListView.separated(
+                          padding: EdgeInsets.fromLTRB(
+                            DonyLayout.hPadding(context),
+                            DonySpacing.md,
+                            DonyLayout.hPadding(context),
+                            100,
+                          ),
+                          itemCount: filtered.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: DonySpacing.md),
+                          itemBuilder: (context, index) {
+                            final item = filtered[index];
+                            final isCancelled = item.status == 'CANCELLED';
+
+                            return Dismissible(
+                              key: ValueKey(item.id),
+                              direction: isCancelled
+                                  ? DismissDirection.endToStart
+                                  : DismissDirection.none,
+                              confirmDismiss: isCancelled
+                                  ? (_) => _confirmDeleteDialog(context)
+                                  : null,
+                              onDismissed: (_) {
+                                context
+                                    .read<AnnouncementBloc>()
+                                    .add(AnnouncementDeleteRequested(item.id));
+                              },
+                              background: Container(
+                                alignment: Alignment.centerRight,
+                                padding: const EdgeInsets.only(
+                                    right: DonySpacing.xl),
+                                decoration: BoxDecoration(
+                                  color: cs.error,
+                                  borderRadius:
+                                      BorderRadius.circular(DonyRadius.card),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.delete_rounded,
+                                        color: cs.onError, size: 26),
+                                    const SizedBox(height: DonySpacing.xs),
+                                    Text(
+                                      'Supprimer',
+                                      style: tt.labelMedium?.copyWith(
+                                        color: cs.onError,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              child: _AnnouncementCard(
+                                announcement: item,
+                                index: index,
+                                onTap: () async {
+                                  await context.push('/announcements/${item.id}');
+                                  if (context.mounted) {
+                                    context
+                                        .read<AnnouncementBloc>()
+                                        .add(AnnouncementListRequested());
+                                  }
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+              ),
+            ],
           );
         },
       ),
@@ -253,30 +240,239 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
   }
 }
 
+class _TabBar extends StatelessWidget {
+  final _TripsTab current;
+  final int upcomingCount;
+  final int historyCount;
+  final int cancelledCount;
+  final ValueChanged<_TripsTab> onChanged;
+
+  const _TabBar({
+    required this.current,
+    required this.upcomingCount,
+    required this.historyCount,
+    required this.cancelledCount,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        DonyLayout.hPadding(context),
+        DonySpacing.md,
+        DonyLayout.hPadding(context),
+        DonySpacing.xs,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(DonyRadius.xl),
+        ),
+        padding: const EdgeInsets.all(4),
+        child: Row(
+          children: [
+            _TabSegment(
+              label: 'À venir',
+              count: upcomingCount,
+              selected: current == _TripsTab.upcoming,
+              onTap: () => onChanged(_TripsTab.upcoming),
+            ),
+            _TabSegment(
+              label: 'Historique',
+              count: historyCount,
+              selected: current == _TripsTab.history,
+              onTap: () => onChanged(_TripsTab.history),
+            ),
+            _TabSegment(
+              label: 'Annulés',
+              count: cancelledCount,
+              selected: current == _TripsTab.cancelled,
+              onTap: () => onChanged(_TripsTab.cancelled),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TabSegment extends StatelessWidget {
+  final String label;
+  final int count;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _TabSegment({
+    required this.label,
+    required this.count,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(vertical: 9),
+          decoration: BoxDecoration(
+            color: selected ? cs.surface : Colors.transparent,
+            borderRadius: BorderRadius.circular(DonyRadius.lg),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: DonyColors.shadow,
+                      blurRadius: 6,
+                      offset: const Offset(0, 1),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                style: tt.labelMedium?.copyWith(
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  color: selected ? cs.primary : cs.onSurfaceVariant,
+                ),
+              ),
+              if (count > 0) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? cs.primary.withValues(alpha: 0.12)
+                        : cs.surface,
+                    borderRadius: BorderRadius.circular(DonyRadius.sm),
+                  ),
+                  child: Text(
+                    '$count',
+                    style: tt.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: selected ? cs.primary : cs.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ErrorView extends StatelessWidget {
+  final String message;
+  const _ErrorView({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(DonySpacing.xxl),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.wifi_off_rounded, size: 56, color: cs.outline),
+            const SizedBox(height: DonySpacing.base),
+            Text(
+              'Impossible de charger vos trajets',
+              style: tt.titleLarge?.copyWith(color: cs.onSurface),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            Text(
+              message,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: DonySpacing.xl),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Réessayer'),
+              onPressed: () => context
+                  .read<AnnouncementBloc>()
+                  .add(AnnouncementListRequested()),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyView extends StatelessWidget {
+  final String title;
+  final String description;
+  const _EmptyView({required this.title, required this.description});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(DonySpacing.xxl),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(DonySpacing.xl),
+              decoration: BoxDecoration(
+                color: cs.primaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.flight_takeoff_rounded,
+                size: 48,
+                color: cs.primary,
+              ),
+            ),
+            const SizedBox(height: DonySpacing.lg),
+            Text(
+              title,
+              style: tt.headlineMedium?.copyWith(color: cs.onSurface),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            Text(
+              description,
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn();
+  }
+}
+
 class _AnnouncementCard extends StatelessWidget {
-  final String departureCity;
-  final String arrivalCity;
-  final DateTime departureDate;
-  final double availableKg;
-  final double pricePerKg;
-  final String status;
-  final int bidsCount;
+  final AnnouncementModel announcement;
   final VoidCallback onTap;
   final int index;
 
   const _AnnouncementCard({
-    required this.departureCity,
-    required this.arrivalCity,
-    required this.departureDate,
-    required this.availableKg,
-    required this.pricePerKg,
-    required this.status,
-    required this.bidsCount,
+    required this.announcement,
     required this.onTap,
     required this.index,
   });
 
-  DonyBadgeType get _badgeType => switch (status) {
+  DonyBadgeType get _badgeType => switch (announcement.status) {
         'ACTIVE' => DonyBadgeType.success,
         'FULL' => DonyBadgeType.warning,
         'COMPLETED' => DonyBadgeType.info,
@@ -284,19 +480,34 @@ class _AnnouncementCard extends StatelessWidget {
         _ => DonyBadgeType.info,
       };
 
-  String get _statusLabel => switch (status) {
+  String get _statusLabel => switch (announcement.status) {
         'ACTIVE' => 'Actif',
         'FULL' => 'Complet',
         'COMPLETED' => 'Terminé',
         'CANCELLED' => 'Annulé',
-        _ => status,
+        _ => announcement.status,
       };
+
+  String _formatDate(DateTime date) {
+    final today = DateUtils.dateOnly(DateTime.now());
+    final d = DateUtils.dateOnly(date);
+    final diff = d.difference(today).inDays;
+    if (diff == 0) return "Aujourd'hui";
+    if (diff == 1) return 'Demain';
+    if (diff > 1 && diff <= 6) return 'Dans $diff jours';
+    return DateFormat('EEE d MMM yyyy', 'fr').format(date);
+  }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final dateStr = DateFormat('EEE d MMM yyyy', 'fr').format(departureDate);
+    final dateLabel = _formatDate(announcement.departureDate);
+    final total = announcement.totalKg;
+    final remaining = announcement.availableKg;
+    final booked = (total - remaining).clamp(0, total);
+    final progress = total > 0 ? (booked / total).clamp(0.0, 1.0) : 0.0;
+    final bidsCount = announcement.bidsCount ?? 0;
 
     return GestureDetector(
       onTap: onTap,
@@ -315,136 +526,144 @@ class _AnnouncementCard extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.all(14),
-          child: Row(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Icône trajet (remplace l'avatar dans la vue expéditeur)
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [DonyColors.blue700, cs.primary],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [DonyColors.blue700, cs.primary],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.flight_takeoff_rounded,
+                        color: cs.onPrimary,
+                        size: 20,
+                      ),
+                    ),
                   ),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.flight_takeoff_rounded,
-                    color: cs.onPrimary,
-                    size: 20,
+                  const SizedBox(width: DonySpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '${announcement.departureCity} → ${announcement.arrivalCity}',
+                                style: tt.titleMedium?.copyWith(
+                                  color: cs.onSurface,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: DonySpacing.sm),
+                            DonyBadge(label: _statusLabel, type: _badgeType),
+                          ],
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          dateLabel,
+                          style: tt.bodySmall
+                              ?.copyWith(color: cs.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Barre de remplissage : booked / total
+              ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 6,
+                  backgroundColor: cs.surfaceContainerHighest,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    progress >= 1.0
+                        ? DonyColors.violet
+                        : cs.primary,
                   ),
                 ),
               ),
-              const SizedBox(width: DonySpacing.md),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Ligne 1 : route + badge statut
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            '$departureCity → $arrivalCity',
-                            style: tt.titleMedium?.copyWith(
-                              color: cs.onSurface,
+              const SizedBox(height: 6),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${booked.toStringAsFixed(0)} kg réservés sur ${total.toStringAsFixed(0)} kg',
+                    style: tt.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    '${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
+                    style: tt.bodySmall?.copyWith(
+                      color: cs.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  if (bidsCount > 0)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: DonyColors.violetLight,
+                        borderRadius: BorderRadius.circular(DonyRadius.sm),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.inbox_rounded,
+                              size: 12, color: DonyColors.violet),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$bidsCount demande${bidsCount > 1 ? 's' : ''}',
+                            style: tt.labelSmall?.copyWith(
                               fontWeight: FontWeight.w700,
+                              color: DonyColors.violet,
                             ),
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        const SizedBox(width: DonySpacing.sm),
-                        DonyBadge(label: _statusLabel, type: _badgeType),
-                      ],
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 3),
-
-                    // Ligne 2 : date
-                    Text(
-                      dateStr,
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      borderRadius: BorderRadius.circular(DonyRadius.sm),
+                      border: Border.all(color: cs.primary),
                     ),
-                    const SizedBox(height: 10),
-
-                    // Ligne 3 : capacité + prix + demandes + gérer
-                    Row(
-                      children: [
-                        // Chips à gauche : flexibles pour ne pas déborder
-                        Flexible(
-                          child: Wrap(
-                            spacing: 6,
-                            runSpacing: 4,
-                            children: [
-                              _InfoChip(
-                                icon: Icons.scale_rounded,
-                                label: '${availableKg.toStringAsFixed(0)} kg',
-                              ),
-                              _InfoChip(
-                                icon: Icons.euro_rounded,
-                                label: '${pricePerKg.toStringAsFixed(0)}/kg',
-                                highlight: true,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: DonySpacing.sm),
-                        // Badge demandes + bouton Gérer ancrés à droite
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (bidsCount > 0) ...[
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 7, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: DonyColors.violetLight,
-                                  borderRadius: BorderRadius.circular(DonyRadius.sm),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.inbox_rounded,
-                                        size: 11, color: DonyColors.violet),
-                                    const SizedBox(width: 3),
-                                    Text(
-                                      '$bidsCount',
-                                      style: tt.labelSmall?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        color: DonyColors.violet,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                            ],
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: cs.surface,
-                                borderRadius: BorderRadius.circular(DonyRadius.sm),
-                                border: Border.all(color: cs.primary),
-                              ),
-                              child: Text(
-                                'Gérer →',
-                                style: tt.labelMedium?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: cs.primary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                    child: Text(
+                      'Gérer →',
+                      style: tt.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: cs.primary,
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -452,44 +671,6 @@ class _AnnouncementCard extends StatelessWidget {
       ).animate().fadeIn(
             delay: Duration(milliseconds: 60 * index),
           ).slideY(begin: 0.04, curve: Curves.easeOutCubic),
-    );
-  }
-}
-
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool highlight;
-
-  const _InfoChip({required this.icon, required this.label, this.highlight = false});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: 5),
-      decoration: BoxDecoration(
-        color: highlight ? cs.primaryContainer : cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.sm),
-        border: highlight ? null : Border.all(color: cs.outline),
-      ),
-      child: Row(
-        children: [
-          Icon(icon,
-              size: 13,
-              color: highlight ? cs.primary : cs.onSurfaceVariant),
-          const SizedBox(width: DonySpacing.xs),
-          Text(
-            label,
-            style: tt.bodySmall?.copyWith(
-              fontWeight: FontWeight.w500,
-              color: highlight ? cs.primary : cs.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -32,6 +32,7 @@ final _testAnnouncement = AnnouncementModel(
   arrivalCity: 'Dakar',
   departureDate: DateTime(2026, 6, 15),
   availableKg: 10,
+  totalKg: 10,
   pricePerKg: 8,
   status: 'ACTIVE',
   createdAt: DateTime(2026, 1, 1),
