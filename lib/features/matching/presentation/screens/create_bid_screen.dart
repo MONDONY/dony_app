@@ -301,7 +301,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       await Stripe.instance.presentPaymentSheet();
 
       if (!context.mounted) return;
-      context.go('/bids/${state.bidId}');
+      context.push('/bids/${state.bidId}');
     } on StripeException catch (e) {
       if (e.error.code == FailureCode.Canceled) {
         _showError('Paiement annulé');
