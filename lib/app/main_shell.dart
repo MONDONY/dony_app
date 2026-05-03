@@ -172,19 +172,34 @@ class _DonyBottomNav extends StatelessWidget {
               ),
               // 3 — Messages
               Expanded(
-                child: StreamBuilder<int>(
-                  stream: getIt<FirestoreChatRepository>().totalUnreadStream(
-                    FirebaseAuth.instance.currentUser?.uid ?? '',
-                  ),
-                  builder: (context, snapshot) {
-                    return _NavItem(
+                child: Builder(
+                  builder: (context) {
+                    final uid = FirebaseAuth.instance.currentUser?.uid;
+                    final messagesItem = _NavItem(
                       icon: Icons.chat_bubble_rounded,
                       outlinedIcon: Icons.chat_bubble_outline_rounded,
                       label: 'Messages',
                       index: 3,
                       currentIndex: currentIndex,
                       onTap: () => onTap(3),
-                      badgeCount: snapshot.data ?? 0,
+                    );
+                    if (uid == null || uid.isEmpty) {
+                      // Pendant le sign-out : pas de stream Firestore (path vide invalide).
+                      return messagesItem;
+                    }
+                    return StreamBuilder<int>(
+                      stream: getIt<FirestoreChatRepository>().totalUnreadStream(uid),
+                      builder: (context, snapshot) {
+                        return _NavItem(
+                          icon: Icons.chat_bubble_rounded,
+                          outlinedIcon: Icons.chat_bubble_outline_rounded,
+                          label: 'Messages',
+                          index: 3,
+                          currentIndex: currentIndex,
+                          onTap: () => onTap(3),
+                          badgeCount: snapshot.data ?? 0,
+                        );
+                      },
                     );
                   },
                 ),
