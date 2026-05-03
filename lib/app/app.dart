@@ -7,8 +7,10 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
+import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -59,6 +61,12 @@ class _DonyAppState extends State<DonyApp> {
           ),
           BlocProvider<AnnouncementBloc>(
             create: (_) => getIt<AnnouncementBloc>(),
+          ),
+          BlocProvider<BidBloc>(
+            create: (_) => getIt<BidBloc>(),
+          ),
+          BlocProvider<PaymentBloc>(
+            create: (_) => getIt<PaymentBloc>(),
           ),
           BlocProvider<NotificationBloc>(
             create: (_) => getIt<NotificationBloc>(),

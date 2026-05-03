@@ -4,8 +4,10 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/create_bid_screen.dart';
+import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,6 +19,9 @@ import 'package:mocktail/mocktail.dart';
 
 class MockBidBloc extends MockBloc<BidEvent, BidState>
     implements BidBloc {}
+
+class MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
+    implements PaymentBloc {}
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -51,7 +56,7 @@ final _testBid = BidModel(
 
 // ── Builder ───────────────────────────────────────────────────────────────────
 
-Widget _buildScreen(MockBidBloc bidBloc) {
+Widget _buildScreen(MockBidBloc bidBloc, MockPaymentBloc paymentBloc) {
   final router = GoRouter(
     initialLocation: '/',
     routes: [
@@ -60,14 +65,15 @@ Widget _buildScreen(MockBidBloc bidBloc) {
         builder: (ctx, state) => MultiBlocProvider(
           providers: [
             BlocProvider<BidBloc>.value(value: bidBloc),
+            BlocProvider<PaymentBloc>.value(value: paymentBloc),
           ],
           child: CreateBidScreen(announcement: _testAnnouncement),
         ),
       ),
       GoRoute(
-        path: '/payments/pay',
-        builder: (_, __) =>
-            const Scaffold(body: Center(child: Text('Payment screen'))),
+        path: '/bids/:id',
+        builder: (_, state) =>
+            const Scaffold(body: Center(child: Text('Bid detail screen'))),
       ),
     ],
   );
@@ -82,11 +88,11 @@ const _kSettle = Duration(milliseconds: 600);
 
 // Pumps the screen with a tall viewport (1400px) so the full form — including
 // the DisclaimerCard near the bottom — is always visible without scrolling.
-Future<void> _pumpScreen(WidgetTester tester, MockBidBloc bidBloc) async {
+Future<void> _pumpScreen(WidgetTester tester, MockBidBloc bidBloc, MockPaymentBloc paymentBloc) async {
   tester.view.physicalSize = const Size(800, 1400);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.reset);
-  await tester.pumpWidget(_buildScreen(bidBloc));
+  await tester.pumpWidget(_buildScreen(bidBloc, paymentBloc));
   await tester.pump(_kSettle);
 }
 
@@ -103,11 +109,12 @@ Future<void> _enableSubmit(WidgetTester tester) async {
 
 void main() {
   late MockBidBloc bidBloc;
+  late MockPaymentBloc paymentBloc;
 
   setUpAll(() async {
     await initializeDateFormatting('fr');
     registerFallbackValue(BidInitial());
-    registerFallbackValue(BidCreateRequested(
+    registerFallbackValue(BidCheckoutRequested(
       announcementId: '',
       weightKg: 0,
       declaredValueEur: 0,
@@ -116,16 +123,27 @@ void main() {
       recipientName: '',
       recipientPhone: '',
     ));
+    registerFallbackValue(PaymentInitial());
+    registerFallbackValue(BidCheckoutPaymentRequested(
+      clientSecret: '',
+      publishableKey: '',
+      bidId: '',
+    ));
   });
 
   setUp(() {
     bidBloc = MockBidBloc();
     when(() => bidBloc.state).thenReturn(BidInitial());
     when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
+
+    paymentBloc = MockPaymentBloc();
+    when(() => paymentBloc.state).thenReturn(const PaymentInitial());
+    when(() => paymentBloc.stream).thenAnswer((_) => const Stream.empty());
   });
 
   tearDown(() {
     bidBloc.close();
+    paymentBloc.close();
   });
 
   // ── 1. Rendu initial ──────────────────────────────────────────────────────
@@ -133,7 +151,7 @@ void main() {
   group('Rendu initial', () {
     testWidgets('affiche le titre et les sections du formulaire',
         (tester) async {
-      await _pumpScreen(tester, bidBloc);
+      await _pumpScreen(tester, bidBloc, paymentBloc);
 
       expect(find.text("Demande d'envoi"), findsOneWidget);
       expect(find.text('POIDS ESTIMÉ'), findsOneWidget);
@@ -144,13 +162,13 @@ void main() {
     });
 
     testWidgets('affiche le nom du voyageur dans l\'appbar', (tester) async {
-      await _pumpScreen(tester, bidBloc);
+      await _pumpScreen(tester, bidBloc, paymentBloc);
 
       expect(find.textContaining('Ibrahima Diallo'), findsOneWidget);
     });
 
     testWidgets('affiche les 7 chips de catégorie', (tester) async {
-      await _pumpScreen(tester, bidBloc);
+      await _pumpScreen(tester, bidBloc, paymentBloc);
 
       for (final cat in [
         'Vêtements',
@@ -167,7 +185,7 @@ void main() {
 
     testWidgets('bouton désactivé sans catégorie ni disclaimer',
         (tester) async {
-      await _pumpScreen(tester, bidBloc);
+      await _pumpScreen(tester, bidBloc, paymentBloc);
 
       final button =
           tester.widget<FilledButton>(find.byType(FilledButton).last);
@@ -176,7 +194,7 @@ void main() {
 
     testWidgets('affiche la section de prix (Total + Frais de service)',
         (tester) async {
-      await _pumpScreen(tester, bidBloc);
+      await _pumpScreen(tester, bidBloc, paymentBloc);
 
       expect(find.text('Total'), findsOneWidget);
       expect(find.text('Frais de service'), findsOneWidget);
@@ -202,7 +220,10 @@ void main() {
               GoRoute(
                 path: 'bid',
                 builder: (ctx, state) => MultiBlocProvider(
-                  providers: [BlocProvider<BidBloc>.value(value: bidBloc)],
+                  providers: [
+                    BlocProvider<BidBloc>.value(value: bidBloc),
+                    BlocProvider<PaymentBloc>.value(value: paymentBloc),
+                  ],
                   child: CreateBidScreen(announcement: _testAnnouncement),
                 ),
               ),
@@ -226,7 +247,7 @@ void main() {
     });
 
     testWidgets('slider poids → met à jour le poids estimé', (tester) async {
-      await _pumpScreen(tester, bidBloc);
+      await _pumpScreen(tester, bidBloc, paymentBloc);
 
       await tester.drag(find.byType(Slider), const Offset(100, 0));
       await tester.pump();
@@ -241,7 +262,7 @@ void main() {
   group('Sélection catégorie', () {
     testWidgets('tap une catégorie → chip sélectionné (icône check)',
         (tester) async {
-      await _pumpScreen(tester, bidBloc);
+      await _pumpScreen(tester, bidBloc, paymentBloc);
 
       await tester.tap(find.text('Médicaments'));
       await tester.pump();
@@ -251,7 +272,7 @@ void main() {
 
     testWidgets('double-tap sur même catégorie → chip désélectionné',
         (tester) async {
-      await _pumpScreen(tester, bidBloc);
+      await _pumpScreen(tester, bidBloc, paymentBloc);
 
       await tester.tap(find.text('Documents'));
       await tester.pump();
@@ -262,7 +283,7 @@ void main() {
     });
 
     testWidgets('sélection multiple → plusieurs icônes check', (tester) async {
-      await _pumpScreen(tester, bidBloc);
+      await _pumpScreen(tester, bidBloc, paymentBloc);
 
       await tester.tap(find.text('Vêtements'));
       await tester.pump();
@@ -278,7 +299,7 @@ void main() {
   group('Disclaimer card', () {
     testWidgets('cocher disclaimer seul ne suffit pas (bouton reste désactivé)',
         (tester) async {
-      await _pumpScreen(tester, bidBloc);
+      await _pumpScreen(tester, bidBloc, paymentBloc);
 
       await tester.tap(find.byType(Checkbox).first);
       await tester.pump();
@@ -289,7 +310,7 @@ void main() {
     });
 
     testWidgets('catégorie + disclaimer → bouton activé', (tester) async {
-      await _pumpScreen(tester, bidBloc);
+      await _pumpScreen(tester, bidBloc, paymentBloc);
 
       await _enableSubmit(tester);
 
@@ -300,7 +321,7 @@ void main() {
 
     testWidgets('tap texte disclaimer → accepte via GestureDetector',
         (tester) async {
-      await _pumpScreen(tester, bidBloc);
+      await _pumpScreen(tester, bidBloc, paymentBloc);
 
       // Tap on the label text triggers GestureDetector.onTap (not Checkbox)
       await tester.tap(find.text('Je signe & j\'accepte'));
@@ -316,7 +337,7 @@ void main() {
   group('Validation — messages d\'erreur', () {
     testWidgets('description vide → snackbar "Description obligatoire"',
         (tester) async {
-      await _pumpScreen(tester, bidBloc);
+      await _pumpScreen(tester, bidBloc, paymentBloc);
 
       await _enableSubmit(tester);
       await tester.tap(find.textContaining('Bloquer'));
@@ -327,7 +348,7 @@ void main() {
 
     testWidgets('valeur vide → snackbar "Valeur déclarée invalide"',
         (tester) async {
-      await _pumpScreen(tester, bidBloc);
+      await _pumpScreen(tester, bidBloc, paymentBloc);
 
       await _enableSubmit(tester);
       await tester.enterText(find.byType(TextField).at(0), 'Test');
@@ -341,7 +362,7 @@ void main() {
 
     testWidgets('valeur > 500€ → snackbar "Valeur maximum : 500 €"',
         (tester) async {
-      await _pumpScreen(tester, bidBloc);
+      await _pumpScreen(tester, bidBloc, paymentBloc);
 
       await _enableSubmit(tester);
       await tester.enterText(find.byType(TextField).at(0), 'Vêtements test');
@@ -356,7 +377,7 @@ void main() {
     });
 
     testWidgets('nom destinataire vide → snackbar d\'erreur', (tester) async {
-      await _pumpScreen(tester, bidBloc);
+      await _pumpScreen(tester, bidBloc, paymentBloc);
 
       await _enableSubmit(tester);
       await tester.enterText(find.byType(TextField).at(0), 'Test description');
@@ -372,7 +393,7 @@ void main() {
 
     testWidgets('téléphone destinataire vide → snackbar d\'erreur',
         (tester) async {
-      await _pumpScreen(tester, bidBloc);
+      await _pumpScreen(tester, bidBloc, paymentBloc);
 
       await _enableSubmit(tester);
       await tester.enterText(find.byType(TextField).at(0), 'Test description');
@@ -394,7 +415,7 @@ void main() {
   group('Soumission valide', () {
     testWidgets('formulaire complet → BidCreateRequested dispatché',
         (tester) async {
-      await _pumpScreen(tester, bidBloc);
+      await _pumpScreen(tester, bidBloc, paymentBloc);
 
       await _enableSubmit(tester);
       await tester.enterText(find.byType(TextField).at(0), 'Vêtements famille');
@@ -410,7 +431,7 @@ void main() {
       await tester.tap(find.textContaining('Bloquer'));
       await tester.pump();
 
-      verify(() => bidBloc.add(any(that: isA<BidCreateRequested>()))).called(1);
+      verify(() => bidBloc.add(any(that: isA<BidCheckoutRequested>()))).called(1);
     });
   });
 
@@ -420,7 +441,7 @@ void main() {
     testWidgets('BidLoading → bouton affiche spinner (désactivé)',
         (tester) async {
       when(() => bidBloc.state).thenReturn(BidLoading());
-      await _pumpScreen(tester, bidBloc);
+      await _pumpScreen(tester, bidBloc, paymentBloc);
 
       // isLoading = true → DonyButton shows CircularProgressIndicator
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -430,20 +451,29 @@ void main() {
       expect(button.onPressed, isNull);
     });
 
-    testWidgets('BidCreated → navigue vers /payments/pay', (tester) async {
+    testWidgets('BidCheckoutReady → triggers PaymentBloc', (tester) async {
       tester.view.physicalSize = const Size(800, 1400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
+
+      final checkoutResponse = BidCheckoutResponseModel(
+        bidId: 'bid-1',
+        clientSecret: 'pi_test_secret',
+        publishableKey: 'pk_test_123',
+        expiresAt: DateTime.now().add(const Duration(minutes: 15)),
+      );
+
       whenListen<BidState>(
         bidBloc,
-        Stream.fromIterable([BidCreated(_testBid)]),
+        Stream.fromIterable([BidCheckoutReady(checkoutResponse)]),
         initialState: BidInitial(),
       );
 
-      await tester.pumpWidget(_buildScreen(bidBloc));
+      await tester.pumpWidget(_buildScreen(bidBloc, paymentBloc));
       await tester.pumpAndSettle();
 
-      expect(find.text('Payment screen'), findsOneWidget);
+      // Verify PaymentBloc received BidCheckoutPaymentRequested event
+      verify(() => paymentBloc.add(any(that: isA<BidCheckoutPaymentRequested>()))).called(1);
     });
 
     testWidgets('BidError → affiche message d\'erreur via snackbar',
@@ -457,7 +487,7 @@ void main() {
         initialState: BidInitial(),
       );
 
-      await tester.pumpWidget(_buildScreen(bidBloc));
+      await tester.pumpWidget(_buildScreen(bidBloc, paymentBloc));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
