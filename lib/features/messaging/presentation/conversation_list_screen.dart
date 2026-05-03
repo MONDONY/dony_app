@@ -245,14 +245,16 @@ class _ConversationTile extends StatelessWidget {
   }
 
   String _formatTime(DateTime dt) {
+    // Server timestamps arrive as UTC — display in the user's local zone.
+    final local = dt.isUtc ? dt.toLocal() : dt;
     final now = DateTime.now();
-    final diff = now.difference(dt);
+    final diff = now.difference(local);
     if (diff.inMinutes < 1) return 'maintenant';
     final isToday =
-        now.year == dt.year && now.month == dt.month && now.day == dt.day;
-    if (isToday) return DateFormat('HH:mm').format(dt);
-    if (diff.inDays < 7) return DateFormat('EEE', 'fr').format(dt);
-    return DateFormat('d MMM', 'fr').format(dt);
+        now.year == local.year && now.month == local.month && now.day == local.day;
+    if (isToday) return DateFormat('HH:mm').format(local);
+    if (diff.inDays < 7) return DateFormat('EEE', 'fr').format(local);
+    return DateFormat('d MMM', 'fr').format(local);
   }
 }
 

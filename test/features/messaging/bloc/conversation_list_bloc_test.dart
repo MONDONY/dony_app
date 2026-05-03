@@ -85,6 +85,37 @@ void main() {
     );
 
     blocTest<ConversationListBloc, ConversationListState>(
+      'ConversationDeleteRequested removes the conversation locally and calls API',
+      build: () {
+        when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
+        when(() => firestoreRepo.perConversationUnreadStream(any()))
+            .thenAnswer((_) => const Stream.empty());
+        when(() => firestoreRepo.markConversationRead(any(), any()))
+            .thenAnswer((_) async {});
+        when(() => convRepo.deleteConversation(any())).thenAnswer((_) async {});
+        return ConversationListBloc(convRepo, firestoreRepo);
+      },
+      act: (b) async {
+        b.add(const ConversationsLoadRequested());
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        b.add(const ConversationDeleteRequested('conv-1'));
+      },
+      verify: (_) {
+        // Backend deletion still happens.
+        verify(() => convRepo.deleteConversation('conv-1')).called(1);
+      },
+      expect: () => [
+        isA<ConversationListLoading>(),
+        isA<ConversationListLoaded>(),
+        isA<ConversationListLoaded>().having(
+          (s) => s.conversations.length,
+          'conversations.length',
+          0,
+        ),
+      ],
+    );
+
+    blocTest<ConversationListBloc, ConversationListState>(
       'ConversationsUnreadUpdated does nothing when no conversations loaded',
       build: () {
         when(() => convRepo.getConversations()).thenAnswer((_) async => []);

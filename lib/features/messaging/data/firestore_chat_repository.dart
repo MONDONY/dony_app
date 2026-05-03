@@ -106,11 +106,25 @@ class FirestoreChatRepository {
   }
 
   Stream<int> totalUnreadStream(String currentUserUid) {
+    // Compute the total from per-conversation `unread_*` fields rather than
+    // the stored `totalUnreadMessages` aggregate. The aggregate can drift
+    // (e.g. when a conversation is deleted while still holding unread
+    // messages), so summing the source-of-truth fields self-heals the badge.
     return _firestore
         .collection('userMeta')
         .doc(currentUserUid)
         .snapshots()
-        .map((doc) => (doc.data()?['totalUnreadMessages'] as int?) ?? 0);
+        .map((doc) {
+      final data = doc.data();
+      if (data == null) return 0;
+      var total = 0;
+      for (final entry in data.entries) {
+        if (!entry.key.startsWith('unread_')) continue;
+        final value = entry.value;
+        if (value is num && value > 0) total += value.toInt();
+      }
+      return total;
+    });
   }
 
   Stream<Map<String, int>> perConversationUnreadStream(String currentUserUid) {
@@ -139,6 +153,37 @@ class FirestoreChatRepository {
         .doc(firestoreConversationId)
         .snapshots()
         .map((snap) => snap.data()?['deletedAt'] != null);
+  }
+
+  /// Zero out per-conversation unread counters whose firestoreConversationId
+  /// is not in [validFirestoreIds]. Used after loading the conversation list
+  /// to self-heal stale `unread_*` fields left behind by deletions that
+  /// happened before the cleanup logic was in place.
+  Future<void> cleanupOrphanUnreadCounters({
+    required String currentUserUid,
+    required Set<String> validFirestoreIds,
+  }) async {
+    if (currentUserUid.isEmpty) return;
+    final docRef = _firestore.collection('userMeta').doc(currentUserUid);
+    final snap = await docRef.get();
+    final data = snap.data();
+    if (data == null) return;
+
+    final updates = <String, Object?>{};
+    for (final entry in data.entries) {
+      if (!entry.key.startsWith('unread_')) continue;
+      final value = entry.value;
+      if (value is! num || value <= 0) continue;
+      final convId = entry.key.substring('unread_'.length);
+      if (!validFirestoreIds.contains(convId)) {
+        updates[entry.key] = 0;
+      }
+    }
+    if (updates.isEmpty) return;
+    // Reset `totalUnreadMessages` too — it will be recomputed by future writes,
+    // and `totalUnreadStream` no longer reads it directly.
+    updates['totalUnreadMessages'] = 0;
+    await docRef.update(updates);
   }
 
   Future<void> markConversationRead(

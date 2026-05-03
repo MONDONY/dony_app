@@ -4,6 +4,7 @@ import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class _DeletedByOtherParty extends ChatEvent {
@@ -124,6 +125,22 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     // trigger _DeletedByOtherParty after we already handle the deletion ourselves.
     await _deletedSub?.cancel();
     _deletedSub = null;
+
+    // Reset the unread counter so the bottom-nav badge clears immediately.
+    // Already a no-op when the user opened the chat (subscribe path does it),
+    // but read-only chats never call markConversationRead, so do it here too.
+    if (event.firestoreConversationId.isNotEmpty) {
+      try {
+        final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+        if (uid.isNotEmpty) {
+          await _firestoreRepo.markConversationRead(
+              event.firestoreConversationId, uid);
+        }
+      } catch (_) {
+        // Non-fatal — proceed with the API deletion.
+      }
+    }
+
     try {
       await _conversationRepo.deleteConversation(event.conversationId);
       emit(const ChatConversationDeleted());

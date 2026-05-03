@@ -869,7 +869,7 @@ class _SenderCard extends StatelessWidget {
                     ],
                   ),
                 Text(
-                  'Demande soumise le ${DateFormat('dd/MM/yyyy à HH:mm').format(bid.createdAt)}',
+                  'Demande soumise le ${DateFormat('dd/MM/yyyy à HH:mm').format(bid.createdAt.toLocal())}',
                   style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
                 ),
               ],
@@ -941,7 +941,7 @@ class _DisclaimerCard extends StatelessWidget {
           Expanded(
             child: Text(
               bid.disclaimerSignedAt != null
-                  ? 'Disclaimer signé le ${DateFormat('dd/MM/yyyy à HH:mm').format(bid.disclaimerSignedAt!)}'
+                  ? 'Disclaimer signé le ${DateFormat('dd/MM/yyyy à HH:mm').format(bid.disclaimerSignedAt!.toLocal())}'
                   : 'Disclaimer signé',
               style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
             ),
@@ -968,7 +968,7 @@ class _HandoverCard extends StatelessWidget {
             _InfoRow(
               label: 'Début',
               value: DateFormat('dd/MM/yyyy HH:mm')
-                  .format(bid.handoverWindowStart!),
+                  .format(bid.handoverWindowStart!.toLocal()),
             ),
           ],
           if (bid.handoverWindowEnd != null) ...[
@@ -976,7 +976,7 @@ class _HandoverCard extends StatelessWidget {
             _InfoRow(
               label: 'Fin',
               value: DateFormat('dd/MM/yyyy HH:mm')
-                  .format(bid.handoverWindowEnd!),
+                  .format(bid.handoverWindowEnd!.toLocal()),
             ),
           ],
           const SizedBox(height: DonySpacing.sm),

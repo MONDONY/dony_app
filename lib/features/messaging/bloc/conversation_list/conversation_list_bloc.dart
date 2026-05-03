@@ -43,6 +43,18 @@ class ConversationListBloc
       await _unreadSub?.cancel();
       final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
       if (uid.isNotEmpty) {
+        // One-shot self-healing: clear unread_* counters for conversations
+        // that no longer exist in the user's list (orphans left by previous
+        // deletions before the cleanup logic existed).
+        final validIds = _loaded!
+            .map((c) => c.firestoreConversationId)
+            .where((id) => id.isNotEmpty)
+            .toSet();
+        unawaited(_firestoreRepo.cleanupOrphanUnreadCounters(
+          currentUserUid: uid,
+          validFirestoreIds: validIds,
+        ));
+
         _unreadSub = _firestoreRepo
             .perConversationUnreadStream(uid)
             .listen((map) => add(ConversationsUnreadUpdated(map)));
@@ -69,7 +81,37 @@ class ConversationListBloc
     ConversationDeleteRequested event,
     Emitter<ConversationListState> emit,
   ) async {
+    // Capture the firestoreConversationId BEFORE removing — the unread
+    // counter cleanup needs it.
+    String firestoreConvId = '';
+    for (final c in _loaded ?? const <ConversationModel>[]) {
+      if (c.id == event.conversationId) {
+        firestoreConvId = c.firestoreConversationId;
+        break;
+      }
+    }
+
+    // Remove from the list synchronously, BEFORE any await. This is required
+    // by the Dismissible contract: once a tile is dismissed, the underlying
+    // model must disappear in the same frame, otherwise Flutter throws
+    // "A dismissed Dismissible widget is still part of the tree."
     _removeFromLoaded(event.conversationId, emit);
+
+    // Reset the unread counter so userMeta.totalUnreadMessages stops
+    // reflecting the now-deleted conversation. Done after the synchronous
+    // emit so the UI stays consistent.
+    if (firestoreConvId.isNotEmpty) {
+      try {
+        final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+        if (uid.isNotEmpty) {
+          await _firestoreRepo.markConversationRead(firestoreConvId, uid);
+        }
+      } catch (_) {
+        // Non-fatal: deletion can still proceed even if Firestore is offline
+        // or Firebase is not available (e.g. tests).
+      }
+    }
+
     try {
       await _repository.deleteConversation(event.conversationId);
     } catch (_) {

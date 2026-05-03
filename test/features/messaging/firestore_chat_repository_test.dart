@@ -17,12 +17,45 @@ void main() {
     expect(result, 0);
   });
 
-  test('totalUnreadStream emits correct count from userMeta', () async {
+  test('totalUnreadStream sums per-conversation unread fields', () async {
     await fakeFirestore.collection('userMeta').doc('uid-1').set({
-      'totalUnreadMessages': 3,
+      // Stale aggregate must be ignored — sum is the source of truth.
+      'totalUnreadMessages': 99,
+      'unread_conv_a': 2,
+      'unread_conv_b': 1,
+      'unread_conv_c': 0,
     });
     final result = await repo.totalUnreadStream('uid-1').first;
     expect(result, 3);
+  });
+
+  test(
+      'totalUnreadStream returns 0 when only orphan totalUnreadMessages remains',
+      () async {
+    // Reproduces the bug seen on +33766334898: a stale aggregate from a
+    // deleted conversation must not light up the badge.
+    await fakeFirestore.collection('userMeta').doc('uid-1').set({
+      'totalUnreadMessages': 4,
+    });
+    final result = await repo.totalUnreadStream('uid-1').first;
+    expect(result, 0);
+  });
+
+  test('cleanupOrphanUnreadCounters zeroes unread_* keys not in valid set',
+      () async {
+    await fakeFirestore.collection('userMeta').doc('uid-1').set({
+      'totalUnreadMessages': 7,
+      'unread_conv_keep': 3,
+      'unread_conv_orphan': 4,
+    });
+    await repo.cleanupOrphanUnreadCounters(
+      currentUserUid: 'uid-1',
+      validFirestoreIds: {'conv_keep'},
+    );
+    final doc = await fakeFirestore.collection('userMeta').doc('uid-1').get();
+    expect(doc.data()?['unread_conv_keep'], 3);
+    expect(doc.data()?['unread_conv_orphan'], 0);
+    expect(doc.data()?['totalUnreadMessages'], 0);
   });
 
   test('perConversationUnreadStream returns map of non-zero unread convIds', () async {

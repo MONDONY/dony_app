@@ -684,7 +684,7 @@ class _MessageBubble extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        DateFormat('HH:mm').format(message.sentAt),
+                        DateFormat('HH:mm').format(message.sentAt.toLocal()),
                         style: tt.bodySmall?.copyWith(
                           fontSize: 10,
                           color: cs.onSurfaceVariant,
