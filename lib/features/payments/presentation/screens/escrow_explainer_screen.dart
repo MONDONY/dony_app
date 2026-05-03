@@ -61,7 +61,7 @@ class EscrowExplainerScreen extends StatelessWidget {
                   label: 'Voir le suivi',
                   onPressed: () {
                     if (bidId != null) {
-                      context.go('/bids/$bidId');
+                      context.push('/bids/$bidId');
                     } else {
                       context.pop();
                     }
