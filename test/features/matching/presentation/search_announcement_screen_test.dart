@@ -693,6 +693,27 @@ void main() {
     });
   });
 
+  // ── AppBar does not contain toggle tabs ────────────────────────────────────
+
+  testWidgets('AppBar does not contain list/map toggle tabs', (tester) async {
+    stubLoaded([_makeAnn()]);
+
+    await tester.pumpWidget(
+        _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
+    await tester.pump();
+    await _goToResults(tester);
+
+    // Verify AppBar contains journey title
+    expect(find.text('Paris → Dakar'), findsWidgets);
+
+    // Verify AppBar contains filter icon
+    expect(find.byIcon(Icons.tune_rounded), findsWidgets);
+
+    // Verify no toggle labels are in AppBar (those belong to _ToggleTab)
+    expect(find.text('Liste'), findsNothing);
+    expect(find.text('Carte'), findsNothing);
+  });
+
   // ── 9. Toggle Liste/Carte ─────────────────────────────────────────────────
 
   group('Toggle Liste/Map', () {
