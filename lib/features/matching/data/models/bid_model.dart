@@ -9,6 +9,7 @@ class BidModel {
   final String senderId;
   final String? senderName;
   final String? senderPhone;
+  final int? senderTotalShipments;
   final double weightKg;
   final double declaredValueEur;
   final String description;
@@ -43,6 +44,7 @@ class BidModel {
     required this.senderId,
     this.senderName,
     this.senderPhone,
+    this.senderTotalShipments,
     required this.weightKg,
     required this.declaredValueEur,
     required this.description,

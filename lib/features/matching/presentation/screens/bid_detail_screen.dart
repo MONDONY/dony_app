@@ -885,6 +885,18 @@ class _SenderCard extends StatelessWidget {
                       ),
                     ],
                   ),
+                if (bid.senderTotalShipments != null)
+                  Row(
+                    children: [
+                      const Icon(Icons.local_shipping_rounded,
+                          size: 12, color: DonyColors.neutral400),
+                      const SizedBox(width: DonySpacing.xs),
+                      Text(
+                        '${bid.senderTotalShipments} envoi${(bid.senderTotalShipments ?? 0) > 1 ? 's' : ''}',
+                        style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
+                      ),
+                    ],
+                  ),
                 Text(
                   'Demande soumise le ${DateFormat('dd/MM/yyyy à HH:mm').format(bid.createdAt.toLocal())}',
                   style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),

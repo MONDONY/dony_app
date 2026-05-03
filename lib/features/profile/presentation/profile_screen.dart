@@ -62,7 +62,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 builder: (context, announcementState) {
                   // Bid stats (sender)
                   final bids = bidState is BidListLoaded ? bidState.bids : <BidModel>[];
-                  final totalBids = bids.length;
                   final activeBids =
                       bids.where((b) => b.status == 'ACCEPTED').length;
 
@@ -152,8 +151,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             // ── Stats ───────────────────────────────────
                             _StatsRow(
                               isTraveler: isTraveler,
-                              totalBids: totalBids,
                               totalTrips: user?.totalTrips ?? 0,
+                              totalShipments: user?.totalShipments ?? 0,
                               isLoading: bidState is BidLoading ||
                                   announcementState is AnnouncementLoading,
                               cs: cs,
@@ -489,16 +488,16 @@ class _MissingChip extends StatelessWidget {
 class _StatsRow extends StatelessWidget {
   const _StatsRow({
     required this.isTraveler,
-    required this.totalBids,
     required this.totalTrips,
+    required this.totalShipments,
     required this.isLoading,
     required this.cs,
     required this.tt,
   });
 
   final bool isTraveler;
-  final int totalBids;
   final int totalTrips;
+  final int totalShipments;
   final bool isLoading;
   final ColorScheme cs;
   final TextTheme tt;
@@ -516,7 +515,7 @@ class _StatsRow extends StatelessWidget {
       stat3Value = '98%';
       stat3Label = 'Livraison';
     } else {
-      stat1Value = isLoading ? '—' : '$totalBids';
+      stat1Value = isLoading ? '—' : '$totalShipments';
       stat1Label = 'Envois';
       stat3Value = '0€';
       stat3Label = 'Économisés';
