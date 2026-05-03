@@ -125,4 +125,9 @@ class BidRemoteDatasource {
     final response = await _apiClient.dio.put('/bids/$bidId/confirm-presence');
     return BidModel.fromJson(response.data as Map<String, dynamic>);
   }
+
+  Future<BidModel> confirmPayment(String bidId) async {
+    final response = await _apiClient.dio.post('/bids/$bidId/confirm-payment');
+    return BidModel.fromJson(response.data as Map<String, dynamic>);
+  }
 }

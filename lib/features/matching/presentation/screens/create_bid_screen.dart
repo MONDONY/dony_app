@@ -301,6 +301,11 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       await Stripe.instance.presentPaymentSheet();
 
       if (!context.mounted) return;
+      // Synchronously confirm the payment with the backend so the bid is
+      // promoted to PENDING immediately (does not depend on the Stripe webhook).
+      context
+          .read<BidBloc>()
+          .add(BidConfirmPaymentRequested(state.bidId));
       context.push('/bids/${state.bidId}');
     } on StripeException catch (e) {
       if (e.error.code == FailureCode.Canceled) {

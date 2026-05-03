@@ -649,6 +649,52 @@ void main() {
     );
   });
 
+  // ─── BidConfirmPaymentRequested ──────────────────────────────────────────────
+
+  group('BidConfirmPaymentRequested', () {
+    blocTest<BidBloc, BidState>(
+      'confirmation paiement réussie → [BidPaymentConfirmed] (pas de Loading)',
+      build: () {
+        when(() => mockRepo.confirmPayment('bid-001'))
+            .thenAnswer((_) async => buildBid(status: 'PENDING'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidConfirmPaymentRequested('bid-001')),
+      expect: () => [isA<BidPaymentConfirmed>()],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'DioException → [BidError avec detail]',
+      build: () {
+        when(() => mockRepo.confirmPayment(any())).thenThrow(DioException(
+          requestOptions: RequestOptions(path: '/bids/bid-001/confirm-payment'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/bids/bid-001/confirm-payment'),
+            statusCode: 502,
+            data: {'detail': 'Stripe indisponible'},
+          ),
+        ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidConfirmPaymentRequested('bid-001')),
+      expect: () => [
+        predicate<BidState>(
+            (s) => s is BidError && s.message == 'Stripe indisponible'),
+      ],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'erreur générique → [BidError]',
+      build: () {
+        when(() => mockRepo.confirmPayment(any()))
+            .thenThrow(Exception('boom'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidConfirmPaymentRequested('bid-001')),
+      expect: () => [isA<BidError>()],
+    );
+  });
+
   // ─── BidDeleteRequested ──────────────────────────────────────────────────────
 
   group('BidDeleteRequested', () {

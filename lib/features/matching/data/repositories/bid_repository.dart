@@ -84,4 +84,7 @@ class BidRepository {
 
   Future<BidModel> confirmPresence(String bidId) =>
       _datasource.confirmPresence(bidId);
+
+  Future<BidModel> confirmPayment(String bidId) =>
+      _datasource.confirmPayment(bidId);
 }

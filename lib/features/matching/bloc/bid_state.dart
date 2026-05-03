@@ -69,3 +69,8 @@ class BidError extends BidState {
 }
 
 class BidNotFound extends BidState {}
+
+class BidPaymentConfirmed extends BidState {
+  final BidModel bid;
+  BidPaymentConfirmed(this.bid);
+}

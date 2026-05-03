@@ -25,6 +25,22 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     on<BidHideRequested>(_onHideRequested);
     on<BidDeleteRequested>(_onDeleteRequested);
     on<BidTravelerDismissRequested>(_onTravelerDismissRequested);
+    on<BidConfirmPaymentRequested>(_onConfirmPaymentRequested);
+  }
+
+  Future<void> _onConfirmPaymentRequested(
+    BidConfirmPaymentRequested event,
+    Emitter<BidState> emit,
+  ) async {
+    try {
+      final bid = await _repository.confirmPayment(event.bidId);
+      emit(BidPaymentConfirmed(bid));
+    } on DioException catch (e) {
+      final detail = e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
+      emit(BidError(detail));
+    } catch (e) {
+      emit(BidError(e.toString()));
+    }
   }
 
   Future<void> _onCheckoutRequested(
