@@ -309,41 +309,56 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     if (widget.onNearMeRequested == null) {
       return;
     }
+
+    // 1. Check permissions FIRST (may show system dialog)
+    var permission = await widget.locationService.checkPermission();
+    if (permission == LocationPermission.deniedForever) {
+      _showPermissionDeniedSheet(true);
+      return;
+    }
+    if (permission == LocationPermission.denied) {
+      permission = await widget.locationService.requestPermission();
+    }
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      _showPermissionDeniedSheet(
+          permission == LocationPermission.deniedForever);
+      return;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    // 2. Start GPS lookup IN PARALLEL (no await yet)
+    final positionFuture = widget.locationService.getCurrentPosition();
+
+    // 3. Show radius bottom sheet IMMEDIATELY (user can interact)
+    final radiusKm = await showModalBottomSheet<double>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => NearMeRadiusSheet(
+        initialRadiusKm: widget.activeRadiusKm ?? 25,
+      ),
+    );
+
+    if (radiusKm == null || !mounted) {
+      return;
+    }
+
+    // 4. Now await GPS (often already done) — show spinner if still pending
     setState(() => _isLocating = true);
     try {
-      var permission = await widget.locationService.checkPermission();
-      if (permission == LocationPermission.deniedForever) {
-        _showPermissionDeniedSheet(true);
-        return;
-      }
-      if (permission == LocationPermission.denied) {
-        permission = await widget.locationService.requestPermission();
-      }
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        _showPermissionDeniedSheet(
-            permission == LocationPermission.deniedForever);
-        return;
-      }
-      final pos = await widget.locationService.getCurrentPosition();
+      final pos = await positionFuture;
       if (!mounted) {
         return;
       }
-
-      final radiusKm = await showModalBottomSheet<double>(
-        context: context,
-        useRootNavigator: true,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (_) => NearMeRadiusSheet(
-          initialRadiusKm: widget.activeRadiusKm ?? 25,
-        ),
-      );
-      if (radiusKm != null && mounted) {
-        widget.onNearMeRequested!(pos.latitude, pos.longitude, radiusKm);
-        await _fitNearMeBounds(
-            LatLng(pos.latitude, pos.longitude), radiusKm);
-      }
+      // Trigger parent state update — didUpdateWidget will auto-fit the camera
+      // once the new props (userPosition, activeRadiusKm, isNearMeActive)
+      // propagate. No need to animate here.
+      widget.onNearMeRequested!(pos.latitude, pos.longitude, radiusKm);
     } finally {
       if (mounted) {
         setState(() => _isLocating = false);

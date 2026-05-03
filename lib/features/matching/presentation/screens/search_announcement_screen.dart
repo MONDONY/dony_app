@@ -184,7 +184,9 @@ class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
               }
               _radiusKmNotifier.value = radius;
               _isNearMeActiveNotifier.value = isActive;
-              if (isActive) _search();
+              // Always re-run the search — when disabling, this returns all
+              // results matching the other filters (without the radius filter).
+              _search();
             },
           );
         }
