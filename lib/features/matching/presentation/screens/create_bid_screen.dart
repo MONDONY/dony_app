@@ -306,7 +306,9 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       context
           .read<BidBloc>()
           .add(BidConfirmPaymentRequested(state.bidId));
-      context.push('/bids/${state.bidId}');
+      // ?from=payment makes the bid-detail back arrow route to /home (mes envois)
+      // instead of popping back to the just-completed checkout form.
+      context.push('/bids/${state.bidId}?from=payment');
     } on StripeException catch (e) {
       if (e.error.code == FailureCode.Canceled) {
         _showError('Paiement annulé');

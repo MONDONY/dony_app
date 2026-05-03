@@ -117,7 +117,8 @@ final appRouter = GoRouter(
         final bid = state.extra is BidModel
             ? state.extra as BidModel
             : BidModel.skeleton(state.pathParameters['bidId']!);
-        return BidDetailScreen(bid: bid);
+        final fromPayment = state.uri.queryParameters['from'] == 'payment';
+        return BidDetailScreen(bid: bid, fromPayment: fromPayment);
       },
       routes: [
         GoRoute(

@@ -28,8 +28,16 @@ import 'package:intl/intl.dart';
 
 class BidDetailScreen extends StatelessWidget {
   final BidModel bid;
+  /// When true, the back arrow goes to /home (the sender's "mes envois") instead
+  /// of popping the navigation stack. Used after a fresh payment so the user
+  /// doesn't go back to the create-bid form.
+  final bool fromPayment;
 
-  const BidDetailScreen({super.key, required this.bid});
+  const BidDetailScreen({
+    super.key,
+    required this.bid,
+    this.fromPayment = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -39,14 +47,15 @@ class BidDetailScreen extends StatelessWidget {
         BlocProvider(create: (_) => getIt<TrackingBloc>()),
         BlocProvider(create: (_) => getIt<ConversationOpenBloc>()),
       ],
-      child: _BidDetailView(initialBid: bid),
+      child: _BidDetailView(initialBid: bid, fromPayment: fromPayment),
     );
   }
 }
 
 class _BidDetailView extends StatefulWidget {
   final BidModel initialBid;
-  const _BidDetailView({required this.initialBid});
+  final bool fromPayment;
+  const _BidDetailView({required this.initialBid, this.fromPayment = false});
 
   @override
   State<_BidDetailView> createState() => _BidDetailViewState();
@@ -209,7 +218,15 @@ class _BidDetailViewState extends State<_BidDetailView> {
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_rounded,
                   size: 20, color: DonyColors.primary),
-              onPressed: () => context.pop(),
+              onPressed: () {
+                if (widget.fromPayment) {
+                  context.go('/home');
+                } else if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/home');
+                }
+              },
               tooltip: 'Retour',
             ),
             title: Text(
