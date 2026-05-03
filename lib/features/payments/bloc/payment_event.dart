@@ -33,6 +33,13 @@ class PaymentOnboardingStatusChecked extends PaymentEvent {
   const PaymentOnboardingStatusChecked();
 }
 
+/// Force un re-pull depuis Stripe — utilisé en bouton "Rafraîchir le statut"
+/// quand le webhook account.updated n'est pas remonté (dev local sans CLI Stripe,
+/// ou délai de propagation en prod).
+class PaymentOnboardingRefreshRequested extends PaymentEvent {
+  const PaymentOnboardingRefreshRequested();
+}
+
 /// Initie le paiement escrow pour un bid accepté.
 class PaymentInitiated extends PaymentEvent {
   final String bidId;

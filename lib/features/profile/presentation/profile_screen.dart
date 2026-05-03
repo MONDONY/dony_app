@@ -70,9 +70,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   final announcements = announcementState is AnnouncementListLoaded
                       ? announcementState.announcements
                       : <AnnouncementModel>[];
-                  final totalAnnouncements = announcementState is AnnouncementListLoaded
-                      ? announcementState.totalElements
-                      : 0;
                   // Trajets en cours ou à venir = ACTIVE + FULL
                   final upcomingAnnouncements = announcements
                       .where((a) => a.status == 'ACTIVE' || a.status == 'FULL')
@@ -156,7 +153,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             _StatsRow(
                               isTraveler: isTraveler,
                               totalBids: totalBids,
-                              totalAnnouncements: totalAnnouncements,
+                              totalTrips: user?.totalTrips ?? 0,
                               isLoading: bidState is BidLoading ||
                                   announcementState is AnnouncementLoading,
                               cs: cs,
@@ -493,7 +490,7 @@ class _StatsRow extends StatelessWidget {
   const _StatsRow({
     required this.isTraveler,
     required this.totalBids,
-    required this.totalAnnouncements,
+    required this.totalTrips,
     required this.isLoading,
     required this.cs,
     required this.tt,
@@ -501,7 +498,7 @@ class _StatsRow extends StatelessWidget {
 
   final bool isTraveler;
   final int totalBids;
-  final int totalAnnouncements;
+  final int totalTrips;
   final bool isLoading;
   final ColorScheme cs;
   final TextTheme tt;
@@ -514,7 +511,7 @@ class _StatsRow extends StatelessWidget {
     final String stat3Label;
 
     if (isTraveler) {
-      stat1Value = isLoading ? '—' : '$totalAnnouncements';
+      stat1Value = isLoading ? '—' : '$totalTrips';
       stat1Label = 'Trajets';
       stat3Value = '98%';
       stat3Label = 'Livraison';

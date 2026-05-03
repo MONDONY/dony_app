@@ -11,6 +11,7 @@ class UserModel extends Equatable {
   final List<String> roles;
   final String kycStatus;
   final String status;
+  final int totalTrips;
 
   const UserModel({
     required this.id,
@@ -23,6 +24,7 @@ class UserModel extends Equatable {
     required this.roles,
     required this.kycStatus,
     required this.status,
+    this.totalTrips = 0,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -38,6 +40,7 @@ class UserModel extends Equatable {
         roles: List<String>.from(json['roles'] as List? ?? []),
         kycStatus: json['kycStatus'] as String? ?? 'PENDING',
         status: json['status'] as String? ?? 'ACTIVE',
+        totalTrips: (json['totalTrips'] as num?)?.toInt() ?? 0,
       );
 
   String get displayName {
@@ -111,5 +114,6 @@ class UserModel extends Equatable {
         roles,
         kycStatus,
         status,
+        totalTrips,
       ];
 }

@@ -131,6 +131,60 @@ void main() {
     );
   });
 
+  // ── PaymentOnboardingRefreshRequested ───────────────────────────────────────
+
+  group('PaymentOnboardingRefreshRequested', () {
+    blocTest<PaymentBloc, PaymentState>(
+      'emits [Loading, OnboardingComplete] when refresh confirms onboarded',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.refreshConnectAccount()).thenAnswer(
+          (_) async => const ConnectAccountModel(
+            stripeAccountId: 'acct_x',
+            stripeOnboarded: true,
+          ),
+        );
+      },
+      act: (b) => b.add(const PaymentOnboardingRefreshRequested()),
+      expect: () => [
+        const PaymentLoading(),
+        const PaymentOnboardingComplete(),
+      ],
+    );
+
+    blocTest<PaymentBloc, PaymentState>(
+      'emits [Loading, OnboardingPending] when refresh shows still pending',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.refreshConnectAccount()).thenAnswer(
+          (_) async => const ConnectAccountModel(
+            stripeAccountId: 'acct_x',
+            stripeOnboarded: false,
+          ),
+        );
+      },
+      act: (b) => b.add(const PaymentOnboardingRefreshRequested()),
+      expect: () => [
+        const PaymentLoading(),
+        const PaymentOnboardingPending(),
+      ],
+    );
+
+    blocTest<PaymentBloc, PaymentState>(
+      'emits [Loading, Error] when refresh throws',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.refreshConnectAccount())
+            .thenThrow(Exception('Stripe down'));
+      },
+      act: (b) => b.add(const PaymentOnboardingRefreshRequested()),
+      expect: () => [
+        const PaymentLoading(),
+        isA<PaymentError>(),
+      ],
+    );
+  });
+
   // ── PaymentInitiated ────────────────────────────────────────────────────────
 
   group('PaymentInitiated', () {

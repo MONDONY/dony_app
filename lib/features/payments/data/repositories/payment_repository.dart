@@ -28,6 +28,16 @@ class PaymentRepository {
     }
   }
 
+  Future<ConnectAccountModel> refreshConnectAccount() async {
+    try {
+      return await _datasource.refreshConnectAccount();
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw NetworkException(e.toString());
+    }
+  }
+
   Future<PaymentModel> createPayment(String bidId) async {
     try {
       return await _datasource.createPayment(bidId);

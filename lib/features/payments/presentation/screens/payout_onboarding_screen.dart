@@ -73,7 +73,18 @@ class _OnboardingView extends StatelessWidget {
                     type: DonyStatusBannerType.warning,
                     icon: Icons.schedule_rounded,
                     message:
-                        'Vérification en cours — Stripe finalise votre compte. Revenez dans quelques minutes.',
+                        'Vérification en cours — Stripe finalise votre compte. Si vous avez déjà terminé l\'inscription, rafraîchissez le statut.',
+                  ),
+                  const SizedBox(height: DonySpacing.md),
+                  DonyButton(
+                    label: 'Rafraîchir le statut',
+                    variant: DonyButtonVariant.secondary,
+                    onPressed: isLoading
+                        ? null
+                        : () => context
+                            .read<PaymentBloc>()
+                            .add(const PaymentOnboardingRefreshRequested()),
+                    icon: Icons.refresh_rounded,
                   ),
                   const SizedBox(height: DonySpacing.xl),
                 ],

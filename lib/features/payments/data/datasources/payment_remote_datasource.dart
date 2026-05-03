@@ -18,6 +18,11 @@ class PaymentRemoteDatasource {
     return response.data['url'] as String;
   }
 
+  Future<ConnectAccountModel> refreshConnectAccount() async {
+    final response = await _client.dio.post('/payments/connect/refresh');
+    return ConnectAccountModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Future<PaymentModel> createPayment(String bidId) async {
     final response = await _client.dio.post(
       '/payments',

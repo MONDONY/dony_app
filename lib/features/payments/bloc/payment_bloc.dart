@@ -12,6 +12,7 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
     on<BidCheckoutPaymentRequested>(_onBidCheckoutPaymentRequested);
     on<PaymentConnectAccountRequested>(_onConnectAccountRequested);
     on<PaymentOnboardingStatusChecked>(_onOnboardingStatusChecked);
+    on<PaymentOnboardingRefreshRequested>(_onOnboardingRefreshRequested);
     on<PaymentInitiated>(_onPaymentInitiated);
     on<PaymentSheetCompleted>(_onPaymentSheetCompleted);
     on<PaymentFailed>(_onPaymentFailed);
@@ -55,6 +56,23 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
     emit(const PaymentLoading());
     try {
       final account = await _repository.createConnectAccount();
+      if (account.stripeOnboarded) {
+        emit(const PaymentOnboardingComplete());
+      } else {
+        emit(const PaymentOnboardingPending());
+      }
+    } catch (e) {
+      emit(PaymentError(e.toString()));
+    }
+  }
+
+  Future<void> _onOnboardingRefreshRequested(
+    PaymentOnboardingRefreshRequested event,
+    Emitter<PaymentState> emit,
+  ) async {
+    emit(const PaymentLoading());
+    try {
+      final account = await _repository.refreshConnectAccount();
       if (account.stripeOnboarded) {
         emit(const PaymentOnboardingComplete());
       } else {

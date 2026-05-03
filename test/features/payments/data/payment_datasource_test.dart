@@ -127,6 +127,20 @@ void main() {
     });
   });
 
+  // ── refreshConnectAccount ────────────────────────────────────────────────────
+
+  group('refreshConnectAccount', () {
+    test('returns ConnectAccountModel reflecting current Stripe state', () async {
+      when(() => mockDio.post('/payments/connect/refresh')).thenAnswer(
+          (_) async => _ok(_connectJson, '/payments/connect/refresh'));
+
+      final result = await datasource.refreshConnectAccount();
+
+      expect(result.stripeAccountId, 'acct_123');
+      expect(result.stripeOnboarded, isTrue);
+    });
+  });
+
   // ── createPayment ─────────────────────────────────────────────────────────────
 
   group('createPayment', () {
