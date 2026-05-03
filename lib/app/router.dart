@@ -317,6 +317,15 @@ final appRouter = GoRouter(
       builder: (context, state) => const OfflineScanQueueScreen(),
     ),
 
+    // ── Résultats de recherche (hors shell — plein écran) ───────────────
+    GoRoute(
+      path: '/search',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<AnnouncementBloc>(),
+        child: const SearchAnnouncementScreen(),
+      ),
+    ),
+
     // ── Shell principal avec Bottom Navigation ───────────────────────────
     // Règle : UNIQUEMENT les 5 racines de tabs, sans sous-routes.
     StatefulShellRoute.indexedStack(
@@ -336,19 +345,12 @@ final appRouter = GoRouter(
           ],
         ),
 
-        // Branch 1 — Envois (annonces voyageur + recherche expéditeur)
+        // Branch 1 — Envois (annonces voyageur)
         StatefulShellBranch(
           routes: [
             GoRoute(
               path: '/announcements',
               builder: (context, state) => const MatchingManagementScreen(),
-            ),
-            GoRoute(
-              path: '/search',
-              builder: (context, state) => BlocProvider(
-                create: (_) => getIt<AnnouncementBloc>(),
-                child: const SearchAnnouncementScreen(),
-              ),
             ),
           ],
         ),

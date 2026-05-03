@@ -129,6 +129,7 @@ class AnnouncementMapView extends StatefulWidget {
     this.searchArrivalCity,
     this.locationService = const GeolocatorLocationService(),
     this.onNearMeRequested,
+    this.onNearMeDisabled,
     this.isNearMeActive = false,
     this.activeRadiusKm,
     this.userPosition,
@@ -140,6 +141,7 @@ class AnnouncementMapView extends StatefulWidget {
   final LocationService locationService;
   final void Function(double userLat, double userLng, double radiusKm)?
       onNearMeRequested;
+  final VoidCallback? onNearMeDisabled;
   final bool isNearMeActive;
   final double? activeRadiusKm;
   final LatLng? userPosition;
@@ -202,13 +204,8 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       .map((a) => _AnnouncementPoint(a, _MarkerSide.pickup))
       .toList();
 
-  List<_AnnouncementPoint> _deliveryPoints() => widget.announcements
-      .where((a) => a.deliveryAddress != null)
-      .map((a) => _AnnouncementPoint(a, _MarkerSide.delivery))
-      .toList();
-
   Future<void> _rebuildMarkers() async {
-    final allPoints = [..._pickupPoints(), ..._deliveryPoints()];
+    final allPoints = [..._pickupPoints()];
     final clusters = _gridCluster(allPoints, _currentZoom);
     final futures = clusters.map((c) => _buildMarker(c));
     final built = await Future.wait(futures);
@@ -398,14 +395,41 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
           compassEnabled: false,
         ),
         Positioned(
-          bottom: DonySpacing.lg,
+          bottom: DonySpacing.lg + 26,
           right: DonySpacing.lg,
-          child: _NearMeFab(
-            key: const Key('near-me-fab'),
-            isActive: widget.isNearMeActive,
-            isLoading: _isLocating,
-            radiusKm: widget.activeRadiusKm,
-            onTap: _onNearMeTapped,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _NearMeFab(
+                key: const Key('near-me-fab'),
+                isActive: widget.isNearMeActive,
+                isLoading: _isLocating,
+                radiusKm: widget.activeRadiusKm,
+                onTap: _onNearMeTapped,
+                onDoubleTap: widget.isNearMeActive
+                    ? widget.onNearMeDisabled
+                    : null,
+              ),
+              const SizedBox(height: 8),
+              _ZoomButton(
+                icon: Icons.add_rounded,
+                onTap: () async {
+                  final controller = _mapController;
+                  if (controller != null) {
+                    await controller.animateCamera(CameraUpdate.zoomIn());
+                  }
+                },
+              ),
+              _ZoomButton(
+                icon: Icons.remove_rounded,
+                onTap: () async {
+                  final controller = _mapController;
+                  if (controller != null) {
+                    await controller.animateCamera(CameraUpdate.zoomOut());
+                  }
+                },
+              ),
+            ],
           ),
         ),
       ],
@@ -455,7 +479,6 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     }
     final allPoints = <LatLng>[
       ..._pickupPoints().map((it) => it.location),
-      ..._deliveryPoints().map((it) => it.location),
     ];
     if (allPoints.isEmpty) {
       return;
@@ -489,30 +512,27 @@ class _NearMeFab extends StatelessWidget {
     required this.isLoading,
     required this.radiusKm,
     required this.onTap,
+    this.onDoubleTap,
   });
 
   final bool isActive;
   final bool isLoading;
   final double? radiusKm;
   final VoidCallback onTap;
+  final VoidCallback? onDoubleTap;
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final label = isActive && radiusKm != null
-        ? '${radiusKm!.round()} km'
-        : 'Près de moi';
     return GestureDetector(
       onTap: isLoading ? null : onTap,
+      onDoubleTap: isLoading ? null : onDoubleTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.md,
-          vertical: DonySpacing.sm,
-        ),
+        width: 48,
+        height: 48,
         decoration: BoxDecoration(
           color: isActive ? DonyColors.primary : DonyColors.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.full),
+          shape: BoxShape.circle,
           border: Border.all(
             color: isActive ? DonyColors.primary : DonyColors.borderDefault,
           ),
@@ -524,35 +544,63 @@ class _NearMeFab extends StatelessWidget {
             ),
           ],
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isLoading)
-              SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
+        child: Center(
+          child: isLoading
+              ? SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: isActive ? Colors.white : DonyColors.primary,
+                  ),
+                )
+              : Icon(
+                  isActive
+                      ? Icons.my_location_rounded
+                      : Icons.my_location_outlined,
+                  size: 22,
                   color: isActive ? Colors.white : DonyColors.primary,
                 ),
-              )
-            else
-              Icon(
-                isActive
-                    ? Icons.my_location_rounded
-                    : Icons.my_location_outlined,
-                size: 16,
-                color: isActive ? Colors.white : DonyColors.primary,
-              ),
-            const SizedBox(width: DonySpacing.xs),
-            Text(
-              label,
-              style: tt.labelMedium?.copyWith(
-                color: isActive ? Colors.white : DonyColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── _ZoomButton ───────────────────────────────────────────────────────────────
+
+class _ZoomButton extends StatelessWidget {
+  const _ZoomButton({
+    required this.icon,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: DonyColors.surface,
+          shape: BoxShape.circle,
+          border: Border.all(color: DonyColors.borderDefault),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
+        ),
+        child: Icon(
+          icon,
+          size: 22,
+          color: DonyColors.primary,
         ),
       ),
     );

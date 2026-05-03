@@ -89,7 +89,7 @@ void main() {
       expect(find.byKey(const Key('permission-denied-sheet')), findsOneWidget);
     });
 
-    testWidgets('FAB shows radius label when isNearMeActive', (tester) async {
+    testWidgets('FAB shows active state when isNearMeActive', (tester) async {
       final mockLoc = MockLocationService();
       await tester.pumpWidget(_wrap(AnnouncementMapView(
         announcements: announcements,
@@ -97,8 +97,13 @@ void main() {
         isNearMeActive: true,
         activeRadiusKm: 30,
       )));
-      await tester.pump();
-      expect(find.text('30 km'), findsOneWidget);
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.my_location_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.my_location_outlined), findsNothing);
+
+      final iconWidget = tester.widget<Icon>(find.byIcon(Icons.my_location_rounded));
+      expect(iconWidget.color, Colors.white);
     });
 
     testWidgets('legacy announcement (null pickup) is silently filtered',

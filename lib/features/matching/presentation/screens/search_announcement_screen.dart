@@ -577,67 +577,128 @@ class _ResultsViewState extends State<_ResultsView> {
     return list;
   }
 
+  Widget _buildFilterChipsRow(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: ListenableBuilder(
+        listenable: Listenable.merge([
+          widget.ratingActive,
+          widget.priceActive,
+          widget.weekActive,
+          widget.weightActive,
+        ]),
+        builder: (context, _) => ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.lg,
+            vertical: DonySpacing.sm,
+          ),
+          children: [
+            // ── LIST/MAP TOGGLE ICONS ────────────────────────────────
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.transparent,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // List icon button
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      color: !_isMapView
+                          ? DonyColors.primary.withOpacity(0.1)
+                          : Colors.transparent,
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.list_rounded, size: 24),
+                      color: !_isMapView
+                          ? DonyColors.primary
+                          : DonyColors.neutral500,
+                      onPressed: () => setState(() => _isMapView = false),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.sm,
+                        vertical: DonySpacing.sm,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 40,
+                        minHeight: 40,
+                      ),
+                      tooltip: 'Liste',
+                    ),
+                  ),
+                  const SizedBox(width: DonySpacing.xs), // 4pt gap
+                  // Map icon button
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      color: _isMapView
+                          ? DonyColors.primary.withOpacity(0.1)
+                          : Colors.transparent,
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.map_outlined, size: 24),
+                      color: _isMapView
+                          ? DonyColors.primary
+                          : DonyColors.neutral500,
+                      onPressed: () => setState(() => _isMapView = true),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.sm,
+                        vertical: DonySpacing.sm,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 40,
+                        minHeight: 40,
+                      ),
+                      tooltip: 'Carte',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: DonySpacing.md), // Spacer before chips
+            // ── EXISTING FILTER CHIPS ────────────────────────────────
+            _FilterChip(
+              label: '★ 4.7+',
+              icon: Icons.star_rounded,
+              active: widget.ratingActive.value,
+              onTap: () => widget.ratingActive.value =
+                  !widget.ratingActive.value,
+            ),
+            const SizedBox(width: DonySpacing.sm),
+            _FilterChip(
+              label: '€/kg ↓',
+              active: widget.priceActive.value,
+              onTap: () => widget.priceActive.value =
+                  !widget.priceActive.value,
+            ),
+            const SizedBox(width: DonySpacing.sm),
+            _FilterChip(
+              label: 'Cette semaine',
+              active: widget.weekActive.value,
+              onTap: () =>
+                  widget.weekActive.value = !widget.weekActive.value,
+            ),
+            const SizedBox(width: DonySpacing.sm),
+            _FilterChip(
+              label: '+10 kg',
+              active: widget.weightActive.value,
+              onTap: () => widget.weightActive.value =
+                  !widget.weightActive.value,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildListColumn(
     BuildContext context,
     AnnouncementState state, {
     required List<AnnouncementModel> results,
   }) {
-    return Column(
-      children: [
-        // ── Filter chips row ────────────────────────────────────────────
-        SizedBox(
-          height: 48,
-          child: ListenableBuilder(
-            listenable: Listenable.merge([
-              widget.ratingActive,
-              widget.priceActive,
-              widget.weekActive,
-              widget.weightActive,
-            ]),
-            builder: (context, _) => ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(
-                horizontal: DonySpacing.lg,
-                vertical: DonySpacing.sm,
-              ),
-              children: [
-                _FilterChip(
-                  label: '★ 4.7+',
-                  icon: Icons.star_rounded,
-                  active: widget.ratingActive.value,
-                  onTap: () => widget.ratingActive.value =
-                      !widget.ratingActive.value,
-                ),
-                const SizedBox(width: DonySpacing.sm),
-                _FilterChip(
-                  label: '€/kg ↓',
-                  active: widget.priceActive.value,
-                  onTap: () => widget.priceActive.value =
-                      !widget.priceActive.value,
-                ),
-                const SizedBox(width: DonySpacing.sm),
-                _FilterChip(
-                  label: 'Cette semaine',
-                  active: widget.weekActive.value,
-                  onTap: () =>
-                      widget.weekActive.value = !widget.weekActive.value,
-                ),
-                const SizedBox(width: DonySpacing.sm),
-                _FilterChip(
-                  label: '+10 kg',
-                  active: widget.weightActive.value,
-                  onTap: () => widget.weightActive.value =
-                      !widget.weightActive.value,
-                ),
-              ],
-            ),
-          ),
-        ),
-        Expanded(
-          child: _buildResultsBody(context, state, results: results),
-        ),
-      ],
-    );
+    return _buildResultsBody(context, state, results: results);
   }
 
   Widget _buildResultsBody(
@@ -1089,38 +1150,10 @@ class _ResultsViewState extends State<_ResultsView> {
           ],
         ),
         actions: [
-          // Toggle segmenté Liste | Carte
-          Container(
-            margin: const EdgeInsets.only(right: DonySpacing.sm),
-            decoration: BoxDecoration(
-              color: DonyColors.bg,
-              borderRadius: BorderRadius.circular(DonyRadius.sm),
-              border: Border.all(color: DonyColors.neutral200),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _ToggleTab(
-                  icon: Icons.list_rounded,
-                  label: 'Liste',
-                  isActive: !_isMapView,
-                  onTap: () => setState(() => _isMapView = false),
-                ),
-                _ToggleTab(
-                  icon: Icons.map_outlined,
-                  label: 'Carte',
-                  isActive: _isMapView,
-                  onTap: () => setState(() => _isMapView = true),
-                ),
-              ],
-            ),
-          ),
-          // Bouton filtre toujours visible
           Stack(
             children: [
               IconButton(
-                icon: const Icon(Icons.tune_rounded,
-                    color: DonyColors.ink900),
+                icon: const Icon(Icons.tune_rounded, color: DonyColors.ink900),
                 onPressed: () => _showFilterBottomSheet(context),
                 tooltip: 'Filtres',
               ),
@@ -1179,131 +1212,95 @@ class _ResultsViewState extends State<_ResultsView> {
             builder: (context, _) {
               final filtered = _applyFilters(rawResults);
               final pos = widget.userPosition.value;
-              return Stack(
+              return Column(
                 children: [
-                  IndexedStack(
-                    index: _isMapView ? 1 : 0,
-                    sizing: StackFit.expand,
-                    children: [
-                      _buildListColumn(context, state, results: filtered),
-                      AnnouncementMapView(
-                        announcements: filtered,
-                        searchDepartureCity: widget.departureCity,
-                        searchArrivalCity: widget.arrivalCity,
-                        onNearMeRequested: (lat, lng, radius) {
-                          widget.onNearMeChanged(
-                            isActive: true,
-                            lat: lat,
-                            lng: lng,
-                            radius: radius,
-                          );
-                        },
-                        isNearMeActive: widget.isNearMeActive.value,
-                        activeRadiusKm: widget.radiusKm.value,
-                        userPosition:
-                            pos != null ? LatLng(pos.lat, pos.lng) : null,
-                      ),
-                    ],
-                  ),
-                  if (state is AnnouncementSearchLoaded && state.isReloading)
-                    Positioned(
-                      top: DonySpacing.md,
-                      right: DonySpacing.md,
-                      child: Container(
-                        key: const Key('search-reload-overlay'),
-                        padding: const EdgeInsets.all(DonySpacing.sm),
-                        decoration: BoxDecoration(
-                          color: DonyColors.surface,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x1A000000),
-                              blurRadius: 8,
-                              offset: Offset(0, 2),
+                  // Filter chips row — ALWAYS VISIBLE
+                  _buildFilterChipsRow(context),
+                  // List or Map view — SWITCHES via IndexedStack
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        IndexedStack(
+                          index: _isMapView ? 1 : 0,
+                          sizing: StackFit.expand,
+                          children: [
+                            _buildListColumn(context, state, results: filtered),
+                            AnnouncementMapView(
+                              announcements: filtered,
+                              searchDepartureCity: widget.departureCity,
+                              searchArrivalCity: widget.arrivalCity,
+                              onNearMeRequested: (lat, lng, radius) {
+                                widget.onNearMeChanged(
+                                  isActive: true,
+                                  lat: lat,
+                                  lng: lng,
+                                  radius: radius,
+                                );
+                              },
+                              onNearMeDisabled: () {
+                                widget.onNearMeChanged(
+                                  isActive: false,
+                                  radius: widget.radiusKm.value,
+                                );
+                              },
+                              isNearMeActive: widget.isNearMeActive.value,
+                              activeRadiusKm: widget.radiusKm.value,
+                              userPosition:
+                                  pos != null ? LatLng(pos.lat, pos.lng) : null,
                             ),
                           ],
                         ),
-                        child: const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            color: DonyColors.primary,
-                            strokeWidth: 2,
+                        if (state is AnnouncementSearchLoaded && state.isReloading)
+                          Positioned(
+                            top: DonySpacing.md,
+                            right: DonySpacing.md,
+                            child: Container(
+                              key: const Key('search-reload-overlay'),
+                              padding: const EdgeInsets.all(DonySpacing.sm),
+                              decoration: BoxDecoration(
+                                color: DonyColors.surface,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x1A000000),
+                                    blurRadius: 8,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  color: DonyColors.primary,
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
+                        if (state is AnnouncementError &&
+                            state.previousResults != null &&
+                            !_errorBannerDismissed)
+                          Positioned(
+                            key: const Key('search-error-banner'),
+                            left: DonySpacing.md,
+                            right: DonySpacing.md,
+                            bottom: DonySpacing.md,
+                            child: DonyStatusBanner(
+                              type: DonyStatusBannerType.error,
+                              message: state.message,
+                              onDismiss: () =>
+                                  setState(() => _errorBannerDismissed = true),
+                            ),
+                          ),
+                      ],
                     ),
-                  if (state is AnnouncementError &&
-                      state.previousResults != null &&
-                      !_errorBannerDismissed)
-                    Positioned(
-                      key: const Key('search-error-banner'),
-                      left: DonySpacing.md,
-                      right: DonySpacing.md,
-                      bottom: DonySpacing.md,
-                      child: DonyStatusBanner(
-                        type: DonyStatusBannerType.error,
-                        message: state.message,
-                        onDismiss: () =>
-                            setState(() => _errorBannerDismissed = true),
-                      ),
-                    ),
+                  ),
                 ],
               );
             },
           );
         },
-      ),
-    );
-  }
-}
-
-// ── Toggle tab ───────────────────────────────────────────────────────────────
-
-class _ToggleTab extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  const _ToggleTab({
-    required this.icon,
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.md,
-          vertical: DonySpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: isActive ? DonyColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(DonyRadius.sm),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 15,
-                color: isActive ? Colors.white : DonyColors.neutral400),
-            const SizedBox(width: DonySpacing.xxs),
-            Text(
-              label,
-              style: tt.labelMedium?.copyWith(
-                color: isActive ? Colors.white : DonyColors.neutral400,
-                fontWeight:
-                    isActive ? FontWeight.w600 : FontWeight.w400,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

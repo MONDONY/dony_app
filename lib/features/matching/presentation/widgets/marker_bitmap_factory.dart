@@ -18,14 +18,7 @@ class MarkerBitmapFactory {
   static const double _clusterSize = 64;
 
   // ─── New pin rendering (Phase B) ──────────────────────────────────────────
-  static const double _pinWidth = 64;
-  static const double _pinHeight = 72;
-  static const double _pinHeadRadius = 22;
-  static const double _pinHeadCenterY = 24;
-  static const double _innerCircleRadius = 13;
   static const double _iconSize = 22;
-  static const double _badgeWidth = 28;
-  static const double _badgeHeight = 16;
 
   static final Map<_MarkerKey, BitmapDescriptor> _cache = {};
 
@@ -97,33 +90,24 @@ class MarkerBitmapFactory {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
 
-    final sideColor = side == MarkerSide.pickup
-        ? DonyColors.primary
-        : DonyColors.warning;
+    const size = 48.0;
+    const center = Offset(size / 2, size / 2);
+    const radius = size / 2 - 2; // Small inset for clarity
 
-    // Pin head + tail
-    final pinPaint = Paint()
-      ..color = sideColor
+    // Solid blue circle background
+    final bgPaint = Paint()
+      ..color = DonyColors.primary
       ..style = PaintingStyle.fill;
-    final headCenter = Offset(_pinWidth / 2, _pinHeadCenterY);
-    canvas.drawCircle(headCenter, _pinHeadRadius, pinPaint);
-    final tail = Path()
-      ..moveTo(headCenter.dx - 10, headCenter.dy + _pinHeadRadius - 4)
-      ..lineTo(_pinWidth / 2, _pinHeight)
-      ..lineTo(headCenter.dx + 10, headCenter.dy + _pinHeadRadius - 4)
-      ..close();
-    canvas.drawPath(tail, pinPaint);
+    canvas.drawCircle(center, radius, bgPaint);
 
-    // White inner circle
-    canvas.drawCircle(
-      headCenter,
-      _innerCircleRadius,
-      Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.fill,
-    );
+    // Optional: subtle white border for contrast
+    final borderPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    canvas.drawCircle(center, radius, borderPaint);
 
-    // Transport icon at center (color = side color)
+    // Transport icon centered (white color)
     final iconData = (mode ?? TransportMode.other).icon;
     final iconPainter = TextPainter(
       text: TextSpan(
@@ -132,103 +116,21 @@ class MarkerBitmapFactory {
           fontFamily: iconData.fontFamily,
           package: iconData.fontPackage,
           fontSize: _iconSize,
-          color: sideColor,
+          color: Colors.white,
         ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
     iconPainter.paint(
       canvas,
-      Offset(headCenter.dx - iconPainter.width / 2,
-          headCenter.dy - iconPainter.height / 2),
+      Offset(center.dx - iconPainter.width / 2,
+          center.dy - iconPainter.height / 2),
     );
-
-    // Rating badge (top-right)
-    _drawRatingBadge(canvas, rating);
 
     final picture = recorder.endRecording();
-    final image = await picture.toImage(_pinWidth.toInt(), _pinHeight.toInt());
+    final image = await picture.toImage(size.toInt(), size.toInt());
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
     return BitmapDescriptor.bytes(bytes!.buffer.asUint8List());
-  }
-
-  static void _drawRatingBadge(Canvas canvas, double? rating) {
-    final left = _pinWidth - _badgeWidth;
-    const top = 2.0;
-    final rect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(left, top, _badgeWidth, _badgeHeight),
-      const Radius.circular(8),
-    );
-
-    // Subtle drop shadow
-    canvas.drawRRect(
-      rect.shift(const Offset(0, 1)),
-      Paint()
-        ..color = const Color(0x1A000000)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.5),
-    );
-
-    if (rating == null) {
-      // "Nouveau" terracotta variant
-      canvas.drawRRect(rect, Paint()..color = DonyColors.accent);
-      final tp = TextPainter(
-        text: const TextSpan(
-          text: 'Nouveau',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 8,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.2,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      tp.paint(
-        canvas,
-        Offset(left + (_badgeWidth - tp.width) / 2,
-            top + (_badgeHeight - tp.height) / 2),
-      );
-      return;
-    }
-
-    // Rated variant: white bg + primary star + score
-    canvas.drawRRect(rect, Paint()..color = Colors.white);
-
-    const starIcon = Icons.star_rounded;
-    final starPainter = TextPainter(
-      text: TextSpan(
-        text: String.fromCharCode(starIcon.codePoint),
-        style: TextStyle(
-          fontFamily: starIcon.fontFamily,
-          package: starIcon.fontPackage,
-          fontSize: 10,
-          color: DonyColors.primary,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-
-    final score = rating.toStringAsFixed(1);
-    final scorePainter = TextPainter(
-      text: TextSpan(
-        text: score,
-        style: const TextStyle(
-          color: DonyColors.primary,
-          fontSize: 9,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-
-    final totalWidth = starPainter.width + 2 + scorePainter.width;
-    final startX = left + (_badgeWidth - totalWidth) / 2;
-    final centerY = top + _badgeHeight / 2;
-    starPainter.paint(canvas, Offset(startX, centerY - starPainter.height / 2));
-    scorePainter.paint(
-      canvas,
-      Offset(startX + starPainter.width + 2, centerY - scorePainter.height / 2),
-    );
   }
 
 }
