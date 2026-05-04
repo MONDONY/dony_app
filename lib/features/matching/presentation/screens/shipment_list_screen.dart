@@ -76,8 +76,10 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
             final bids = state.bids;
             final inProgress =
                 bids.where((b) => b.status == 'ACCEPTED').toList();
-            final upcoming =
-                bids.where((b) => b.status == 'PENDING').toList();
+            final upcoming = bids
+                .where((b) =>
+                    b.status == 'PENDING' || b.status == 'AWAITING_PAYMENT')
+                .toList();
             final past = bids
                 .where((b) =>
                     b.status == 'COMPLETED' ||
@@ -600,6 +602,11 @@ class _ShipmentCard extends StatelessWidget {
   ({String label, DonyBadgeType type, Color barColor}) _statusInfo(
       ColorScheme cs) =>
       switch (bid.status) {
+        'AWAITING_PAYMENT' => (
+            label: 'Paiement requis',
+            type: DonyBadgeType.error,
+            barColor: DonyColors.warning,
+          ),
         'PENDING' => (
             label: 'En attente',
             type: DonyBadgeType.warning,

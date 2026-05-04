@@ -285,7 +285,11 @@ final appRouter = GoRouter(
           path: 'bids',
           builder: (context, state) {
             final id = state.pathParameters['id']!;
-            return BidListScreen(announcementId: id);
+            final extra = state.extra as Map<String, dynamic>?;
+            return BidListScreen(
+              announcementId: id,
+              initialTabIndex: extra?['initialTabIndex'] as int? ?? 0,
+            );
           },
         ),
         GoRoute(

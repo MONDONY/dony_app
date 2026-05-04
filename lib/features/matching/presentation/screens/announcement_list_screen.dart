@@ -225,6 +225,10 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
                                         .add(AnnouncementListRequested());
                                   }
                                 },
+                                onBidsTap: () => context.push(
+                                  '/announcements/${item.id}/bids',
+                                  extra: {'initialTabIndex': 1},
+                                ),
                               ),
                             );
                           },
@@ -288,14 +292,17 @@ class _InProgressSection extends StatelessWidget {
                 child: _InProgressCard(
                   announcement: e.value,
                   index: e.key,
-                  onTap: () async {
+                  onDetailTap: () async {
                     await context.push('/announcements/${e.value.id}');
                     if (context.mounted) {
-                      context
-                          .read<AnnouncementBloc>()
-                          .add(AnnouncementListRequested());
+                      context.read<AnnouncementBloc>().add(AnnouncementListRequested());
                     }
                   },
+                  onScanTap: () => context.push('/tracking/scan'),
+                  onBidsTap: () => context.push(
+                    '/announcements/${e.value.id}/bids',
+                    extra: {'initialTabIndex': 1},
+                  ),
                 ),
               )),
           Divider(height: 1, color: cs.outlineVariant),
@@ -308,12 +315,16 @@ class _InProgressSection extends StatelessWidget {
 class _InProgressCard extends StatelessWidget {
   final AnnouncementModel announcement;
   final int index;
-  final VoidCallback onTap;
+  final VoidCallback onDetailTap;
+  final VoidCallback onScanTap;
+  final VoidCallback onBidsTap;
 
   const _InProgressCard({
     required this.announcement,
     required this.index,
-    required this.onTap,
+    required this.onDetailTap,
+    required this.onScanTap,
+    required this.onBidsTap,
   });
 
   String _formatDate(DateTime date) {
@@ -336,7 +347,7 @@ class _InProgressCard extends StatelessWidget {
     final progress = total > 0 ? (booked / total).clamp(0.0, 1.0) : 0.0;
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: onDetailTap,
       child: Container(
         decoration: BoxDecoration(
           color: DonyColors.successLight,
@@ -381,19 +392,22 @@ class _InProgressCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    borderRadius: BorderRadius.circular(DonyRadius.sm),
-                    border: Border.all(color: DonyColors.success),
-                  ),
-                  child: Text(
-                    'Scanner →',
-                    style: tt.labelSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: DonyColors.success,
+                GestureDetector(
+                  onTap: onScanTap,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      borderRadius: BorderRadius.circular(DonyRadius.sm),
+                      border: Border.all(color: DonyColors.success),
+                    ),
+                    child: Text(
+                      'Scanner →',
+                      style: tt.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: DonyColors.success,
+                      ),
                     ),
                   ),
                 ),
@@ -411,20 +425,50 @@ class _InProgressCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              '${booked.toStringAsFixed(0)} / ${total.toStringAsFixed(0)} kg livrés',
-              style: tt.bodySmall?.copyWith(
-                color: DonyColors.success,
-                fontWeight: FontWeight.w500,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${booked.toStringAsFixed(0)} / ${total.toStringAsFixed(0)} kg livrés',
+                  style: tt.bodySmall?.copyWith(
+                    color: DonyColors.success,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: onBidsTap,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: DonyColors.success.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(DonyRadius.sm),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.inventory_2_outlined,
+                            size: 12, color: DonyColors.success),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Voir les colis',
+                          style: tt.labelSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: DonyColors.success,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
-      )
-          .animate(delay: Duration(milliseconds: index * 80))
-          .fadeIn(duration: 300.ms)
-          .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-    );
+      ),
+    )
+        .animate(delay: Duration(milliseconds: index * 80))
+        .fadeIn(duration: 300.ms)
+        .slideY(begin: 0.04, curve: Curves.easeOutCubic);
   }
 }
 
@@ -568,13 +612,20 @@ class _TabSegment extends StatelessWidget {
 class _AnnouncementCard extends StatelessWidget {
   final AnnouncementModel announcement;
   final VoidCallback onTap;
+  final VoidCallback? onBidsTap;
   final int index;
 
   const _AnnouncementCard({
     required this.announcement,
     required this.onTap,
+    this.onBidsTap,
     required this.index,
   });
+
+  bool get _hasAcceptedBids =>
+      announcement.status == 'COMPLETED' ||
+      announcement.status == 'FULL' ||
+      announcement.availableKg < announcement.totalKg;
 
   DonyBadgeType get _badgeType => switch (announcement.status) {
         'ACTIVE' => DonyBadgeType.success,
@@ -752,19 +803,22 @@ class _AnnouncementCard extends StatelessWidget {
                       ),
                     ),
                   const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: cs.surface,
-                      borderRadius: BorderRadius.circular(DonyRadius.sm),
-                      border: Border.all(color: cs.primary),
-                    ),
-                    child: Text(
-                      'Gérer →',
-                      style: tt.labelMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: cs.primary,
+                  GestureDetector(
+                    onTap: _hasAcceptedBids ? onBidsTap : null,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: cs.surface,
+                        borderRadius: BorderRadius.circular(DonyRadius.sm),
+                        border: Border.all(color: cs.primary),
+                      ),
+                      child: Text(
+                        _hasAcceptedBids ? 'Voir les colis →' : 'Gérer →',
+                        style: tt.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: cs.primary,
+                        ),
                       ),
                     ),
                   ),
