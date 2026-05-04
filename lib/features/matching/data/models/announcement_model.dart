@@ -63,6 +63,7 @@ class AnnouncementModel {
   final AddressData? pickupAddress;
   final AddressData? deliveryAddress;
   final double availableKg;
+  final double totalKg;
   final double pricePerKg;
   @JsonKey(fromJson: transportModeFromWire, toJson: _transportModeToWireOrNull)
   final TransportMode? transportMode;
@@ -86,6 +87,7 @@ class AnnouncementModel {
     this.pickupAddress,
     this.deliveryAddress,
     required this.availableKg,
+    required this.totalKg,
     required this.pricePerKg,
     this.transportMode,
     required this.status,

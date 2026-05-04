@@ -51,6 +51,7 @@ class SavedTripsService {
         'pickupAddress': a.pickupAddress?.toJson(),
         'deliveryAddress': a.deliveryAddress?.toJson(),
         'availableKg': a.availableKg,
+        'totalKg': a.totalKg,
         'pricePerKg': a.pricePerKg,
         'status': a.status,
         'bidsCount': a.bidsCount,

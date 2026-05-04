@@ -19,6 +19,7 @@ AnnouncementModel _ann() => AnnouncementModel(
       arrivalCity: 'Dakar',
       departureDate: DateTime(2024, 6, 1),
       availableKg: 10.0,
+      totalKg: 10.0,
       pricePerKg: 12.0,
       status: 'ACTIVE',
       createdAt: DateTime(2024, 5, 1),
