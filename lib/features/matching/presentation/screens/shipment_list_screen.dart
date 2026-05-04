@@ -8,10 +8,12 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/services/saved_trips_service.dart';
+import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -27,13 +29,22 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
   late TabController _tabController;
   late final EnvoisRefreshNotifier _refreshNotifier;
 
+  // Cache the last loaded lists so checkout's BidLoading doesn't wipe the UI.
+  List<BidModel> _inProgress = [];
+  List<BidModel> _upcoming = [];
+  List<BidModel> _past = [];
+  bool _hasData = false;
+  bool _isRefreshing = false;
+
+  // ID of the bid currently going through checkout — drives button loading state.
+  String? _payingBidId;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _refreshNotifier = getIt<EnvoisRefreshNotifier>();
     _refreshNotifier.addListener(_onTabRefreshRequested);
-    // Chargement initial via auto-refresh (TTL check, pas de double appel si déjà chargé)
     context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
   }
 
@@ -50,108 +61,192 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
     super.dispose();
   }
 
+  void _startPayment(BidModel bid) {
+    setState(() => _payingBidId = bid.id);
+    context.read<BidBloc>().add(BidCheckoutRequested(
+      announcementId: bid.announcementId,
+      weightKg: bid.weightKg,
+      declaredValueEur: bid.declaredValueEur,
+      description: bid.description,
+      contentCategory: bid.contentCategory ?? '',
+      recipientName: bid.recipientName ?? '',
+      recipientPhone: bid.recipientPhone ?? '',
+    ));
+  }
+
+  Future<void> _presentPaymentSheet(
+    BuildContext context,
+    CheckoutPaymentSheetReady state,
+  ) async {
+    try {
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: state.clientSecret,
+          merchantDisplayName: 'Dony',
+        ),
+      );
+      await Stripe.instance.presentPaymentSheet();
+      if (!context.mounted) return;
+      context.read<BidBloc>().add(BidConfirmPaymentRequested(state.bidId));
+      context.push('/bids/${state.bidId}?from=payment');
+    } on StripeException catch (e) {
+      if (!context.mounted) return;
+      setState(() => _payingBidId = null);
+      if (e.error.code != FailureCode.Canceled) {
+        DonySnackbar.show(context,
+            message: 'Erreur de paiement: ${e.error.message}',
+            type: DonySnackbarType.error);
+      }
+    } catch (e) {
+      if (!context.mounted) return;
+      setState(() => _payingBidId = null);
+      DonySnackbar.show(context,
+          message: 'Erreur: ${e.toString()}', type: DonySnackbarType.error);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return Scaffold(
-      floatingActionButton: Builder(
-        builder: (context) {
-          final authState = context.watch<AuthBloc>().state;
-          if (authState is AuthAuthenticated && authState.user.isTraveler) {
-            return _SendFab();
-          }
-          return const SizedBox.shrink();
-        },
-      ),
-      body: BlocBuilder<BidBloc, BidState>(
-        builder: (context, state) {
-          if (state is BidLoading || state is BidInitial) {
-            return const _LoadingView();
-          }
-          if (state is BidError) {
-            return _ErrorView(message: state.message);
-          }
-          if (state is BidListLoaded) {
-            final bids = state.bids;
-            final inProgress =
-                bids.where((b) => b.status == 'ACCEPTED').toList();
-            final upcoming = bids
-                .where((b) =>
-                    b.status == 'PENDING' || b.status == 'AWAITING_PAYMENT')
-                .toList();
-            final past = bids
-                .where((b) =>
-                    b.status == 'COMPLETED' ||
-                    b.status == 'REJECTED' ||
-                    b.status == 'CANCELLED')
-                .toList();
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<BidBloc, BidState>(
+          listener: (context, state) {
+            if (state is BidListLoaded) {
+              final bids = state.bids;
+              setState(() {
+                _inProgress = bids.where((b) => b.status == 'ACCEPTED').toList();
+                _upcoming = bids
+                    .where((b) =>
+                        b.status == 'PENDING' || b.status == 'AWAITING_PAYMENT')
+                    .toList();
+                _past = bids
+                    .where((b) =>
+                        b.status == 'COMPLETED' ||
+                        b.status == 'REJECTED' ||
+                        b.status == 'CANCELLED' ||
+                        b.status == 'NO_SHOW' ||
+                        b.status == 'EXPIRED' ||
+                        b.status == 'PARCEL_REFUSED')
+                    .toList();
+                _hasData = true;
+                _isRefreshing = state.isRefreshing;
+              });
+            } else if (state is BidCheckoutReady) {
+              context.read<PaymentBloc>().add(BidCheckoutPaymentRequested(
+                clientSecret: state.response.clientSecret,
+                publishableKey: state.response.publishableKey,
+                bidId: state.response.bidId,
+              ));
+            } else if (state is BidDeleted) {
+              DonySnackbar.show(context,
+                  message: 'Envoi supprimé', type: DonySnackbarType.success);
+              context.read<BidBloc>().add(const BidMyListAutoRefreshRequested(force: true));
+            } else if (state is BidError && _payingBidId != null) {
+              setState(() => _payingBidId = null);
+              DonySnackbar.show(context,
+                  message: state.message, type: DonySnackbarType.error);
+            }
+          },
+        ),
+        BlocListener<PaymentBloc, PaymentState>(
+          listener: (context, state) async {
+            if (state is CheckoutPaymentSheetReady) {
+              await _presentPaymentSheet(context, state);
+            }
+          },
+        ),
+      ],
+      child: Scaffold(
+        floatingActionButton: Builder(
+          builder: (context) {
+            final authState = context.watch<AuthBloc>().state;
+            if (authState is AuthAuthenticated && authState.user.isTraveler) {
+              return _SendFab();
+            }
+            return const SizedBox.shrink();
+          },
+        ),
+        body: BlocBuilder<BidBloc, BidState>(
+          builder: (context, state) {
+            if (!_hasData && (state is BidLoading || state is BidInitial)) {
+              return const _LoadingView();
+            }
+            if (!_hasData && state is BidError) {
+              return _ErrorView(message: state.message);
+            }
 
             return Stack(
               children: [
-                RefreshIndicator(
-                  color: cs.primary,
-                  onRefresh: () async => context
-                      .read<BidBloc>()
-                      .add(const BidMyListAutoRefreshRequested(force: true)),
-                  child: NestedScrollView(
-                headerSliverBuilder: (context, _) => [
-                  SliverToBoxAdapter(
-                    child: _EnvoisHeader(
-                      inProgressCount: inProgress.length,
-                      upcomingCount: upcoming.length,
-                      activeShipment:
-                          inProgress.isNotEmpty ? inProgress.first : null,
+                NestedScrollView(
+                  headerSliverBuilder: (context, _) => [
+                    SliverToBoxAdapter(
+                      child: _EnvoisHeader(
+                        inProgressCount: _inProgress.length,
+                        upcomingCount: _upcoming.length,
+                        activeShipment:
+                            _inProgress.isNotEmpty ? _inProgress.first : null,
+                      ),
                     ),
-                  ),
-                  SliverPersistentHeader(
-                    pinned: true,
-                    delegate: _TabBarDelegate(
-                      _SegmentedTabs(controller: _tabController),
-                    ),
-                  ),
-                ],
-                body: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _ShipmentListView(
-                      key: const PageStorageKey('tab_inprogress'),
-                      bids: inProgress,
-                      emptyMessage: 'Aucun envoi en cours',
-                      emptySubtitle:
-                          'Vos colis acceptés par un voyageur apparaîtront ici.',
-                      emptyIcon: Icons.local_shipping_outlined,
-                    ),
-                    _ShipmentListView(
-                      key: const PageStorageKey('tab_upcoming'),
-                      bids: upcoming,
-                      emptyMessage: 'Aucune demande en attente',
-                      emptySubtitle:
-                          'Trouvez un voyageur et faites votre premier envoi.',
-                      emptyIcon: Icons.hourglass_empty_rounded,
-                    ),
-                    _ShipmentListView(
-                      key: const PageStorageKey('tab_past'),
-                      bids: past,
-                      emptyMessage: 'Aucun historique',
-                      emptySubtitle:
-                          'Vos livraisons terminées apparaîtront ici.',
-                      emptyIcon: Icons.history_rounded,
+                    SliverPersistentHeader(
+                      pinned: true,
+                      delegate: _TabBarDelegate(
+                        _SegmentedTabs(controller: _tabController),
+                      ),
                     ),
                   ],
+                  body: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _ShipmentListView(
+                        key: const PageStorageKey('tab_inprogress'),
+                        bids: _inProgress,
+                        emptyMessage: 'Aucun envoi en cours',
+                        emptySubtitle:
+                            'Vos colis acceptés par un voyageur apparaîtront ici.',
+                        emptyIcon: Icons.local_shipping_outlined,
+                        onRefresh: () async => context
+                            .read<BidBloc>()
+                            .add(const BidMyListAutoRefreshRequested(force: true)),
+                      ),
+                      _ShipmentListView(
+                        key: const PageStorageKey('tab_upcoming'),
+                        bids: _upcoming,
+                        emptyMessage: 'Aucune demande en attente',
+                        emptySubtitle:
+                            'Trouvez un voyageur et faites votre premier envoi.',
+                        emptyIcon: Icons.hourglass_empty_rounded,
+                        payingBidId: _payingBidId,
+                        onPayTap: _startPayment,
+                        onRefresh: () async => context
+                            .read<BidBloc>()
+                            .add(const BidMyListAutoRefreshRequested(force: true)),
+                      ),
+                      _ShipmentListView(
+                        key: const PageStorageKey('tab_past'),
+                        bids: _past,
+                        emptyMessage: 'Aucun historique',
+                        emptySubtitle:
+                            'Vos livraisons terminées apparaîtront ici.',
+                        emptyIcon: Icons.history_rounded,
+                        onRefresh: () async => context
+                            .read<BidBloc>()
+                            .add(const BidMyListAutoRefreshRequested(force: true)),
+                        onDelete: (bid) => context
+                            .read<BidBloc>()
+                            .add(BidDeleteRequested(bid.id)),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-                ),
-                if (state.isRefreshing)
+                if (_isRefreshing)
                   const LinearProgressIndicator(
                     color: DonyColors.primary,
                     minHeight: 2,
                   ),
               ],
             );
-          }
-          return const SizedBox();
-        },
+          },
+        ),
       ),
     );
   }
@@ -563,6 +658,10 @@ class _ShipmentListView extends StatelessWidget {
   final String emptyMessage;
   final String emptySubtitle;
   final IconData emptyIcon;
+  final String? payingBidId;
+  final void Function(BidModel)? onPayTap;
+  final Future<void> Function()? onRefresh;
+  final void Function(BidModel)? onDelete;
 
   const _ShipmentListView({
     super.key,
@@ -570,23 +669,86 @@ class _ShipmentListView extends StatelessWidget {
     required this.emptyMessage,
     required this.emptySubtitle,
     required this.emptyIcon,
+    this.payingBidId,
+    this.onPayTap,
+    this.onRefresh,
+    this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (bids.isEmpty) {
-      return _EmptyView(
-        icon: emptyIcon,
-        title: emptyMessage,
-        subtitle: emptySubtitle,
-      );
-    }
-    return ListView.separated(
-      padding: EdgeInsets.fromLTRB(
-          DonyLayout.hPadding(context), DonySpacing.base, DonyLayout.hPadding(context), 100),
-      itemCount: bids.length,
-      separatorBuilder: (_, _) => const SizedBox(height: DonySpacing.md),
-      itemBuilder: (_, i) => _ShipmentCard(bid: bids[i], index: i),
+    final h = DonyLayout.hPadding(context);
+    final child = bids.isEmpty
+        ? _EmptyView(icon: emptyIcon, title: emptyMessage, subtitle: emptySubtitle)
+        : ListView.separated(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(h, DonySpacing.base, h, 100),
+            itemCount: bids.length,
+            separatorBuilder: (_, _) => const SizedBox(height: DonySpacing.md),
+            itemBuilder: (_, i) {
+              final bid = bids[i];
+              final card = _ShipmentCard(
+                bid: bid,
+                index: i,
+                isPaymentLoading: payingBidId == bid.id,
+                onPayTap: onPayTap != null ? () => onPayTap!(bid) : null,
+              );
+              if (onDelete == null) return card;
+              return Dismissible(
+                key: ValueKey('dismiss_${bid.id}'),
+                direction: DismissDirection.endToStart,
+                confirmDismiss: (_) => _confirmDelete(context),
+                onDismissed: (_) => onDelete!(bid),
+                background: _DeleteBackground(),
+                child: card,
+              );
+            },
+          );
+
+    if (onRefresh == null) return child;
+    return RefreshIndicator(
+      onRefresh: onRefresh!,
+      color: DonyColors.primary,
+      child: child,
+    );
+  }
+}
+
+Future<bool> _confirmDelete(BuildContext context) async {
+  final confirmed = await DonyDialog.show(
+    context,
+    title: 'Supprimer cet envoi ?',
+    message: 'Il sera retiré de votre historique. Cette action est irréversible.',
+    confirmLabel: 'Supprimer',
+    variant: DonyDialogVariant.destructive,
+    icon: Icons.delete_outline_rounded,
+  );
+  return confirmed == true;
+}
+
+class _DeleteBackground extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.only(right: DonySpacing.xl),
+      decoration: BoxDecoration(
+        color: DonyColors.error,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.delete_outline_rounded,
+              color: DonyColors.white, size: 26),
+          const SizedBox(height: DonySpacing.xs),
+          Text(
+            'Supprimer',
+            style: tt.labelSmall?.copyWith(color: DonyColors.white),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -596,8 +758,15 @@ class _ShipmentListView extends StatelessWidget {
 class _ShipmentCard extends StatelessWidget {
   final BidModel bid;
   final int index;
+  final bool isPaymentLoading;
+  final VoidCallback? onPayTap;
 
-  const _ShipmentCard({required this.bid, required this.index});
+  const _ShipmentCard({
+    required this.bid,
+    required this.index,
+    this.isPaymentLoading = false,
+    this.onPayTap,
+  });
 
   ({String label, DonyBadgeType type, Color barColor}) _statusInfo(
       ColorScheme cs) =>
@@ -631,6 +800,21 @@ class _ShipmentCard extends StatelessWidget {
             label: 'Livré',
             type: DonyBadgeType.success,
             barColor: cs.primary,
+          ),
+        'NO_SHOW' => (
+            label: 'Voyageur absent',
+            type: DonyBadgeType.error,
+            barColor: cs.outline,
+          ),
+        'EXPIRED' => (
+            label: 'Expiré',
+            type: DonyBadgeType.error,
+            barColor: cs.outline,
+          ),
+        'PARCEL_REFUSED' => (
+            label: 'Colis refusé',
+            type: DonyBadgeType.error,
+            barColor: cs.error,
           ),
         _ => (
             label: bid.status,
@@ -736,30 +920,70 @@ class _ShipmentCard extends StatelessWidget {
                             ),
                           ),
                           const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: DonySpacing.md, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: cs.primaryContainer,
-                              borderRadius:
-                                  BorderRadius.circular(DonyRadius.sm),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'Voir',
-                                  style: tt.bodySmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: cs.primary,
-                                  ),
+                          if (bid.status == 'AWAITING_PAYMENT' &&
+                              onPayTap != null)
+                            GestureDetector(
+                              onTap: isPaymentLoading ? null : onPayTap,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: DonySpacing.md, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: DonyColors.warning,
+                                  borderRadius:
+                                      BorderRadius.circular(DonyRadius.sm),
                                 ),
-                                const SizedBox(width: DonySpacing.xs),
-                                Icon(Icons.arrow_forward_rounded,
-                                    size: 12, color: cs.primary),
-                              ],
+                                child: isPaymentLoading
+                                    ? SizedBox(
+                                        width: 14,
+                                        height: 14,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: DonyColors.white,
+                                        ),
+                                      )
+                                    : Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.payment_rounded,
+                                              size: 12,
+                                              color: DonyColors.white),
+                                          const SizedBox(width: DonySpacing.xs),
+                                          Text(
+                                            'Payer maintenant',
+                                            style: tt.bodySmall?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                              color: DonyColors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                              ),
+                            )
+                          else
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: DonySpacing.md, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: cs.primaryContainer,
+                                borderRadius:
+                                    BorderRadius.circular(DonyRadius.sm),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Voir',
+                                    style: tt.bodySmall?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: cs.primary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: DonySpacing.xs),
+                                  Icon(Icons.arrow_forward_rounded,
+                                      size: 12, color: cs.primary),
+                                ],
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ],
@@ -901,14 +1125,18 @@ class _EmptyView extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-            horizontal: DonySpacing.xxl, vertical: DonySpacing.xxl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: SizedBox(
+          height: constraints.maxHeight,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xxl),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
             Container(
               width: 68,
               height: 68,
@@ -970,11 +1198,14 @@ class _EmptyView extends StatelessWidget {
                 ),
               ),
             ),
-          ],
-        )
-            .animate()
-            .fadeIn(duration: 300.ms)
-            .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                ],
+              )
+                  .animate()
+                  .fadeIn(duration: 300.ms)
+                  .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+            ),
+          ),
+        ),
       ),
     );
   }
