@@ -45,26 +45,19 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
     );
   }
 
-  bool _isUpcoming(AnnouncementModel a) {
-    final today = DateUtils.dateOnly(DateTime.now());
-    final dep = DateUtils.dateOnly(a.departureDate);
-    return (a.status == 'ACTIVE' || a.status == 'FULL') && !dep.isBefore(today);
-  }
-
-  bool _isHistory(AnnouncementModel a) {
-    if (a.status == 'CANCELLED') return false;
-    if (a.status == 'COMPLETED') return true;
-    final today = DateUtils.dateOnly(DateTime.now());
-    final dep = DateUtils.dateOnly(a.departureDate);
-    return dep.isBefore(today);
-  }
+  // Filtrage pur sur statut — pas de fallback date.
+  List<AnnouncementModel> _inProgress() =>
+      _lastList.where((a) => a.status == 'IN_PROGRESS').toList()
+        ..sort((a, b) => a.departureDate.compareTo(b.departureDate));
 
   List<AnnouncementModel> _filtered() {
     final list = switch (_tab) {
-      _TripsTab.upcoming => _lastList.where(_isUpcoming).toList()
-        ..sort((a, b) => a.departureDate.compareTo(b.departureDate)),
-      _TripsTab.history => _lastList.where(_isHistory).toList()
-        ..sort((a, b) => b.departureDate.compareTo(a.departureDate)),
+      _TripsTab.upcoming =>
+        _lastList.where((a) => a.status == 'ACTIVE' || a.status == 'FULL').toList()
+          ..sort((a, b) => a.departureDate.compareTo(b.departureDate)),
+      _TripsTab.history =>
+        _lastList.where((a) => a.status == 'COMPLETED').toList()
+          ..sort((a, b) => b.departureDate.compareTo(a.departureDate)),
       _TripsTab.cancelled =>
         _lastList.where((a) => a.status == 'CANCELLED').toList()
           ..sort((a, b) => b.departureDate.compareTo(a.departureDate)),
@@ -77,11 +70,12 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
     for (final a in _lastList) {
       if (a.status == 'CANCELLED') {
         c++;
-      } else if (_isUpcoming(a)) {
+      } else if (a.status == 'ACTIVE' || a.status == 'FULL') {
         u++;
-      } else if (_isHistory(a)) {
+      } else if (a.status == 'COMPLETED') {
         h++;
       }
+      // IN_PROGRESS shown separately — not counted in tabs
     }
     return (upcoming: u, history: h, cancelled: c);
   }
@@ -140,11 +134,16 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
             return _ErrorView(message: state.message);
           }
 
+          final inProgressList = _inProgress();
           final counts = _counts();
           final filtered = _filtered();
 
           return Column(
             children: [
+              // "En cours" section — pinned above tabs, visible only when at least one trip is IN_PROGRESS
+              if (inProgressList.isNotEmpty) ...[
+                _InProgressSection(announcements: inProgressList, tt: tt, cs: cs),
+              ],
               _TabBar(
                 current: _tab,
                 upcomingCount: counts.upcoming,
@@ -239,6 +238,197 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
     );
   }
 }
+
+// ── "En cours" pinned section ────────────────────────────────────────────────
+
+class _InProgressSection extends StatelessWidget {
+  final List<AnnouncementModel> announcements;
+  final TextTheme tt;
+  final ColorScheme cs;
+
+  const _InProgressSection({
+    required this.announcements,
+    required this.tt,
+    required this.cs,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final h = DonyLayout.hPadding(context);
+    return Container(
+      color: cs.surface,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(h, DonySpacing.md, h, DonySpacing.xs),
+            child: Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: DonyColors.success,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.xs),
+                Text(
+                  'En cours',
+                  style: tt.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: DonyColors.success,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ...announcements.asMap().entries.map((e) => Padding(
+                padding: EdgeInsets.fromLTRB(h, 0, h, DonySpacing.sm),
+                child: _InProgressCard(
+                  announcement: e.value,
+                  index: e.key,
+                  onTap: () async {
+                    await context.push('/announcements/${e.value.id}');
+                    if (context.mounted) {
+                      context
+                          .read<AnnouncementBloc>()
+                          .add(AnnouncementListRequested());
+                    }
+                  },
+                ),
+              )),
+          Divider(height: 1, color: cs.outlineVariant),
+        ],
+      ),
+    );
+  }
+}
+
+class _InProgressCard extends StatelessWidget {
+  final AnnouncementModel announcement;
+  final int index;
+  final VoidCallback onTap;
+
+  const _InProgressCard({
+    required this.announcement,
+    required this.index,
+    required this.onTap,
+  });
+
+  String _formatDate(DateTime date) {
+    final today = DateUtils.dateOnly(DateTime.now());
+    final d = DateUtils.dateOnly(date);
+    final diff = d.difference(today).inDays;
+    if (diff == 0) return "Aujourd'hui";
+    if (diff == 1) return 'Demain';
+    if (diff < 0) return 'Parti il y a ${-diff} jour${-diff > 1 ? 's' : ''}';
+    return DateFormat('EEE d MMM', 'fr').format(date);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final total = announcement.totalKg;
+    final remaining = announcement.availableKg;
+    final booked = (total - remaining).clamp(0, total);
+    final progress = total > 0 ? (booked / total).clamp(0.0, 1.0) : 0.0;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: DonyColors.successLight,
+          borderRadius: BorderRadius.circular(DonyRadius.card),
+          border: Border.all(color: DonyColors.success.withValues(alpha: 0.35)),
+        ),
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    color: DonyColors.success,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.flight_rounded,
+                      color: Colors.white, size: 18),
+                ),
+                const SizedBox(width: DonySpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${announcement.departureCity} → ${announcement.arrivalCity}',
+                        style: tt.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: cs.onSurface,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        _formatDate(announcement.departureDate),
+                        style: tt.bodySmall?.copyWith(
+                            color: DonyColors.success,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: cs.surface,
+                    borderRadius: BorderRadius.circular(DonyRadius.sm),
+                    border: Border.all(color: DonyColors.success),
+                  ),
+                  child: Text(
+                    'Scanner →',
+                    style: tt.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: DonyColors.success,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 5,
+                backgroundColor: DonyColors.success.withValues(alpha: 0.15),
+                valueColor:
+                    const AlwaysStoppedAnimation<Color>(DonyColors.success),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${booked.toStringAsFixed(0)} / ${total.toStringAsFixed(0)} kg livrés',
+              style: tt.bodySmall?.copyWith(
+                color: DonyColors.success,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      )
+          .animate(delay: Duration(milliseconds: index * 80))
+          .fadeIn(duration: 300.ms)
+          .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+    );
+  }
+}
+
+// ── Tabs ─────────────────────────────────────────────────────────────────────
 
 class _TabBar extends StatelessWidget {
   final _TripsTab current;
@@ -373,93 +563,7 @@ class _TabSegment extends StatelessWidget {
   }
 }
 
-class _ErrorView extends StatelessWidget {
-  final String message;
-  const _ErrorView({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(DonySpacing.xxl),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.wifi_off_rounded, size: 56, color: cs.outline),
-            const SizedBox(height: DonySpacing.base),
-            Text(
-              'Impossible de charger vos trajets',
-              style: tt.titleLarge?.copyWith(color: cs.onSurface),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: DonySpacing.sm),
-            Text(
-              message,
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: DonySpacing.xl),
-            OutlinedButton.icon(
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Réessayer'),
-              onPressed: () => context
-                  .read<AnnouncementBloc>()
-                  .add(AnnouncementListRequested()),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _EmptyView extends StatelessWidget {
-  final String title;
-  final String description;
-  const _EmptyView({required this.title, required this.description});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(DonySpacing.xxl),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(DonySpacing.xl),
-              decoration: BoxDecoration(
-                color: cs.primaryContainer,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.flight_takeoff_rounded,
-                size: 48,
-                color: cs.primary,
-              ),
-            ),
-            const SizedBox(height: DonySpacing.lg),
-            Text(
-              title,
-              style: tt.headlineMedium?.copyWith(color: cs.onSurface),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: DonySpacing.sm),
-            Text(
-              description,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    ).animate().fadeIn();
-  }
-}
+// ── Cards ─────────────────────────────────────────────────────────────────────
 
 class _AnnouncementCard extends StatelessWidget {
   final AnnouncementModel announcement;
@@ -475,6 +579,7 @@ class _AnnouncementCard extends StatelessWidget {
   DonyBadgeType get _badgeType => switch (announcement.status) {
         'ACTIVE' => DonyBadgeType.success,
         'FULL' => DonyBadgeType.warning,
+        'IN_PROGRESS' => DonyBadgeType.success,
         'COMPLETED' => DonyBadgeType.info,
         'CANCELLED' => DonyBadgeType.error,
         _ => DonyBadgeType.info,
@@ -483,6 +588,7 @@ class _AnnouncementCard extends StatelessWidget {
   String get _statusLabel => switch (announcement.status) {
         'ACTIVE' => 'Actif',
         'FULL' => 'Complet',
+        'IN_PROGRESS' => 'En cours',
         'COMPLETED' => 'Terminé',
         'CANCELLED' => 'Annulé',
         _ => announcement.status,
@@ -585,7 +691,6 @@ class _AnnouncementCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              // Barre de remplissage : booked / total
               ClipRRect(
                 borderRadius: BorderRadius.circular(999),
                 child: LinearProgressIndicator(
@@ -672,5 +777,95 @@ class _AnnouncementCard extends StatelessWidget {
             delay: Duration(milliseconds: 60 * index),
           ).slideY(begin: 0.04, curve: Curves.easeOutCubic),
     );
+  }
+}
+
+// ── Empty / Error views ───────────────────────────────────────────────────────
+
+class _ErrorView extends StatelessWidget {
+  final String message;
+  const _ErrorView({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(DonySpacing.xxl),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.wifi_off_rounded, size: 56, color: cs.outline),
+            const SizedBox(height: DonySpacing.base),
+            Text(
+              'Impossible de charger vos trajets',
+              style: tt.titleLarge?.copyWith(color: cs.onSurface),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            Text(
+              message,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: DonySpacing.xl),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Réessayer'),
+              onPressed: () => context
+                  .read<AnnouncementBloc>()
+                  .add(AnnouncementListRequested()),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyView extends StatelessWidget {
+  final String title;
+  final String description;
+  const _EmptyView({required this.title, required this.description});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(DonySpacing.xxl),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(DonySpacing.xl),
+              decoration: BoxDecoration(
+                color: cs.primaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.flight_takeoff_rounded,
+                size: 48,
+                color: cs.primary,
+              ),
+            ),
+            const SizedBox(height: DonySpacing.lg),
+            Text(
+              title,
+              style: tt.headlineMedium?.copyWith(color: cs.onSurface),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            Text(
+              description,
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn();
   }
 }
