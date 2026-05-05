@@ -42,10 +42,8 @@ class ConnectOnboardingRepository implements IConnectOnboardingRepository {
   Future<ConnectAccountStatus> getAccountStatus() async {
     try {
       return await _datasource.getAccountStatus();
-    } on AppException {
-      rethrow;
     } catch (e) {
-      throw NetworkException(e.toString());
+      throw unwrapDioError(e);
     }
   }
 
@@ -53,10 +51,8 @@ class ConnectOnboardingRepository implements IConnectOnboardingRepository {
   Future<String> createOnboardingLink() async {
     try {
       return await _datasource.createOnboardingLink();
-    } on AppException {
-      rethrow;
     } catch (e) {
-      throw NetworkException(e.toString());
+      throw unwrapDioError(e);
     }
   }
 }

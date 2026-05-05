@@ -18,10 +18,8 @@ class ProfileRepository {
           'siret': siret,
         },
       );
-    } on AppException {
-      rethrow;
     } catch (e) {
-      throw NetworkException(e.toString());
+      throw unwrapDioError(e);
     }
   }
 }

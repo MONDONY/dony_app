@@ -13,6 +13,8 @@ class UserModel extends Equatable {
   final String status;
   final int totalTrips;
   final int totalShipments;
+  final bool isProAccount;
+  final String stripeAccountStatus;
 
   const UserModel({
     required this.id,
@@ -27,6 +29,8 @@ class UserModel extends Equatable {
     required this.status,
     this.totalTrips = 0,
     this.totalShipments = 0,
+    this.isProAccount = false,
+    this.stripeAccountStatus = 'NOT_CREATED',
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -44,6 +48,9 @@ class UserModel extends Equatable {
         status: json['status'] as String? ?? 'ACTIVE',
         totalTrips: (json['totalTrips'] as num?)?.toInt() ?? 0,
         totalShipments: (json['totalShipments'] as num?)?.toInt() ?? 0,
+        isProAccount: json['isProAccount'] as bool? ?? false,
+        stripeAccountStatus:
+            json['stripeAccountStatus'] as String? ?? 'NOT_CREATED',
       );
 
   String get displayName {
@@ -119,5 +126,7 @@ class UserModel extends Equatable {
         status,
         totalTrips,
         totalShipments,
+        isProAccount,
+        stripeAccountStatus,
       ];
 }

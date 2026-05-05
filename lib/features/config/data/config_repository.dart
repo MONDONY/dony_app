@@ -14,10 +14,8 @@ class ConfigRepository implements IConfigRepository {
   Future<double> getCommissionRate() async {
     try {
       return await _datasource.getCommissionRate();
-    } on AppException {
-      rethrow;
     } catch (e) {
-      throw NetworkException(e.toString());
+      throw unwrapDioError(e);
     }
   }
 }

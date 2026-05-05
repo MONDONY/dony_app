@@ -55,6 +55,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           final isTraveler = user?.isTraveler ?? false;
           final isSender = user?.isSender ?? false;
           final isKycVerified = user?.isKycVerified ?? false;
+          final isProAccount = user?.isProAccount ?? false;
           final displayName = user?.displayName ?? 'Utilisateur';
 
           return BlocBuilder<BidBloc, BidState>(
@@ -212,9 +213,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                   DonyListTile(
                                     icon: Icons.business_center_rounded,
-                                    iconColor: DonyColors.warning,
-                                    iconBgColor: DonyColors.warningLight,
-                                    label: 'Passer en compte PRO',
+                                    iconColor: isProAccount
+                                        ? DonyColors.success
+                                        : DonyColors.warning,
+                                    iconBgColor: isProAccount
+                                        ? DonyColors.successLight
+                                        : DonyColors.warningLight,
+                                    label: isProAccount
+                                        ? 'Mon profil PRO'
+                                        : 'Passer en compte PRO',
+                                    trailing: isProAccount
+                                        ? const Icon(
+                                            Icons.verified_rounded,
+                                            color: DonyColors.success,
+                                            size: 18,
+                                          )
+                                        : null,
                                     onTap: () =>
                                         context.push('/profile/upgrade-pro'),
                                   ),

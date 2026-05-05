@@ -1,5 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/profile/bloc/upgrade_to_pro_bloc.dart';
 import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:flutter/material.dart';
@@ -77,6 +79,9 @@ class _UpgradeToProViewState extends State<_UpgradeToProView> {
     return BlocListener<UpgradeToProBloc, UpgradeToProState>(
       listener: (context, state) {
         if (state is UpgradeToProSuccess) {
+          // Rafraîchit le UserModel dans AuthBloc pour que isProAccount
+          // soit à jour partout dans l'app dès le retour au profil.
+          context.read<AuthBloc>().add(const AuthCheckRequested());
           DonySnackbar.show(
             context,
             message: 'Compte PRO activé',
