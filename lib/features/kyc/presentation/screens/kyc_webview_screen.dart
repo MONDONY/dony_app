@@ -24,7 +24,11 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = WebViewController()
+    // onPermissionRequest is passed at construction so the selfie camera
+    // step on Stripe's hosted page works without a prompt.
+    _controller = WebViewController(
+      onPermissionRequest: (request) => request.grant(),
+    )
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
         NavigationDelegate(
@@ -71,6 +75,7 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: DonyAppBar(
         title: 'Vérification d\'identité',
         showBackButton: false,
