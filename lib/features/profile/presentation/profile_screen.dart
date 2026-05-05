@@ -309,6 +309,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           ),
                                         ],
                                       ),
+                                    // NOT_STARTED or unknown → prompt user to start
                                     _ => Text(
                                         'Vérifier',
                                         style: tt.labelMedium?.copyWith(
@@ -316,7 +317,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         ),
                                       ),
                                   },
-                                  onTap: () => context.push('/kyc'),
+                                  onTap: user?.kycStatus == 'VERIFIED'
+                                      ? () => context.push('/kyc/status')
+                                      : () => context.push('/kyc'),
                                 ),
                                 DonyListTile(
                                   icon: Icons.people_outline_rounded,
