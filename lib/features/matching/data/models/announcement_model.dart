@@ -13,6 +13,7 @@ class TravelerProfile {
   final double? averageRating;
   final int? totalTrips;
   final bool kiloPro;
+  final bool isProAccount;
 
   const TravelerProfile({
     required this.id,
@@ -21,6 +22,7 @@ class TravelerProfile {
     this.averageRating,
     this.totalTrips,
     this.kiloPro = false,
+    this.isProAccount = false,
   });
 
   factory TravelerProfile.fromJson(Map<String, dynamic> json) =>

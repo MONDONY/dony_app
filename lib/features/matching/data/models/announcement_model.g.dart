@@ -14,6 +14,7 @@ TravelerProfile _$TravelerProfileFromJson(Map<String, dynamic> json) =>
       averageRating: (json['averageRating'] as num?)?.toDouble(),
       totalTrips: (json['totalTrips'] as num?)?.toInt(),
       kiloPro: json['kiloPro'] as bool? ?? false,
+      isProAccount: json['isProAccount'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$TravelerProfileToJson(TravelerProfile instance) =>
@@ -24,6 +25,7 @@ Map<String, dynamic> _$TravelerProfileToJson(TravelerProfile instance) =>
       'averageRating': instance.averageRating,
       'totalTrips': instance.totalTrips,
       'kiloPro': instance.kiloPro,
+      'isProAccount': instance.isProAccount,
     };
 
 AnnouncementModel _$AnnouncementModelFromJson(Map<String, dynamic> json) =>

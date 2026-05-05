@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/presentation/screens/payment_screen.dart';
@@ -11,6 +12,9 @@ import 'package:mocktail/mocktail.dart';
 
 class MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
     implements PaymentBloc {}
+
+class MockConfigBloc extends MockBloc<ConfigEvent, ConfigState>
+    implements ConfigBloc {}
 
 class MockLocalAuthService extends Mock implements LocalAuthService {}
 
@@ -31,13 +35,17 @@ final _testBid = BidModel(
   updatedAt: DateTime(2025, 5, 1),
 );
 
-Widget _wrap(Widget child, PaymentBloc bloc) {
+Widget _wrap(Widget child, PaymentBloc bloc, {ConfigBloc? configBloc}) {
   return MaterialApp.router(
     routerConfig: GoRouter(routes: [
       GoRoute(
         path: '/',
-        builder: (_, __) => BlocProvider.value(
-          value: bloc,
+        builder: (_, __) => MultiBlocProvider(
+          providers: [
+            BlocProvider<PaymentBloc>.value(value: bloc),
+            if (configBloc != null)
+              BlocProvider<ConfigBloc>.value(value: configBloc),
+          ],
           child: child,
         ),
       ),
@@ -49,17 +57,26 @@ void main() {
   late MockPaymentBloc mockBloc;
   late MockLocalAuthService mockLocalAuth;
 
+  late MockConfigBloc mockConfigBloc;
+
   setUpAll(() {
     registerFallbackValue(const PaymentInitiated('fallback'));
+    registerFallbackValue(const ConfigCommissionRateRequested());
   });
 
   setUp(() {
     mockBloc = MockPaymentBloc();
+    mockConfigBloc = MockConfigBloc();
     mockLocalAuth = MockLocalAuthService();
     whenListen<PaymentState>(
       mockBloc,
       Stream.value(const PaymentInitial()),
       initialState: const PaymentInitial(),
+    );
+    whenListen<ConfigState>(
+      mockConfigBloc,
+      Stream.value(const ConfigLoaded(0.12)),
+      initialState: const ConfigLoaded(0.12),
     );
     when(() => mockLocalAuth.isBiometricAvailable()).thenAnswer((_) async => true);
   });
@@ -78,6 +95,7 @@ void main() {
             localAuthService: mockLocalAuth,
           ),
           mockBloc,
+          configBloc: mockConfigBloc,
         ),
       );
       await tester.pump();
@@ -102,6 +120,7 @@ void main() {
             localAuthService: mockLocalAuth,
           ),
           mockBloc,
+          configBloc: mockConfigBloc,
         ),
       );
       await tester.pump();
@@ -124,6 +143,7 @@ void main() {
             localAuthService: mockLocalAuth,
           ),
           mockBloc,
+          configBloc: mockConfigBloc,
         ),
       );
       await tester.pump();

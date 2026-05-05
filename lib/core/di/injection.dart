@@ -1,4 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dony/features/config/bloc/config_bloc.dart';
+import 'package:dony/features/config/data/config_datasource.dart';
+import 'package:dony/features/config/data/config_repository.dart';
+import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
+import 'package:dony/features/connect_onboarding/data/connect_onboarding_datasource.dart';
+import 'package:dony/features/connect_onboarding/data/connect_onboarding_repository.dart';
+import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
@@ -155,6 +162,33 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<ConversationOpenBloc>(
     () => ConversationOpenBloc(getIt<ConversationRepository>()),
+  );
+
+  // Config (commission rate)
+  getIt.registerLazySingleton<ConfigDatasource>(
+    () => ConfigDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<IConfigRepository>(
+    () => ConfigRepository(getIt<ConfigDatasource>()),
+  );
+  getIt.registerFactory<ConfigBloc>(
+    () => ConfigBloc(getIt<IConfigRepository>()),
+  );
+
+  // Connect onboarding
+  getIt.registerLazySingleton<ConnectOnboardingDatasource>(
+    () => ConnectOnboardingDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<IConnectOnboardingRepository>(
+    () => ConnectOnboardingRepository(getIt<ConnectOnboardingDatasource>()),
+  );
+  getIt.registerFactory<ConnectOnboardingBloc>(
+    () => ConnectOnboardingBloc(getIt<IConnectOnboardingRepository>()),
+  );
+
+  // Profile (upgrade PRO)
+  getIt.registerLazySingleton<ProfileRepository>(
+    () => ProfileRepository(getIt<ApiClient>()),
   );
 
   // Tracking

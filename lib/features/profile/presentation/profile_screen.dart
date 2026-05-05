@@ -217,6 +217,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     onTap: () =>
                                         context.push('/payments/onboarding'),
                                   ),
+                                if (isTraveler)
+                                  DonyListTile(
+                                    icon: Icons.business_center_rounded,
+                                    iconColor: DonyColors.warning,
+                                    iconBgColor: DonyColors.warningLight,
+                                    label: 'Passer en compte PRO',
+                                    onTap: () =>
+                                        context.push('/profile/upgrade-pro'),
+                                  ),
                                 DonyListTile(
                                   icon: Icons.credit_card_outlined,
                                   iconColor: DonyColors.purple,

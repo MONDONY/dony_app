@@ -35,8 +35,13 @@ import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/presentation/screens/escrow_explainer_screen.dart';
 import 'package:dony/features/payments/presentation/screens/payment_screen.dart';
 import 'package:dony/features/payments/presentation/screens/payout_onboarding_screen.dart';
+import 'package:dony/features/config/bloc/config_bloc.dart';
+import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
+import 'package:dony/features/connect_onboarding/presentation/screens/connect_onboarding_intro_screen.dart';
+import 'package:dony/features/connect_onboarding/presentation/screens/connect_onboarding_pending_screen.dart';
 import 'package:dony/features/profile/presentation/edit_profile_screen.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
+import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/presentation/screens/offline_scan_queue_screen.dart';
@@ -149,6 +154,28 @@ final appRouter = GoRouter(
       builder: (context, state) => const EditProfileScreen(),
     ),
 
+    // ── Upgrade PRO (hors shell) ─────────────────────────────────────────
+    GoRoute(
+      path: '/profile/upgrade-pro',
+      builder: (context, state) => const UpgradeToProScreen(),
+    ),
+
+    // ── Connect onboarding (hors shell) ─────────────────────────────────
+    GoRoute(
+      path: '/connect/onboarding/intro',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<ConnectOnboardingBloc>(),
+        child: const ConnectOnboardingIntroScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/connect/onboarding/pending',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<ConnectOnboardingBloc>(),
+        child: const ConnectOnboardingPendingScreen(),
+      ),
+    ),
+
     // ── Routes plein écran (hors shell) ─────────────────────────────────
     GoRoute(
       path: '/tracking/scan',
@@ -186,8 +213,14 @@ final appRouter = GoRouter(
       path: '/payments/pay',
       builder: (context, state) {
         final bid = state.extra as BidModel;
-        return BlocProvider(
-          create: (_) => getIt<PaymentBloc>(),
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (_) => getIt<PaymentBloc>()),
+            BlocProvider(
+              create: (_) => getIt<ConfigBloc>()
+                ..add(const ConfigCommissionRateRequested()),
+            ),
+          ],
           child: PaymentScreen(bid: bid),
         );
       },
