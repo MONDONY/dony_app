@@ -216,7 +216,10 @@ final appRouter = GoRouter(
         return MultiBlocProvider(
           providers: [
             BlocProvider(create: (_) => getIt<PaymentBloc>()),
-            BlocProvider(create: (_) => getIt<ConfigBloc>()),
+            BlocProvider(
+              create: (_) => getIt<ConfigBloc>()
+                ..add(const ConfigCommissionRateRequested()),
+            ),
           ],
           child: PaymentScreen(bid: bid),
         );

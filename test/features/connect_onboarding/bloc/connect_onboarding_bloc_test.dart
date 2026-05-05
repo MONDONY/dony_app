@@ -159,6 +159,25 @@ void main() {
     );
   });
 
+  // ── Launch failed ───────────────────────────────────────────────────────────
+
+  group('ConnectOnboardingLaunchFailed', () {
+    blocTest<ConnectOnboardingBloc, ConnectOnboardingState>(
+      'emits [Error] with provided message',
+      build: buildBloc,
+      act: (b) => b.add(
+        const ConnectOnboardingLaunchFailed("Impossible d'ouvrir le navigateur."),
+      ),
+      expect: () => [
+        isA<ConnectOnboardingError>().having(
+          (s) => s.message,
+          'message',
+          "Impossible d'ouvrir le navigateur.",
+        ),
+      ],
+    );
+  });
+
   // ── ConnectAccountStatus helpers ────────────────────────────────────────────
 
   group('ConnectAccountStatus', () {

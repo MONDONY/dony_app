@@ -15,3 +15,8 @@ class ConnectOnboardingLinkRequested extends ConnectOnboardingEvent {
 class ConnectOnboardingPollingRequested extends ConnectOnboardingEvent {
   const ConnectOnboardingPollingRequested();
 }
+
+class ConnectOnboardingLaunchFailed extends ConnectOnboardingEvent {
+  final String message;
+  const ConnectOnboardingLaunchFailed(this.message);
+}

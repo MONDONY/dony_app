@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/profile/bloc/upgrade_to_pro_bloc.dart';
 import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
@@ -287,12 +288,12 @@ void main() {
       );
     });
 
-    testWidgets('shows 409 error message when upgradeToPro throws 409',
+    testWidgets('shows 409 error message when upgradeToPro throws AppException with code 409',
         (tester) async {
       when(() => mockRepo.upgradeToPro(
             companyName: any(named: 'companyName'),
             siret: any(named: 'siret'),
-          )).thenThrow(Exception('409 Conflict'));
+          )).thenThrow(const NetworkException('Conflict', code: '409'));
 
       await tester.pumpWidget(_wrap(mockRepo));
       await tester.pump(_kSettle);

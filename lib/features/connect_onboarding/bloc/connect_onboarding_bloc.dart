@@ -13,6 +13,7 @@ class ConnectOnboardingBloc
     on<ConnectOnboardingStatusRequested>(_onStatusRequested);
     on<ConnectOnboardingLinkRequested>(_onLinkRequested);
     on<ConnectOnboardingPollingRequested>(_onPollingRequested);
+    on<ConnectOnboardingLaunchFailed>(_onLaunchFailed);
   }
 
   Future<void> _onStatusRequested(
@@ -61,5 +62,12 @@ class ConnectOnboardingBloc
     } catch (e) {
       emit(ConnectOnboardingError(e.toString()));
     }
+  }
+
+  Future<void> _onLaunchFailed(
+    ConnectOnboardingLaunchFailed event,
+    Emitter<ConnectOnboardingState> emit,
+  ) async {
+    emit(ConnectOnboardingError(event.message));
   }
 }

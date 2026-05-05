@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -23,10 +24,8 @@ class UpgradeToProBloc extends Bloc<UpgradeToProEvent, UpgradeToProState> {
         siret: event.siret,
       );
       emit(UpgradeToProSuccess());
-    } catch (e) {
-      final msg = e.toString();
-      final isConflict =
-          msg.contains('409') || msg.toLowerCase().contains('already');
+    } on AppException catch (e) {
+      final isConflict = e.code == '409';
       emit(
         UpgradeToProError(
           isConflict
@@ -34,6 +33,8 @@ class UpgradeToProBloc extends Bloc<UpgradeToProEvent, UpgradeToProState> {
               : 'Une erreur est survenue. Veuillez réessayer.',
         ),
       );
+    } catch (e) {
+      emit(const UpgradeToProError('Une erreur est survenue. Veuillez réessayer.'));
     }
   }
 }

@@ -29,11 +29,19 @@ class ConnectOnboardingIntroScreen extends StatelessWidget {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-    // After launching external browser, navigate to pending screen so the
-    // user can tap "J'ai complété le formulaire" if the deep link doesn't fire.
-    if (context.mounted) {
-      context.go('/connect/onboarding/pending');
+      // After launching external browser, navigate to pending screen so the
+      // user can tap "J'ai complété le formulaire" if the deep link doesn't fire.
+      if (context.mounted) {
+        context.go('/connect/onboarding/pending');
+      }
+    } else {
+      if (context.mounted) {
+        context.read<ConnectOnboardingBloc>().add(
+          const ConnectOnboardingLaunchFailed(
+            "Impossible d'ouvrir le navigateur. Vérifie ta connexion.",
+          ),
+        );
+      }
     }
   }
 }

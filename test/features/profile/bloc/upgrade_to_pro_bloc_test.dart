@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/profile/bloc/upgrade_to_pro_bloc.dart';
 import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -54,14 +55,14 @@ void main() {
     );
 
     blocTest<UpgradeToProBloc, UpgradeToProState>(
-      'emits [Loading, Error] with 409 message when repo throws 409',
+      'emits [Loading, Error] with 409 message when repo throws AppException with code 409',
       build: () {
         when(
           () => mockRepo.upgradeToPro(
             companyName: any(named: 'companyName'),
             siret: any(named: 'siret'),
           ),
-        ).thenThrow(Exception('409 Conflict'));
+        ).thenThrow(const NetworkException('Conflict', code: '409'));
         return bloc;
       },
       act: (b) => b.add(tEvent),
@@ -76,14 +77,14 @@ void main() {
     );
 
     blocTest<UpgradeToProBloc, UpgradeToProState>(
-      'emits [Loading, Error] with generic message on network error',
+      'emits [Loading, Error] with generic message when AppException has non-409 code',
       build: () {
         when(
           () => mockRepo.upgradeToPro(
             companyName: any(named: 'companyName'),
             siret: any(named: 'siret'),
           ),
-        ).thenThrow(Exception('Network timeout'));
+        ).thenThrow(const NetworkException('Network timeout'));
         return bloc;
       },
       act: (b) => b.add(tEvent),
@@ -98,14 +99,14 @@ void main() {
     );
 
     blocTest<UpgradeToProBloc, UpgradeToProState>(
-      'emits [Loading, Error] with 409 message when error contains "already"',
+      'emits [Loading, Error] with generic message on non-AppException error',
       build: () {
         when(
           () => mockRepo.upgradeToPro(
             companyName: any(named: 'companyName'),
             siret: any(named: 'siret'),
           ),
-        ).thenThrow(Exception('Account already exists'));
+        ).thenThrow(Exception('Unexpected error'));
         return bloc;
       },
       act: (b) => b.add(tEvent),
@@ -114,7 +115,7 @@ void main() {
         isA<UpgradeToProError>().having(
           (s) => s.message,
           'message',
-          'Un compte Stripe Connect existe déjà. Contactez le support.',
+          'Une erreur est survenue. Veuillez réessayer.',
         ),
       ],
     );

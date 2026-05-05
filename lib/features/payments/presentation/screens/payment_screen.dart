@@ -23,9 +23,6 @@ class PaymentScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Fetch commission rate on first build
-    context.read<ConfigBloc>().add(const ConfigCommissionRateRequested());
-
     return BlocConsumer<PaymentBloc, PaymentState>(
       listener: (context, state) async {
         if (state is PaymentSheetReady) {
