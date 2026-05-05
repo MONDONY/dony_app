@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
@@ -30,22 +31,24 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, authState) {
-        final user = authState is AuthAuthenticated
-            ? authState.user
-            : authState is AuthProfileUpdated
+    return BlocBuilder<ActiveRoleCubit, ActiveRole>(
+      builder: (context, activeRole) {
+        return BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, authState) {
+            final user = authState is AuthAuthenticated
                 ? authState.user
-                : null;
+                : authState is AuthProfileUpdated
+                    ? authState.user
+                    : null;
 
-        final isTraveler = user?.roles.contains('ROLE_TRAVELER') ?? false;
-
-        if (isTraveler) {
-          return _TravelerView(displayName: user?.displayName ?? 'Voyageur');
-        }
-        return _SenderView(
-          firstName: user?.firstName ?? user?.displayName ?? 'vous',
-          displayName: user?.displayName ?? 'vous',
+            if (activeRole == ActiveRole.traveler) {
+              return _TravelerView(displayName: user?.displayName ?? 'Voyageur');
+            }
+            return _SenderView(
+              firstName: user?.firstName ?? user?.displayName ?? 'vous',
+              displayName: user?.displayName ?? 'vous',
+            );
+          },
         );
       },
     );

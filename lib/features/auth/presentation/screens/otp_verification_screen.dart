@@ -63,7 +63,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthOtpVerified) {
-            context.go('/auth/role');
+            context.read<AuthBloc>().add(
+              const AuthRegisterRequested(['SENDER', 'TRAVELER']),
+            );
           } else if (state is AuthAuthenticated) {
             context.go('/auth/local');
           } else if (state is AuthError) {

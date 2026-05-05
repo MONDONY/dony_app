@@ -4,6 +4,7 @@ import 'package:app_links/app_links.dart';
 import 'package:dony/app/router.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
@@ -85,6 +86,9 @@ class _DonyAppState extends State<DonyApp> {
   @override
   Widget build(BuildContext context) => MultiBlocProvider(
         providers: [
+          BlocProvider<ActiveRoleCubit>(
+            create: (_) => getIt<ActiveRoleCubit>(),
+          ),
           BlocProvider<AuthBloc>(
             create: (_) => getIt<AuthBloc>(),
           ),

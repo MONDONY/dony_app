@@ -14,6 +14,7 @@ import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/auth/data/datasources/auth_remote_datasource.dart';
@@ -49,6 +50,9 @@ final getIt = GetIt.instance;
 Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Core
   getIt.registerLazySingleton<HiveService>(() => HiveService());
+  getIt.registerLazySingleton<ActiveRoleCubit>(
+    () => ActiveRoleCubit(hiveService: getIt<HiveService>()),
+  );
   getIt.registerLazySingleton<ApiClient>(() => ApiClient(baseUrl: apiBaseUrl));
   getIt.registerLazySingleton<NotificationRemoteDatasource>(
     () => NotificationRemoteDatasource(getIt<ApiClient>()),

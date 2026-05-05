@@ -104,7 +104,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (result is AuthAuthenticated) {
       context.go('/auth/local');
     } else if (result is AuthInitial) {
-      context.go('/auth/role');
+      context.go('/onboarding');
     } else {
       setState(() => _hasError = true);
     }

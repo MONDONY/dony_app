@@ -8,7 +8,6 @@ import 'package:dony/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/pin_setup_screen.dart';
-import 'package:dony/features/auth/presentation/screens/role_selection_screen.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/presentation/screens/cancellation_screen.dart';
@@ -74,10 +73,6 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/auth/otp',
       builder: (context, state) => const OtpVerificationScreen(),
-    ),
-    GoRoute(
-      path: '/auth/role',
-      builder: (context, state) => const RoleSelectionScreen(),
     ),
     GoRoute(
       path: '/auth/pin-setup',
