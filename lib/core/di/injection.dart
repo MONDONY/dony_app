@@ -43,6 +43,8 @@ import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:dony/features/payments/data/datasources/payment_remote_datasource.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
+import 'package:dony/features/ratings/bloc/rating_bloc.dart';
+import 'package:dony/features/ratings/data/rating_repository.dart';
 import 'package:get_it/get_it.dart';
 
 final getIt = GetIt.instance;
@@ -193,6 +195,14 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Profile (upgrade PRO)
   getIt.registerLazySingleton<ProfileRepository>(
     () => ProfileRepository(getIt<ApiClient>()),
+  );
+
+  // Ratings
+  getIt.registerLazySingleton<RatingRepository>(
+    () => RatingRepository(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<RatingBloc>(
+    () => RatingBloc(getIt<RatingRepository>()),
   );
 
   // Tracking

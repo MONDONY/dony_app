@@ -83,7 +83,7 @@ class _TravelerProfileSheet extends StatelessWidget {
                       DonyAvatar(
                         name: traveler.resolvedName,
                         size: DonyAvatarSize.xl,
-                        verified: true,
+                        verified: traveler.kycVerified,
                         pro: traveler.isProAccount,
                       ),
                       const SizedBox(height: DonySpacing.md),
@@ -137,13 +137,14 @@ class _TravelerProfileSheet extends StatelessWidget {
                               bgColor: DonyColors.amberLight,
                               textColor: DonyColors.amberDark,
                             ),
-                          _SheetBadge(
-                            icon: Icons.verified_rounded,
-                            label: 'Identité vérifiée',
-                            iconColor: cs.primary,
-                            bgColor: cs.primaryContainer,
-                            textColor: cs.primary,
-                          ),
+                          if (traveler.kycVerified)
+                            _SheetBadge(
+                              icon: Icons.verified_rounded,
+                              label: 'Identité vérifiée',
+                              iconColor: cs.primary,
+                              bgColor: cs.primaryContainer,
+                              textColor: cs.primary,
+                            ),
                         ],
                       ),
                     ],

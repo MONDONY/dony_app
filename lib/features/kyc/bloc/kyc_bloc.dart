@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/kyc/data/repositories/kyc_repository.dart';
@@ -44,25 +44,12 @@ class KycBloc extends Bloc<KycEvent, KycState> {
   }
 
   String _friendlyError(Object e) {
-    if (e is DioException) {
-      final status = e.response?.statusCode;
-      if (status == 409) {
-        return 'Votre identité est déjà vérifiée.';
-      }
-      if (status == 503) {
-        return 'Service de vérification indisponible. Réessayez plus tard.';
-      }
-      if (status == 401) {
-        return 'Session expirée. Reconnectez-vous.';
-      }
-    }
-    final s = e.toString();
-    if (s.contains('503') || s.contains('SERVICE_UNAVAILABLE')) {
-      return 'Service de vérification indisponible. Réessayez plus tard.';
-    }
-    if (s.contains('409') || s.contains('CONFLICT')) {
-      return 'Votre identité est déjà vérifiée.';
-    }
+    if (e is UnauthorizedException) return 'Session expirée. Reconnectez-vous.';
+    final ex = e is AppException ? e : unwrapDioError(e);
+    if (ex is UnauthorizedException) return 'Session expirée. Reconnectez-vous.';
+    final msg = ex.message;
+    if (msg.contains('409')) return 'Votre identité est déjà vérifiée.';
+    if (msg.contains('503')) return 'Service de vérification indisponible. Réessayez plus tard.';
     return 'Une erreur est survenue. Réessayez.';
   }
 }

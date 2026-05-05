@@ -14,6 +14,7 @@ class TravelerProfile {
   final int? totalTrips;
   final bool kiloPro;
   final bool isProAccount;
+  final bool kycVerified;
 
   const TravelerProfile({
     required this.id,
@@ -23,6 +24,7 @@ class TravelerProfile {
     this.totalTrips,
     this.kiloPro = false,
     this.isProAccount = false,
+    this.kycVerified = false,
   });
 
   factory TravelerProfile.fromJson(Map<String, dynamic> json) =>

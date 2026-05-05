@@ -42,6 +42,8 @@ import 'package:dony/features/profile/presentation/edit_profile_screen.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
 import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
+import 'package:dony/features/ratings/bloc/rating_bloc.dart';
+import 'package:dony/features/ratings/presentation/rating_screen.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/presentation/screens/offline_scan_queue_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/qr_scanner_screen.dart';
@@ -361,6 +363,19 @@ final appRouter = GoRouter(
           },
         ),
       ],
+    ),
+
+    // ── Ratings (hors shell) ─────────────────────────────────────────────
+    GoRoute(
+      path: '/ratings/:bidId',
+      builder: (context, state) {
+        final bidId = state.pathParameters['bidId']!;
+        final travelerName = state.extra as String? ?? 'le voyageur';
+        return BlocProvider(
+          create: (_) => getIt<RatingBloc>(),
+          child: RatingScreen(bidId: bidId, travelerName: travelerName),
+        );
+      },
     ),
 
     // ── Suivi hors-ligne (hors shell) ────────────────────────────────────

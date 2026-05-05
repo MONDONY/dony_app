@@ -363,6 +363,20 @@ class _BidDetailViewState extends State<_BidDetailView> {
                         _PaymentReleaseCard(bid: _bid),
                       ],
 
+                      // Rating CTA (sender only, bid completed)
+                      if (isSender && _bid.status == 'COMPLETED') ...[
+                        const SizedBox(height: DonySpacing.base),
+                        DonyButton(
+                          label: 'Noter le voyageur',
+                          icon: Icons.star_rounded,
+                          variant: DonyButtonVariant.secondary,
+                          onPressed: () => context.push(
+                            '/ratings/${_bid.id}',
+                            extra: _bid.travelerName ?? 'le voyageur',
+                          ),
+                        ),
+                      ],
+
                       // Cancel section (traveler only, ACCEPTED or IN_TRANSIT)
                       if (!isSender &&
                           (_bid.status == 'ACCEPTED' ||

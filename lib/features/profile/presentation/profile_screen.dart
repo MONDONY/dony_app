@@ -262,15 +262,60 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   iconColor: cs.primary,
                                   iconBgColor: cs.primaryContainer,
                                   label: 'Documents KYC',
-                                  trailing: isKycVerified
-                                      ? Text(
-                                          'Vérifié',
-                                          style: tt.labelMedium?.copyWith(
-                                            color: DonyColors.success,
-                                            fontWeight: FontWeight.w600,
+                                  trailing: switch (user?.kycStatus) {
+                                    'VERIFIED' => Text(
+                                        'Vérifié',
+                                        style: tt.labelMedium?.copyWith(
+                                          color: DonyColors.success,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    'REJECTED' => Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(
+                                            Icons.warning_amber_rounded,
+                                            color: DonyColors.warning,
+                                            size: 16,
                                           ),
-                                        )
-                                      : null,
+                                          const SizedBox(width: DonySpacing.xs),
+                                          Text(
+                                            'Réessayer',
+                                            style: tt.labelMedium?.copyWith(
+                                              color: DonyColors.warning,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    'PENDING' => Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          SizedBox(
+                                            width: 12,
+                                            height: 12,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 1.5,
+                                              color: DonyColors.warning,
+                                            ),
+                                          ),
+                                          const SizedBox(width: DonySpacing.xs),
+                                          Text(
+                                            'En cours',
+                                            style: tt.labelMedium?.copyWith(
+                                              color: DonyColors.warning,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    _ => Text(
+                                        'Vérifier',
+                                        style: tt.labelMedium?.copyWith(
+                                          color: cs.onSurfaceVariant,
+                                        ),
+                                      ),
+                                  },
                                   onTap: () => context.push('/kyc'),
                                 ),
                                 DonyListTile(
