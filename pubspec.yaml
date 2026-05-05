@@ -72,6 +72,9 @@ dependencies:
   # Splash
   flutter_native_splash: ^2.4.3
 
+  # Deep links
+  app_links: ^6.3.4
+
   # Utils
   intl: ^0.20.2
   equatable: ^2.0.7

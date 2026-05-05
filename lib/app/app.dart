@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_links/app_links.dart';
 import 'package:dony/app/router.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
@@ -26,6 +27,8 @@ class DonyApp extends StatefulWidget {
 class _DonyAppState extends State<DonyApp> {
   StreamSubscription<String>? _navSub;
   StreamSubscription<User?>? _authSub;
+  StreamSubscription<Uri>? _deepLinkSub;
+  final _appLinks = AppLinks();
 
   @override
   void initState() {
@@ -38,12 +41,44 @@ class _DonyAppState extends State<DonyApp> {
         getIt<NotificationService>().uploadCurrentToken();
       }
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initDeepLinks());
+  }
+
+  void _initDeepLinks() {
+    // Handle cold-start URI (app was terminated)
+    _appLinks.getInitialLink().then((uri) {
+      if (uri != null) {
+        _handleDeepLink(uri);
+      }
+    });
+    // Handle warm/hot start URIs
+    _deepLinkSub = _appLinks.uriLinkStream.listen(
+      _handleDeepLink,
+      onError: (Object error, StackTrace stack) {
+        // log if Sentry is available, otherwise ignore to keep subscription alive
+      },
+    );
+  }
+
+  void _handleDeepLink(Uri uri) {
+    if (uri.scheme != 'dony') {
+      return;
+    }
+    // Build GoRouter path from host + path segments:
+    // dony://stripe/onboarding/complete  →  /stripe/onboarding/complete
+    final routePath = '/${uri.host}${uri.path}';
+    try {
+      appRouter.go(routePath);
+    } catch (_) {
+      // Unknown deep link path — no-op
+    }
   }
 
   @override
   void dispose() {
     _navSub?.cancel();
     _authSub?.cancel();
+    _deepLinkSub?.cancel();
     super.dispose();
   }
 

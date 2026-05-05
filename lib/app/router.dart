@@ -218,6 +218,17 @@ final appRouter = GoRouter(
       builder: (context, state) =>
           const _PlaceholderScreen(title: 'Confirmer paiement'),
     ),
+    // ── Stripe Connect deep-link return routes ───────────────────────────
+    GoRoute(
+      path: '/stripe/onboarding/complete',
+      builder: (context, state) =>
+          const _PlaceholderScreen(title: 'Onboarding Stripe complet'),
+    ),
+    GoRoute(
+      path: '/stripe/onboarding/refresh',
+      builder: (context, state) =>
+          const _PlaceholderScreen(title: 'Actualisation onboarding Stripe'),
+    ),
     GoRoute(
       path: '/disputes',
       builder: (context, state) =>
