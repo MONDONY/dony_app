@@ -29,6 +29,7 @@ class TravelerCard extends StatelessWidget {
     final rating = traveler?.averageRating;
     final totalTrips = traveler?.totalTrips;
     final isKiloPro = traveler?.kiloPro ?? false;
+    final isProAccount = traveler?.isProAccount ?? false;
     final dateStr = DateFormat('EEE d', 'fr').format(announcement.departureDate);
     final categories = announcement.acceptedContentTypes ?? [];
 
@@ -68,6 +69,10 @@ class TravelerCard extends StatelessWidget {
                           if (isKiloPro) ...[
                             const SizedBox(width: DonySpacing.xs),
                             const _KycBadge(),
+                          ],
+                          if (isProAccount) ...[
+                            const SizedBox(width: DonySpacing.xs),
+                            const _ProBadge(),
                           ],
                         ],
                       ),
@@ -110,6 +115,39 @@ class TravelerCard extends StatelessWidget {
           .animate()
           .fadeIn(delay: Duration(milliseconds: 60 * index))
           .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+    );
+  }
+}
+
+class _ProBadge extends StatelessWidget {
+  const _ProBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.sm, vertical: DonySpacing.xxs),
+      decoration: BoxDecoration(
+        color: DonyColors.warning50,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+        border: Border.all(color: DonyColors.warning.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.star_rounded, size: 10, color: DonyColors.warning),
+          const SizedBox(width: DonySpacing.xxs),
+          Text(
+            'PRO',
+            style: tt.labelSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: DonyColors.warning,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

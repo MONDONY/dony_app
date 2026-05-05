@@ -84,6 +84,7 @@ class _TravelerProfileSheet extends StatelessWidget {
                         name: traveler.resolvedName,
                         size: DonyAvatarSize.xl,
                         verified: true,
+                        pro: traveler.isProAccount,
                       ),
                       const SizedBox(height: DonySpacing.md),
                       Text(
@@ -120,6 +121,14 @@ class _TravelerProfileSheet extends StatelessWidget {
                         runSpacing: 6,
                         alignment: WrapAlignment.center,
                         children: [
+                          if (traveler.isProAccount)
+                            const _SheetBadge(
+                              icon: Icons.star_rounded,
+                              label: 'Compte PRO',
+                              iconColor: DonyColors.warning,
+                              bgColor: DonyColors.warning50,
+                              textColor: DonyColors.warning,
+                            ),
                           if (traveler.kiloPro)
                             const _SheetBadge(
                               icon: Icons.star_rounded,

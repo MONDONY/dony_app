@@ -6,6 +6,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
@@ -83,7 +84,19 @@ class _DonyBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-    return BlocBuilder<ActiveRoleCubit, ActiveRole>(
+    return BlocBuilder<AuthBloc, AuthState>(
+      buildWhen: (p, c) =>
+          (p is AuthAuthenticated) != (c is AuthAuthenticated) ||
+          (c is AuthAuthenticated && (p as AuthAuthenticated?)?.user.isProAccount !=
+              (c as AuthAuthenticated).user.isProAccount) ||
+          (c is AuthProfileUpdated),
+      builder: (context, authState) {
+        UserModel? authUser;
+        if (authState is AuthAuthenticated) authUser = authState.user;
+        if (authState is AuthProfileUpdated) authUser = authState.user;
+        final isProAccount = authUser?.isProAccount ?? false;
+
+        return BlocBuilder<ActiveRoleCubit, ActiveRole>(
       builder: (context, activeRole) {
         final isTraveler = activeRole == ActiveRole.traveler;
 
@@ -201,12 +214,15 @@ class _DonyBottomNav extends StatelessWidget {
                   index: 4,
                   currentIndex: currentIndex,
                   onTap: () => onTap(4),
+                  isPro: isProAccount,
                 ),
               ),
             ],
           ),
         ),
       ),
+        );
+      },
         );
       },
     );
@@ -222,6 +238,7 @@ class _NavItem extends StatelessWidget {
     required this.currentIndex,
     required this.onTap,
     this.badgeCount = 0,
+    this.isPro = false,
   });
 
   final IconData icon;
@@ -231,6 +248,7 @@ class _NavItem extends StatelessWidget {
   final int currentIndex;
   final VoidCallback onTap;
   final int badgeCount;
+  final bool isPro;
 
   bool get _active => index == currentIndex;
 
@@ -267,6 +285,24 @@ class _NavItem extends StatelessWidget {
                   right: 2,
                   top: 2,
                   child: _NavBadge(count: badgeCount),
+                ),
+              if (isPro)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Container(
+                    width: 14,
+                    height: 14,
+                    decoration: const BoxDecoration(
+                      color: DonyColors.warning,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.star_rounded,
+                      color: DonyColors.white,
+                      size: 9,
+                    ),
+                  ),
                 ),
             ],
           ),

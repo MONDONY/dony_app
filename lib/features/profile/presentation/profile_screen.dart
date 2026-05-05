@@ -101,6 +101,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               name: displayName,
                               size: DonyAvatarSize.xl,
                               verified: isKycVerified,
+                              pro: isProAccount,
                             )
                                 .animate()
                                 .fadeIn(duration: 300.ms)
