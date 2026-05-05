@@ -23,8 +23,6 @@ void main() {
     testWidgets(
       '/stripe/onboarding/complete redirects to /connect/onboarding/pending',
       (tester) async {
-        // Verify the redirect by checking the router resolves the correct path.
-        // We use a self-contained router with stub routes to avoid GetIt deps.
         final router = GoRouter(
           initialLocation: '/stripe/onboarding/complete',
           routes: [
