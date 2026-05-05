@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ConnectOnboardingIntroScreen extends StatelessWidget {
   const ConnectOnboardingIntroScreen({super.key});
@@ -14,7 +14,7 @@ class ConnectOnboardingIntroScreen extends StatelessWidget {
     return BlocConsumer<ConnectOnboardingBloc, ConnectOnboardingState>(
       listener: (context, state) async {
         if (state is ConnectOnboardingUrlReady) {
-          await _openStripeOnboarding(context, state.url);
+          await _openExternalBrowser(context, state.url);
         } else if (state is ConnectOnboardingComplete) {
           context.go('/home');
         }
@@ -25,19 +25,16 @@ class ConnectOnboardingIntroScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _openStripeOnboarding(BuildContext context, String url) async {
-    await showGeneralDialog<void>(
-      context: context,
-      pageBuilder: (ctx, animation, secondaryAnimation) =>
-          _StripeOnboardingWebView(
-        url: url,
-        onReturn: () {
-          if (context.mounted) {
-            context.go('/connect/onboarding/pending');
-          }
-        },
-      ),
-    );
+  Future<void> _openExternalBrowser(BuildContext context, String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+    // After launching external browser, navigate to pending screen so the
+    // user can tap "J'ai complété le formulaire" if the deep link doesn't fire.
+    if (context.mounted) {
+      context.go('/connect/onboarding/pending');
+    }
   }
 }
 
@@ -207,86 +204,6 @@ class _BenefitsList extends StatelessWidget {
             ],
           );
         }).toList(),
-      ),
-    );
-  }
-}
-
-// ── WebView Stripe (deep-link aware) ──────────────────────────────────────────
-
-class _StripeOnboardingWebView extends StatefulWidget {
-  final String url;
-  final VoidCallback onReturn;
-
-  const _StripeOnboardingWebView({
-    required this.url,
-    required this.onReturn,
-  });
-
-  @override
-  State<_StripeOnboardingWebView> createState() =>
-      _StripeOnboardingWebViewState();
-}
-
-class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
-  late final WebViewController _controller;
-  final _isLoading = ValueNotifier<bool>(true);
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(NavigationDelegate(
-        onPageStarted: (_) => _isLoading.value = true,
-        onPageFinished: (_) => _isLoading.value = false,
-        onNavigationRequest: (req) {
-          if (req.url.startsWith('dony://') ||
-              req.url.contains('/stripe/onboarding/complete') ||
-              req.url.contains('/stripe/onboarding/refresh')) {
-            Navigator.of(context).pop();
-            widget.onReturn();
-            return NavigationDecision.prevent;
-          }
-          return NavigationDecision.navigate;
-        },
-      ))
-      ..loadRequest(Uri.parse(widget.url));
-  }
-
-  @override
-  void dispose() {
-    _isLoading.dispose();
-    super.dispose();
-  }
-
-  void _close() {
-    Navigator.of(context).pop();
-    widget.onReturn();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return Scaffold(
-      appBar: DonyAppBar(
-        title: 'Inscription Stripe',
-        leadingIcon: Icons.close_rounded,
-        onBack: _close,
-      ),
-      body: Stack(
-        children: [
-          WebViewWidget(controller: _controller),
-          ValueListenableBuilder<bool>(
-            valueListenable: _isLoading,
-            builder: (_, loading, __) => loading
-                ? Center(
-                    child: CircularProgressIndicator(color: cs.primary),
-                  )
-                : const SizedBox.shrink(),
-          ),
-        ],
       ),
     );
   }

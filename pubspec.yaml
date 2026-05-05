@@ -63,8 +63,11 @@ dependencies:
   flutter_secure_storage: ^9.2.2
   google_fonts: ^6.2.1
 
-  # WebView (Stripe Identity)
+  # WebView (Stripe Identity, KYC)
   webview_flutter: ^4.10.0
+
+  # External browser (Stripe Connect onboarding)
+  url_launcher: ^6.3.0
 
   # Notifications
   flutter_local_notifications: ^18.0.0

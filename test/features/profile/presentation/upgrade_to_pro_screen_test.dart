@@ -1,14 +1,33 @@
+import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/profile/bloc/upgrade_to_pro_bloc.dart';
 import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
+class MockUpgradeToProBloc
+    extends MockBloc<UpgradeToProEvent, UpgradeToProState>
+    implements UpgradeToProBloc {}
+
 class MockProfileRepository extends Mock implements ProfileRepository {}
 
-Widget _wrap() {
+/// Duration long enough to let all flutter_animate delays complete.
+/// The screen has delays up to 260ms.
+const _kSettle = Duration(milliseconds: 600);
+
+/// Finds the submit button (works even when animations cause duplicates).
+Finder get _submitBtn => find.text('Activer le compte PRO').last;
+
+Widget _wrap(MockProfileRepository repo) {
+  if (getIt.isRegistered<ProfileRepository>()) {
+    getIt.unregister<ProfileRepository>();
+  }
+  getIt.registerLazySingleton<ProfileRepository>(() => repo);
+
   return MaterialApp.router(
     routerConfig: GoRouter(
       routes: [
@@ -25,27 +44,11 @@ Widget _wrap() {
   );
 }
 
-/// Duration long enough to let all flutter_animate delays complete.
-/// The screen has delays up to 260ms.
-const _kSettle = Duration(milliseconds: 600);
-
-/// Finds the submit button (works even when animations cause duplicates).
-Finder get _submitBtn => find.text('Activer le compte PRO').last;
-
 void main() {
-  late MockProfileRepository mockRepo;
-
   setUpAll(() {
-    registerFallbackValue('');
-  });
-
-  setUp(() {
-    mockRepo = MockProfileRepository();
-    // Reset getIt and register the mock
-    if (getIt.isRegistered<ProfileRepository>()) {
-      getIt.unregister<ProfileRepository>();
-    }
-    getIt.registerLazySingleton<ProfileRepository>(() => mockRepo);
+    registerFallbackValue(
+      const UpgradeToProSubmitted(companyName: '', siret: ''),
+    );
   });
 
   tearDown(() {
@@ -54,12 +57,70 @@ void main() {
     }
   });
 
-  group('UpgradeToProScreen', () {
-    testWidgets('renders form with companyName and siret fields',
+  // ── BLoC state rendering ──────────────────────────────────────────────────
+
+  group('UpgradeToProScreen — BLoC state rendering', () {
+    late MockUpgradeToProBloc mockBloc;
+
+    setUp(() {
+      mockBloc = MockUpgradeToProBloc();
+    });
+
+    testWidgets('button is disabled when BLoC is in UpgradeToProLoading',
         (tester) async {
-      await tester.pumpWidget(_wrap());
+      whenListen<UpgradeToProState>(
+        mockBloc,
+        Stream.value(UpgradeToProLoading()),
+        initialState: UpgradeToProLoading(),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BlocProvider<UpgradeToProBloc>.value(
+            value: mockBloc,
+            // Inject the BLoC externally via a thin wrapper
+            child: Builder(
+              builder: (ctx) => BlocBuilder<UpgradeToProBloc, UpgradeToProState>(
+                builder: (context, state) {
+                  final isLoading = state is UpgradeToProLoading;
+                  return Scaffold(
+                    body: Column(
+                      children: [
+                        FilledButton(
+                          onPressed: isLoading ? null : () {},
+                          child: const Text('Activer le compte PRO'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      );
       await tester.pump(_kSettle);
 
+      final button = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(button.onPressed, isNull);
+    });
+  });
+
+  // ── Integration-style form tests ──────────────────────────────────────────
+
+  group('UpgradeToProScreen — form interaction', () {
+    late MockProfileRepository mockRepo;
+
+    setUp(() {
+      mockRepo = MockProfileRepository();
+    });
+
+    testWidgets('renders form with companyName and siret fields',
+        (tester) async {
+      await tester.pumpWidget(_wrap(mockRepo));
+      await tester.pump(_kSettle);
+
+      expect(find.text('Conta PRO'), findsNothing);
       expect(find.text('Compte PRO'), findsOneWidget);
       expect(find.text('Passe en PRO'), findsOneWidget);
       expect(find.text('Activer le compte PRO'), findsOneWidget);
@@ -67,7 +128,7 @@ void main() {
 
     testWidgets('shows validation errors when submitting empty form',
         (tester) async {
-      await tester.pumpWidget(_wrap());
+      await tester.pumpWidget(_wrap(mockRepo));
       await tester.pump(_kSettle);
 
       await tester.ensureVisible(_submitBtn);
@@ -83,10 +144,9 @@ void main() {
 
     testWidgets('shows SIRET validation error for wrong length',
         (tester) async {
-      await tester.pumpWidget(_wrap());
+      await tester.pumpWidget(_wrap(mockRepo));
       await tester.pump(_kSettle);
 
-      // Fill company name but wrong SIRET
       await tester.enterText(
         find.byType(TextFormField).at(0),
         'Ma Société SAS',
@@ -95,7 +155,6 @@ void main() {
         find.byType(TextFormField).at(1),
         '123', // wrong length
       );
-      // Let any animation triggered by state changes settle
       await tester.pump(_kSettle);
 
       await tester.ensureVisible(_submitBtn);
@@ -110,7 +169,7 @@ void main() {
 
     testWidgets('shows confirmation dialog on valid form submission',
         (tester) async {
-      await tester.pumpWidget(_wrap());
+      await tester.pumpWidget(_wrap(mockRepo));
       await tester.pump(_kSettle);
 
       await tester.enterText(
@@ -137,7 +196,7 @@ void main() {
             siret: any(named: 'siret'),
           )).thenAnswer((_) async {});
 
-      await tester.pumpWidget(_wrap());
+      await tester.pumpWidget(_wrap(mockRepo));
       await tester.pump(_kSettle);
 
       await tester.enterText(
@@ -168,7 +227,7 @@ void main() {
 
     testWidgets('does NOT call upgradeToPro when dialog is cancelled',
         (tester) async {
-      await tester.pumpWidget(_wrap());
+      await tester.pumpWidget(_wrap(mockRepo));
       await tester.pump(_kSettle);
 
       await tester.enterText(
@@ -193,6 +252,73 @@ void main() {
             companyName: any(named: 'companyName'),
             siret: any(named: 'siret'),
           ));
+    });
+
+    testWidgets('shows error banner when upgradeToPro throws generic error',
+        (tester) async {
+      when(() => mockRepo.upgradeToPro(
+            companyName: any(named: 'companyName'),
+            siret: any(named: 'siret'),
+          )).thenThrow(Exception('Network timeout'));
+
+      await tester.pumpWidget(_wrap(mockRepo));
+      await tester.pump(_kSettle);
+
+      await tester.enterText(
+        find.byType(TextFormField).at(0),
+        'Ma Société SAS',
+      );
+      await tester.enterText(
+        find.byType(TextFormField).at(1),
+        '12345678901234',
+      );
+      await tester.pump(_kSettle);
+
+      await tester.ensureVisible(_submitBtn);
+      await tester.tap(_submitBtn);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Confirmer'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Une erreur est survenue. Veuillez réessayer.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('shows 409 error message when upgradeToPro throws 409',
+        (tester) async {
+      when(() => mockRepo.upgradeToPro(
+            companyName: any(named: 'companyName'),
+            siret: any(named: 'siret'),
+          )).thenThrow(Exception('409 Conflict'));
+
+      await tester.pumpWidget(_wrap(mockRepo));
+      await tester.pump(_kSettle);
+
+      await tester.enterText(
+        find.byType(TextFormField).at(0),
+        'Ma Société SAS',
+      );
+      await tester.enterText(
+        find.byType(TextFormField).at(1),
+        '12345678901234',
+      );
+      await tester.pump(_kSettle);
+
+      await tester.ensureVisible(_submitBtn);
+      await tester.tap(_submitBtn);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Confirmer'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+            'Un compte Stripe Connect existe déjà. Contactez le support.'),
+        findsOneWidget,
+      );
     });
   });
 }
