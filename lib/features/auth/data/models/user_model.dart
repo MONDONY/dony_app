@@ -15,6 +15,7 @@ class UserModel extends Equatable {
   final int totalShipments;
   final bool isProAccount;
   final String stripeAccountStatus;
+  final DateTime? deletionRequestedAt;
 
   const UserModel({
     required this.id,
@@ -31,6 +32,7 @@ class UserModel extends Equatable {
     this.totalShipments = 0,
     this.isProAccount = false,
     this.stripeAccountStatus = 'NOT_CREATED',
+    this.deletionRequestedAt,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -51,6 +53,9 @@ class UserModel extends Equatable {
         isProAccount: json['isProAccount'] as bool? ?? false,
         stripeAccountStatus:
             json['stripeAccountStatus'] as String? ?? 'NOT_CREATED',
+        deletionRequestedAt: json['deletionRequestedAt'] != null
+            ? DateTime.tryParse(json['deletionRequestedAt'] as String)
+            : null,
       );
 
   String get displayName {
@@ -111,6 +116,7 @@ class UserModel extends Equatable {
   bool get isKycVerified => kycStatus == 'VERIFIED';
   bool get isSender => roles.contains('SENDER');
   bool get isTraveler => roles.contains('TRAVELER');
+  bool get isPendingDeletion => status == 'PENDING_DELETION';
 
   @override
   List<Object?> get props => [
@@ -128,5 +134,6 @@ class UserModel extends Equatable {
         totalShipments,
         isProAccount,
         stripeAccountStatus,
+        deletionRequestedAt,
       ];
 }

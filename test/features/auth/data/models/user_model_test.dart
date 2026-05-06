@@ -398,5 +398,35 @@ void main() {
         expect(user1, isNot(equals(user2)));
       });
     });
+
+    // ─── deletionRequestedAt ──────────────────────────────────────────────────
+
+    group('deletionRequestedAt', () {
+      test('parses deletionRequestedAt when present', () {
+        final json = {
+          'id': 'u1',
+          'roles': ['SENDER'],
+          'kycStatus': 'PENDING',
+          'status': 'PENDING_DELETION',
+          'deletionRequestedAt': '2026-05-06T10:00:00Z',
+        };
+        final user = UserModel.fromJson(json);
+        expect(user.deletionRequestedAt, isNotNull);
+        expect(user.deletionRequestedAt!.year, 2026);
+        expect(user.isPendingDeletion, isTrue);
+      });
+
+      test('deletionRequestedAt is null when absent', () {
+        final json = {
+          'id': 'u1',
+          'roles': ['SENDER'],
+          'kycStatus': 'PENDING',
+          'status': 'ACTIVE',
+        };
+        final user = UserModel.fromJson(json);
+        expect(user.deletionRequestedAt, isNull);
+        expect(user.isPendingDeletion, isFalse);
+      });
+    });
   });
 }
