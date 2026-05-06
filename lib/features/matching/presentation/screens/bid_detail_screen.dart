@@ -24,6 +24,8 @@ import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.dart';
 import 'package:dony/features/matching/presentation/widgets/route_map_components.dart';
+import 'package:dony/features/ratings/bloc/rating_bloc.dart';
+import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:intl/intl.dart';
 
 class BidDetailScreen extends StatelessWidget {
@@ -46,6 +48,7 @@ class BidDetailScreen extends StatelessWidget {
         BlocProvider(create: (_) => getIt<BidBloc>()),
         BlocProvider(create: (_) => getIt<TrackingBloc>()),
         BlocProvider(create: (_) => getIt<ConversationOpenBloc>()),
+        BlocProvider(create: (_) => getIt<RatingBloc>()),
       ],
       child: _BidDetailView(initialBid: bid, fromPayment: fromPayment),
     );
@@ -370,9 +373,10 @@ class _BidDetailViewState extends State<_BidDetailView> {
                           label: 'Noter le voyageur',
                           icon: Icons.star_rounded,
                           variant: DonyButtonVariant.secondary,
-                          onPressed: () => context.push(
-                            '/ratings/${_bid.id}',
-                            extra: _bid.travelerName ?? 'le voyageur',
+                          onPressed: () => RatingBottomSheet.show(
+                            context,
+                            bidId: _bid.id,
+                            travelerName: _bid.travelerName ?? 'le voyageur',
                           ),
                         ),
                       ],

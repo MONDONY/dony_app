@@ -11,7 +11,6 @@ import 'package:dony/features/auth/presentation/screens/pin_setup_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
-import 'package:dony/features/cancellation/presentation/screens/cancellation_screen.dart';
 import 'package:dony/features/cancellation/presentation/screens/rematch_search_screen.dart';
 import 'package:dony/features/home/presentation/home_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_onboarding_screen.dart';
@@ -32,7 +31,6 @@ import 'package:dony/features/matching/presentation/screens/search_announcement_
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
 import 'package:dony/features/notifications/presentation/inbox_screen.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
-import 'package:dony/features/payments/presentation/screens/escrow_explainer_screen.dart';
 import 'package:dony/features/payments/presentation/screens/payment_screen.dart';
 import 'package:dony/features/payments/presentation/screens/payout_onboarding_screen.dart';
 import 'package:dony/features/config/bloc/config_bloc.dart';
@@ -43,8 +41,6 @@ import 'package:dony/features/profile/presentation/edit_profile_screen.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
 import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
-import 'package:dony/features/ratings/bloc/rating_bloc.dart';
-import 'package:dony/features/ratings/presentation/rating_screen.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/presentation/delete_account_screen.dart';
 import 'package:dony/features/settings/presentation/settings_screen.dart';
@@ -246,17 +242,6 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: '/payments/escrow',
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>;
-        return EscrowExplainerScreen(
-          amount: (extra['amount'] as num).toDouble(),
-          travelerName: extra['travelerName'] as String,
-          bidId: extra['bidId'] as String?,
-        );
-      },
-    ),
-    GoRoute(
       path: '/tracking/confirm',
       builder: (context, state) {
         final extra = state.extra as Map<String, String>;
@@ -337,8 +322,11 @@ final appRouter = GoRouter(
       path: '/announcements/:id',
       builder: (context, state) {
         final id = state.pathParameters['id']!;
-        return BlocProvider(
-          create: (_) => getIt<AnnouncementBloc>(),
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (_) => getIt<AnnouncementBloc>()),
+            BlocProvider(create: (_) => getIt<CancellationBloc>()),
+          ],
           child: AnnouncementDetailScreen(id: id),
         );
       },
@@ -351,16 +339,6 @@ final appRouter = GoRouter(
             return BidListScreen(
               announcementId: id,
               initialTabIndex: extra?['initialTabIndex'] as int? ?? 0,
-            );
-          },
-        ),
-        GoRoute(
-          path: 'cancel',
-          builder: (context, state) {
-            final id = state.pathParameters['id']!;
-            return BlocProvider(
-              create: (_) => getIt<CancellationBloc>(),
-              child: CancellationScreen(announcementId: id),
             );
           },
         ),
@@ -386,19 +364,6 @@ final appRouter = GoRouter(
           },
         ),
       ],
-    ),
-
-    // ── Ratings (hors shell) ─────────────────────────────────────────────
-    GoRoute(
-      path: '/ratings/:bidId',
-      builder: (context, state) {
-        final bidId = state.pathParameters['bidId']!;
-        final travelerName = state.extra as String? ?? 'le voyageur';
-        return BlocProvider(
-          create: (_) => getIt<RatingBloc>(),
-          child: RatingScreen(bidId: bidId, travelerName: travelerName),
-        );
-      },
     ),
 
     // ── Suivi hors-ligne (hors shell) ────────────────────────────────────
