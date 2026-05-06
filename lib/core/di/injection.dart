@@ -6,6 +6,8 @@ import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.da
 import 'package:dony/features/connect_onboarding/data/connect_onboarding_datasource.dart';
 import 'package:dony/features/connect_onboarding/data/connect_onboarding_repository.dart';
 import 'package:dony/features/profile/data/profile_repository.dart';
+import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
+import 'package:dony/features/settings/data/account_deletion_repository.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
@@ -195,6 +197,14 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Profile (upgrade PRO)
   getIt.registerLazySingleton<ProfileRepository>(
     () => ProfileRepository(getIt<ApiClient>()),
+  );
+
+  // Settings — Account Deletion
+  getIt.registerLazySingleton<AccountDeletionRepository>(
+    () => AccountDeletionRepository(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<AccountDeletionBloc>(
+    () => AccountDeletionBloc(getIt<AccountDeletionRepository>()),
   );
 
   // Ratings
