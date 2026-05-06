@@ -590,6 +590,9 @@ class _ResultsViewState extends State<_ResultsView> {
 
   bool get _isMapHidden => _sheetSize > 0.92;
 
+  bool get _isNearMeCarouselMode =>
+      widget.isNearMeActive.value && _sheetSize < 0.80;
+
   bool _errorBannerDismissed = false;
 
   @override
@@ -1304,34 +1307,43 @@ class _ResultsViewState extends State<_ResultsView> {
                             // Liste scrollable
                             Expanded(
                               child: filtered.isEmpty
-                                  ? SingleChildScrollView(
-                                      controller: scrollController,
-                                      child: _EmptyView(onBack: widget.onBack),
-                                    )
-                                  : ListView.separated(
-                                      controller: scrollController,
-                                      padding: EdgeInsets.fromLTRB(
-                                        DonySpacing.base, DonySpacing.sm,
-                                        DonySpacing.base, bottomPad + DonySpacing.huge,
-                                      ),
-                                      itemCount: filtered.length,
-                                      separatorBuilder: (_, __) => const SizedBox(height: DonySpacing.md),
-                                      itemBuilder: (context, i) {
-                                        final a = filtered[i];
-                                        final authState = context.read<AuthBloc>().state;
-                                        final currentUserId = authState is AuthAuthenticated
-                                            ? authState.user.id : null;
-                                        final isOwn = currentUserId != null && a.travelerId == currentUserId;
-                                        return TravelerCard(
-                                          announcement: a,
-                                          index: i,
-                                          isOwnAnnouncement: isOwn,
-                                          onTap: isOwn
-                                              ? null
-                                              : () => context.push('/search/${a.id}', extra: a),
-                                        );
-                                      },
-                                    ),
+                                  ? _EmptyView(onBack: widget.onBack)
+                                  : _isNearMeCarouselMode
+                                      ? _NearMeCarousel(
+                                          announcements: filtered,
+                                          userPosition: pos,
+                                          scrollController: scrollController,
+                                          onSeeAll: () => _sheetController.animateTo(
+                                            1.0,
+                                            duration: const Duration(milliseconds: 350),
+                                            curve: Curves.easeOutCubic,
+                                          ),
+                                        )
+                                      : ListView.separated(
+                                          controller: scrollController,
+                                          padding: EdgeInsets.fromLTRB(
+                                            DonySpacing.base, DonySpacing.sm,
+                                            DonySpacing.base, bottomPad + DonySpacing.huge,
+                                          ),
+                                          itemCount: filtered.length,
+                                          separatorBuilder: (_, __) => const SizedBox(height: DonySpacing.md),
+                                          itemBuilder: (context, i) {
+                                            final a = filtered[i];
+                                            final authState = context.read<AuthBloc>().state;
+                                            final currentUserId = authState is AuthAuthenticated
+                                                ? authState.user.id : null;
+                                            final isOwn = currentUserId != null && a.travelerId == currentUserId;
+                                            return TravelerCard(
+                                              announcement: a,
+                                              index: i,
+                                              isOwnAnnouncement: isOwn,
+                                              distanceBadge: pos != null ? buildDistanceBadge(a, pos) : null,
+                                              onTap: isOwn
+                                                  ? null
+                                                  : () => context.push('/search/${a.id}', extra: a),
+                                            );
+                                          },
+                                        ),
                             ),
                           ],
                         ),
@@ -1389,6 +1401,99 @@ class _ResultsViewState extends State<_ResultsView> {
           );
         },
       ),
+    );
+  }
+}
+
+// ── Carousel "Près de moi" ───────────────────────────────────────────────────
+
+class _NearMeCarousel extends StatelessWidget {
+  const _NearMeCarousel({
+    required this.announcements,
+    required this.userPosition,
+    required this.scrollController,
+    required this.onSeeAll,
+  });
+
+  final List<AnnouncementModel> announcements;
+  final ({double lat, double lng})? userPosition;
+  final ScrollController scrollController;
+  final VoidCallback onSeeAll;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.separated(
+            controller: scrollController,
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
+            itemCount: announcements.length,
+            separatorBuilder: (_, __) => const SizedBox(width: DonySpacing.md),
+            itemBuilder: (context, i) {
+              final a = announcements[i];
+              final badge = buildDistanceBadge(a, userPosition);
+              final authState = context.read<AuthBloc>().state;
+              final currentUserId = authState is AuthAuthenticated
+                  ? authState.user.id : null;
+              final isOwn = currentUserId != null && a.travelerId == currentUserId;
+              return SizedBox(
+                width: 220,
+                child: TravelerCard(
+                  announcement: a,
+                  index: i,
+                  isOwnAnnouncement: isOwn,
+                  distanceBadge: badge,
+                  onTap: isOwn
+                      ? null
+                      : () => context.push('/search/${a.id}', extra: a),
+                ),
+              );
+            },
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+            DonySpacing.lg, DonySpacing.md, DonySpacing.lg, bottomPad + DonySpacing.md,
+          ),
+          child: GestureDetector(
+            onTap: onSeeAll,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+              decoration: BoxDecoration(
+                color: DonyColors.primarySoft,
+                borderRadius: BorderRadius.circular(DonyRadius.card),
+                border: Border.all(
+                  color: DonyColors.primary.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    'Voir les ${announcements.length} annonce${announcements.length > 1 ? 's' : ''}',
+                    style: tt.labelLarge?.copyWith(
+                      color: DonyColors.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: DonySpacing.xxs),
+                  Text(
+                    'Tirez vers le haut pour la liste',
+                    style: tt.bodySmall?.copyWith(color: DonyColors.primary),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
