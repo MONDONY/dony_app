@@ -258,62 +258,77 @@ class _NavItem extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
         children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOutCubic,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.md,
-                  vertical: DonySpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: _active ? DonyColors.primarySoft : Colors.transparent,
-                  borderRadius: BorderRadius.circular(DonyRadius.xl),
-                ),
-                child: Icon(
-                  _active ? icon : outlinedIcon,
-                  size: 22,
-                  color: _active ? DonyColors.primary : DonyColors.textSubtle,
-                ),
-              ),
-              if (badgeCount > 0)
-                Positioned(
-                  right: 2,
-                  top: 2,
-                  child: _NavBadge(count: badgeCount),
-                ),
-              if (isPro)
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    width: 14,
-                    height: 14,
-                    decoration: const BoxDecoration(
-                      color: DonyColors.warning,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.star_rounded,
-                      color: DonyColors.white,
-                      size: 9,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: DonySpacing.xxs),
-          AnimatedDefaultTextStyle(
+          // Barre indicatrice en haut (style Coclis)
+          AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            style: Theme.of(context).textTheme.labelSmall!.copyWith(
-              fontWeight: _active ? FontWeight.w700 : FontWeight.w500,
-              color: _active ? DonyColors.primary : DonyColors.textSubtle,
+            curve: Curves.easeOutCubic,
+            height: 3,
+            decoration: BoxDecoration(
+              color: _active ? DonyColors.primary : Colors.transparent,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(3),
+                bottomRight: Radius.circular(3),
+              ),
             ),
-            child: Text(label),
+          ),
+          // Icône + label centrés dans l'espace restant
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.md,
+                        vertical: DonySpacing.xs,
+                      ),
+                      child: Icon(
+                        _active ? icon : outlinedIcon,
+                        size: 22,
+                        color: _active ? DonyColors.primary : DonyColors.textSubtle,
+                      ),
+                    ),
+                    if (badgeCount > 0)
+                      Positioned(
+                        right: 2,
+                        top: 2,
+                        child: _NavBadge(count: badgeCount),
+                      ),
+                    if (isPro)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          width: 14,
+                          height: 14,
+                          decoration: const BoxDecoration(
+                            color: DonyColors.warning,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.star_rounded,
+                            color: DonyColors.white,
+                            size: 9,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: DonySpacing.xxs),
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 200),
+                  style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                    fontWeight: _active ? FontWeight.w700 : FontWeight.w500,
+                    color: _active ? DonyColors.primary : DonyColors.textSubtle,
+                  ),
+                  child: Text(label),
+                ),
+              ],
+            ),
           ),
         ],
       ),

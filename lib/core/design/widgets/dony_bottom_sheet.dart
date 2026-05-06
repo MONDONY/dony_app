@@ -55,7 +55,10 @@ class _DonyBottomSheetContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final mq = MediaQuery.of(context);
+    // viewInsets.bottom = hauteur clavier ; viewPadding.bottom = barre nav système
+    // (viewPadding survit à l'écrasement de padding.bottom par le modal)
+    final bottomInset = mq.viewInsets.bottom + mq.viewPadding.bottom;
 
     return Container(
       margin: const EdgeInsets.only(top: DonySpacing.huge),

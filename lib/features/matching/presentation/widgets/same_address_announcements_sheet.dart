@@ -27,7 +27,7 @@ class SameAddressAnnouncementsSheet extends StatelessWidget {
         DonySpacing.lg,
         0,
         DonySpacing.lg,
-        MediaQuery.of(context).padding.bottom + DonySpacing.lg,
+        MediaQuery.of(context).viewPadding.bottom + DonySpacing.lg,
       ),
       decoration: const BoxDecoration(
         color: DonyColors.surface,

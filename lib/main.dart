@@ -7,6 +7,7 @@ import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -28,6 +29,14 @@ const _stripePublishableKey = String.fromEnvironment('STRIPE_PUBLISHABLE_KEY');
 
 Future<void> _bootstrap() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  // Edge-to-edge : l'app dessine derrière la barre nav Android.
+  // systemNavigationBarColor transparent supprime le scrim noir par défaut.
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarDividerColor: Colors.transparent,
+    systemNavigationBarContrastEnforced: false,
+  ));
   // Maintient la native splash visible jusqu'à ce que Flutter soit prêt
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await initializeDateFormatting('fr');

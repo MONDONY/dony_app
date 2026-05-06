@@ -72,8 +72,9 @@ class _TravelerProfileSheet extends StatelessWidget {
           Expanded(
             child: ListView(
               controller: scrollController,
-              padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg, 0, DonySpacing.lg, DonySpacing.huge,
+              padding: EdgeInsets.fromLTRB(
+                DonySpacing.lg, 0, DonySpacing.lg,
+                DonySpacing.xl + MediaQuery.of(context).viewPadding.bottom,
               ),
               children: [
                 // Avatar + name + phone

@@ -15,6 +15,7 @@ import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -111,20 +112,29 @@ class _DonyAppState extends State<DonyApp> {
             create: (_) => getIt<NotificationBloc>(),
           ),
         ],
-        child: MaterialApp.router(
-          title: 'dony',
-          theme: AppTheme.light,
-          routerConfig: appRouter,
-          debugShowCheckedModeBanner: false,
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: const [
-            Locale('fr', 'FR'),
-            Locale('en', 'US'),
-          ],
+        child: AnnotatedRegion<SystemUiOverlayStyle>(
+          value: const SystemUiOverlayStyle(
+            systemNavigationBarColor: Colors.transparent,
+            systemNavigationBarDividerColor: Colors.transparent,
+            systemNavigationBarContrastEnforced: false,
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.dark,
+          ),
+          child: MaterialApp.router(
+            title: 'dony',
+            theme: AppTheme.light,
+            routerConfig: appRouter,
+            debugShowCheckedModeBanner: false,
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('fr', 'FR'),
+              Locale('en', 'US'),
+            ],
+          ),
         ),
       );
 }
