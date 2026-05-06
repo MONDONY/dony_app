@@ -1,0 +1,26 @@
+import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
+
+class AccountDeletionRepository {
+  final ApiClient _client;
+
+  AccountDeletionRepository(this._client);
+
+  Future<void> requestDeletion() async {
+    try {
+      await _client.dio.delete('/auth/me');
+    } catch (e) {
+      throw unwrapDioError(e);
+    }
+  }
+
+  Future<UserModel> reactivateAccount() async {
+    try {
+      final response = await _client.dio.post('/auth/me/reactivate');
+      return UserModel.fromJson(response.data as Map<String, dynamic>);
+    } catch (e) {
+      throw unwrapDioError(e);
+    }
+  }
+}
