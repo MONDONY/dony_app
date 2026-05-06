@@ -26,7 +26,8 @@ class DeleteAccountScreen extends StatelessWidget {
               backgroundColor: cs.error,
             ),
           );
-          if (context.canPop()) context.pop();
+          assert(context.canPop(), 'DeleteAccountScreen must always be pushed onto the stack');
+          context.pop();
         } else if (state is AccountDeletionError && state.isEscrowBlocked) {
           showDialog(
             context: context,

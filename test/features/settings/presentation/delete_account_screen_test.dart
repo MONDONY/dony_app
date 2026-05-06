@@ -1,13 +1,9 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
-import 'package:dony/features/auth/data/repositories/auth_repository.dart';
-import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
-import 'package:dony/features/settings/data/account_deletion_repository.dart';
 import 'package:dony/features/settings/presentation/delete_account_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -22,15 +18,11 @@ class MockAccountDeletionBloc
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
 
-class MockAccountDeletionRepository extends Mock
-    implements AccountDeletionRepository {}
-
 const _kSettle = Duration(milliseconds: 400);
 
 void main() {
   late MockAccountDeletionBloc mockDeletionBloc;
   late MockAuthBloc mockAuthBloc;
-  late MockAccountDeletionRepository mockRepo;
 
   setUpAll(() {
     registerFallbackValue(const RequestDeletion());
@@ -41,12 +33,6 @@ void main() {
   setUp(() {
     mockDeletionBloc = MockAccountDeletionBloc();
     mockAuthBloc = MockAuthBloc();
-    mockRepo = MockAccountDeletionRepository();
-
-    if (getIt.isRegistered<AccountDeletionRepository>()) {
-      getIt.unregister<AccountDeletionRepository>();
-    }
-    getIt.registerLazySingleton<AccountDeletionRepository>(() => mockRepo);
 
     whenListen<AccountDeletionState>(
       mockDeletionBloc,
@@ -65,29 +51,26 @@ void main() {
     );
   });
 
-  tearDown(() {
-    if (getIt.isRegistered<AccountDeletionRepository>()) {
-      getIt.unregister<AccountDeletionRepository>();
-    }
-  });
-
   Widget wrap() => MaterialApp.router(
         routerConfig: GoRouter(
+          initialLocation: '/settings/delete-account',
           routes: [
-            GoRoute(
-              path: '/',
-              builder: (_, __) => MultiBlocProvider(
-                providers: [
-                  BlocProvider<AccountDeletionBloc>.value(
-                      value: mockDeletionBloc),
-                  BlocProvider<AuthBloc>.value(value: mockAuthBloc),
-                ],
-                child: const DeleteAccountScreen(),
-              ),
-            ),
             GoRoute(
               path: '/settings',
               builder: (_, __) => const Scaffold(body: Text('Settings')),
+              routes: [
+                GoRoute(
+                  path: 'delete-account',
+                  builder: (_, __) => MultiBlocProvider(
+                    providers: [
+                      BlocProvider<AccountDeletionBloc>.value(
+                          value: mockDeletionBloc),
+                      BlocProvider<AuthBloc>.value(value: mockAuthBloc),
+                    ],
+                    child: const DeleteAccountScreen(),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -132,7 +115,7 @@ void main() {
     expect(find.text('Voir mes envois'), findsOneWidget);
   });
 
-  testWidgets('dispatches AuthCheckRequested and pops on AccountDeletionRequested',
+  testWidgets('dispatches AuthCheckRequested and shows SnackBar on AccountDeletionRequested',
       (tester) async {
     whenListen<AccountDeletionState>(
       mockDeletionBloc,
@@ -144,9 +127,41 @@ void main() {
     );
 
     await tester.pumpWidget(wrap());
-    await tester.pump(_kSettle);
+    await tester.pump(_kSettle);  // let the SnackBar appear
+    expect(find.byType(SnackBar), findsAtLeastNWidgets(1));  // SnackBar is visible before pop
     await tester.pumpAndSettle();
 
     verify(() => mockAuthBloc.add(const AuthCheckRequested())).called(1);
+  });
+
+  testWidgets('shows inline error message for generic errors', (tester) async {
+    whenListen<AccountDeletionState>(
+      mockDeletionBloc,
+      Stream.fromIterable([
+        const AccountDeletionError(message: 'Une erreur est survenue. Veuillez réessayer.'),
+      ]),
+      initialState: const AccountDeletionInitial(),
+    );
+
+    await tester.pumpWidget(wrap());
+    await tester.pump(_kSettle);
+
+    expect(find.textContaining('Une erreur est survenue'), findsOneWidget);
+    expect(find.byType(AlertDialog), findsNothing);
+  });
+
+  testWidgets('button is disabled during loading', (tester) async {
+    whenListen<AccountDeletionState>(
+      mockDeletionBloc,
+      Stream.fromIterable([const AccountDeletionLoading()]),
+      initialState: const AccountDeletionInitial(),
+    );
+
+    await tester.pumpWidget(wrap());
+    await tester.pump(_kSettle);
+
+    // DonyButton wraps a FilledButton — find it and verify onPressed is null
+    final button = tester.widget<FilledButton>(find.byType(FilledButton));
+    expect(button.onPressed, isNull);
   });
 }
