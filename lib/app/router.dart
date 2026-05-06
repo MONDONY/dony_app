@@ -45,6 +45,9 @@ import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen
 import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/presentation/rating_screen.dart';
+import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
+import 'package:dony/features/settings/presentation/delete_account_screen.dart';
+import 'package:dony/features/settings/presentation/settings_screen.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/presentation/screens/offline_scan_queue_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/qr_scanner_screen.dart';
@@ -413,6 +416,21 @@ final appRouter = GoRouter(
       ),
     ),
 
+    // ── Settings (hors shell) ──────────────────────────────────────────
+    GoRoute(
+      path: '/settings',
+      builder: (context, state) => const SettingsScreen(),
+      routes: [
+        GoRoute(
+          path: 'delete-account',
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<AccountDeletionBloc>(),
+            child: const DeleteAccountScreen(),
+          ),
+        ),
+      ],
+    ),
+
     // ── Shell principal avec Bottom Navigation ───────────────────────────
     // Règle : UNIQUEMENT les 5 racines de tabs, sans sous-routes.
     StatefulShellRoute.indexedStack(
@@ -467,8 +485,11 @@ final appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/profile',
-              builder: (context, state) => BlocProvider(
-                create: (_) => getIt<BidBloc>(),
+              builder: (context, state) => MultiBlocProvider(
+                providers: [
+                  BlocProvider(create: (_) => getIt<BidBloc>()),
+                  BlocProvider(create: (_) => getIt<AccountDeletionBloc>()),
+                ],
                 child: const ProfileScreen(),
               ),
             ),

@@ -4,6 +4,8 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
+import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -37,12 +39,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is AuthInitial || state is AuthAccountDeleted) {
-          context.go('/auth/phone');
-        }
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<AuthBloc, AuthState>(
+          listener: (context, state) {
+            if (state is AuthInitial || state is AuthAccountDeleted) {
+              context.go('/auth/phone');
+            }
+          },
+        ),
+        BlocListener<AccountDeletionBloc, AccountDeletionState>(
+          listener: (context, state) {
+            if (state is AccountReactivated) {
+              context.read<AuthBloc>().add(const AuthCheckRequested());
+            }
+          },
+        ),
+      ],
       child: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, authState) {
           UserModel? user;
@@ -172,6 +185,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               tt: tt,
                             ).animate().fadeIn(delay: 160.ms),
                             const SizedBox(height: DonySpacing.lg),
+
+                            // ── Bannière suppression en attente ─────────
+                            if (user != null &&
+                                user.isPendingDeletion &&
+                                user.deletionRequestedAt != null) ...[
+                              PendingDeletionBanner(
+                                deletionRequestedAt: user.deletionRequestedAt!,
+                                onReactivate: () => context
+                                    .read<AccountDeletionBloc>()
+                                    .add(const ReactivateAccount()),
+                              ),
+                              const SizedBox(height: DonySpacing.lg),
+                            ],
 
                             // ── Bannière complétion profil ───────────────
                             if (user != null && !user.isProfileComplete) ...[
@@ -347,6 +373,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             // ── Menu settings ───────────────────────────
                             DonyListSection(
                               tiles: [
+                                DonyListTile(
+                                  icon: Icons.settings_outlined,
+                                  label: 'Paramètres',
+                                  onTap: () => context.push('/settings'),
+                                ),
                                 DonyListTile(
                                   icon: Icons.notifications_outlined,
                                   iconColor: DonyColors.warning,
