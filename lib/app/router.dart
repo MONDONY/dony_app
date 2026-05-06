@@ -485,11 +485,8 @@ final appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/profile',
-              builder: (context, state) => MultiBlocProvider(
-                providers: [
-                  BlocProvider(create: (_) => getIt<BidBloc>()),
-                  BlocProvider(create: (_) => getIt<AccountDeletionBloc>()),
-                ],
+              builder: (context, state) => BlocProvider(
+                create: (_) => getIt<AccountDeletionBloc>(),
                 child: const ProfileScreen(),
               ),
             ),
