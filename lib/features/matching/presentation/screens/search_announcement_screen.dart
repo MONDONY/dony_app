@@ -18,6 +18,36 @@ import 'package:intl/intl.dart';
 const _departureCities = ['Paris · CDG, ORY', 'Lyon · LYS', 'Marseille · MRS'];
 const _arrivalCities = ['Dakar · DKR', 'Abidjan · ABJ', 'Bamako · BKO', 'Douala · DLA'];
 
+/// Retourne un label "CODE · X km" si userPos est connue et pickupAddress non-null.
+/// Retourne null sinon.
+String? buildDistanceBadge(
+  AnnouncementModel announcement,
+  ({double lat, double lng})? userPos,
+) {
+  if (userPos == null) {
+    return null;
+  }
+  final pickup = announcement.pickupAddress;
+  if (pickup == null) {
+    return null;
+  }
+
+  final distanceM = Geolocator.distanceBetween(
+    userPos.lat,
+    userPos.lng,
+    pickup.lat,
+    pickup.lng,
+  );
+  final distanceKm = (distanceM / 1000).round();
+
+  // Extrait le code IATA (3 lettres majuscules) depuis le label si présent
+  // Ex: "Paris CDG" → "CDG", "Roissy" → "Roissy"
+  final iataMatch = RegExp(r'\b([A-Z]{3})\b').firstMatch(pickup.label);
+  final locationCode = iataMatch?.group(1) ?? pickup.label.split(' ').first;
+
+  return '$locationCode · $distanceKm km';
+}
+
 // Layout constants
 const _kRowIndent = 56.0; // left indent for divider under location rows
 const _kIconGap = 14.0;   // gap between location dot and city text
