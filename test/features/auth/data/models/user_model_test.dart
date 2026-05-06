@@ -341,7 +341,7 @@ void main() {
         expect(user.id, 'user-min');
         expect(user.phoneNumber, isNull);
         expect(user.firstName, isNull);
-        expect(user.kycStatus, 'PENDING');
+        expect(user.kycStatus, 'NOT_STARTED');
         expect(user.status, 'ACTIVE');
         expect(user.roles, isEmpty);
       });

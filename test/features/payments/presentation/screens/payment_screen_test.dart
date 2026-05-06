@@ -18,7 +18,6 @@ class MockConfigBloc extends MockBloc<ConfigEvent, ConfigState>
 
 class MockLocalAuthService extends Mock implements LocalAuthService {}
 
-
 final _testBid = BidModel(
   id: 'bid-1',
   announcementId: 'ann-1',
@@ -35,7 +34,15 @@ final _testBid = BidModel(
   updatedAt: DateTime(2025, 5, 1),
 );
 
-Widget _wrap(Widget child, PaymentBloc bloc, {ConfigBloc? configBloc}) {
+/// Wraps the widget under test with a GoRouter that includes /auth/local
+/// so that PIN fallback navigation does not throw.
+Widget _wrap(
+  Widget child,
+  PaymentBloc bloc, {
+  ConfigBloc? configBloc,
+  // When [pinResult] is non-null, /auth/local will pop with that value.
+  bool? pinResult,
+}) {
   return MaterialApp.router(
     routerConfig: GoRouter(routes: [
       GoRoute(
@@ -49,6 +56,19 @@ Widget _wrap(Widget child, PaymentBloc bloc, {ConfigBloc? configBloc}) {
           child: child,
         ),
       ),
+      // Stub for PIN screen — pops immediately with [pinResult].
+      GoRoute(
+        path: '/auth/local',
+        builder: (context, __) {
+          // Use a post-frame callback so we can pop after the frame is built.
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              context.pop(pinResult);
+            }
+          });
+          return const SizedBox.shrink();
+        },
+      ),
     ]),
   );
 }
@@ -56,7 +76,6 @@ Widget _wrap(Widget child, PaymentBloc bloc, {ConfigBloc? configBloc}) {
 void main() {
   late MockPaymentBloc mockBloc;
   late MockLocalAuthService mockLocalAuth;
-
   late MockConfigBloc mockConfigBloc;
 
   setUpAll(() {
@@ -82,9 +101,9 @@ void main() {
   });
 
   group('PaymentScreen biometric gate', () {
-    testWidgets('does NOT dispatch PaymentInitiated when biometric fails', (
-      tester,
-    ) async {
+    testWidgets(
+        'does NOT dispatch PaymentInitiated when biometric fails and PIN not entered',
+        (tester) async {
       when(() => mockLocalAuth.authenticateWithBiometric())
           .thenAnswer((_) async => false);
 
@@ -96,6 +115,7 @@ void main() {
           ),
           mockBloc,
           configBloc: mockConfigBloc,
+          pinResult: false, // PIN screen returns false (user cancelled)
         ),
       );
       await tester.pump();
@@ -107,9 +127,8 @@ void main() {
       verifyNever(() => mockBloc.add(any()));
     });
 
-    testWidgets('dispatches PaymentInitiated after successful biometric', (
-      tester,
-    ) async {
+    testWidgets('dispatches PaymentInitiated after successful biometric',
+        (tester) async {
       when(() => mockLocalAuth.authenticateWithBiometric())
           .thenAnswer((_) async => true);
 
@@ -132,7 +151,9 @@ void main() {
       verify(() => mockBloc.add(PaymentInitiated('bid-1'))).called(1);
     });
 
-    testWidgets('shows error snackbar when biometric fails', (tester) async {
+    testWidgets(
+        'dispatches PaymentInitiated when biometric fails but PIN succeeds',
+        (tester) async {
       when(() => mockLocalAuth.authenticateWithBiometric())
           .thenAnswer((_) async => false);
 
@@ -144,6 +165,7 @@ void main() {
           ),
           mockBloc,
           configBloc: mockConfigBloc,
+          pinResult: true, // PIN screen returns true (success)
         ),
       );
       await tester.pump();
@@ -151,7 +173,65 @@ void main() {
       await tester.tap(find.text('Payer 30.00 €'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Authentification requise'), findsOneWidget);
+      verify(() => mockLocalAuth.authenticateWithBiometric()).called(1);
+      verify(() => mockBloc.add(PaymentInitiated('bid-1'))).called(1);
+    });
+
+    testWidgets('shows error snackbar when biometric fails and PIN returns false',
+        (tester) async {
+      when(() => mockLocalAuth.authenticateWithBiometric())
+          .thenAnswer((_) async => false);
+
+      await tester.pumpWidget(
+        _wrap(
+          PaymentScreen(
+            bid: _testBid,
+            localAuthService: mockLocalAuth,
+          ),
+          mockBloc,
+          configBloc: mockConfigBloc,
+          pinResult: false,
+        ),
+      );
+      await tester.pump();
+
+      await tester.tap(find.text('Payer 30.00 €'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Authentification requise pour effectuer le paiement'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets(
+        'shows error snackbar when biometric not available and PIN returns false',
+        (tester) async {
+      when(() => mockLocalAuth.isBiometricAvailable())
+          .thenAnswer((_) async => false);
+
+      await tester.pumpWidget(
+        _wrap(
+          PaymentScreen(
+            bid: _testBid,
+            localAuthService: mockLocalAuth,
+          ),
+          mockBloc,
+          configBloc: mockConfigBloc,
+          pinResult: false,
+        ),
+      );
+      await tester.pump();
+
+      await tester.tap(find.text('Payer 30.00 €'));
+      await tester.pumpAndSettle();
+
+      verifyNever(() => mockLocalAuth.authenticateWithBiometric());
+      verifyNever(() => mockBloc.add(any()));
+      expect(
+        find.text('Authentification requise pour effectuer le paiement'),
+        findsOneWidget,
+      );
     });
   });
 }

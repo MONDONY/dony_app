@@ -99,14 +99,28 @@ class _PaymentSummaryView extends StatelessWidget {
   double get _commission => _amount * commissionRate;
 
   Future<void> _pay(BuildContext context) async {
-    final authenticated = await localAuthService.authenticateWithBiometric();
-    if (!context.mounted) return;
-    if (!authenticated) {
-      DonySnackbar.show(
-        context,
-        message: 'Authentification requise',
-        type: DonySnackbarType.error,
-      );
+    bool authenticated = false;
+
+    // Try biometric first if available.
+    final biometricAvailable = await localAuthService.isBiometricAvailable();
+    if (biometricAvailable) {
+      authenticated = await localAuthService.authenticateWithBiometric();
+    }
+
+    // Fall back to PIN if biometric not available or failed.
+    if (!authenticated && context.mounted) {
+      final pinResult = await context.push<bool>('/auth/local');
+      authenticated = pinResult ?? false;
+    }
+
+    if (!context.mounted || !authenticated) {
+      if (context.mounted) {
+        DonySnackbar.show(
+          context,
+          message: 'Authentification requise pour effectuer le paiement',
+          type: DonySnackbarType.error,
+        );
+      }
       return;
     }
     context.read<PaymentBloc>().add(PaymentInitiated(bid.id));

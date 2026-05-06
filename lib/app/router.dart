@@ -8,6 +8,7 @@ import 'package:dony/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/pin_setup_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/presentation/screens/cancellation_screen.dart';
@@ -55,9 +56,28 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
+const _publicRoutes = {
+  '/splash',
+  '/onboarding',
+  '/auth/phone',
+  '/auth/otp',
+  '/auth/pin-setup',
+  '/auth/local',
+};
+
 final appRouter = GoRouter(
   initialLocation: '/splash',
   observers: [SentryNavigatorObserver()],
+  redirect: (context, state) {
+    final user = FirebaseAuth.instance.currentUser;
+    final isAuthenticated = user != null;
+    final isPublic =
+        _publicRoutes.any((r) => state.matchedLocation.startsWith(r));
+    if (!isAuthenticated && !isPublic) {
+      return '/auth/phone';
+    }
+    return null;
+  },
   routes: [
     // ── Auth (hors shell) ─────────────────────────────────────────────────
     GoRoute(

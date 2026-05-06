@@ -44,7 +44,7 @@ class UserModel extends Equatable {
             : null,
         city: json['city'] as String?,
         roles: List<String>.from(json['roles'] as List? ?? []),
-        kycStatus: json['kycStatus'] as String? ?? 'PENDING',
+        kycStatus: json['kycStatus'] as String? ?? 'NOT_STARTED',
         status: json['status'] as String? ?? 'ACTIVE',
         totalTrips: (json['totalTrips'] as num?)?.toInt() ?? 0,
         totalShipments: (json['totalShipments'] as num?)?.toInt() ?? 0,

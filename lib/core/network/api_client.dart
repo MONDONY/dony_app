@@ -69,8 +69,31 @@ class _AuthInterceptor extends Interceptor {
         final token = await user.getIdToken();
         options.headers['Authorization'] = 'Bearer $token';
       }
-    } catch (_) {
-      // Firebase not yet initialized — proceed without token
+    } on FirebaseException catch (e) {
+      if (e.code == 'no-app') {
+        // Firebase genuinely not initialized yet — proceed unauthenticated.
+        handler.next(options);
+        return;
+      }
+      // Any other Firebase error should NOT silently proceed.
+      handler.reject(
+        DioException(
+          requestOptions: options,
+          error: 'Authentication failed: ${e.message}',
+          type: DioExceptionType.unknown,
+        ),
+      );
+      return;
+    } catch (e) {
+      // Unexpected error — reject instead of silently proceeding.
+      handler.reject(
+        DioException(
+          requestOptions: options,
+          error: 'Unexpected auth error',
+          type: DioExceptionType.unknown,
+        ),
+      );
+      return;
     }
     handler.next(options);
   }

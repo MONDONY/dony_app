@@ -436,13 +436,24 @@ class _StripeOnboardingWebView extends StatefulWidget {
       _StripeOnboardingWebViewState();
 }
 
+bool _isStripeUrl(String url) {
+  final uri = Uri.tryParse(url);
+  return uri != null &&
+      uri.scheme == 'https' &&
+      (uri.host == 'connect.stripe.com' || uri.host.endsWith('.stripe.com'));
+}
+
 class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
   late final WebViewController _controller;
   final _isLoading = ValueNotifier<bool>(true);
+  bool _urlValid = true;
 
   @override
   void initState() {
     super.initState();
+    _urlValid = _isStripeUrl(widget.url);
+    if (!_urlValid) return;
+
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(NavigationDelegate(
@@ -475,6 +486,40 @@ class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    if (!_urlValid) {
+      return Scaffold(
+        appBar: DonyAppBar(
+          title: 'Configuration du compte',
+          leadingIcon: Icons.close_rounded,
+          onBack: _close,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(DonySpacing.base),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.error_outline_rounded, color: cs.error, size: 64),
+                const SizedBox(height: DonySpacing.lg),
+                Text(
+                  'URL invalide',
+                  style: tt.headlineMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: DonySpacing.md),
+                Text(
+                  "L'URL de configuration n'est pas une URL Stripe valide.",
+                  style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: DonyAppBar(

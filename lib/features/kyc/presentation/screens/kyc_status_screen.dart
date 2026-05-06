@@ -90,6 +90,9 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
             _stopPolling();
             // Cancellable timer: auto-navigate after a short visual delay.
             _autoNavTimer = Timer(const Duration(milliseconds: 1500), _navigateHome);
+          } else if (state.kycStatus == 'NOT_STARTED') {
+            // KYC not started — stop any polling that may have been running.
+            _stopPolling();
           } else if (state.kycStatus == 'PENDING' && !_timedOut) {
             _startPolling();
           } else {
@@ -133,11 +136,47 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
         return _buildVerifiedContent(cs, tt);
       case 'REJECTED':
         return _buildRejectedContent(context, cs, tt);
+      case 'NOT_STARTED':
+        return _buildNotStartedContent(context, cs, tt);
       default:
         return _timedOut
             ? _buildTimedOutContent(context, cs, tt)
             : _buildPendingContent(context, cs, tt);
     }
+  }
+
+  Widget _buildNotStartedContent(BuildContext context, ColorScheme cs, TextTheme tt) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 96,
+          height: 96,
+          decoration: BoxDecoration(
+            color: cs.primaryContainer,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(Icons.person_outline_rounded, color: cs.primary, size: 48),
+        ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
+        const SizedBox(height: DonySpacing.xxl),
+        Text(
+          'Vérification non démarrée',
+          style: tt.headlineLarge,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: DonySpacing.md),
+        Text(
+          'Vous devez vérifier votre identité pour utiliser toutes les fonctionnalités de dony.',
+          style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: DonySpacing.huge),
+        DonyButton(
+          label: 'Commencer la vérification',
+          onPressed: () => context.go('/kyc'),
+        ),
+      ],
+    );
   }
 
   // Auto-navigation fires 1.5s after this widget is shown.
