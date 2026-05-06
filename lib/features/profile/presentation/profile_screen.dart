@@ -52,6 +52,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           listener: (context, state) {
             if (state is AccountReactivated) {
               context.read<AuthBloc>().add(const AuthCheckRequested());
+            } else if (state is AccountDeletionError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.message)),
+              );
             }
           },
         ),

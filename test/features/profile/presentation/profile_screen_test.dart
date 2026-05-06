@@ -231,7 +231,42 @@ void main() {
     verify(() => authBloc.add(const AuthCheckRequested())).called(1);
   });
 
-  // ── Test 4: Paramètres tile navigates to /settings ──────────────────────
+  // ── Test 4: AccountDeletionError shows a SnackBar ───────────────────────
+
+  testWidgets(
+      'AccountDeletionError state shows a SnackBar with the error message',
+      (tester) async {
+    whenListen<AuthState>(
+      authBloc,
+      const Stream.empty(),
+      initialState: AuthAuthenticated(_pendingDeletionUser),
+    );
+
+    const errorMessage = 'La réactivation a échoué. Veuillez réessayer.';
+
+    whenListen<AccountDeletionState>(
+      deletionBloc,
+      Stream.fromIterable([
+        const AccountDeletionError(message: errorMessage),
+      ]),
+      initialState: const AccountDeletionInitial(),
+    );
+
+    await tester.pumpWidget(_buildTestHarness(
+      authBloc: authBloc,
+      deletionBloc: deletionBloc,
+      bidBloc: bidBloc,
+      announcementBloc: announcementBloc,
+      activeRoleCubit: activeRoleCubit,
+    ));
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump(); // let BlocListener react and SnackBar appear
+
+    expect(find.byType(SnackBar), findsOneWidget);
+    expect(find.text(errorMessage), findsOneWidget);
+  });
+
+  // ── Test 5: Paramètres tile navigates to /settings ──────────────────────
 
   testWidgets('tapping "Paramètres" navigates to /settings', (tester) async {
     whenListen<AuthState>(
