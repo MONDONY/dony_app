@@ -19,7 +19,6 @@ class DeleteAccountScreen extends StatelessWidget {
       listener: (context, state) {
         if (state is AccountDeletionRequested) {
           context.read<AuthBloc>().add(const AuthCheckRequested());
-          if (context.canPop()) context.pop();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text(
@@ -27,6 +26,7 @@ class DeleteAccountScreen extends StatelessWidget {
               backgroundColor: cs.error,
             ),
           );
+          if (context.canPop()) context.pop();
         } else if (state is AccountDeletionError && state.isEscrowBlocked) {
           showDialog(
             context: context,

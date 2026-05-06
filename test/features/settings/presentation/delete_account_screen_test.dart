@@ -118,7 +118,7 @@ void main() {
       Stream.fromIterable([
         const AccountDeletionLoading(),
         const AccountDeletionError(
-          message: 'Paiement en cours',
+          message: 'escrow-active',
           isEscrowBlocked: true,
         ),
       ]),
@@ -129,7 +129,7 @@ void main() {
     await tester.pump(_kSettle);
     await tester.pumpAndSettle();
 
-    expect(find.text('Paiement en cours'), findsOneWidget);
+    expect(find.text('Voir mes envois'), findsOneWidget);
   });
 
   testWidgets('dispatches AuthCheckRequested and pops on AccountDeletionRequested',
