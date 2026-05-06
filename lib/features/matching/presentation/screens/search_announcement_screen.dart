@@ -42,10 +42,13 @@ String? buildDistanceBadge(
 
   // Extrait le code IATA (3 lettres majuscules) depuis le label si présent
   // Ex: "Paris CDG" → "CDG", "Roissy" → "Roissy"
-  final iataMatch = RegExp(r'\b([A-Z]{3})\b').firstMatch(pickup.label);
-  final locationCode = iataMatch?.group(1) ?? pickup.label.split(' ').first;
+  final allMatches = RegExp(r'\b([A-Z]{3})\b').allMatches(pickup.label);
+  final locationCode = allMatches.isNotEmpty
+      ? allMatches.last.group(1)!
+      : pickup.label.split(' ').first;
 
-  return '$locationCode · $distanceKm km';
+  final distanceLabel = distanceKm == 0 ? '< 1 km' : '$distanceKm km';
+  return '$locationCode · $distanceLabel';
 }
 
 // Layout constants
