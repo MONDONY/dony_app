@@ -4,7 +4,6 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
-import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/same_address_announcements_sheet.dart';
@@ -40,7 +39,7 @@ class GeolocatorLocationService implements LocationService {
 
 // ── Internal types ────────────────────────────────────────────────────────────
 
-enum _MarkerSide { pickup, delivery }
+enum _MarkerSide { pickup }
 
 class _AnnouncementPoint {
   const _AnnouncementPoint(this.announcement, this.side);
@@ -120,6 +119,26 @@ double _cellDegForZoom(double zoom) {
   return 0.003;
 }
 
+// ── Map style (beige/crème, style Cocolis) ────────────────────────────────────
+
+const String _kMapStyle = '''[
+  {"elementType":"geometry","stylers":[{"color":"#f5f0e8"}]},
+  {"elementType":"labels.icon","stylers":[{"visibility":"off"}]},
+  {"elementType":"labels.text.fill","stylers":[{"color":"#746855"}]},
+  {"elementType":"labels.text.stroke","stylers":[{"color":"#f5f1e6"}]},
+  {"featureType":"administrative","elementType":"geometry","stylers":[{"visibility":"off"}]},
+  {"featureType":"administrative.land_parcel","elementType":"labels.text.fill","stylers":[{"color":"#ae9e90"}]},
+  {"featureType":"poi","stylers":[{"visibility":"off"}]},
+  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#ffffff"}]},
+  {"featureType":"road.arterial","elementType":"labels.text.fill","stylers":[{"color":"#93817c"}]},
+  {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#f8c967"}]},
+  {"featureType":"road.highway","elementType":"geometry.stroke","stylers":[{"color":"#e9bc62"}]},
+  {"featureType":"road.local","elementType":"labels.text.fill","stylers":[{"color":"#806b63"}]},
+  {"featureType":"transit","stylers":[{"visibility":"off"}]},
+  {"featureType":"water","elementType":"geometry.fill","stylers":[{"color":"#b9d3c2"}]},
+  {"featureType":"water","elementType":"labels.text.fill","stylers":[{"color":"#92998d"}]}
+]''';
+
 // ── Widget ────────────────────────────────────────────────────────────────────
 
 class AnnouncementMapView extends StatefulWidget {
@@ -134,6 +153,8 @@ class AnnouncementMapView extends StatefulWidget {
     this.isNearMeActive = false,
     this.activeRadiusKm,
     this.userPosition,
+    this.fabBottomPadding = 0,
+    this.mapStyle,
   });
 
   final List<AnnouncementModel> announcements;
@@ -146,6 +167,9 @@ class AnnouncementMapView extends StatefulWidget {
   final bool isNearMeActive;
   final double? activeRadiusKm;
   final LatLng? userPosition;
+  final double fabBottomPadding;
+  /// Style JSON Google Maps. Null = style par défaut Google Maps.
+  final String? mapStyle;
 
   @override
   State<AnnouncementMapView> createState() => _AnnouncementMapViewState();
@@ -185,18 +209,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   }
 
   Future<void> _prewarmCommonIcons() async {
-    final futures = <Future<BitmapDescriptor>>[];
-    for (final mode in TransportMode.values) {
-      for (final side in MarkerSide.values) {
-        futures.add(MarkerBitmapFactory.pin(
-          mode: mode,
-          side: side,
-          rating: null,
-        ));
-      }
-    }
-    await Future.wait(futures);
-    if (!mounted) return;
+    // Price pills don't need prewarm — built lazily and cached per price
     await _rebuildMarkers();
   }
 
@@ -223,25 +236,20 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
             'cluster_${cluster.centroid.latitude}_${cluster.centroid.longitude}_${cluster.count}'),
         position: cluster.centroid,
         icon: icon,
-        // Circle badge → centred on the position
         anchor: const Offset(0.5, 0.5),
         onTap: () => _onClusterTapped(cluster),
       );
     }
     final item = cluster.items.first;
-    final icon = await MarkerBitmapFactory.pin(
-      mode: item.announcement.transportMode,
-      side: item.side == _MarkerSide.pickup
-          ? MarkerSide.pickup
-          : MarkerSide.delivery,
-      rating: item.announcement.traveler?.averageRating,
+    final icon = await MarkerBitmapFactory.pricePill(
+      pricePerKg: item.announcement.pricePerKg,
     );
-    // Default anchor (0.5, 1.0) lands the pin tip — drawn at the very
-    // bottom-centre of the bitmap — exactly on the lat/lng coordinate.
     return Marker(
       markerId: MarkerId('${item.side.name}_${item.announcement.id}'),
       position: item.location,
       icon: icon,
+      // Pill centré sur le point géographique
+      anchor: const Offset(0.5, 0.5),
       onTap: () => _onMarkerTapped(item.announcement),
     );
   }
@@ -386,6 +394,8 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
 
   @override
   Widget build(BuildContext context) {
+    final fabBottom = widget.fabBottomPadding + DonySpacing.lg;
+
     return Stack(
       children: [
         GoogleMap(
@@ -393,6 +403,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
             target: LatLng(30.0, -5.0),
             zoom: 3.5,
           ),
+          style: widget.mapStyle,
           onMapCreated: (controller) {
             _mapController = controller;
             _fitInitialBounds();
@@ -411,41 +422,15 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
           compassEnabled: false,
         ),
         Positioned(
-          bottom: DonySpacing.lg + 26,
+          bottom: fabBottom,
           right: DonySpacing.lg,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _NearMeFab(
-                key: const Key('near-me-fab'),
-                isActive: widget.isNearMeActive,
-                isLoading: _isLocating,
-                radiusKm: widget.activeRadiusKm,
-                onTap: _onNearMeTapped,
-                onDoubleTap: widget.isNearMeActive
-                    ? widget.onNearMeDisabled
-                    : null,
-              ),
-              const SizedBox(height: 8),
-              _ZoomButton(
-                icon: Icons.add_rounded,
-                onTap: () async {
-                  final controller = _mapController;
-                  if (controller != null) {
-                    await controller.animateCamera(CameraUpdate.zoomIn());
-                  }
-                },
-              ),
-              _ZoomButton(
-                icon: Icons.remove_rounded,
-                onTap: () async {
-                  final controller = _mapController;
-                  if (controller != null) {
-                    await controller.animateCamera(CameraUpdate.zoomOut());
-                  }
-                },
-              ),
-            ],
+          child: _NearMeFab(
+            key: const Key('near-me-fab'),
+            isActive: widget.isNearMeActive,
+            isLoading: _isLocating,
+            radiusKm: widget.activeRadiusKm,
+            onTap: _onNearMeTapped,
+            onDoubleTap: widget.isNearMeActive ? widget.onNearMeDisabled : null,
           ),
         ),
       ],
@@ -577,46 +562,6 @@ class _NearMeFab extends StatelessWidget {
                   size: 22,
                   color: isActive ? Colors.white : DonyColors.primary,
                 ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── _ZoomButton ───────────────────────────────────────────────────────────────
-
-class _ZoomButton extends StatelessWidget {
-  const _ZoomButton({
-    required this.icon,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: DonyColors.surface,
-          shape: BoxShape.circle,
-          border: Border.all(color: DonyColors.borderDefault),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Icon(
-          icon,
-          size: 22,
-          color: DonyColors.primary,
         ),
       ),
     );
