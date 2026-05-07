@@ -9,51 +9,34 @@ import 'package:dony/features/auth/presentation/screens/otp_verification_screen.
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/pin_setup_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
-import 'package:dony/features/cancellation/presentation/screens/cancellation_screen.dart';
 import 'package:dony/features/cancellation/presentation/screens/rematch_search_screen.dart';
 import 'package:dony/features/home/presentation/home_screen.dart';
-import 'package:dony/features/kyc/presentation/screens/kyc_onboarding_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_status_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
-import 'package:dony/features/matching/bloc/bid_bloc.dart';
-import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/presentation/screens/announcement_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_list_screen.dart';
-import 'package:dony/features/matching/presentation/screens/create_announcement_screen.dart';
-import 'package:dony/features/matching/presentation/screens/create_bid_screen.dart';
-import 'package:dony/features/matching/presentation/screens/handover_screen.dart';
 import 'package:dony/features/matching/presentation/screens/matching_management_screen.dart';
+import 'package:dony/features/matching/data/models/search_params.dart';
 import 'package:dony/features/matching/presentation/screens/search_announcement_screen.dart';
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
 import 'package:dony/features/notifications/presentation/inbox_screen.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
-import 'package:dony/features/payments/presentation/screens/escrow_explainer_screen.dart';
 import 'package:dony/features/payments/presentation/screens/payment_screen.dart';
 import 'package:dony/features/payments/presentation/screens/payout_onboarding_screen.dart';
 import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/presentation/screens/connect_onboarding_intro_screen.dart';
-import 'package:dony/features/connect_onboarding/presentation/screens/connect_onboarding_pending_screen.dart';
-import 'package:dony/features/profile/presentation/edit_profile_screen.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
-import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
-import 'package:dony/features/ratings/bloc/rating_bloc.dart';
-import 'package:dony/features/ratings/presentation/rating_screen.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
-import 'package:dony/features/settings/presentation/delete_account_screen.dart';
 import 'package:dony/features/settings/presentation/settings_screen.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/presentation/screens/offline_scan_queue_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/qr_scanner_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/reception_confirm_screen.dart';
-import 'package:dony/features/tracking/presentation/screens/tracking_search_screen.dart';
-import 'package:dony/features/tracking/presentation/screens/tracking_timeline_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -110,22 +93,18 @@ final appRouter = GoRouter(
 
     // ── KYC (hors shell) ─────────────────────────────────────────────────
     GoRoute(
-      path: '/kyc',
-      builder: (context, state) => const KycOnboardingScreen(),
-    ),
-    GoRoute(
       path: '/kyc/verify',
       builder: (context, state) {
         final raw = state.extra;
         if (raw is! String) {
-          return const KycOnboardingScreen();
+          return const KycStatusScreen();
         }
         final uri = Uri.tryParse(raw);
         final host = uri?.host ?? '';
         final isStripe = uri?.scheme == 'https' &&
             (host == 'verify.stripe.com' || host.endsWith('.stripe.com'));
         if (!isStripe) {
-          return const KycOnboardingScreen();
+          return const KycStatusScreen();
         }
         return KycWebViewScreen(stripeUrl: raw);
       },
@@ -135,7 +114,7 @@ final appRouter = GoRouter(
       builder: (context, state) => const KycStatusScreen(),
     ),
 
-    // ── Bid detail + handover (hors shell) ──────────────────────────────
+    // ── Bid detail (hors shell) ──────────────────────────────────────────
     GoRoute(
       path: '/bids/:bidId',
       builder: (context, state) {
@@ -145,18 +124,6 @@ final appRouter = GoRouter(
         final fromPayment = state.uri.queryParameters['from'] == 'payment';
         return BidDetailScreen(bid: bid, fromPayment: fromPayment);
       },
-      routes: [
-        GoRoute(
-          path: 'handover',
-          builder: (context, state) {
-            final bid = state.extra as BidModel;
-            return BlocProvider(
-              create: (_) => getIt<BidBloc>(),
-              child: HandoverScreen(bid: bid),
-            );
-          },
-        ),
-      ],
     ),
 
     // ── Cancellation (hors shell) ────────────────────────────────────────
@@ -168,31 +135,12 @@ final appRouter = GoRouter(
       },
     ),
 
-    // ── Édition profil (hors shell, plein écran) ─────────────────────────
-    GoRoute(
-      path: '/profile/edit',
-      builder: (context, state) => const EditProfileScreen(),
-    ),
-
-    // ── Upgrade PRO (hors shell) ─────────────────────────────────────────
-    GoRoute(
-      path: '/profile/upgrade-pro',
-      builder: (context, state) => const UpgradeToProScreen(),
-    ),
-
     // ── Connect onboarding (hors shell) ─────────────────────────────────
     GoRoute(
       path: '/connect/onboarding/intro',
       builder: (context, state) => BlocProvider(
         create: (_) => getIt<ConnectOnboardingBloc>(),
         child: const ConnectOnboardingIntroScreen(),
-      ),
-    ),
-    GoRoute(
-      path: '/connect/onboarding/pending',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<ConnectOnboardingBloc>(),
-        child: const ConnectOnboardingPendingScreen(),
       ),
     ),
 
@@ -203,24 +151,6 @@ final appRouter = GoRouter(
         create: (_) => getIt<TrackingBloc>(),
         child: const QrScannerScreen(),
       ),
-    ),
-    GoRoute(
-      path: '/tracking/search',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<TrackingBloc>(),
-        child: const TrackingSearchScreen(),
-      ),
-    ),
-    GoRoute(
-      path: '/tracking/:bidId/timeline',
-      builder: (context, state) {
-        final bidId = state.pathParameters['bidId']!;
-        final corridor = state.extra as String? ?? '';
-        return BlocProvider(
-          create: (_) => getIt<TrackingBloc>(),
-          child: TrackingTimelineScreen(bidId: bidId, corridor: corridor),
-        );
-      },
     ),
     GoRoute(
       path: '/payments/onboarding',
@@ -246,17 +176,6 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: '/payments/escrow',
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>;
-        return EscrowExplainerScreen(
-          amount: (extra['amount'] as num).toDouble(),
-          travelerName: extra['travelerName'] as String,
-          bidId: extra['bidId'] as String?,
-        );
-      },
-    ),
-    GoRoute(
       path: '/tracking/confirm',
       builder: (context, state) {
         final extra = state.extra as Map<String, String>;
@@ -274,7 +193,7 @@ final appRouter = GoRouter(
     // ── Stripe Connect deep-link return routes ───────────────────────────
     GoRoute(
       path: '/stripe/onboarding/complete',
-      redirect: (context, state) => '/connect/onboarding/pending',
+      redirect: (context, state) => '/connect/onboarding/intro?from=stripe',
     ),
     GoRoute(
       path: '/stripe/onboarding/refresh',
@@ -312,91 +231,15 @@ final appRouter = GoRouter(
       },
     ),
 
-    // ── Création / édition trajet (hors shell — plein écran) ────────────
+    // ── Bids d'une annonce (hors shell — plein écran) ────────────────────
     GoRoute(
-      path: '/announcements/create',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<AnnouncementBloc>(),
-        child: const CreateAnnouncementScreen(),
-      ),
-    ),
-    GoRoute(
-      path: '/announcements/:id/edit',
-      builder: (context, state) {
-        final announcement = state.extra as AnnouncementModel?;
-        return BlocProvider(
-          create: (_) => getIt<AnnouncementBloc>(),
-          child: CreateAnnouncementScreen(announcement: announcement),
-        );
-      },
-    ),
-
-    // ── Détail annonce + sous-écrans (hors shell — plein écran) ─────────
-    // Règle : tout écran avec ← ou ✕ est hors shell.
-    GoRoute(
-      path: '/announcements/:id',
+      path: '/announcements/:id/bids',
       builder: (context, state) {
         final id = state.pathParameters['id']!;
-        return BlocProvider(
-          create: (_) => getIt<AnnouncementBloc>(),
-          child: AnnouncementDetailScreen(id: id),
-        );
-      },
-      routes: [
-        GoRoute(
-          path: 'bids',
-          builder: (context, state) {
-            final id = state.pathParameters['id']!;
-            final extra = state.extra as Map<String, dynamic>?;
-            return BidListScreen(
-              announcementId: id,
-              initialTabIndex: extra?['initialTabIndex'] as int? ?? 0,
-            );
-          },
-        ),
-        GoRoute(
-          path: 'cancel',
-          builder: (context, state) {
-            final id = state.pathParameters['id']!;
-            return BlocProvider(
-              create: (_) => getIt<CancellationBloc>(),
-              child: CancellationScreen(announcementId: id),
-            );
-          },
-        ),
-      ],
-    ),
-
-    // ── Détail annonce expéditeur + envoi colis (hors shell) ─────────────
-    GoRoute(
-      path: '/search/:id',
-      builder: (context, state) {
-        final announcement = state.extra as AnnouncementModel;
-        return TravelerProfileScreen(announcement: announcement);
-      },
-      routes: [
-        GoRoute(
-          path: 'bid',
-          builder: (context, state) {
-            final announcement = state.extra as AnnouncementModel;
-            return BlocProvider(
-              create: (_) => getIt<BidBloc>(),
-              child: CreateBidScreen(announcement: announcement),
-            );
-          },
-        ),
-      ],
-    ),
-
-    // ── Ratings (hors shell) ─────────────────────────────────────────────
-    GoRoute(
-      path: '/ratings/:bidId',
-      builder: (context, state) {
-        final bidId = state.pathParameters['bidId']!;
-        final travelerName = state.extra as String? ?? 'le voyageur';
-        return BlocProvider(
-          create: (_) => getIt<RatingBloc>(),
-          child: RatingScreen(bidId: bidId, travelerName: travelerName),
+        final extra = state.extra as Map<String, dynamic>?;
+        return BidListScreen(
+          announcementId: id,
+          initialTabIndex: extra?['initialTabIndex'] as int? ?? 0,
         );
       },
     ),
@@ -410,25 +253,21 @@ final appRouter = GoRouter(
     // ── Résultats de recherche (hors shell — plein écran) ───────────────
     GoRoute(
       path: '/search',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<AnnouncementBloc>(),
-        child: const SearchAnnouncementScreen(),
-      ),
+      builder: (context, state) {
+        final params = state.extra is SearchParams
+            ? state.extra as SearchParams
+            : null;
+        return BlocProvider(
+          create: (_) => getIt<AnnouncementBloc>(),
+          child: SearchAnnouncementScreen(initialParams: params),
+        );
+      },
     ),
 
     // ── Settings (hors shell) ──────────────────────────────────────────
     GoRoute(
       path: '/settings',
       builder: (context, state) => const SettingsScreen(),
-      routes: [
-        GoRoute(
-          path: 'delete-account',
-          builder: (context, state) => BlocProvider(
-            create: (_) => getIt<AccountDeletionBloc>(),
-            child: const DeleteAccountScreen(),
-          ),
-        ),
-      ],
     ),
 
     // ── Shell principal avec Bottom Navigation ───────────────────────────

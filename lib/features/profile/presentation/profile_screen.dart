@@ -5,6 +5,7 @@ import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
+import 'package:dony/features/profile/presentation/widgets/upgrade_pro_bottom_sheet.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
@@ -14,6 +15,9 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/kyc/presentation/widgets/kyc_onboarding_bottom_sheet.dart';
+import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.dart';
+import 'package:dony/features/profile/presentation/widgets/edit_profile_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -207,7 +211,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             if (user != null && !user.isProfileComplete) ...[
                               _ProfileCompletionBanner(
                                 user: user,
-                                onTap: () => context.push('/profile/edit'),
+                                onTap: () => EditProfileBottomSheet.show(context),
                                 cs: cs,
                                 tt: tt,
                               ).animate().fadeIn(delay: 180.ms),
@@ -260,8 +264,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             size: 18,
                                           )
                                         : null,
-                                    onTap: () =>
-                                        context.push('/profile/upgrade-pro'),
+                                    onTap: user != null
+                                        ? () => UpgradeProBottomSheet.show(
+                                              context,
+                                              user: user!,
+                                            )
+                                        : null,
                                   ),
                                 ] else
                                   DonyListTile(
@@ -348,8 +356,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       ),
                                   },
                                   onTap: user?.kycStatus == 'VERIFIED'
-                                      ? () => context.push('/kyc/status')
-                                      : () => context.push('/kyc'),
+                                      ? () => KycStatusBottomSheet.show(context)
+                                      : () => KycOnboardingBottomSheet.show(context),
                                 ),
                                 DonyListTile(
                                   icon: Icons.people_outline_rounded,

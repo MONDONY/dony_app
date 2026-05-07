@@ -21,3 +21,14 @@ class UpgradeToProError extends UpgradeToProState {
   @override
   List<Object?> get props => [message];
 }
+
+class DowngradeSuccess extends UpgradeToProState {}
+
+class DowngradeError extends UpgradeToProState {
+  final String message;
+
+  const DowngradeError(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}

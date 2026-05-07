@@ -4,7 +4,10 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/search_params.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
+import 'package:dony/features/matching/presentation/widgets/search_form_bottom_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +26,9 @@ const _kRowIndent = 56.0; // left indent for divider under location rows
 const _kIconGap = 14.0;   // gap between location dot and city text
 
 class SearchAnnouncementScreen extends StatefulWidget {
-  const SearchAnnouncementScreen({super.key});
+  const SearchAnnouncementScreen({super.key, this.initialParams});
+
+  final SearchParams? initialParams;
 
   @override
   State<SearchAnnouncementScreen> createState() =>
@@ -62,6 +67,32 @@ class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
       _departureCityNotifier.value.split(' ').first;
   String get _arrivalCityShort =>
       _arrivalCityNotifier.value.split(' ').first;
+
+  /// Matches a short city name (e.g. "Paris") to the full label (e.g. "Paris · CDG, ORY").
+  String _matchCity(String short, List<String> cities) =>
+      cities.firstWhere((c) => c.startsWith(short), orElse: () => cities[0]);
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialParams != null) {
+      final p = widget.initialParams!;
+      _departureCityNotifier.value = _matchCity(p.departureCity, _departureCities);
+      _arrivalCityNotifier.value = _matchCity(p.arrivalCity, _arrivalCities);
+      _dateNotifier.value = p.date;
+      _weightKgNotifier.value = p.weightKg;
+      _maxPricePerKgNotifier.value = p.maxPricePerKg;
+      _kiloProOnlyNotifier.value = p.kiloProOnly;
+      _ratingFilterNotifier.value = p.ratingFilter;
+      _weekendFilterNotifier.value = p.weekendFilter;
+      _priceFilterNotifier.value = p.priceFilter;
+      // Start in results mode and trigger search
+      _showResultsNotifier.value = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _search();
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -109,9 +140,33 @@ class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
     _showResultsNotifier.value = true;
   }
 
-  void _resetSearch() {
-    _showResultsNotifier.value = false;
-    _searchDirtyNotifier.value = true;
+  Future<void> _resetSearch() async {
+    final params = await SearchFormBottomSheet.show(
+      context,
+      initialParams: SearchParams(
+        departureCity: _departureCityShort,
+        arrivalCity: _arrivalCityShort,
+        date: _dateNotifier.value,
+        weightKg: _weightKgNotifier.value,
+        maxPricePerKg: _maxPricePerKgNotifier.value,
+        kiloProOnly: _kiloProOnlyNotifier.value,
+        ratingFilter: _ratingFilterNotifier.value,
+        weekendFilter: _weekendFilterNotifier.value,
+        priceFilter: _priceFilterNotifier.value,
+      ),
+    );
+    if (params != null && mounted) {
+      _departureCityNotifier.value = _matchCity(params.departureCity, _departureCities);
+      _arrivalCityNotifier.value = _matchCity(params.arrivalCity, _arrivalCities);
+      _dateNotifier.value = params.date;
+      _weightKgNotifier.value = params.weightKg;
+      _maxPricePerKgNotifier.value = params.maxPricePerKg;
+      _kiloProOnlyNotifier.value = params.kiloProOnly;
+      _ratingFilterNotifier.value = params.ratingFilter;
+      _weekendFilterNotifier.value = params.weekendFilter;
+      _priceFilterNotifier.value = params.priceFilter;
+      _search();
+    }
   }
 
   @override
@@ -141,7 +196,8 @@ class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
           return _ResultsView(
             departureCity: _departureCityShort,
             arrivalCity: _arrivalCityShort,
-            onBack: _resetSearch,
+            onBack: () => context.go('/home'),
+            onModify: _resetSearch,
             ratingActive: _ratingActive,
             priceActive: _priceActive,
             weekActive: _weekActive,
@@ -490,6 +546,7 @@ class _ResultsView extends StatefulWidget {
     required this.departureCity,
     required this.arrivalCity,
     required this.onBack,
+    required this.onModify,
     required this.ratingActive,
     required this.priceActive,
     required this.weekActive,
@@ -511,6 +568,7 @@ class _ResultsView extends StatefulWidget {
   final String departureCity;
   final String arrivalCity;
   final VoidCallback onBack;
+  final VoidCallback onModify;
   final ValueNotifier<bool> ratingActive;
   final ValueNotifier<bool> priceActive;
   final ValueNotifier<bool> weekActive;
@@ -726,7 +784,7 @@ class _ResultsViewState extends State<_ResultsView> {
       );
     }
     if (results.isEmpty) {
-      return _EmptyView(onBack: widget.onBack);
+      return _EmptyView(onBack: widget.onModify);
     }
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(
@@ -750,9 +808,9 @@ class _ResultsViewState extends State<_ResultsView> {
           isOwnAnnouncement: isOwn,
           onTap: isOwn
               ? null
-              : () => context.push(
-                    '/search/${announcement.id}',
-                    extra: announcement,
+              : () => showTravelerAnnouncementSheet(
+                    context,
+                    announcement: announcement,
                   ),
         );
       },

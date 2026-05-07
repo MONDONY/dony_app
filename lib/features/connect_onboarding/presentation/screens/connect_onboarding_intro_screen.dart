@@ -1,13 +1,35 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
+import 'package:dony/features/connect_onboarding/presentation/widgets/connect_pending_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class ConnectOnboardingIntroScreen extends StatelessWidget {
+class ConnectOnboardingIntroScreen extends StatefulWidget {
   const ConnectOnboardingIntroScreen({super.key});
+
+  @override
+  State<ConnectOnboardingIntroScreen> createState() =>
+      _ConnectOnboardingIntroScreenState();
+}
+
+class _ConnectOnboardingIntroScreenState
+    extends State<ConnectOnboardingIntroScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final fromStripe =
+            GoRouterState.of(context).uri.queryParameters['from'] == 'stripe';
+        if (fromStripe) {
+          ConnectPendingBottomSheet.show(context);
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,10 +51,10 @@ class ConnectOnboardingIntroScreen extends StatelessWidget {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
-      // After launching external browser, navigate to pending screen so the
+      // After launching external browser, show pending bottom sheet so the
       // user can tap "J'ai complété le formulaire" if the deep link doesn't fire.
       if (context.mounted) {
-        context.go('/connect/onboarding/pending');
+        await ConnectPendingBottomSheet.show(context);
       }
     } else {
       if (context.mounted) {

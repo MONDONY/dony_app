@@ -8,6 +8,7 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/same_address_announcements_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
@@ -262,7 +263,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     // Match the list view: own trips have no nav, others go to the
     // sender-side announcement detail.
     if (isOwn) return;
-    context.push('/search/${a.id}', extra: a);
+    showTravelerAnnouncementSheet(context, announcement: a);
   }
 
   void _onClusterTapped(_Cluster cluster) {
@@ -291,7 +292,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
           currentUserId: currentUserId,
           onTap: (a) {
             Navigator.pop(context);
-            context.push('/search/${a.id}', extra: a);
+            showTravelerAnnouncementSheet(context, announcement: a);
           },
         ),
       );

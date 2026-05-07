@@ -14,6 +14,8 @@ class UserModel extends Equatable {
   final int totalTrips;
   final int totalShipments;
   final bool isProAccount;
+  final String? companyName;
+  final String? siret;
   final String stripeAccountStatus;
   final DateTime? deletionRequestedAt;
 
@@ -31,6 +33,8 @@ class UserModel extends Equatable {
     this.totalTrips = 0,
     this.totalShipments = 0,
     this.isProAccount = false,
+    this.companyName,
+    this.siret,
     this.stripeAccountStatus = 'NOT_CREATED',
     this.deletionRequestedAt,
   });
@@ -51,6 +55,8 @@ class UserModel extends Equatable {
         totalTrips: (json['totalTrips'] as num?)?.toInt() ?? 0,
         totalShipments: (json['totalShipments'] as num?)?.toInt() ?? 0,
         isProAccount: json['isProAccount'] as bool? ?? false,
+        companyName: json['companyName'] as String?,
+        siret: json['siret'] as String?,
         stripeAccountStatus:
             json['stripeAccountStatus'] as String? ?? 'NOT_CREATED',
         deletionRequestedAt: json['deletionRequestedAt'] != null
@@ -133,6 +139,8 @@ class UserModel extends Equatable {
         totalTrips,
         totalShipments,
         isProAccount,
+        companyName,
+        siret,
         stripeAccountStatus,
         deletionRequestedAt,
       ];

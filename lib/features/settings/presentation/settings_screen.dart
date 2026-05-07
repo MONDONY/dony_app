@@ -1,6 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/settings/presentation/widgets/delete_account_bottom_sheet.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -8,7 +8,7 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: DonyAppBar(title: 'Paramètres'),
+      appBar: const DonyAppBar(title: 'Paramètres'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(
           horizontal: DonySpacing.lg,
@@ -25,7 +25,7 @@ class SettingsScreen extends StatelessWidget {
                   label: 'Supprimer mon compte',
                   destructive: true,
                   showDivider: false,
-                  onTap: () => context.push('/settings/delete-account'),
+                  onTap: () => DeleteAccountBottomSheet.show(context),
                 ),
               ],
             ),

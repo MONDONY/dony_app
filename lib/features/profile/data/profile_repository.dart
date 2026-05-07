@@ -22,4 +22,12 @@ class ProfileRepository {
       throw unwrapDioError(e);
     }
   }
+
+  Future<void> downgradePro() async {
+    try {
+      await _client.dio.delete('/auth/me/upgrade-to-pro');
+    } catch (e) {
+      throw unwrapDioError(e);
+    }
+  }
 }
