@@ -107,6 +107,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
   double? _weightMin;
   double? _weightMax;
   double? _maxPricePerKg;
+  bool _weekendOnly = false;
 
   DateTime? get _dateFrom {
     final now = DateTime.now();
@@ -183,6 +184,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
           departureDateTo: _dateTo,
           kiloProOnly: _kiloProOnly ? true : null,
           minRating: _minRating,
+          weekendOnly: _weekendOnly ? true : null,
           minAvailableKg: _weightMin,
           maxAvailableKg: _weightMax,
           maxPricePerKg: _maxPricePerKg,
@@ -352,8 +354,12 @@ class _MapSenderViewState extends State<_MapSenderView> {
       }
       _kiloProOnly = result.kiloProOnly;
       _minRating = result.ratingFilter ? 4.5 : null;
+      _weekendOnly = result.weekendFilter;
       _maxPricePerKg = result.priceFilter ? result.maxPricePerKg : null;
-      if (result.weightKg > 0) _weightMin = result.weightKg;
+      if (result.weightKg > 0) {
+        _weightMin = result.weightKg;
+        _weightMax = null; // single-value weight from search form clears the range max
+      }
     });
     _dispatchSearch();
   }
