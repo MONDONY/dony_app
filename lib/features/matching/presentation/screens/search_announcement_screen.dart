@@ -5,6 +5,7 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
+import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
@@ -750,9 +751,9 @@ class _ResultsViewState extends State<_ResultsView> {
           isOwnAnnouncement: isOwn,
           onTap: isOwn
               ? null
-              : () => context.push(
-                    '/search/${announcement.id}',
-                    extra: announcement,
+              : () => showTravelerAnnouncementSheet(
+                    context,
+                    announcement: announcement,
                   ),
         );
       },

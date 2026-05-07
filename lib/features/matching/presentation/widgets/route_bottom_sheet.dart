@@ -1,6 +1,7 @@
 import 'package:dony/core/constants/cities.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -138,7 +139,8 @@ class RouteBottomSheet extends StatelessWidget {
                           isOwnAnnouncement: false,
                           onTap: () {
                             ctx.pop();
-                            context.push('/search/${ann.id}', extra: ann);
+                            showTravelerAnnouncementSheet(context,
+                                announcement: ann);
                           },
                         );
                       },

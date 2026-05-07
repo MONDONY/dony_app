@@ -16,14 +16,12 @@ import 'package:dony/features/home/presentation/home_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_status_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
-import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/announcement_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/create_announcement_screen.dart';
-import 'package:dony/features/matching/presentation/screens/create_bid_screen.dart';
 import 'package:dony/features/matching/presentation/screens/matching_management_screen.dart';
 import 'package:dony/features/matching/presentation/screens/search_announcement_screen.dart';
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
@@ -42,7 +40,6 @@ import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/presentation/screens/offline_scan_queue_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/qr_scanner_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/reception_confirm_screen.dart';
-import 'package:dony/features/tracking/presentation/screens/tracking_timeline_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -157,17 +154,6 @@ final appRouter = GoRouter(
         create: (_) => getIt<TrackingBloc>(),
         child: const QrScannerScreen(),
       ),
-    ),
-    GoRoute(
-      path: '/tracking/:bidId/timeline',
-      builder: (context, state) {
-        final bidId = state.pathParameters['bidId']!;
-        final corridor = state.extra as String? ?? '';
-        return BlocProvider(
-          create: (_) => getIt<TrackingBloc>(),
-          child: TrackingTimelineScreen(bidId: bidId, corridor: corridor),
-        );
-      },
     ),
     GoRoute(
       path: '/payments/onboarding',
@@ -290,27 +276,6 @@ final appRouter = GoRouter(
             return BidListScreen(
               announcementId: id,
               initialTabIndex: extra?['initialTabIndex'] as int? ?? 0,
-            );
-          },
-        ),
-      ],
-    ),
-
-    // ── Détail annonce expéditeur + envoi colis (hors shell) ─────────────
-    GoRoute(
-      path: '/search/:id',
-      builder: (context, state) {
-        final announcement = state.extra as AnnouncementModel;
-        return TravelerProfileScreen(announcement: announcement);
-      },
-      routes: [
-        GoRoute(
-          path: 'bid',
-          builder: (context, state) {
-            final announcement = state.extra as AnnouncementModel;
-            return BlocProvider(
-              create: (_) => getIt<BidBloc>(),
-              child: CreateBidScreen(announcement: announcement),
             );
           },
         ),

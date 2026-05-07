@@ -10,6 +10,7 @@ import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/presentation/widgets/qr_code_card.dart';
+import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
@@ -1943,7 +1944,7 @@ class _TimelineButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     return GestureDetector(
-      onTap: () => context.push('/tracking/${bid.id}/timeline', extra: _corridor),
+      onTap: () => showTrackingTimelineSheet(context, bidId: bid.id, corridor: _corridor),
       child: Container(
         padding: const EdgeInsets.all(DonySpacing.base),
         decoration: BoxDecoration(

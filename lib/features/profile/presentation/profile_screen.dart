@@ -16,6 +16,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_onboarding_bottom_sheet.dart';
+import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.dart';
 import 'package:dony/features/profile/presentation/widgets/edit_profile_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -355,7 +356,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       ),
                                   },
                                   onTap: user?.kycStatus == 'VERIFIED'
-                                      ? () => context.push('/kyc/status')
+                                      ? () => KycStatusBottomSheet.show(context)
                                       : () => KycOnboardingBottomSheet.show(context),
                                 ),
                                 DonyListTile(

@@ -8,6 +8,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/services/saved_trips_service.dart';
+import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
@@ -1498,7 +1499,8 @@ class _SavedTripsSheetState extends State<_SavedTripsSheet> {
                           GestureDetector(
                             onTap: () {
                               context.pop();
-                              context.push('/search/${a.id}', extra: a);
+                              showTravelerAnnouncementSheet(
+                                  context, announcement: a);
                             },
                             child: Container(
                               padding: const EdgeInsets.symmetric(
