@@ -5,6 +5,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
+import 'package:dony/features/matching/presentation/widgets/marker_urgency.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/same_address_announcements_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
@@ -155,6 +156,8 @@ class AnnouncementMapView extends StatefulWidget {
     this.userPosition,
     this.fabBottomPadding = 0,
     this.mapStyle,
+    this.selectedAnnouncementId,
+    this.onAnnouncementSelected,
   });
 
   final List<AnnouncementModel> announcements;
@@ -170,6 +173,10 @@ class AnnouncementMapView extends StatefulWidget {
   final double fabBottomPadding;
   /// Style JSON Google Maps. Null = style par défaut Google Maps.
   final String? mapStyle;
+  /// ID of the currently selected announcement (highlighted marker).
+  final String? selectedAnnouncementId;
+  /// Called when user taps a single marker.
+  final void Function(String id)? onAnnouncementSelected;
 
   @override
   State<AnnouncementMapView> createState() => _AnnouncementMapViewState();
@@ -191,7 +198,8 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   @override
   void didUpdateWidget(covariant AnnouncementMapView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.announcements != widget.announcements) {
+    if (oldWidget.announcements != widget.announcements ||
+        oldWidget.selectedAnnouncementId != widget.selectedAnnouncementId) {
       _rebuildMarkers();
     }
     // Auto-fit when "Près de moi" turns on or its radius/position changes
@@ -241,15 +249,21 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       );
     }
     final item = cluster.items.first;
+    final urgencyColor =
+        MarkerUrgencyColor.fromDeparture(item.announcement.departureDate);
+    final isSelected =
+        item.announcement.id == widget.selectedAnnouncementId;
     final icon = await MarkerBitmapFactory.pricePill(
       pricePerKg: item.announcement.pricePerKg,
+      dotColor: urgencyColor,
+      isSelected: isSelected,
     );
     return Marker(
       markerId: MarkerId('${item.side.name}_${item.announcement.id}'),
       position: item.location,
       icon: icon,
-      // Pill centré sur le point géographique
-      anchor: const Offset(0.5, 0.5),
+      // Tail tip (bottom of bitmap) at the marker location
+      anchor: const Offset(0.5, 1.0),
       onTap: () => _onMarkerTapped(item.announcement),
     );
   }
@@ -264,12 +278,11 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   }
 
   void _onMarkerTapped(AnnouncementModel a) {
+    widget.onAnnouncementSelected?.call(a.id);
     final authState = context.read<AuthBloc>().state;
     final currentUserId =
         authState is AuthAuthenticated ? authState.user.id : null;
     final isOwn = currentUserId != null && a.travelerId == currentUserId;
-    // Match the list view: own trips have no nav, others go to the
-    // sender-side announcement detail.
     if (isOwn) return;
     showTravelerAnnouncementSheet(context, announcement: a);
   }

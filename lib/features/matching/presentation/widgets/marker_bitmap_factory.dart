@@ -18,6 +18,9 @@ class MarkerBitmapFactory {
   static final Map<_MarkerKey, BitmapDescriptor> _cache = {};
   static final Map<_PricePillKey, BitmapDescriptor> _pillCache = {};
 
+  static const double _kTailH = 6.0;
+  static const double _kTailW = 10.0;
+
   static Future<BitmapDescriptor> pin({
     required TransportMode? mode,
     required MarkerSide side,
@@ -43,40 +46,54 @@ class MarkerBitmapFactory {
     _pillCache.clear();
   }
 
-  // ─── Price pill marker (style Cocolis) ────────────────────────────────────
+  // ─── Price pill marker (white pill + urgency dot) ─────────────────────────
 
   static Future<BitmapDescriptor> pricePill({
     required double pricePerKg,
-    bool isHighlighted = false,
+    Color dotColor = Colors.transparent,
+    bool isSelected = false,
   }) async {
     final key = _PricePillKey(
       priceCents: (pricePerKg * 100).round(),
-      isHighlighted: isHighlighted,
+      colorValue: dotColor.value,
+      isSelected: isSelected,
     );
     final cached = _pillCache[key];
     if (cached != null) return cached;
-    final bitmap = await _renderPricePill(pricePerKg: pricePerKg, isHighlighted: isHighlighted);
+    final bitmap = await _renderPricePill(
+      pricePerKg: pricePerKg,
+      dotColor: dotColor,
+      isSelected: isSelected,
+    );
     _pillCache[key] = bitmap;
     return bitmap;
   }
 
   static Future<BitmapDescriptor> _renderPricePill({
     required double pricePerKg,
-    required bool isHighlighted,
+    required Color dotColor,
+    required bool isSelected,
   }) async {
     final label = pricePerKg == pricePerKg.roundToDouble()
         ? '${pricePerKg.toInt()}€/kg'
         : '${pricePerKg.toStringAsFixed(1)}€/kg';
 
     const fontSize = 13.0;
-    const paddingH = 12.0;
+    const paddingH = 10.0;
     const paddingV = 7.0;
+    const textColor = Color(0xFF061833);
 
-    final textColor = isHighlighted ? Colors.white : const Color(0xFF061833);
+    // Urgency dot dimensions
+    const dotR = 3.5;     // inner solid dot radius
+    const halo1R = 5.5;   // mid halo radius
+    const halo2R = 7.5;   // outer halo radius
+    const dotSectionW = halo2R * 2; // total width taken by dot + halos
+    const dotGap = 5.0;   // gap between outer halo and text
+
     final tp = TextPainter(
       text: TextSpan(
         text: label,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: fontSize,
           fontWeight: FontWeight.w700,
           color: textColor,
@@ -85,13 +102,13 @@ class MarkerBitmapFactory {
       textDirection: TextDirection.ltr,
     )..layout();
 
-    final pillW = tp.width + paddingH * 2;
+    final pillW = paddingH + dotSectionW + dotGap + tp.width + paddingH;
     final pillH = tp.height + paddingV * 2;
-    // Extra space for shadow
+
     const shadowSpread = 4.0;
     const shadowOffY = 2.0;
     final canvasW = pillW + shadowSpread * 2;
-    final canvasH = pillH + shadowSpread * 2 + shadowOffY;
+    final canvasH = shadowSpread + pillH + _kTailH;
     final offsetX = shadowSpread;
     final offsetY = shadowSpread;
 
@@ -103,7 +120,7 @@ class MarkerBitmapFactory {
       Radius.circular(pillH / 2),
     );
 
-    // Shadow
+    // Drop shadow
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(offsetX, offsetY + shadowOffY, pillW, pillH),
@@ -114,27 +131,61 @@ class MarkerBitmapFactory {
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
     );
 
-    // Background
-    canvas.drawRRect(
-      pillRect,
-      Paint()
-        ..color = isHighlighted ? DonyColors.primary : Colors.white
-        ..style = PaintingStyle.fill,
-    );
-
-    // Border (white pill only)
-    if (!isHighlighted) {
+    // Selected ring (blue stroke around the pill)
+    if (isSelected) {
       canvas.drawRRect(
-        pillRect,
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(offsetX - 2.5, offsetY - 2.5, pillW + 5, pillH + 5),
+          Radius.circular((pillH + 5) / 2),
+        ),
         Paint()
-          ..color = const Color(0xFFE8E5DF)
+          ..color = const Color(0xFF0B5FFF) // DonyColors.primary
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1,
+          ..strokeWidth = 2.5,
       );
     }
 
-    // Text
-    tp.paint(canvas, Offset(offsetX + paddingH, offsetY + paddingV));
+    // White pill background
+    canvas.drawRRect(
+      pillRect,
+      Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.fill,
+    );
+
+    // Pill border (neutral200)
+    canvas.drawRRect(
+      pillRect,
+      Paint()
+        ..color = const Color(0xFFE8E5DF)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
+
+    // White tail (bottom triangle)
+    final tailCenterX = offsetX + pillW / 2;
+    final tailTopY = offsetY + pillH;
+    final tailPath = Path()
+      ..moveTo(tailCenterX - _kTailW / 2, tailTopY)
+      ..lineTo(tailCenterX + _kTailW / 2, tailTopY)
+      ..lineTo(tailCenterX, canvasH)
+      ..close();
+    canvas.drawPath(tailPath, Paint()..color = Colors.white..style = PaintingStyle.fill);
+
+    // Urgency dot + sonar halos (left-aligned inside pill)
+    final dotCx = offsetX + paddingH + halo2R;
+    final dotCy = offsetY + pillH / 2;
+    final dotCenter = Offset(dotCx, dotCy);
+
+    // Outer halo (faintest)
+    canvas.drawCircle(dotCenter, halo2R, Paint()..color = dotColor.withValues(alpha: 0.15));
+    // Mid halo
+    canvas.drawCircle(dotCenter, halo1R, Paint()..color = dotColor.withValues(alpha: 0.35));
+    // Inner solid dot
+    canvas.drawCircle(dotCenter, dotR, Paint()..color = dotColor);
+
+    // Price text
+    tp.paint(canvas, Offset(offsetX + paddingH + dotSectionW + dotGap, offsetY + paddingV));
 
     final picture = recorder.endRecording();
     final img = await picture.toImage(canvasW.ceil(), canvasH.ceil());
@@ -255,18 +306,24 @@ class _MarkerKey {
 }
 
 class _PricePillKey {
-  const _PricePillKey({required this.priceCents, required this.isHighlighted});
+  const _PricePillKey({
+    required this.priceCents,
+    required this.colorValue,
+    required this.isSelected,
+  });
 
   final int priceCents;
-  final bool isHighlighted;
+  final int colorValue;
+  final bool isSelected;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is _PricePillKey &&
           priceCents == other.priceCents &&
-          isHighlighted == other.isHighlighted;
+          colorValue == other.colorValue &&
+          isSelected == other.isSelected;
 
   @override
-  int get hashCode => Object.hash(priceCents, isHighlighted);
+  int get hashCode => Object.hash(priceCents, colorValue, isSelected);
 }

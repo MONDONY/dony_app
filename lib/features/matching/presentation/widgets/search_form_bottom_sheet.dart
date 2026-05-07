@@ -20,10 +20,12 @@ class SearchFormBottomSheet {
   static Future<SearchParams?> show(
     BuildContext context, {
     SearchParams? initialParams,
+    double? heightFraction,
   }) {
     return DonyBottomSheet.show<SearchParams>(
       context,
       title: 'Rechercher un trajet',
+      heightFraction: heightFraction,
       child: _SearchFormContent(initialParams: initialParams),
     );
   }

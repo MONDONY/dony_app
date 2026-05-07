@@ -48,6 +48,7 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
   final DateTime? departureDateFrom;
   final DateTime? departureDateTo;
   final double? minAvailableKg;
+  final double? maxAvailableKg;
   final double? maxPricePerKg;
   final bool? kiloProOnly;
   final double? minRating;
@@ -64,6 +65,7 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
     this.departureDateFrom,
     this.departureDateTo,
     this.minAvailableKg,
+    this.maxAvailableKg,
     this.maxPricePerKg,
     this.kiloProOnly,
     this.minRating,

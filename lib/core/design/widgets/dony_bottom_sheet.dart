@@ -11,18 +11,27 @@ abstract final class DonyBottomSheet {
     bool showHandle = true,
     bool isScrollControlled = true,
     bool isDanger = false,
+    double? heightFraction,
   }) {
+    final screenHeight = MediaQuery.of(context).size.height;
     return showModalBottomSheet<T>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: isScrollControlled,
       isDismissible: isDismissible,
       backgroundColor: Colors.transparent,
+      constraints: heightFraction != null
+          ? BoxConstraints(
+              minHeight: screenHeight * heightFraction,
+              maxHeight: screenHeight * heightFraction,
+            )
+          : null,
       builder: (ctx) => _DonyBottomSheetContent(
         title: title,
         subtitle: subtitle,
         showHandle: showHandle,
         isDanger: isDanger,
+        expand: heightFraction != null,
         child: child,
       ),
     );
@@ -36,6 +45,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
     this.subtitle,
     this.showHandle = true,
     this.isDanger = false,
+    this.expand = false,
   });
 
   final Widget child;
@@ -43,6 +53,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
   final String? subtitle;
   final bool showHandle;
   final bool isDanger;
+  final bool expand;
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +69,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
         : DonyColors.neutral300;
 
     return Container(
-      margin: EdgeInsets.only(top: topMargin),
+      margin: expand ? EdgeInsets.zero : EdgeInsets.only(top: topMargin),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: const BorderRadius.vertical(
@@ -67,7 +78,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
         boxShadow: DonyShadow.sheet,
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (showHandle)

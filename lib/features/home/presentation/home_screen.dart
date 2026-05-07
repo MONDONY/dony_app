@@ -7,8 +7,14 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
+import 'package:dony/features/matching/data/models/search_params.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement_bottom_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/near_me_carousel.dart';
+import 'package:dony/features/matching/presentation/widgets/search_form_bottom_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:dony/features/notifications/presentation/notification_bottom_sheet.dart';
@@ -22,6 +28,8 @@ import 'package:intl/intl.dart';
 // ── Home-screen specific constants ────────────────────────────────────────────
 
 enum _HomeTab { voyageurs, demandes }
+
+enum _DatePreset { today, thisWeek, thisMonth, custom, none }
 
 typedef _CorridorOpt = ({String label, String departure, String arrival});
 
@@ -84,12 +92,60 @@ class _MapSenderViewState extends State<_MapSenderView> {
   _HomeTab _tab = _HomeTab.voyageurs;
   _CorridorOpt _corridor = _corridorOptions.first;
 
-  DateTime? _date;
+  _DatePreset _datePreset = _DatePreset.thisWeek;
+  DateTime? _customDate;
   bool _kiloProOnly = false;
+  bool _allCorridors = false;
 
   bool _isNearMeActive = false;
   double? _nearMeRadiusKm;
   LatLng? _userPosition;
+
+  String? _selectedAnnouncementId;
+
+  double? _minRating;
+  double? _weightMin;
+  double? _weightMax;
+  double? _maxPricePerKg;
+
+  DateTime? get _dateFrom {
+    final now = DateTime.now();
+    switch (_datePreset) {
+      case _DatePreset.today:
+        return DateTime(now.year, now.month, now.day);
+      case _DatePreset.thisWeek:
+        final monday = now.subtract(Duration(days: now.weekday - 1));
+        return DateTime(monday.year, monday.month, monday.day);
+      case _DatePreset.thisMonth:
+        return DateTime(now.year, now.month, 1);
+      case _DatePreset.custom:
+        return _customDate;
+      case _DatePreset.none:
+        return null;
+    }
+  }
+
+  DateTime? get _dateTo {
+    final now = DateTime.now();
+    switch (_datePreset) {
+      case _DatePreset.today:
+        return DateTime(now.year, now.month, now.day, 23, 59, 59);
+      case _DatePreset.thisWeek:
+        final monday = now.subtract(Duration(days: now.weekday - 1));
+        final nextMonday = monday.add(const Duration(days: 7));
+        return DateTime(nextMonday.year, nextMonday.month, nextMonday.day)
+            .subtract(const Duration(seconds: 1));
+      case _DatePreset.thisMonth:
+        final m = now.month == 12
+            ? DateTime(now.year + 1, 1, 1)
+            : DateTime(now.year, now.month + 1, 1);
+        return m.subtract(const Duration(seconds: 1));
+      case _DatePreset.custom:
+        return null;
+      case _DatePreset.none:
+        return null;
+    }
+  }
 
   @override
   void initState() {
@@ -116,15 +172,137 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   void _dispatchSearch() {
     if (!mounted) return;
+    // Near-me bypasses corridor: we want ALL travelers near the user
+    final ignoreCorridor = _allCorridors || _isNearMeActive;
     context.read<AnnouncementBloc>().add(AnnouncementSearchRequested(
-          departureCity: _corridor.departure.split(' ').first,
-          arrivalCity: _corridor.arrival.split(' ').first,
-          departureDateFrom: _date,
+          departureCity:
+              ignoreCorridor ? null : _corridor.departure.split(' ').first,
+          arrivalCity:
+              ignoreCorridor ? null : _corridor.arrival.split(' ').first,
+          departureDateFrom: _dateFrom,
+          departureDateTo: _dateTo,
           kiloProOnly: _kiloProOnly ? true : null,
+          minRating: _minRating,
+          minAvailableKg: _weightMin,
+          maxAvailableKg: _weightMax,
+          maxPricePerKg: _maxPricePerKg,
           userLat: _isNearMeActive ? _userPosition?.latitude : null,
           userLng: _isNearMeActive ? _userPosition?.longitude : null,
           radiusKm: _isNearMeActive ? _nearMeRadiusKm : null,
         ));
+  }
+
+  void _deactivateNearMe() {
+    setState(() {
+      _isNearMeActive = false;
+      _nearMeRadiusKm = null;
+      _userPosition = null;
+      _selectedAnnouncementId = null;
+    });
+    _dispatchSearch();
+  }
+
+  Future<void> _activateNearMe() async {
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.deniedForever) return;
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      return;
+    }
+    if (!mounted) return;
+
+    final positionFuture = Geolocator.getCurrentPosition(
+      locationSettings:
+          const LocationSettings(accuracy: LocationAccuracy.low),
+    );
+
+    final radiusKm = await showModalBottomSheet<double>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) =>
+          NearMeRadiusSheet(initialRadiusKm: _nearMeRadiusKm ?? 25),
+    );
+
+    if (radiusKm == null || !mounted) return;
+
+    final pos = await positionFuture;
+    if (!mounted) return;
+
+    setState(() {
+      _isNearMeActive = true;
+      _nearMeRadiusKm = radiusKm;
+      _userPosition = LatLng(pos.latitude, pos.longitude);
+    });
+    _dispatchSearch();
+  }
+
+  Future<void> _showDatePresetSheet() async {
+    final result = await showModalBottomSheet<
+        ({_DatePreset preset, DateTime? customDate})>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _DatePresetSheet(
+        currentPreset: _datePreset,
+        customDate: _customDate,
+      ),
+    );
+    if (result != null && mounted) {
+      setState(() {
+        _datePreset = result.preset;
+        _customDate = result.customDate;
+      });
+      _dispatchSearch();
+    }
+  }
+
+  Future<void> _showRatingSheet() async {
+    final result = await showModalBottomSheet<double>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _RatingFilterSheet(currentRating: _minRating),
+    );
+    if (result == null || !mounted) return;
+    setState(() => _minRating = result < 0 ? null : result);
+    _dispatchSearch();
+  }
+
+  Future<void> _showWeightSheet() async {
+    final result = await showModalBottomSheet<({double min, double max})>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) =>
+          _WeightRangeSheet(currentMin: _weightMin, currentMax: _weightMax),
+    );
+    if (result == null || !mounted) return;
+    setState(() {
+      _weightMin = result.min <= 0 ? null : result.min;
+      _weightMax = result.max <= 0 ? null : result.max;
+    });
+    _dispatchSearch();
+  }
+
+  Future<void> _showPriceSheet() async {
+    final result = await showModalBottomSheet<double>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _PriceFilterSheet(currentMaxPrice: _maxPricePerKg),
+    );
+    if (result == null || !mounted) return;
+    setState(() => _maxPricePerKg = result < 0 ? null : result);
+    _dispatchSearch();
   }
 
   void _showMap() {
@@ -135,30 +313,49 @@ class _MapSenderViewState extends State<_MapSenderView> {
     );
   }
 
-  void _showFilterSheet(BuildContext ctx) {
-    showModalBottomSheet<void>(
-      context: ctx,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _HomeFilterSheet(
-        corridor: _corridor,
-        date: _date,
-        kiloProOnly: _kiloProOnly,
-        onApply: ({
-          required _CorridorOpt corridor,
-          required DateTime? date,
-          required bool kiloProOnly,
-        }) {
-          setState(() {
-            _corridor = corridor;
-            _date = date;
-            _kiloProOnly = kiloProOnly;
-          });
-          _dispatchSearch();
-        },
+  Future<void> _showFilterSheet(BuildContext ctx) async {
+    final initialParams = SearchParams(
+      departureCity: _corridor.departure,
+      arrivalCity: _corridor.arrival,
+      date: _customDate,
+      kiloProOnly: _kiloProOnly,
+      ratingFilter: _minRating != null,
+      priceFilter: _maxPricePerKg != null,
+      maxPricePerKg: _maxPricePerKg ?? 25,
+    );
+
+    final result = await SearchFormBottomSheet.show(
+      ctx,
+      initialParams: initialParams,
+      heightFraction: 0.80,
+    );
+
+    if (result == null || !mounted) return;
+
+    final dep = result.departureCity;
+    final arr = result.arrivalCity;
+    final matchedCorridor = _corridorOptions.firstWhere(
+      (c) => c.departure == dep && c.arrival == arr,
+      orElse: () => (
+        label: '${dep.split(' ').first} → ${arr.split(' ').first}',
+        departure: dep,
+        arrival: arr,
       ),
     );
+
+    setState(() {
+      _corridor = matchedCorridor;
+      _allCorridors = false;
+      if (result.date != null) {
+        _datePreset = _DatePreset.custom;
+        _customDate = result.date;
+      }
+      _kiloProOnly = result.kiloProOnly;
+      _minRating = result.ratingFilter ? 4.5 : null;
+      _maxPricePerKg = result.priceFilter ? result.maxPricePerKg : null;
+      if (result.weightKg > 0) _weightMin = result.weightKg;
+    });
+    _dispatchSearch();
   }
 
   @override
@@ -188,15 +385,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
                     });
                     _dispatchSearch();
                   },
-                  onNearMeDisabled: () {
-                    setState(() {
-                      _isNearMeActive = false;
-                      _nearMeRadiusKm = null;
-                      _userPosition = null;
-                    });
-                    _dispatchSearch();
-                  },
+                  onNearMeDisabled: _deactivateNearMe,
                   fabBottomPadding: MediaQuery.of(context).size.height * 0.45,
+                  selectedAnnouncementId: _selectedAnnouncementId,
+                  onAnnouncementSelected: (id) =>
+                      setState(() => _selectedAnnouncementId = id),
                 ),
               ),
 
@@ -216,8 +409,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
                       children: [
                         _CorridorBar(
                           key: const Key('corridor-bar'),
-                          label: _corridor.label,
-                          hasActiveFilters: _date != null || _kiloProOnly,
+                          label: _allCorridors
+                              ? 'Tous les corridors'
+                              : _corridor.label,
+                          hasActiveFilters: _allCorridors,
                           onTap: () => _showFilterSheet(context),
                         ),
                         const SizedBox(height: DonySpacing.sm),
@@ -228,21 +423,38 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             onChanged: (t) => setState(() => _tab = t),
                           ),
                         ),
-                        if (_date != null || _kiloProOnly) ...[
-                          const SizedBox(height: DonySpacing.xs),
-                          _ActiveFilterChips(
-                            date: _date,
-                            kiloProOnly: _kiloProOnly,
-                            onRemoveDate: () {
-                              setState(() => _date = null);
-                              _dispatchSearch();
-                            },
-                            onRemoveKiloPro: () {
-                              setState(() => _kiloProOnly = false);
-                              _dispatchSearch();
-                            },
-                          ),
-                        ],
+                        const SizedBox(height: DonySpacing.xs),
+                        _HomeFilterChipsRow(
+                          datePreset: _datePreset,
+                          customDate: _customDate,
+                          kiloProOnly: _kiloProOnly,
+                          isNearMeActive: _isNearMeActive,
+                          allCorridors: _allCorridors,
+                          minRating: _minRating,
+                          weightMin: _weightMin,
+                          weightMax: _weightMax,
+                          maxPricePerKg: _maxPricePerKg,
+                          onDateTap: _showDatePresetSheet,
+                          onRatingTap: _showRatingSheet,
+                          onWeightTap: _showWeightSheet,
+                          onNearMeTap: () {
+                            if (_isNearMeActive) {
+                              _deactivateNearMe();
+                            } else {
+                              _activateNearMe();
+                            }
+                          },
+                          onPriceTap: _showPriceSheet,
+                          onKiloProToggle: () {
+                            setState(() => _kiloProOnly = !_kiloProOnly);
+                            _dispatchSearch();
+                          },
+                          onAllCorridorsToggle: () {
+                            setState(
+                                () => _allCorridors = !_allCorridors);
+                            _dispatchSearch();
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -342,7 +554,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
                       const SizedBox(height: 2),
                       Text(
                         _tab == _HomeTab.voyageurs
-                            ? '$count résultat${count > 1 ? 's' : ''} · ${_corridor.label}'
+                            ? _isNearMeActive
+                                ? '$count voyageur${count > 1 ? 's' : ''} à proximité'
+                                : '$count résultat${count > 1 ? 's' : ''} · ${_corridor.label}'
                             : _corridor.label,
                         style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                       ),
@@ -376,54 +590,69 @@ class _MapSenderViewState extends State<_MapSenderView> {
                     ],
                   )
                 : count == 0
-                    ? CustomScrollView(
-                        controller: scrollCtrl,
-                        slivers: [
-                          SliverFillRemaining(
-                            hasScrollBody: false,
-                            child: Center(
-                              child: Text(
-                                'Aucun voyageur sur ce corridor',
-                                style: tt.bodyMedium
-                                    ?.copyWith(color: DonyColors.textMuted),
+                        ? CustomScrollView(
+                            controller: scrollCtrl,
+                            slivers: [
+                              SliverFillRemaining(
+                                hasScrollBody: false,
+                                child: Center(
+                                  child: Text(
+                                    _isNearMeActive
+                                        ? 'Aucun voyageur à proximité'
+                                        : 'Aucun voyageur sur ce corridor',
+                                    style: tt.bodyMedium?.copyWith(
+                                        color: DonyColors.textMuted),
+                                  ),
+                                ),
                               ),
+                            ],
+                          )
+                        : ListView.separated(
+                            key: const Key('home-announcements-list'),
+                            controller: scrollCtrl,
+                            padding: EdgeInsets.fromLTRB(
+                              DonySpacing.base,
+                              DonySpacing.sm,
+                              DonySpacing.base,
+                              bottomPad + DonySpacing.huge,
                             ),
+                            itemCount: count,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: DonySpacing.md),
+                            itemBuilder: (context, i) {
+                              final a = announcements[i];
+                              final authState = context.read<AuthBloc>().state;
+                              final currentUserId =
+                                  authState is AuthAuthenticated
+                                      ? authState.user.id
+                                      : null;
+                              final isOwn = currentUserId != null &&
+                                  a.travelerId == currentUserId;
+                              final badge = _isNearMeActive
+                                  ? buildDistanceBadge(
+                                      a,
+                                      _userPosition != null
+                                          ? (
+                                              lat: _userPosition!.latitude,
+                                              lng: _userPosition!.longitude
+                                            )
+                                          : null,
+                                    )
+                                  : null;
+                              return TravelerCard(
+                                announcement: a,
+                                index: i,
+                                isOwnAnnouncement: isOwn,
+                                distanceBadge: badge,
+                                onTap: isOwn
+                                    ? null
+                                    : () => showTravelerAnnouncementSheet(
+                                          context,
+                                          announcement: a,
+                                        ),
+                              );
+                            },
                           ),
-                        ],
-                      )
-                    : ListView.separated(
-                        key: const Key('home-announcements-list'),
-                        controller: scrollCtrl,
-                        padding: EdgeInsets.fromLTRB(
-                          DonySpacing.base,
-                          DonySpacing.sm,
-                          DonySpacing.base,
-                          bottomPad + DonySpacing.huge,
-                        ),
-                        itemCount: count,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: DonySpacing.md),
-                        itemBuilder: (context, i) {
-                          final a = announcements[i];
-                          final authState = context.read<AuthBloc>().state;
-                          final currentUserId = authState is AuthAuthenticated
-                              ? authState.user.id
-                              : null;
-                          final isOwn = currentUserId != null &&
-                              a.travelerId == currentUserId;
-                          return TravelerCard(
-                            announcement: a,
-                            index: i,
-                            isOwnAnnouncement: isOwn,
-                            onTap: isOwn
-                                ? null
-                                : () => context.push(
-                                      '/search/${a.id}',
-                                      extra: a,
-                                    ),
-                          );
-                        },
-                      ),
           ),
         ],
       ),
@@ -1108,87 +1337,6 @@ class _TabPill extends StatelessWidget {
   }
 }
 
-// ── _ActiveFilterChips ────────────────────────────────────────────────────────
-
-class _ActiveFilterChips extends StatelessWidget {
-  const _ActiveFilterChips({
-    required this.date,
-    required this.kiloProOnly,
-    required this.onRemoveDate,
-    required this.onRemoveKiloPro,
-  });
-
-  final DateTime? date;
-  final bool kiloProOnly;
-  final VoidCallback onRemoveDate;
-  final VoidCallback onRemoveKiloPro;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: DonySpacing.xs,
-      children: [
-        if (date != null)
-          _FilterChip(
-            label: DateFormat('d MMM', 'fr').format(date!),
-            onRemove: onRemoveDate,
-          ),
-        if (kiloProOnly)
-          _FilterChip(
-            label: 'Kilo Pro',
-            onRemove: onRemoveKiloPro,
-          ),
-      ],
-    );
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({required this.label, required this.onRemove});
-
-  final String label;
-  final VoidCallback onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.sm,
-        vertical: DonySpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: DonyColors.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.full),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: tt.labelSmall?.copyWith(
-              color: DonyColors.ink900,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(width: DonySpacing.xs),
-          GestureDetector(
-            onTap: onRemove,
-            child: const Icon(Icons.close_rounded, size: 14, color: DonyColors.textMuted),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ── _DemandesPlaceholder ──────────────────────────────────────────────────────
 
 class _DemandesPlaceholder extends StatelessWidget {
@@ -1276,47 +1424,228 @@ class _HomeCarteFab extends StatelessWidget {
   }
 }
 
-// ── _HomeFilterSheet ──────────────────────────────────────────────────────────
+// ── _HomeFilterChipsRow ───────────────────────────────────────────────────────
 
-class _HomeFilterSheet extends StatefulWidget {
-  const _HomeFilterSheet({
-    required this.corridor,
-    required this.date,
+class _HomeFilterChipsRow extends StatelessWidget {
+  const _HomeFilterChipsRow({
+    required this.datePreset,
+    required this.customDate,
     required this.kiloProOnly,
+    required this.isNearMeActive,
+    required this.allCorridors,
+    required this.onDateTap,
+    required this.onRatingTap,
+    required this.onWeightTap,
+    required this.onNearMeTap,
+    required this.onPriceTap,
+    required this.onKiloProToggle,
+    required this.onAllCorridorsToggle,
+    this.minRating,
+    this.weightMin,
+    this.weightMax,
+    this.maxPricePerKg,
+  });
+
+  final _DatePreset datePreset;
+  final DateTime? customDate;
+  final bool kiloProOnly;
+  final bool isNearMeActive;
+  final bool allCorridors;
+  final double? minRating;
+  final double? weightMin;
+  final double? weightMax;
+  final double? maxPricePerKg;
+  final VoidCallback onDateTap;
+  final VoidCallback onRatingTap;
+  final VoidCallback onWeightTap;
+  final VoidCallback onNearMeTap;
+  final VoidCallback onPriceTap;
+  final VoidCallback onKiloProToggle;
+  final VoidCallback onAllCorridorsToggle;
+
+  String get _dateLabel {
+    switch (datePreset) {
+      case _DatePreset.today:
+        return 'Aujourd\'hui';
+      case _DatePreset.thisWeek:
+        return 'Cette semaine';
+      case _DatePreset.thisMonth:
+        return 'Ce mois-ci';
+      case _DatePreset.custom:
+        return customDate != null
+            ? DateFormat('d MMM', 'fr').format(customDate!)
+            : 'Date';
+      case _DatePreset.none:
+        return 'Toutes dates';
+    }
+  }
+
+  String get _ratingLabel =>
+      minRating != null ? '★ ${minRating!.toStringAsFixed(1)}+' : 'Note';
+
+  String get _weightLabel {
+    if (weightMin != null && weightMax != null) {
+      return '${weightMin!.toInt()}–${weightMax!.toInt()} kg';
+    }
+    if (weightMin != null) return '≥ ${weightMin!.toInt()} kg';
+    if (weightMax != null) return '≤ ${weightMax!.toInt()} kg';
+    return 'Kilos';
+  }
+
+  String get _priceLabel => maxPricePerKg != null
+      ? '≤ ${maxPricePerKg!.toStringAsFixed(0)} €/kg'
+      : 'Prix';
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _SmallChip(
+            label: _dateLabel,
+            isActive: datePreset != _DatePreset.none,
+            icon: Icons.calendar_today_rounded,
+            onTap: onDateTap,
+          ),
+          const SizedBox(width: DonySpacing.xs),
+          _SmallChip(
+            label: _ratingLabel,
+            isActive: minRating != null,
+            icon: Icons.star_rounded,
+            onTap: onRatingTap,
+          ),
+          const SizedBox(width: DonySpacing.xs),
+          _SmallChip(
+            label: _weightLabel,
+            isActive: weightMin != null || weightMax != null,
+            icon: Icons.fitness_center_rounded,
+            onTap: onWeightTap,
+          ),
+          const SizedBox(width: DonySpacing.xs),
+          _SmallChip(
+            label: 'Près de moi',
+            isActive: isNearMeActive,
+            icon: Icons.near_me_rounded,
+            onTap: onNearMeTap,
+          ),
+          const SizedBox(width: DonySpacing.xs),
+          _SmallChip(
+            label: _priceLabel,
+            isActive: maxPricePerKg != null,
+            icon: Icons.euro_rounded,
+            onTap: onPriceTap,
+          ),
+          const SizedBox(width: DonySpacing.xs),
+          _SmallChip(
+            label: 'Kilo Pro',
+            isActive: kiloProOnly,
+            onTap: onKiloProToggle,
+          ),
+          const SizedBox(width: DonySpacing.xs),
+          _SmallChip(
+            label: 'Tous corridors',
+            isActive: allCorridors,
+            onTap: onAllCorridorsToggle,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── _SmallChip ────────────────────────────────────────────────────────────────
+
+class _SmallChip extends StatelessWidget {
+  const _SmallChip({
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+    this.icon,
+  });
+
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.base,
+          vertical: DonySpacing.xs,
+        ),
+        decoration: BoxDecoration(
+          color: isActive ? DonyColors.ink900 : DonyColors.surface,
+          borderRadius: BorderRadius.circular(DonyRadius.full),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isActive ? 0.20 : 0.08),
+              blurRadius: isActive ? 8 : 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                size: 13,
+                color: isActive ? DonyColors.surface : DonyColors.textMuted,
+              ),
+              const SizedBox(width: DonySpacing.xxs),
+            ],
+            Text(
+              label,
+              style: tt.labelSmall?.copyWith(
+                color: isActive ? DonyColors.surface : DonyColors.ink900,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── _HomeCorridorSheet ────────────────────────────────────────────────────────
+
+class _HomeCorridorSheet extends StatefulWidget {
+  const _HomeCorridorSheet({
+    required this.corridor,
     required this.onApply,
   });
 
   final _CorridorOpt corridor;
-  final DateTime? date;
-  final bool kiloProOnly;
-  final void Function({
-    required _CorridorOpt corridor,
-    required DateTime? date,
-    required bool kiloProOnly,
-  }) onApply;
+  final void Function(_CorridorOpt corridor) onApply;
 
   @override
-  State<_HomeFilterSheet> createState() => _HomeFilterSheetState();
+  State<_HomeCorridorSheet> createState() => _HomeCorridorSheetState();
 }
 
-class _HomeFilterSheetState extends State<_HomeFilterSheet> {
+class _HomeCorridorSheetState extends State<_HomeCorridorSheet> {
   late _CorridorOpt _corridor;
-  late DateTime? _date;
-  late bool _kiloProOnly;
 
   @override
   void initState() {
     super.initState();
     _corridor = widget.corridor;
-    _date = widget.date;
-    _kiloProOnly = widget.kiloProOnly;
   }
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     return DraggableScrollableSheet(
-      initialChildSize: 0.80,
+      initialChildSize: 0.70,
       minChildSize: 0.50,
       maxChildSize: 0.95,
       expand: false,
@@ -1349,7 +1678,7 @@ class _HomeFilterSheetState extends State<_HomeFilterSheet> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Filtres',
+                  'Corridor',
                   style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
@@ -1366,138 +1695,54 @@ class _HomeFilterSheetState extends State<_HomeFilterSheet> {
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'CORRIDOR',
-                      style: tt.labelMedium?.copyWith(
-                        color: DonyColors.textMuted,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                    const SizedBox(height: DonySpacing.sm),
-                    ...List.generate(_corridorOptions.length, (i) {
-                      final opt = _corridorOptions[i];
-                      final isSelected = opt.label == _corridor.label;
-                      return GestureDetector(
-                        onTap: () => setState(() => _corridor = opt),
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: DonySpacing.xs),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: DonySpacing.base,
-                            vertical: DonySpacing.md,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? DonyColors.primarySoft
-                                : DonyColors.bgApp,
-                            borderRadius:
-                                BorderRadius.circular(DonyRadius.card),
-                            border: Border.all(
-                              color: isSelected
-                                  ? DonyColors.primary
-                                  : DonyColors.neutral200,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  opt.label,
-                                  style: tt.bodyMedium?.copyWith(
-                                    color: isSelected
-                                        ? DonyColors.primary
-                                        : DonyColors.ink900,
-                                    fontWeight: isSelected
-                                        ? FontWeight.w600
-                                        : FontWeight.w400,
-                                  ),
-                                ),
-                              ),
-                              if (isSelected)
-                                const Icon(
-                                  Icons.check_circle_rounded,
-                                  size: 18,
-                                  color: DonyColors.primary,
-                                ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }),
-                    const SizedBox(height: DonySpacing.xl),
-                    Text(
-                      'DATE DE DÉPART',
-                      style: tt.labelMedium?.copyWith(
-                        color: DonyColors.textMuted,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                    const SizedBox(height: DonySpacing.sm),
-                    GestureDetector(
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: _date ?? DateTime.now(),
-                          firstDate: DateTime.now(),
-                          lastDate:
-                              DateTime.now().add(const Duration(days: 365)),
-                          locale: const Locale('fr'),
-                        );
-                        if (picked != null) {
-                          setState(() => _date = picked);
-                        }
-                      },
+                  children: List.generate(_corridorOptions.length, (i) {
+                    final opt = _corridorOptions[i];
+                    final isSelected = opt.label == _corridor.label;
+                    return GestureDetector(
+                      onTap: () => setState(() => _corridor = opt),
                       child: Container(
+                        margin: const EdgeInsets.only(bottom: DonySpacing.xs),
                         padding: const EdgeInsets.symmetric(
                           horizontal: DonySpacing.base,
                           vertical: DonySpacing.md,
                         ),
                         decoration: BoxDecoration(
-                          color: DonyColors.bgApp,
-                          borderRadius:
-                              BorderRadius.circular(DonyRadius.card),
-                          border: Border.all(color: DonyColors.neutral200),
+                          color: isSelected
+                              ? DonyColors.primarySoft
+                              : DonyColors.bgApp,
+                          borderRadius: BorderRadius.circular(DonyRadius.card),
+                          border: Border.all(
+                            color: isSelected
+                                ? DonyColors.primary
+                                : DonyColors.neutral200,
+                          ),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.calendar_today_rounded,
-                                size: 16, color: DonyColors.textMuted),
-                            const SizedBox(width: DonySpacing.sm),
-                            Text(
-                              _date != null
-                                  ? DateFormat('EEE d MMM', 'fr').format(_date!)
-                                  : 'Toutes les dates',
-                              style: tt.bodyMedium?.copyWith(
-                                color: _date != null
-                                    ? DonyColors.ink900
-                                    : DonyColors.textMuted,
+                            Expanded(
+                              child: Text(
+                                opt.label,
+                                style: tt.bodyMedium?.copyWith(
+                                  color: isSelected
+                                      ? DonyColors.primary
+                                      : DonyColors.ink900,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                ),
                               ),
                             ),
-                            const Spacer(),
-                            if (_date != null)
-                              GestureDetector(
-                                onTap: () => setState(() => _date = null),
-                                child: const Icon(Icons.close_rounded,
-                                    size: 16, color: DonyColors.textMuted),
+                            if (isSelected)
+                              const Icon(
+                                Icons.check_circle_rounded,
+                                size: 18,
+                                color: DonyColors.primary,
                               ),
                           ],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: DonySpacing.xl),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text('Kilo Pro uniquement', style: tt.titleMedium),
-                      subtitle: Text(
-                        'Voyageurs avec badge KYC vérifié',
-                        style: tt.bodySmall
-                            ?.copyWith(color: DonyColors.neutral400),
-                      ),
-                      value: _kiloProOnly,
-                      activeThumbColor: DonyColors.primary,
-                      onChanged: (v) => setState(() => _kiloProOnly = v),
-                    ),
-                  ],
+                    );
+                  }),
                 ),
               ),
             ),
@@ -1516,16 +1761,568 @@ class _HomeFilterSheetState extends State<_HomeFilterSheet> {
                 label: 'Appliquer',
                 onPressed: () {
                   Navigator.of(sheetCtx).pop();
-                  widget.onApply(
-                    corridor: _corridor,
-                    date: _date,
-                    kiloProOnly: _kiloProOnly,
-                  );
+                  widget.onApply(_corridor);
                 },
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── _DatePresetSheet ──────────────────────────────────────────────────────────
+
+class _DatePresetSheet extends StatefulWidget {
+  const _DatePresetSheet({
+    required this.currentPreset,
+    required this.customDate,
+  });
+
+  final _DatePreset currentPreset;
+  final DateTime? customDate;
+
+  @override
+  State<_DatePresetSheet> createState() => _DatePresetSheetState();
+}
+
+class _DatePresetSheetState extends State<_DatePresetSheet> {
+  late _DatePreset _selected;
+  late DateTime? _customDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = widget.currentPreset;
+    _customDate = widget.customDate;
+  }
+
+  Future<void> _pickCustomDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _customDate ?? DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      locale: const Locale('fr'),
+    );
+    if (picked != null && mounted) {
+      setState(() {
+        _selected = _DatePreset.custom;
+        _customDate = picked;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+    return Container(
+      decoration: const BoxDecoration(
+        color: DonyColors.white,
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        0,
+        DonySpacing.lg,
+        bottomPad + DonySpacing.base,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: DonyColors.neutral200,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          Text(
+            'Date de départ',
+            style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: DonySpacing.md),
+          _PresetOption(
+            label: 'Aujourd\'hui',
+            isSelected: _selected == _DatePreset.today,
+            onTap: () => setState(() => _selected = _DatePreset.today),
+          ),
+          _PresetOption(
+            label: 'Cette semaine',
+            isSelected: _selected == _DatePreset.thisWeek,
+            onTap: () => setState(() => _selected = _DatePreset.thisWeek),
+          ),
+          _PresetOption(
+            label: 'Ce mois-ci',
+            isSelected: _selected == _DatePreset.thisMonth,
+            onTap: () => setState(() => _selected = _DatePreset.thisMonth),
+          ),
+          _PresetOption(
+            label: _selected == _DatePreset.custom && _customDate != null
+                ? DateFormat('EEE d MMM', 'fr').format(_customDate!)
+                : 'Choisir une date',
+            isSelected: _selected == _DatePreset.custom,
+            onTap: _pickCustomDate,
+          ),
+          const SizedBox(height: DonySpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(
+                    (preset: _DatePreset.none, customDate: null as DateTime?),
+                  ),
+                  child: Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: DonyColors.bgApp,
+                      borderRadius: BorderRadius.circular(DonyRadius.card),
+                      border: Border.all(color: DonyColors.neutral200),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Effacer',
+                        style: tt.labelLarge?.copyWith(
+                          color: DonyColors.ink900,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: DonyButton(
+                  label: 'Appliquer',
+                  onPressed: () => Navigator.of(context).pop(
+                    (preset: _selected, customDate: _customDate),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── _PresetOption ─────────────────────────────────────────────────────────────
+
+class _PresetOption extends StatelessWidget {
+  const _PresetOption({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.base,
+          vertical: DonySpacing.md,
+        ),
+        margin: const EdgeInsets.only(bottom: DonySpacing.xs),
+        decoration: BoxDecoration(
+          color: isSelected ? DonyColors.primarySoft : Colors.transparent,
+          borderRadius: BorderRadius.circular(DonyRadius.card),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: tt.bodyMedium?.copyWith(
+                  color: isSelected ? DonyColors.primary : DonyColors.ink900,
+                  fontWeight:
+                      isSelected ? FontWeight.w600 : FontWeight.w400,
+                ),
+              ),
+            ),
+            if (isSelected)
+              const Icon(
+                Icons.check_rounded,
+                size: 18,
+                color: DonyColors.primary,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── _RatingFilterSheet ────────────────────────────────────────────────────────
+
+class _RatingFilterSheet extends StatefulWidget {
+  const _RatingFilterSheet({this.currentRating});
+  final double? currentRating;
+
+  @override
+  State<_RatingFilterSheet> createState() => _RatingFilterSheetState();
+}
+
+class _RatingFilterSheetState extends State<_RatingFilterSheet> {
+  double? _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = widget.currentRating;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+
+    const ratings = [4.0, 4.5, 4.7, 5.0];
+    return Container(
+      decoration: const BoxDecoration(
+        color: DonyColors.white,
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+          DonySpacing.lg, 0, DonySpacing.lg, bottomPad + DonySpacing.base),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                  color: DonyColors.neutral200,
+                  borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          Text('Note minimum',
+              style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: DonySpacing.md),
+          for (final r in ratings)
+            _PresetOption(
+              label: r == 5.0
+                  ? '★ 5.0 uniquement'
+                  : '★ ${r.toStringAsFixed(1)} et plus',
+              isSelected: _selected == r,
+              onTap: () => setState(() => _selected = r),
+            ),
+          const SizedBox(height: DonySpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(-1.0),
+                  child: Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: DonyColors.bgApp,
+                      borderRadius: BorderRadius.circular(DonyRadius.card),
+                      border: Border.all(color: DonyColors.neutral200),
+                    ),
+                    child: Center(
+                      child: Text('Effacer',
+                          style: tt.labelLarge?.copyWith(
+                              color: DonyColors.ink900,
+                              fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: DonyButton(
+                  label: 'Appliquer',
+                  onPressed: () =>
+                      Navigator.of(context).pop(_selected ?? -1.0),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── _WeightRangeSheet ─────────────────────────────────────────────────────────
+
+class _WeightRangeSheet extends StatefulWidget {
+  const _WeightRangeSheet({this.currentMin, this.currentMax});
+  final double? currentMin;
+  final double? currentMax;
+
+  @override
+  State<_WeightRangeSheet> createState() => _WeightRangeSheetState();
+}
+
+class _WeightRangeSheetState extends State<_WeightRangeSheet> {
+  static const double _kMin = 1.0;
+  static const double _kMax = 50.0;
+
+  late double _min;
+  late double _max;
+
+  @override
+  void initState() {
+    super.initState();
+    _min = widget.currentMin ?? _kMin;
+    _max = widget.currentMax ?? _kMax;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: DonyColors.white,
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+          DonySpacing.lg, 0, DonySpacing.lg, bottomPad + DonySpacing.base),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                  color: DonyColors.neutral200,
+                  borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          Text('Capacité kilo',
+              style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: DonySpacing.xl),
+          Center(
+            child: Text(
+              '${_min.toInt()} – ${_max.toInt()} kg',
+              style: tt.headlineMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: DonyColors.primary,
+              ),
+            ),
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: DonyColors.primary,
+              thumbColor: DonyColors.primary,
+              overlayColor: DonyColors.primarySoft,
+              inactiveTrackColor: DonyColors.neutral200,
+            ),
+            child: RangeSlider(
+              values: RangeValues(_min, _max),
+              min: _kMin,
+              max: _kMax,
+              divisions: (_kMax - _kMin).toInt(),
+              onChanged: (v) =>
+                  setState(() {
+                    _min = v.start;
+                    _max = v.end;
+                  }),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('1 kg',
+                    style: tt.bodySmall?.copyWith(color: DonyColors.textMuted)),
+                Text('50 kg',
+                    style: tt.bodySmall?.copyWith(color: DonyColors.textMuted)),
+              ],
+            ),
+          ),
+          const SizedBox(height: DonySpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context)
+                      .pop((min: 0.0, max: 0.0)),
+                  child: Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: DonyColors.bgApp,
+                      borderRadius: BorderRadius.circular(DonyRadius.card),
+                      border: Border.all(color: DonyColors.neutral200),
+                    ),
+                    child: Center(
+                      child: Text('Effacer',
+                          style: tt.labelLarge?.copyWith(
+                              color: DonyColors.ink900,
+                              fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: DonyButton(
+                  label: 'Appliquer',
+                  onPressed: () =>
+                      Navigator.of(context).pop((min: _min, max: _max)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── _PriceFilterSheet ─────────────────────────────────────────────────────────
+
+class _PriceFilterSheet extends StatefulWidget {
+  const _PriceFilterSheet({this.currentMaxPrice});
+  final double? currentMaxPrice;
+
+  @override
+  State<_PriceFilterSheet> createState() => _PriceFilterSheetState();
+}
+
+class _PriceFilterSheetState extends State<_PriceFilterSheet> {
+  static const double _kMin = 3.0;
+  static const double _kMax = 25.0;
+
+  late double _maxPrice;
+
+  @override
+  void initState() {
+    super.initState();
+    _maxPrice = widget.currentMaxPrice ?? _kMax;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+    final isAtMax = _maxPrice >= _kMax;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: DonyColors.white,
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+          DonySpacing.lg, 0, DonySpacing.lg, bottomPad + DonySpacing.base),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                  color: DonyColors.neutral200,
+                  borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          Text('Prix maximum',
+              style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: DonySpacing.xl),
+          Center(
+            child: Text(
+              isAtMax ? 'Tous les prix' : '≤ ${_maxPrice.toInt()} €/kg',
+              style: tt.headlineMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: isAtMax ? DonyColors.textMuted : DonyColors.primary,
+              ),
+            ),
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: DonyColors.primary,
+              thumbColor: DonyColors.primary,
+              overlayColor: DonyColors.primarySoft,
+              inactiveTrackColor: DonyColors.neutral200,
+            ),
+            child: Slider(
+              value: _maxPrice,
+              min: _kMin,
+              max: _kMax,
+              divisions: (_kMax - _kMin).toInt(),
+              onChanged: (v) => setState(() => _maxPrice = v),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('3 €/kg',
+                    style: tt.bodySmall?.copyWith(color: DonyColors.textMuted)),
+                Text('25 €/kg',
+                    style: tt.bodySmall?.copyWith(color: DonyColors.textMuted)),
+              ],
+            ),
+          ),
+          const SizedBox(height: DonySpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(-1.0),
+                  child: Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: DonyColors.bgApp,
+                      borderRadius: BorderRadius.circular(DonyRadius.card),
+                      border: Border.all(color: DonyColors.neutral200),
+                    ),
+                    child: Center(
+                      child: Text('Effacer',
+                          style: tt.labelLarge?.copyWith(
+                              color: DonyColors.ink900,
+                              fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: DonyButton(
+                  label: 'Appliquer',
+                  onPressed: () =>
+                      Navigator.of(context).pop(isAtMax ? -1.0 : _maxPrice),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
