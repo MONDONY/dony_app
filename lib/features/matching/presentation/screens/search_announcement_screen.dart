@@ -21,6 +21,39 @@ import 'package:intl/intl.dart';
 const _departureCities = ['Paris · CDG, ORY', 'Lyon · LYS', 'Marseille · MRS'];
 const _arrivalCities = ['Dakar · DKR', 'Abidjan · ABJ', 'Bamako · BKO', 'Douala · DLA'];
 
+/// Retourne un label "CODE · X km" si userPos est connue et pickupAddress non-null.
+/// Retourne null sinon.
+String? buildDistanceBadge(
+  AnnouncementModel announcement,
+  ({double lat, double lng})? userPos,
+) {
+  if (userPos == null) {
+    return null;
+  }
+  final pickup = announcement.pickupAddress;
+  if (pickup == null) {
+    return null;
+  }
+
+  final distanceM = Geolocator.distanceBetween(
+    userPos.lat,
+    userPos.lng,
+    pickup.lat,
+    pickup.lng,
+  );
+  final distanceKm = (distanceM / 1000).round();
+
+  // Extrait le code IATA (3 lettres majuscules) depuis le label si présent
+  // Ex: "Paris CDG" → "CDG", "Roissy" → "Roissy"
+  final allMatches = RegExp(r'\b([A-Z]{3})\b').allMatches(pickup.label);
+  final locationCode = allMatches.isNotEmpty
+      ? allMatches.last.group(1)!
+      : pickup.label.split(' ').first;
+
+  final distanceLabel = distanceKm == 0 ? '< 1 km' : '$distanceKm km';
+  return '$locationCode · $distanceLabel';
+}
+
 // Layout constants
 const _kRowIndent = 56.0; // left indent for divider under location rows
 const _kIconGap = 14.0;   // gap between location dot and city text
@@ -607,8 +640,48 @@ class _ResultsView extends StatefulWidget {
 
 class _ResultsViewState extends State<_ResultsView> {
   // ── Section 5: client-side filter logic (AND semantics) ─────────────────────
-  bool _isMapView = false;
+  static const double _kSheetInitial = 0.55;
+  static const double _kSheetMin = 0.15;
+
+  final _sheetController = DraggableScrollableController();
+  double _sheetSize = _kSheetInitial;
+
+  bool get _isMapHidden => _sheetSize > 0.92;
+
+  bool get _isNearMeCarouselMode =>
+      widget.isNearMeActive.value && _sheetSize < 0.80;
+
   bool _errorBannerDismissed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _sheetController.addListener(_onSheetSizeChanged);
+  }
+
+  void _onSheetSizeChanged() {
+    if (_sheetController.isAttached) {
+      final s = _sheetController.size;
+      if ((s - _sheetSize).abs() > 0.001) {
+        setState(() => _sheetSize = s);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _sheetController.removeListener(_onSheetSizeChanged);
+    _sheetController.dispose();
+    super.dispose();
+  }
+
+  void _showMap() {
+    _sheetController.animateTo(
+      _kSheetInitial,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOutCubic,
+    );
+  }
 
   List<AnnouncementModel> _applyFilters(List<AnnouncementModel> all) {
     final list = all.where((a) {
@@ -639,7 +712,7 @@ class _ResultsViewState extends State<_ResultsView> {
 
   Widget _buildFilterChipsRow(BuildContext context) {
     return SizedBox(
-      height: 48,
+      height: 44,
       child: ListenableBuilder(
         listenable: Listenable.merge([
           widget.ratingActive,
@@ -654,71 +727,6 @@ class _ResultsViewState extends State<_ResultsView> {
             vertical: DonySpacing.sm,
           ),
           children: [
-            // ── LIST/MAP TOGGLE ICONS ────────────────────────────────
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: Colors.transparent,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // List icon button
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      color: !_isMapView
-                          ? DonyColors.primary.withOpacity(0.1)
-                          : Colors.transparent,
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.list_rounded, size: 24),
-                      color: !_isMapView
-                          ? DonyColors.primary
-                          : DonyColors.neutral500,
-                      onPressed: () => setState(() => _isMapView = false),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.sm,
-                        vertical: DonySpacing.sm,
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 40,
-                        minHeight: 40,
-                      ),
-                      tooltip: 'Liste',
-                    ),
-                  ),
-                  const SizedBox(width: DonySpacing.xs), // 4pt gap
-                  // Map icon button
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      color: _isMapView
-                          ? DonyColors.primary.withOpacity(0.1)
-                          : Colors.transparent,
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.map_outlined, size: 24),
-                      color: _isMapView
-                          ? DonyColors.primary
-                          : DonyColors.neutral500,
-                      onPressed: () => setState(() => _isMapView = true),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.sm,
-                        vertical: DonySpacing.sm,
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 40,
-                        minHeight: 40,
-                      ),
-                      tooltip: 'Carte',
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: DonySpacing.md), // Spacer before chips
-            // ── EXISTING FILTER CHIPS ────────────────────────────────
             _FilterChip(
               label: '★ 4.7+',
               icon: Icons.star_rounded,
@@ -1272,95 +1280,319 @@ class _ResultsViewState extends State<_ResultsView> {
             builder: (context, _) {
               final filtered = _applyFilters(rawResults);
               final pos = widget.userPosition.value;
-              return Column(
+              final tt = Theme.of(context).textTheme;
+              final bottomPad = MediaQuery.of(context).padding.bottom;
+              return Stack(
                 children: [
-                  // Filter chips row — ALWAYS VISIBLE
-                  _buildFilterChipsRow(context),
-                  // List or Map view — SWITCHES via IndexedStack
-                  Expanded(
-                    child: Stack(
-                      children: [
-                        IndexedStack(
-                          index: _isMapView ? 1 : 0,
-                          sizing: StackFit.expand,
-                          children: [
-                            _buildListColumn(context, state, results: filtered),
-                            AnnouncementMapView(
-                              announcements: filtered,
-                              searchDepartureCity: widget.departureCity,
-                              searchArrivalCity: widget.arrivalCity,
-                              onNearMeRequested: (lat, lng, radius) {
-                                widget.onNearMeChanged(
-                                  isActive: true,
-                                  lat: lat,
-                                  lng: lng,
-                                  radius: radius,
-                                );
-                              },
-                              onNearMeDisabled: () {
-                                widget.onNearMeChanged(
-                                  isActive: false,
-                                  radius: widget.radiusKm.value,
-                                );
-                              },
-                              isNearMeActive: widget.isNearMeActive.value,
-                              activeRadiusKm: widget.radiusKm.value,
-                              userPosition:
-                                  pos != null ? LatLng(pos.lat, pos.lng) : null,
+                  // ── Carte (fond permanent) ──
+                  Positioned.fill(
+                    child: AnnouncementMapView(
+                      announcements: filtered,
+                      searchDepartureCity: widget.departureCity,
+                      searchArrivalCity: widget.arrivalCity,
+                      onNearMeRequested: (lat, lng, radius) {
+                        widget.onNearMeChanged(isActive: true, lat: lat, lng: lng, radius: radius);
+                      },
+                      onNearMeDisabled: () {
+                        widget.onNearMeChanged(isActive: false, radius: widget.radiusKm.value);
+                      },
+                      isNearMeActive: widget.isNearMeActive.value,
+                      activeRadiusKm: widget.radiusKm.value,
+                      userPosition: pos != null ? LatLng(pos.lat, pos.lng) : null,
+                    ),
+                  ),
+
+                  // ── Sheet draggable ──
+                  DraggableScrollableSheet(
+                    controller: _sheetController,
+                    initialChildSize: _kSheetInitial,
+                    minChildSize: _kSheetMin,
+                    maxChildSize: 1.0,
+                    snap: true,
+                    snapSizes: const [_kSheetInitial, 1.0],
+                    builder: (context, scrollController) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: DonyColors.white,
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.12),
+                              blurRadius: 20,
+                              offset: const Offset(0, -4),
                             ),
                           ],
                         ),
-                        if (state is AnnouncementSearchLoaded && state.isReloading)
-                          Positioned(
-                            top: DonySpacing.md,
-                            right: DonySpacing.md,
-                            child: Container(
-                              key: const Key('search-reload-overlay'),
-                              padding: const EdgeInsets.all(DonySpacing.sm),
-                              decoration: BoxDecoration(
-                                color: DonyColors.surface,
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Color(0x1A000000),
-                                    blurRadius: 8,
-                                    offset: Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  color: DonyColors.primary,
-                                  strokeWidth: 2,
+                        child: Column(
+                          children: [
+                            // Drag handle
+                            Center(
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(vertical: 10),
+                                width: 40, height: 4,
+                                decoration: BoxDecoration(
+                                  color: DonyColors.neutral200,
+                                  borderRadius: BorderRadius.circular(2),
                                 ),
                               ),
                             ),
-                          ),
-                        if (state is AnnouncementError &&
-                            state.previousResults != null &&
-                            !_errorBannerDismissed)
-                          Positioned(
-                            key: const Key('search-error-banner'),
-                            left: DonySpacing.md,
-                            right: DonySpacing.md,
-                            bottom: DonySpacing.md,
-                            child: DonyStatusBanner(
-                              type: DonyStatusBannerType.error,
-                              message: state.message,
-                              onDismiss: () =>
-                                  setState(() => _errorBannerDismissed = true),
+                            _buildFilterChipsRow(context),
+                            const Divider(height: 1, color: DonyColors.neutral200),
+                            // Compteur + Trier
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                DonySpacing.lg, DonySpacing.md, DonySpacing.lg, DonySpacing.xs,
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    '${filtered.length} voyageur${filtered.length > 1 ? 's' : ''}',
+                                    style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                                  ),
+                                  const Spacer(),
+                                  GestureDetector(
+                                    onTap: () => _showFilterBottomSheet(context),
+                                    child: Text(
+                                      'Trier',
+                                      style: tt.labelMedium?.copyWith(
+                                        color: DonyColors.primary, fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                      ],
+                            // Liste scrollable
+                            Expanded(
+                              child: filtered.isEmpty
+                                  ? _EmptyView(onBack: widget.onBack)
+                                  : _isNearMeCarouselMode
+                                      ? _NearMeCarousel(
+                                          announcements: filtered,
+                                          userPosition: pos,
+                                          scrollController: scrollController,
+                                          onSeeAll: () => _sheetController.animateTo(
+                                            1.0,
+                                            duration: const Duration(milliseconds: 350),
+                                            curve: Curves.easeOutCubic,
+                                          ),
+                                        )
+                                      : ListView.separated(
+                                          controller: scrollController,
+                                          padding: EdgeInsets.fromLTRB(
+                                            DonySpacing.base, DonySpacing.sm,
+                                            DonySpacing.base, bottomPad + DonySpacing.huge,
+                                          ),
+                                          itemCount: filtered.length,
+                                          separatorBuilder: (_, __) => const SizedBox(height: DonySpacing.md),
+                                          itemBuilder: (context, i) {
+                                            final a = filtered[i];
+                                            final authState = context.read<AuthBloc>().state;
+                                            final currentUserId = authState is AuthAuthenticated
+                                                ? authState.user.id : null;
+                                            final isOwn = currentUserId != null && a.travelerId == currentUserId;
+                                            return TravelerCard(
+                                              announcement: a,
+                                              index: i,
+                                              isOwnAnnouncement: isOwn,
+                                              distanceBadge: pos != null ? buildDistanceBadge(a, pos) : null,
+                                              onTap: isOwn
+                                                  ? null
+                                                  : () => context.push('/search/${a.id}', extra: a),
+                                            );
+                                          },
+                                        ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+
+                  // ── Reload spinner ──
+                  if (state is AnnouncementSearchLoaded && state.isReloading)
+                    Positioned(
+                      top: DonySpacing.md, right: DonySpacing.md,
+                      child: Container(
+                        key: const Key('search-reload-overlay'),
+                        padding: const EdgeInsets.all(DonySpacing.sm),
+                        decoration: BoxDecoration(
+                          color: DonyColors.surface,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: const [
+                            BoxShadow(color: Color(0x1A000000), blurRadius: 8, offset: Offset(0, 2)),
+                          ],
+                        ),
+                        child: const SizedBox(
+                          width: 18, height: 18,
+                          child: CircularProgressIndicator(color: DonyColors.primary, strokeWidth: 2),
+                        ),
+                      ),
                     ),
+
+                  // ── Error banner ──
+                  if (state is AnnouncementError &&
+                      state.previousResults != null &&
+                      !_errorBannerDismissed)
+                    Positioned(
+                      key: const Key('search-error-banner'),
+                      left: DonySpacing.md, right: DonySpacing.md,
+                      bottom: bottomPad + DonySpacing.md,
+                      child: DonyStatusBanner(
+                        type: DonyStatusBannerType.error,
+                        message: state.message,
+                        onDismiss: () => setState(() => _errorBannerDismissed = true),
+                      ),
+                    ),
+
+                  // ── FAB "Carte" ──
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 280),
+                    curve: Curves.easeOutCubic,
+                    bottom: _isMapHidden ? bottomPad + DonySpacing.lg : -(DonySpacing.huge + 20),
+                    left: 0, right: 0,
+                    child: Center(child: _CarteFab(onTap: _showMap)),
                   ),
                 ],
               );
             },
           );
         },
+      ),
+    );
+  }
+}
+
+// ── Carousel "Près de moi" ───────────────────────────────────────────────────
+
+class _NearMeCarousel extends StatelessWidget {
+  const _NearMeCarousel({
+    required this.announcements,
+    required this.userPosition,
+    required this.scrollController,
+    required this.onSeeAll,
+  });
+
+  final List<AnnouncementModel> announcements;
+  final ({double lat, double lng})? userPosition;
+  final ScrollController scrollController;
+  final VoidCallback onSeeAll;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.separated(
+            controller: scrollController,
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
+            itemCount: announcements.length,
+            separatorBuilder: (_, __) => const SizedBox(width: DonySpacing.md),
+            itemBuilder: (context, i) {
+              final a = announcements[i];
+              final badge = buildDistanceBadge(a, userPosition);
+              final authState = context.read<AuthBloc>().state;
+              final currentUserId = authState is AuthAuthenticated
+                  ? authState.user.id : null;
+              final isOwn = currentUserId != null && a.travelerId == currentUserId;
+              return SizedBox(
+                width: 220,
+                child: TravelerCard(
+                  announcement: a,
+                  index: i,
+                  isOwnAnnouncement: isOwn,
+                  distanceBadge: badge,
+                  onTap: isOwn
+                      ? null
+                      : () => context.push('/search/${a.id}', extra: a),
+                ),
+              );
+            },
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+            DonySpacing.lg, DonySpacing.md, DonySpacing.lg, bottomPad + DonySpacing.md,
+          ),
+          child: GestureDetector(
+            onTap: onSeeAll,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+              decoration: BoxDecoration(
+                color: DonyColors.primarySoft,
+                borderRadius: BorderRadius.circular(DonyRadius.card),
+                border: Border.all(
+                  color: DonyColors.primary.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    'Voir les ${announcements.length} annonce${announcements.length > 1 ? 's' : ''}',
+                    style: tt.labelLarge?.copyWith(
+                      color: DonyColors.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: DonySpacing.xxs),
+                  Text(
+                    'Tirez vers le haut pour la liste',
+                    style: tt.bodySmall?.copyWith(color: DonyColors.primary),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── FAB Carte ────────────────────────────────────────────────────────────────
+
+class _CarteFab extends StatelessWidget {
+  const _CarteFab({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: DonyColors.ink900,
+          borderRadius: BorderRadius.circular(DonyRadius.full),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.28),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.map_outlined, size: 18, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(
+              'Carte',
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ],
+        ),
       ),
     );
   }

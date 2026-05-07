@@ -81,4 +81,29 @@ void main() {
       expect(tapped, isTrue);
     });
   });
+
+  group('TravelerCard – distanceBadge', () {
+    testWidgets('affiche le badge quand distanceBadge est fourni', (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+        distanceBadge: 'CDG · 8 km',
+      )));
+      await tester.pumpAndSettle();
+      expect(find.text('CDG · 8 km'), findsOneWidget);
+    });
+
+    testWidgets('n\'affiche rien quand distanceBadge est null', (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+      )));
+      await tester.pumpAndSettle();
+      expect(find.text('CDG · 8 km'), findsNothing);
+    });
+  });
 }

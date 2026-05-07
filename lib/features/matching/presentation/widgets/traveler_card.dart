@@ -11,12 +11,14 @@ class TravelerCard extends StatelessWidget {
     required this.index,
     required this.isOwnAnnouncement,
     required this.onTap,
+    this.distanceBadge,
   });
 
   final AnnouncementModel announcement;
   final VoidCallback? onTap;
   final int index;
   final bool isOwnAnnouncement;
+  final String? distanceBadge;
 
   static const int _maxVisibleChips = 3;
 
@@ -45,6 +47,10 @@ class TravelerCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (distanceBadge != null) ...[
+              _DistanceBadge(label: distanceBadge!),
+              const SizedBox(height: DonySpacing.sm),
+            ],
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -115,6 +121,39 @@ class TravelerCard extends StatelessWidget {
           .animate()
           .fadeIn(delay: Duration(milliseconds: 60 * index))
           .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+    );
+  }
+}
+
+class _DistanceBadge extends StatelessWidget {
+  const _DistanceBadge({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: DonyColors.ink900,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.location_on_rounded, size: 11, color: Colors.white),
+          const SizedBox(width: DonySpacing.xxs),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ],
+      ),
     );
   }
 }
