@@ -104,16 +104,16 @@ class MarkerBitmapFactory {
     required bool isSelected,
   }) async {
     final label = pricePerKg == pricePerKg.roundToDouble()
-        ? '${pricePerKg.toInt()}€/kg'
-        : '${pricePerKg.toStringAsFixed(1)}€/kg';
+        ? '${pricePerKg.toInt()}€'
+        : '${pricePerKg.toStringAsFixed(1)}€';
 
-    const fontSize = 13.0;
-    const paddingH = 10.0;
-    const paddingV = 7.0;
+    const fontSize = 12.0;
+    const paddingH = 8.0;
+    const paddingV = 5.0;
     const textColor = Color(0xFF061833);
-    const dotR = 3.5;
-    const halo1R = 5.5;
-    const halo2R = 7.5;
+    const dotR = 3.0;
+    const halo1R = 4.5;
+    const halo2R = 6.0;
     const dotSectionW = halo2R * 2;
     const dotGap = 5.0;
     const badgeR = 8.0;
@@ -288,18 +288,18 @@ class MarkerBitmapFactory {
     required bool isSelected,
   }) async {
     final label = pricePerKg == pricePerKg.roundToDouble()
-        ? '${pricePerKg.toInt()}€/kg'
-        : '${pricePerKg.toStringAsFixed(1)}€/kg';
+        ? '${pricePerKg.toInt()}€'
+        : '${pricePerKg.toStringAsFixed(1)}€';
 
-    const fontSize = 13.0;
-    const paddingH = 10.0;
-    const paddingV = 7.0;
+    const fontSize = 12.0;
+    const paddingH = 8.0;
+    const paddingV = 5.0;
     const textColor = Color(0xFF061833);
 
     // Urgency dot dimensions
-    const dotR = 3.5;     // inner solid dot radius
-    const halo1R = 5.5;   // mid halo radius
-    const halo2R = 7.5;   // outer halo radius
+    const dotR = 3.0;
+    const halo1R = 4.5;
+    const halo2R = 6.0;
     const dotSectionW = halo2R * 2; // total width taken by dot + halos
     const dotGap = 5.0;   // gap between outer halo and text
 

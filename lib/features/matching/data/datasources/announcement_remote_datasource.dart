@@ -3,6 +3,7 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:intl/intl.dart';
+export 'package:dony/features/matching/data/models/transport_mode.dart';
 
 class AnnouncementRemoteDatasource {
   final ApiClient _apiClient;
@@ -76,6 +77,9 @@ class AnnouncementRemoteDatasource {
     bool? kiloProOnly,
     double? minRating,
     bool? weekendOnly,
+    TransportMode? transportMode,
+    bool? kycVerifiedOnly,
+    String? contentType,
     double? userLat,
     double? userLng,
     double? radiusKm,
@@ -100,6 +104,9 @@ class AnnouncementRemoteDatasource {
       if (kiloProOnly == true) 'kiloProOnly': true,
       if (minRating != null) 'minRating': minRating,
       if (weekendOnly == true) 'weekendOnly': true,
+      if (transportMode != null) 'transportMode': transportModeToWire(transportMode),
+      if (kycVerifiedOnly == true) 'kycVerifiedOnly': true,
+      if (contentType != null) 'contentType': contentType,
       if (userLat != null) 'userLat': userLat,
       if (userLng != null) 'userLng': userLng,
       if (radiusKm != null) 'radiusKm': radiusKm,

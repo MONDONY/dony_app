@@ -8,6 +8,7 @@ import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
 import 'package:dony/features/matching/data/models/search_params.dart';
+import 'package:dony/features/matching/data/models/urgency_filter.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_carousel.dart';
 import 'package:dony/features/matching/presentation/widgets/search_form_bottom_sheet.dart';
@@ -108,6 +109,27 @@ class _MapSenderViewState extends State<_MapSenderView> {
   double? _weightMax;
   double? _maxPricePerKg;
   bool _weekendOnly = false;
+  TransportMode? _transportMode;
+  bool _kycVerifiedOnly = false;
+  String? _contentType;
+  UrgencyFilter? _urgencyFilter;
+
+  int get _activeFilterCount {
+    int n = 0;
+    if (_kiloProOnly) n++;
+    if (_allCorridors) n++;
+    if (_minRating != null) n++;
+    if (_weightMin != null || _weightMax != null) n++;
+    if (_maxPricePerKg != null) n++;
+    if (_weekendOnly) n++;
+    if (_transportMode != null) n++;
+    if (_kycVerifiedOnly) n++;
+    if (_contentType != null) n++;
+    if (_isNearMeActive) n++;
+    if (_datePreset != _DatePreset.thisWeek) n++;
+    if (_urgencyFilter != null) n++;
+    return n;
+  }
 
   DateTime? get _dateFrom {
     final now = DateTime.now();
@@ -188,6 +210,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
           minAvailableKg: _weightMin,
           maxAvailableKg: _weightMax,
           maxPricePerKg: _maxPricePerKg,
+          transportMode: _transportMode,
+          kycVerifiedOnly: _kycVerifiedOnly ? true : null,
+          contentType: _contentType,
           userLat: _isNearMeActive ? _userPosition?.latitude : null,
           userLng: _isNearMeActive ? _userPosition?.longitude : null,
           radiusKm: _isNearMeActive ? _nearMeRadiusKm : null,
@@ -324,6 +349,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
       ratingFilter: _minRating != null,
       priceFilter: _maxPricePerKg != null,
       maxPricePerKg: _maxPricePerKg ?? 25,
+      transportMode: _transportMode,
+      kycVerifiedOnly: _kycVerifiedOnly,
+      contentType: _contentType,
+      urgencyFilter: _urgencyFilter,
     );
 
     final result = await SearchFormBottomSheet.show(
@@ -356,9 +385,13 @@ class _MapSenderViewState extends State<_MapSenderView> {
       _minRating = result.ratingFilter ? 4.5 : null;
       _weekendOnly = result.weekendFilter;
       _maxPricePerKg = result.priceFilter ? result.maxPricePerKg : null;
+      _transportMode = result.transportMode;
+      _kycVerifiedOnly = result.kycVerifiedOnly;
+      _contentType = result.contentType;
+      _urgencyFilter = result.urgencyFilter;
       if (result.weightKg > 0) {
         _weightMin = result.weightKg;
-        _weightMax = null; // single-value weight from search form clears the range max
+        _weightMax = null;
       }
     });
     _dispatchSearch();
@@ -370,9 +403,12 @@ class _MapSenderViewState extends State<_MapSenderView> {
       backgroundColor: DonyColors.bgApp,
       body: BlocBuilder<AnnouncementBloc, AnnouncementState>(
         builder: (context, state) {
-          final announcements = state is AnnouncementSearchLoaded
+          final raw = state is AnnouncementSearchLoaded
               ? state.results
               : <AnnouncementModel>[];
+          final announcements = _urgencyFilter == null
+              ? raw
+              : raw.where((a) => _urgencyFilter!.matches(a.departureDate)).toList();
 
           return Stack(
             children: [
@@ -418,7 +454,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                           label: _allCorridors
                               ? 'Tous les corridors'
                               : _corridor.label,
-                          hasActiveFilters: _allCorridors,
+                          activeFilterCount: _activeFilterCount,
                           onTap: () => _showFilterSheet(context),
                         ),
                         const SizedBox(height: DonySpacing.sm),
@@ -456,8 +492,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             _dispatchSearch();
                           },
                           onAllCorridorsToggle: () {
-                            setState(
-                                () => _allCorridors = !_allCorridors);
+                            setState(() => _allCorridors = !_allCorridors);
                             _dispatchSearch();
                           },
                         ),
@@ -1175,13 +1210,15 @@ class _CorridorBar extends StatelessWidget {
   const _CorridorBar({
     super.key,
     required this.label,
-    required this.hasActiveFilters,
+    required this.activeFilterCount,
     required this.onTap,
   });
 
   final String label;
-  final bool hasActiveFilters;
+  final int activeFilterCount;
   final VoidCallback onTap;
+
+  bool get _hasActive => activeFilterCount > 0;
 
   @override
   Widget build(BuildContext context) {
@@ -1216,18 +1253,48 @@ class _CorridorBar extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: hasActiveFilters ? DonyColors.primary : DonyColors.bgApp,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.tune_rounded,
-                size: 18,
-                color: hasActiveFilters ? DonyColors.surface : DonyColors.ink900,
-              ),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: _hasActive ? DonyColors.primary : DonyColors.bgApp,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.tune_rounded,
+                    size: 18,
+                    color: _hasActive ? DonyColors.surface : DonyColors.ink900,
+                  ),
+                ),
+                if (_hasActive)
+                  Positioned(
+                    top: -4,
+                    right: -4,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: const BoxDecoration(
+                        color: DonyColors.error,
+                        borderRadius: BorderRadius.all(Radius.circular(8)),
+                      ),
+                      child: Text(
+                        '$activeFilterCount',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: DonyColors.white,
+                          height: 1.6,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ],
         ),
@@ -1622,6 +1689,8 @@ class _SmallChip extends StatelessWidget {
     );
   }
 }
+
+// ── _UrgencyChip ──────────────────────────────────────────────────────────────
 
 // ── _HomeCorridorSheet ────────────────────────────────────────────────────────
 
