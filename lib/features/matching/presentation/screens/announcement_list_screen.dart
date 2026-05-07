@@ -2,6 +2,8 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/widgets/announcement_detail_bottom_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement_bottom_sheet.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -107,7 +109,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
         heroTag: null,
         backgroundColor: cs.primary,
         elevation: 2,
-        onPressed: () => context.push('/announcements/create'),
+        onPressed: () => CreateAnnouncementBottomSheet.show(context),
         child: Icon(Icons.add_rounded, color: cs.onPrimary),
       ),
       body: BlocConsumer<AnnouncementBloc, AnnouncementState>(
@@ -218,7 +220,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
                                 announcement: item,
                                 index: index,
                                 onTap: () async {
-                                  await context.push('/announcements/${item.id}');
+                                  await AnnouncementDetailBottomSheet.show(context, announcementId: item.id);
                                   if (context.mounted) {
                                     context
                                         .read<AnnouncementBloc>()
@@ -293,7 +295,7 @@ class _InProgressSection extends StatelessWidget {
                   announcement: e.value,
                   index: e.key,
                   onDetailTap: () async {
-                    await context.push('/announcements/${e.value.id}');
+                    await AnnouncementDetailBottomSheet.show(context, announcementId: e.value.id);
                     if (context.mounted) {
                       context.read<AnnouncementBloc>().add(AnnouncementListRequested());
                     }

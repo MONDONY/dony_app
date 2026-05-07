@@ -4,6 +4,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement_bottom_sheet.dart';
 import 'package:dony/features/notifications/presentation/notification_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -912,7 +913,7 @@ class _TravelerViewState extends State<_TravelerView> {
                 DonyButton(
                   label: 'Publier un trajet',
                   icon: Icons.send_rounded,
-                  onPressed: () => context.push('/announcements/create'),
+                  onPressed: () => CreateAnnouncementBottomSheet.show(context),
                 ).animate().fadeIn(delay: 140.ms),
 
                 const SizedBox(height: DonySpacing.xl),

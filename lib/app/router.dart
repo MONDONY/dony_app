@@ -9,19 +9,15 @@ import 'package:dony/features/auth/presentation/screens/otp_verification_screen.
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/pin_setup_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/presentation/screens/rematch_search_screen.dart';
 import 'package:dony/features/home/presentation/home_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_status_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
-import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/presentation/screens/announcement_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_list_screen.dart';
-import 'package:dony/features/matching/presentation/screens/create_announcement_screen.dart';
 import 'package:dony/features/matching/presentation/screens/matching_management_screen.dart';
 import 'package:dony/features/matching/presentation/screens/search_announcement_screen.dart';
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
@@ -234,52 +230,17 @@ final appRouter = GoRouter(
       },
     ),
 
-    // ── Création / édition trajet (hors shell — plein écran) ────────────
+    // ── Bids d'une annonce (hors shell — plein écran) ────────────────────
     GoRoute(
-      path: '/announcements/create',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<AnnouncementBloc>(),
-        child: const CreateAnnouncementScreen(),
-      ),
-    ),
-    GoRoute(
-      path: '/announcements/:id/edit',
-      builder: (context, state) {
-        final announcement = state.extra as AnnouncementModel?;
-        return BlocProvider(
-          create: (_) => getIt<AnnouncementBloc>(),
-          child: CreateAnnouncementScreen(announcement: announcement),
-        );
-      },
-    ),
-
-    // ── Détail annonce + sous-écrans (hors shell — plein écran) ─────────
-    // Règle : tout écran avec ← ou ✕ est hors shell.
-    GoRoute(
-      path: '/announcements/:id',
+      path: '/announcements/:id/bids',
       builder: (context, state) {
         final id = state.pathParameters['id']!;
-        return MultiBlocProvider(
-          providers: [
-            BlocProvider(create: (_) => getIt<AnnouncementBloc>()),
-            BlocProvider(create: (_) => getIt<CancellationBloc>()),
-          ],
-          child: AnnouncementDetailScreen(id: id),
+        final extra = state.extra as Map<String, dynamic>?;
+        return BidListScreen(
+          announcementId: id,
+          initialTabIndex: extra?['initialTabIndex'] as int? ?? 0,
         );
       },
-      routes: [
-        GoRoute(
-          path: 'bids',
-          builder: (context, state) {
-            final id = state.pathParameters['id']!;
-            final extra = state.extra as Map<String, dynamic>?;
-            return BidListScreen(
-              announcementId: id,
-              initialTabIndex: extra?['initialTabIndex'] as int? ?? 0,
-            );
-          },
-        ),
-      ],
     ),
 
     // ── Suivi hors-ligne (hors shell) ────────────────────────────────────
