@@ -11,6 +11,7 @@ class UpgradeToProBloc extends Bloc<UpgradeToProEvent, UpgradeToProState> {
 
   UpgradeToProBloc(this._repository) : super(UpgradeToProInitial()) {
     on<UpgradeToProSubmitted>(_onSubmitted);
+    on<DowngradeRequested>(_onDowngrade);
   }
 
   Future<void> _onSubmitted(
@@ -35,6 +36,19 @@ class UpgradeToProBloc extends Bloc<UpgradeToProEvent, UpgradeToProState> {
       );
     } catch (e) {
       emit(const UpgradeToProError('Une erreur est survenue. Veuillez réessayer.'));
+    }
+  }
+
+  Future<void> _onDowngrade(
+    DowngradeRequested event,
+    Emitter<UpgradeToProState> emit,
+  ) async {
+    emit(UpgradeToProLoading());
+    try {
+      await _repository.downgradePro();
+      emit(DowngradeSuccess());
+    } catch (e) {
+      emit(const DowngradeError('Une erreur est survenue. Veuillez réessayer.'));
     }
   }
 }

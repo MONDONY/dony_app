@@ -1,6 +1,9 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/profile/bloc/upgrade_to_pro_bloc.dart';
 import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
@@ -16,6 +19,9 @@ class MockUpgradeToProBloc
 
 class MockProfileRepository extends Mock implements ProfileRepository {}
 
+class MockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {}
+
 /// Duration long enough to let all flutter_animate delays complete.
 /// The screen has delays up to 260ms.
 const _kSettle = Duration(milliseconds: 600);
@@ -23,24 +29,27 @@ const _kSettle = Duration(milliseconds: 600);
 /// Finds the submit button (works even when animations cause duplicates).
 Finder get _submitBtn => find.text('Activer le compte PRO').last;
 
-Widget _wrap(MockProfileRepository repo) {
+Widget _wrap(MockProfileRepository repo, MockAuthBloc authBloc) {
   if (getIt.isRegistered<ProfileRepository>()) {
     getIt.unregister<ProfileRepository>();
   }
   getIt.registerLazySingleton<ProfileRepository>(() => repo);
 
-  return MaterialApp.router(
-    routerConfig: GoRouter(
-      routes: [
-        GoRoute(
-          path: '/',
-          builder: (_, __) => const UpgradeToProScreen(),
-        ),
-        GoRoute(
-          path: '/profile',
-          builder: (_, __) => const Scaffold(body: Text('Profile')),
-        ),
-      ],
+  return BlocProvider<AuthBloc>.value(
+    value: authBloc,
+    child: MaterialApp.router(
+      routerConfig: GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, __) => const UpgradeToProScreen(),
+          ),
+          GoRoute(
+            path: '/profile',
+            builder: (_, __) => const Scaffold(body: Text('Profile')),
+          ),
+        ],
+      ),
     ),
   );
 }
@@ -50,6 +59,7 @@ void main() {
     registerFallbackValue(
       const UpgradeToProSubmitted(companyName: '', siret: ''),
     );
+    registerFallbackValue(const AuthCheckRequested());
   });
 
   tearDown(() {
@@ -111,14 +121,21 @@ void main() {
 
   group('UpgradeToProScreen — form interaction', () {
     late MockProfileRepository mockRepo;
+    late MockAuthBloc mockAuthBloc;
 
     setUp(() {
       mockRepo = MockProfileRepository();
+      mockAuthBloc = MockAuthBloc();
+      whenListen<AuthState>(
+        mockAuthBloc,
+        const Stream.empty(),
+        initialState: AuthInitial(),
+      );
     });
 
     testWidgets('renders form with companyName and siret fields',
         (tester) async {
-      await tester.pumpWidget(_wrap(mockRepo));
+      await tester.pumpWidget(_wrap(mockRepo, mockAuthBloc));
       await tester.pump(_kSettle);
 
       expect(find.text('Conta PRO'), findsNothing);
@@ -129,7 +146,7 @@ void main() {
 
     testWidgets('shows validation errors when submitting empty form',
         (tester) async {
-      await tester.pumpWidget(_wrap(mockRepo));
+      await tester.pumpWidget(_wrap(mockRepo, mockAuthBloc));
       await tester.pump(_kSettle);
 
       await tester.ensureVisible(_submitBtn);
@@ -145,7 +162,7 @@ void main() {
 
     testWidgets('shows SIRET validation error for wrong length',
         (tester) async {
-      await tester.pumpWidget(_wrap(mockRepo));
+      await tester.pumpWidget(_wrap(mockRepo, mockAuthBloc));
       await tester.pump(_kSettle);
 
       await tester.enterText(
@@ -170,7 +187,7 @@ void main() {
 
     testWidgets('shows confirmation dialog on valid form submission',
         (tester) async {
-      await tester.pumpWidget(_wrap(mockRepo));
+      await tester.pumpWidget(_wrap(mockRepo, mockAuthBloc));
       await tester.pump(_kSettle);
 
       await tester.enterText(
@@ -197,7 +214,7 @@ void main() {
             siret: any(named: 'siret'),
           )).thenAnswer((_) async {});
 
-      await tester.pumpWidget(_wrap(mockRepo));
+      await tester.pumpWidget(_wrap(mockRepo, mockAuthBloc));
       await tester.pump(_kSettle);
 
       await tester.enterText(
@@ -228,7 +245,7 @@ void main() {
 
     testWidgets('does NOT call upgradeToPro when dialog is cancelled',
         (tester) async {
-      await tester.pumpWidget(_wrap(mockRepo));
+      await tester.pumpWidget(_wrap(mockRepo, mockAuthBloc));
       await tester.pump(_kSettle);
 
       await tester.enterText(
@@ -262,7 +279,7 @@ void main() {
             siret: any(named: 'siret'),
           )).thenThrow(Exception('Network timeout'));
 
-      await tester.pumpWidget(_wrap(mockRepo));
+      await tester.pumpWidget(_wrap(mockRepo, mockAuthBloc));
       await tester.pump(_kSettle);
 
       await tester.enterText(
@@ -295,7 +312,7 @@ void main() {
             siret: any(named: 'siret'),
           )).thenThrow(const NetworkException('Conflict', code: '409'));
 
-      await tester.pumpWidget(_wrap(mockRepo));
+      await tester.pumpWidget(_wrap(mockRepo, mockAuthBloc));
       await tester.pump(_kSettle);
 
       await tester.enterText(

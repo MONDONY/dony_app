@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/cancellation/presentation/widgets/cancellation_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -345,7 +346,10 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
               label: 'Annuler ce trajet',
               icon: Icons.cancel_outlined,
               variant: DonyButtonVariant.destructive,
-              onPressed: () => context.push('/announcements/${a.id}/cancel'),
+              onPressed: () => CancellationBottomSheet.show(
+                context,
+                announcementId: a.id,
+              ),
             ).animate().fadeIn(delay: 250.ms),
             const SizedBox(height: DonySpacing.md),
           ],

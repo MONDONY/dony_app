@@ -1,16 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 
-/// Helper pour afficher un bottom sheet standardisé dony.
-///
-/// Usage :
-/// ```dart
-/// DonyBottomSheet.show(
-///   context,
-///   title: 'Trier par',
-///   child: SortOptions(),
-/// );
-/// ```
 abstract final class DonyBottomSheet {
   static Future<T?> show<T>(
     BuildContext context, {
@@ -20,7 +10,7 @@ abstract final class DonyBottomSheet {
     bool isDismissible = true,
     bool showHandle = true,
     bool isScrollControlled = true,
-    double? initialChildSizeRatio,
+    bool isDanger = false,
   }) {
     return showModalBottomSheet<T>(
       context: context,
@@ -32,6 +22,7 @@ abstract final class DonyBottomSheet {
         title: title,
         subtitle: subtitle,
         showHandle: showHandle,
+        isDanger: isDanger,
         child: child,
       ),
     );
@@ -44,26 +35,32 @@ class _DonyBottomSheetContent extends StatelessWidget {
     this.title,
     this.subtitle,
     this.showHandle = true,
+    this.isDanger = false,
   });
 
   final Widget child;
   final String? title;
   final String? subtitle;
   final bool showHandle;
+  final bool isDanger;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final mq = MediaQuery.of(context);
-    // viewInsets.bottom = hauteur clavier ; viewPadding.bottom = barre nav système
-    // (viewPadding survit à l'écrasement de padding.bottom par le modal)
     final bottomInset = mq.viewInsets.bottom + mq.viewPadding.bottom;
+    final topMargin = mq.size.height * 0.1;
+
+    final bgColor = isDanger ? cs.errorContainer : cs.surface;
+    final handleColor = isDanger
+        ? cs.error.withValues(alpha: 0.35)
+        : DonyColors.neutral300;
 
     return Container(
-      margin: const EdgeInsets.only(top: DonySpacing.huge),
+      margin: EdgeInsets.only(top: topMargin),
       decoration: BoxDecoration(
-        color: cs.surface,
+        color: bgColor,
         borderRadius: const BorderRadius.vertical(
           top: Radius.circular(DonyRadius.sheet),
         ),
@@ -80,7 +77,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: DonyColors.neutral300,
+                  color: handleColor,
                   borderRadius: BorderRadius.circular(DonyRadius.full),
                 ),
               ),
@@ -96,7 +93,12 @@ class _DonyBottomSheetContent extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(title!, style: tt.headlineSmall),
+                        Text(
+                          title!,
+                          style: tt.headlineSmall?.copyWith(
+                            color: isDanger ? cs.error : null,
+                          ),
+                        ),
                         if (subtitle != null) ...[
                           const SizedBox(height: DonySpacing.xs),
                           Text(

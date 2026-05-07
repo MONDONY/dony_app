@@ -23,6 +23,7 @@ import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.dart';
+import 'package:dony/features/matching/presentation/widgets/handover_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/route_map_components.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
@@ -135,7 +136,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
           DonySnackbar.show(context,
               message: 'Demande acceptée ! Définissez maintenant la fenêtre de remise.',
               type: DonySnackbarType.success);
-          context.push('/bids/${_bid.id}/handover', extra: _bid);
+          HandoverBottomSheet.show(context, bid: _bid);
         } else if (state is BidRejected) {
           _bid = state.bid;
           DonySnackbar.show(context, message: 'Demande refusée.');

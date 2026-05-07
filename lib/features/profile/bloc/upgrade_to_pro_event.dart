@@ -19,3 +19,7 @@ class UpgradeToProSubmitted extends UpgradeToProEvent {
   @override
   List<Object?> get props => [companyName, siret];
 }
+
+class DowngradeRequested extends UpgradeToProEvent {
+  const DowngradeRequested();
+}
