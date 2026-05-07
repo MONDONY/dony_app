@@ -8,6 +8,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/services/saved_trips_service.dart';
+import 'package:dony/features/matching/presentation/widgets/search_form_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -1164,7 +1165,12 @@ class _EmptyView extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.xl),
             GestureDetector(
-              onTap: () => context.push('/search'),
+              onTap: () async {
+                final params = await SearchFormBottomSheet.show(context);
+                if (params != null && context.mounted) {
+                  context.push('/search', extra: params);
+                }
+              },
               child: Container(
                 padding: const EdgeInsets.symmetric(
                     horizontal: DonySpacing.xl, vertical: 13),
@@ -1297,7 +1303,12 @@ class _SendFab extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     return GestureDetector(
-      onTap: () => context.push('/search'),
+      onTap: () async {
+        final params = await SearchFormBottomSheet.show(context);
+        if (params != null && context.mounted) {
+          context.push('/search', extra: params);
+        }
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(
             horizontal: DonySpacing.lg, vertical: 14),

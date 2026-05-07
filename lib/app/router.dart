@@ -19,6 +19,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/matching_management_screen.dart';
+import 'package:dony/features/matching/data/models/search_params.dart';
 import 'package:dony/features/matching/presentation/screens/search_announcement_screen.dart';
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
 import 'package:dony/features/notifications/presentation/inbox_screen.dart';
@@ -252,10 +253,15 @@ final appRouter = GoRouter(
     // ── Résultats de recherche (hors shell — plein écran) ───────────────
     GoRoute(
       path: '/search',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<AnnouncementBloc>(),
-        child: const SearchAnnouncementScreen(),
-      ),
+      builder: (context, state) {
+        final params = state.extra is SearchParams
+            ? state.extra as SearchParams
+            : null;
+        return BlocProvider(
+          create: (_) => getIt<AnnouncementBloc>(),
+          child: SearchAnnouncementScreen(initialParams: params),
+        );
+      },
     ),
 
     // ── Settings (hors shell) ──────────────────────────────────────────
