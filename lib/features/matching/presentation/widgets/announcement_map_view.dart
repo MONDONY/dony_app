@@ -58,10 +58,13 @@ class _AnnouncementPoint {
 
 /// A lightweight cluster: one or more [_AnnouncementPoint]s with a centroid.
 class _Cluster {
-  _Cluster(this.items, this.centroid);
+  _Cluster(this.items, this.centroid, {required this.isSameSpot});
 
   final List<_AnnouncementPoint> items;
   final LatLng centroid;
+  /// True when all items are within ~10 m of each other (same building/address).
+  /// Pre-computed at cluster-build time so tap handlers don't need to recheck.
+  final bool isSameSpot;
 
   bool get isMultiple => items.length > 1;
   int get count => items.length;
@@ -91,8 +94,78 @@ List<_Cluster> _gridCluster(
         pts.fold<double>(0, (s, p) => s + p.location.latitude) / pts.length;
     final avgLng =
         pts.fold<double>(0, (s, p) => s + p.location.longitude) / pts.length;
-    return _Cluster(pts, LatLng(avgLat, avgLng));
+
+    // Pre-compute whether all items share the same physical address (~10 m).
+    // 1e-4° ≈ 11 m at equator — captures same-building geocoding variations.
+    const kSameSpot = 1e-4;
+    final first = pts.first.location;
+    final isSameSpot = pts.every(
+      (p) =>
+          (p.location.latitude - first.latitude).abs() < kSameSpot &&
+          (p.location.longitude - first.longitude).abs() < kSameSpot,
+    );
+
+    return _Cluster(pts, LatLng(avgLat, avgLng), isSameSpot: isSameSpot);
   }).toList();
+}
+
+/// Merges singleton clusters whose single point falls within [kSameSpot]
+/// degrees of another singleton's point.
+///
+/// This is needed because two addresses at the same physical location can
+/// straddle a grid-cell boundary (especially at high zoom where cellDeg is
+/// small), producing two separate 1-item clusters instead of one 2-item
+/// same-spot cluster.
+List<_Cluster> _mergeSameSpotSingletons(List<_Cluster> clusters) {
+  const kSameSpot = 1e-4;
+
+  final multi = <_Cluster>[];
+  final singles = <_Cluster>[];
+
+  for (final c in clusters) {
+    if (c.isMultiple) {
+      multi.add(c);
+    } else {
+      singles.add(c);
+    }
+  }
+
+  if (singles.length < 2) return [...multi, ...singles];
+
+  final used = List.filled(singles.length, false);
+  final merged = <_Cluster>[];
+
+  for (int i = 0; i < singles.length; i++) {
+    if (used[i]) continue;
+    final group = [singles[i]];
+    used[i] = true;
+    final locI = singles[i].items.first.location;
+
+    for (int j = i + 1; j < singles.length; j++) {
+      if (used[j]) continue;
+      final locJ = singles[j].items.first.location;
+      if ((locI.latitude - locJ.latitude).abs() < kSameSpot &&
+          (locI.longitude - locJ.longitude).abs() < kSameSpot) {
+        group.add(singles[j]);
+        used[j] = true;
+      }
+    }
+
+    if (group.length == 1) {
+      merged.add(singles[i]);
+    } else {
+      final allItems = group.expand((c) => c.items).toList();
+      final avgLat =
+          allItems.fold<double>(0, (s, p) => s + p.location.latitude) /
+              allItems.length;
+      final avgLng =
+          allItems.fold<double>(0, (s, p) => s + p.location.longitude) /
+              allItems.length;
+      merged.add(_Cluster(allItems, LatLng(avgLat, avgLng), isSameSpot: true));
+    }
+  }
+
+  return [...multi, ...merged];
 }
 
 double _cellDegForZoom(double zoom) {
@@ -228,7 +301,10 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
 
   Future<void> _rebuildMarkers() async {
     final allPoints = [..._pickupPoints()];
-    final clusters = _gridCluster(allPoints, _currentZoom);
+    final rawClusters = _gridCluster(allPoints, _currentZoom);
+    // Merge singleton clusters that straddle a grid-cell boundary but share
+    // the same physical address (within the kSameSpot threshold).
+    final clusters = _mergeSameSpotSingletons(rawClusters);
     final futures = clusters.map((c) => _buildMarker(c));
     final built = await Future.wait(futures);
     if (mounted) {
@@ -238,6 +314,35 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
 
   Future<Marker> _buildMarker(_Cluster cluster) async {
     if (cluster.isMultiple) {
+      if (cluster.isSameSpot) {
+        // Same address: stacked pill with count badge.
+        // Show cheapest price and most urgent (earliest) departure.
+        final cheapest = cluster.items
+            .map((it) => it.announcement.pricePerKg)
+            .reduce(math.min);
+        final earliest = cluster.items
+            .map((it) => it.announcement.departureDate)
+            .reduce((a, b) => a.isBefore(b) ? a : b);
+        final urgencyColor = MarkerUrgencyColor.fromDeparture(earliest);
+        final isSelected = cluster.items
+            .any((it) => it.announcement.id == widget.selectedAnnouncementId);
+        final icon = await MarkerBitmapFactory.stackedPricePill(
+          pricePerKg: cheapest,
+          count: cluster.count,
+          dotColor: urgencyColor,
+          isSelected: isSelected,
+        );
+        return Marker(
+          markerId: MarkerId(
+              'same_spot_${cluster.centroid.latitude}_${cluster.centroid.longitude}'),
+          position: cluster.centroid,
+          icon: icon,
+          anchor: const Offset(0.5, 1.0),
+          onTap: () => _onClusterTapped(cluster),
+        );
+      }
+
+      // Proximity cluster: classic blue badge.
       final icon = await _getClusterIcon(cluster.count);
       return Marker(
         markerId: MarkerId(
@@ -248,11 +353,12 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
         onTap: () => _onClusterTapped(cluster),
       );
     }
+
+    // Single marker.
     final item = cluster.items.first;
     final urgencyColor =
         MarkerUrgencyColor.fromDeparture(item.announcement.departureDate);
-    final isSelected =
-        item.announcement.id == widget.selectedAnnouncementId;
+    final isSelected = item.announcement.id == widget.selectedAnnouncementId;
     final icon = await MarkerBitmapFactory.pricePill(
       pricePerKg: item.announcement.pricePerKg,
       dotColor: urgencyColor,
@@ -262,7 +368,6 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       markerId: MarkerId('${item.side.name}_${item.announcement.id}'),
       position: item.location,
       icon: icon,
-      // Tail tip (bottom of bitmap) at the marker location
       anchor: const Offset(0.5, 1.0),
       onTap: () => _onMarkerTapped(item.announcement),
     );
@@ -288,13 +393,8 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   }
 
   void _onClusterTapped(_Cluster cluster) {
-    final firstLoc = cluster.items.first.location;
-    final allSameSpot = cluster.items.every((it) =>
-        (it.location.latitude - firstLoc.latitude).abs() < 1e-6 &&
-        (it.location.longitude - firstLoc.longitude).abs() < 1e-6);
-
-    if (allSameSpot) {
-      // Same exact address → list sheet
+    if (cluster.isSameSpot) {
+      // Same address → list sheet (type known at build time, no recheck needed).
       final firstItem = cluster.items.first;
       final addr = firstItem.side == _MarkerSide.pickup
           ? firstItem.announcement.pickupAddress
@@ -318,9 +418,10 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
         ),
       );
     } else {
-      // Different positions → zoom in
+      // Proximity cluster → zoom in to separate the pins.
       _mapController?.animateCamera(
-        CameraUpdate.newLatLngZoom(cluster.centroid, math.min(_currentZoom + 2, 18)),
+        CameraUpdate.newLatLngZoom(
+            cluster.centroid, math.min(_currentZoom + 2, 18)),
       );
     }
   }
