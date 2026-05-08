@@ -71,6 +71,7 @@ void main() {
       final cubit = ActiveRoleCubit(hiveService: mockHive);
       cubit.reset();
       expect(cubit.state, ActiveRole.sender);
+      verify(() => mockBox.delete('active_role')).called(1);
       cubit.close();
     });
   });
