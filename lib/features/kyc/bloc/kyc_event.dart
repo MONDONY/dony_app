@@ -9,3 +9,7 @@ class KycSessionRequested extends KycEvent {
 class KycStatusRefreshed extends KycEvent {
   const KycStatusRefreshed();
 }
+
+class KycReset extends KycEvent {
+  const KycReset();
+}
