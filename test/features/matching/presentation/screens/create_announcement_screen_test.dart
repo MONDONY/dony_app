@@ -3,6 +3,8 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
+import 'package:dony/features/city/bloc/city_search_bloc.dart';
+import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -26,6 +28,8 @@ class MockAnnouncementBloc
 
 class MockAddressAutocompleteService extends Mock
     implements AddressAutocompleteService {}
+
+class MockCityRepository extends Mock implements CityRepository {}
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -105,6 +109,15 @@ void main() {
   setUpAll(() async {
     await initializeDateFormatting('fr');
     registerFallbackValue(AnnouncementListRequested());
+    // CitySearchBloc needed: CreateAnnouncementScreen uses getIt<CitySearchBloc>()
+    final mockCityRepo = MockCityRepository();
+    when(() => mockCityRepo.searchCities(any())).thenAnswer((_) async => []);
+    when(() => mockCityRepo.getPopularCorridors()).thenAnswer((_) async => []);
+    getIt.registerFactory<CitySearchBloc>(() => CitySearchBloc(mockCityRepo));
+  });
+
+  tearDownAll(() {
+    getIt.reset();
   });
 
   setUp(() {

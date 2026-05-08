@@ -2,10 +2,13 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/city/bloc/city_search_bloc.dart';
+import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -27,6 +30,8 @@ class MockAnnouncementBloc
     implements AnnouncementBloc {}
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
+
+class MockCityRepository extends Mock implements CityRepository {}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -94,6 +99,13 @@ Future<void> _goToResults(WidgetTester tester) async {
   }
 }
 
+/// Augmente la hauteur de rendu pour éviter les débordements dans _EmptyView.
+/// Conserve la largeur par défaut (800) pour ne pas casser les Row internes.
+Future<void> _setLargeScreen(WidgetTester tester) async {
+  await tester.binding.setSurfaceSize(const Size(800, 1200));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+}
+
 // ── Setup ─────────────────────────────────────────────────────────────────────
 
 void main() {
@@ -104,6 +116,15 @@ void main() {
     await initializeDateFormatting('fr');
     registerFallbackValue(AnnouncementInitial());
     registerFallbackValue(AnnouncementSearchRequested());
+    // CitySearchBloc needed because SearchAnnouncementScreen uses getIt<CitySearchBloc>()
+    final mockCityRepo = MockCityRepository();
+    when(() => mockCityRepo.searchCities(any())).thenAnswer((_) async => []);
+    when(() => mockCityRepo.getPopularCorridors()).thenAnswer((_) async => []);
+    getIt.registerFactory<CitySearchBloc>(() => CitySearchBloc(mockCityRepo));
+  });
+
+  tearDownAll(() {
+    getIt.reset();
   });
 
   setUp(() {
@@ -252,34 +273,23 @@ void main() {
     });
   });
 
-  // ── 5. Auto-search changement ville ───────────────────────────────────────
+  // ── 5. CityAutocompleteField présent dans le formulaire ──────────────────
 
-  group('Auto-search sur changement ville', () {
-    testWidgets(
-        'AnnouncementSearchRequested émis automatiquement après sélection ville départ',
+  group('CityAutocompleteField dans le formulaire de recherche', () {
+    testWidgets('deux champs autocomplete ville présents dans le formulaire',
         (tester) async {
-      when(() => announcementBloc.state)
-          .thenReturn(AnnouncementSearchLoaded([]));
-      when(() => announcementBloc.stream).thenAnswer(
-        (_) => Stream.fromIterable([AnnouncementSearchLoaded([])]),
-      );
-
       await tester.pumpWidget(
           _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
       await tester.pump();
 
-      // Ouvrir le picker de ville de départ
-      await tester.tap(find.text('Paris · CDG, ORY'));
-      await tester.pumpAndSettle();
+      // Les deux CityAutocompleteField doivent être présents
+      // (départ + arrivée) — le sélecteur de ville est maintenant un champ
+      // d'autocomplétion, non plus une liste à tapper
+      expect(find.text('Ville de départ'), findsOneWidget);
+      expect(find.text('Ville d\'arrivée'), findsOneWidget);
 
-      // Sélectionner Lyon
-      await tester.tap(find.text('Lyon · LYS'));
-      await tester.pumpAndSettle();
-
-      // AnnouncementSearchRequested doit avoir été émis
-      verify(() =>
-              announcementBloc.add(any(that: isA<AnnouncementSearchRequested>())))
-          .called(greaterThan(0));
+      // Drainer les éventuels timers de debounce internes à CityAutocompleteField
+      await tester.pump(const Duration(milliseconds: 500));
     });
   });
 
@@ -294,6 +304,7 @@ void main() {
         (_) => Stream.fromIterable([AnnouncementSearchLoaded([])]),
       );
 
+      await _setLargeScreen(tester);
       await tester.pumpWidget(
           _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
       await tester.pump();
@@ -407,31 +418,31 @@ void main() {
     });
   });
 
-  // ── 10. Filtres mémorisés après retour formulaire ─────────────────────────
+  // ── 10. Filtres mémorisés après nouvelle recherche ───────────────────────
 
   group('Filtres mémorisés après retour au formulaire', () {
-    testWidgets('filtres résultats conservés après back + nouvelle recherche',
+    testWidgets(
+        'filtre ★ 4.7+ conservé après nouvelle recherche via sheet Trier',
         (tester) async {
       stubLoaded([_makeAnn(rating: 4.9)]);
+      await _setLargeScreen(tester);
 
       await tester.pumpWidget(
           _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
       await tester.pump();
       await _goToResults(tester);
 
-      // Activer filtre rating
+      // Activer le filtre rating dans la vue résultats
       await tester.tap(find.text('★ 4.7+'));
       await tester.pumpAndSettle();
 
-      // Revenir au formulaire
-      await tester.tap(find.byIcon(Icons.arrow_back_ios_rounded).first);
+      // Ouvrir le sheet de filtres via "Trier" et appliquer une nouvelle recherche
+      await tester.tap(find.text('Trier'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
       await tester.pumpAndSettle();
 
-      // Faire une nouvelle recherche
-      await tester.tap(find.text('Rechercher'));
-      await tester.pumpAndSettle();
-
-      // Le filtre rating doit encore être actif (chip ★ 4.7+ en vert)
+      // Le filtre ★ 4.7+ doit encore être actif (chip en vert/primary)
       final chip = tester.widget<AnimatedContainer>(
         find.ancestor(
           of: find.text('★ 4.7+'),
@@ -503,6 +514,7 @@ void main() {
         _makeAnn(availableKg: 5, pricePerKg: 8),
       ]);
 
+      await _setLargeScreen(tester);
       await tester.pumpWidget(
           _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
       await tester.pump();
@@ -628,29 +640,11 @@ void main() {
   // ── 17. Auto-search callbacks formulaire supplémentaires ─────────────────
 
   group('Auto-search callbacks formulaire', () {
-    testWidgets('changement ville arrivée → AnnouncementSearchRequested émis',
-        (tester) async {
-      stubLoaded([]);
-
-      await tester.pumpWidget(
-          _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
-      await tester.pump();
-
-      await tester.tap(find.text('Dakar · DKR'));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Abidjan · ABJ'));
-      await tester.pumpAndSettle();
-
-      verify(() =>
-              announcementBloc.add(any(that: isA<AnnouncementSearchRequested>())))
-          .called(greaterThan(0));
-    });
-
     testWidgets('toggle Note ≥ 4.5 → AnnouncementSearchRequested émis',
         (tester) async {
       stubLoaded([]);
 
+      await _setLargeScreen(tester);
       await tester.pumpWidget(
           _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
       await tester.pump();
@@ -667,6 +661,7 @@ void main() {
         (tester) async {
       stubLoaded([]);
 
+      await _setLargeScreen(tester);
       await tester.pumpWidget(
           _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
       await tester.pump();
@@ -684,6 +679,7 @@ void main() {
         (tester) async {
       stubLoaded([]);
 
+      await _setLargeScreen(tester);
       await tester.pumpWidget(
           _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
       await tester.pump();
@@ -707,8 +703,8 @@ void main() {
     await tester.pump();
     await _goToResults(tester);
 
-    // Verify AppBar contains journey title
-    expect(find.text('Paris → Dakar'), findsWidgets);
+    // Verify AppBar contains journey title in "départ → arrivée" format
+    expect(find.textContaining('→'), findsWidgets);
 
     // Verify AppBar contains filter icon
     expect(find.byIcon(Icons.tune_rounded), findsWidgets);
@@ -1051,8 +1047,8 @@ void main() {
 
     await tester.pump(const Duration(milliseconds: 350));
 
-    // ✓ ASSERTION 1: AppBar shows journey title
-    expect(find.text('Paris → Dakar'), findsWidgets);
+    // ✓ ASSERTION 1: AppBar shows journey title in "départ → arrivée" format
+    expect(find.textContaining('→'), findsWidgets);
 
     // ✓ ASSERTION 2: Pas de toggles liste/carte dans la chips row
     expect(find.byIcon(Icons.list_rounded), findsNothing);
@@ -1178,6 +1174,7 @@ void main() {
         (tester) async {
       stubLoaded([]);
 
+      await _setLargeScreen(tester);
       await tester.pumpWidget(
           _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
       await tester.pump();

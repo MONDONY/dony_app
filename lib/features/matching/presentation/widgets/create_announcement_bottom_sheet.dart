@@ -1,7 +1,9 @@
-import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
+import 'package:dony/features/city/bloc/city_search_bloc.dart';
+import 'package:dony/features/city/data/city_model.dart';
+import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -15,8 +17,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-const _departureCities = ['Paris', 'Lyon', 'Marseille'];
-const _arrivalCities = ['Dakar', 'Abidjan', 'Bamako', 'Douala'];
 const _priceOptions = [5.0, 6.0, 7.0, 8.0];
 const _contentTypes = [
   'Vêtements',
@@ -409,8 +409,8 @@ class _CreateAnnouncementContentState
                     return const SizedBox.shrink();
                   }
 
-                  final depCode = cityAirportCode(dep, departure: true);
-                  final arrCode = cityAirportCode(arr, departure: false);
+                  final depCode = dep.length >= 3 ? dep.substring(0, 3).toUpperCase() : dep.toUpperCase();
+                  final arrCode = arr.length >= 3 ? arr.substring(0, 3).toUpperCase() : arr.toUpperCase();
                   final dateStr = _formatCorridorDateTime();
 
                   return Column(
@@ -487,15 +487,17 @@ class _CreateAnnouncementContentState
                   return _SectionCard(
                     child: Column(
                       children: [
-                        _CityRow(
-                          isDeparture: true,
-                          value: _departureCityNotifier.value,
-                          airport: _departureCityNotifier.value != null
-                              ? kDepartureCityCodes[_departureCityNotifier.value]
-                              : null,
-                          cities: _departureCities,
-                          onChanged: (v) =>
-                              _departureCityNotifier.value = v,
+                        BlocProvider(
+                          create: (_) => getIt<CitySearchBloc>(),
+                          child: CityAutocompleteField(
+                            label: 'Ville de départ',
+                            initialValue: _departureCityNotifier.value,
+                            prefixIcon: const Icon(Icons.flight_takeoff_rounded,
+                                color: DonyColors.primary, size: 20),
+                            onSelected: (CityModel city) {
+                              _departureCityNotifier.value = city.name;
+                            },
+                          ),
                         ),
                         const _RowDivider(),
                         _TimeRow(
@@ -507,15 +509,17 @@ class _CreateAnnouncementContentState
                               : null,
                         ),
                         const _RowDivider(),
-                        _CityRow(
-                          isDeparture: false,
-                          value: _arrivalCityNotifier.value,
-                          airport: _arrivalCityNotifier.value != null
-                              ? kArrivalCityCodes[_arrivalCityNotifier.value]
-                              : null,
-                          cities: _arrivalCities,
-                          onChanged: (v) =>
-                              _arrivalCityNotifier.value = v,
+                        BlocProvider(
+                          create: (_) => getIt<CitySearchBloc>(),
+                          child: CityAutocompleteField(
+                            label: 'Ville d\'arrivée',
+                            initialValue: _arrivalCityNotifier.value,
+                            prefixIcon: const Icon(Icons.flight_land_rounded,
+                                color: DonyColors.accent, size: 20),
+                            onSelected: (CityModel city) {
+                              _arrivalCityNotifier.value = city.name;
+                            },
+                          ),
                         ),
                         const _RowDivider(),
                         _TimeRow(
@@ -1160,137 +1164,6 @@ class _RemovableChip extends StatelessWidget {
             child: Icon(Icons.close_rounded, size: 14, color: accentColor),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ─── Rangée ville ─────────────────────────────────────────────────────────────
-
-class _CityRow extends StatelessWidget {
-  final bool isDeparture;
-  final String? value;
-  final String? airport;
-  final List<String> cities;
-  final ValueChanged<String> onChanged;
-
-  const _CityRow({
-    required this.isDeparture,
-    required this.value,
-    required this.airport,
-    required this.cities,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    return InkWell(
-      onTap: () => _showPicker(context),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.base,
-          vertical: DonySpacing.md,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isDeparture ? DonyColors.primary : DonyColors.accent,
-              ),
-            ),
-            const SizedBox(width: DonySpacing.md),
-            Expanded(
-              child: value == null
-                  ? Text(
-                      isDeparture ? 'Ville de départ' : 'Ville d\'arrivée',
-                      style: tt.bodyMedium
-                          ?.copyWith(color: DonyColors.textSubtle),
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(value!, style: tt.titleLarge),
-                        if (airport != null)
-                          Text(
-                            airport!,
-                            style: tt.bodySmall
-                                ?.copyWith(color: DonyColors.textSubtle),
-                          ),
-                      ],
-                    ),
-            ),
-            const Icon(Icons.chevron_right_rounded,
-                size: 18, color: DonyColors.textSubtle),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showPicker(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        decoration: const BoxDecoration(
-          color: DonyColors.surface,
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(DonyRadius.sheet),
-          ),
-        ),
-        padding: const EdgeInsets.fromLTRB(
-          DonySpacing.lg,
-          0,
-          DonySpacing.lg,
-          DonySpacing.xxl,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: DonyColors.borderDefault,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            Text(
-              isDeparture ? 'Ville de départ' : 'Ville d\'arrivée',
-              style: tt.headlineMedium,
-            ),
-            const SizedBox(height: DonySpacing.base),
-            ...cities.map((city) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    city,
-                    style: tt.titleMedium?.copyWith(
-                      color: value == city
-                          ? DonyColors.primary
-                          : DonyColors.textPrimary,
-                    ),
-                  ),
-                  trailing: value == city
-                      ? const Icon(Icons.check_rounded,
-                          color: DonyColors.primary)
-                      : null,
-                  onTap: () {
-                    onChanged(city);
-                    Navigator.of(context, rootNavigator: true).pop();
-                  },
-                )),
-          ],
-        ),
       ),
     );
   }

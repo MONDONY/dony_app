@@ -1,5 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
+import 'package:dony/features/city/data/city_repository.dart';
+import 'package:dony/features/city/data/popular_corridor_model.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -34,13 +37,14 @@ enum _DatePreset { today, thisWeek, thisMonth, custom, none }
 
 typedef _CorridorOpt = ({String label, String departure, String arrival});
 
-const _corridorOptions = <_CorridorOpt>[
-  (label: 'Paris → Dakar',      departure: 'Paris · CDG, ORY', arrival: 'Dakar · DKR'),
-  (label: 'Paris → Abidjan',    departure: 'Paris · CDG, ORY', arrival: 'Abidjan · ABJ'),
-  (label: 'Lyon → Abidjan',     departure: 'Lyon · LYS',       arrival: 'Abidjan · ABJ'),
-  (label: 'Paris → Bamako',     departure: 'Paris · CDG, ORY', arrival: 'Bamako · BKO'),
-  (label: 'Paris → Douala',     departure: 'Paris · CDG, ORY', arrival: 'Douala · DLA'),
-  (label: 'Marseille → Bamako', departure: 'Marseille · MRS',  arrival: 'Bamako · BKO'),
+// Fallback statique utilisé jusqu'à ce que l'API réponde
+const _defaultCorridorOptions = <_CorridorOpt>[
+  (label: 'Paris → Dakar',      departure: 'Paris',     arrival: 'Dakar'),
+  (label: 'Paris → Abidjan',    departure: 'Paris',     arrival: 'Abidjan'),
+  (label: 'Lyon → Abidjan',     departure: 'Lyon',      arrival: 'Abidjan'),
+  (label: 'Paris → Bamako',     departure: 'Paris',     arrival: 'Bamako'),
+  (label: 'Paris → Douala',     departure: 'Paris',     arrival: 'Douala'),
+  (label: 'Marseille → Bamako', departure: 'Marseille', arrival: 'Bamako'),
 ];
 
 // Accent clair sur fond ink pour le texte de mise en valeur (compatible design system)
@@ -91,7 +95,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
   bool get _isMapHidden => _sheetSize > 0.92;
 
   _HomeTab _tab = _HomeTab.voyageurs;
-  _CorridorOpt _corridor = _corridorOptions.first;
+
+  // Liste mutable — initialisée avec le fallback statique, remplacée par l'API
+  List<_CorridorOpt> _corridorOptions = List.of(_defaultCorridorOptions);
+  _CorridorOpt _corridor = _defaultCorridorOptions.first;
 
   _DatePreset _datePreset = _DatePreset.thisWeek;
   DateTime? _customDate;
@@ -174,7 +181,32 @@ class _MapSenderViewState extends State<_MapSenderView> {
   void initState() {
     super.initState();
     _sheetController.addListener(_onSheetSizeChanged);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _dispatchSearch());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _dispatchSearch();
+      _loadPopularCorridors();
+    });
+  }
+
+  Future<void> _loadPopularCorridors() async {
+    try {
+      final corridors = await getIt<CityRepository>().getPopularCorridors();
+      if (!mounted || corridors.isEmpty) return;
+      setState(() {
+        _corridorOptions = corridors
+            .map((c) => (
+                  label: '${c.departureCity} → ${c.arrivalCity}',
+                  departure: c.departureCity,
+                  arrival: c.arrivalCity,
+                ))
+            .toList();
+        // Mettre à jour le corridor sélectionné si possible
+        if (_corridorOptions.isNotEmpty) {
+          _corridor = _corridorOptions.first;
+        }
+      });
+    } catch (_) {
+      // Échec silencieux — l'UI reste fonctionnelle avec le fallback statique
+    }
   }
 
   void _onSheetSizeChanged() {
@@ -1698,10 +1730,12 @@ class _HomeCorridorSheet extends StatefulWidget {
   const _HomeCorridorSheet({
     required this.corridor,
     required this.onApply,
+    required this.corridorOptions,
   });
 
   final _CorridorOpt corridor;
   final void Function(_CorridorOpt corridor) onApply;
+  final List<_CorridorOpt> corridorOptions;
 
   @override
   State<_HomeCorridorSheet> createState() => _HomeCorridorSheetState();
@@ -1770,8 +1804,8 @@ class _HomeCorridorSheetState extends State<_HomeCorridorSheet> {
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: List.generate(_corridorOptions.length, (i) {
-                    final opt = _corridorOptions[i];
+                  children: List.generate(widget.corridorOptions.length, (i) {
+                    final opt = widget.corridorOptions[i];
                     final isSelected = opt.label == _corridor.label;
                     return GestureDetector(
                       onTap: () => setState(() => _corridor = opt),
