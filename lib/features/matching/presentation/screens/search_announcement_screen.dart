@@ -108,12 +108,9 @@ class _SearchAnnouncementScreenState extends State<SearchAnnouncementScreen> {
   }
 
   void _search() {
-    final dep = _departureCityNotifier.value;
-    final arr = _arrivalCityNotifier.value;
-    if (dep == null || arr == null) return;
     context.read<AnnouncementBloc>().add(AnnouncementSearchRequested(
-      departureCity: dep,
-      arrivalCity: arr,
+      departureCity: _departureCityNotifier.value,
+      arrivalCity: _arrivalCityNotifier.value,
       departureDateFrom: _dateNotifier.value,
       minAvailableKg:
           _weightKgNotifier.value > 1 ? _weightKgNotifier.value : null,
