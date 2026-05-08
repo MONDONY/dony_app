@@ -19,6 +19,20 @@ class AccountDeletionRequested extends AccountDeletionState {
   const AccountDeletionRequested();
 }
 
+class DeletionOtpSent extends AccountDeletionState {
+  final String verificationId;
+  final String phoneHint;
+
+  const DeletionOtpSent({required this.verificationId, required this.phoneHint});
+
+  @override
+  List<Object?> get props => [verificationId, phoneHint];
+}
+
+class AccountDeletionImmediate extends AccountDeletionState {
+  const AccountDeletionImmediate();
+}
+
 class AccountReactivated extends AccountDeletionState {
   final UserModel user;
   const AccountReactivated(this.user);
@@ -30,12 +44,14 @@ class AccountReactivated extends AccountDeletionState {
 class AccountDeletionError extends AccountDeletionState {
   final String message;
   final bool isEscrowBlocked;
+  final bool isReauthRequired;
 
   const AccountDeletionError({
     required this.message,
     this.isEscrowBlocked = false,
+    this.isReauthRequired = false,
   });
 
   @override
-  List<Object?> get props => [message, isEscrowBlocked];
+  List<Object?> get props => [message, isEscrowBlocked, isReauthRequired];
 }

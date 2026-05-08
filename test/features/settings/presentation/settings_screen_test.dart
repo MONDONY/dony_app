@@ -1,23 +1,26 @@
+import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/presentation/settings_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
+import 'package:mocktail/mocktail.dart';
 
-Widget _wrap() => MaterialApp.router(
-      routerConfig: GoRouter(
-        routes: [
-          GoRoute(
-            path: '/',
-            builder: (_, __) => const SettingsScreen(),
-          ),
-          GoRoute(
-            path: '/settings/delete-account',
-            builder: (_, __) =>
-                const Scaffold(body: Text('DeleteAccountScreen')),
-          ),
-        ],
-      ),
-    );
+class MockAccountDeletionBloc
+    extends MockBloc<AccountDeletionEvent, AccountDeletionState>
+    implements AccountDeletionBloc {}
+
+Widget _wrap() {
+  final mockBloc = MockAccountDeletionBloc();
+  when(() => mockBloc.state).thenReturn(const AccountDeletionInitial());
+
+  return MaterialApp(
+    home: BlocProvider<AccountDeletionBloc>.value(
+      value: mockBloc,
+      child: const SettingsScreen(),
+    ),
+  );
+}
 
 void main() {
   testWidgets('renders Paramètres title', (tester) async {
@@ -34,7 +37,7 @@ void main() {
     expect(find.text('Supprimer mon compte'), findsOneWidget);
   });
 
-  testWidgets('tapping Supprimer mon compte navigates to delete-account screen',
+  testWidgets('tapping Supprimer mon compte ouvre le bottom sheet',
       (tester) async {
     await tester.pumpWidget(_wrap());
     await tester.pumpAndSettle();
@@ -42,6 +45,9 @@ void main() {
     await tester.tap(find.text('Supprimer mon compte'));
     await tester.pumpAndSettle();
 
-    expect(find.text('DeleteAccountScreen'), findsOneWidget);
+    // Le bottom sheet s'ouvre avec le titre "Supprimer mon compte"
+    // et les deux cartes de choix
+    expect(find.text('Pause 30 jours'), findsOneWidget);
+    expect(find.text('Supprimer définitivement'), findsOneWidget);
   });
 }

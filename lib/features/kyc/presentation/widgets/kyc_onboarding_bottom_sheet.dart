@@ -4,13 +4,16 @@ import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class KycOnboardingBottomSheet extends StatelessWidget {
   const KycOnboardingBottomSheet({super.key});
 
-  static Future<void> show(BuildContext context) {
-    final kycBloc = context.read<KycBloc>();
-    return DonyBottomSheet.show(
+  static Future<void> show(BuildContext context) async {
+    final kycBloc = context.read<KycBloc>()..add(const KycReset());
+
+    // Le sheet retourne l'URL Stripe via Navigator.pop(url) quand la session est prête.
+    final stripeUrl = await DonyBottomSheet.show<String>(
       context,
       wrapper: (child) => BlocProvider.value(value: kycBloc, child: child),
       stickyBottom: Column(
@@ -39,6 +42,10 @@ class KycOnboardingBottomSheet extends StatelessWidget {
       ),
       child: const KycOnboardingBottomSheet(),
     );
+
+    if (stripeUrl != null && context.mounted) {
+      GoRouter.of(context).go('/kyc/verify', extra: stripeUrl);
+    }
   }
 
   @override
@@ -49,7 +56,7 @@ class KycOnboardingBottomSheet extends StatelessWidget {
     return BlocConsumer<KycBloc, KycState>(
       listener: (context, state) {
         if (state is KycSessionCreated) {
-          Navigator.of(context).pop();
+          Navigator.of(context, rootNavigator: true).pop(state.stripeUrl);
         } else if (state is KycError) {
           DonySnackbar.show(
             context,

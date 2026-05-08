@@ -89,13 +89,13 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
             padding: EdgeInsets.symmetric(horizontal: h),
             child: Column(
               children: [
-                const SizedBox(height: DonySpacing.huge),
+                const Spacer(flex: 2),
                 _buildHeader(cs, tt),
-                const SizedBox(height: DonySpacing.huge),
+                const Spacer(flex: 2),
                 _buildStepIndicator(cs),
                 const SizedBox(height: DonySpacing.xxl),
                 _buildPinDots(cs),
-                const Spacer(),
+                const Spacer(flex: 3),
                 DonyKeypad(onDigit: _onDigit, onDelete: _onDelete),
                 SizedBox(height: DonySpacing.xxl + bottom),
               ],

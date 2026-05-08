@@ -11,6 +11,7 @@ import 'package:dony/features/connect_onboarding/data/connect_onboarding_reposit
 import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/data/account_deletion_repository.dart';
+import 'package:dony/features/settings/data/firebase_phone_reauth.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
@@ -206,8 +207,14 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<AccountDeletionRepository>(
     () => AccountDeletionRepository(getIt<ApiClient>()),
   );
+  getIt.registerLazySingleton<FirebasePhoneReauth>(
+    () => FirebasePhoneReauthImpl(),
+  );
   getIt.registerFactory<AccountDeletionBloc>(
-    () => AccountDeletionBloc(getIt<AccountDeletionRepository>()),
+    () => AccountDeletionBloc(
+      getIt<AccountDeletionRepository>(),
+      getIt<FirebasePhoneReauth>(),
+    ),
   );
 
   // Ratings

@@ -3,11 +3,14 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/data/account_deletion_repository.dart';
+import 'package:dony/features/settings/data/firebase_phone_reauth.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockAccountDeletionRepository extends Mock
     implements AccountDeletionRepository {}
+
+class MockFirebasePhoneReauth extends Mock implements FirebasePhoneReauth {}
 
 const _activeUser = UserModel(
   id: 'u1',
@@ -18,11 +21,13 @@ const _activeUser = UserModel(
 
 void main() {
   late MockAccountDeletionRepository mockRepo;
+  late MockFirebasePhoneReauth mockReauth;
   late AccountDeletionBloc bloc;
 
   setUp(() {
     mockRepo = MockAccountDeletionRepository();
-    bloc = AccountDeletionBloc(mockRepo);
+    mockReauth = MockFirebasePhoneReauth();
+    bloc = AccountDeletionBloc(mockRepo, mockReauth);
   });
 
   tearDown(() => bloc.close());

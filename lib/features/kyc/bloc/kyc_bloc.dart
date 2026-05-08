@@ -11,6 +11,7 @@ class KycBloc extends Bloc<KycEvent, KycState> {
   KycBloc(this._repository) : super(const KycInitial()) {
     on<KycSessionRequested>(_onSessionRequested);
     on<KycStatusRefreshed>(_onStatusRefreshed);
+    on<KycReset>((_, emit) => emit(const KycInitial()));
   }
 
   Future<void> _onSessionRequested(
