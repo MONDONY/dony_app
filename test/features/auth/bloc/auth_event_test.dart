@@ -27,13 +27,13 @@ void main() {
   });
 
   group('AuthRegisterRequested', () {
-    test('props contains roles', () {
-      final e = AuthRegisterRequested(['SENDER']);
-      expect(e.props, [['SENDER']]);
+    test('props is empty', () {
+      final e = AuthRegisterRequested();
+      expect(e.props, isEmpty);
     });
 
     test('equality', () {
-      expect(AuthRegisterRequested(['TRAVELER']), AuthRegisterRequested(['TRAVELER']));
+      expect(AuthRegisterRequested(), AuthRegisterRequested());
     });
   });
 
@@ -77,17 +77,6 @@ void main() {
   group('OnboardingCompleted', () {
     test('props is empty', () {
       expect(OnboardingCompleted().props, isEmpty);
-    });
-  });
-
-  group('AuthRoleToggled', () {
-    test('props contains role', () {
-      final e = AuthRoleToggled('TRAVELER');
-      expect(e.props, ['TRAVELER']);
-    });
-
-    test('equality', () {
-      expect(AuthRoleToggled('SENDER'), AuthRoleToggled('SENDER'));
     });
   });
 

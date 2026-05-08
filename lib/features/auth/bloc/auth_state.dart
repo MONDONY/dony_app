@@ -41,13 +41,6 @@ class AuthOtpSent extends AuthState {
   List<Object?> get props => [verificationId, phoneNumber, secondsLeft];
 }
 
-class AuthSelectingRoles extends AuthState {
-  final Set<String> selectedRoles;
-  const AuthSelectingRoles({required this.selectedRoles});
-  @override
-  List<Object?> get props => [selectedRoles];
-}
-
 class AuthOtpVerified extends AuthState {
   final String phoneNumber;
 

@@ -31,7 +31,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthDeleteAccountRequested>(_onDeleteAccountRequested);
     on<AuthUpdateProfileRequested>(_onUpdateProfileRequested);
     on<OnboardingCompleted>(_onOnboardingCompleted);
-    on<AuthRoleToggled>(_onRoleToggled);
     on<AuthDialCodeChanged>(_onDialCodeChanged);
     on<AuthOtpTimerTicked>(_onOtpTimerTicked);
   }
@@ -175,7 +174,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final user = await _authRepository.register(
         phoneNumber: _pendingPhoneNumber ?? '',
-        roles: event.roles,
+        roles: ['ROLE_TRAVELER', 'ROLE_SENDER'],
       );
       // Nouveau compte → effacer tout PIN résiduel d'un compte précédent
       // (le PIN est lié à l'appareil, pas à l'utilisateur Firebase)
@@ -249,21 +248,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     await Hive.box('user_prefs').put('onboarding_done', true);
-  }
-
-  // ─── Sélection de rôles ──────────────────────────────────────────────────
-
-  void _onRoleToggled(AuthRoleToggled event, Emitter<AuthState> emit) {
-    final currentRoles = state is AuthSelectingRoles
-        ? (state as AuthSelectingRoles).selectedRoles
-        : <String>{};
-    final updated = Set<String>.from(currentRoles);
-    if (updated.contains(event.role)) {
-      updated.remove(event.role);
-    } else {
-      updated.add(event.role);
-    }
-    emit(AuthSelectingRoles(selectedRoles: updated));
   }
 
   // ─── Code pays téléphone ─────────────────────────────────────────────────
