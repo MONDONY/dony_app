@@ -123,8 +123,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   // ─── Vérification OTP + détection compte existant ────────────────────────
   //
   // Après OTP validé, on tente getProfile() pour savoir si l'user est déjà inscrit :
-  //   • 200 → AuthAuthenticated → OTP screen va à /auth/local (PIN existant)
-  //   • 404 → AuthOtpVerified  → OTP screen va à /auth/role  (nouveau compte)
+  //   • 200 → AuthAuthenticated → OTP screen navigue vers /auth/local (PIN existant)
+  //   • 404 → AuthOtpVerified  → OTP screen dispatche AuthRegisterRequested() (nouveau compte)
+  //           → AuthRegisterRequested crée le compte avec les deux rôles
+  //           → AuthAuthenticated est émis → navigation vers /auth/local
 
   Future<void> _onPhoneVerified(
     AuthPhoneVerified event,
@@ -190,7 +192,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   // On déconnecte Firebase seulement. Le PIN est CONSERVÉ.
   // Après re-authentification OTP :
   //   • numéro existant → AuthAuthenticated → /auth/local (PIN screen, même PIN)
-  //   • numéro inconnu  → AuthOtpVerified    → /auth/role  (nouveau compte)
+  //   • numéro inconnu  → AuthOtpVerified   → OTP screen dispatche AuthRegisterRequested() (nouveau compte)
 
   Future<void> _onLogoutRequested(
     AuthLogoutRequested event,
