@@ -25,14 +25,21 @@ class OfflineQueueBottomSheet extends StatelessWidget {
     BuildContext context, {
     required List<OfflineScanItem> items,
   }) {
+    final trackingBloc = context.read<TrackingBloc>();
     return DonyBottomSheet.show(
       context,
       title: '${items.length} scan${items.length > 1 ? 's' : ''} hors-ligne',
       subtitle: 'En attente de synchronisation',
-      child: BlocProvider.value(
-        value: context.read<TrackingBloc>(),
-        child: OfflineQueueBottomSheet(items: items),
+      wrapper: (child) => BlocProvider.value(value: trackingBloc, child: child),
+      stickyBottom: DonyButton(
+        label: 'Synchroniser',
+        icon: Icons.sync_rounded,
+        onPressed: () {
+          trackingBloc.add(OfflineSyncRequested());
+          Navigator.of(context, rootNavigator: true).pop();
+        },
       ),
+      child: OfflineQueueBottomSheet(items: items),
     );
   }
 
@@ -83,15 +90,6 @@ class OfflineQueueBottomSheet extends StatelessWidget {
               ),
             ),
           ),
-        ),
-        const SizedBox(height: DonySpacing.base),
-        DonyButton(
-          label: 'Synchroniser',
-          icon: Icons.sync_rounded,
-          onPressed: () {
-            context.read<TrackingBloc>().add(OfflineSyncRequested());
-            Navigator.of(context, rootNavigator: true).pop();
-          },
         ),
       ],
     );

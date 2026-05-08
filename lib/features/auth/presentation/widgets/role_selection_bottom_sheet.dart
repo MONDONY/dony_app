@@ -7,19 +7,43 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class RoleSelectionBottomSheet extends StatefulWidget {
-  const RoleSelectionBottomSheet({super.key});
+  const RoleSelectionBottomSheet({
+    super.key,
+    this.canContinueNotifier,
+    this.onSubmitReady,
+  });
+
+  final ValueNotifier<bool>? canContinueNotifier;
+  final void Function(VoidCallback)? onSubmitReady;
 
   static Future<void> show(BuildContext context) {
+    final authBloc = context.read<AuthBloc>();
+    final canContinueNotifier = ValueNotifier<bool>(false);
+    VoidCallback? submit;
     return DonyBottomSheet.show(
       context,
       isDismissible: false,
       title: 'Comment utiliser dony ?',
       subtitle: 'Vous pouvez cumuler les deux rôles',
-      child: BlocProvider.value(
-        value: context.read<AuthBloc>(),
-        child: const RoleSelectionBottomSheet(),
+      wrapper: (child) => BlocProvider.value(value: authBloc, child: child),
+      stickyBottom: ValueListenableBuilder<bool>(
+        valueListenable: canContinueNotifier,
+        builder: (ctx, canContinue, _) => BlocBuilder<AuthBloc, AuthState>(
+          builder: (ctx, state) {
+            final isLoading = state is AuthLoading;
+            return DonyButton(
+              label: 'Créer mon compte',
+              isLoading: isLoading,
+              onPressed: (canContinue && !isLoading) ? () => submit?.call() : null,
+            );
+          },
+        ),
       ),
-    );
+      child: RoleSelectionBottomSheet(
+        canContinueNotifier: canContinueNotifier,
+        onSubmitReady: (fn) => submit = fn,
+      ),
+    ).whenComplete(canContinueNotifier.dispose);
   }
 
   @override
@@ -33,7 +57,21 @@ class _RoleSelectionBottomSheetState extends State<RoleSelectionBottomSheet> {
 
   bool get _canContinue => _isSender || _isTraveler;
 
-  void _submit(BuildContext context) {
+  @override
+  void initState() {
+    super.initState();
+    widget.onSubmitReady?.call(_submit);
+  }
+
+  void _setRole({bool? sender, bool? traveler}) {
+    setState(() {
+      if (sender != null) _isSender = sender;
+      if (traveler != null) _isTraveler = traveler;
+    });
+    widget.canContinueNotifier?.value = _canContinue;
+  }
+
+  void _submit() {
     if (!_canContinue) return;
     final roles = <String>[];
     if (_isSender) roles.add('SENDER');
@@ -56,8 +94,6 @@ class _RoleSelectionBottomSheetState extends State<RoleSelectionBottomSheet> {
         }
       },
       builder: (context, state) {
-        final isLoading = state is AuthLoading;
-
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -68,7 +104,7 @@ class _RoleSelectionBottomSheetState extends State<RoleSelectionBottomSheet> {
               selected: _isSender,
               cs: cs,
               tt: tt,
-              onTap: () => setState(() => _isSender = !_isSender),
+              onTap: () => _setRole(sender: !_isSender),
             ),
             const SizedBox(height: DonySpacing.base),
             _RoleCard(
@@ -78,15 +114,9 @@ class _RoleSelectionBottomSheetState extends State<RoleSelectionBottomSheet> {
               selected: _isTraveler,
               cs: cs,
               tt: tt,
-              onTap: () => setState(() => _isTraveler = !_isTraveler),
+              onTap: () => _setRole(traveler: !_isTraveler),
             ),
             const SizedBox(height: DonySpacing.xl),
-            DonyButton(
-              label: 'Créer mon compte',
-              onPressed: (_canContinue && !isLoading) ? () => _submit(context) : null,
-              isLoading: isLoading,
-            ),
-            const SizedBox(height: DonySpacing.base),
           ],
         );
       },

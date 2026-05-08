@@ -32,26 +32,68 @@ class CreateBidBottomSheet {
     BuildContext context, {
     required AnnouncementModel announcement,
   }) {
+    VoidCallback? submit;
+    final canSubmitNotifier = ValueNotifier<bool>(false);
+    final totalPriceNotifier = ValueNotifier<double>(
+      announcement.availableKg >= 5
+          ? 5 * announcement.pricePerKg * 1.12
+          : announcement.availableKg * announcement.pricePerKg * 1.12,
+    );
     return DonyBottomSheet.show(
       context,
       title: 'Envoyer un colis',
-      child: MultiBlocProvider(
+      wrapper: (child) => MultiBlocProvider(
         providers: [
           BlocProvider(create: (_) => getIt<BidBloc>()),
           BlocProvider(create: (_) => getIt<PaymentBloc>()),
         ],
-        child: _CreateBidContent(announcement: announcement),
+        child: child,
       ),
-    );
+      stickyBottom: ValueListenableBuilder<bool>(
+        valueListenable: canSubmitNotifier,
+        builder: (ctx, canSubmit, _) => ValueListenableBuilder<double>(
+          valueListenable: totalPriceNotifier,
+          builder: (ctx, totalPrice, _) => BlocBuilder<BidBloc, BidState>(
+            builder: (ctx, state) {
+              final isLoading = state is BidLoading;
+              return DonyButton(
+                label:
+                    'Bloquer ${NumberFormat.currency(locale: 'fr_FR', symbol: '€').format(totalPrice)} & envoyer',
+                isLoading: isLoading,
+                onPressed: (canSubmit && !isLoading) ? () => submit?.call() : null,
+                icon: Icons.lock_rounded,
+              );
+            },
+          ),
+        ),
+      ),
+      child: _CreateBidContent(
+        announcement: announcement,
+        canSubmitNotifier: canSubmitNotifier,
+        totalPriceNotifier: totalPriceNotifier,
+        onSubmitReady: (fn) => submit = fn,
+      ),
+    ).whenComplete(() {
+      canSubmitNotifier.dispose();
+      totalPriceNotifier.dispose();
+    });
   }
 }
 
 // ─── Content widget ───────────────────────────────────────────────────────────
 
 class _CreateBidContent extends StatefulWidget {
-  const _CreateBidContent({required this.announcement});
+  const _CreateBidContent({
+    required this.announcement,
+    this.canSubmitNotifier,
+    this.totalPriceNotifier,
+    this.onSubmitReady,
+  });
 
   final AnnouncementModel announcement;
+  final ValueNotifier<bool>? canSubmitNotifier;
+  final ValueNotifier<double>? totalPriceNotifier;
+  final void Function(VoidCallback)? onSubmitReady;
 
   @override
   State<_CreateBidContent> createState() => _CreateBidContentState();
@@ -77,6 +119,21 @@ class _CreateBidContentState extends State<_CreateBidContent> {
     _weightNotifier = ValueNotifier<double>(
       widget.announcement.availableKg >= 5 ? 5 : widget.announcement.availableKg,
     );
+    widget.onSubmitReady?.call(_submit);
+    _weightNotifier.addListener(_syncStickyState);
+    _categoriesNotifier.addListener(_syncStickyState);
+    _disclaimerNotifier.addListener(_syncStickyState);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncStickyState());
+  }
+
+  void _syncStickyState() {
+    final weightKg = _weightNotifier.value;
+    final categories = _categoriesNotifier.value;
+    final disclaimerAccepted = _disclaimerNotifier.value;
+    final canSubmit = weightKg > 0 && categories.isNotEmpty && disclaimerAccepted;
+    final totalPrice = weightKg * _pricePerKg * 1.12;
+    widget.canSubmitNotifier?.value = canSubmit;
+    widget.totalPriceNotifier?.value = totalPrice;
   }
 
   @override
@@ -85,6 +142,9 @@ class _CreateBidContentState extends State<_CreateBidContent> {
     _valueCtrl.dispose();
     _recipientNameCtrl.dispose();
     _recipientPhoneCtrl.dispose();
+    _weightNotifier.removeListener(_syncStickyState);
+    _categoriesNotifier.removeListener(_syncStickyState);
+    _disclaimerNotifier.removeListener(_syncStickyState);
     _weightNotifier.dispose();
     _categoriesNotifier.dispose();
     _disclaimerNotifier.dispose();
@@ -155,7 +215,6 @@ class _CreateBidContentState extends State<_CreateBidContent> {
       ],
       child: BlocBuilder<BidBloc, BidState>(
         builder: (context, bidState) {
-          final isLoading = bidState is BidLoading;
           return ListenableBuilder(
             listenable: Listenable.merge([
               _weightNotifier,
@@ -169,8 +228,6 @@ class _CreateBidContentState extends State<_CreateBidContent> {
               final serviceFee = weightKg * _pricePerKg * 0.12;
               final basePrice = weightKg * _pricePerKg;
               final totalPrice = basePrice + serviceFee;
-              final canSubmit =
-                  weightKg > 0 && categories.isNotEmpty && disclaimerAccepted;
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,15 +337,6 @@ class _CreateBidContentState extends State<_CreateBidContent> {
                     totalPrice: totalPrice,
                   ),
                   const SizedBox(height: DonySpacing.md),
-
-                  // ── CTA ─────────────────────────────────────────────────
-                  DonyButton(
-                    label: 'Bloquer ${NumberFormat.currency(locale: 'fr_FR', symbol: '€').format(totalPrice)} & envoyer',
-                    onPressed: canSubmit && !isLoading ? _submit : null,
-                    isLoading: isLoading,
-                    icon: Icons.lock_rounded,
-                  ),
-                  const SizedBox(height: DonySpacing.base),
                 ],
               );
             },

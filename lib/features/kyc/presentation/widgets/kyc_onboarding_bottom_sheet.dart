@@ -9,12 +9,35 @@ class KycOnboardingBottomSheet extends StatelessWidget {
   const KycOnboardingBottomSheet({super.key});
 
   static Future<void> show(BuildContext context) {
+    final kycBloc = context.read<KycBloc>();
     return DonyBottomSheet.show(
       context,
-      child: BlocProvider.value(
-        value: context.read<KycBloc>(),
-        child: const KycOnboardingBottomSheet(),
+      wrapper: (child) => BlocProvider.value(value: kycBloc, child: child),
+      stickyBottom: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          BlocBuilder<KycBloc, KycState>(
+            builder: (ctx, state) {
+              final isLoading = state is KycLoading;
+              return DonyButton(
+                label: 'Démarrer la vérification',
+                isLoading: isLoading,
+                onPressed: isLoading
+                    ? null
+                    : () => ctx.read<KycBloc>().add(const KycSessionRequested()),
+              );
+            },
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          DonyButton(
+            label: 'Plus tard',
+            variant: DonyButtonVariant.ghost,
+            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+          ),
+        ],
       ),
+      child: const KycOnboardingBottomSheet(),
     );
   }
 
@@ -36,7 +59,6 @@ class KycOnboardingBottomSheet extends StatelessWidget {
         }
       },
       builder: (context, state) {
-        final isLoading = state is KycLoading;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -81,21 +103,6 @@ class KycOnboardingBottomSheet extends StatelessWidget {
               tt: tt,
             ),
             const SizedBox(height: DonySpacing.xl),
-            DonyButton(
-              label: 'Démarrer la vérification',
-              isLoading: isLoading,
-              onPressed: isLoading
-                  ? null
-                  : () => context.read<KycBloc>().add(
-                        const KycSessionRequested(),
-                      ),
-            ),
-            const SizedBox(height: DonySpacing.sm),
-            DonyButton(
-              label: 'Plus tard',
-              variant: DonyButtonVariant.ghost,
-              onPressed: () => Navigator.of(context).pop(),
-            ),
           ],
         );
       },

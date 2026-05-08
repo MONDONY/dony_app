@@ -6,16 +6,34 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class TrackingSearchBottomSheet extends StatefulWidget {
-  const TrackingSearchBottomSheet({super.key});
+  const TrackingSearchBottomSheet({
+    super.key,
+    this.onSubmitReady,
+  });
+
+  final void Function(VoidCallback)? onSubmitReady;
 
   static Future<void> show(BuildContext context) {
+    final trackingBloc = context.read<TrackingBloc>();
+    VoidCallback? submit;
     return DonyBottomSheet.show(
       context,
       title: 'Rechercher un colis',
       subtitle: 'Format : DON-XXXXXX',
-      child: BlocProvider.value(
-        value: context.read<TrackingBloc>(),
-        child: const TrackingSearchBottomSheet(),
+      wrapper: (child) => BlocProvider.value(value: trackingBloc, child: child),
+      stickyBottom: BlocBuilder<TrackingBloc, TrackingState>(
+        builder: (ctx, state) {
+          final isLoading = state is TrackingSearchLoading;
+          return DonyButton(
+            label: 'Rechercher',
+            icon: Icons.search_rounded,
+            isLoading: isLoading,
+            onPressed: isLoading ? null : () => submit?.call(),
+          );
+        },
+      ),
+      child: TrackingSearchBottomSheet(
+        onSubmitReady: (fn) => submit = fn,
       ),
     );
   }
@@ -28,16 +46,20 @@ class _TrackingSearchBottomSheetState extends State<TrackingSearchBottomSheet> {
   final _ctrl = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    widget.onSubmitReady?.call(_search);
+  }
+
+  @override
   void dispose() {
     _ctrl.dispose();
     super.dispose();
   }
 
-  void _search(BuildContext context) {
+  void _search() {
     final raw = _ctrl.text.trim().toUpperCase();
-    if (raw.isEmpty) {
-      return;
-    }
+    if (raw.isEmpty) return;
     final normalized = raw.startsWith('DON-') ? raw : 'DON-$raw';
     context.read<TrackingBloc>().add(TrackingSearchRequested(normalized));
   }
@@ -57,37 +79,23 @@ class _TrackingSearchBottomSheetState extends State<TrackingSearchBottomSheet> {
       },
       builder: (context, state) {
         final isLoading = state is TrackingSearchLoading;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _ctrl,
-              textCapitalization: TextCapitalization.characters,
-              enabled: !isLoading,
-              decoration: InputDecoration(
-                labelText: 'Numéro de suivi',
-                hintText: 'DON-481234',
-                prefixIcon: const Icon(Icons.qr_code_rounded),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(DonyRadius.md),
-                  borderSide: BorderSide(color: cs.outline),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.base,
-                  vertical: DonySpacing.md,
-                ),
-              ),
-              onChanged: (v) => setState(() {}),
+        return TextField(
+          controller: _ctrl,
+          textCapitalization: TextCapitalization.characters,
+          enabled: !isLoading,
+          decoration: InputDecoration(
+            labelText: 'Numéro de suivi',
+            hintText: 'DON-481234',
+            prefixIcon: const Icon(Icons.qr_code_rounded),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+              borderSide: BorderSide(color: cs.outline),
             ),
-            const SizedBox(height: DonySpacing.base),
-            DonyButton(
-              label: 'Rechercher',
-              icon: Icons.search_rounded,
-              isLoading: isLoading,
-              onPressed: isLoading ? null : () => _search(context),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.base,
+              vertical: DonySpacing.md,
             ),
-          ],
+          ),
         );
       },
     );

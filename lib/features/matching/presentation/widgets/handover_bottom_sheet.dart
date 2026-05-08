@@ -8,18 +8,33 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 class HandoverBottomSheet extends StatefulWidget {
-  const HandoverBottomSheet({super.key, required this.bid});
+  const HandoverBottomSheet({
+    super.key,
+    required this.bid,
+    this.onSubmitReady,
+  });
 
   final BidModel bid;
+  final void Function(VoidCallback)? onSubmitReady;
 
   static Future<void> show(BuildContext context, {required BidModel bid}) {
+    final bidBloc = context.read<BidBloc>();
+    VoidCallback? submit;
     return DonyBottomSheet.show(
       context,
       title: 'Lieu de remise',
       subtitle: '${bid.id.substring(0, 6).toUpperCase()} · ${bid.weightKg} kg',
-      child: BlocProvider.value(
-        value: context.read<BidBloc>(),
-        child: HandoverBottomSheet(bid: bid),
+      wrapper: (child) => BlocProvider.value(value: bidBloc, child: child),
+      stickyBottom: BlocBuilder<BidBloc, BidState>(
+        builder: (ctx, state) => DonyButton(
+          label: 'Confirmer la remise',
+          isLoading: state is BidLoading,
+          onPressed: state is BidLoading ? null : () => submit?.call(),
+        ),
+      ),
+      child: HandoverBottomSheet(
+        bid: bid,
+        onSubmitReady: (fn) => submit = fn,
       ),
     );
   }
@@ -33,6 +48,12 @@ class _HandoverBottomSheetState extends State<HandoverBottomSheet> {
   final _locationCtrl = TextEditingController();
   DateTime? _windowStart;
   DateTime? _windowEnd;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.onSubmitReady?.call(_submit);
+  }
 
   @override
   void dispose() {
@@ -76,10 +97,8 @@ class _HandoverBottomSheetState extends State<HandoverBottomSheet> {
     });
   }
 
-  void _submit(BuildContext context) {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
     if (_windowStart == null || _windowEnd == null) {
       DonySnackbar.show(
         context,
@@ -127,7 +146,6 @@ class _HandoverBottomSheetState extends State<HandoverBottomSheet> {
         }
       },
       builder: (context, state) {
-        final isLoading = state is BidLoading;
         return Form(
           key: _formKey,
           child: Column(
@@ -211,12 +229,6 @@ class _HandoverBottomSheetState extends State<HandoverBottomSheet> {
                 tt: tt,
               ),
               const SizedBox(height: DonySpacing.xl),
-
-              DonyButton(
-                label: 'Confirmer la remise',
-                isLoading: isLoading,
-                onPressed: isLoading ? null : () => _submit(context),
-              ),
             ],
           ),
         );

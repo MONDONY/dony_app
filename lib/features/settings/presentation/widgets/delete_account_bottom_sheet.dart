@@ -14,17 +14,46 @@ const _reasons = [
 ];
 
 class DeleteAccountBottomSheet extends StatefulWidget {
-  const DeleteAccountBottomSheet({super.key});
+  const DeleteAccountBottomSheet({super.key, this.onSubmitReady});
+
+  final void Function(VoidCallback)? onSubmitReady;
 
   static Future<void> show(BuildContext context) {
+    final deletionBloc = context.read<AccountDeletionBloc>();
+    VoidCallback? submit;
     return DonyBottomSheet.show(
       context,
       isDanger: true,
       title: 'Supprimer le compte ?',
       subtitle: 'Action irréversible — toutes vos données seront effacées',
-      child: BlocProvider.value(
-        value: context.read<AccountDeletionBloc>(),
-        child: const DeleteAccountBottomSheet(),
+      wrapper: (child) => BlocProvider.value(value: deletionBloc, child: child),
+      stickyBottom: Row(
+        children: [
+          Expanded(
+            child: DonyButton(
+              label: 'Annuler',
+              variant: DonyButtonVariant.ghost,
+              onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+            ),
+          ),
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
+            flex: 2,
+            child: BlocBuilder<AccountDeletionBloc, AccountDeletionState>(
+              builder: (ctx, state) => DonyButton(
+                label: 'Supprimer définitivement',
+                variant: DonyButtonVariant.destructive,
+                isLoading: state is AccountDeletionLoading,
+                onPressed: state is AccountDeletionLoading
+                    ? null
+                    : () => submit?.call(),
+              ),
+            ),
+          ),
+        ],
+      ),
+      child: DeleteAccountBottomSheet(
+        onSubmitReady: (fn) => submit = fn,
       ),
     );
   }
@@ -37,7 +66,13 @@ class DeleteAccountBottomSheet extends StatefulWidget {
 class _DeleteAccountBottomSheetState extends State<DeleteAccountBottomSheet> {
   String? _reason;
 
-  void _confirm(BuildContext context) {
+  @override
+  void initState() {
+    super.initState();
+    widget.onSubmitReady?.call(_confirm);
+  }
+
+  void _confirm() {
     final bloc = context.read<AccountDeletionBloc>();
     Navigator.of(context, rootNavigator: true).pop();
     DonyDialog.show(
@@ -93,32 +128,6 @@ class _DeleteAccountBottomSheetState extends State<DeleteAccountBottomSheet> {
                 .toList(),
           ),
           const SizedBox(height: DonySpacing.xl),
-          Row(
-            children: [
-              Expanded(
-                child: DonyButton(
-                  label: 'Annuler',
-                  variant: DonyButtonVariant.ghost,
-                  onPressed: () =>
-                      Navigator.of(context, rootNavigator: true).pop(),
-                ),
-              ),
-              const SizedBox(width: DonySpacing.sm),
-              Expanded(
-                flex: 2,
-                child: BlocBuilder<AccountDeletionBloc, AccountDeletionState>(
-                  builder: (context, state) => DonyButton(
-                    label: 'Supprimer définitivement',
-                    variant: DonyButtonVariant.destructive,
-                    isLoading: state is AccountDeletionLoading,
-                    onPressed: state is AccountDeletionLoading
-                        ? null
-                        : () => _confirm(context),
-                  ),
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );

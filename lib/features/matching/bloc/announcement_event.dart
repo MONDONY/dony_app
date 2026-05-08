@@ -1,5 +1,6 @@
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+export 'package:dony/features/matching/data/models/transport_mode.dart';
 
 abstract class AnnouncementEvent {}
 
@@ -48,10 +49,14 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
   final DateTime? departureDateFrom;
   final DateTime? departureDateTo;
   final double? minAvailableKg;
+  final double? maxAvailableKg;
   final double? maxPricePerKg;
   final bool? kiloProOnly;
   final double? minRating;
   final bool? weekendOnly;
+  final TransportMode? transportMode;
+  final bool? kycVerifiedOnly;
+  final String? contentType;
   final double? userLat;
   final double? userLng;
   final double? radiusKm;
@@ -64,10 +69,14 @@ class AnnouncementSearchRequested extends AnnouncementEvent {
     this.departureDateFrom,
     this.departureDateTo,
     this.minAvailableKg,
+    this.maxAvailableKg,
     this.maxPricePerKg,
     this.kiloProOnly,
     this.minRating,
     this.weekendOnly,
+    this.transportMode,
+    this.kycVerifiedOnly,
+    this.contentType,
     this.userLat,
     this.userLng,
     this.radiusKm,

@@ -1,6 +1,7 @@
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/screens/search_announcement_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/near_me_carousel.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────

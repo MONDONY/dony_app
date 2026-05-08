@@ -7,24 +7,39 @@ abstract final class DonyBottomSheet {
     required Widget child,
     String? title,
     String? subtitle,
+    Widget? stickyBottom,
     bool isDismissible = true,
     bool showHandle = true,
     bool isScrollControlled = true,
     bool isDanger = false,
+    double? heightFraction,
+    Widget Function(Widget)? wrapper,
   }) {
+    final screenHeight = MediaQuery.of(context).size.height;
     return showModalBottomSheet<T>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: isScrollControlled,
       isDismissible: isDismissible,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => _DonyBottomSheetContent(
-        title: title,
-        subtitle: subtitle,
-        showHandle: showHandle,
-        isDanger: isDanger,
-        child: child,
-      ),
+      constraints: heightFraction != null
+          ? BoxConstraints(
+              minHeight: screenHeight * heightFraction,
+              maxHeight: screenHeight * heightFraction,
+            )
+          : null,
+      builder: (ctx) {
+        final Widget content = _DonyBottomSheetContent(
+          title: title,
+          subtitle: subtitle,
+          showHandle: showHandle,
+          isDanger: isDanger,
+          expand: heightFraction != null,
+          stickyBottom: stickyBottom,
+          child: child,
+        );
+        return wrapper != null ? wrapper(content) : content;
+      },
     );
   }
 }
@@ -34,15 +49,19 @@ class _DonyBottomSheetContent extends StatelessWidget {
     required this.child,
     this.title,
     this.subtitle,
+    this.stickyBottom,
     this.showHandle = true,
     this.isDanger = false,
+    this.expand = false,
   });
 
   final Widget child;
   final String? title;
   final String? subtitle;
+  final Widget? stickyBottom;
   final bool showHandle;
   final bool isDanger;
+  final bool expand;
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +77,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
         : DonyColors.neutral300;
 
     return Container(
-      margin: EdgeInsets.only(top: topMargin),
+      margin: expand ? EdgeInsets.zero : EdgeInsets.only(top: topMargin),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: const BorderRadius.vertical(
@@ -67,7 +86,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
         boxShadow: DonyShadow.sheet,
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (showHandle)
@@ -130,11 +149,34 @@ class _DonyBottomSheetContent extends StatelessWidget {
                 DonySpacing.lg,
                 title != null ? 0 : DonySpacing.sm,
                 DonySpacing.lg,
-                DonySpacing.xl + bottomInset,
+                stickyBottom != null ? DonySpacing.xl : DonySpacing.xl + bottomInset,
               ),
               child: child,
             ),
           ),
+          if (stickyBottom != null)
+            Container(
+              decoration: BoxDecoration(
+                color: bgColor,
+                border: Border(
+                  top: BorderSide(color: DonyColors.neutral200, width: 1),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              padding: EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.md,
+                DonySpacing.lg,
+                bottomInset + DonySpacing.base,
+              ),
+              child: stickyBottom!,
+            ),
         ],
       ),
     );

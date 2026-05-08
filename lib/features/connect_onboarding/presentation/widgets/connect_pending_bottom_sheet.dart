@@ -9,13 +9,38 @@ class ConnectPendingBottomSheet extends StatelessWidget {
   const ConnectPendingBottomSheet({super.key});
 
   static Future<void> show(BuildContext context) {
+    final connectBloc = context.read<ConnectOnboardingBloc>();
     return DonyBottomSheet.show(
       context,
       isDismissible: false,
-      child: BlocProvider.value(
-        value: context.read<ConnectOnboardingBloc>(),
-        child: const ConnectPendingBottomSheet(),
+      wrapper: (child) => BlocProvider.value(value: connectBloc, child: child),
+      stickyBottom: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          BlocBuilder<ConnectOnboardingBloc, ConnectOnboardingState>(
+            builder: (ctx, state) => DonyButton(
+              label: "J'ai complété le formulaire",
+              isLoading: state is ConnectOnboardingLoading,
+              onPressed: state is ConnectOnboardingLoading
+                  ? null
+                  : () => ctx
+                      .read<ConnectOnboardingBloc>()
+                      .add(const ConnectOnboardingPollingRequested()),
+            ),
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          DonyButton(
+            label: 'Revenir plus tard',
+            variant: DonyButtonVariant.ghost,
+            onPressed: () {
+              Navigator.of(context, rootNavigator: true).pop();
+              context.go('/profile');
+            },
+          ),
+        ],
       ),
+      child: const ConnectPendingBottomSheet(),
     );
   }
 
@@ -81,30 +106,6 @@ class ConnectPendingBottomSheet extends StatelessWidget {
             textAlign: TextAlign.center,
           ).animate().fadeIn(delay: 100.ms),
           const SizedBox(height: DonySpacing.xl),
-
-          // Check button
-          BlocBuilder<ConnectOnboardingBloc, ConnectOnboardingState>(
-            builder: (context, state) => DonyButton(
-              label: "J'ai complété le formulaire",
-              isLoading: state is ConnectOnboardingLoading,
-              onPressed: state is ConnectOnboardingLoading
-                  ? null
-                  : () => context
-                      .read<ConnectOnboardingBloc>()
-                      .add(const ConnectOnboardingPollingRequested()),
-            ),
-          ),
-          const SizedBox(height: DonySpacing.sm),
-
-          // Back button
-          DonyButton(
-            label: 'Revenir plus tard',
-            variant: DonyButtonVariant.ghost,
-            onPressed: () {
-              Navigator.of(context).pop();
-              context.go('/profile');
-            },
-          ),
         ],
       ),
     );

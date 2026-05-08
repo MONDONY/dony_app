@@ -13,22 +13,51 @@ class UpgradeProBottomSheet extends StatefulWidget {
     super.key,
     required this.authBloc,
     required this.user,
+    this.onSubmitReady,
   });
 
   final AuthBloc authBloc;
   final UserModel user;
+  final void Function(VoidCallback)? onSubmitReady;
 
   static Future<void> show(BuildContext context, {required UserModel user}) {
     final authBloc = context.read<AuthBloc>();
+    VoidCallback? submit;
     return DonyBottomSheet.show(
       context,
       title: user.isProAccount ? 'Mon profil PRO' : 'Passer en Professionnel',
       subtitle: user.isProAccount
           ? null
           : 'Badge Pro · Volume + · Priorité de matching',
-      child: BlocProvider(
-        create: (_) => UpgradeToProBloc(getIt<ProfileRepository>()),
-        child: UpgradeProBottomSheet(authBloc: authBloc, user: user),
+      wrapper: (child) => MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => UpgradeToProBloc(getIt<ProfileRepository>())),
+          BlocProvider.value(value: authBloc),
+        ],
+        child: child,
+      ),
+      stickyBottom: BlocBuilder<UpgradeToProBloc, UpgradeToProState>(
+        builder: (ctx, state) {
+          final isLoading = state is UpgradeToProLoading;
+          if (user.isProAccount) {
+            return DonyButton(
+              label: 'Désactiver le compte PRO',
+              variant: DonyButtonVariant.secondary,
+              isLoading: isLoading,
+              onPressed: isLoading ? null : () => submit?.call(),
+            );
+          }
+          return DonyButton(
+            label: 'Activer le compte PRO',
+            isLoading: isLoading,
+            onPressed: isLoading ? null : () => submit?.call(),
+          );
+        },
+      ),
+      child: UpgradeProBottomSheet(
+        authBloc: authBloc,
+        user: user,
+        onSubmitReady: (fn) => submit = fn,
       ),
     );
   }
@@ -46,6 +75,9 @@ class _UpgradeProBottomSheetState extends State<UpgradeProBottomSheet> {
     super.initState();
     _companyCtrl = TextEditingController(text: widget.user.companyName ?? '');
     _siretCtrl = TextEditingController(text: widget.user.siret ?? '');
+    widget.onSubmitReady?.call(
+      widget.user.isProAccount ? _confirmDowngradeSubmit : _submitUpgrade,
+    );
   }
 
   @override
@@ -55,7 +87,7 @@ class _UpgradeProBottomSheetState extends State<UpgradeProBottomSheet> {
     super.dispose();
   }
 
-  void _submit(BuildContext context) {
+  void _submitUpgrade() {
     final company = _companyCtrl.text.trim();
     final siret = _siretCtrl.text.trim().replaceAll(' ', '');
     if (company.isEmpty) {
@@ -80,9 +112,9 @@ class _UpgradeProBottomSheetState extends State<UpgradeProBottomSheet> {
         ));
   }
 
-  Future<void> _confirmDowngrade(BuildContext blocContext) async {
+  Future<void> _confirmDowngradeSubmit() async {
     final confirmed = await DonyDialog.show(
-      blocContext,
+      context,
       title: 'Désactiver le compte PRO',
       message:
           'Votre badge PRO et vos avantages seront supprimés. Cette action est irréversible.',
@@ -90,8 +122,8 @@ class _UpgradeProBottomSheetState extends State<UpgradeProBottomSheet> {
       cancelLabel: 'Annuler',
       variant: DonyDialogVariant.destructive,
     );
-    if (confirmed == true && blocContext.mounted) {
-      blocContext.read<UpgradeToProBloc>().add(const DowngradeRequested());
+    if (confirmed == true && mounted) {
+      context.read<UpgradeToProBloc>().add(const DowngradeRequested());
     }
   }
 
@@ -137,11 +169,7 @@ class _UpgradeProBottomSheetState extends State<UpgradeProBottomSheet> {
         final isLoading = state is UpgradeToProLoading;
 
         if (widget.user.isProAccount) {
-          return _ProActiveView(
-            user: widget.user,
-            isLoading: isLoading,
-            onDowngrade: () => _confirmDowngrade(context),
-          );
+          return _ProActiveView(user: widget.user);
         }
 
         return _UpgradeFormView(
@@ -149,7 +177,6 @@ class _UpgradeProBottomSheetState extends State<UpgradeProBottomSheet> {
           siretCtrl: _siretCtrl,
           isLoading: isLoading,
           state: state,
-          onSubmit: () => _submit(context),
         );
       },
     );
@@ -159,15 +186,9 @@ class _UpgradeProBottomSheetState extends State<UpgradeProBottomSheet> {
 // ── Vue compte PRO actif ──────────────────────────────────────────────────────
 
 class _ProActiveView extends StatelessWidget {
-  const _ProActiveView({
-    required this.user,
-    required this.isLoading,
-    required this.onDowngrade,
-  });
+  const _ProActiveView({required this.user});
 
   final UserModel user;
-  final bool isLoading;
-  final VoidCallback onDowngrade;
 
   @override
   Widget build(BuildContext context) {
@@ -274,14 +295,6 @@ class _ProActiveView extends StatelessWidget {
           ],
         ),
         const SizedBox(height: DonySpacing.xxl),
-
-        // ── Bouton désactiver ─────────────────────────────────────────
-        DonyButton(
-          label: 'Désactiver le compte PRO',
-          variant: DonyButtonVariant.secondary,
-          isLoading: isLoading,
-          onPressed: isLoading ? null : onDowngrade,
-        ),
       ],
     );
   }
@@ -352,14 +365,12 @@ class _UpgradeFormView extends StatelessWidget {
     required this.siretCtrl,
     required this.isLoading,
     required this.state,
-    required this.onSubmit,
   });
 
   final TextEditingController companyCtrl;
   final TextEditingController siretCtrl;
   final bool isLoading;
   final UpgradeToProState state;
-  final VoidCallback onSubmit;
 
   @override
   Widget build(BuildContext context) {
@@ -419,12 +430,7 @@ class _UpgradeFormView extends StatelessWidget {
           const SizedBox(height: DonySpacing.md),
         ],
 
-        // ── Bouton soumettre ──────────────────────────────────────────
-        DonyButton(
-          label: 'Activer le compte PRO',
-          isLoading: isLoading,
-          onPressed: isLoading ? null : onSubmit,
-        ),
+        const SizedBox(height: DonySpacing.xl),
       ],
     );
   }

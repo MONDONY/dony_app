@@ -2,6 +2,7 @@ import 'package:dony/features/matching/data/datasources/announcement_remote_data
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+export 'package:dony/features/matching/data/models/transport_mode.dart';
 
 class AnnouncementRepository {
   final AnnouncementRemoteDatasource _remoteDatasource;
@@ -55,6 +56,14 @@ class AnnouncementRepository {
     DateTime? departureDateFrom,
     DateTime? departureDateTo,
     double? minAvailableKg,
+    double? maxAvailableKg,
+    double? maxPricePerKg,
+    bool? kiloProOnly,
+    double? minRating,
+    bool? weekendOnly,
+    TransportMode? transportMode,
+    bool? kycVerifiedOnly,
+    String? contentType,
     double? userLat,
     double? userLng,
     double? radiusKm,
@@ -67,6 +76,14 @@ class AnnouncementRepository {
       departureDateFrom: departureDateFrom,
       departureDateTo: departureDateTo,
       minAvailableKg: minAvailableKg,
+      maxAvailableKg: maxAvailableKg,
+      maxPricePerKg: maxPricePerKg,
+      kiloProOnly: kiloProOnly,
+      minRating: minRating,
+      weekendOnly: weekendOnly,
+      transportMode: transportMode,
+      kycVerifiedOnly: kycVerifiedOnly,
+      contentType: contentType,
       userLat: userLat,
       userLng: userLng,
       radiusKm: radiusKm,

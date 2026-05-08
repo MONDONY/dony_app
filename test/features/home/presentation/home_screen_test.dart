@@ -1,24 +1,39 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
-import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/home/presentation/home_screen.dart';
+import 'package:dony/features/matching/bloc/announcement_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_event.dart';
+import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
-class MockNotificationBloc extends MockBloc<NotificationEvent, NotificationState> implements NotificationBloc {}
+
+class MockNotificationBloc
+    extends MockBloc<NotificationEvent, NotificationState>
+    implements NotificationBloc {}
+
+class MockAnnouncementBloc
+    extends MockBloc<AnnouncementEvent, AnnouncementState>
+    implements AnnouncementBloc {}
+
+class MockActiveRoleCubit extends MockCubit<ActiveRole>
+    implements ActiveRoleCubit {}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -32,193 +47,119 @@ UserModel _makeUser({List<String> roles = const ['ROLE_SENDER']}) => UserModel(
       status: 'ACTIVE',
     );
 
-GoRouter _buildRouter(AuthBloc authBloc, NotificationBloc notificationBloc) => GoRouter(
-      initialLocation: '/',
-      routes: [
-        GoRoute(
-          path: '/',
-          builder: (context, state) => MultiBlocProvider(
-            providers: [
-              BlocProvider<AuthBloc>.value(value: authBloc),
-              BlocProvider<NotificationBloc>.value(value: notificationBloc),
-            ],
-            child: const HomeScreen(),
-          ),
-        ),
-        GoRoute(
-          path: '/search',
-          builder: (_, __) => const Scaffold(body: Text('Search')),
-        ),
-        GoRoute(
-          path: '/announcements/create',
-          builder: (_, __) => const Scaffold(body: Text('Create Announcement')),
-        ),
-        GoRoute(
-          path: '/messages',
-          builder: (_, __) => const Scaffold(body: Text('Messages')),
-        ),
-      ],
+AnnouncementModel _makeAnn({String id = 'a1'}) => AnnouncementModel(
+      id: id,
+      travelerId: 'traveler-1',
+      departureCity: 'Paris · CDG, ORY',
+      arrivalCity: 'Dakar · DKR',
+      departureDate: DateTime(2026, 6, 15),
+      availableKg: 10,
+      totalKg: 20,
+      pricePerKg: 7,
+      status: 'ACTIVE',
+      createdAt: DateTime(2026, 5, 1),
+      updatedAt: DateTime(2026, 5, 1),
     );
 
-Future<void> _pump(WidgetTester tester, AuthBloc authBloc, NotificationBloc notificationBloc) async {
-  await tester.pumpWidget(
-    MaterialApp.router(
+Widget _buildHome({
+  AnnouncementState? announcementState,
+  ActiveRole role = ActiveRole.sender,
+  UserModel? user,
+}) {
+  final announcementBloc = MockAnnouncementBloc();
+  final authBloc = MockAuthBloc();
+  final roleCubit = MockActiveRoleCubit();
+  final notifBloc = MockNotificationBloc();
+
+  when(() => announcementBloc.state)
+      .thenReturn(announcementState ?? AnnouncementInitial());
+  when(() => announcementBloc.stream).thenAnswer((_) => const Stream.empty());
+  when(() => authBloc.state).thenReturn(AuthAuthenticated(user ?? _makeUser()));
+  when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
+  when(() => roleCubit.state).thenReturn(role);
+  when(() => roleCubit.stream).thenAnswer((_) => const Stream.empty());
+  when(() => notifBloc.state).thenReturn(const NotificationInitial());
+  when(() => notifBloc.stream).thenAnswer((_) => const Stream.empty());
+
+  return MultiBlocProvider(
+    providers: [
+      BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
+      BlocProvider<AuthBloc>.value(value: authBloc),
+      BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
+      BlocProvider<NotificationBloc>.value(value: notifBloc),
+    ],
+    child: MaterialApp(
       theme: AppTheme.light,
-      routerConfig: _buildRouter(authBloc, notificationBloc),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('fr'), Locale('en')],
+      locale: const Locale('fr'),
+      home: const HomeScreen(),
     ),
   );
-  // Allow flutter_animate animations to settle
-  await tester.pump(const Duration(milliseconds: 600));
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 void main() {
-  late MockAuthBloc mockAuthBloc;
-  late MockNotificationBloc mockNotificationBloc;
+  group('HomeScreen — Map sender view', () {
+    testWidgets('shows corridor label in search bar', (tester) async {
+      await tester.pumpWidget(_buildHome());
+      await tester.pump();
 
-  setUp(() {
-    mockAuthBloc = MockAuthBloc();
-    when(() => mockAuthBloc.stream).thenAnswer((_) => const Stream.empty());
-    mockNotificationBloc = MockNotificationBloc();
-    when(() => mockNotificationBloc.stream).thenAnswer((_) => const Stream.empty());
-    when(() => mockNotificationBloc.state).thenReturn(const NotificationInitial());
-  });
-
-  tearDown(() {
-    mockAuthBloc.close();
-    mockNotificationBloc.close();
-  });
-
-  group('HomeScreen — Sender view (ROLE_SENDER)', () {
-    setUp(() {
-      when(() => mockAuthBloc.state)
-          .thenReturn(AuthAuthenticated(_makeUser(roles: ['ROLE_SENDER'])));
+      expect(find.text('Paris → Dakar'), findsOneWidget);
     });
 
-    testWidgets('renders sender headline text', (tester) async {
-      await _pump(tester, mockAuthBloc, mockNotificationBloc);
-
-      // "on envoie quoi" is a TextSpan inside Text.rich — textContaining works
-      expect(find.textContaining('on envoie quoi'), findsOneWidget);
-    });
-
-    testWidgets('renders "Trouver un voyageur" CTA button', (tester) async {
-      await _pump(tester, mockAuthBloc, mockNotificationBloc);
-
-      expect(find.text('Trouver un voyageur'), findsOneWidget);
-      expect(find.byType(DonyButton), findsAtLeastNWidgets(1));
-    });
-
-    testWidgets('renders greeting with first name', (tester) async {
-      await _pump(tester, mockAuthBloc, mockNotificationBloc);
-
-      expect(find.textContaining('Bonjour Ibrahima'), findsOneWidget);
-    });
-
-    testWidgets('renders corridors section header', (tester) async {
-      await _pump(tester, mockAuthBloc, mockNotificationBloc);
-
-      expect(find.text('CORRIDORS POPULAIRES'), findsOneWidget);
-    });
-
-    testWidgets('renders 4 corridor chips', (tester) async {
-      await _pump(tester, mockAuthBloc, mockNotificationBloc);
-
-      // Each corridor has its code as a text widget
-      expect(find.text('PAR → DKR'), findsOneWidget);
-      expect(find.text('LYS → ABJ'), findsOneWidget);
-      expect(find.text('MRS → BKO'), findsOneWidget);
-      expect(find.text('PAR → DLA'), findsOneWidget);
-    });
-
-    testWidgets('HOT badge appears only on first corridor', (tester) async {
-      await _pump(tester, mockAuthBloc, mockNotificationBloc);
-
-      expect(find.text('HOT'), findsOneWidget);
-    });
-
-    testWidgets('renders Garantie Dony card', (tester) async {
-      tester.view.physicalSize = const Size(800, 2400);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
-      await _pump(tester, mockAuthBloc, mockNotificationBloc);
-
-      // Scroll down to ensure _GarantieCard is laid out in the SliverList
-      await tester.scrollUntilVisible(
-        find.text('Garantie Dony'),
-        100,
-        scrollable: find.byType(Scrollable).first,
-      );
-
-      expect(find.text('Garantie Dony'), findsOneWidget);
-    });
-
-    testWidgets('does NOT render traveler-specific text in sender view',
+    testWidgets('shows Voyageurs tab active by default with count 0',
         (tester) async {
-      await _pump(tester, mockAuthBloc, mockNotificationBloc);
+      await tester.pumpWidget(_buildHome());
+      await tester.pump();
 
-      expect(find.text('CE MOIS-CI'), findsNothing);
-      expect(find.text('Publier un trajet'), findsNothing);
+      expect(find.text('Voyageurs · 0'), findsOneWidget);
+    });
+
+    testWidgets('tapping Demandes tab shows placeholder', (tester) async {
+      await tester.pumpWidget(_buildHome());
+      await tester.pump();
+
+      await tester.tap(find.text('Demandes'));
+      await tester.pump();
+
+      expect(find.text('Demandes bientôt disponibles'), findsOneWidget);
+    });
+
+    testWidgets('shows TravelerCards when announcements loaded',
+        (tester) async {
+      await tester.pumpWidget(_buildHome(
+        announcementState: AnnouncementSearchLoaded(
+          [_makeAnn(), _makeAnn(id: 'a2')],
+        ),
+      ));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.byType(TravelerCard), findsNWidgets(2));
+    });
+
+    testWidgets('shows empty message when search loaded with no results',
+        (tester) async {
+      await tester.pumpWidget(_buildHome(
+        announcementState: AnnouncementSearchLoaded(const []),
+      ));
+      await tester.pump();
+
+      expect(find.text('Aucun voyageur sur ce corridor'), findsOneWidget);
     });
   });
 
-  group('HomeScreen — Traveler view (ROLE_TRAVELER)', () {
-    setUp(() {
-      when(() => mockAuthBloc.state)
-          .thenReturn(AuthAuthenticated(_makeUser(roles: ['ROLE_TRAVELER'])));
-    });
-
-    testWidgets('renders "CE MOIS-CI" stats label', (tester) async {
-      await _pump(tester, mockAuthBloc, mockNotificationBloc);
+  group('HomeScreen — Traveler view', () {
+    testWidgets('renders traveler-specific stats label', (tester) async {
+      await tester.pumpWidget(_buildHome(role: ActiveRole.traveler));
+      await tester.pump(const Duration(milliseconds: 600));
 
       expect(find.text('CE MOIS-CI'), findsOneWidget);
-    });
-
-    testWidgets('renders "Publier un trajet" CTA button', (tester) async {
-      await _pump(tester, mockAuthBloc, mockNotificationBloc);
-
-      expect(find.text('Publier un trajet'), findsOneWidget);
-      expect(find.byType(DonyButton), findsAtLeastNWidgets(1));
-    });
-
-    testWidgets('renders earnings amount', (tester) async {
-      await _pump(tester, mockAuthBloc, mockNotificationBloc);
-
-      expect(find.textContaining('248,50'), findsAtLeastNWidgets(1));
-    });
-
-    testWidgets('renders active trips section label', (tester) async {
-      await _pump(tester, mockAuthBloc, mockNotificationBloc);
-
-      expect(find.text('MES TRAJETS ACTIFS'), findsOneWidget);
-    });
-
-    testWidgets('renders payout footer', (tester) async {
-      await _pump(tester, mockAuthBloc, mockNotificationBloc);
-
-      expect(find.textContaining('Prochain payout'), findsOneWidget);
-    });
-
-    testWidgets('does NOT render sender CTA in traveler view', (tester) async {
-      await _pump(tester, mockAuthBloc, mockNotificationBloc);
-
-      expect(find.text('Trouver un voyageur'), findsNothing);
-    });
-  });
-
-  group('HomeScreen — Unauthenticated / unknown role falls back to sender view',
-      () {
-    testWidgets('shows sender view when auth state is AuthInitial',
-        (tester) async {
-      when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
-      await _pump(tester, mockAuthBloc, mockNotificationBloc);
-
-      // Fallback to sender view — headline present
-      expect(find.textContaining('on envoie quoi'), findsOneWidget);
-      expect(find.text('CE MOIS-CI'), findsNothing);
     });
   });
 }

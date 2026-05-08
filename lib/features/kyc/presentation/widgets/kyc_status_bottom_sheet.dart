@@ -12,19 +12,41 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+typedef _StickyBtnConfig = ({
+  String label,
+  VoidCallback? onPressed,
+  DonyButtonVariant variant,
+});
+
 class KycStatusBottomSheet extends StatefulWidget {
   const KycStatusBottomSheet({super.key});
 
   static Future<void> show(BuildContext context) {
     final authBloc = context.read<AuthBloc>();
+    final stickyBtnNotifier = ValueNotifier<_StickyBtnConfig?>(null);
     return DonyBottomSheet.show(
       context,
       title: 'Vérification d\'identité',
-      child: BlocProvider(
+      wrapper: (child) => BlocProvider(
         create: (_) => getIt<KycBloc>(),
-        child: _KycStatusContent(authBloc: authBloc),
+        child: child,
       ),
-    );
+      stickyBottom: ValueListenableBuilder<_StickyBtnConfig?>(
+        valueListenable: stickyBtnNotifier,
+        builder: (ctx, config, _) {
+          if (config == null) return const SizedBox.shrink();
+          return DonyButton(
+            label: config.label,
+            onPressed: config.onPressed,
+            variant: config.variant,
+          );
+        },
+      ),
+      child: _KycStatusContent(
+        authBloc: authBloc,
+        stickyBtnNotifier: stickyBtnNotifier,
+      ),
+    ).whenComplete(stickyBtnNotifier.dispose);
   }
 
   @override
@@ -39,9 +61,13 @@ class _KycStatusBottomSheetState extends State<KycStatusBottomSheet> {
 }
 
 class _KycStatusContent extends StatefulWidget {
-  const _KycStatusContent({required this.authBloc});
+  const _KycStatusContent({
+    required this.authBloc,
+    this.stickyBtnNotifier,
+  });
 
   final AuthBloc authBloc;
+  final ValueNotifier<_StickyBtnConfig?>? stickyBtnNotifier;
 
   @override
   State<_KycStatusContent> createState() => _KycStatusContentState();
@@ -107,6 +133,52 @@ class _KycStatusContentState extends State<_KycStatusContent> {
     Navigator.of(context, rootNavigator: true).pop();
   }
 
+  void _updateStickyBtn(KycState state) {
+    _StickyBtnConfig? config;
+    if (state is KycStatusLoaded) {
+      switch (state.kycStatus) {
+        case 'NOT_STARTED':
+          config = (
+            label: 'Commencer la vérification',
+            onPressed: () => context.go('/kyc'),
+            variant: DonyButtonVariant.primary,
+          );
+        case 'VERIFIED':
+          config = null;
+        case 'REJECTED':
+          config = (
+            label: 'Réessayer la vérification',
+            onPressed: () => context.go('/kyc'),
+            variant: DonyButtonVariant.primary,
+          );
+        default:
+          if (_timedOut) {
+            config = (
+              label: "Retour à l'app",
+              onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+              variant: DonyButtonVariant.primary,
+            );
+          } else {
+            config = (
+              label: 'Continuer plus tard',
+              onPressed: () {
+                _stopPolling();
+                Navigator.of(context, rootNavigator: true).pop();
+              },
+              variant: DonyButtonVariant.ghost,
+            );
+          }
+      }
+    } else if (state is KycError) {
+      config = (
+        label: 'Réessayer',
+        onPressed: _loadStatus,
+        variant: DonyButtonVariant.ghost,
+      );
+    }
+    widget.stickyBtnNotifier?.value = config;
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -129,6 +201,9 @@ class _KycStatusContentState extends State<_KycStatusContent> {
         }
       },
       builder: (context, state) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _updateStickyBtn(state);
+        });
         final h = DonyLayout.hPadding(context);
         return Padding(
           padding: EdgeInsets.symmetric(horizontal: h),
@@ -197,12 +272,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
           style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: DonySpacing.huge),
-        DonyButton(
-          label: 'Commencer la vérification',
-          onPressed: () => context.go('/kyc'),
-        ),
-        const SizedBox(height: DonySpacing.lg),
+        const SizedBox(height: DonySpacing.xxl),
       ],
     );
   }
@@ -273,17 +343,6 @@ class _KycStatusContentState extends State<_KycStatusContent> {
         const SizedBox(height: DonySpacing.xl),
         const _PollingIndicator(),
         const SizedBox(height: DonySpacing.xxl),
-        TextButton(
-          onPressed: () {
-            _stopPolling();
-            Navigator.of(context, rootNavigator: true).pop();
-          },
-          child: Text(
-            'Continuer plus tard',
-            style: tt.labelLarge?.copyWith(color: cs.onSurfaceVariant),
-          ),
-        ),
-        const SizedBox(height: DonySpacing.lg),
       ],
     );
   }
@@ -314,12 +373,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
           style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: DonySpacing.huge),
-        DonyButton(
-          label: "Retour à l'app",
-          onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
-        ),
-        const SizedBox(height: DonySpacing.lg),
+        const SizedBox(height: DonySpacing.xxl),
       ],
     );
   }
@@ -349,12 +403,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
           style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: DonySpacing.huge),
-        DonyButton(
-          label: 'Réessayer la vérification',
-          onPressed: () => context.go('/kyc'),
-        ),
-        const SizedBox(height: DonySpacing.lg),
+        const SizedBox(height: DonySpacing.xxl),
       ],
     );
   }
@@ -370,13 +419,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
           style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: DonySpacing.xl),
-        DonyButton(
-          label: 'Réessayer',
-          onPressed: _loadStatus,
-          variant: DonyButtonVariant.ghost,
-        ),
-        const SizedBox(height: DonySpacing.lg),
+        const SizedBox(height: DonySpacing.xxl),
       ],
     );
   }

@@ -11,25 +11,49 @@ class RatingBottomSheet extends StatefulWidget {
     super.key,
     required this.bidId,
     required this.travelerName,
+    this.starsNotifier,
+    this.onSubmitReady,
   });
 
   final String bidId;
   final String travelerName;
+  final ValueNotifier<int>? starsNotifier;
+  final void Function(VoidCallback)? onSubmitReady;
 
   static Future<void> show(
     BuildContext context, {
     required String bidId,
     required String travelerName,
   }) {
+    final ratingBloc = context.read<RatingBloc>();
+    final starsNotifier = ValueNotifier<int>(0);
+    VoidCallback? submit;
     return DonyBottomSheet.show(
       context,
       title: 'Évaluer $travelerName',
       subtitle: 'Votre avis aide la communauté dony',
-      child: BlocProvider.value(
-        value: context.read<RatingBloc>(),
-        child: RatingBottomSheet(bidId: bidId, travelerName: travelerName),
+      wrapper: (child) => BlocProvider.value(value: ratingBloc, child: child),
+      stickyBottom: ValueListenableBuilder<int>(
+        valueListenable: starsNotifier,
+        builder: (ctx, stars, _) => BlocBuilder<RatingBloc, RatingState>(
+          builder: (ctx, state) {
+            final isLoading = state is RatingLoading;
+            return DonyButton(
+              label: "Envoyer l'évaluation",
+              icon: Icons.star_rounded,
+              isLoading: isLoading,
+              onPressed: (stars > 0 && !isLoading) ? () => submit?.call() : null,
+            );
+          },
+        ),
       ),
-    );
+      child: RatingBottomSheet(
+        bidId: bidId,
+        travelerName: travelerName,
+        starsNotifier: starsNotifier,
+        onSubmitReady: (fn) => submit = fn,
+      ),
+    ).whenComplete(starsNotifier.dispose);
   }
 
   @override
@@ -37,8 +61,15 @@ class RatingBottomSheet extends StatefulWidget {
 }
 
 class _RatingBottomSheetState extends State<RatingBottomSheet> {
-  int _stars = 0;
   final _commentCtrl = TextEditingController();
+
+  int get _stars => widget.starsNotifier?.value ?? 0;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.onSubmitReady?.call(_submit);
+  }
 
   @override
   void dispose() {
@@ -46,10 +77,8 @@ class _RatingBottomSheetState extends State<RatingBottomSheet> {
     super.dispose();
   }
 
-  void _submit(BuildContext context) {
-    if (_stars == 0) {
-      return;
-    }
+  void _submit() {
+    if (_stars == 0) return;
     context.read<RatingBloc>().add(RatingSubmitRequested(
       bidId: widget.bidId,
       stars: _stars,
@@ -71,59 +100,57 @@ class _RatingBottomSheetState extends State<RatingBottomSheet> {
         }
       },
       builder: (context, state) {
-        final isLoading = state is RatingLoading;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _StarSelector(
-              selected: _stars,
-              onSelect: (s) => setState(() => _stars = s),
-            ),
-            if (_stars > 0)
-              Center(
-                child: Text(
-                  _starLabel(_stars),
-                  style: tt.labelLarge?.copyWith(
-                    color: DonyColors.primary,
-                    fontWeight: FontWeight.w600,
+        return ValueListenableBuilder<int>(
+          valueListenable: widget.starsNotifier ?? ValueNotifier(0),
+          builder: (ctx, stars, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _StarSelector(
+                selected: stars,
+                onSelect: (s) {
+                  if (widget.starsNotifier != null) {
+                    widget.starsNotifier!.value = s;
+                  }
+                },
+              ),
+              if (stars > 0)
+                Center(
+                  child: Text(
+                    _starLabel(stars),
+                    style: tt.labelLarge?.copyWith(
+                      color: DonyColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ).animate().fadeIn(duration: 200.ms),
+              const SizedBox(height: DonySpacing.base),
+              TextField(
+                controller: _commentCtrl,
+                maxLines: 3,
+                maxLength: 200,
+                keyboardType: TextInputType.multiline,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: InputDecoration(
+                  labelText: 'Commentaire (facultatif)',
+                  hintText: 'Partagez votre expérience…',
+                  filled: true,
+                  fillColor: DonyColors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(DonyRadius.card),
+                    borderSide: const BorderSide(color: DonyColors.neutral200),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(DonyRadius.card),
+                    borderSide: const BorderSide(color: DonyColors.neutral200),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(DonyRadius.card),
+                    borderSide: const BorderSide(color: DonyColors.primary, width: 2),
                   ),
                 ),
-              ).animate().fadeIn(duration: 200.ms),
-            const SizedBox(height: DonySpacing.base),
-            TextField(
-              controller: _commentCtrl,
-              maxLines: 3,
-              maxLength: 200,
-              keyboardType: TextInputType.multiline,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: InputDecoration(
-                labelText: 'Commentaire (facultatif)',
-                hintText: 'Partagez votre expérience…',
-                filled: true,
-                fillColor: DonyColors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(DonyRadius.card),
-                  borderSide: const BorderSide(color: DonyColors.neutral200),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(DonyRadius.card),
-                  borderSide: const BorderSide(color: DonyColors.neutral200),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(DonyRadius.card),
-                  borderSide: const BorderSide(color: DonyColors.primary, width: 2),
-                ),
               ),
-            ),
-            const SizedBox(height: DonySpacing.base),
-            DonyButton(
-              label: 'Envoyer l\'évaluation',
-              icon: Icons.star_rounded,
-              isLoading: isLoading,
-              onPressed: (_stars > 0 && !isLoading) ? () => _submit(context) : null,
-            ),
-            const SizedBox(height: DonySpacing.base),
-          ],
+            ],
+          ),
         );
       },
     );

@@ -67,7 +67,7 @@ class SameAddressAnnouncementsSheet extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.sm),
           Text(
-            '${announcements.length} annonce${announcements.length > 1 ? "s" : ""} à cette adresse',
+            '${announcements.length} voyageur${announcements.length > 1 ? "s" : ""} disponible${announcements.length > 1 ? "s" : ""} à cette adresse',
             style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
           ),
           const SizedBox(height: DonySpacing.md),

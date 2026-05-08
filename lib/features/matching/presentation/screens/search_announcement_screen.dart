@@ -6,6 +6,7 @@ import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/search_params.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
+import 'package:dony/features/matching/presentation/widgets/near_me_carousel.dart';
 import 'package:dony/features/matching/presentation/widgets/search_form_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
@@ -20,39 +21,6 @@ import 'package:intl/intl.dart';
 
 const _departureCities = ['Paris · CDG, ORY', 'Lyon · LYS', 'Marseille · MRS'];
 const _arrivalCities = ['Dakar · DKR', 'Abidjan · ABJ', 'Bamako · BKO', 'Douala · DLA'];
-
-/// Retourne un label "CODE · X km" si userPos est connue et pickupAddress non-null.
-/// Retourne null sinon.
-String? buildDistanceBadge(
-  AnnouncementModel announcement,
-  ({double lat, double lng})? userPos,
-) {
-  if (userPos == null) {
-    return null;
-  }
-  final pickup = announcement.pickupAddress;
-  if (pickup == null) {
-    return null;
-  }
-
-  final distanceM = Geolocator.distanceBetween(
-    userPos.lat,
-    userPos.lng,
-    pickup.lat,
-    pickup.lng,
-  );
-  final distanceKm = (distanceM / 1000).round();
-
-  // Extrait le code IATA (3 lettres majuscules) depuis le label si présent
-  // Ex: "Paris CDG" → "CDG", "Roissy" → "Roissy"
-  final allMatches = RegExp(r'\b([A-Z]{3})\b').allMatches(pickup.label);
-  final locationCode = allMatches.isNotEmpty
-      ? allMatches.last.group(1)!
-      : pickup.label.split(' ').first;
-
-  final distanceLabel = distanceKm == 0 ? '< 1 km' : '$distanceKm km';
-  return '$locationCode · $distanceLabel';
-}
 
 // Layout constants
 const _kRowIndent = 56.0; // left indent for divider under location rows
@@ -1367,7 +1335,7 @@ class _ResultsViewState extends State<_ResultsView> {
                               child: filtered.isEmpty
                                   ? _EmptyView(onBack: widget.onBack)
                                   : _isNearMeCarouselMode
-                                      ? _NearMeCarousel(
+                                      ? NearMeCarousel(
                                           announcements: filtered,
                                           userPosition: pos,
                                           scrollController: scrollController,
@@ -1376,6 +1344,9 @@ class _ResultsViewState extends State<_ResultsView> {
                                             duration: const Duration(milliseconds: 350),
                                             curve: Curves.easeOutCubic,
                                           ),
+                                          onTapCard: (a) {
+                                            context.push('/search/${a.id}', extra: a);
+                                          },
                                         )
                                       : ListView.separated(
                                           controller: scrollController,
@@ -1459,99 +1430,6 @@ class _ResultsViewState extends State<_ResultsView> {
           );
         },
       ),
-    );
-  }
-}
-
-// ── Carousel "Près de moi" ───────────────────────────────────────────────────
-
-class _NearMeCarousel extends StatelessWidget {
-  const _NearMeCarousel({
-    required this.announcements,
-    required this.userPosition,
-    required this.scrollController,
-    required this.onSeeAll,
-  });
-
-  final List<AnnouncementModel> announcements;
-  final ({double lat, double lng})? userPosition;
-  final ScrollController scrollController;
-  final VoidCallback onSeeAll;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final bottomPad = MediaQuery.of(context).padding.bottom;
-
-    return Column(
-      children: [
-        Expanded(
-          child: ListView.separated(
-            controller: scrollController,
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
-            itemCount: announcements.length,
-            separatorBuilder: (_, __) => const SizedBox(width: DonySpacing.md),
-            itemBuilder: (context, i) {
-              final a = announcements[i];
-              final badge = buildDistanceBadge(a, userPosition);
-              final authState = context.read<AuthBloc>().state;
-              final currentUserId = authState is AuthAuthenticated
-                  ? authState.user.id : null;
-              final isOwn = currentUserId != null && a.travelerId == currentUserId;
-              return SizedBox(
-                width: 220,
-                child: TravelerCard(
-                  announcement: a,
-                  index: i,
-                  isOwnAnnouncement: isOwn,
-                  distanceBadge: badge,
-                  onTap: isOwn
-                      ? null
-                      : () => context.push('/search/${a.id}', extra: a),
-                ),
-              );
-            },
-          ),
-        ),
-        Padding(
-          padding: EdgeInsets.fromLTRB(
-            DonySpacing.lg, DonySpacing.md, DonySpacing.lg, bottomPad + DonySpacing.md,
-          ),
-          child: GestureDetector(
-            onTap: onSeeAll,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
-              decoration: BoxDecoration(
-                color: DonyColors.primarySoft,
-                borderRadius: BorderRadius.circular(DonyRadius.card),
-                border: Border.all(
-                  color: DonyColors.primary.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    'Voir les ${announcements.length} annonce${announcements.length > 1 ? 's' : ''}',
-                    style: tt.labelLarge?.copyWith(
-                      color: DonyColors.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: DonySpacing.xxs),
-                  Text(
-                    'Tirez vers le haut pour la liste',
-                    style: tt.bodySmall?.copyWith(color: DonyColors.primary),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
