@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 /// DonyBottomSheet.show(
 ///   context,
 ///   title: 'Trier par',
+///   stickyBottom: DonyButton(label: 'Confirmer', onPressed: ...),
 ///   child: SortOptions(),
 /// );
 /// ```
@@ -20,20 +21,28 @@ abstract final class DonyBottomSheet {
     bool isDismissible = true,
     bool showHandle = true,
     bool isScrollControlled = true,
-    double? initialChildSizeRatio,
+    Widget? stickyBottom,
+    Widget Function(Widget child)? wrapper,
   }) {
+    Widget content = _DonyBottomSheetContent(
+      title: title,
+      subtitle: subtitle,
+      showHandle: showHandle,
+      stickyBottom: stickyBottom,
+      child: child,
+    );
+
+    if (wrapper != null) {
+      content = wrapper(content);
+    }
+
     return showModalBottomSheet<T>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: isScrollControlled,
       isDismissible: isDismissible,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => _DonyBottomSheetContent(
-        title: title,
-        subtitle: subtitle,
-        showHandle: showHandle,
-        child: child,
-      ),
+      builder: (_) => content,
     );
   }
 }
@@ -44,18 +53,21 @@ class _DonyBottomSheetContent extends StatelessWidget {
     this.title,
     this.subtitle,
     this.showHandle = true,
+    this.stickyBottom,
   });
 
   final Widget child;
   final String? title;
   final String? subtitle;
   final bool showHandle;
+  final Widget? stickyBottom;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Container(
       margin: const EdgeInsets.only(top: DonySpacing.huge),
@@ -125,11 +137,21 @@ class _DonyBottomSheetContent extends StatelessWidget {
                 DonySpacing.lg,
                 title != null ? 0 : DonySpacing.sm,
                 DonySpacing.lg,
-                DonySpacing.xl + bottomInset,
+                stickyBottom != null ? DonySpacing.sm : DonySpacing.xl + bottomInset,
               ),
               child: child,
             ),
           ),
+          if (stickyBottom != null)
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.sm,
+                DonySpacing.lg,
+                bottomPadding + DonySpacing.base,
+              ),
+              child: stickyBottom,
+            ),
         ],
       ),
     );

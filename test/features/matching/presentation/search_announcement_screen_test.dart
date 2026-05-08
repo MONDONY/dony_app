@@ -730,7 +730,7 @@ void main() {
 
     // Find the horizontal ListView of filter chips (the results view chips row)
     // The ListView has scrollDirection: Axis.horizontal
-    final chipsListView = find.byType(ListView).at(1);  // Second ListView is the chips row
+    final chipsListView = find.byType(ListView).at(0);  // First ListView is the horizontal chips row
     expect(chipsListView, findsOneWidget);
 
     // Find icons that are descendants of the chips ListView
@@ -794,7 +794,7 @@ void main() {
       expect(listIconButton, findsOneWidget);
 
       // Verify it has active styling (background color should contain primary tint)
-      final widget = tester.widget<IconButton>(listIconButton);
+      final widget = tester.widget<IconButton>(find.ancestor(of: listIconButton, matching: find.byType(IconButton)));
       // The button should have elevated style (background) when active
       expect(widget.color, DonyColors.primary);
     });
@@ -811,7 +811,7 @@ void main() {
       final mapIconButton = find.byIcon(Icons.map_outlined).first;
       expect(mapIconButton, findsOneWidget);
 
-      final widget = tester.widget<IconButton>(mapIconButton);
+      final widget = tester.widget<IconButton>(find.ancestor(of: mapIconButton, matching: find.byType(IconButton)));
       expect(widget.color, DonyColors.neutral500);
     });
   });
@@ -1003,13 +1003,13 @@ void main() {
           tester.element(find.byType(AnnouncementMapView, skipOffstage: false));
 
       // Switch to map
-      await tester.tap(find.text('Carte'));
+      await tester.tap(find.byTooltip('Carte'));
       await tester.pump();
       // Switch back to list
-      await tester.tap(find.text('Liste'));
+      await tester.tap(find.byTooltip('Liste'));
       await tester.pump();
       // Switch to map again
-      await tester.tap(find.text('Carte'));
+      await tester.tap(find.byTooltip('Carte'));
       await tester.pump();
 
       final mapElementAfter =

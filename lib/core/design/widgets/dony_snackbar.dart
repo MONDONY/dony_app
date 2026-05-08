@@ -15,25 +15,35 @@ abstract final class DonySnackbar {
     final cs = Theme.of(context).colorScheme;
 
     final (bg, fg) = switch (type) {
-      DonySnackbarType.info    => (cs.inverseSurface,          cs.onInverseSurface),
-      DonySnackbarType.success => (DonyColors.success,         DonyColors.white),
-      DonySnackbarType.warning => (DonyColors.warning,         DonyColors.white),
-      DonySnackbarType.error   => (cs.error,                   cs.onError),
+      DonySnackbarType.info    => (cs.inverseSurface,  cs.onInverseSurface),
+      DonySnackbarType.success => (DonyColors.success, DonyColors.white),
+      DonySnackbarType.warning => (DonyColors.warning, DonyColors.white),
+      DonySnackbarType.error   => (cs.error,           cs.onError),
     };
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, style: TextStyle(color: fg)),
-        backgroundColor: bg,
-        duration: duration,
-        action: actionLabel != null
-            ? SnackBarAction(
-                label: actionLabel,
-                textColor: fg,
-                onPressed: onAction ?? () {},
-              )
-            : null,
-      ),
-    );
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message, style: TextStyle(color: fg)),
+          backgroundColor: bg,
+          duration: duration,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.sm),
+          ),
+          margin: const EdgeInsets.fromLTRB(
+            DonySpacing.base, DonySpacing.base, DonySpacing.base, DonySpacing.lg,
+          ),
+          dismissDirection: DismissDirection.horizontal,
+          action: actionLabel != null
+              ? SnackBarAction(
+                  label: actionLabel,
+                  textColor: fg,
+                  onPressed: onAction ?? () {},
+                )
+              : null,
+        ),
+      );
   }
 }

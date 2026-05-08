@@ -334,14 +334,9 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     final positionFuture = widget.locationService.getCurrentPosition();
 
     // 3. Show radius bottom sheet IMMEDIATELY (user can interact)
-    final radiusKm = await showModalBottomSheet<double>(
-      context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => NearMeRadiusSheet(
-        initialRadiusKm: widget.activeRadiusKm ?? 25,
-      ),
+    final radiusKm = await NearMeRadiusSheet.show(
+      context,
+      initialRadiusKm: widget.activeRadiusKm ?? 25,
     );
 
     if (radiusKm == null || !mounted) {

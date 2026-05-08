@@ -66,7 +66,11 @@ class _AuthInterceptor extends Interceptor {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        final token = await user.getIdToken();
+        final isCritical = options.path.contains('/payments') ||
+            options.path.contains('/kyc') ||
+            options.path.contains('/tracking/events') ||
+            options.path.contains('/bids/checkout');
+        final token = await user.getIdToken(isCritical);
         options.headers['Authorization'] = 'Bearer $token';
       }
     } catch (_) {

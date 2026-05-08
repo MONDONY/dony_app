@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 /// AppBar standardisé dony.
@@ -45,12 +46,16 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       title: Text(title, style: tt.headlineMedium),
       centerTitle: false,
+      scrolledUnderElevation: 0,
       leading: showBackButton
           ? IconButton(
               tooltip: leadingIcon != null ? 'Fermer' : 'Retour',
               icon: Icon(leadingIcon ?? Icons.arrow_back_rounded, size: 22),
-              onPressed: onBack ?? () {
-                if (context.canPop()) {
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                if (onBack != null) {
+                  onBack!();
+                } else if (context.canPop()) {
                   context.pop();
                 } else {
                   context.go('/home');

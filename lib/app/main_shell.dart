@@ -11,6 +11,7 @@ import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -27,6 +28,7 @@ class _MainShellState extends State<MainShell> {
   StreamSubscription<void>? _fcmSub;
 
   void _onTap(int index) {
+    HapticFeedback.selectionClick();
     if (index == 1) {
       getIt<EnvoisRefreshNotifier>().requestRefresh();
     }
@@ -253,10 +255,20 @@ class _NavItem extends StatelessWidget {
                   color: _active ? DonyColors.primarySoft : Colors.transparent,
                   borderRadius: BorderRadius.circular(DonyRadius.xl),
                 ),
-                child: Icon(
-                  _active ? icon : outlinedIcon,
-                  size: 22,
-                  color: _active ? DonyColors.primary : DonyColors.textSubtle,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) => ScaleTransition(
+                    scale: animation,
+                    child: FadeTransition(opacity: animation, child: child),
+                  ),
+                  child: Icon(
+                    _active ? icon : outlinedIcon,
+                    key: ValueKey('${index}_${_active ? 'a' : 'i'}'),
+                    size: 22,
+                    color: _active ? DonyColors.primary : DonyColors.neutral700,
+                  ),
                 ),
               ),
               if (badgeCount > 0)

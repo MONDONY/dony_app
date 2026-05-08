@@ -72,7 +72,7 @@ class DonyUserCard extends StatelessWidget {
                       const Icon(Icons.star_rounded, size: 13, color: DonyColors.warning),
                       const SizedBox(width: DonySpacing.xxs),
                       Text(
-                        rating!.toStringAsFixed(1),
+                        '${rating!.toStringAsFixed(1)}/5',
                         style: tt.bodySmall?.copyWith(
                           color: DonyColors.textMuted,
                           fontWeight: FontWeight.w600,

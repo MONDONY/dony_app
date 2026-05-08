@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class DonyCard extends StatelessWidget {
   const DonyCard({
@@ -23,7 +24,10 @@ class DonyCard extends StatelessWidget {
       return Card(
         margin: EdgeInsets.zero,
         child: InkWell(
-          onTap: onTap,
+          onTap: () {
+            HapticFeedback.selectionClick();
+            onTap!();
+          },
           borderRadius: BorderRadius.circular(DonyRadius.card),
           child: inner,
         ),

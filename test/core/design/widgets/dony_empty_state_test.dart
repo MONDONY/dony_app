@@ -16,6 +16,7 @@ void main() {
           type: DonyEmptyStateType.loading,
         ),
       ));
+      await tester.pump();
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       expect(find.text('Chargement'), findsNothing);
     });
@@ -24,6 +25,7 @@ void main() {
       await tester.pumpWidget(wrap(
         const DonyEmptyState(title: 'Aucun colis'),
       ));
+      await tester.pumpAndSettle();
       expect(find.text('Aucun colis'), findsOneWidget);
       expect(find.byType(DonyIconContainer), findsOneWidget);
     });
@@ -35,6 +37,7 @@ void main() {
           description: 'Ajoutez votre premier colis.',
         ),
       ));
+      await tester.pumpAndSettle();
       expect(find.text('Ajoutez votre premier colis.'), findsOneWidget);
     });
 
@@ -47,6 +50,7 @@ void main() {
           onAction: () => pressed = true,
         ),
       ));
+      await tester.pumpAndSettle();
       expect(find.text('Envoyer un colis'), findsOneWidget);
       await tester.tap(find.text('Envoyer un colis'));
       expect(pressed, isTrue);
@@ -59,6 +63,7 @@ void main() {
           type: DonyEmptyStateType.error,
         ),
       ));
+      await tester.pumpAndSettle();
       expect(find.text('Erreur réseau'), findsOneWidget);
       expect(find.byType(DonyIconContainer), findsOneWidget);
     });
@@ -72,6 +77,7 @@ void main() {
           onAction: () {},
         ),
       ));
+      await tester.pumpAndSettle();
       expect(find.text('Réessayer'), findsOneWidget);
     });
 
@@ -82,6 +88,7 @@ void main() {
           icon: Icons.mail_outline,
         ),
       ));
+      await tester.pumpAndSettle();
       expect(find.byIcon(Icons.mail_outline), findsOneWidget);
     });
 
@@ -92,6 +99,7 @@ void main() {
           padding: EdgeInsets.all(8),
         ),
       ));
+      await tester.pumpAndSettle();
       expect(find.text('Vide'), findsOneWidget);
     });
 
@@ -99,6 +107,7 @@ void main() {
       await tester.pumpWidget(wrap(
         const DonyEmptyState(title: 'Vide'),
       ));
+      await tester.pumpAndSettle();
       expect(find.byType(DonyButton), findsNothing);
     });
   });
