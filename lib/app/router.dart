@@ -267,7 +267,10 @@ final appRouter = GoRouter(
     // ── Settings (hors shell) ──────────────────────────────────────────
     GoRoute(
       path: '/settings',
-      builder: (context, state) => const SettingsScreen(),
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<AccountDeletionBloc>(),
+        child: const SettingsScreen(),
+      ),
     ),
 
     // ── Shell principal avec Bottom Navigation ───────────────────────────

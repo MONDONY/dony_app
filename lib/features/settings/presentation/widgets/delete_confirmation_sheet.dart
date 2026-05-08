@@ -70,10 +70,11 @@ class _DeleteConfirmationSheetState extends State<DeleteConfirmationSheet> {
     return BlocListener<AccountDeletionBloc, AccountDeletionState>(
       listener: (context, state) {
         if (state is DeletionOtpSent) {
+          final deletionBloc = context.read<AccountDeletionBloc>();
           Navigator.of(context, rootNavigator: true).pop();
           DeleteOtpSheet.show(
             context,
-            context.read<AccountDeletionBloc>(),
+            deletionBloc,
             verificationId: state.verificationId,
             phoneHint: state.phoneHint,
           );
@@ -135,7 +136,7 @@ class _DeleteConfirmationSheetState extends State<DeleteConfirmationSheet> {
                     child: Padding(
                       padding: const EdgeInsets.only(top: 12),
                       child: Text(
-                        'Je comprends que la suppression de mon compte est définitive et irréversible.',
+                        'Je comprends que cette suppression est définitive et irréversible.',
                         style: tt.bodyMedium?.copyWith(color: cs.onSurface),
                       ),
                     ),
