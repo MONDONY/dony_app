@@ -1,4 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -8,8 +11,23 @@ import 'package:webview_flutter/webview_flutter.dart';
 class PayoutOnboardingScreen extends StatelessWidget {
   const PayoutOnboardingScreen({super.key});
 
+  UserModel? _getUser(BuildContext context) {
+    final s = context.read<AuthBloc>().state;
+    if (s is AuthAuthenticated) return s.user;
+    if (s is AuthProfileUpdated) return s.user;
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final user = _getUser(context);
+    final isAlreadyConnected =
+        user?.stripeAccountStatus == 'ONBOARDING_COMPLETE';
+
+    if (isAlreadyConnected) {
+      return const _ActiveAccountView();
+    }
+
     return BlocConsumer<PaymentBloc, PaymentState>(
       listener: (context, state) async {
         if (state is PaymentOnboardingUrlReady) {
@@ -217,6 +235,137 @@ class _BenefitsSection extends StatelessWidget {
   }
 }
 
+// ── Vue compte bancaire déjà connecté ────────────────────────────────────────
+
+class _ActiveAccountView extends StatelessWidget {
+  const _ActiveAccountView();
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final h = DonyLayout.hPadding(context);
+
+    return Scaffold(
+      appBar: const DonyAppBar(title: 'Recevoir mes paiements'),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(h, DonySpacing.xxl, h, DonySpacing.huge),
+        child: DonyLayout.constrained(
+          context,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DonyIconContainer(
+                icon: Icons.check_circle_rounded,
+                size: DonyIconContainerSize.xl,
+                borderRadius: DonyRadius.xl,
+                backgroundColor: cs.success.withValues(alpha: 0.1),
+                iconColor: cs.success,
+              ),
+              const SizedBox(height: DonySpacing.lg),
+              Text(
+                'Compte bancaire connecté',
+                style: tt.displayLarge?.copyWith(height: 1.2),
+              ),
+              const SizedBox(height: DonySpacing.md),
+              Text(
+                'Votre compte Stripe est actif. Après chaque livraison confirmée, '
+                'le paiement est automatiquement viré sur votre compte bancaire '
+                'sous 1 à 2 jours ouvrés.',
+                style: tt.bodyLarge?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: DonySpacing.xxl),
+              DonyCard(
+                padding: EdgeInsets.zero,
+                child: Column(
+                  children: [
+                    _InfoRow(
+                      icon: Icons.lock_rounded,
+                      title: 'Paiement sécurisé en escrow',
+                      subtitle:
+                          "L'argent est retenu jusqu'à confirmation de livraison.",
+                    ),
+                    const Divider(height: 1, indent: 70),
+                    _InfoRow(
+                      icon: Icons.bolt_rounded,
+                      title: 'Virement automatique',
+                      subtitle:
+                          'Aucune action requise — Stripe vire directement sur votre RIB.',
+                    ),
+                    const Divider(height: 1, indent: 70),
+                    _InfoRow(
+                      icon: Icons.account_balance_rounded,
+                      title: 'Sur votre compte bancaire',
+                      subtitle:
+                          "Vous recevez l'argent sur le compte lié à votre RIB/IBAN, pas dans un wallet Stripe.",
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          )
+              .animate()
+              .fadeIn(duration: 300.ms)
+              .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  const _InfoRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.all(DonySpacing.base),
+      child: Row(
+        children: [
+          DonyIconContainer(
+            icon: icon,
+            size: DonyIconContainerSize.md,
+            borderRadius: DonyRadius.md,
+            backgroundColor: cs.primaryContainer,
+            iconColor: cs.primary,
+          ),
+          const SizedBox(width: DonySpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: tt.titleMedium),
+                const SizedBox(height: DonySpacing.xxs),
+                Text(
+                  subtitle,
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Vue succès ────────────────────────────────────────────────────────────────
 
 class _SuccessView extends StatelessWidget {
@@ -287,13 +436,24 @@ class _StripeOnboardingWebView extends StatefulWidget {
       _StripeOnboardingWebViewState();
 }
 
+bool _isStripeUrl(String url) {
+  final uri = Uri.tryParse(url);
+  return uri != null &&
+      uri.scheme == 'https' &&
+      (uri.host == 'connect.stripe.com' || uri.host.endsWith('.stripe.com'));
+}
+
 class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
   late final WebViewController _controller;
   final _isLoading = ValueNotifier<bool>(true);
+  bool _urlValid = true;
 
   @override
   void initState() {
     super.initState();
+    _urlValid = _isStripeUrl(widget.url);
+    if (!_urlValid) return;
+
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(NavigationDelegate(
@@ -326,6 +486,40 @@ class _StripeOnboardingWebViewState extends State<_StripeOnboardingWebView> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    if (!_urlValid) {
+      return Scaffold(
+        appBar: DonyAppBar(
+          title: 'Configuration du compte',
+          leadingIcon: Icons.close_rounded,
+          onBack: _close,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(DonySpacing.base),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.error_outline_rounded, color: cs.error, size: 64),
+                const SizedBox(height: DonySpacing.lg),
+                Text(
+                  'URL invalide',
+                  style: tt.headlineMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: DonySpacing.md),
+                Text(
+                  "L'URL de configuration n'est pas une URL Stripe valide.",
+                  style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: DonyAppBar(

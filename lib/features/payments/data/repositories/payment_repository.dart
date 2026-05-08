@@ -11,50 +11,40 @@ class PaymentRepository {
   Future<ConnectAccountModel> createConnectAccount() async {
     try {
       return await _datasource.createConnectAccount();
-    } on AppException {
-      rethrow;
     } catch (e) {
-      throw NetworkException(e.toString());
+      throw unwrapDioError(e);
     }
   }
 
   Future<String> createOnboardingLink() async {
     try {
       return await _datasource.createOnboardingLink();
-    } on AppException {
-      rethrow;
     } catch (e) {
-      throw NetworkException(e.toString());
+      throw unwrapDioError(e);
     }
   }
 
   Future<ConnectAccountModel> refreshConnectAccount() async {
     try {
       return await _datasource.refreshConnectAccount();
-    } on AppException {
-      rethrow;
     } catch (e) {
-      throw NetworkException(e.toString());
+      throw unwrapDioError(e);
     }
   }
 
   Future<PaymentModel> createPayment(String bidId) async {
     try {
       return await _datasource.createPayment(bidId);
-    } on AppException {
-      rethrow;
     } catch (e) {
-      throw NetworkException(e.toString());
+      throw unwrapDioError(e);
     }
   }
 
   Future<PaymentModel?> getPaymentForBid(String bidId) async {
     try {
       return await _datasource.getPaymentForBid(bidId);
-    } on AppException {
-      rethrow;
     } catch (e) {
-      throw NetworkException(e.toString());
+      throw unwrapDioError(e);
     }
   }
 }

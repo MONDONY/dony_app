@@ -163,18 +163,27 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                 _SectionTitle(label: 'Le voyageur', tt: tt, cs: cs),
                 const SizedBox(height: DonySpacing.sm),
                 if (_a.traveler != null)
-                  DonyUserCard(
-                    name: _a.traveler!.resolvedName,
-                    subtitle: [
-                      if (_a.traveler!.totalTrips != null)
-                        '${_a.traveler!.totalTrips} trajets',
-                      if (_a.traveler!.phoneNumber != null)
-                        _a.traveler!.phoneNumber!,
-                    ].join(' · '),
-                    rating: _a.traveler!.averageRating,
-                    verified: true,
-                    onTap: () =>
-                        showTravelerProfileSheet(context, _a.traveler!),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DonyUserCard(
+                        name: _a.traveler!.resolvedName,
+                        subtitle: [
+                          if (_a.traveler!.totalTrips != null)
+                            '${_a.traveler!.totalTrips} trajets',
+                          if (_a.traveler!.phoneNumber != null)
+                            _a.traveler!.phoneNumber!,
+                        ].join(' · '),
+                        rating: _a.traveler!.averageRating,
+                        verified: true,
+                        onTap: () =>
+                            showTravelerProfileSheet(context, _a.traveler!),
+                      ),
+                      if (_a.traveler!.isProAccount) ...[
+                        const SizedBox(height: DonySpacing.sm),
+                        const _ProBadge(),
+                      ],
+                    ],
                   ).animate().fadeIn(delay: 180.ms),
               ],
             ),
@@ -649,6 +658,46 @@ class _LocationRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ─── PRO Badge ────────────────────────────────────────────────────────────────
+
+class _ProBadge extends StatelessWidget {
+  const _ProBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.md,
+        vertical: DonySpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: DonyColors.warning50,
+        borderRadius: BorderRadius.circular(DonyRadius.xl),
+        border: Border.all(color: DonyColors.warning.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.verified_rounded,
+            size: 13,
+            color: DonyColors.warning,
+          ),
+          const SizedBox(width: DonySpacing.xs),
+          Text(
+            'PRO',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: DonyColors.amberDark,
+                  letterSpacing: 0.5,
+                ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
 
 class KycRepository {
@@ -5,18 +6,22 @@ class KycRepository {
   final ApiClient _apiClient;
 
   Future<Map<String, dynamic>> createSession() async {
-    final response = await _apiClient.dio.post<Map<String, dynamic>>('/kyc/session');
-    if (response.data == null) {
-      throw Exception('Réponse invalide du serveur KYC');
+    try {
+      final response = await _apiClient.dio.post<Map<String, dynamic>>('/kyc/session');
+      if (response.data == null) throw const NetworkException('Réponse invalide du serveur KYC');
+      return response.data!;
+    } catch (e) {
+      throw unwrapDioError(e);
     }
-    return response.data!;
   }
 
   Future<Map<String, dynamic>> getStatus() async {
-    final response = await _apiClient.dio.get<Map<String, dynamic>>('/kyc/status');
-    if (response.data == null) {
-      throw Exception('Réponse invalide du serveur KYC');
+    try {
+      final response = await _apiClient.dio.get<Map<String, dynamic>>('/kyc/status');
+      if (response.data == null) throw const NetworkException('Réponse invalide du serveur KYC');
+      return response.data!;
+    } catch (e) {
+      throw unwrapDioError(e);
     }
-    return response.data!;
   }
 }

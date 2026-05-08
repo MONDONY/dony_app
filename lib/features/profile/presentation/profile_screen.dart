@@ -1,8 +1,12 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
+import 'package:dony/features/profile/presentation/widgets/upgrade_pro_bottom_sheet.dart';
+import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -11,6 +15,9 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/kyc/presentation/widgets/kyc_onboarding_bottom_sheet.dart';
+import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.dart';
+import 'package:dony/features/profile/presentation/widgets/edit_profile_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -36,12 +43,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is AuthInitial || state is AuthAccountDeleted) {
-          context.go('/auth/phone');
-        }
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<AuthBloc, AuthState>(
+          listener: (context, state) {
+            if (state is AuthInitial || state is AuthAccountDeleted) {
+              context.go('/auth/phone');
+            }
+          },
+        ),
+        BlocListener<AccountDeletionBloc, AccountDeletionState>(
+          listener: (context, state) {
+            if (state is AccountReactivated) {
+              context.read<AuthBloc>().add(const AuthCheckRequested());
+            } else if (state is AccountDeletionError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.message)),
+              );
+            }
+          },
+        ),
+      ],
       child: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, authState) {
           UserModel? user;
@@ -54,6 +76,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           final isTraveler = user?.isTraveler ?? false;
           final isSender = user?.isSender ?? false;
           final isKycVerified = user?.isKycVerified ?? false;
+          final isProAccount = user?.isProAccount ?? false;
           final displayName = user?.displayName ?? 'Utilisateur';
 
           return BlocBuilder<BidBloc, BidState>(
@@ -99,6 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               name: displayName,
                               size: DonyAvatarSize.xl,
                               verified: isKycVerified,
+                              pro: isProAccount,
                             )
                                 .animate()
                                 .fadeIn(duration: 300.ms)
@@ -118,39 +142,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ).animate().fadeIn(delay: 80.ms),
                             const SizedBox(height: DonySpacing.md),
 
-                            // ── Badges ──────────────────────────────────
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                if (isKycVerified) ...[
-                                  const _Badge(
-                                    icon: Icons.verified_rounded,
-                                    label: 'Identité vérifiée',
-                                    color: DonyColors.success,
-                                  ),
-                                  const SizedBox(width: DonySpacing.sm),
-                                ],
-                                if (isTraveler)
-                                  _Badge(
-                                    icon: Icons.flight_takeoff_rounded,
-                                    label: 'Voyageur',
-                                    color: cs.primary,
-                                  ),
-                                if (isTraveler && isSender)
-                                  const SizedBox(width: DonySpacing.sm),
-                                if (isSender)
-                                  _Badge(
-                                    icon: Icons.send_rounded,
-                                    label: 'Expéditeur',
-                                    color: cs.secondary,
-                                  ),
-                              ],
-                            ).animate().fadeIn(delay: 120.ms),
+                            // ── Badge KYC ───────────────────────────────
+                            if (isKycVerified) ...[
+                              const _Badge(
+                                icon: Icons.verified_rounded,
+                                label: 'Identité vérifiée',
+                                color: DonyColors.success,
+                              ).animate().fadeIn(delay: 120.ms),
+                              const SizedBox(height: DonySpacing.md),
+                            ] else
+                              const SizedBox(height: DonySpacing.md),
+
+                            // ── Switcher de rôle ─────────────────────────
+                            if (isTraveler && isSender)
+                              BlocBuilder<ActiveRoleCubit, ActiveRole>(
+                                builder: (context, activeRole) {
+                                  return _RoleSwitcher(
+                                    activeRole: activeRole,
+                                    onSwitch: (role) {
+                                      if (role == ActiveRole.traveler) {
+                                        context.read<ActiveRoleCubit>().switchToTraveler();
+                                      } else {
+                                        context.read<ActiveRoleCubit>().switchToSender();
+                                      }
+                                      context.go('/home');
+                                    },
+                                    cs: cs,
+                                    tt: tt,
+                                  );
+                                },
+                              ).animate().fadeIn(delay: 120.ms)
+                            else
+                              _Badge(
+                                icon: isTraveler
+                                    ? Icons.flight_takeoff_rounded
+                                    : Icons.send_rounded,
+                                label: isTraveler ? 'Voyageur' : 'Expéditeur',
+                                color: isTraveler ? cs.primary : cs.secondary,
+                              ).animate().fadeIn(delay: 120.ms),
                             const SizedBox(height: DonySpacing.xl),
 
                             // ── Stats ───────────────────────────────────
                             _StatsRow(
-                              isTraveler: isTraveler,
+                              isTraveler: context.watch<ActiveRoleCubit>().state == ActiveRole.traveler,
                               totalTrips: user?.totalTrips ?? 0,
                               totalShipments: user?.totalShipments ?? 0,
                               isLoading: bidState is BidLoading ||
@@ -160,11 +194,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ).animate().fadeIn(delay: 160.ms),
                             const SizedBox(height: DonySpacing.lg),
 
+                            // ── Bannière suppression en attente ─────────
+                            if (user != null &&
+                                user.isPendingDeletion &&
+                                user.deletionRequestedAt != null) ...[
+                              PendingDeletionBanner(
+                                deletionRequestedAt: user.deletionRequestedAt!,
+                                onReactivate: () => context
+                                    .read<AccountDeletionBloc>()
+                                    .add(const ReactivateAccount()),
+                              ),
+                              const SizedBox(height: DonySpacing.lg),
+                            ],
+
                             // ── Bannière complétion profil ───────────────
                             if (user != null && !user.isProfileComplete) ...[
                               _ProfileCompletionBanner(
                                 user: user,
-                                onTap: () => context.push('/profile/edit'),
+                                onTap: () => EditProfileBottomSheet.show(context),
                                 cs: cs,
                                 tt: tt,
                               ).animate().fadeIn(delay: 180.ms),
@@ -174,7 +221,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             // ── Menu principal ──────────────────────────
                             DonyListSection(
                               tiles: [
-                                if (isTraveler)
+                                if (context.watch<ActiveRoleCubit>().state == ActiveRole.traveler) ...[
                                   DonyListTile(
                                     icon: Icons.flight_takeoff_rounded,
                                     iconColor: cs.primary,
@@ -191,7 +238,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         : null,
                                     onTap: () => context.push('/announcements'),
                                   ),
-                                if (isSender)
+                                  DonyListTile(
+                                    icon: Icons.account_balance_wallet_rounded,
+                                    iconColor: DonyColors.success,
+                                    iconBgColor: DonyColors.successLight,
+                                    label: 'Recevoir mes paiements',
+                                    onTap: () =>
+                                        context.push('/payments/onboarding'),
+                                  ),
+                                  DonyListTile(
+                                    icon: Icons.business_center_rounded,
+                                    iconColor: isProAccount
+                                        ? DonyColors.success
+                                        : DonyColors.warning,
+                                    iconBgColor: isProAccount
+                                        ? DonyColors.successLight
+                                        : DonyColors.warningLight,
+                                    label: isProAccount
+                                        ? 'Mon profil PRO'
+                                        : 'Passer en compte PRO',
+                                    trailing: isProAccount
+                                        ? const Icon(
+                                            Icons.verified_rounded,
+                                            color: DonyColors.success,
+                                            size: 18,
+                                          )
+                                        : null,
+                                    onTap: user != null
+                                        ? () => UpgradeProBottomSheet.show(
+                                              context,
+                                              user: user!,
+                                            )
+                                        : null,
+                                  ),
+                                ] else
                                   DonyListTile(
                                     icon: Icons.inventory_2_outlined,
                                     iconColor: cs.secondary,
@@ -208,15 +288,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         : null,
                                     onTap: () => context.push('/announcements'),
                                   ),
-                                if (isTraveler)
-                                  DonyListTile(
-                                    icon: Icons.account_balance_wallet_rounded,
-                                    iconColor: DonyColors.success,
-                                    iconBgColor: DonyColors.successLight,
-                                    label: 'Recevoir mes paiements',
-                                    onTap: () =>
-                                        context.push('/payments/onboarding'),
-                                  ),
                                 DonyListTile(
                                   icon: Icons.credit_card_outlined,
                                   iconColor: DonyColors.purple,
@@ -229,16 +300,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   iconColor: cs.primary,
                                   iconBgColor: cs.primaryContainer,
                                   label: 'Documents KYC',
-                                  trailing: isKycVerified
-                                      ? Text(
-                                          'Vérifié',
-                                          style: tt.labelMedium?.copyWith(
-                                            color: DonyColors.success,
-                                            fontWeight: FontWeight.w600,
+                                  trailing: switch (user?.kycStatus) {
+                                    'VERIFIED' => Text(
+                                        'Vérifié',
+                                        style: tt.labelMedium?.copyWith(
+                                          color: DonyColors.success,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    'REJECTED' => Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(
+                                            Icons.warning_amber_rounded,
+                                            color: DonyColors.warning,
+                                            size: 16,
                                           ),
-                                        )
-                                      : null,
-                                  onTap: () => context.push('/kyc'),
+                                          const SizedBox(width: DonySpacing.xs),
+                                          Text(
+                                            'Réessayer',
+                                            style: tt.labelMedium?.copyWith(
+                                              color: DonyColors.warning,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    'PENDING' => Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          SizedBox(
+                                            width: 12,
+                                            height: 12,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 1.5,
+                                              color: DonyColors.warning,
+                                            ),
+                                          ),
+                                          const SizedBox(width: DonySpacing.xs),
+                                          Text(
+                                            'En cours',
+                                            style: tt.labelMedium?.copyWith(
+                                              color: DonyColors.warning,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    // NOT_STARTED or unknown → prompt user to start
+                                    _ => Text(
+                                        'Vérifier',
+                                        style: tt.labelMedium?.copyWith(
+                                          color: cs.onSurfaceVariant,
+                                        ),
+                                      ),
+                                  },
+                                  onTap: user?.kycStatus == 'VERIFIED'
+                                      ? () => KycStatusBottomSheet.show(context)
+                                      : () => KycOnboardingBottomSheet.show(context),
                                 ),
                                 DonyListTile(
                                   icon: Icons.people_outline_rounded,
@@ -266,6 +385,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             // ── Menu settings ───────────────────────────
                             DonyListSection(
                               tiles: [
+                                DonyListTile(
+                                  icon: Icons.settings_outlined,
+                                  label: 'Paramètres',
+                                  onTap: () => context.push('/settings'),
+                                ),
                                 DonyListTile(
                                   icon: Icons.notifications_outlined,
                                   iconColor: DonyColors.warning,
@@ -571,6 +695,117 @@ class _StatItem extends StatelessWidget {
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
       ],
+    );
+  }
+}
+
+// ── Role Switcher ─────────────────────────────────────────────────────────────
+
+class _RoleSwitcher extends StatelessWidget {
+  const _RoleSwitcher({
+    required this.activeRole,
+    required this.onSwitch,
+    required this.cs,
+    required this.tt,
+  });
+
+  final ActiveRole activeRole;
+  final ValueChanged<ActiveRole> onSwitch;
+  final ColorScheme cs;
+  final TextTheme tt;
+
+  @override
+  Widget build(BuildContext context) {
+    final isTraveler = activeRole == ActiveRole.traveler;
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(DonyRadius.xl),
+        border: Border.all(color: DonyColors.borderDefault),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _RoleTab(
+            icon: Icons.flight_takeoff_rounded,
+            label: 'Voyageur',
+            selected: isTraveler,
+            color: cs.primary,
+            onTap: () => onSwitch(ActiveRole.traveler),
+            cs: cs,
+            tt: tt,
+          ),
+          const SizedBox(width: 4),
+          _RoleTab(
+            icon: Icons.send_rounded,
+            label: 'Expéditeur',
+            selected: !isTraveler,
+            color: cs.secondary,
+            onTap: () => onSwitch(ActiveRole.sender),
+            cs: cs,
+            tt: tt,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RoleTab extends StatelessWidget {
+  const _RoleTab({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.color,
+    required this.onTap,
+    required this.cs,
+    required this.tt,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final Color color;
+  final VoidCallback onTap;
+  final ColorScheme cs;
+  final TextTheme tt;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: selected ? null : onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.md,
+          vertical: DonySpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: selected ? color : Colors.transparent,
+          borderRadius: BorderRadius.circular(DonyRadius.lg),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 14,
+              color: selected ? Colors.white : cs.onSurfaceVariant,
+            ),
+            const SizedBox(width: DonySpacing.xs),
+            Text(
+              label,
+              style: tt.labelMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: selected ? Colors.white : cs.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

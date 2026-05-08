@@ -23,6 +23,7 @@ AnnouncementModel buildAnnouncement({String id = 'ann-001'}) => AnnouncementMode
       arrivalCity: 'Dakar',
       departureDate: DateTime.now().add(const Duration(days: 10)),
       availableKg: 20.0,
+      totalKg: 20.0,
       pricePerKg: 5.0,
       status: 'ACTIVE',
       createdAt: DateTime.now(),

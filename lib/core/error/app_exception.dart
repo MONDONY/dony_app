@@ -1,4 +1,21 @@
+import 'package:dio/dio.dart' show DioException;
 import 'package:equatable/equatable.dart';
+
+/// Extracts an [AppException] stored inside a [DioException.error] by the
+/// auth interceptor, or wraps any other error in [NetworkException].
+AppException unwrapDioError(Object e) {
+  if (e is AppException) {
+    return e;
+  }
+  if (e is DioException) {
+    final inner = e.error;
+    if (inner is AppException) {
+      return inner;
+    }
+    return NetworkException(e.message ?? 'Erreur réseau');
+  }
+  return NetworkException(e.toString());
+}
 
 abstract class AppException extends Equatable implements Exception {
   const AppException(this.message, {this.code});

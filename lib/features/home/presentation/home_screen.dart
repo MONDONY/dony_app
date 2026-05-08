@@ -1,6 +1,24 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/auth/bloc/active_role_cubit.dart';
+import 'package:dony/features/city/data/city_repository.dart';
+import 'package:dony/features/city/data/popular_corridor_model.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/matching/bloc/announcement_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_event.dart';
+import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
+import 'package:dony/features/matching/data/models/search_params.dart';
+import 'package:dony/features/matching/data/models/urgency_filter.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement_bottom_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/near_me_carousel.dart';
+import 'package:dony/features/matching/presentation/widgets/search_form_bottom_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:dony/features/notifications/presentation/notification_bottom_sheet.dart';
@@ -8,16 +26,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:intl/intl.dart';
 
-// ── Static corridor data ─────────────────────────────────────────────────────
+// ── Home-screen specific constants ────────────────────────────────────────────
 
-typedef _Corridor = ({String code, int travelers, bool isHot});
+enum _HomeTab { voyageurs, demandes }
 
-const List<_Corridor> _corridors = [
-  (code: 'PAR → DKR', travelers: 23, isHot: true),
-  (code: 'LYS → ABJ', travelers: 11, isHot: false),
-  (code: 'MRS → BKO', travelers: 7, isHot: false),
-  (code: 'PAR → DLA', travelers: 14, isHot: false),
+enum _DatePreset { today, thisWeek, thisMonth, custom, none }
+
+typedef _CorridorOpt = ({String label, String departure, String arrival});
+
+// Fallback statique utilisé jusqu'à ce que l'API réponde
+const _defaultCorridorOptions = <_CorridorOpt>[
+  (label: 'Paris → Dakar',      departure: 'Paris',     arrival: 'Dakar'),
+  (label: 'Paris → Abidjan',    departure: 'Paris',     arrival: 'Abidjan'),
+  (label: 'Lyon → Abidjan',     departure: 'Lyon',      arrival: 'Abidjan'),
+  (label: 'Paris → Bamako',     departure: 'Paris',     arrival: 'Bamako'),
+  (label: 'Paris → Douala',     departure: 'Paris',     arrival: 'Douala'),
+  (label: 'Marseille → Bamako', departure: 'Marseille', arrival: 'Bamako'),
 ];
 
 // Accent clair sur fond ink pour le texte de mise en valeur (compatible design system)
@@ -30,22 +57,21 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, authState) {
-        final user = authState is AuthAuthenticated
-            ? authState.user
-            : authState is AuthProfileUpdated
+    return BlocBuilder<ActiveRoleCubit, ActiveRole>(
+      builder: (context, activeRole) {
+        return BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, authState) {
+            final user = authState is AuthAuthenticated
                 ? authState.user
-                : null;
+                : authState is AuthProfileUpdated
+                    ? authState.user
+                    : null;
 
-        final isTraveler = user?.roles.contains('ROLE_TRAVELER') ?? false;
-
-        if (isTraveler) {
-          return _TravelerView(displayName: user?.displayName ?? 'Voyageur');
-        }
-        return _SenderView(
-          firstName: user?.firstName ?? user?.displayName ?? 'vous',
-          displayName: user?.displayName ?? 'vous',
+            if (activeRole == ActiveRole.traveler) {
+              return _TravelerView(displayName: user?.displayName ?? 'Voyageur');
+            }
+            return const _MapSenderView();
+          },
         );
       },
     );
@@ -53,50 +79,149 @@ class HomeScreen extends StatelessWidget {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// SENDER VIEW
+// MAP SENDER VIEW
 // ══════════════════════════════════════════════════════════════════════════════
 
-class _SenderView extends StatefulWidget {
-  const _SenderView({required this.firstName, required this.displayName});
-
-  final String firstName;
-  final String displayName;
+class _MapSenderView extends StatefulWidget {
+  const _MapSenderView();
 
   @override
-  State<_SenderView> createState() => _SenderViewState();
+  State<_MapSenderView> createState() => _MapSenderViewState();
 }
 
-class _SenderViewState extends State<_SenderView> {
-  final _scroll = ScrollController();
+class _MapSenderViewState extends State<_MapSenderView> {
+  final _sheetController = DraggableScrollableController();
+  double _sheetSize = 0.45;
+  bool get _isMapHidden => _sheetSize > 0.92;
 
-  // Hauteur du contenu visible sous la toolbar dans le header étendu
-  static const double _kContentHeight = 88.0;
+  _HomeTab _tab = _HomeTab.voyageurs;
 
-  String get _initials {
-    if (widget.displayName.isEmpty) return '?';
-    final parts = widget.displayName
-        .trim()
-        .split(' ')
-        .where((p) => p.isNotEmpty)
-        .toList();
-    if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+  // Liste mutable — initialisée avec le fallback statique, remplacée par l'API
+  List<_CorridorOpt> _corridorOptions = List.of(_defaultCorridorOptions);
+  _CorridorOpt _corridor = _defaultCorridorOptions.first;
+
+  _DatePreset _datePreset = _DatePreset.thisWeek;
+  DateTime? _customDate;
+  bool _kiloProOnly = false;
+  bool _allCorridors = false;
+
+  bool _isNearMeActive = false;
+  double? _nearMeRadiusKm;
+  LatLng? _userPosition;
+
+  String? _selectedAnnouncementId;
+
+  double? _minRating;
+  double? _weightMin;
+  double? _weightMax;
+  double? _maxPricePerKg;
+  bool _weekendOnly = false;
+  TransportMode? _transportMode;
+  bool _kycVerifiedOnly = false;
+  String? _contentType;
+  UrgencyFilter? _urgencyFilter;
+
+  int get _activeFilterCount {
+    int n = 0;
+    if (_kiloProOnly) n++;
+    if (_allCorridors) n++;
+    if (_minRating != null) n++;
+    if (_weightMin != null || _weightMax != null) n++;
+    if (_maxPricePerKg != null) n++;
+    if (_weekendOnly) n++;
+    if (_transportMode != null) n++;
+    if (_kycVerifiedOnly) n++;
+    if (_contentType != null) n++;
+    if (_isNearMeActive) n++;
+    if (_datePreset != _DatePreset.thisWeek) n++;
+    if (_urgencyFilter != null) n++;
+    return n;
+  }
+
+  DateTime? get _dateFrom {
+    final now = DateTime.now();
+    switch (_datePreset) {
+      case _DatePreset.today:
+        return DateTime(now.year, now.month, now.day);
+      case _DatePreset.thisWeek:
+        final monday = now.subtract(Duration(days: now.weekday - 1));
+        return DateTime(monday.year, monday.month, monday.day);
+      case _DatePreset.thisMonth:
+        return DateTime(now.year, now.month, 1);
+      case _DatePreset.custom:
+        return _customDate;
+      case _DatePreset.none:
+        return null;
     }
-    return widget.displayName[0].toUpperCase();
+  }
+
+  DateTime? get _dateTo {
+    final now = DateTime.now();
+    switch (_datePreset) {
+      case _DatePreset.today:
+        return DateTime(now.year, now.month, now.day, 23, 59, 59);
+      case _DatePreset.thisWeek:
+        final monday = now.subtract(Duration(days: now.weekday - 1));
+        final nextMonday = monday.add(const Duration(days: 7));
+        return DateTime(nextMonday.year, nextMonday.month, nextMonday.day)
+            .subtract(const Duration(seconds: 1));
+      case _DatePreset.thisMonth:
+        final m = now.month == 12
+            ? DateTime(now.year + 1, 1, 1)
+            : DateTime(now.year, now.month + 1, 1);
+        return m.subtract(const Duration(seconds: 1));
+      case _DatePreset.custom:
+        return null;
+      case _DatePreset.none:
+        return null;
+    }
   }
 
   @override
   void initState() {
     super.initState();
-    _scroll.addListener(_onScroll);
+    _sheetController.addListener(_onSheetSizeChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _dispatchSearch();
+      _loadPopularCorridors();
+    });
   }
 
-  void _onScroll() => setState(() {});
+  Future<void> _loadPopularCorridors() async {
+    try {
+      final corridors = await getIt<CityRepository>().getPopularCorridors();
+      if (!mounted || corridors.isEmpty) return;
+      setState(() {
+        _corridorOptions = corridors
+            .map((c) => (
+                  label: '${c.departureCity} → ${c.arrivalCity}',
+                  departure: c.departureCity,
+                  arrival: c.arrivalCity,
+                ))
+            .toList();
+        // Mettre à jour le corridor sélectionné si possible
+        if (_corridorOptions.isNotEmpty) {
+          _corridor = _corridorOptions.first;
+        }
+      });
+    } catch (_) {
+      // Échec silencieux — l'UI reste fonctionnelle avec le fallback statique
+    }
+  }
+
+  void _onSheetSizeChanged() {
+    if (!_sheetController.isAttached) return;
+    final newSize = _sheetController.size;
+    final wasHidden = _isMapHidden;
+    _sheetSize = newSize;
+    // Rebuild uniquement quand l'état caché/visible change, pas à chaque frame
+    if (wasHidden != _isMapHidden) setState(() {});
+  }
 
   @override
   void dispose() {
-    _scroll.removeListener(_onScroll);
-    _scroll.dispose();
+    _sheetController.removeListener(_onSheetSizeChanged);
+    _sheetController.dispose();
     super.dispose();
   }
 
@@ -302,306 +427,184 @@ class _SenderViewState extends State<_SenderView> {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final topPad = MediaQuery.of(context).padding.top;
-
-    // expandedHeight = zone status bar + toolbar + contenu additionnel
-    final expandedHeight = topPad + 56.0 + _kContentHeight;
-
-    // Progress 0→1 sur la plage de collapse (= _kContentHeight px)
-    final offset = _scroll.hasClients
-        ? _scroll.offset.clamp(0.0, double.infinity)
-        : 0.0;
-    final progress = (offset / _kContentHeight).clamp(0.0, 1.0);
-
-    // Interpolation des couleurs
-    final headerBg = Color.lerp(DonyColors.ink800, DonyColors.surface, progress)!;
-    final iconColor = Color.lerp(DonyColors.white, DonyColors.ink900, progress)!;
-    final logoVariant = progress > 0.5 ? DonyLogoVariant.onLight : DonyLogoVariant.onDark;
-    final avatarBg = Color.lerp(
-      DonyColors.white.withValues(alpha: 0.15),
-      DonyColors.primarySoft,
-      progress,
-    )!;
-    final avatarBorder = Color.lerp(
-      DonyColors.white.withValues(alpha: 0.3),
-      DonyColors.blue200,
-      progress,
-    )!;
-    final avatarTextColor =
-        Color.lerp(DonyColors.white, DonyColors.primary, progress)!;
-
     return Scaffold(
-      backgroundColor: DonyColors.bg,
-      body: CustomScrollView(
-        controller: _scroll,
-        slivers: [
-          // ── Collapsing header ────────────────────────────────────────────
-          SliverAppBar(
-            expandedHeight: expandedHeight,
-            pinned: true,
-            floating: false,
-            backgroundColor: headerBg,
-            surfaceTintColor: Colors.transparent,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            centerTitle: false,
-            automaticallyImplyLeading: false,
-            // Barre persistante : logo + icônes
-            title: DonyLogo(variant: logoVariant, fontSize: 43),
-            actions: [
-              BlocBuilder<NotificationBloc, NotificationState>(
-                builder: (context, notifState) {
-                  final unread = notifState is NotificationLoaded
-                      ? notifState.unreadCount
-                      : 0;
-                  return Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.notifications_outlined,
-                            color: iconColor),
-                        onPressed: () => showNotificationBottomSheet(context),
-                        tooltip: 'Notifications',
-                      ),
-                      if (unread > 0)
-                        Positioned(
-                          right: 6,
-                          top: 6,
-                          child: _NotifBadge(count: unread),
-                        ),
-                    ],
-                  );
-                },
-              ),
-              GestureDetector(
-                onTap: () => context.push('/profile'),
-                child: Container(
-                  margin: const EdgeInsets.only(right: DonySpacing.base),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.sm,
-                    vertical: DonySpacing.xs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: avatarBg,
-                    borderRadius: BorderRadius.circular(DonyRadius.full),
-                    border: Border.all(color: avatarBorder),
-                  ),
-                  child: Text(
-                    _initials,
-                    style: tt.labelMedium!.copyWith(
-                      color: avatarTextColor,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+      backgroundColor: DonyColors.bgApp,
+      body: BlocBuilder<AnnouncementBloc, AnnouncementState>(
+        builder: (context, state) {
+          final raw = state is AnnouncementSearchLoaded
+              ? state.results
+              : <AnnouncementModel>[];
+          final announcements = _urgencyFilter == null
+              ? raw
+              : raw.where((a) => _urgencyFilter!.matches(a.departureDate)).toList();
+
+          return Stack(
+            children: [
+              Positioned.fill(
+                child: AnnouncementMapView(
+                  announcements:
+                      _tab == _HomeTab.voyageurs ? announcements : const [],
+                  isNearMeActive: _isNearMeActive,
+                  activeRadiusKm: _nearMeRadiusKm,
+                  userPosition: _userPosition,
+                  onNearMeRequested: (lat, lng, radius) {
+                    setState(() {
+                      _isNearMeActive = true;
+                      _nearMeRadiusKm = radius;
+                      _userPosition = LatLng(lat, lng);
+                    });
+                    _dispatchSearch();
+                  },
+                  onNearMeDisabled: _deactivateNearMe,
+                  fabBottomPadding: MediaQuery.of(context).size.height * 0.45,
+                  selectedAnnouncementId: _selectedAnnouncementId,
+                  onAnnouncementSelected: (id) =>
+                      setState(() => _selectedAnnouncementId = id),
                 ),
               ),
-            ],
-            // Diviseur visible seulement en mode collapsed
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(1),
-              child: Opacity(
-                opacity: progress,
-                child: const Divider(height: 1, color: DonyColors.borderDefault),
-              ),
-            ),
-            // Zone flexible : dégradé vert + salutation + titre
-            flexibleSpace: FlexibleSpaceBar(
-              collapseMode: CollapseMode.parallax,
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Dégradé de fond
-                  Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          DonyColors.ink800,
-                          DonyColors.ink600,
-                        ],
-                      ),
-                    ),
-                  ),
-                  // Cercles décoratifs semi-transparents
-                  Positioned(
-                    right: -40,
-                    top: topPad - 30,
-                    child: Container(
-                      width: 200,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: DonyColors.white.withValues(alpha: 0.05),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    right: 50,
-                    top: topPad + 10,
-                    child: Container(
-                      width: 90,
-                      height: 90,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: DonyColors.white.withValues(alpha: 0.04),
-                      ),
-                    ),
-                  ),
-                  // Contenu textuel : salutation + accroche
-                  Positioned(
-                    left: DonySpacing.lg,
-                    right: DonySpacing.lg,
-                    // Positionné sous la toolbar
-                    top: topPad + 56,
-                    bottom: DonySpacing.lg,
+
+              // ── Top overlay (disparaît en plein écran) ────────────────────
+              Positioned(
+                top: MediaQuery.of(context).padding.top + DonySpacing.sm,
+                left: DonySpacing.md,
+                right: DonySpacing.md,
+                child: IgnorePointer(
+                  ignoring: _isMapHidden,
+                  child: AnimatedOpacity(
+                    opacity: _isMapHidden ? 0.0 : 1.0,
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeInOut,
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Bonjour ${widget.firstName},',
-                          style: tt.bodyMedium!.copyWith(
-                            color: DonyColors.white.withValues(alpha: 0.75),
+                        _CorridorBar(
+                          key: const Key('corridor-bar'),
+                          label: _allCorridors
+                              ? 'Tous les corridors'
+                              : _corridor.label,
+                          activeFilterCount: _activeFilterCount,
+                          onTap: () => _showFilterSheet(context),
+                        ),
+                        const SizedBox(height: DonySpacing.sm),
+                        Center(
+                          child: _TabToggle(
+                            tab: _tab,
+                            voyageursCount: announcements.length,
+                            onChanged: (t) => setState(() => _tab = t),
                           ),
-                        ).animate().fadeIn(duration: 280.ms),
+                        ),
                         const SizedBox(height: DonySpacing.xs),
-                        Text.rich(
-                          TextSpan(
-                            children: [
-                              TextSpan(
-                                text: 'on envoie quoi ',
-                                style: tt.headlineMedium!.copyWith(
-                                  color: DonyColors.white,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              WidgetSpan(
-                                alignment: PlaceholderAlignment.baseline,
-                                baseline: TextBaseline.alphabetic,
-                                child: Text(
-                                  "aujourd'hui",
-                                  style: DonyTypography.caveat(
-                                    fontSize: 22,
-                                    color: _kAccentOnDark,
-                                  ),
-                                ),
-                              ),
-                              TextSpan(
-                                text: ' ?',
-                                style: tt.headlineMedium!.copyWith(
-                                  color: DonyColors.white,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ).animate().fadeIn(delay: 60.ms, duration: 300.ms),
+                        _HomeFilterChipsRow(
+                          datePreset: _datePreset,
+                          customDate: _customDate,
+                          kiloProOnly: _kiloProOnly,
+                          isNearMeActive: _isNearMeActive,
+                          allCorridors: _allCorridors,
+                          minRating: _minRating,
+                          weightMin: _weightMin,
+                          weightMax: _weightMax,
+                          maxPricePerKg: _maxPricePerKg,
+                          onDateTap: _showDatePresetSheet,
+                          onRatingTap: _showRatingSheet,
+                          onWeightTap: _showWeightSheet,
+                          onNearMeTap: () {
+                            if (_isNearMeActive) {
+                              _deactivateNearMe();
+                            } else {
+                              _activateNearMe();
+                            }
+                          },
+                          onPriceTap: _showPriceSheet,
+                          onKiloProToggle: () {
+                            setState(() => _kiloProOnly = !_kiloProOnly);
+                            _dispatchSearch();
+                          },
+                          onAllCorridorsToggle: () {
+                            setState(() => _allCorridors = !_allCorridors);
+                            _dispatchSearch();
+                          },
+                        ),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
-
-          // ── Contenu scrollable ───────────────────────────────────────────
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.lg,
-              DonySpacing.xl,
-              DonySpacing.lg,
-              0,
-            ),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                const _SearchFormCard()
-                    .animate()
-                    .fadeIn(delay: 100.ms)
-                    .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-
-                const SizedBox(height: DonySpacing.base),
-
-                DonyButton(
-                  label: 'Trouver un voyageur',
-                  icon: Icons.search,
-                  onPressed: () => context.push('/search'),
-                ).animate().fadeIn(delay: 140.ms),
-
-                const SizedBox(height: DonySpacing.xxl),
-
-                Row(
-                  children: [
-                    Text(
-                      'CORRIDORS POPULAIRES',
-                      style: tt.labelMedium!.copyWith(
-                        color: DonyColors.textMuted,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      'cette semaine',
-                      style: tt.bodySmall!.copyWith(color: DonyColors.textMuted),
-                    ),
-                  ],
                 ),
+              ),
 
-                const SizedBox(height: DonySpacing.md),
+              // ── DraggableScrollableSheet ──────────────────────────────────
+              DraggableScrollableSheet(
+                controller: _sheetController,
+                initialChildSize: 0.45,
+                minChildSize: 0.15,
+                maxChildSize: 1.0,
+                snap: true,
+                snapSizes: const [0.45, 1.0],
+                builder: (ctx, scrollCtrl) => _buildSheet(
+                  ctx,
+                  scrollCtrl,
+                  announcements,
+                  MediaQuery.of(context).padding.bottom,
+                ),
+              ),
 
-                const _CorridorsGrid().animate().fadeIn(delay: 180.ms),
-
-                const SizedBox(height: DonySpacing.xl),
-
-                const _GarantieCard().animate().fadeIn(delay: 220.ms),
-
-                const SizedBox(height: DonySpacing.huge),
-              ]),
-            ),
-          ),
-        ],
+              // ── FAB "Carte" (visible quand sheet plein écran) ─────────────
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 280),
+                curve: Curves.easeOutCubic,
+                bottom: _isMapHidden
+                    ? MediaQuery.of(context).padding.bottom + DonySpacing.lg
+                    : -80,
+                left: 0,
+                right: 0,
+                child: Center(child: _HomeCarteFab(onTap: _showMap)),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
-}
 
-// ── Search form card ─────────────────────────────────────────────────────────
+  Widget _buildSheet(
+    BuildContext ctx,
+    ScrollController scrollCtrl,
+    List<AnnouncementModel> announcements,
+    double bottomPad,
+  ) {
+    final tt = Theme.of(ctx).textTheme;
+    final count = announcements.length;
 
-class _SearchFormCard extends StatefulWidget {
-  const _SearchFormCard();
+    final statusBarHeight = MediaQuery.of(ctx).padding.top;
 
-  @override
-  State<_SearchFormCard> createState() => _SearchFormCardState();
-}
-
-class _SearchFormCardState extends State<_SearchFormCard> {
-  String _departure = 'Paris CDG';
-  String _arrival = 'Dakar DKR';
-
-  void _swap() {
-    setState(() {
-      final tmp = _departure;
-      _departure = _arrival;
-      _arrival = tmp;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
     return Container(
+      key: const Key('home-sheet'),
       decoration: BoxDecoration(
-        color: DonyColors.white,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.borderDefault),
+        color: DonyColors.surface,
+        borderRadius: _isMapHidden
+            ? BorderRadius.zero
+            : const BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
       ),
       child: Column(
         children: [
-          // Row 1: DÉPART
+          // Padding status bar quand le sheet est en plein écran
+          if (_isMapHidden) SizedBox(height: statusBarHeight),
+          Center(
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: DonyColors.neutral200,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(
-                DonySpacing.base, DonySpacing.base, DonySpacing.base, DonySpacing.sm),
+              DonySpacing.lg,
+              DonySpacing.xs,
+              DonySpacing.lg,
+              DonySpacing.xs,
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -609,239 +612,116 @@ class _SearchFormCardState extends State<_SearchFormCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'DÉPART',
-                        style: tt.labelSmall!.copyWith(color: DonyColors.textMuted),
-                      ),
-                      const SizedBox(height: DonySpacing.xxs),
-                      Text(
-                        _departure,
-                        style: tt.titleMedium!.copyWith(
-                          color: DonyColors.ink900,
-                          fontWeight: FontWeight.w700,
+                        _tab == _HomeTab.voyageurs
+                            ? 'VOYAGEURS DISPONIBLES'
+                            : 'DEMANDES D\'ENVOI',
+                        style: tt.labelSmall?.copyWith(
+                          color: DonyColors.textMuted,
+                          letterSpacing: 0.8,
                         ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _tab == _HomeTab.voyageurs
+                            ? _isNearMeActive
+                                ? '$count voyageur${count > 1 ? 's' : ''} à proximité'
+                                : '$count résultat${count > 1 ? 's' : ''} · ${_corridor.label}'
+                            : _corridor.label,
+                        style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                       ),
                     ],
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.swap_vert_rounded,
-                      color: DonyColors.primary),
-                  onPressed: _swap,
-                  tooltip: 'Inverser',
-                ),
-              ],
-            ),
-          ),
-          // Row 2: ARRIVÉE
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-                DonySpacing.base, 0, DonySpacing.base, DonySpacing.sm),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'ARRIVÉE',
-                        style: tt.labelSmall!.copyWith(color: DonyColors.textMuted),
-                      ),
-                      const SizedBox(height: DonySpacing.xxs),
-                      Text(
-                        _arrival,
-                        style: tt.titleMedium!.copyWith(
-                          color: DonyColors.ink900,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => context.push('/search'),
-                  child: Text(
-                    'Modifier',
-                    style: tt.bodySmall!.copyWith(
-                      color: DonyColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1, color: DonyColors.borderDefault),
-          // Row 3: Date + Poids
-          Padding(
-            padding: const EdgeInsets.all(DonySpacing.base),
-            child: Row(
-              children: [
-                const Icon(Icons.calendar_today_outlined,
-                    size: 12, color: DonyColors.textMuted),
-                const SizedBox(width: DonySpacing.xs),
-                Text(
-                  'Cette semaine',
-                  style: tt.bodySmall!.copyWith(color: DonyColors.ink900),
-                ),
-                const Spacer(),
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: "Jusqu'à ",
-                        style: tt.bodySmall!.copyWith(color: DonyColors.ink900),
-                      ),
-                      TextSpan(
-                        text: '15',
-                        style: tt.titleMedium!.copyWith(
-                          color: DonyColors.ink900,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      TextSpan(
-                        text: ' kg',
-                        style: tt.bodySmall!.copyWith(color: DonyColors.ink900),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Corridors grid ────────────────────────────────────────────────────────────
-
-class _CorridorsGrid extends StatelessWidget {
-  const _CorridorsGrid();
-
-  @override
-  Widget build(BuildContext context) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: DonySpacing.sm,
-        mainAxisSpacing: DonySpacing.sm,
-        childAspectRatio: 2.2,
-      ),
-      itemCount: _corridors.length,
-      itemBuilder: (context, i) {
-        final corridor = _corridors[i];
-        return _CorridorChip(corridor: corridor);
-      },
-    );
-  }
-}
-
-class _CorridorChip extends StatelessWidget {
-  const _CorridorChip({required this.corridor});
-
-  final _Corridor corridor;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    return GestureDetector(
-      onTap: () => context.push('/search'),
-      child: Container(
-        padding: const EdgeInsets.all(DonySpacing.md),
-        decoration: BoxDecoration(
-          color: DonyColors.white,
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: DonyColors.borderDefault),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    corridor.code,
-                    style: tt.titleSmall!.copyWith(
-                      color: DonyColors.ink900,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (corridor.isHot) ...[
-                  const SizedBox(width: DonySpacing.xs),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.xs, vertical: DonySpacing.xxs),
-                    decoration: BoxDecoration(
-                      color: DonyColors.errorLight,
-                      borderRadius: BorderRadius.circular(DonyRadius.xs),
-                    ),
+                if (_tab == _HomeTab.voyageurs && count > 0)
+                  GestureDetector(
+                    onTap: () => _showFilterSheet(ctx),
                     child: Text(
-                      'HOT',
-                      style: tt.labelSmall!.copyWith(
-                        color: DonyColors.error,
-                        fontWeight: FontWeight.w700,
+                      'Trier',
+                      style: tt.labelMedium?.copyWith(
+                        color: DonyColors.primary,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-                ],
               ],
             ),
-            const SizedBox(height: DonySpacing.xxs),
-            Text(
-              '${corridor.travelers} voyageurs',
-              style: tt.bodySmall!.copyWith(color: DonyColors.textMuted),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Garantie Dony card ────────────────────────────────────────────────────────
-
-class _GarantieCard extends StatelessWidget {
-  const _GarantieCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: DonyColors.bgApp,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.blue200),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.shield_outlined, color: DonyColors.primary, size: 22),
-          const SizedBox(width: DonySpacing.md),
+          ),
+          const Divider(height: 1, color: DonyColors.neutral200),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Garantie Dony',
-                  style: tt.titleMedium!.copyWith(
-                    color: DonyColors.ink900,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: DonySpacing.xxs),
-                Text(
-                  "Remboursé jusqu'à 200 € si le colis n'arrive pas.",
-                  style: tt.bodySmall!.copyWith(color: DonyColors.textMuted),
-                ),
-              ],
-            ),
+            child: _tab == _HomeTab.demandes
+                ? CustomScrollView(
+                    controller: scrollCtrl,
+                    slivers: const [
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: _DemandesPlaceholder(),
+                      ),
+                    ],
+                  )
+                : count == 0
+                        ? CustomScrollView(
+                            controller: scrollCtrl,
+                            slivers: [
+                              SliverFillRemaining(
+                                hasScrollBody: false,
+                                child: Center(
+                                  child: Text(
+                                    _isNearMeActive
+                                        ? 'Aucun voyageur à proximité'
+                                        : 'Aucun voyageur sur ce corridor',
+                                    style: tt.bodyMedium?.copyWith(
+                                        color: DonyColors.textMuted),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        : ListView.separated(
+                            key: const Key('home-announcements-list'),
+                            controller: scrollCtrl,
+                            padding: EdgeInsets.fromLTRB(
+                              DonySpacing.base,
+                              DonySpacing.sm,
+                              DonySpacing.base,
+                              bottomPad + DonySpacing.huge,
+                            ),
+                            itemCount: count,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: DonySpacing.md),
+                            itemBuilder: (context, i) {
+                              final a = announcements[i];
+                              final authState = context.read<AuthBloc>().state;
+                              final currentUserId =
+                                  authState is AuthAuthenticated
+                                      ? authState.user.id
+                                      : null;
+                              final isOwn = currentUserId != null &&
+                                  a.travelerId == currentUserId;
+                              final badge = _isNearMeActive
+                                  ? buildDistanceBadge(
+                                      a,
+                                      _userPosition != null
+                                          ? (
+                                              lat: _userPosition!.latitude,
+                                              lng: _userPosition!.longitude
+                                            )
+                                          : null,
+                                    )
+                                  : null;
+                              return TravelerCard(
+                                announcement: a,
+                                index: i,
+                                isOwnAnnouncement: isOwn,
+                                distanceBadge: badge,
+                                onTap: isOwn
+                                    ? null
+                                    : () => showTravelerAnnouncementSheet(
+                                          context,
+                                          announcement: a,
+                                        ),
+                              );
+                            },
+                          ),
           ),
         ],
       ),
@@ -1109,7 +989,7 @@ class _TravelerViewState extends State<_TravelerView> {
                 DonyButton(
                   label: 'Publier un trajet',
                   icon: Icons.send_rounded,
-                  onPressed: () => context.push('/announcements/create'),
+                  onPressed: () => CreateAnnouncementBottomSheet.show(context),
                 ).animate().fadeIn(delay: 140.ms),
 
                 const SizedBox(height: DonySpacing.xl),
@@ -1345,6 +1225,1210 @@ class _PayoutFooter extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+// ══════════════════════════════════════════════════════════════════════════════
+// MAP SENDER — sub-widgets
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── _CorridorBar ──────────────────────────────────────────────────────────────
+
+class _CorridorBar extends StatelessWidget {
+  const _CorridorBar({
+    super.key,
+    required this.label,
+    required this.activeFilterCount,
+    required this.onTap,
+  });
+
+  final String label;
+  final int activeFilterCount;
+  final VoidCallback onTap;
+
+  bool get _hasActive => activeFilterCount > 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 48,
+        decoration: BoxDecoration(
+          color: DonyColors.surface,
+          borderRadius: BorderRadius.circular(DonyRadius.full),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.10),
+              blurRadius: 12,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
+        child: Row(
+          children: [
+            const Icon(Icons.search_rounded, size: 18, color: DonyColors.textMuted),
+            const SizedBox(width: DonySpacing.sm),
+            Expanded(
+              child: Text(
+                label,
+                style: tt.bodyMedium?.copyWith(
+                  color: DonyColors.ink900,
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: _hasActive ? DonyColors.primary : DonyColors.bgApp,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.tune_rounded,
+                    size: 18,
+                    color: _hasActive ? DonyColors.surface : DonyColors.ink900,
+                  ),
+                ),
+                if (_hasActive)
+                  Positioned(
+                    top: -4,
+                    right: -4,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: const BoxDecoration(
+                        color: DonyColors.error,
+                        borderRadius: BorderRadius.all(Radius.circular(8)),
+                      ),
+                      child: Text(
+                        '$activeFilterCount',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: DonyColors.white,
+                          height: 1.6,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── _TabToggle ────────────────────────────────────────────────────────────────
+
+class _TabToggle extends StatelessWidget {
+  const _TabToggle({
+    required this.tab,
+    required this.voyageursCount,
+    required this.onChanged,
+  });
+
+  final _HomeTab tab;
+  final int? voyageursCount;
+  final void Function(_HomeTab) onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 40,
+      decoration: BoxDecoration(
+        color: DonyColors.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(3),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _TabPill(
+            label: voyageursCount != null
+                ? 'Voyageurs · $voyageursCount'
+                : 'Voyageurs',
+            isActive: tab == _HomeTab.voyageurs,
+            dotColor: DonyColors.primary,
+            onTap: () => onChanged(_HomeTab.voyageurs),
+          ),
+          const SizedBox(width: 2),
+          _TabPill(
+            label: 'Demandes',
+            isActive: tab == _HomeTab.demandes,
+            dotColor: DonyColors.success,
+            onTap: () => onChanged(_HomeTab.demandes),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TabPill extends StatelessWidget {
+  const _TabPill({
+    required this.label,
+    required this.isActive,
+    required this.dotColor,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isActive;
+  final Color dotColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.base,
+          vertical: DonySpacing.xs,
+        ),
+        decoration: BoxDecoration(
+          color: isActive ? DonyColors.ink900 : Colors.transparent,
+          borderRadius: BorderRadius.circular(DonyRadius.full),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                color: isActive ? DonyColors.surface : dotColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: DonySpacing.xs),
+            Text(
+              label,
+              style: tt.labelMedium?.copyWith(
+                color: isActive ? DonyColors.surface : DonyColors.ink900,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── _DemandesPlaceholder ──────────────────────────────────────────────────────
+
+class _DemandesPlaceholder extends StatelessWidget {
+  const _DemandesPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.all(DonySpacing.xl),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: DonyColors.primarySoft,
+              borderRadius: BorderRadius.circular(DonyRadius.full),
+            ),
+            child: const Icon(Icons.inbox_outlined, color: DonyColors.primary, size: 28),
+          ),
+          const SizedBox(height: DonySpacing.md),
+          Text(
+            'Demandes bientôt disponibles',
+            style: tt.titleMedium?.copyWith(
+              color: DonyColors.ink900,
+              fontWeight: FontWeight.w700,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: DonySpacing.xs),
+          Text(
+            'Tu pourras bientôt consulter les demandes d\'envoi postées par les expéditeurs.',
+            style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── _HomeCarteFab ─────────────────────────────────────────────────────────────
+
+class _HomeCarteFab extends StatelessWidget {
+  const _HomeCarteFab({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: DonyColors.ink900,
+          borderRadius: BorderRadius.circular(DonyRadius.full),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.20),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.map_outlined, size: 16, color: Colors.white),
+            const SizedBox(width: DonySpacing.xs),
+            Text(
+              'Carte',
+              style: tt.labelMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── _HomeFilterChipsRow ───────────────────────────────────────────────────────
+
+class _HomeFilterChipsRow extends StatelessWidget {
+  const _HomeFilterChipsRow({
+    required this.datePreset,
+    required this.customDate,
+    required this.kiloProOnly,
+    required this.isNearMeActive,
+    required this.allCorridors,
+    required this.onDateTap,
+    required this.onRatingTap,
+    required this.onWeightTap,
+    required this.onNearMeTap,
+    required this.onPriceTap,
+    required this.onKiloProToggle,
+    required this.onAllCorridorsToggle,
+    this.minRating,
+    this.weightMin,
+    this.weightMax,
+    this.maxPricePerKg,
+  });
+
+  final _DatePreset datePreset;
+  final DateTime? customDate;
+  final bool kiloProOnly;
+  final bool isNearMeActive;
+  final bool allCorridors;
+  final double? minRating;
+  final double? weightMin;
+  final double? weightMax;
+  final double? maxPricePerKg;
+  final VoidCallback onDateTap;
+  final VoidCallback onRatingTap;
+  final VoidCallback onWeightTap;
+  final VoidCallback onNearMeTap;
+  final VoidCallback onPriceTap;
+  final VoidCallback onKiloProToggle;
+  final VoidCallback onAllCorridorsToggle;
+
+  String get _dateLabel {
+    switch (datePreset) {
+      case _DatePreset.today:
+        return 'Aujourd\'hui';
+      case _DatePreset.thisWeek:
+        return 'Cette semaine';
+      case _DatePreset.thisMonth:
+        return 'Ce mois-ci';
+      case _DatePreset.custom:
+        return customDate != null
+            ? DateFormat('d MMM', 'fr').format(customDate!)
+            : 'Date';
+      case _DatePreset.none:
+        return 'Toutes dates';
+    }
+  }
+
+  String get _ratingLabel =>
+      minRating != null ? '★ ${minRating!.toStringAsFixed(1)}+' : 'Note';
+
+  String get _weightLabel {
+    if (weightMin != null && weightMax != null) {
+      return '${weightMin!.toInt()}–${weightMax!.toInt()} kg';
+    }
+    if (weightMin != null) return '≥ ${weightMin!.toInt()} kg';
+    if (weightMax != null) return '≤ ${weightMax!.toInt()} kg';
+    return 'Kilos';
+  }
+
+  String get _priceLabel => maxPricePerKg != null
+      ? '≤ ${maxPricePerKg!.toStringAsFixed(0)} €/kg'
+      : 'Prix';
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _SmallChip(
+            label: _dateLabel,
+            isActive: datePreset != _DatePreset.none,
+            icon: Icons.calendar_today_rounded,
+            onTap: onDateTap,
+          ),
+          const SizedBox(width: DonySpacing.xs),
+          _SmallChip(
+            label: _ratingLabel,
+            isActive: minRating != null,
+            icon: Icons.star_rounded,
+            onTap: onRatingTap,
+          ),
+          const SizedBox(width: DonySpacing.xs),
+          _SmallChip(
+            label: _weightLabel,
+            isActive: weightMin != null || weightMax != null,
+            icon: Icons.fitness_center_rounded,
+            onTap: onWeightTap,
+          ),
+          const SizedBox(width: DonySpacing.xs),
+          _SmallChip(
+            label: 'Près de moi',
+            isActive: isNearMeActive,
+            icon: Icons.near_me_rounded,
+            onTap: onNearMeTap,
+          ),
+          const SizedBox(width: DonySpacing.xs),
+          _SmallChip(
+            label: _priceLabel,
+            isActive: maxPricePerKg != null,
+            icon: Icons.euro_rounded,
+            onTap: onPriceTap,
+          ),
+          const SizedBox(width: DonySpacing.xs),
+          _SmallChip(
+            label: 'Kilo Pro',
+            isActive: kiloProOnly,
+            onTap: onKiloProToggle,
+          ),
+          const SizedBox(width: DonySpacing.xs),
+          _SmallChip(
+            label: 'Tous corridors',
+            isActive: allCorridors,
+            onTap: onAllCorridorsToggle,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── _SmallChip ────────────────────────────────────────────────────────────────
+
+class _SmallChip extends StatelessWidget {
+  const _SmallChip({
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+    this.icon,
+  });
+
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.base,
+          vertical: DonySpacing.xs,
+        ),
+        decoration: BoxDecoration(
+          color: isActive ? DonyColors.ink900 : DonyColors.surface,
+          borderRadius: BorderRadius.circular(DonyRadius.full),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isActive ? 0.20 : 0.08),
+              blurRadius: isActive ? 8 : 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(
+                icon,
+                size: 13,
+                color: isActive ? DonyColors.surface : DonyColors.textMuted,
+              ),
+              const SizedBox(width: DonySpacing.xxs),
+            ],
+            Text(
+              label,
+              style: tt.labelSmall?.copyWith(
+                color: isActive ? DonyColors.surface : DonyColors.ink900,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── _UrgencyChip ──────────────────────────────────────────────────────────────
+
+// ── _HomeCorridorSheet ────────────────────────────────────────────────────────
+
+class _HomeCorridorSheet extends StatefulWidget {
+  const _HomeCorridorSheet({
+    required this.corridor,
+    required this.onApply,
+    required this.corridorOptions,
+  });
+
+  final _CorridorOpt corridor;
+  final void Function(_CorridorOpt corridor) onApply;
+  final List<_CorridorOpt> corridorOptions;
+
+  @override
+  State<_HomeCorridorSheet> createState() => _HomeCorridorSheetState();
+}
+
+class _HomeCorridorSheetState extends State<_HomeCorridorSheet> {
+  late _CorridorOpt _corridor;
+
+  @override
+  void initState() {
+    super.initState();
+    _corridor = widget.corridor;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return DraggableScrollableSheet(
+      initialChildSize: 0.70,
+      minChildSize: 0.50,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (sheetCtx, scrollCtrl) => Container(
+        decoration: const BoxDecoration(
+          color: DonyColors.white,
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+        ),
+        child: Column(
+          children: [
+            Center(
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: DonyColors.neutral200,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                0,
+                DonySpacing.lg,
+                DonySpacing.md,
+              ),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Corridor',
+                  style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+            const Divider(height: 1, color: DonyColors.neutral200),
+            Expanded(
+              child: SingleChildScrollView(
+                controller: scrollCtrl,
+                padding: const EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.lg,
+                  DonySpacing.lg,
+                  DonySpacing.xxl,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: List.generate(widget.corridorOptions.length, (i) {
+                    final opt = widget.corridorOptions[i];
+                    final isSelected = opt.label == _corridor.label;
+                    return GestureDetector(
+                      onTap: () => setState(() => _corridor = opt),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: DonySpacing.xs),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: DonySpacing.base,
+                          vertical: DonySpacing.md,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? DonyColors.primarySoft
+                              : DonyColors.bgApp,
+                          borderRadius: BorderRadius.circular(DonyRadius.card),
+                          border: Border.all(
+                            color: isSelected
+                                ? DonyColors.primary
+                                : DonyColors.neutral200,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                opt.label,
+                                style: tt.bodyMedium?.copyWith(
+                                  color: isSelected
+                                      ? DonyColors.primary
+                                      : DonyColors.ink900,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                ),
+                              ),
+                            ),
+                            if (isSelected)
+                              const Icon(
+                                Icons.check_circle_rounded,
+                                size: 18,
+                                color: DonyColors.primary,
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.base,
+                DonySpacing.lg,
+                MediaQuery.of(sheetCtx).padding.bottom + DonySpacing.base,
+              ),
+              decoration: const BoxDecoration(
+                color: DonyColors.white,
+                border: Border(top: BorderSide(color: DonyColors.neutral200)),
+              ),
+              child: DonyButton(
+                label: 'Appliquer',
+                onPressed: () {
+                  Navigator.of(sheetCtx).pop();
+                  widget.onApply(_corridor);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── _DatePresetSheet ──────────────────────────────────────────────────────────
+
+class _DatePresetSheet extends StatefulWidget {
+  const _DatePresetSheet({
+    required this.currentPreset,
+    required this.customDate,
+  });
+
+  final _DatePreset currentPreset;
+  final DateTime? customDate;
+
+  @override
+  State<_DatePresetSheet> createState() => _DatePresetSheetState();
+}
+
+class _DatePresetSheetState extends State<_DatePresetSheet> {
+  late _DatePreset _selected;
+  late DateTime? _customDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = widget.currentPreset;
+    _customDate = widget.customDate;
+  }
+
+  Future<void> _pickCustomDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _customDate ?? DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      locale: const Locale('fr'),
+    );
+    if (picked != null && mounted) {
+      setState(() {
+        _selected = _DatePreset.custom;
+        _customDate = picked;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+    return Container(
+      decoration: const BoxDecoration(
+        color: DonyColors.white,
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        0,
+        DonySpacing.lg,
+        bottomPad + DonySpacing.base,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: DonyColors.neutral200,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          Text(
+            'Date de départ',
+            style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: DonySpacing.md),
+          _PresetOption(
+            label: 'Aujourd\'hui',
+            isSelected: _selected == _DatePreset.today,
+            onTap: () => setState(() => _selected = _DatePreset.today),
+          ),
+          _PresetOption(
+            label: 'Cette semaine',
+            isSelected: _selected == _DatePreset.thisWeek,
+            onTap: () => setState(() => _selected = _DatePreset.thisWeek),
+          ),
+          _PresetOption(
+            label: 'Ce mois-ci',
+            isSelected: _selected == _DatePreset.thisMonth,
+            onTap: () => setState(() => _selected = _DatePreset.thisMonth),
+          ),
+          _PresetOption(
+            label: _selected == _DatePreset.custom && _customDate != null
+                ? DateFormat('EEE d MMM', 'fr').format(_customDate!)
+                : 'Choisir une date',
+            isSelected: _selected == _DatePreset.custom,
+            onTap: _pickCustomDate,
+          ),
+          const SizedBox(height: DonySpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(
+                    (preset: _DatePreset.none, customDate: null as DateTime?),
+                  ),
+                  child: Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: DonyColors.bgApp,
+                      borderRadius: BorderRadius.circular(DonyRadius.card),
+                      border: Border.all(color: DonyColors.neutral200),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Effacer',
+                        style: tt.labelLarge?.copyWith(
+                          color: DonyColors.ink900,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: DonyButton(
+                  label: 'Appliquer',
+                  onPressed: () => Navigator.of(context).pop(
+                    (preset: _selected, customDate: _customDate),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── _PresetOption ─────────────────────────────────────────────────────────────
+
+class _PresetOption extends StatelessWidget {
+  const _PresetOption({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.base,
+          vertical: DonySpacing.md,
+        ),
+        margin: const EdgeInsets.only(bottom: DonySpacing.xs),
+        decoration: BoxDecoration(
+          color: isSelected ? DonyColors.primarySoft : Colors.transparent,
+          borderRadius: BorderRadius.circular(DonyRadius.card),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: tt.bodyMedium?.copyWith(
+                  color: isSelected ? DonyColors.primary : DonyColors.ink900,
+                  fontWeight:
+                      isSelected ? FontWeight.w600 : FontWeight.w400,
+                ),
+              ),
+            ),
+            if (isSelected)
+              const Icon(
+                Icons.check_rounded,
+                size: 18,
+                color: DonyColors.primary,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── _RatingFilterSheet ────────────────────────────────────────────────────────
+
+class _RatingFilterSheet extends StatefulWidget {
+  const _RatingFilterSheet({this.currentRating});
+  final double? currentRating;
+
+  @override
+  State<_RatingFilterSheet> createState() => _RatingFilterSheetState();
+}
+
+class _RatingFilterSheetState extends State<_RatingFilterSheet> {
+  double? _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = widget.currentRating;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+
+    const ratings = [4.0, 4.5, 4.7, 5.0];
+    return Container(
+      decoration: const BoxDecoration(
+        color: DonyColors.white,
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+          DonySpacing.lg, 0, DonySpacing.lg, bottomPad + DonySpacing.base),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                  color: DonyColors.neutral200,
+                  borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          Text('Note minimum',
+              style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: DonySpacing.md),
+          for (final r in ratings)
+            _PresetOption(
+              label: r == 5.0
+                  ? '★ 5.0 uniquement'
+                  : '★ ${r.toStringAsFixed(1)} et plus',
+              isSelected: _selected == r,
+              onTap: () => setState(() => _selected = r),
+            ),
+          const SizedBox(height: DonySpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(-1.0),
+                  child: Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: DonyColors.bgApp,
+                      borderRadius: BorderRadius.circular(DonyRadius.card),
+                      border: Border.all(color: DonyColors.neutral200),
+                    ),
+                    child: Center(
+                      child: Text('Effacer',
+                          style: tt.labelLarge?.copyWith(
+                              color: DonyColors.ink900,
+                              fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: DonyButton(
+                  label: 'Appliquer',
+                  onPressed: () =>
+                      Navigator.of(context).pop(_selected ?? -1.0),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── _WeightRangeSheet ─────────────────────────────────────────────────────────
+
+class _WeightRangeSheet extends StatefulWidget {
+  const _WeightRangeSheet({this.currentMin, this.currentMax});
+  final double? currentMin;
+  final double? currentMax;
+
+  @override
+  State<_WeightRangeSheet> createState() => _WeightRangeSheetState();
+}
+
+class _WeightRangeSheetState extends State<_WeightRangeSheet> {
+  static const double _kMin = 1.0;
+  static const double _kMax = 50.0;
+
+  late double _min;
+  late double _max;
+
+  @override
+  void initState() {
+    super.initState();
+    _min = widget.currentMin ?? _kMin;
+    _max = widget.currentMax ?? _kMax;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: DonyColors.white,
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+          DonySpacing.lg, 0, DonySpacing.lg, bottomPad + DonySpacing.base),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                  color: DonyColors.neutral200,
+                  borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          Text('Capacité kilo',
+              style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: DonySpacing.xl),
+          Center(
+            child: Text(
+              '${_min.toInt()} – ${_max.toInt()} kg',
+              style: tt.headlineMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: DonyColors.primary,
+              ),
+            ),
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: DonyColors.primary,
+              thumbColor: DonyColors.primary,
+              overlayColor: DonyColors.primarySoft,
+              inactiveTrackColor: DonyColors.neutral200,
+            ),
+            child: RangeSlider(
+              values: RangeValues(_min, _max),
+              min: _kMin,
+              max: _kMax,
+              divisions: (_kMax - _kMin).toInt(),
+              onChanged: (v) =>
+                  setState(() {
+                    _min = v.start;
+                    _max = v.end;
+                  }),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('1 kg',
+                    style: tt.bodySmall?.copyWith(color: DonyColors.textMuted)),
+                Text('50 kg',
+                    style: tt.bodySmall?.copyWith(color: DonyColors.textMuted)),
+              ],
+            ),
+          ),
+          const SizedBox(height: DonySpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context)
+                      .pop((min: 0.0, max: 0.0)),
+                  child: Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: DonyColors.bgApp,
+                      borderRadius: BorderRadius.circular(DonyRadius.card),
+                      border: Border.all(color: DonyColors.neutral200),
+                    ),
+                    child: Center(
+                      child: Text('Effacer',
+                          style: tt.labelLarge?.copyWith(
+                              color: DonyColors.ink900,
+                              fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: DonyButton(
+                  label: 'Appliquer',
+                  onPressed: () =>
+                      Navigator.of(context).pop((min: _min, max: _max)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── _PriceFilterSheet ─────────────────────────────────────────────────────────
+
+class _PriceFilterSheet extends StatefulWidget {
+  const _PriceFilterSheet({this.currentMaxPrice});
+  final double? currentMaxPrice;
+
+  @override
+  State<_PriceFilterSheet> createState() => _PriceFilterSheetState();
+}
+
+class _PriceFilterSheetState extends State<_PriceFilterSheet> {
+  static const double _kMin = 3.0;
+  static const double _kMax = 25.0;
+
+  late double _maxPrice;
+
+  @override
+  void initState() {
+    super.initState();
+    _maxPrice = widget.currentMaxPrice ?? _kMax;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+    final isAtMax = _maxPrice >= _kMax;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: DonyColors.white,
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+          DonySpacing.lg, 0, DonySpacing.lg, bottomPad + DonySpacing.base),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                  color: DonyColors.neutral200,
+                  borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          Text('Prix maximum',
+              style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: DonySpacing.xl),
+          Center(
+            child: Text(
+              isAtMax ? 'Tous les prix' : '≤ ${_maxPrice.toInt()} €/kg',
+              style: tt.headlineMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: isAtMax ? DonyColors.textMuted : DonyColors.primary,
+              ),
+            ),
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: DonyColors.primary,
+              thumbColor: DonyColors.primary,
+              overlayColor: DonyColors.primarySoft,
+              inactiveTrackColor: DonyColors.neutral200,
+            ),
+            child: Slider(
+              value: _maxPrice,
+              min: _kMin,
+              max: _kMax,
+              divisions: (_kMax - _kMin).toInt(),
+              onChanged: (v) => setState(() => _maxPrice = v),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('3 €/kg',
+                    style: tt.bodySmall?.copyWith(color: DonyColors.textMuted)),
+                Text('25 €/kg',
+                    style: tt.bodySmall?.copyWith(color: DonyColors.textMuted)),
+              ],
+            ),
+          ),
+          const SizedBox(height: DonySpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context).pop(-1.0),
+                  child: Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: DonyColors.bgApp,
+                      borderRadius: BorderRadius.circular(DonyRadius.card),
+                      border: Border.all(color: DonyColors.neutral200),
+                    ),
+                    child: Center(
+                      child: Text('Effacer',
+                          style: tt.labelLarge?.copyWith(
+                              color: DonyColors.ink900,
+                              fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: DonyButton(
+                  label: 'Appliquer',
+                  onPressed: () =>
+                      Navigator.of(context).pop(isAtMax ? -1.0 : _maxPrice),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

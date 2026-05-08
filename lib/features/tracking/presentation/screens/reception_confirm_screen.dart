@@ -21,8 +21,8 @@ class ReceptionConfirmScreen extends StatefulWidget {
 }
 
 class _ReceptionConfirmScreenState extends State<ReceptionConfirmScreen> {
-  static const _kCodeLength = 4;
-  static const _kInitialSeconds = 272; // 4:32 shown in maquette
+  static const _kCodeLength = 6;
+  static const _kInitialSeconds = 900; // 15 min — matches server-side expiry
 
   final _codeController = TextEditingController();
   final _focusNode = FocusNode();
@@ -360,7 +360,7 @@ class _CodeTabContent extends StatelessWidget {
         const SizedBox(height: DonySpacing.lg),
         Center(
           child: Pinput(
-            length: 4,
+            length: 6,
             controller: codeController,
             focusNode: focusNode,
             defaultPinTheme: defaultTheme,

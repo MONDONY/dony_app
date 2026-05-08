@@ -10,6 +10,7 @@ import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/presentation/widgets/qr_code_card.dart';
+import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
@@ -23,7 +24,10 @@ import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.dart';
+import 'package:dony/features/matching/presentation/widgets/handover_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/route_map_components.dart';
+import 'package:dony/features/ratings/bloc/rating_bloc.dart';
+import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:intl/intl.dart';
 
 class BidDetailScreen extends StatelessWidget {
@@ -46,6 +50,7 @@ class BidDetailScreen extends StatelessWidget {
         BlocProvider(create: (_) => getIt<BidBloc>()),
         BlocProvider(create: (_) => getIt<TrackingBloc>()),
         BlocProvider(create: (_) => getIt<ConversationOpenBloc>()),
+        BlocProvider(create: (_) => getIt<RatingBloc>()),
       ],
       child: _BidDetailView(initialBid: bid, fromPayment: fromPayment),
     );
@@ -132,7 +137,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
           DonySnackbar.show(context,
               message: 'Demande acceptée ! Définissez maintenant la fenêtre de remise.',
               type: DonySnackbarType.success);
-          context.push('/bids/${_bid.id}/handover', extra: _bid);
+          HandoverBottomSheet.show(context, bid: _bid);
         } else if (state is BidRejected) {
           _bid = state.bid;
           DonySnackbar.show(context, message: 'Demande refusée.');
@@ -361,6 +366,21 @@ class _BidDetailViewState extends State<_BidDetailView> {
                       if (_bid.status == 'COMPLETED') ...[
                         const SizedBox(height: DonySpacing.base),
                         _PaymentReleaseCard(bid: _bid),
+                      ],
+
+                      // Rating CTA (sender only, bid completed)
+                      if (isSender && _bid.status == 'COMPLETED') ...[
+                        const SizedBox(height: DonySpacing.base),
+                        DonyButton(
+                          label: 'Noter le voyageur',
+                          icon: Icons.star_rounded,
+                          variant: DonyButtonVariant.secondary,
+                          onPressed: () => RatingBottomSheet.show(
+                            context,
+                            bidId: _bid.id,
+                            travelerName: _bid.travelerName ?? 'le voyageur',
+                          ),
+                        ),
                       ],
 
                       // Cancel section (traveler only, ACCEPTED or IN_TRANSIT)
@@ -1924,7 +1944,7 @@ class _TimelineButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     return GestureDetector(
-      onTap: () => context.push('/tracking/${bid.id}/timeline', extra: _corridor),
+      onTap: () => showTrackingTimelineSheet(context, bidId: bid.id, corridor: _corridor),
       child: Container(
         padding: const EdgeInsets.all(DonySpacing.base),
         decoration: BoxDecoration(

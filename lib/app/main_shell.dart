@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
@@ -85,29 +87,32 @@ class _DonyBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     return BlocBuilder<AuthBloc, AuthState>(
+      buildWhen: (p, c) =>
+          (p is AuthAuthenticated) != (c is AuthAuthenticated) ||
+          (c is AuthAuthenticated && (p as AuthAuthenticated?)?.user.isProAccount !=
+              (c as AuthAuthenticated).user.isProAccount) ||
+          (c is AuthProfileUpdated),
       builder: (context, authState) {
-        final user = authState is AuthAuthenticated
-            ? authState.user
-            : authState is AuthProfileUpdated
-                ? authState.user
-                : null;
-        final isTraveler = user?.isTraveler ?? false;
-        final isSender = user?.isSender ?? false;
-        // Priorité voyageur en cas de dual-role (cohérent avec home_screen.dart)
-        final showTravelerNav = isTraveler;
-        final isDualRole = isTraveler && isSender;
+        UserModel? authUser;
+        if (authState is AuthAuthenticated) authUser = authState.user;
+        if (authState is AuthProfileUpdated) authUser = authState.user;
+        final isProAccount = authUser?.isProAccount ?? false;
+
+        return BlocBuilder<ActiveRoleCubit, ActiveRole>(
+      builder: (context, activeRole) {
+        final isTraveler = activeRole == ActiveRole.traveler;
 
         // Tab 1 — Envoyer (sender) ou Trajets (traveler)
-        final tab1Label = showTravelerNav ? 'Trajets' : 'Envoyer';
-        final tab1Icon = showTravelerNav
+        final tab1Label = isTraveler ? 'Trajets' : 'Envoyer';
+        final tab1Icon = isTraveler
             ? Icons.send_rounded
             : Icons.arrow_circle_right_rounded;
-        final tab1IconOutlined = showTravelerNav
+        final tab1IconOutlined = isTraveler
             ? Icons.send_outlined
             : Icons.arrow_circle_right_outlined;
 
         // Tab 2 — Suivi (libellé fixe, icône role-aware)
-        final tab2Icon = showTravelerNav
+        final tab2Icon = isTraveler
             ? Icons.qr_code_scanner_rounded
             : Icons.track_changes_rounded;
 
@@ -160,33 +165,44 @@ class _DonyBottomNav extends StatelessWidget {
                   index: 2,
                   currentIndex: currentIndex,
                   onTap: () {
-                    if (isDualRole) {
-                      onTap(2);
-                    } else if (showTravelerNav) {
+                    if (isTraveler) {
                       context.push('/tracking/scan');
-                    } else if (isSender) {
-                      context.push('/tracking/search');
                     } else {
-                      onTap(2);
+                      context.push('/tracking/search');
                     }
                   },
                 ),
               ),
               // 3 — Messages
               Expanded(
-                child: StreamBuilder<int>(
-                  stream: getIt<FirestoreChatRepository>().totalUnreadStream(
-                    FirebaseAuth.instance.currentUser?.uid ?? '',
-                  ),
-                  builder: (context, snapshot) {
-                    return _NavItem(
+                child: Builder(
+                  builder: (context) {
+                    final uid = FirebaseAuth.instance.currentUser?.uid;
+                    final messagesItem = _NavItem(
                       icon: Icons.chat_bubble_rounded,
                       outlinedIcon: Icons.chat_bubble_outline_rounded,
                       label: 'Messages',
                       index: 3,
                       currentIndex: currentIndex,
                       onTap: () => onTap(3),
-                      badgeCount: snapshot.data ?? 0,
+                    );
+                    if (uid == null || uid.isEmpty) {
+                      // Pendant le sign-out : pas de stream Firestore (path vide invalide).
+                      return messagesItem;
+                    }
+                    return StreamBuilder<int>(
+                      stream: getIt<FirestoreChatRepository>().totalUnreadStream(uid),
+                      builder: (context, snapshot) {
+                        return _NavItem(
+                          icon: Icons.chat_bubble_rounded,
+                          outlinedIcon: Icons.chat_bubble_outline_rounded,
+                          label: 'Messages',
+                          index: 3,
+                          currentIndex: currentIndex,
+                          onTap: () => onTap(3),
+                          badgeCount: snapshot.data ?? 0,
+                        );
+                      },
                     );
                   },
                 ),
@@ -200,12 +216,15 @@ class _DonyBottomNav extends StatelessWidget {
                   index: 4,
                   currentIndex: currentIndex,
                   onTap: () => onTap(4),
+                  isPro: isProAccount,
                 ),
               ),
             ],
           ),
         ),
       ),
+        );
+      },
         );
       },
     );
@@ -221,6 +240,7 @@ class _NavItem extends StatelessWidget {
     required this.currentIndex,
     required this.onTap,
     this.badgeCount = 0,
+    this.isPro = false,
   });
 
   final IconData icon;
@@ -230,6 +250,7 @@ class _NavItem extends StatelessWidget {
   final int currentIndex;
   final VoidCallback onTap;
   final int badgeCount;
+  final bool isPro;
 
   bool get _active => index == currentIndex;
 
@@ -239,7 +260,7 @@ class _NavItem extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
         children: [
           // Barre indicatrice en haut (style Coclis)
           AnimatedContainer(
@@ -277,7 +298,7 @@ class _NavItem extends StatelessWidget {
                           _active ? icon : outlinedIcon,
                           key: ValueKey('${index}_${_active ? 'a' : 'i'}'),
                           size: 22,
-                          color: _active ? DonyColors.primary : DonyColors.neutral700,
+                          color: _active ? DonyColors.primary : DonyColors.textSubtle,
                         ),
                       ),
                     ),
@@ -287,8 +308,27 @@ class _NavItem extends StatelessWidget {
                         top: 2,
                         child: _NavBadge(count: badgeCount),
                       ),
+                    if (isPro)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          width: 14,
+                          height: 14,
+                          decoration: const BoxDecoration(
+                            color: DonyColors.warning,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.star_rounded,
+                            color: DonyColors.white,
+                            size: 9,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
+                const SizedBox(height: DonySpacing.xxs),
                 AnimatedDefaultTextStyle(
                   duration: const Duration(milliseconds: 200),
                   style: Theme.of(context).textTheme.labelSmall!.copyWith(

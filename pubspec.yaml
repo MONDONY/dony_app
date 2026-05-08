@@ -46,6 +46,7 @@ dependencies:
 
   # State management
   flutter_bloc: ^8.1.6
+  rxdart: ^0.28.0
 
   # Navigation
   go_router: ^14.0.0
@@ -63,14 +64,20 @@ dependencies:
   flutter_secure_storage: ^9.2.2
   google_fonts: ^6.2.1
 
-  # WebView (Stripe Identity)
+  # WebView (Stripe Identity, KYC)
   webview_flutter: ^4.10.0
+
+  # External browser (Stripe Connect onboarding)
+  url_launcher: ^6.3.0
 
   # Notifications
   flutter_local_notifications: ^18.0.0
 
   # Splash
   flutter_native_splash: ^2.4.3
+
+  # Deep links
+  app_links: ^6.3.4
 
   # Utils
   intl: ^0.20.2

@@ -158,7 +158,10 @@ class _NotificationList extends StatelessWidget {
                 .read<NotificationBloc>()
                 .add(const NotificationsLoadRequested()),
             child: ListView.separated(
-              padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
+              padding: EdgeInsets.only(
+                top: DonySpacing.sm,
+                bottom: DonySpacing.sm + MediaQuery.of(context).viewPadding.bottom,
+              ),
               itemCount: state.notifications.length,
               separatorBuilder: (_, __) => Divider(
                 height: 1,

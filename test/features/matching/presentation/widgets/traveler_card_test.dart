@@ -12,6 +12,7 @@ AnnouncementModel _makeAnn({String arrivalCity = 'Dakar', bool kiloPro = false})
       arrivalCity: arrivalCity,
       departureDate: DateTime(2026, 6, 15),
       availableKg: 8,
+      totalKg: 8,
       pricePerKg: 12,
       status: 'ACTIVE',
       createdAt: DateTime(2026, 5, 1),
@@ -78,6 +79,31 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byType(TravelerCard));
       expect(tapped, isTrue);
+    });
+  });
+
+  group('TravelerCard – distanceBadge', () {
+    testWidgets('affiche le badge quand distanceBadge est fourni', (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+        distanceBadge: 'CDG · 8 km',
+      )));
+      await tester.pumpAndSettle();
+      expect(find.text('CDG · 8 km'), findsOneWidget);
+    });
+
+    testWidgets('n\'affiche rien quand distanceBadge est null', (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+      )));
+      await tester.pumpAndSettle();
+      expect(find.text('CDG · 8 km'), findsNothing);
     });
   });
 }

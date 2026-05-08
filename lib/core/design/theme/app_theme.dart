@@ -2,6 +2,7 @@ import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:dony/core/design/tokens/typography_tokens.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 abstract final class AppTheme {
   static ThemeData get light => _build();
@@ -44,6 +45,14 @@ abstract final class AppTheme {
         centerTitle: false,
         titleTextStyle: DonyTypography.textTheme.headlineMedium?.copyWith(
           color: DonyColors.textPrimary,
+        ),
+        // Barre nav transparente sur tous les écrans avec AppBar
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          systemNavigationBarColor: Colors.transparent,
+          systemNavigationBarDividerColor: Colors.transparent,
+          systemNavigationBarContrastEnforced: false,
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
         ),
       ),
       cardTheme: CardThemeData(

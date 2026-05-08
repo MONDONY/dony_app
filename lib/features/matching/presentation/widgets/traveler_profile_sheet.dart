@@ -72,8 +72,9 @@ class _TravelerProfileSheet extends StatelessWidget {
           Expanded(
             child: ListView(
               controller: scrollController,
-              padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg, 0, DonySpacing.lg, DonySpacing.huge,
+              padding: EdgeInsets.fromLTRB(
+                DonySpacing.lg, 0, DonySpacing.lg,
+                DonySpacing.xl + MediaQuery.of(context).viewPadding.bottom,
               ),
               children: [
                 // Avatar + name + phone
@@ -83,7 +84,8 @@ class _TravelerProfileSheet extends StatelessWidget {
                       DonyAvatar(
                         name: traveler.resolvedName,
                         size: DonyAvatarSize.xl,
-                        verified: true,
+                        verified: traveler.kycVerified,
+                        pro: traveler.isProAccount,
                       ),
                       const SizedBox(height: DonySpacing.md),
                       Text(
@@ -120,6 +122,14 @@ class _TravelerProfileSheet extends StatelessWidget {
                         runSpacing: 6,
                         alignment: WrapAlignment.center,
                         children: [
+                          if (traveler.isProAccount)
+                            const _SheetBadge(
+                              icon: Icons.star_rounded,
+                              label: 'Compte PRO',
+                              iconColor: DonyColors.warning,
+                              bgColor: DonyColors.warning50,
+                              textColor: DonyColors.warning,
+                            ),
                           if (traveler.kiloPro)
                             const _SheetBadge(
                               icon: Icons.star_rounded,
@@ -128,13 +138,14 @@ class _TravelerProfileSheet extends StatelessWidget {
                               bgColor: DonyColors.amberLight,
                               textColor: DonyColors.amberDark,
                             ),
-                          _SheetBadge(
-                            icon: Icons.verified_rounded,
-                            label: 'Identité vérifiée',
-                            iconColor: cs.primary,
-                            bgColor: cs.primaryContainer,
-                            textColor: cs.primary,
-                          ),
+                          if (traveler.kycVerified)
+                            _SheetBadge(
+                              icon: Icons.verified_rounded,
+                              label: 'Identité vérifiée',
+                              iconColor: cs.primary,
+                              bgColor: cs.primaryContainer,
+                              textColor: cs.primary,
+                            ),
                         ],
                       ),
                     ],

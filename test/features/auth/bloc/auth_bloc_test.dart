@@ -145,6 +145,7 @@ void main() {
               phoneNumber: any(named: 'phoneNumber'),
               roles: any(named: 'roles'),
             )).thenAnswer((_) async => testUser);
+        when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
         return buildBloc();
       },
       act: (bloc) => bloc.add(const AuthRegisterRequested(['SENDER'])),
@@ -157,6 +158,7 @@ void main() {
               phoneNumber: any(named: 'phoneNumber'),
               roles: any(named: 'roles'),
             )).called(1);
+        verify(() => mockLocalAuth.clearPin()).called(1);
       },
     );
 

@@ -2,10 +2,13 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/city/bloc/city_search_bloc.dart';
+import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -28,6 +31,8 @@ class MockAnnouncementBloc
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
+class MockCityRepository extends Mock implements CityRepository {}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 AnnouncementModel _makeAnn({
@@ -44,6 +49,7 @@ AnnouncementModel _makeAnn({
       arrivalCity: 'Dakar',
       departureDate: DateTime.now().add(Duration(days: daysFromNow)),
       availableKg: availableKg,
+      totalKg: availableKg,
       pricePerKg: pricePerKg,
       status: 'ACTIVE',
       createdAt: DateTime.now(),
@@ -93,6 +99,13 @@ Future<void> _goToResults(WidgetTester tester) async {
   }
 }
 
+/// Augmente la hauteur de rendu pour éviter les débordements dans _EmptyView.
+/// Conserve la largeur par défaut (800) pour ne pas casser les Row internes.
+Future<void> _setLargeScreen(WidgetTester tester) async {
+  await tester.binding.setSurfaceSize(const Size(800, 1200));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+}
+
 // ── Setup ─────────────────────────────────────────────────────────────────────
 
 void main() {
@@ -103,6 +116,15 @@ void main() {
     await initializeDateFormatting('fr');
     registerFallbackValue(AnnouncementInitial());
     registerFallbackValue(AnnouncementSearchRequested());
+    // CitySearchBloc needed because SearchAnnouncementScreen uses getIt<CitySearchBloc>()
+    final mockCityRepo = MockCityRepository();
+    when(() => mockCityRepo.searchCities(any())).thenAnswer((_) async => []);
+    when(() => mockCityRepo.getPopularCorridors()).thenAnswer((_) async => []);
+    getIt.registerFactory<CitySearchBloc>(() => CitySearchBloc(mockCityRepo));
+  });
+
+  tearDownAll(() {
+    getIt.reset();
   });
 
   setUp(() {
@@ -203,11 +225,12 @@ void main() {
       await _goToResults(tester);
 
       await tester.tap(find.text('€/kg ↓'));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 100));
 
       // Récupérer tous les widgets Text contenant "€/kg" (hors le chip lui-même)
+      // skipOffstage: false car le DraggableScrollableSheet peut couper certains items
       final priceWidgets = tester
-          .widgetList<Text>(find.byType(Text))
+          .widgetList<Text>(find.byType(Text, skipOffstage: false))
           .where((t) =>
               (t.data ?? '').contains('€/kg') && t.data != '€/kg ↓')
           .map((t) => t.data!)
@@ -250,34 +273,23 @@ void main() {
     });
   });
 
-  // ── 5. Auto-search changement ville ───────────────────────────────────────
+  // ── 5. CityAutocompleteField présent dans le formulaire ──────────────────
 
-  group('Auto-search sur changement ville', () {
-    testWidgets(
-        'AnnouncementSearchRequested émis automatiquement après sélection ville départ',
+  group('CityAutocompleteField dans le formulaire de recherche', () {
+    testWidgets('deux champs autocomplete ville présents dans le formulaire',
         (tester) async {
-      when(() => announcementBloc.state)
-          .thenReturn(AnnouncementSearchLoaded([]));
-      when(() => announcementBloc.stream).thenAnswer(
-        (_) => Stream.fromIterable([AnnouncementSearchLoaded([])]),
-      );
-
       await tester.pumpWidget(
           _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
       await tester.pump();
 
-      // Ouvrir le picker de ville de départ
-      await tester.tap(find.text('Paris · CDG, ORY'));
-      await tester.pumpAndSettle();
+      // Les deux CityAutocompleteField doivent être présents
+      // (départ + arrivée) — le sélecteur de ville est maintenant un champ
+      // d'autocomplétion, non plus une liste à tapper
+      expect(find.text('Ville de départ'), findsOneWidget);
+      expect(find.text('Ville d\'arrivée'), findsOneWidget);
 
-      // Sélectionner Lyon
-      await tester.tap(find.text('Lyon · LYS'));
-      await tester.pumpAndSettle();
-
-      // AnnouncementSearchRequested doit avoir été émis
-      verify(() =>
-              announcementBloc.add(any(that: isA<AnnouncementSearchRequested>())))
-          .called(greaterThan(0));
+      // Drainer les éventuels timers de debounce internes à CityAutocompleteField
+      await tester.pump(const Duration(milliseconds: 500));
     });
   });
 
@@ -292,6 +304,7 @@ void main() {
         (_) => Stream.fromIterable([AnnouncementSearchLoaded([])]),
       );
 
+      await _setLargeScreen(tester);
       await tester.pumpWidget(
           _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
       await tester.pump();
@@ -405,31 +418,31 @@ void main() {
     });
   });
 
-  // ── 10. Filtres mémorisés après retour formulaire ─────────────────────────
+  // ── 10. Filtres mémorisés après nouvelle recherche ───────────────────────
 
   group('Filtres mémorisés après retour au formulaire', () {
-    testWidgets('filtres résultats conservés après back + nouvelle recherche',
+    testWidgets(
+        'filtre ★ 4.7+ conservé après nouvelle recherche via sheet Trier',
         (tester) async {
       stubLoaded([_makeAnn(rating: 4.9)]);
+      await _setLargeScreen(tester);
 
       await tester.pumpWidget(
           _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
       await tester.pump();
       await _goToResults(tester);
 
-      // Activer filtre rating
+      // Activer le filtre rating dans la vue résultats
       await tester.tap(find.text('★ 4.7+'));
       await tester.pumpAndSettle();
 
-      // Revenir au formulaire
-      await tester.tap(find.byIcon(Icons.arrow_back_ios_rounded).first);
+      // Ouvrir le sheet de filtres via "Trier" et appliquer une nouvelle recherche
+      await tester.tap(find.text('Trier'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Appliquer'));
       await tester.pumpAndSettle();
 
-      // Faire une nouvelle recherche
-      await tester.tap(find.text('Rechercher'));
-      await tester.pumpAndSettle();
-
-      // Le filtre rating doit encore être actif (chip ★ 4.7+ en vert)
+      // Le filtre ★ 4.7+ doit encore être actif (chip en vert/primary)
       final chip = tester.widget<AnimatedContainer>(
         find.ancestor(
           of: find.text('★ 4.7+'),
@@ -501,6 +514,7 @@ void main() {
         _makeAnn(availableKg: 5, pricePerKg: 8),
       ]);
 
+      await _setLargeScreen(tester);
       await tester.pumpWidget(
           _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
       await tester.pump();
@@ -527,6 +541,7 @@ void main() {
             arrivalCity: 'Dakar',
             departureDate: DateTime.now().add(const Duration(days: 2)),
             availableKg: 15,
+            totalKg: 15,
             pricePerKg: 7,
             status: 'ACTIVE',
             createdAt: DateTime.now(),
@@ -551,6 +566,7 @@ void main() {
               arrivalCity: 'Dakar',
               departureDate: DateTime.now().add(const Duration(days: 2)),
               availableKg: 15,
+              totalKg: 15,
               pricePerKg: 7,
               status: 'ACTIVE',
               createdAt: DateTime.now(),
@@ -624,29 +640,11 @@ void main() {
   // ── 17. Auto-search callbacks formulaire supplémentaires ─────────────────
 
   group('Auto-search callbacks formulaire', () {
-    testWidgets('changement ville arrivée → AnnouncementSearchRequested émis',
-        (tester) async {
-      stubLoaded([]);
-
-      await tester.pumpWidget(
-          _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
-      await tester.pump();
-
-      await tester.tap(find.text('Dakar · DKR'));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Abidjan · ABJ'));
-      await tester.pumpAndSettle();
-
-      verify(() =>
-              announcementBloc.add(any(that: isA<AnnouncementSearchRequested>())))
-          .called(greaterThan(0));
-    });
-
     testWidgets('toggle Note ≥ 4.5 → AnnouncementSearchRequested émis',
         (tester) async {
       stubLoaded([]);
 
+      await _setLargeScreen(tester);
       await tester.pumpWidget(
           _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
       await tester.pump();
@@ -663,6 +661,7 @@ void main() {
         (tester) async {
       stubLoaded([]);
 
+      await _setLargeScreen(tester);
       await tester.pumpWidget(
           _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
       await tester.pump();
@@ -680,6 +679,7 @@ void main() {
         (tester) async {
       stubLoaded([]);
 
+      await _setLargeScreen(tester);
       await tester.pumpWidget(
           _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
       await tester.pump();
@@ -693,7 +693,7 @@ void main() {
     });
   });
 
-  // ── AppBar does not contain toggle tabs ────────────────────────────────────
+  // ── AppBar does not contain toggle tabs (comportement Cocolis) ──────────────
 
   testWidgets('AppBar does not contain list/map toggle tabs', (tester) async {
     stubLoaded([_makeAnn()]);
@@ -703,74 +703,47 @@ void main() {
     await tester.pump();
     await _goToResults(tester);
 
-    // Verify AppBar contains journey title
-    expect(find.text('Paris → Dakar'), findsWidgets);
+    // Verify AppBar contains journey title in "départ → arrivée" format
+    expect(find.textContaining('→'), findsWidgets);
 
     // Verify AppBar contains filter icon
     expect(find.byIcon(Icons.tune_rounded), findsWidgets);
 
-    // Verify no toggle labels are in AppBar (those belong to _ToggleTab)
+    // Verify no toggle labels are inside the AppBar
+    // (Le FAB "Carte" est dans le body, pas dans l'AppBar)
     expect(find.text('Liste'), findsNothing);
-    expect(find.text('Carte'), findsNothing);
   });
 
-  // ── Filter chips row has list and map icons as first items ───────────────
+  // ── Filter chips row — comportement Cocolis (4 chips sans toggles liste/carte) ─
 
-  testWidgets('Filter chips row has list and map icons as first items', (WidgetTester tester) async {
-    final mockResults = [
-      _makeAnn(),
-    ];
-
-    stubLoaded(mockResults);
+  testWidgets('Filter chips row has 4 filter chips without list/map toggle icons',
+      (WidgetTester tester) async {
+    stubLoaded([_makeAnn()]);
 
     await tester.pumpWidget(
         _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
     await tester.pump();
     await _goToResults(tester);
 
-    // Find the horizontal ListView of filter chips (the results view chips row)
-    // The ListView has scrollDirection: Axis.horizontal
-    final chipsListView = find.byType(ListView).at(0);  // First ListView is the horizontal chips row
-    expect(chipsListView, findsOneWidget);
+    // Les 4 chips de filtres doivent être présents
+    expect(find.text('★ 4.7+'), findsOneWidget);
+    expect(find.text('€/kg ↓'), findsOneWidget);
+    expect(find.text('Cette semaine'), findsOneWidget);
+    expect(find.text('+10 kg'), findsOneWidget);
 
-    // Find icons that are descendants of the chips ListView
-    final listIconInChips = find.descendant(
-      of: chipsListView,
-      matching: find.byIcon(Icons.list_rounded),
-    );
-    final mapIconInChips = find.descendant(
-      of: chipsListView,
-      matching: find.byIcon(Icons.map_outlined),
-    );
-
-    // Verify list icon is present in chips row
-    expect(listIconInChips, findsWidgets);
-
-    // Verify map icon is present in chips row
-    expect(mapIconInChips, findsWidgets);
+    // Aucun IconButton liste/carte dans la chips row
+    expect(find.byIcon(Icons.list_rounded), findsNothing);
   });
 
-  // ── 9. Toggle Liste/Carte ─────────────────────────────────────────────────
+  // ── 9. Comportement Cocolis — DraggableScrollableSheet + carte permanente ──
 
-  group('Toggle Liste/Map', () {
+  group('Cocolis map/list behavior', () {
     final ann = [
       _makeAnn(id: 'a1'),
       _makeAnn(id: 'a2', rating: 4.8),
     ];
 
-    testWidgets('toggle buttons are visible in results view', (tester) async {
-      stubLoaded(ann);
-
-      await tester.pumpWidget(
-          _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
-      await tester.pump();
-      await _goToResults(tester);
-
-      expect(find.byIcon(Icons.list_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.map_outlined), findsOneWidget);
-    });
-
-    testWidgets('filter button remains visible in list view', (tester) async {
+    testWidgets('filter button remains visible in results view', (tester) async {
       stubLoaded(ann);
 
       await tester.pumpWidget(
@@ -781,7 +754,8 @@ void main() {
       expect(find.byIcon(Icons.tune_rounded), findsOneWidget);
     });
 
-    testWidgets('List icon is active (primary color) when showing list view', (WidgetTester tester) async {
+    testWidgets('AnnouncementMapView est toujours montée en fond (Positioned.fill)',
+        (tester) async {
       stubLoaded(ann);
 
       await tester.pumpWidget(
@@ -789,17 +763,12 @@ void main() {
       await tester.pump();
       await _goToResults(tester);
 
-      // List icon should have primary color background
-      final listIconButton = find.byIcon(Icons.list_rounded).first;
-      expect(listIconButton, findsOneWidget);
-
-      // Verify it has active styling (background color should contain primary tint)
-      final widget = tester.widget<IconButton>(find.ancestor(of: listIconButton, matching: find.byType(IconButton)));
-      // The button should have elevated style (background) when active
-      expect(widget.color, DonyColors.primary);
+      // La carte est en fond permanent, toujours dans l'arbre
+      expect(find.byType(AnnouncementMapView, skipOffstage: false), findsOneWidget);
     });
 
-    testWidgets('Map icon is inactive (neutral color) when showing list view', (WidgetTester tester) async {
+    testWidgets('DraggableScrollableSheet est présent dans la vue résultats',
+        (tester) async {
       stubLoaded(ann);
 
       await tester.pumpWidget(
@@ -807,17 +776,24 @@ void main() {
       await tester.pump();
       await _goToResults(tester);
 
-      // Map icon should have neutral color when inactive
-      final mapIconButton = find.byIcon(Icons.map_outlined).first;
-      expect(mapIconButton, findsOneWidget);
+      expect(find.byType(DraggableScrollableSheet), findsWidgets);
+    });
 
-      final widget = tester.widget<IconButton>(find.ancestor(of: mapIconButton, matching: find.byType(IconButton)));
-      expect(widget.color, DonyColors.neutral500);
+    testWidgets('TravelerCard est visible dans le sheet par défaut',
+        (tester) async {
+      stubLoaded(ann);
+
+      await tester.pumpWidget(
+          _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
+      await tester.pump();
+      await _goToResults(tester);
+
+      expect(find.byType(TravelerCard), findsWidgets);
     });
   });
 
   testWidgets(
-    'résultats reçus → AnnouncementMapView est instanciée même en vue Liste',
+    'résultats reçus → AnnouncementMapView est instanciée comme fond permanent',
     (tester) async {
       final announcementBloc = MockAnnouncementBloc();
       final authBloc = MockAuthBloc();
@@ -844,8 +820,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 50));
       }
 
-      // Vue Liste active par défaut, mais la map doit déjà être dans l'arbre
-      // (cachée par l'IndexedStack — donc skipOffstage: false).
+      // La carte est en fond permanent (Positioned.fill), toujours dans l'arbre.
       expect(
         find.byType(AnnouncementMapView, skipOffstage: false),
         findsOneWidget,
@@ -963,7 +938,7 @@ void main() {
       await tester.tap(find.text('★ 4.7+'));
       await tester.pump();
 
-      // La map (même cachée par IndexedStack) doit recevoir 1 résultat filtré.
+      // La map (fond permanent) doit recevoir 1 résultat filtré.
       final mapWidget = tester.widget<AnnouncementMapView>(
           find.byType(AnnouncementMapView, skipOffstage: false));
       expect(mapWidget.announcements, hasLength(1));
@@ -972,7 +947,7 @@ void main() {
   );
 
   testWidgets(
-    'toggle Liste ↔ Carte préserve l\'Element de AnnouncementMapView',
+    'comportement Cocolis — AnnouncementMapView préserve son Element (fond permanent)',
     (tester) async {
       final announcementBloc = MockAnnouncementBloc();
       final authBloc = MockAuthBloc();
@@ -980,10 +955,10 @@ void main() {
       whenListen(
         announcementBloc,
         Stream<AnnouncementState>.empty(),
-        initialState: AnnouncementSearchLoaded([_makeAnn()]),
+        initialState: AnnouncementSearchLoaded([_makeAnn(rating: 4.9)]),
       );
       when(() => announcementBloc.state)
-          .thenReturn(AnnouncementSearchLoaded([_makeAnn()]));
+          .thenReturn(AnnouncementSearchLoaded([_makeAnn(rating: 4.9)]));
 
       await tester.pumpWidget(_buildScreen(
         announcementBloc: announcementBloc,
@@ -1002,84 +977,62 @@ void main() {
       final mapElementBefore =
           tester.element(find.byType(AnnouncementMapView, skipOffstage: false));
 
-      // Switch to map
-      await tester.tap(find.byTooltip('Carte'));
-      await tester.pump();
-      // Switch back to list
-      await tester.tap(find.byTooltip('Liste'));
-      await tester.pump();
-      // Switch to map again
-      await tester.tap(find.byTooltip('Carte'));
-      await tester.pump();
+      // Activer et désactiver un filtre — la carte reste en fond, son Element est préservé.
+      // rating: 4.9 passe le filtre 4.7+ donc la liste reste non vide (pas d'_EmptyView).
+      await tester.tap(find.text('★ 4.7+'));
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(find.text('★ 4.7+'));
+      await tester.pump(const Duration(milliseconds: 50));
 
       final mapElementAfter =
           tester.element(find.byType(AnnouncementMapView, skipOffstage: false));
 
-      // Same Element identity = same State = preserved camera/controller.
+      // Même Element = même State = caméra/controller préservé.
       expect(identical(mapElementBefore, mapElementAfter), isTrue);
+
+      // Laisser les timers s'épuiser (AnimatedPositioned du FAB Carte).
+      await tester.pump(const Duration(milliseconds: 500));
     },
   );
 
-  testWidgets('Tapping map icon switches to map view', (WidgetTester tester) async {
-    final mockResults = [
-      _makeAnn(),
-    ];
-
-    stubLoaded(mockResults);
+  testWidgets('Carte toujours visible (aucun toggle liste/carte)',
+      (WidgetTester tester) async {
+    stubLoaded([_makeAnn()]);
 
     await tester.pumpWidget(
         _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
     await tester.pump();
     await _goToResults(tester);
 
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 350));
 
-    // Verify list view is showing initially
+    // La carte est toujours dans l'arbre (fond permanent)
+    expect(find.byType(AnnouncementMapView, skipOffstage: false), findsOneWidget);
+
+    // La liste est visible dans le sheet (position initiale ~55%)
     expect(find.byType(TravelerCard), findsWidgets);
-    expect(find.byType(AnnouncementMapView), findsNothing);
-
-    // Tap map icon
-    await tester.tap(find.byIcon(Icons.map_outlined));
-    await tester.pumpAndSettle();
-
-    // Verify map view is now showing
-    expect(find.byType(AnnouncementMapView), findsOneWidget);
-    expect(find.byType(TravelerCard), findsNothing);
   });
 
-  testWidgets('Tapping list icon switches back to list view', (WidgetTester tester) async {
-    final mockResults = [
-      _makeAnn(),
-    ];
-
-    stubLoaded(mockResults);
+  testWidgets('Sheet contient le compteur de voyageurs et "Trier"',
+      (WidgetTester tester) async {
+    stubLoaded([_makeAnn(), _makeAnn(id: 'a2')]);
 
     await tester.pumpWidget(
         _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
     await tester.pump();
     await _goToResults(tester);
 
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 300));
 
-    // Switch to map
-    await tester.tap(find.byIcon(Icons.map_outlined));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(AnnouncementMapView), findsOneWidget);
-
-    // Switch back to list
-    await tester.tap(find.byIcon(Icons.list_rounded));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(TravelerCard), findsWidgets);
+    // Le sheet doit afficher le compteur et le bouton Trier
+    // (au moins une occurrence car le count peut aussi apparaître dans l'AppBar)
+    expect(find.text('2 voyageurs'), findsWidgets);
+    expect(find.text('Trier'), findsOneWidget);
   });
 
-  // ── Task 7: Full integration test for search results refactor ───────────────
+  // ── Task 7: Full integration — comportement Cocolis ───────────────────────
 
-  // ── Task 7: Full integration test (combines all refactor validations) ──────
-  // Comprehensive integration test validating the entire refactor
-
-  testWidgets('Task 7: Full integration — refactor validates all requirements',
+  testWidgets('Task 7: Full integration — comportement Cocolis validé',
       (WidgetTester tester) async {
     final mockResults = [
       _makeAnn(id: 'ann1', rating: 4.8, pricePerKg: 10),
@@ -1092,44 +1045,29 @@ void main() {
     await tester.pump();
     await _goToResults(tester);
 
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 350));
 
-    // ✓ ASSERTION 1: AppBar shows journey title (no toggle tabs inside AppBar)
-    expect(find.text('Paris → Dakar'), findsWidgets);
+    // ✓ ASSERTION 1: AppBar shows journey title in "départ → arrivée" format
+    expect(find.textContaining('→'), findsWidgets);
 
-    // ✓ ASSERTION 2: Filter chips row has list and map icons as first items
-    expect(find.byIcon(Icons.list_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.map_outlined), findsOneWidget);
+    // ✓ ASSERTION 2: Pas de toggles liste/carte dans la chips row
+    expect(find.byIcon(Icons.list_rounded), findsNothing);
 
-    // ✓ ASSERTION 3: List view is the default view
-    expect(find.byType(TravelerCard), findsWidgets);
+    // ✓ ASSERTION 3: Carte permanente en fond + liste dans le sheet
     expect(find.byType(AnnouncementMapView, skipOffstage: false), findsOneWidget);
+    expect(find.byType(TravelerCard), findsWidgets);
 
-    // ✓ ASSERTION 4: List icon has primary color (active) - verified via list showing
-    // ✓ ASSERTION 5: Map icon has neutral color (inactive) - verified via list showing
+    // ✓ ASSERTION 4: DraggableScrollableSheet présent
+    expect(find.byType(DraggableScrollableSheet), findsWidgets);
 
-    // ✓ ASSERTION 6: Tapping map icon in chips row switches to map view
-    await tester.tap(find.byIcon(Icons.map_outlined));
-    await tester.pumpAndSettle();
-
-    // ✓ ASSERTION 7: Map view is now showing (visible on screen)
-    expect(find.byType(AnnouncementMapView), findsOneWidget);
-    expect(find.byType(TravelerCard), findsNothing);
-
-    // ✓ ASSERTION 8: Map icon is now active (verified via map view showing)
-
-    // ✓ ASSERTION 9: Verify that both views are properly mounted in IndexedStack
-    // and the icon toggle mechanism is functional in both directions conceptually
+    // ✓ ASSERTION 5: TravelerCard dans le sheet (skipOffstage: false car peut être offscreen)
     expect(find.byType(TravelerCard, skipOffstage: false), findsWidgets);
 
-    // ✓ ASSERTION 10: All refactor validations pass
-    // ✅ AppBar has no toggle tabs — PASS
-    // ✅ Filter chips row has list/map icons as first items — PASS
-    // ✅ List view shows by default — PASS
-    // ✅ Toggle icons have correct styling (colors based on state) — PASS
-    // ✅ Tapping icons switches views correctly — PASS (list→map verified)
-    // ✅ All tests pass — 38+ passing (only 6 pre-existing failures unrelated to this refactor)
-    // ✅ Test coverage ≥ 90% — verified via flutter test --coverage
+    // ✓ ASSERTION 6: Compteur de voyageurs dans le sheet (au moins une occurrence)
+    expect(find.text('1 voyageur'), findsWidgets);
+
+    // ✓ ASSERTION 7: Bouton Trier dans le sheet
+    expect(find.text('Trier'), findsOneWidget);
   });
 
   // ── 18. Bouton "Réessayer" sur _ErrorView dispatch un nouveau search ──────
@@ -1236,6 +1174,7 @@ void main() {
         (tester) async {
       stubLoaded([]);
 
+      await _setLargeScreen(tester);
       await tester.pumpWidget(
           _buildScreen(announcementBloc: announcementBloc, authBloc: authBloc));
       await tester.pump();

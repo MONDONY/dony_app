@@ -189,6 +189,7 @@ class _SuggestionCard extends StatelessWidget {
                 arrivalCity: suggestion.arrivalCity,
                 departureDate: suggestion.departureDate,
                 availableKg: suggestion.availableKg,
+                totalKg: suggestion.availableKg,
                 pricePerKg: suggestion.pricePerKg,
                 status: 'ACTIVE',
                 createdAt: DateTime.now(),

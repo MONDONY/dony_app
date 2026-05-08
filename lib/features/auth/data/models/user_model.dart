@@ -13,6 +13,11 @@ class UserModel extends Equatable {
   final String status;
   final int totalTrips;
   final int totalShipments;
+  final bool isProAccount;
+  final String? companyName;
+  final String? siret;
+  final String stripeAccountStatus;
+  final DateTime? deletionRequestedAt;
 
   const UserModel({
     required this.id,
@@ -27,6 +32,11 @@ class UserModel extends Equatable {
     required this.status,
     this.totalTrips = 0,
     this.totalShipments = 0,
+    this.isProAccount = false,
+    this.companyName,
+    this.siret,
+    this.stripeAccountStatus = 'NOT_CREATED',
+    this.deletionRequestedAt,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -40,10 +50,18 @@ class UserModel extends Equatable {
             : null,
         city: json['city'] as String?,
         roles: List<String>.from(json['roles'] as List? ?? []),
-        kycStatus: json['kycStatus'] as String? ?? 'PENDING',
+        kycStatus: json['kycStatus'] as String? ?? 'NOT_STARTED',
         status: json['status'] as String? ?? 'ACTIVE',
         totalTrips: (json['totalTrips'] as num?)?.toInt() ?? 0,
         totalShipments: (json['totalShipments'] as num?)?.toInt() ?? 0,
+        isProAccount: json['isProAccount'] as bool? ?? false,
+        companyName: json['companyName'] as String?,
+        siret: json['siret'] as String?,
+        stripeAccountStatus:
+            json['stripeAccountStatus'] as String? ?? 'NOT_CREATED',
+        deletionRequestedAt: json['deletionRequestedAt'] != null
+            ? DateTime.tryParse(json['deletionRequestedAt'] as String)
+            : null,
       );
 
   String get displayName {
@@ -104,6 +122,7 @@ class UserModel extends Equatable {
   bool get isKycVerified => kycStatus == 'VERIFIED';
   bool get isSender => roles.contains('SENDER');
   bool get isTraveler => roles.contains('TRAVELER');
+  bool get isPendingDeletion => status == 'PENDING_DELETION';
 
   @override
   List<Object?> get props => [
@@ -119,5 +138,10 @@ class UserModel extends Equatable {
         status,
         totalTrips,
         totalShipments,
+        isProAccount,
+        companyName,
+        siret,
+        stripeAccountStatus,
+        deletionRequestedAt,
       ];
 }

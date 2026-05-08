@@ -10,12 +10,14 @@ class DonyAvatar extends StatelessWidget {
     this.imageUrl,
     this.size = DonyAvatarSize.md,
     this.verified = false,
+    this.pro = false,
   });
 
   final String name;
   final String? imageUrl;
   final DonyAvatarSize size;
   final bool verified;
+  final bool pro;
 
   double get _dimension => switch (size) {
     DonyAvatarSize.sm => 32,
@@ -84,6 +86,20 @@ class DonyAvatar extends StatelessWidget {
               height: dim * 0.33,
               decoration: const BoxDecoration(color: DonyColors.success, shape: BoxShape.circle),
               child: Icon(Icons.check, color: DonyColors.white, size: dim * 0.2),
+            ),
+          ),
+        if (pro)
+          Positioned(
+            left: 0,
+            bottom: 0,
+            child: Container(
+              width: dim * 0.36,
+              height: dim * 0.36,
+              decoration: const BoxDecoration(
+                color: DonyColors.warning,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.star_rounded, color: DonyColors.white, size: dim * 0.22),
             ),
           ),
       ],

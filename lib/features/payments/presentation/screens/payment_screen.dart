@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
+import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:flutter/foundation.dart';
@@ -32,10 +33,18 @@ class PaymentScreen extends StatelessWidget {
         if (state is PaymentEscrowPending) {
           return _EscrowConfirmedView(amount: state.amount);
         }
-        return _PaymentSummaryView(
-          bid: bid,
-          state: state,
-          localAuthService: localAuthService ?? getIt<LocalAuthService>(),
+        return BlocBuilder<ConfigBloc, ConfigState>(
+          builder: (context, configState) {
+            final commissionRate = configState is ConfigLoaded
+                ? configState.commissionRate
+                : 0.12; // Fallback to 12% while loading or on error
+            return _PaymentSummaryView(
+              bid: bid,
+              state: state,
+              commissionRate: commissionRate,
+              localAuthService: localAuthService ?? getIt<LocalAuthService>(),
+            );
+          },
         );
       },
     );
@@ -77,25 +86,41 @@ class _PaymentSummaryView extends StatelessWidget {
   final BidModel bid;
   final PaymentState state;
   final LocalAuthService localAuthService;
+  final double commissionRate;
 
   const _PaymentSummaryView({
     required this.bid,
     required this.state,
     required this.localAuthService,
+    required this.commissionRate,
   });
 
   double get _amount => bid.weightKg * (bid.pricePerKg ?? 0);
-  double get _commission => _amount * 0.12;
+  double get _commission => _amount * commissionRate;
 
   Future<void> _pay(BuildContext context) async {
-    final authenticated = await localAuthService.authenticateWithBiometric();
-    if (!context.mounted) return;
-    if (!authenticated) {
-      DonySnackbar.show(
-        context,
-        message: 'Authentification requise',
-        type: DonySnackbarType.error,
-      );
+    bool authenticated = false;
+
+    // Try biometric first if available.
+    final biometricAvailable = await localAuthService.isBiometricAvailable();
+    if (biometricAvailable) {
+      authenticated = await localAuthService.authenticateWithBiometric();
+    }
+
+    // Fall back to PIN if biometric not available or failed.
+    if (!authenticated && context.mounted) {
+      final pinResult = await context.push<bool>('/auth/local');
+      authenticated = pinResult ?? false;
+    }
+
+    if (!context.mounted || !authenticated) {
+      if (context.mounted) {
+        DonySnackbar.show(
+          context,
+          message: 'Authentification requise pour effectuer le paiement',
+          type: DonySnackbarType.error,
+        );
+      }
       return;
     }
     context.read<PaymentBloc>().add(PaymentInitiated(bid.id));
@@ -117,7 +142,12 @@ class _PaymentSummaryView extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _SummaryCard(bid: bid, amount: _amount, commission: _commission),
+                _SummaryCard(
+                  bid: bid,
+                  amount: _amount,
+                  commission: _commission,
+                  commissionRate: commissionRate,
+                ),
                 const SizedBox(height: DonySpacing.lg),
                 const DonyStatusBanner(
                   type: DonyStatusBannerType.info,
@@ -155,11 +185,13 @@ class _SummaryCard extends StatelessWidget {
   final BidModel bid;
   final double amount;
   final double commission;
+  final double commissionRate;
 
   const _SummaryCard({
     required this.bid,
     required this.amount,
     required this.commission,
+    required this.commissionRate,
   });
 
   @override
@@ -204,7 +236,7 @@ class _SummaryCard extends StatelessWidget {
                 ),
                 const DonyInfoRow.divider(),
                 DonyInfoRow(
-                  label: 'Commission dony (12%)',
+                  label: 'Commission dony (${(commissionRate * 100).toStringAsFixed(0)}%)',
                   value: '− ${commission.toStringAsFixed(2)} €',
                   valueStyle: DonyInfoRowValueStyle.muted,
                 ),

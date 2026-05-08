@@ -26,6 +26,7 @@ class BidListScreen extends StatelessWidget {
   final String? departureCityCode;
   final String? arrivalCityCode;
   final DateTime? departureDate;
+  final int initialTabIndex;
 
   const BidListScreen({
     super.key,
@@ -33,6 +34,7 @@ class BidListScreen extends StatelessWidget {
     this.departureCityCode,
     this.arrivalCityCode,
     this.departureDate,
+    this.initialTabIndex = 0,
   });
 
   @override
@@ -45,6 +47,7 @@ class BidListScreen extends StatelessWidget {
         departureCityCode: departureCityCode,
         arrivalCityCode: arrivalCityCode,
         departureDate: departureDate,
+        initialTabIndex: initialTabIndex,
       ),
     );
   }
@@ -59,12 +62,14 @@ class _BidListView extends StatefulWidget {
   final String? departureCityCode;
   final String? arrivalCityCode;
   final DateTime? departureDate;
+  final int initialTabIndex;
 
   const _BidListView({
     required this.announcementId,
     this.departureCityCode,
     this.arrivalCityCode,
     this.departureDate,
+    this.initialTabIndex = 0,
   });
 
   @override
@@ -81,7 +86,7 @@ class _BidListViewState extends State<_BidListView>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 2, vsync: this, initialIndex: widget.initialTabIndex);
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         setState(() {});

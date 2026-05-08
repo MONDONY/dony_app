@@ -18,31 +18,39 @@ abstract final class DonyBottomSheet {
     required Widget child,
     String? title,
     String? subtitle,
+    Widget? stickyBottom,
     bool isDismissible = true,
     bool showHandle = true,
     bool isScrollControlled = true,
-    Widget? stickyBottom,
-    Widget Function(Widget child)? wrapper,
+    bool isDanger = false,
+    double? heightFraction,
+    Widget Function(Widget)? wrapper,
   }) {
-    Widget content = _DonyBottomSheetContent(
-      title: title,
-      subtitle: subtitle,
-      showHandle: showHandle,
-      stickyBottom: stickyBottom,
-      child: child,
-    );
-
-    if (wrapper != null) {
-      content = wrapper(content);
-    }
-
+    final screenHeight = MediaQuery.of(context).size.height;
     return showModalBottomSheet<T>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: isScrollControlled,
       isDismissible: isDismissible,
       backgroundColor: Colors.transparent,
-      builder: (_) => content,
+      constraints: heightFraction != null
+          ? BoxConstraints(
+              minHeight: screenHeight * heightFraction,
+              maxHeight: screenHeight * heightFraction,
+            )
+          : null,
+      builder: (ctx) {
+        final Widget content = _DonyBottomSheetContent(
+          title: title,
+          subtitle: subtitle,
+          showHandle: showHandle,
+          isDanger: isDanger,
+          expand: heightFraction != null,
+          stickyBottom: stickyBottom,
+          child: child,
+        );
+        return wrapper != null ? wrapper(content) : content;
+      },
     );
   }
 }
@@ -52,34 +60,44 @@ class _DonyBottomSheetContent extends StatelessWidget {
     required this.child,
     this.title,
     this.subtitle,
-    this.showHandle = true,
     this.stickyBottom,
+    this.showHandle = true,
+    this.isDanger = false,
+    this.expand = false,
   });
 
   final Widget child;
   final String? title;
   final String? subtitle;
-  final bool showHandle;
   final Widget? stickyBottom;
+  final bool showHandle;
+  final bool isDanger;
+  final bool expand;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final mq = MediaQuery.of(context);
+    final bottomInset = mq.viewInsets.bottom + mq.viewPadding.bottom;
+    final topMargin = mq.size.height * 0.1;
+
+    final bgColor = isDanger ? cs.errorContainer : cs.surface;
+    final handleColor = isDanger
+        ? cs.error.withValues(alpha: 0.35)
+        : DonyColors.neutral300;
 
     return Container(
-      margin: const EdgeInsets.only(top: DonySpacing.huge),
+      margin: expand ? EdgeInsets.zero : EdgeInsets.only(top: topMargin),
       decoration: BoxDecoration(
-        color: cs.surface,
+        color: bgColor,
         borderRadius: const BorderRadius.vertical(
           top: Radius.circular(DonyRadius.sheet),
         ),
         boxShadow: DonyShadow.sheet,
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (showHandle)
@@ -89,7 +107,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: DonyColors.neutral300,
+                  color: handleColor,
                   borderRadius: BorderRadius.circular(DonyRadius.full),
                 ),
               ),
@@ -105,7 +123,12 @@ class _DonyBottomSheetContent extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(title!, style: tt.headlineSmall),
+                        Text(
+                          title!,
+                          style: tt.headlineSmall?.copyWith(
+                            color: isDanger ? cs.error : null,
+                          ),
+                        ),
                         if (subtitle != null) ...[
                           const SizedBox(height: DonySpacing.xs),
                           Text(
@@ -137,20 +160,33 @@ class _DonyBottomSheetContent extends StatelessWidget {
                 DonySpacing.lg,
                 title != null ? 0 : DonySpacing.sm,
                 DonySpacing.lg,
-                stickyBottom != null ? DonySpacing.sm : DonySpacing.xl + bottomInset,
+                stickyBottom != null ? DonySpacing.xl : DonySpacing.xl + bottomInset,
               ),
               child: child,
             ),
           ),
           if (stickyBottom != null)
-            Padding(
+            Container(
+              decoration: BoxDecoration(
+                color: bgColor,
+                border: Border(
+                  top: BorderSide(color: DonyColors.neutral200, width: 1),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
               padding: EdgeInsets.fromLTRB(
                 DonySpacing.lg,
-                DonySpacing.sm,
+                DonySpacing.md,
                 DonySpacing.lg,
-                bottomPadding + DonySpacing.base,
+                bottomInset + DonySpacing.base,
               ),
-              child: stickyBottom,
+              child: stickyBottom!,
             ),
         ],
       ),

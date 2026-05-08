@@ -4,23 +4,100 @@ import 'package:dony/features/auth/bloc/local_auth_event.dart';
 import 'package:dony/features/auth/bloc/local_auth_state.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
   final LocalAuthService _service;
+  final FlutterSecureStorage _secureStorage;
   int _attemptsLeft = 3;
 
-  LocalAuthBloc(this._service) : super(const LocalAuthInitial()) {
+  static const _keyAttemptsLeft = 'pin_attempts_left';
+  static const _keyLockoutUntil = 'pin_lockout_until';
+  static const _maxAttempts = 3;
+  static const _lockoutSeconds = 30;
+
+  LocalAuthBloc(
+    this._service, {
+    FlutterSecureStorage? secureStorage,
+  })  : _secureStorage = secureStorage ??
+            const FlutterSecureStorage(
+              aOptions: AndroidOptions(encryptedSharedPreferences: true),
+            ),
+        super(const LocalAuthInitial()) {
     on<LocalAuthStarted>(_onStarted);
     on<LocalAuthBiometricRequested>(_onBiometricRequested);
     on<LocalAuthPinSubmitted>(_onPinSubmitted);
     on<LocalAuthLockExpired>(_onLockExpired);
   }
 
-  Future<void> _onStarted(LocalAuthStarted event, Emitter<LocalAuthState> emit) async {
-    emit(const LocalAuthChecking());
-    _attemptsLeft = 3;
+  // ── Persistence helpers ────────────────────────────────────────────────────
 
-    // Si aucun PIN n'est configuré → demander de le créer
+  Future<void> _persistAttempts(int attempts) async {
+    await _secureStorage.write(
+      key: _keyAttemptsLeft,
+      value: attempts.toString(),
+    );
+  }
+
+  Future<int> _loadAttempts() async {
+    final raw = await _secureStorage.read(key: _keyAttemptsLeft);
+    if (raw == null) return _maxAttempts;
+    return int.tryParse(raw) ?? _maxAttempts;
+  }
+
+  Future<void> _persistLockoutUntil(DateTime until) async {
+    await _secureStorage.write(
+      key: _keyLockoutUntil,
+      value: until.toIso8601String(),
+    );
+  }
+
+  Future<DateTime?> _loadLockoutUntil() async {
+    final raw = await _secureStorage.read(key: _keyLockoutUntil);
+    if (raw == null) return null;
+    return DateTime.tryParse(raw);
+  }
+
+  Future<void> _clearLockout() async {
+    await _secureStorage.delete(key: _keyLockoutUntil);
+  }
+
+  Future<void> _resetAttemptsAndPersist() async {
+    _attemptsLeft = _maxAttempts;
+    await _persistAttempts(_maxAttempts);
+    await _clearLockout();
+  }
+
+  // ── Event handlers ─────────────────────────────────────────────────────────
+
+  Future<void> _onStarted(
+    LocalAuthStarted event,
+    Emitter<LocalAuthState> emit,
+  ) async {
+    emit(const LocalAuthChecking());
+
+    // Check for active lockout from a previous session.
+    final lockoutUntil = await _loadLockoutUntil();
+    if (lockoutUntil != null && DateTime.now().isBefore(lockoutUntil)) {
+      final secondsLeft = lockoutUntil.difference(DateTime.now()).inSeconds;
+      _attemptsLeft = 0;
+      emit(LocalAuthLocked(secondsLeft > 0 ? secondsLeft : _lockoutSeconds));
+      return;
+    }
+    // Lockout expired — clear it.
+    if (lockoutUntil != null) {
+      await _clearLockout();
+    }
+
+    // Load persisted attempt counter.
+    _attemptsLeft = await _loadAttempts();
+    // Clamp to valid range.
+    if (_attemptsLeft <= 0 || _attemptsLeft > _maxAttempts) {
+      _attemptsLeft = _maxAttempts;
+      await _persistAttempts(_maxAttempts);
+    }
+
+    // Si aucun PIN n'est configuré → demander de le créer.
     final pinSet = await _service.isPinSet();
     if (!pinSet) {
       emit(const LocalAuthNoPinSet());
@@ -33,6 +110,7 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
       final success = await _service.authenticateWithBiometric();
       if (!isClosed && !emit.isDone) {
         if (success) {
+          await _resetAttemptsAndPersist();
           emit(const LocalAuthSuccess());
           return;
         }
@@ -53,14 +131,18 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
   ) async {
     final success = await _service.authenticateWithBiometric();
     if (success && !emit.isDone) {
+      await _resetAttemptsAndPersist();
       emit(const LocalAuthSuccess());
     }
   }
 
-  Future<void> _onPinSubmitted(LocalAuthPinSubmitted event, Emitter<LocalAuthState> emit) async {
+  Future<void> _onPinSubmitted(
+    LocalAuthPinSubmitted event,
+    Emitter<LocalAuthState> emit,
+  ) async {
     final valid = await _service.validatePin(event.pin);
     if (valid) {
-      _attemptsLeft = 3;
+      await _resetAttemptsAndPersist();
       emit(const LocalAuthSuccess());
       return;
     }
@@ -68,11 +150,16 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
     _attemptsLeft--;
     if (_attemptsLeft <= 0) {
       _attemptsLeft = 0;
-      // Widget will manage the countdown timer and dispatch LocalAuthLockExpired
-      emit(const LocalAuthLocked(30));
+      await _persistAttempts(0);
+      final lockoutUntil =
+          DateTime.now().add(const Duration(seconds: _lockoutSeconds));
+      await _persistLockoutUntil(lockoutUntil);
+      // Widget will manage the countdown timer and dispatch LocalAuthLockExpired.
+      emit(const LocalAuthLocked(_lockoutSeconds));
       return;
     }
 
+    await _persistAttempts(_attemptsLeft);
     final biometricAvailable = await _service.isBiometricAvailable();
     if (!emit.isDone) {
       emit(LocalAuthPinRequired(
@@ -82,8 +169,11 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
     }
   }
 
-  void _onLockExpired(LocalAuthLockExpired event, Emitter<LocalAuthState> emit) {
-    _attemptsLeft = 3;
+  Future<void> _onLockExpired(
+    LocalAuthLockExpired event,
+    Emitter<LocalAuthState> emit,
+  ) async {
+    await _resetAttemptsAndPersist();
     emit(const LocalAuthPinRequired());
   }
 }

@@ -1,4 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dony/features/city/bloc/city_search_bloc.dart';
+import 'package:dony/features/city/data/city_datasource.dart';
+import 'package:dony/features/city/data/city_repository.dart';
+import 'package:dony/features/config/bloc/config_bloc.dart';
+import 'package:dony/features/config/data/config_datasource.dart';
+import 'package:dony/features/config/data/config_repository.dart';
+import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
+import 'package:dony/features/connect_onboarding/data/connect_onboarding_datasource.dart';
+import 'package:dony/features/connect_onboarding/data/connect_onboarding_repository.dart';
+import 'package:dony/features/profile/data/profile_repository.dart';
+import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
+import 'package:dony/features/settings/data/account_deletion_repository.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
@@ -7,6 +19,7 @@ import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/auth/data/datasources/auth_remote_datasource.dart';
@@ -35,6 +48,8 @@ import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:dony/features/payments/data/datasources/payment_remote_datasource.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
+import 'package:dony/features/ratings/bloc/rating_bloc.dart';
+import 'package:dony/features/ratings/data/rating_repository.dart';
 import 'package:get_it/get_it.dart';
 
 final getIt = GetIt.instance;
@@ -42,6 +57,9 @@ final getIt = GetIt.instance;
 Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Core
   getIt.registerLazySingleton<HiveService>(() => HiveService());
+  getIt.registerLazySingleton<ActiveRoleCubit>(
+    () => ActiveRoleCubit(hiveService: getIt<HiveService>()),
+  );
   getIt.registerLazySingleton<ApiClient>(() => ApiClient(baseUrl: apiBaseUrl));
   getIt.registerLazySingleton<NotificationRemoteDatasource>(
     () => NotificationRemoteDatasource(getIt<ApiClient>()),
@@ -157,6 +175,49 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => ConversationOpenBloc(getIt<ConversationRepository>()),
   );
 
+  // Config (commission rate)
+  getIt.registerLazySingleton<ConfigDatasource>(
+    () => ConfigDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<IConfigRepository>(
+    () => ConfigRepository(getIt<ConfigDatasource>()),
+  );
+  getIt.registerFactory<ConfigBloc>(
+    () => ConfigBloc(getIt<IConfigRepository>()),
+  );
+
+  // Connect onboarding
+  getIt.registerLazySingleton<ConnectOnboardingDatasource>(
+    () => ConnectOnboardingDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<IConnectOnboardingRepository>(
+    () => ConnectOnboardingRepository(getIt<ConnectOnboardingDatasource>()),
+  );
+  getIt.registerFactory<ConnectOnboardingBloc>(
+    () => ConnectOnboardingBloc(getIt<IConnectOnboardingRepository>()),
+  );
+
+  // Profile (upgrade PRO)
+  getIt.registerLazySingleton<ProfileRepository>(
+    () => ProfileRepository(getIt<ApiClient>()),
+  );
+
+  // Settings — Account Deletion
+  getIt.registerLazySingleton<AccountDeletionRepository>(
+    () => AccountDeletionRepository(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<AccountDeletionBloc>(
+    () => AccountDeletionBloc(getIt<AccountDeletionRepository>()),
+  );
+
+  // Ratings
+  getIt.registerLazySingleton<RatingRepository>(
+    () => RatingRepository(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<RatingBloc>(
+    () => RatingBloc(getIt<RatingRepository>()),
+  );
+
   // Tracking
   getIt.registerLazySingleton<TrackingRepository>(
     () => TrackingRepository(getIt<ApiClient>()),
@@ -167,5 +228,16 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<TrackingBloc>(
     () => TrackingBloc(getIt<TrackingRepository>(), getIt<OfflineSyncService>()),
+  );
+
+  // City autocomplete
+  getIt.registerLazySingleton<CityDatasource>(
+    () => CityDatasource(dio: getIt<ApiClient>().dio),
+  );
+  getIt.registerLazySingleton<CityRepository>(
+    () => CityRepository(datasource: getIt<CityDatasource>()),
+  );
+  getIt.registerFactory<CitySearchBloc>(
+    () => CitySearchBloc(getIt<CityRepository>()),
   );
 }
