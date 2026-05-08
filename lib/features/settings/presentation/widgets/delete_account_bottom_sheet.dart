@@ -88,8 +88,9 @@ class _DeleteAccountBottomSheetState
     final mode = widget.modeNotifier.value;
 
     if (mode == DeleteMode.soft) {
-      final softBloc = bloc;
-      Navigator.of(context, rootNavigator: true).pop();
+      // Dialog shown while sheet is still mounted so context stays valid.
+      // BlocListener catches AccountDeletionRequested (below) to close the sheet
+      // and show the snackbar while still in the tree.
       DonyDialog.show(
         context,
         title: 'Confirmer la pause',
@@ -98,7 +99,7 @@ class _DeleteAccountBottomSheetState
         variant: DonyDialogVariant.info,
         icon: Icons.hourglass_empty_rounded,
       ).then((confirmed) {
-        if (confirmed == true) softBloc.add(const RequestDeletion());
+        if (confirmed == true && mounted) bloc.add(const RequestDeletion());
       });
     } else if (mode == DeleteMode.hard) {
       final hardBloc = bloc;
@@ -114,6 +115,7 @@ class _DeleteAccountBottomSheetState
     return BlocListener<AccountDeletionBloc, AccountDeletionState>(
       listener: (context, state) {
         if (state is AccountDeletionRequested) {
+          Navigator.of(context, rootNavigator: true).pop();
           DonySnackbar.show(
             context,
             message:

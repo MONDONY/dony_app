@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
+import 'package:dony/features/settings/presentation/widgets/delete_confirmation_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pinput/pinput.dart';
@@ -109,8 +110,18 @@ class _DeleteOtpSheetState extends State<DeleteOtpSheet> {
     return BlocListener<AccountDeletionBloc, AccountDeletionState>(
       listener: (context, state) {
         if (state is AccountDeletionImmediate) {
+          final authBloc = context.read<AuthBloc>();
           Navigator.of(context, rootNavigator: true).pop();
-          context.read<AuthBloc>().add(const AuthLogoutRequested());
+          authBloc.add(const AuthLogoutRequested());
+        } else if (state is AccountDeletionError && state.isReauthRequired) {
+          final deletionBloc = context.read<AccountDeletionBloc>();
+          Navigator.of(context, rootNavigator: true).pop();
+          DonySnackbar.show(
+            context,
+            message: state.message,
+            type: DonySnackbarType.error,
+          );
+          DeleteConfirmationSheet.show(context, deletionBloc);
         } else if (state is AccountDeletionError) {
           DonySnackbar.show(
             context,
