@@ -1,4 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dony/features/city/bloc/city_search_bloc.dart';
+import 'package:dony/features/city/data/city_datasource.dart';
+import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/config/data/config_datasource.dart';
 import 'package:dony/features/config/data/config_repository.dart';
@@ -225,5 +228,16 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<TrackingBloc>(
     () => TrackingBloc(getIt<TrackingRepository>(), getIt<OfflineSyncService>()),
+  );
+
+  // City autocomplete
+  getIt.registerLazySingleton<CityDatasource>(
+    () => CityDatasource(dio: getIt<ApiClient>().dio),
+  );
+  getIt.registerLazySingleton<CityRepository>(
+    () => CityRepository(datasource: getIt<CityDatasource>()),
+  );
+  getIt.registerFactory<CitySearchBloc>(
+    () => CitySearchBloc(getIt<CityRepository>()),
   );
 }
