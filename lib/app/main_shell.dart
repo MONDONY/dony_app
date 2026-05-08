@@ -241,52 +241,64 @@ class _NavItem extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOutCubic,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.md,
-                  vertical: DonySpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: _active ? DonyColors.primarySoft : Colors.transparent,
-                  borderRadius: BorderRadius.circular(DonyRadius.xl),
-                ),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeInCubic,
-                  transitionBuilder: (child, animation) => ScaleTransition(
-                    scale: animation,
-                    child: FadeTransition(opacity: animation, child: child),
-                  ),
-                  child: Icon(
-                    _active ? icon : outlinedIcon,
-                    key: ValueKey('${index}_${_active ? 'a' : 'i'}'),
-                    size: 22,
-                    color: _active ? DonyColors.primary : DonyColors.neutral700,
-                  ),
-                ),
-              ),
-              if (badgeCount > 0)
-                Positioned(
-                  right: 2,
-                  top: 2,
-                  child: _NavBadge(count: badgeCount),
-                ),
-            ],
-          ),
-          const SizedBox(height: DonySpacing.xxs),
-          AnimatedDefaultTextStyle(
+          // Barre indicatrice en haut (style Coclis)
+          AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            style: Theme.of(context).textTheme.labelSmall!.copyWith(
-              fontWeight: _active ? FontWeight.w700 : FontWeight.w500,
-              color: _active ? DonyColors.primary : DonyColors.textSubtle,
+            curve: Curves.easeOutCubic,
+            height: 3,
+            decoration: BoxDecoration(
+              color: _active ? DonyColors.primary : Colors.transparent,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(3),
+                bottomRight: Radius.circular(3),
+              ),
             ),
-            child: Text(label),
+          ),
+          // Icône + label centrés dans l'espace restant
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.md,
+                        vertical: DonySpacing.xs,
+                      ),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 220),
+                        transitionBuilder: (child, animation) => ScaleTransition(
+                          scale: animation,
+                          child: FadeTransition(opacity: animation, child: child),
+                        ),
+                        child: Icon(
+                          _active ? icon : outlinedIcon,
+                          key: ValueKey('${index}_${_active ? 'a' : 'i'}'),
+                          size: 22,
+                          color: _active ? DonyColors.primary : DonyColors.neutral700,
+                        ),
+                      ),
+                    ),
+                    if (badgeCount > 0)
+                      Positioned(
+                        right: 2,
+                        top: 2,
+                        child: _NavBadge(count: badgeCount),
+                      ),
+                  ],
+                ),
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 200),
+                  style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                    fontWeight: _active ? FontWeight.w700 : FontWeight.w500,
+                    color: _active ? DonyColors.primary : DonyColors.textSubtle,
+                  ),
+                  child: Text(label),
+                ),
+              ],
+            ),
           ),
         ],
       ),

@@ -60,13 +60,20 @@ class _DonyButtonState extends State<DonyButton> {
             mainAxisSize: widget.fullWidth ? MainAxisSize.max : MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (widget.icon != null) ...[Icon(widget.icon, size: 18), const SizedBox(width: DonySpacing.xs)],
+              if (widget.icon != null) ...[
+                Icon(widget.icon, size: 18),
+                const SizedBox(width: DonySpacing.xs),
+              ],
               Text(widget.label),
-              if (widget.iconRight != null) ...[const SizedBox(width: DonySpacing.xs), Icon(widget.iconRight, size: 18)],
+              if (widget.iconRight != null) ...[
+                const SizedBox(width: DonySpacing.xs),
+                Icon(widget.iconRight, size: 18),
+              ],
             ],
           );
 
-    final minSize = widget.fullWidth ? const Size.fromHeight(52) : const Size(120, 52);
+    final minSize =
+        widget.fullWidth ? const Size.fromHeight(52) : const Size(120, 52);
     const contentPadding = EdgeInsets.symmetric(horizontal: 16);
 
     final button = switch (widget.variant) {
@@ -91,6 +98,7 @@ class _DonyButtonState extends State<DonyButton> {
           style: TextButton.styleFrom(
             minimumSize: minSize,
             padding: contentPadding,
+            side: const BorderSide(color: DonyColors.borderDefault),
           ),
           child: child,
         ),

@@ -33,7 +33,10 @@ abstract final class DonySnackbar {
             borderRadius: BorderRadius.circular(DonyRadius.sm),
           ),
           margin: const EdgeInsets.fromLTRB(
-            DonySpacing.base, DonySpacing.base, DonySpacing.base, DonySpacing.lg,
+            DonySpacing.base,
+            DonySpacing.base,
+            DonySpacing.base,
+            DonySpacing.lg,
           ),
           dismissDirection: DismissDirection.horizontal,
           action: actionLabel != null

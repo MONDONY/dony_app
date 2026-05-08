@@ -14,6 +14,7 @@ class NearMeRadiusSheet {
     final radiusNotifier = ValueNotifier<double>(
       initialRadiusKm.clamp(minRadiusKm, maxRadiusKm),
     );
+
     return DonyBottomSheet.show<double>(
       context,
       title: 'Près de moi',
@@ -21,7 +22,7 @@ class NearMeRadiusSheet {
         valueListenable: radiusNotifier,
         builder: (_, radius, __) => DonyButton(
           label: 'Activer le filtre',
-          onPressed: () => Navigator.of(context, rootNavigator: true).pop(radius),
+          onPressed: () => Navigator.of(context).pop(radius),
         ),
       ),
       child: _NearMeRadiusContent(radiusNotifier: radiusNotifier),
@@ -30,57 +31,47 @@ class NearMeRadiusSheet {
 }
 
 class _NearMeRadiusContent extends StatelessWidget {
-  const _NearMeRadiusContent({required this.radiusNotifier});
-
   final ValueNotifier<double> radiusNotifier;
+
+  const _NearMeRadiusContent({required this.radiusNotifier});
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+
+    return ValueListenableBuilder<double>(
+      valueListenable: radiusNotifier,
+      builder: (context, radius, _) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.my_location_rounded, color: DonyColors.primary),
-            const SizedBox(width: DonySpacing.xs),
-            Text('Rayon de recherche', style: tt.titleMedium),
-          ],
-        ),
-        const SizedBox(height: DonySpacing.sm),
-        Text(
-          "On garde uniquement les annonces dont le point de remise est dans ce rayon autour de toi.",
-          style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
-        ),
-        const SizedBox(height: DonySpacing.lg),
-        ValueListenableBuilder<double>(
-          valueListenable: radiusNotifier,
-          builder: (_, radius, __) => Column(
-            children: [
-              Center(
-                child: Text(
-                  '${radius.round()} km',
-                  style: tt.displaySmall?.copyWith(
-                    color: DonyColors.primary,
-                    fontWeight: FontWeight.w800,
-                  ),
+            Text(
+              'On garde uniquement les annonces dont le point de remise est dans ce rayon autour de toi.',
+              style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+            ),
+            const SizedBox(height: DonySpacing.lg),
+            Center(
+              child: Text(
+                '${radius.round()} km',
+                style: tt.displaySmall?.copyWith(
+                  color: DonyColors.primary,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
-              Slider(
-                value: radius,
-                min: NearMeRadiusSheet.minRadiusKm,
-                max: NearMeRadiusSheet.maxRadiusKm,
-                divisions: 39,
-                label: '${radius.round()} km',
-                activeColor: DonyColors.primary,
-                onChanged: (v) => radiusNotifier.value = v,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: DonySpacing.sm),
-      ],
+            ),
+            Slider(
+              value: radius,
+              min: NearMeRadiusSheet.minRadiusKm,
+              max: NearMeRadiusSheet.maxRadiusKm,
+              divisions: 39,
+              label: '${radius.round()} km',
+              activeColor: DonyColors.primary,
+              onChanged: (v) => radiusNotifier.value = v,
+            ),
+          ],
+        );
+      },
     );
   }
 }

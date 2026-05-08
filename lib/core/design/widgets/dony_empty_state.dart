@@ -7,8 +7,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 enum DonyEmptyStateType { empty, error, loading }
 
-/// État vide / erreur / chargement standardisé.
-/// Conforme HIG : icône + titre + description + CTA optionnel.
 class DonyEmptyState extends StatelessWidget {
   const DonyEmptyState({
     super.key,
@@ -42,10 +40,10 @@ class DonyEmptyState extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               CircularProgressIndicator(color: cs.primary, strokeWidth: 2),
-              const SizedBox(height: DonySpacing.base),
+              const SizedBox(height: DonySpacing.lg),
               Text(
-                'Chargement en cours…',
-                style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+                'Chargement en cours...',
+                style: tt.bodyMedium?.copyWith(color: DonyColors.textMuted),
               ),
             ],
           ),
@@ -54,9 +52,21 @@ class DonyEmptyState extends StatelessWidget {
     }
 
     final (bg, ic, defaultIcon) = switch (type) {
-      DonyEmptyStateType.empty   => (DonyColors.primarySoft, DonyColors.primary, Icons.inbox_outlined),
-      DonyEmptyStateType.error   => (DonyColors.errorLight,  DonyColors.error,   Icons.wifi_off_rounded),
-      DonyEmptyStateType.loading => (DonyColors.primarySoft, DonyColors.primary, Icons.sync_rounded),
+      DonyEmptyStateType.empty => (
+          DonyColors.primarySoft,
+          DonyColors.primary,
+          Icons.inbox_outlined,
+        ),
+      DonyEmptyStateType.error => (
+          DonyColors.errorLight,
+          DonyColors.error,
+          Icons.wifi_off_rounded,
+        ),
+      DonyEmptyStateType.loading => (
+          DonyColors.primarySoft,
+          DonyColors.primary,
+          Icons.sync_rounded,
+        ),
     };
 
     return Center(
@@ -70,24 +80,23 @@ class DonyEmptyState extends StatelessWidget {
               size: DonyIconContainerSize.xl,
               backgroundColor: bg,
               iconColor: ic,
-            ).animate()
-              .fadeIn(duration: 400.ms)
-              .scaleXY(begin: 0.82, curve: Curves.easeOutBack),
+            )
+                .animate()
+                .fadeIn(duration: 400.ms, curve: Curves.easeOutCubic)
+                .scaleXY(begin: 0.82, duration: 400.ms, curve: Curves.easeOutBack),
             const SizedBox(height: DonySpacing.xl),
             Text(
               title,
               style: tt.headlineSmall,
               textAlign: TextAlign.center,
-            ).animate(delay: 80.ms)
-              .fadeIn()
-              .slideY(begin: 0.05),
+            ).animate(delay: 80.ms).fadeIn(duration: 300.ms).slideY(begin: 0.05),
             if (description != null) ...[
               const SizedBox(height: DonySpacing.sm),
               Text(
                 description!,
                 style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400),
                 textAlign: TextAlign.center,
-              ).animate(delay: 140.ms).fadeIn(),
+              ).animate(delay: 140.ms).fadeIn(duration: 300.ms),
             ],
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: DonySpacing.xl),
@@ -98,9 +107,7 @@ class DonyEmptyState extends StatelessWidget {
                     ? DonyButtonVariant.primary
                     : DonyButtonVariant.secondary,
                 fullWidth: false,
-              ).animate(delay: 200.ms)
-                .fadeIn()
-                .slideY(begin: 0.05),
+              ).animate(delay: 200.ms).fadeIn(duration: 300.ms).slideY(begin: 0.05),
             ],
           ],
         ),

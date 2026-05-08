@@ -100,6 +100,206 @@ class _SenderViewState extends State<_SenderView> {
     super.dispose();
   }
 
+  void _dispatchSearch() {
+    if (!mounted) return;
+    // Near-me bypasses corridor: we want ALL travelers near the user
+    final ignoreCorridor = _allCorridors || _isNearMeActive;
+    context.read<AnnouncementBloc>().add(AnnouncementSearchRequested(
+          departureCity:
+              ignoreCorridor ? null : _corridor.departure.split(' ').first,
+          arrivalCity:
+              ignoreCorridor ? null : _corridor.arrival.split(' ').first,
+          departureDateFrom: _dateFrom,
+          departureDateTo: _dateTo,
+          kiloProOnly: _kiloProOnly ? true : null,
+          minRating: _minRating,
+          weekendOnly: _weekendOnly ? true : null,
+          minAvailableKg: _weightMin,
+          maxAvailableKg: _weightMax,
+          maxPricePerKg: _maxPricePerKg,
+          transportMode: _transportMode,
+          kycVerifiedOnly: _kycVerifiedOnly ? true : null,
+          contentType: _contentType,
+          userLat: _isNearMeActive ? _userPosition?.latitude : null,
+          userLng: _isNearMeActive ? _userPosition?.longitude : null,
+          radiusKm: _isNearMeActive ? _nearMeRadiusKm : null,
+        ));
+  }
+
+  void _deactivateNearMe() {
+    setState(() {
+      _isNearMeActive = false;
+      _nearMeRadiusKm = null;
+      _userPosition = null;
+      _selectedAnnouncementId = null;
+    });
+    _dispatchSearch();
+  }
+
+  Future<void> _activateNearMe() async {
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.deniedForever) return;
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      return;
+    }
+    if (!mounted) return;
+
+    final positionFuture = Geolocator.getCurrentPosition(
+      locationSettings:
+          const LocationSettings(accuracy: LocationAccuracy.low),
+    );
+
+    final radiusKm = await NearMeRadiusSheet.show(
+      context,
+      initialRadiusKm: _nearMeRadiusKm ?? 25,
+    );
+
+    if (radiusKm == null || !mounted) return;
+
+    final pos = await positionFuture;
+    if (!mounted) return;
+
+    setState(() {
+      _isNearMeActive = true;
+      _nearMeRadiusKm = radiusKm;
+      _userPosition = LatLng(pos.latitude, pos.longitude);
+    });
+    _dispatchSearch();
+  }
+
+  Future<void> _showDatePresetSheet() async {
+    final result = await showModalBottomSheet<
+        ({_DatePreset preset, DateTime? customDate})>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _DatePresetSheet(
+        currentPreset: _datePreset,
+        customDate: _customDate,
+      ),
+    );
+    if (result != null && mounted) {
+      setState(() {
+        _datePreset = result.preset;
+        _customDate = result.customDate;
+      });
+      _dispatchSearch();
+    }
+  }
+
+  Future<void> _showRatingSheet() async {
+    final result = await showModalBottomSheet<double>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _RatingFilterSheet(currentRating: _minRating),
+    );
+    if (result == null || !mounted) return;
+    setState(() => _minRating = result < 0 ? null : result);
+    _dispatchSearch();
+  }
+
+  Future<void> _showWeightSheet() async {
+    final result = await showModalBottomSheet<({double min, double max})>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) =>
+          _WeightRangeSheet(currentMin: _weightMin, currentMax: _weightMax),
+    );
+    if (result == null || !mounted) return;
+    setState(() {
+      _weightMin = result.min <= 0 ? null : result.min;
+      _weightMax = result.max <= 0 ? null : result.max;
+    });
+    _dispatchSearch();
+  }
+
+  Future<void> _showPriceSheet() async {
+    final result = await showModalBottomSheet<double>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _PriceFilterSheet(currentMaxPrice: _maxPricePerKg),
+    );
+    if (result == null || !mounted) return;
+    setState(() => _maxPricePerKg = result < 0 ? null : result);
+    _dispatchSearch();
+  }
+
+  void _showMap() {
+    _sheetController.animateTo(
+      0.45,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  Future<void> _showFilterSheet(BuildContext ctx) async {
+    final initialParams = SearchParams(
+      departureCity: _corridor.departure,
+      arrivalCity: _corridor.arrival,
+      date: _customDate,
+      kiloProOnly: _kiloProOnly,
+      ratingFilter: _minRating != null,
+      priceFilter: _maxPricePerKg != null,
+      maxPricePerKg: _maxPricePerKg ?? 25,
+      transportMode: _transportMode,
+      kycVerifiedOnly: _kycVerifiedOnly,
+      contentType: _contentType,
+      urgencyFilter: _urgencyFilter,
+    );
+
+    final result = await SearchFormBottomSheet.show(
+      ctx,
+      initialParams: initialParams,
+      heightFraction: 0.80,
+    );
+
+    if (result == null || !mounted) return;
+
+    final dep = result.departureCity;
+    final arr = result.arrivalCity;
+    final matchedCorridor = _corridorOptions.firstWhere(
+      (c) => c.departure == dep && c.arrival == arr,
+      orElse: () => (
+        label: '${dep.split(' ').first} → ${arr.split(' ').first}',
+        departure: dep,
+        arrival: arr,
+      ),
+    );
+
+    setState(() {
+      _corridor = matchedCorridor;
+      _allCorridors = false;
+      if (result.date != null) {
+        _datePreset = _DatePreset.custom;
+        _customDate = result.date;
+      }
+      _kiloProOnly = result.kiloProOnly;
+      _minRating = result.ratingFilter ? 4.5 : null;
+      _weekendOnly = result.weekendFilter;
+      _maxPricePerKg = result.priceFilter ? result.maxPricePerKg : null;
+      _transportMode = result.transportMode;
+      _kycVerifiedOnly = result.kycVerifiedOnly;
+      _contentType = result.contentType;
+      _urgencyFilter = result.urgencyFilter;
+      if (result.weightKg > 0) {
+        _weightMin = result.weightKg;
+        _weightMax = null;
+      }
+    });
+    _dispatchSearch();
+  }
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
