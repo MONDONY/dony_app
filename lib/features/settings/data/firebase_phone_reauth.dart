@@ -21,9 +21,13 @@ class FirebasePhoneReauthImpl implements FirebasePhoneReauth {
     await FirebaseAuth.instance.verifyPhoneNumber(
       phoneNumber: phone,
       verificationCompleted: (PhoneAuthCredential credential) async {
-        await FirebaseAuth.instance.currentUser
-            ?.reauthenticateWithCredential(credential);
-        await FirebaseAuth.instance.currentUser?.getIdToken(true);
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) {
+          if (!completer.isCompleted) completer.completeError(Exception('No authenticated user'));
+          return;
+        }
+        await user.reauthenticateWithCredential(credential);
+        await user.getIdToken(true);
         if (!completer.isCompleted) completer.complete('AUTO');
       },
       verificationFailed: (FirebaseAuthException e) {
@@ -39,13 +43,14 @@ class FirebasePhoneReauthImpl implements FirebasePhoneReauth {
 
   @override
   Future<void> reauthenticate(String verificationId, String smsCode) async {
-    if (verificationId == 'AUTO') return; // auto-retrieved on Android
+    if (verificationId == 'AUTO') return;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('No authenticated user for reauthentication');
     final credential = PhoneAuthProvider.credential(
       verificationId: verificationId,
       smsCode: smsCode,
     );
-    await FirebaseAuth.instance.currentUser
-        ?.reauthenticateWithCredential(credential);
-    await FirebaseAuth.instance.currentUser?.getIdToken(true);
+    await user.reauthenticateWithCredential(credential);
+    await user.getIdToken(true);
   }
 }
