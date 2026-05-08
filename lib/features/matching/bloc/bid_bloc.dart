@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class BidBloc extends Bloc<BidEvent, BidState> {
   final BidRepository _repository;
+  bool _checkoutInProgress = false;
 
   static const _myBidsTtl = Duration(minutes: 3);
 
@@ -47,6 +48,8 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     BidCheckoutRequested event,
     Emitter<BidState> emit,
   ) async {
+    if (_checkoutInProgress) return;
+    _checkoutInProgress = true;
     emit(BidLoading());
     try {
       final response = await _repository.checkoutBid(
@@ -64,6 +67,8 @@ class BidBloc extends Bloc<BidEvent, BidState> {
       emit(BidError(detail));
     } catch (e) {
       emit(BidError(e.toString()));
+    } finally {
+      _checkoutInProgress = false;
     }
   }
 

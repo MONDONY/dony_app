@@ -17,33 +17,90 @@ class AnnouncementDetailBottomSheet {
     return DonyBottomSheet.show(
       context,
       title: 'Détail du trajet',
-      child: MultiBlocProvider(
+      wrapper: (child) => MultiBlocProvider(
         providers: [
-          BlocProvider(create: (_) => getIt<AnnouncementBloc>()),
+          BlocProvider(
+            create: (_) => getIt<AnnouncementBloc>()
+              ..add(AnnouncementDetailRequested(announcementId)),
+          ),
           BlocProvider(create: (_) => getIt<CancellationBloc>()),
         ],
-        child: _AnnouncementDetailContent(id: announcementId),
+        child: child,
       ),
+      stickyBottom: BlocBuilder<AnnouncementBloc, AnnouncementState>(
+        builder: (context, state) {
+          if (state is! AnnouncementDetailLoaded) return const SizedBox.shrink();
+          final a = state.announcement;
+          final canEdit = a.status == 'ACTIVE' && (a.bidsCount ?? 0) == 0;
+          final isCancelled = a.status == 'CANCELLED';
+          final canDelete =
+              (a.status == 'ACTIVE' && (a.bidsCount ?? 0) == 0) || isCancelled;
+
+          final buttons = <Widget>[];
+
+          if (a.status == 'ACTIVE') {
+            buttons.add(DonyButton(
+              label: 'Voir les demandes (${a.bidsCount ?? 0})',
+              icon: Icons.inbox_rounded,
+              onPressed: () => context.push('/announcements/${a.id}/bids'),
+            ));
+          }
+
+          if (canEdit) {
+            if (buttons.isNotEmpty) buttons.add(const SizedBox(height: DonySpacing.sm));
+            buttons.add(DonyButton(
+              label: 'Modifier ce trajet',
+              icon: Icons.edit_rounded,
+              variant: DonyButtonVariant.secondary,
+              onPressed: () =>
+                  CreateAnnouncementBottomSheet.show(context, announcement: a),
+            ));
+          }
+
+          if (!canDelete && a.status == 'ACTIVE') {
+            if (buttons.isNotEmpty) buttons.add(const SizedBox(height: DonySpacing.sm));
+            buttons.add(DonyButton(
+              label: 'Annuler ce trajet',
+              icon: Icons.cancel_outlined,
+              variant: DonyButtonVariant.destructive,
+              onPressed: () =>
+                  CancellationBottomSheet.show(context, announcementId: a.id),
+            ));
+          }
+
+          if (canDelete) {
+            if (buttons.isNotEmpty) buttons.add(const SizedBox(height: DonySpacing.sm));
+            buttons.add(DonyButton(
+              label: 'Supprimer ce trajet',
+              icon: Icons.delete_outline_rounded,
+              variant: DonyButtonVariant.destructive,
+              onPressed: () async {
+                final confirmed =
+                    await _confirmDelete(context, isCancelled: isCancelled);
+                if (confirmed && context.mounted) {
+                  context
+                      .read<AnnouncementBloc>()
+                      .add(AnnouncementDeleteRequested(a.id));
+                }
+              },
+            ));
+          }
+
+          if (buttons.isEmpty) return const SizedBox.shrink();
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: buttons,
+          );
+        },
+      ),
+      child: _AnnouncementDetailContent(id: announcementId),
     );
   }
-}
 
-class _AnnouncementDetailContent extends StatefulWidget {
-  final String id;
-  const _AnnouncementDetailContent({required this.id});
-
-  @override
-  State<_AnnouncementDetailContent> createState() => _AnnouncementDetailContentState();
-}
-
-class _AnnouncementDetailContentState extends State<_AnnouncementDetailContent> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<AnnouncementBloc>().add(AnnouncementDetailRequested(widget.id));
-  }
-
-  Future<bool> _confirmDelete({bool isCancelled = false}) async {
+  static Future<bool> _confirmDelete(
+    BuildContext context, {
+    bool isCancelled = false,
+  }) async {
     final confirmed = await DonyDialog.show(
       context,
       title: 'Supprimer ce trajet ?',
@@ -56,6 +113,11 @@ class _AnnouncementDetailContentState extends State<_AnnouncementDetailContent> 
     );
     return confirmed ?? false;
   }
+}
+
+class _AnnouncementDetailContent extends StatelessWidget {
+  final String id;
+  const _AnnouncementDetailContent({required this.id});
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +126,8 @@ class _AnnouncementDetailContentState extends State<_AnnouncementDetailContent> 
     return BlocConsumer<AnnouncementBloc, AnnouncementState>(
       listener: (context, state) {
         if (state is AnnouncementDeleted) {
-          DonySnackbar.show(context, message: 'Trajet supprimé', type: DonySnackbarType.success);
+          DonySnackbar.show(
+              context, message: 'Trajet supprimé', type: DonySnackbarType.success);
           Navigator.of(context, rootNavigator: true).pop();
           if (context.mounted) context.go('/announcements');
         } else if (state is AnnouncementNotFound) {
@@ -161,7 +224,8 @@ class _AnnouncementDetailContentState extends State<_AnnouncementDetailContent> 
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
-                    child: Icon(Icons.arrow_forward_rounded, color: cs.onPrimary.withValues(alpha: 0.7), size: 20),
+                    child: Icon(Icons.arrow_forward_rounded,
+                        color: cs.onPrimary.withValues(alpha: 0.7), size: 20),
                   ),
                   Text(
                     a.arrivalCity,
@@ -175,7 +239,8 @@ class _AnnouncementDetailContentState extends State<_AnnouncementDetailContent> 
               const SizedBox(height: DonySpacing.md),
               Row(
                 children: [
-                  Icon(Icons.calendar_month_rounded, color: cs.onPrimary.withValues(alpha: 0.6), size: 15),
+                  Icon(Icons.calendar_month_rounded,
+                      color: cs.onPrimary.withValues(alpha: 0.6), size: 15),
                   const SizedBox(width: DonySpacing.xs),
                   Text(
                     DateFormat('EEEE d MMMM yyyy', 'fr').format(a.departureDate),
@@ -190,7 +255,8 @@ class _AnnouncementDetailContentState extends State<_AnnouncementDetailContent> 
                 Row(
                   children: [
                     if (a.departureTime != null) ...[
-                      Icon(Icons.flight_takeoff_rounded, color: cs.onPrimary.withValues(alpha: 0.6), size: 13),
+                      Icon(Icons.flight_takeoff_rounded,
+                          color: cs.onPrimary.withValues(alpha: 0.6), size: 13),
                       const SizedBox(width: DonySpacing.xs),
                       Text(
                         a.departureTime!,
@@ -202,14 +268,17 @@ class _AnnouncementDetailContentState extends State<_AnnouncementDetailContent> 
                     ],
                     if (a.departureTime != null && a.arrivalTime != null)
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
                         child: Text(
                           '→',
-                          style: tt.bodySmall?.copyWith(color: cs.onPrimary.withValues(alpha: 0.5)),
+                          style: tt.bodySmall
+                              ?.copyWith(color: cs.onPrimary.withValues(alpha: 0.5)),
                         ),
                       ),
                     if (a.arrivalTime != null) ...[
-                      Icon(Icons.flight_land_rounded, color: cs.onPrimary.withValues(alpha: 0.6), size: 13),
+                      Icon(Icons.flight_land_rounded,
+                          color: cs.onPrimary.withValues(alpha: 0.6), size: 13),
                       const SizedBox(width: DonySpacing.xs),
                       Text(
                         a.arrivalTime!,
@@ -329,57 +398,8 @@ class _AnnouncementDetailContentState extends State<_AnnouncementDetailContent> 
           ],
         ).animate().fadeIn(delay: 100.ms),
 
-        const SizedBox(height: DonySpacing.xxl),
-
-        // Voir les demandes — toujours visible si le statut est ACTIVE
-        if (a.status == 'ACTIVE') ...[
-          DonyButton(
-            label: 'Voir les demandes (${a.bidsCount ?? 0})',
-            icon: Icons.inbox_rounded,
-            onPressed: () => context.push('/announcements/${a.id}/bids'),
-          ).animate().fadeIn(delay: 150.ms),
-          const SizedBox(height: DonySpacing.md),
-        ],
-
-        if (canEdit) ...[
-          DonyButton(
-            label: 'Modifier ce trajet',
-            icon: Icons.edit_rounded,
-            variant: DonyButtonVariant.secondary,
-            onPressed: () => CreateAnnouncementBottomSheet.show(context, announcement: a),
-          ).animate().fadeIn(delay: 200.ms),
-          const SizedBox(height: DonySpacing.md),
-        ],
-
-        if (!canDelete && a.status == 'ACTIVE') ...[
-          DonyButton(
-            label: 'Annuler ce trajet',
-            icon: Icons.cancel_outlined,
-            variant: DonyButtonVariant.destructive,
-            onPressed: () => CancellationBottomSheet.show(
-              context,
-              announcementId: a.id,
-            ),
-          ).animate().fadeIn(delay: 250.ms),
-          const SizedBox(height: DonySpacing.md),
-        ],
-
-        if (canDelete)
-          DonyButton(
-            label: 'Supprimer ce trajet',
-            icon: Icons.delete_outline_rounded,
-            variant: DonyButtonVariant.destructive,
-            onPressed: () async {
-              final confirmed = await _confirmDelete(isCancelled: isCancelled);
-              if (confirmed && context.mounted) {
-                context.read<AnnouncementBloc>().add(
-                  AnnouncementDeleteRequested(a.id),
-                );
-              }
-            },
-          ).animate().fadeIn(delay: 300.ms),
-
-        if (!canEdit && !canDelete && a.status != 'ACTIVE')
+        if (!canEdit && !canDelete && a.status != 'ACTIVE') ...[
+          const SizedBox(height: DonySpacing.base),
           Container(
             padding: const EdgeInsets.all(DonySpacing.md),
             decoration: BoxDecoration(
@@ -389,7 +409,8 @@ class _AnnouncementDetailContentState extends State<_AnnouncementDetailContent> 
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline_rounded, color: DonyColors.warning, size: 18),
+                const Icon(Icons.info_outline_rounded,
+                    color: DonyColors.warning, size: 18),
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Text(
@@ -400,6 +421,7 @@ class _AnnouncementDetailContentState extends State<_AnnouncementDetailContent> 
               ],
             ),
           ).animate().fadeIn(delay: 150.ms),
+        ],
       ],
     );
   }
@@ -421,7 +443,8 @@ class _StatusBadge extends StatelessWidget {
       _           => (cs.onSurfaceVariant, status),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
+      padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
       decoration: BoxDecoration(
         color: cs.onPrimary.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(DonyRadius.xl),

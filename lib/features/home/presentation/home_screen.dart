@@ -278,13 +278,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
           const LocationSettings(accuracy: LocationAccuracy.low),
     );
 
-    final radiusKm = await showModalBottomSheet<double>(
-      context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) =>
-          NearMeRadiusSheet(initialRadiusKm: _nearMeRadiusKm ?? 25),
+    final radiusKm = await NearMeRadiusSheet.show(
+      context,
+      initialRadiusKm: _nearMeRadiusKm ?? 25,
     );
 
     if (radiusKm == null || !mounted) return;

@@ -21,6 +21,10 @@ class EscrowExplainerBottomSheet extends StatelessWidget {
       context,
       title: '🔒 Paiement sécurisé',
       subtitle: travelerName,
+      stickyBottom: DonyButton(
+        label: "J'ai compris",
+        onPressed: () => Navigator.of(context).pop(),
+      ),
       child: EscrowExplainerBottomSheet(amount: amount, travelerName: travelerName),
     );
   }
@@ -68,11 +72,6 @@ class EscrowExplainerBottomSheet extends StatelessWidget {
           text: 'En cas de litige, dony intervient pour arbitrer et protéger les deux parties.',
           cs: cs,
           tt: tt,
-        ),
-        const SizedBox(height: DonySpacing.xl),
-        DonyButton(
-          label: "J'ai compris",
-          onPressed: () => Navigator.of(context).pop(),
         ),
       ],
     );

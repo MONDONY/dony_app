@@ -1,6 +1,17 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 
+/// Helper pour afficher un bottom sheet standardisé dony.
+///
+/// Usage :
+/// ```dart
+/// DonyBottomSheet.show(
+///   context,
+///   title: 'Trier par',
+///   stickyBottom: DonyButton(label: 'Confirmer', onPressed: ...),
+///   child: SortOptions(),
+/// );
+/// ```
 abstract final class DonyBottomSheet {
   static Future<T?> show<T>(
     BuildContext context, {

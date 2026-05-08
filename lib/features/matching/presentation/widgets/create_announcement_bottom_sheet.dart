@@ -1,3 +1,4 @@
+import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
@@ -409,8 +410,8 @@ class _CreateAnnouncementContentState
                     return const SizedBox.shrink();
                   }
 
-                  final depCode = dep.length >= 3 ? dep.substring(0, 3).toUpperCase() : dep.toUpperCase();
-                  final arrCode = arr.length >= 3 ? arr.substring(0, 3).toUpperCase() : arr.toUpperCase();
+                  final depCode = cityAirportCode(dep, departure: true);
+                  final arrCode = cityAirportCode(arr, departure: false);
                   final dateStr = _formatCorridorDateTime();
 
                   return Column(

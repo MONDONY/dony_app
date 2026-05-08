@@ -111,9 +111,32 @@ class TravelerCard extends StatelessWidget {
               const SizedBox(height: DonySpacing.sm),
               _CategoryChips(categories: categories, maxVisible: _maxVisibleChips),
             ],
-            if (isOwnAnnouncement) ...[
+            if (distanceBadge != null || isOwnAnnouncement) ...[
               const SizedBox(height: DonySpacing.sm),
-              Text('Votre trajet', style: tt.labelMedium?.copyWith(color: DonyColors.textMuted)),
+              Row(
+                children: [
+                  if (distanceBadge != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.sm, vertical: DonySpacing.xxs,
+                      ),
+                      decoration: BoxDecoration(
+                        color: DonyColors.primarySoft,
+                        borderRadius: BorderRadius.circular(DonyRadius.xl),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.location_on_rounded, size: 11, color: DonyColors.primary),
+                          const SizedBox(width: 3),
+                          Text(distanceBadge!, style: tt.labelSmall?.copyWith(color: DonyColors.primary, fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    ),
+                  if (isOwnAnnouncement)
+                    Text('Votre trajet', style: tt.labelMedium?.copyWith(color: DonyColors.textMuted)),
+                ],
+              ),
             ],
           ],
         ),

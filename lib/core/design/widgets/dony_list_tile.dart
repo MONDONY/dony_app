@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// ListTile stylisé dony — paramètres, infos, actions.
 ///
@@ -61,7 +62,12 @@ class DonyListTile extends StatelessWidget {
     return Column(
       children: [
         InkWell(
-          onTap: enabled ? onTap : null,
+          onTap: (enabled && onTap != null)
+              ? () {
+                  HapticFeedback.selectionClick();
+                  onTap!();
+                }
+              : null,
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: DonySpacing.xs,

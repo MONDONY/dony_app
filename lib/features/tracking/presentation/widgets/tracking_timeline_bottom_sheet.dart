@@ -19,10 +19,21 @@ void showTrackingTimelineSheet(
     context,
     title: 'Suivi du colis',
     subtitle: corridor.isNotEmpty ? corridor : null,
-    child: BlocProvider(
+    wrapper: (child) => BlocProvider(
       create: (_) => getIt<TrackingBloc>()..add(TrackingEventsRequested(bidId)),
-      child: _TrackingTimelineContent(bidId: bidId, corridor: corridor),
+      child: child,
     ),
+    stickyBottom: BlocBuilder<TrackingBloc, TrackingState>(
+      builder: (context, state) {
+        if (state is! TrackingEventsLoaded) return const SizedBox.shrink();
+        return DonyButton(
+          label: "J'ouvre la confirmation",
+          icon: Icons.qr_code_rounded,
+          onPressed: () {},
+        );
+      },
+    ),
+    child: _TrackingTimelineContent(bidId: bidId, corridor: corridor),
   );
 }
 
@@ -444,12 +455,6 @@ class _ApplessBanner extends StatelessWidget {
           Text(
             'Quand $travelerName sera devant votre porte, vous confirmerez avec un QR ou un code à 4 chiffres.',
             style: tt.bodySmall?.copyWith(color: DonyColors.ink900, height: 1.4),
-          ),
-          const SizedBox(height: DonySpacing.md),
-          DonyButton(
-            label: 'J\'ouvre la confirmation',
-            icon: Icons.qr_code_rounded,
-            onPressed: () {},
           ),
         ],
       ),

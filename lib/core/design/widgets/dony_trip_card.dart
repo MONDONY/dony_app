@@ -83,7 +83,7 @@ class DonyTripCard extends StatelessWidget {
                           ),
                           const SizedBox(width: DonySpacing.xxs),
                           Text(
-                            rating!.toStringAsFixed(1),
+                            '${rating!.toStringAsFixed(1)}/5',
                             style: tt.bodySmall?.copyWith(
                               color: DonyColors.textMuted,
                               fontWeight: FontWeight.w600,

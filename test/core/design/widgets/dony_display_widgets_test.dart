@@ -80,7 +80,7 @@ void main() {
         rating: 4.7,
       )));
       await tester.pump();
-      expect(find.text('4.7'), findsOneWidget);
+      expect(find.text('4.7/5'), findsOneWidget);
       expect(find.byIcon(Icons.star_rounded), findsOneWidget);
     });
 
@@ -207,7 +207,7 @@ void main() {
       )));
       await tester.pump(const Duration(milliseconds: 600));
       expect(find.text('Full'), findsOneWidget);
-      expect(find.text('4.9'), findsOneWidget);
+      expect(find.text('4.9/5'), findsOneWidget);
       expect(find.text('8 kg'), findsOneWidget);
       expect(find.text('11 €/kg'), findsOneWidget);
       expect(find.text('Marseille'), findsOneWidget);
@@ -505,7 +505,7 @@ void main() {
         rating: 4.8,
       )));
       await tester.pump();
-      expect(find.text('4.8'), findsOneWidget);
+      expect(find.text('4.8/5'), findsOneWidget);
       expect(find.byIcon(Icons.star_rounded), findsOneWidget);
     });
 
@@ -637,7 +637,7 @@ void main() {
       await tester.pump();
       expect(find.text('All Params'), findsOneWidget);
       expect(find.text('Expéditeur • 5 envois'), findsOneWidget);
-      expect(find.text('4.5'), findsOneWidget);
+      expect(find.text('4.5/5'), findsOneWidget);
       expect(find.byIcon(Icons.check), findsOneWidget);
       expect(find.byIcon(Icons.arrow_forward), findsOneWidget);
       await tester.tap(find.byType(DonyUserCard));

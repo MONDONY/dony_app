@@ -1,10 +1,11 @@
 import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 enum DonyButtonVariant { primary, secondary, ghost, destructive }
 
-class DonyButton extends StatelessWidget {
+class DonyButton extends StatefulWidget {
   const DonyButton({
     super.key,
     required this.label,
@@ -25,37 +26,59 @@ class DonyButton extends StatelessWidget {
   final bool fullWidth;
 
   @override
+  State<DonyButton> createState() => _DonyButtonState();
+}
+
+class _DonyButtonState extends State<DonyButton> {
+  bool _pressed = false;
+
+  void _handleTapDown(TapDownDetails _) {
+    if (widget.onPressed == null || widget.isLoading) return;
+    setState(() => _pressed = true);
+    HapticFeedback.selectionClick();
+  }
+
+  void _handleTapUp(TapUpDetails _) => setState(() => _pressed = false);
+  void _handleTapCancel() => setState(() => _pressed = false);
+
+  @override
   Widget build(BuildContext context) {
-    final spinnerColor = switch (variant) {
+    final spinnerColor = switch (widget.variant) {
       DonyButtonVariant.primary     => DonyColors.white,
       DonyButtonVariant.destructive => DonyColors.white,
       DonyButtonVariant.secondary   => DonyColors.ink900,
       DonyButtonVariant.ghost       => DonyColors.primary,
     };
 
-    final child = isLoading
+    final child = widget.isLoading
         ? SizedBox(
             width: 20,
             height: 20,
             child: CircularProgressIndicator(strokeWidth: 2, color: spinnerColor),
           )
         : Row(
-            mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
+            mainAxisSize: widget.fullWidth ? MainAxisSize.max : MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (icon != null) ...[Icon(icon, size: 18), const SizedBox(width: DonySpacing.xs)],
-              Text(label),
-              if (iconRight != null) ...[const SizedBox(width: DonySpacing.xs), Icon(iconRight, size: 18)],
+              if (widget.icon != null) ...[
+                Icon(widget.icon, size: 18),
+                const SizedBox(width: DonySpacing.xs),
+              ],
+              Text(widget.label),
+              if (widget.iconRight != null) ...[
+                const SizedBox(width: DonySpacing.xs),
+                Icon(widget.iconRight, size: 18),
+              ],
             ],
           );
 
-    final minSize = fullWidth ? const Size.fromHeight(52) : const Size(120, 52);
-
+    final minSize =
+        widget.fullWidth ? const Size.fromHeight(52) : const Size(120, 52);
     const contentPadding = EdgeInsets.symmetric(horizontal: 16);
 
-    return switch (variant) {
+    final button = switch (widget.variant) {
       DonyButtonVariant.primary => FilledButton(
-          onPressed: isLoading ? null : onPressed,
+          onPressed: widget.isLoading ? null : widget.onPressed,
           style: FilledButton.styleFrom(
             minimumSize: minSize,
             padding: contentPadding,
@@ -63,7 +86,7 @@ class DonyButton extends StatelessWidget {
           child: child,
         ),
       DonyButtonVariant.secondary => OutlinedButton(
-          onPressed: isLoading ? null : onPressed,
+          onPressed: widget.isLoading ? null : widget.onPressed,
           style: OutlinedButton.styleFrom(
             minimumSize: minSize,
             padding: contentPadding,
@@ -71,15 +94,16 @@ class DonyButton extends StatelessWidget {
           child: child,
         ),
       DonyButtonVariant.ghost => TextButton(
-          onPressed: isLoading ? null : onPressed,
+          onPressed: widget.isLoading ? null : widget.onPressed,
           style: TextButton.styleFrom(
             minimumSize: minSize,
             padding: contentPadding,
+            side: const BorderSide(color: DonyColors.borderDefault),
           ),
           child: child,
         ),
       DonyButtonVariant.destructive => FilledButton(
-          onPressed: isLoading ? null : onPressed,
+          onPressed: widget.isLoading ? null : widget.onPressed,
           style: FilledButton.styleFrom(
             backgroundColor: DonyColors.error,
             minimumSize: minSize,
@@ -88,5 +112,17 @@ class DonyButton extends StatelessWidget {
           child: child,
         ),
     };
+
+    return GestureDetector(
+      onTapDown: _handleTapDown,
+      onTapUp: _handleTapUp,
+      onTapCancel: _handleTapCancel,
+      child: AnimatedScale(
+        scale: _pressed ? 0.96 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeOutCubic,
+        child: button,
+      ),
+    );
   }
 }
