@@ -35,14 +35,40 @@ class CreateAnnouncementBottomSheet {
     BuildContext context, {
     AnnouncementModel? announcement,
   }) {
+    final canSubmitNotifier =
+        ValueNotifier<bool>(announcement?.transportMode != null);
+    VoidCallback? submit;
     return DonyBottomSheet.show(
       context,
       title: announcement != null ? 'Modifier le trajet' : 'Publier un trajet',
-      child: BlocProvider(
+      wrapper: (child) => BlocProvider(
         create: (_) => getIt<AnnouncementBloc>(),
-        child: _CreateAnnouncementContent(announcement: announcement),
+        child: child,
       ),
-    );
+      stickyBottom: ValueListenableBuilder<bool>(
+        valueListenable: canSubmitNotifier,
+        builder: (ctx, canSubmit, _) =>
+            BlocBuilder<AnnouncementBloc, AnnouncementState>(
+          builder: (ctx, state) {
+            final isLoading = state is AnnouncementLoading;
+            return DonyButton(
+              key: const Key('create-announcement-submit'),
+              label: announcement != null
+                  ? 'Enregistrer les modifications'
+                  : 'Publier le trajet',
+              isLoading: isLoading,
+              onPressed:
+                  (canSubmit && !isLoading) ? () => submit?.call() : null,
+            );
+          },
+        ),
+      ),
+      child: _CreateAnnouncementContent(
+        announcement: announcement,
+        canSubmitNotifier: canSubmitNotifier,
+        onSubmitReady: (fn) => submit = fn,
+      ),
+    ).whenComplete(canSubmitNotifier.dispose);
   }
 }
 
@@ -50,7 +76,13 @@ class CreateAnnouncementBottomSheet {
 
 class _CreateAnnouncementContent extends StatefulWidget {
   final AnnouncementModel? announcement;
-  const _CreateAnnouncementContent({this.announcement});
+  final ValueNotifier<bool>? canSubmitNotifier;
+  final void Function(VoidCallback)? onSubmitReady;
+  const _CreateAnnouncementContent({
+    this.announcement,
+    this.canSubmitNotifier,
+    this.onSubmitReady,
+  });
 
   @override
   State<_CreateAnnouncementContent> createState() =>
@@ -140,6 +172,13 @@ class _CreateAnnouncementContentState
       }
       _priceOptionNotifier.value = closest;
     }
+    widget.onSubmitReady?.call(_submit);
+    _transportModeNotifier.addListener(_syncCanSubmit);
+    widget.canSubmitNotifier?.value = _transportModeNotifier.value != null;
+  }
+
+  void _syncCanSubmit() {
+    widget.canSubmitNotifier?.value = _transportModeNotifier.value != null;
   }
 
   @override
@@ -157,6 +196,7 @@ class _CreateAnnouncementContentState
     _selectedContentNotifier.dispose();
     _customAcceptedNotifier.dispose();
     _refusedTypesNotifier.dispose();
+    _transportModeNotifier.removeListener(_syncCanSubmit);
     _transportModeNotifier.dispose();
     super.dispose();
   }
@@ -348,8 +388,6 @@ class _CreateAnnouncementContentState
         }
       },
       builder: (context, state) {
-        final isLoading = state is AnnouncementLoading;
-
         return Form(
           key: _formKey,
           child: Column(
@@ -947,23 +985,6 @@ class _CreateAnnouncementContentState
                 },
               ).animate().fadeIn(delay: 160.ms),
               const SizedBox(height: DonySpacing.xxl),
-
-              // ── Submit button ───────────────────────────────────────────
-              ValueListenableBuilder<TransportMode?>(
-                valueListenable: _transportModeNotifier,
-                builder: (context, transportMode, _) {
-                  final canSubmit = !isLoading && transportMode != null;
-                  return DonyButton(
-                    key: const Key('create-announcement-submit'),
-                    label: _isEdit
-                        ? 'Enregistrer les modifications'
-                        : 'Publier le trajet',
-                    onPressed: canSubmit ? _submit : null,
-                    isLoading: isLoading,
-                  );
-                },
-              ),
-              const SizedBox(height: DonySpacing.base),
             ],
           ),
         );

@@ -10,19 +10,33 @@ import 'package:intl/intl.dart';
 
 abstract final class EditProfileBottomSheet {
   static Future<void> show(BuildContext context) {
+    final authBloc = context.read<AuthBloc>();
+    VoidCallback? submit;
     return DonyBottomSheet.show(
       context,
       title: 'Compléter mon profil',
-      child: BlocProvider.value(
-        value: context.read<AuthBloc>(),
-        child: const _EditProfileContent(),
+      wrapper: (child) => BlocProvider.value(value: authBloc, child: child),
+      stickyBottom: BlocBuilder<AuthBloc, AuthState>(
+        builder: (ctx, state) {
+          final isLoading = state is AuthLoading;
+          return DonyButton(
+            label: 'Enregistrer',
+            isLoading: isLoading,
+            onPressed: isLoading ? null : () => submit?.call(),
+          );
+        },
+      ),
+      child: _EditProfileContent(
+        onSubmitReady: (fn) => submit = fn,
       ),
     );
   }
 }
 
 class _EditProfileContent extends StatefulWidget {
-  const _EditProfileContent();
+  const _EditProfileContent({this.onSubmitReady});
+
+  final void Function(VoidCallback)? onSubmitReady;
 
   @override
   State<_EditProfileContent> createState() => _EditProfileContentState();
@@ -35,6 +49,12 @@ class _EditProfileContentState extends State<_EditProfileContent> {
   final _cityCtrl = TextEditingController();
   DateTime? _birthDate;
   bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.onSubmitReady?.call(_save);
+  }
 
   @override
   void dispose() {
@@ -228,12 +248,6 @@ class _EditProfileContentState extends State<_EditProfileContent> {
               ),
               const SizedBox(height: DonySpacing.xl),
 
-              // ── Bouton sauvegarder ──────────────────────────────
-              DonyButton(
-                label: 'Enregistrer',
-                onPressed: isLoading ? null : _save,
-                isLoading: isLoading,
-              ),
             ],
           )
               .animate()

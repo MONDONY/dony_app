@@ -19,6 +19,10 @@ void showTravelerAnnouncementSheet(
   DonyBottomSheet.show(
     context,
     title: 'Détail annonce',
+    stickyBottom: DonyButton(
+      label: 'Envoyer un colis',
+      onPressed: () => CreateBidBottomSheet.show(context, announcement: announcement),
+    ),
     child: _TravelerAnnouncementContent(announcement: announcement),
   );
 }
@@ -182,14 +186,6 @@ class _TravelerAnnouncementContentState
           ).animate().fadeIn(delay: 180.ms),
 
         const SizedBox(height: DonySpacing.xxl),
-
-        // ── CTA ──────────────────────────────────────────────────────────
-        DonyButton(
-          label: 'Envoyer un colis',
-          onPressed: () => CreateBidBottomSheet.show(context, announcement: _a),
-        ),
-
-        const SizedBox(height: DonySpacing.base),
       ],
     );
   }

@@ -15,22 +15,38 @@ const _reasons = [
 ];
 
 class CancellationBottomSheet extends StatefulWidget {
-  const CancellationBottomSheet({super.key, required this.announcementId});
+  const CancellationBottomSheet({
+    super.key,
+    required this.announcementId,
+    this.onSubmitReady,
+  });
 
   final String announcementId;
+  final void Function(VoidCallback)? onSubmitReady;
 
   static Future<void> show(
     BuildContext context, {
     required String announcementId,
   }) {
+    final cancellationBloc = context.read<CancellationBloc>();
+    VoidCallback? submit;
     return DonyBottomSheet.show(
       context,
       isDanger: true,
       title: 'Annuler ce trajet ?',
       subtitle: 'Cette action est irréversible',
-      child: BlocProvider.value(
-        value: context.read<CancellationBloc>(),
-        child: CancellationBottomSheet(announcementId: announcementId),
+      wrapper: (child) => BlocProvider.value(value: cancellationBloc, child: child),
+      stickyBottom: BlocBuilder<CancellationBloc, CancellationState>(
+        builder: (ctx, state) => DonyButton(
+          label: "Confirmer l'annulation",
+          variant: DonyButtonVariant.destructive,
+          isLoading: state is CancellationLoading,
+          onPressed: state is CancellationLoading ? null : () => submit?.call(),
+        ),
+      ),
+      child: CancellationBottomSheet(
+        announcementId: announcementId,
+        onSubmitReady: (fn) => submit = fn,
       ),
     );
   }
@@ -43,6 +59,12 @@ class CancellationBottomSheet extends StatefulWidget {
 class _CancellationBottomSheetState extends State<CancellationBottomSheet> {
   String? _selectedReason;
   final _otherCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.onSubmitReady?.call(_confirm);
+  }
 
   @override
   void dispose() {
@@ -63,7 +85,7 @@ class _CancellationBottomSheetState extends State<CancellationBottomSheet> {
     return _selectedReason;
   }
 
-  void _confirm(BuildContext context) {
+  void _confirm() {
     final reason = _finalReason;
     if (reason == null) {
       DonySnackbar.show(
@@ -167,18 +189,6 @@ class _CancellationBottomSheetState extends State<CancellationBottomSheet> {
           ],
 
           const SizedBox(height: DonySpacing.xl),
-
-          // Confirm button
-          BlocBuilder<CancellationBloc, CancellationState>(
-            builder: (context, state) => DonyButton(
-              label: "Confirmer l'annulation",
-              variant: DonyButtonVariant.destructive,
-              isLoading: state is CancellationLoading,
-              onPressed: state is CancellationLoading
-                  ? null
-                  : () => _confirm(context),
-            ),
-          ),
         ],
       ),
     );

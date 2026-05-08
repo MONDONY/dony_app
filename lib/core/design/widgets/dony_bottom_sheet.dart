@@ -13,6 +13,7 @@ abstract final class DonyBottomSheet {
     bool isScrollControlled = true,
     bool isDanger = false,
     double? heightFraction,
+    Widget Function(Widget)? wrapper,
   }) {
     final screenHeight = MediaQuery.of(context).size.height;
     return showModalBottomSheet<T>(
@@ -27,15 +28,18 @@ abstract final class DonyBottomSheet {
               maxHeight: screenHeight * heightFraction,
             )
           : null,
-      builder: (ctx) => _DonyBottomSheetContent(
-        title: title,
-        subtitle: subtitle,
-        showHandle: showHandle,
-        isDanger: isDanger,
-        expand: heightFraction != null,
-        stickyBottom: stickyBottom,
-        child: child,
-      ),
+      builder: (ctx) {
+        final Widget content = _DonyBottomSheetContent(
+          title: title,
+          subtitle: subtitle,
+          showHandle: showHandle,
+          isDanger: isDanger,
+          expand: heightFraction != null,
+          stickyBottom: stickyBottom,
+          child: child,
+        );
+        return wrapper != null ? wrapper(content) : content;
+      },
     );
   }
 }
