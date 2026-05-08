@@ -109,8 +109,8 @@ class AccountDeletionBloc
 
   String _maskPhone(String phone) {
     if (phone.length < 6) return phone;
-    final start = phone.substring(0, phone.length - 4);
-    final end = phone.substring(phone.length - 2);
-    return '$start•••• $end';
+    final prefix = phone.substring(0, 3); // country code e.g. "+33"
+    final suffix = phone.substring(phone.length - 2); // last 2 digits
+    return '$prefix ••••••• $suffix';
   }
 }

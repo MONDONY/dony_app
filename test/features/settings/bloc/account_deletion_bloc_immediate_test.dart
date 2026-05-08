@@ -37,7 +37,8 @@ void main() {
       expect: () => [
         isA<AccountDeletionLoading>(),
         isA<DeletionOtpSent>()
-            .having((s) => s.verificationId, 'verificationId', 'verif-id-123'),
+            .having((s) => s.verificationId, 'verificationId', 'verif-id-123')
+            .having((s) => s.phoneHint, 'phoneHint', '+33 ••••••• 01'),
       ],
     );
 
