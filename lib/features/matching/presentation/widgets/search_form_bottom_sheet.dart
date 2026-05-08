@@ -1,14 +1,16 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/city/bloc/city_search_bloc.dart';
+import 'package:dony/features/city/data/city_model.dart';
+import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
 import 'package:dony/features/matching/data/models/search_params.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-
-const _departureCities = ['Paris · CDG, ORY', 'Lyon · LYS', 'Marseille · MRS'];
-const _arrivalCities = ['Dakar · DKR', 'Abidjan · ABJ', 'Bamako · BKO', 'Douala · DLA'];
 
 // Content types mirroring what travelers can declare in CreateAnnouncement
 const _contentTypes = [
@@ -30,12 +32,6 @@ const _contentTypeIcons = <String, IconData>{
   'Téléphone': Icons.smartphone_rounded,
   'Cosmétiques': Icons.face_retouching_natural_rounded,
 };
-
-const _kRowIndent = 56.0;
-const _kIconGap = 14.0;
-
-String _matchCity(String short, List<String> cities) =>
-    cities.firstWhere((c) => c.startsWith(short), orElse: () => cities[0]);
 
 class SearchFormBottomSheet {
   static Future<SearchParams?> show(
@@ -126,8 +122,8 @@ class _SearchFormContent extends StatefulWidget {
 }
 
 class _SearchFormContentState extends State<_SearchFormContent> {
-  late final ValueNotifier<String> _departureCityNotifier;
-  late final ValueNotifier<String> _arrivalCityNotifier;
+  late final ValueNotifier<String?> _departureCityNotifier;
+  late final ValueNotifier<String?> _arrivalCityNotifier;
   late final ValueNotifier<DateTime?> _dateNotifier;
   late final ValueNotifier<double> _weightKgNotifier;
   late final ValueNotifier<double> _maxPricePerKgNotifier;
@@ -144,10 +140,8 @@ class _SearchFormContentState extends State<_SearchFormContent> {
   void initState() {
     super.initState();
     final p = widget.initialParams;
-    _departureCityNotifier = ValueNotifier<String>(
-        p != null ? _matchCity(p.departureCity, _departureCities) : _departureCities[0]);
-    _arrivalCityNotifier = ValueNotifier<String>(
-        p != null ? _matchCity(p.arrivalCity, _arrivalCities) : _arrivalCities[0]);
+    _departureCityNotifier = ValueNotifier<String?>(p?.departureCity);
+    _arrivalCityNotifier = ValueNotifier<String?>(p?.arrivalCity);
     _dateNotifier = ValueNotifier<DateTime?>(p?.date);
     _weightKgNotifier = ValueNotifier<double>(p?.weightKg ?? 6);
     _maxPricePerKgNotifier = ValueNotifier<double>(p?.maxPricePerKg ?? 25);
@@ -210,9 +204,12 @@ class _SearchFormContentState extends State<_SearchFormContent> {
   }
 
   void _submit() {
+    final departureCity = _departureCityNotifier.value;
+    final arrivalCity = _arrivalCityNotifier.value;
+    if (departureCity == null || arrivalCity == null) return;
     Navigator.of(context, rootNavigator: true).pop(SearchParams(
-      departureCity: _departureCityNotifier.value,
-      arrivalCity: _arrivalCityNotifier.value,
+      departureCity: departureCity,
+      arrivalCity: arrivalCity,
       date: _dateNotifier.value,
       weightKg: _weightKgNotifier.value,
       maxPricePerKg: _maxPricePerKgNotifier.value,
@@ -280,32 +277,34 @@ class _SearchFormContentState extends State<_SearchFormContent> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Corridor ────────────────────────────────────────────────────
-            Container(
-              decoration: BoxDecoration(
-                color: DonyColors.white,
-                borderRadius: BorderRadius.circular(DonyRadius.card),
-                border: Border.all(color: DonyColors.neutral200),
-              ),
-              child: Column(
-                children: [
-                  _LocationRow(
-                    isDeparture: true,
-                    value: _departureCityNotifier.value,
-                    cities: _departureCities,
-                    onChanged: (v) => _departureCityNotifier.value = v,
+            Column(
+              children: [
+                BlocProvider(
+                  create: (_) => getIt<CitySearchBloc>(),
+                  child: CityAutocompleteField(
+                    label: 'Ville de départ',
+                    initialValue: _departureCityNotifier.value,
+                    prefixIcon: const Icon(Icons.flight_takeoff_rounded,
+                        color: DonyColors.primary, size: 20),
+                    onSelected: (CityModel city) {
+                      _departureCityNotifier.value = city.name;
+                    },
                   ),
-                  const Padding(
-                    padding: EdgeInsets.only(left: _kRowIndent),
-                    child: Divider(height: 1, color: DonyColors.neutral200),
+                ),
+                const SizedBox(height: DonySpacing.sm),
+                BlocProvider(
+                  create: (_) => getIt<CitySearchBloc>(),
+                  child: CityAutocompleteField(
+                    label: 'Ville d\'arrivée',
+                    initialValue: _arrivalCityNotifier.value,
+                    prefixIcon: const Icon(Icons.flight_land_rounded,
+                        color: DonyColors.accent, size: 20),
+                    onSelected: (CityModel city) {
+                      _arrivalCityNotifier.value = city.name;
+                    },
                   ),
-                  _LocationRow(
-                    isDeparture: false,
-                    value: _arrivalCityNotifier.value,
-                    cities: _arrivalCities,
-                    onChanged: (v) => _arrivalCityNotifier.value = v,
-                  ),
-                ],
-              ),
+                ),
+              ],
             ).animate().fadeIn(duration: 250.ms),
             const SizedBox(height: DonySpacing.base),
 
@@ -863,116 +862,6 @@ class _QuickChip extends StatelessWidget {
                 fontWeight: active ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Location row ──────────────────────────────────────────────────────────────
-
-class _LocationRow extends StatelessWidget {
-  const _LocationRow({
-    required this.isDeparture,
-    required this.value,
-    required this.cities,
-    required this.onChanged,
-  });
-
-  final bool isDeparture;
-  final String value;
-  final List<String> cities;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    return InkWell(
-      onTap: () => _showPicker(context),
-      borderRadius: BorderRadius.circular(DonyRadius.card),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.base,
-          vertical: DonySpacing.md,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isDeparture ? DonyColors.primary : DonyColors.error,
-              ),
-            ),
-            const SizedBox(width: _kIconGap),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isDeparture ? 'DÉPART' : 'ARRIVÉE',
-                    style: tt.labelSmall?.copyWith(color: DonyColors.neutral400),
-                  ),
-                  const SizedBox(height: DonySpacing.xxs),
-                  Text(value, style: tt.titleLarge),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded, size: 18, color: DonyColors.neutral400),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showPicker(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        decoration: const BoxDecoration(
-          color: DonyColors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
-        ),
-        padding: const EdgeInsets.fromLTRB(DonySpacing.lg, 0, DonySpacing.lg, DonySpacing.xxl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: DonyColors.neutral200,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            Text(isDeparture ? 'Ville de départ' : 'Ville d\'arrivée',
-                style: tt.headlineMedium),
-            const SizedBox(height: DonySpacing.base),
-            ...cities.map((city) => ListTile(
-                  title: Text(
-                    city,
-                    style: tt.bodyMedium?.copyWith(
-                      color: value == city ? DonyColors.primary : DonyColors.ink900,
-                      fontWeight: value == city ? FontWeight.w700 : FontWeight.w400,
-                    ),
-                  ),
-                  trailing: value == city
-                      ? const Icon(Icons.check_rounded, color: DonyColors.primary)
-                      : null,
-                  onTap: () {
-                    onChanged(city);
-                    context.pop();
-                  },
-                )),
           ],
         ),
       ),
