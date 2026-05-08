@@ -23,4 +23,14 @@ class AccountDeletionRepository {
       throw unwrapDioError(e);
     }
   }
+
+  Future<void> deleteImmediately() async {
+    try {
+      await _client.dio.post('/auth/me/delete-immediately', data: {
+        'confirmationAcknowledged': true,
+      });
+    } catch (e) {
+      throw unwrapDioError(e);
+    }
+  }
 }
