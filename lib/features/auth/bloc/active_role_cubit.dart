@@ -13,7 +13,10 @@ class ActiveRoleCubit extends Cubit<ActiveRole> {
 
   static ActiveRole _load(HiveService hive) {
     final saved = hive.userPrefs.get(_key) as String?;
-    return saved == 'SENDER' ? ActiveRole.sender : ActiveRole.traveler;
+    if (saved == 'TRAVELER') {
+      return ActiveRole.traveler;
+    }
+    return ActiveRole.sender; // défaut : Expéditeur
   }
 
   void switchToTraveler() {
@@ -28,6 +31,6 @@ class ActiveRoleCubit extends Cubit<ActiveRole> {
 
   void reset() {
     _hive.userPrefs.delete(_key);
-    emit(ActiveRole.traveler);
+    emit(ActiveRole.sender); // défaut : Expéditeur
   }
 }
