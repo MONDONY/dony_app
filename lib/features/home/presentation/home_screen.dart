@@ -394,6 +394,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
   void _exitNearMeAndShowList() {
     _deactivateNearMe();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_sheetController.isAttached) return;
       _sheetController.animateTo(
         1.0,
         duration: const Duration(milliseconds: 280),

@@ -199,7 +199,7 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
             child: Container(
               key: const Key('near-me-see-all-btn'),
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+              padding: const EdgeInsets.symmetric(vertical: DonySpacing.base),
               decoration: BoxDecoration(
                 color: DonyColors.primarySoft,
                 borderRadius: BorderRadius.circular(DonyRadius.card),
