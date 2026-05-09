@@ -159,6 +159,48 @@ abstract final class DonyColors {
 
   // shadow
   static const shadow = Color(0x1A0A2540); // ink800 @ 10%
+
+  // ═══════════════════════════════════════════════════════════════
+  // DARK MODE — Palette dérivée
+  // Recalibrée pour contraste WCAG AA sur fond sombre
+  // ═══════════════════════════════════════════════════════════════
+
+  // Bleu primary recalibré (le #0B5FFF est trop saturé sur fond sombre)
+  static const blueDark500 = Color(0xFF4D8AFF); // PRIMARY DARK ★
+  static const blueDark600 = Color(0xFF6699FF); // Hover dark
+  static const blueDark700 = Color(0xFF3D7AEF); // Press dark
+  static const blueDark50  = Color(0xFF1A2B47); // PrimarySoft dark
+
+  // Terra accent recalibré
+  static const terraDark500 = Color(0xFFE8865B); // ACCENT DARK ★
+  static const terraDark50  = Color(0xFF2E1F18); // Fond accent dark
+  static const terraDark700 = Color(0xFFB95524);
+
+  // Neutrals dark (chauds, cohérents avec sand)
+  static const neutralDark0   = Color(0xFF0A0E14); // BG APP DARK ★
+  static const neutralDark50  = Color(0xFF11161E);
+  static const neutralDark100 = Color(0xFF161B23); // SURFACE DARK ★
+  static const neutralDark200 = Color(0xFF222932);
+  static const neutralDark300 = Color(0xFF2D333D); // BORDER DARK ★
+  static const neutralDark400 = Color(0xFF7E7972); // text subtle dark
+  static const neutralDark500 = Color(0xFFB5AFA5); // text muted dark
+  static const neutralDark600 = Color(0xFFD8D2C7); // text high
+  static const neutralDark700 = Color(0xFFF5F0E8); // TEXT PRIMARY DARK ★
+
+  // Sand dark
+  static const sandDark100 = Color(0xFF1F1A14); // SURFACE WARM DARK ★
+
+  // États sémantiques dark
+  static const successDark500 = Color(0xFF2DA677);
+  static const successDark50  = Color(0xFF0F2B1F);
+  static const warningDark500 = Color(0xFFF0B84A);
+  static const warningDark50  = Color(0xFF2B2014);
+  static const dangerDark500  = Color(0xFFEF5048);
+  static const dangerDark50   = Color(0xFF2B1715);
+  static const infoDark500    = Color(0xFF3FA0E5);
+  static const infoDark50     = Color(0xFF0F1F2D);
+
+  static const shadowDark = Color(0x66000000); // black @ 40%
 }
 
 extension DonyStatusColors on ColorScheme {
