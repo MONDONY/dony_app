@@ -273,8 +273,8 @@ class _InProgressSection extends StatelessWidget {
                 Container(
                   width: 8,
                   height: 8,
-                  decoration: const BoxDecoration(
-                    color: DonyColors.success,
+                  decoration: BoxDecoration(
+                    color: cs.success,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -283,7 +283,7 @@ class _InProgressSection extends StatelessWidget {
                   'En cours',
                   style: tt.labelLarge?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: DonyColors.success,
+                    color: cs.success,
                   ),
                 ),
               ],
@@ -352,9 +352,9 @@ class _InProgressCard extends StatelessWidget {
       onTap: onDetailTap,
       child: Container(
         decoration: BoxDecoration(
-          color: DonyColors.successLight,
+          color: cs.successLight,
           borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: DonyColors.success.withValues(alpha: 0.35)),
+          border: Border.all(color: cs.success.withValues(alpha: 0.35)),
         ),
         padding: const EdgeInsets.all(14),
         child: Column(
@@ -365,8 +365,8 @@ class _InProgressCard extends StatelessWidget {
                 Container(
                   width: 40,
                   height: 40,
-                  decoration: const BoxDecoration(
-                    color: DonyColors.success,
+                  decoration: BoxDecoration(
+                    color: cs.success,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.flight_rounded,
@@ -388,7 +388,7 @@ class _InProgressCard extends StatelessWidget {
                       Text(
                         _formatDate(announcement.departureDate),
                         style: tt.bodySmall?.copyWith(
-                            color: DonyColors.success,
+                            color: cs.success,
                             fontWeight: FontWeight.w600),
                       ),
                     ],
@@ -402,13 +402,13 @@ class _InProgressCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: cs.surface,
                       borderRadius: BorderRadius.circular(DonyRadius.sm),
-                      border: Border.all(color: DonyColors.success),
+                      border: Border.all(color: cs.success),
                     ),
                     child: Text(
                       'Scanner →',
                       style: tt.labelSmall?.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: DonyColors.success,
+                        color: cs.success,
                       ),
                     ),
                   ),
@@ -421,9 +421,9 @@ class _InProgressCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 5,
-                backgroundColor: DonyColors.success.withValues(alpha: 0.15),
+                backgroundColor: cs.success.withValues(alpha: 0.15),
                 valueColor:
-                    const AlwaysStoppedAnimation<Color>(DonyColors.success),
+                    AlwaysStoppedAnimation<Color>(cs.success),
               ),
             ),
             const SizedBox(height: 4),
@@ -433,7 +433,7 @@ class _InProgressCard extends StatelessWidget {
                 Text(
                   '${booked.toStringAsFixed(0)} / ${total.toStringAsFixed(0)} kg livrés',
                   style: tt.bodySmall?.copyWith(
-                    color: DonyColors.success,
+                    color: cs.success,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -442,20 +442,20 @@ class _InProgressCard extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: DonyColors.success.withValues(alpha: 0.12),
+                      color: cs.success.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(DonyRadius.sm),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.inventory_2_outlined,
-                            size: 12, color: DonyColors.success),
+                            size: 12, color: cs.success),
                         const SizedBox(width: 4),
                         Text(
                           'Voir les colis',
                           style: tt.labelSmall?.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: DonyColors.success,
+                            color: cs.success,
                           ),
                         ),
                       ],

@@ -239,8 +239,8 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
                   ),
                 ),
                 if (_isRefreshing)
-                  const LinearProgressIndicator(
-                    color: DonyColors.primary,
+                  LinearProgressIndicator(
+                    color: Theme.of(context).colorScheme.primary,
                     minHeight: 2,
                   ),
               ],
@@ -333,7 +333,7 @@ class _EnvoisHeaderState extends State<_EnvoisHeader> {
                                   color: Colors.white.withValues(alpha: 0.92)),
                               boxShadow: [
                                 BoxShadow(
-                                  color: DonyColors.primary.withValues(alpha: 0.10),
+                                  color: cs.primary.withValues(alpha: 0.10),
                                   blurRadius: 10,
                                 ),
                               ],
@@ -388,15 +388,15 @@ class _EnvoisHeaderState extends State<_EnvoisHeader> {
                 _StatChip(
                   count: widget.inProgressCount,
                   label: 'en cours',
-                  color: DonyColors.success,
-                  bgColor: DonyColors.successLight,
+                  color: cs.success,
+                  bgColor: cs.successLight,
                 ),
                 const SizedBox(width: DonySpacing.sm),
                 _StatChip(
                   count: widget.upcomingCount,
                   label: 'en attente',
-                  color: DonyColors.warning,
-                  bgColor: DonyColors.warningLight,
+                  color: cs.warning,
+                  bgColor: cs.warningLight,
                 ),
               ],
             ).animate().fadeIn(delay: 80.ms),
@@ -511,7 +511,7 @@ class _ActiveShipmentBanner extends StatelessWidget {
               border: Border.all(color: Colors.white.withValues(alpha: 0.88)),
               boxShadow: [
                 BoxShadow(
-                  color: DonyColors.primary.withValues(alpha: 0.09),
+                  color: cs.primary.withValues(alpha: 0.09),
                   blurRadius: 20,
                 ),
               ],
@@ -735,7 +735,7 @@ class _ShipmentListView extends StatelessWidget {
     if (onRefresh == null) return child;
     return RefreshIndicator(
       onRefresh: onRefresh!,
-      color: DonyColors.primary,
+      color: Theme.of(context).colorScheme.primary,
       child: child,
     );
   }
@@ -756,12 +756,13 @@ Future<bool> _confirmDelete(BuildContext context) async {
 class _DeleteBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Container(
       alignment: Alignment.centerRight,
       padding: const EdgeInsets.only(right: DonySpacing.xl),
       decoration: BoxDecoration(
-        color: DonyColors.error,
+        color: cs.error,
         borderRadius: BorderRadius.circular(DonyRadius.card),
       ),
       child: Column(
@@ -801,17 +802,17 @@ class _ShipmentCard extends StatelessWidget {
         'AWAITING_PAYMENT' => (
             label: 'Paiement requis',
             type: DonyBadgeType.error,
-            barColor: DonyColors.warning,
+            barColor: cs.warning,
           ),
         'PENDING' => (
             label: 'En attente',
             type: DonyBadgeType.warning,
-            barColor: DonyColors.warning,
+            barColor: cs.warning,
           ),
         'ACCEPTED' => (
             label: 'Accepté',
             type: DonyBadgeType.success,
-            barColor: DonyColors.success,
+            barColor: cs.success,
           ),
         'REJECTED' => (
             label: 'Refusé',
@@ -953,7 +954,7 @@ class _ShipmentCard extends StatelessWidget {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: DonySpacing.md, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: DonyColors.warning,
+                                  color: cs.warning,
                                   borderRadius:
                                       BorderRadius.circular(DonyRadius.sm),
                                 ),
@@ -1112,7 +1113,7 @@ class _InfoChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(
           horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
       decoration: BoxDecoration(
-        color: DonyColors.bgApp,
+        color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: cs.outline),
       ),
@@ -1294,14 +1295,14 @@ class _EmptyView extends StatelessWidget {
                     horizontal: DonySpacing.xl, vertical: 13),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [DonyColors.blue700, DonyColors.primary],
+                    colors: [DonyColors.blue700, cs.primary],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(DonyRadius.md),
                   boxShadow: [
                     BoxShadow(
-                      color: DonyColors.primary.withValues(alpha: 0.28),
+                      color: cs.primary.withValues(alpha: 0.28),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -1529,7 +1530,7 @@ class _SavedTripsSheetState extends State<_SavedTripsSheet> {
                   final a = _trips[i];
                   return Container(
                     decoration: BoxDecoration(
-                      color: DonyColors.bgApp,
+                      color: Theme.of(context).scaffoldBackgroundColor,
                       borderRadius: BorderRadius.circular(DonyRadius.lg),
                       border: Border.all(color: cs.outline),
                     ),

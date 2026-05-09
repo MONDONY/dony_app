@@ -258,12 +258,13 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
                 separatorBuilder: (_, __) => Divider(
                   height: 1,
                   thickness: 1,
-                  color: DonyColors.borderDefault,
+                  color: Theme.of(context).colorScheme.outline,
                   indent: 48,
                 ),
                 itemBuilder: (innerCtx, i) {
                   final s = _suggestions[i];
                   final tt = Theme.of(innerCtx).textTheme;
+                  final ics = Theme.of(innerCtx).colorScheme;
                   return InkWell(
                     onTap: () => _resolveAndSelect(s),
                     child: Padding(
@@ -277,14 +278,14 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
                             width: 32,
                             height: 32,
                             decoration: BoxDecoration(
-                              color: DonyColors.primarySoft,
+                              color: ics.primaryContainer,
                               borderRadius:
                                   BorderRadius.circular(DonyRadius.sm),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.place_rounded,
                               size: 16,
-                              color: DonyColors.primary,
+                              color: ics.primary,
                             ),
                           ),
                           const SizedBox(width: DonySpacing.md),
@@ -303,7 +304,7 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
                                   Text(
                                     s.secondaryText,
                                     style: tt.bodySmall?.copyWith(
-                                      color: DonyColors.textMuted,
+                                      color: ics.onSurfaceVariant,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -355,10 +356,10 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
     final borderColor = hasErr
         ? cs.error
         : isFocused
-            ? DonyColors.borderFocus
+            ? cs.primary
             : confirmed
-                ? DonyColors.success
-                : DonyColors.borderDefault;
+                ? cs.success
+                : cs.outline;
     final borderWidth = (hasErr || isFocused || confirmed) ? 1.5 : 1.0;
 
     return CompositedTransformTarget(
@@ -374,33 +375,33 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(DonyRadius.md),
               border: Border.all(color: borderColor, width: borderWidth),
-              color: DonyColors.surface,
+              color: cs.surface,
             ),
             child: TextField(
               controller: _ctrl,
               focusNode: _focus,
-              style: tt.bodyMedium?.copyWith(color: DonyColors.textPrimary),
+              style: tt.bodyMedium?.copyWith(color: cs.onSurface),
               // Assez d'espace bas pour que l'overlay et le clavier soient visibles ensemble
               scrollPadding: const EdgeInsets.only(bottom: 280),
               decoration: InputDecoration(
                 labelText: _w.fieldLabel,
                 labelStyle: tt.bodyMedium?.copyWith(
                   color: isFocused
-                      ? DonyColors.primary
-                      : DonyColors.textSubtle,
+                      ? cs.primary
+                      : cs.onSurfaceVariant,
                 ),
                 floatingLabelStyle: tt.bodySmall?.copyWith(
                   color: isFocused
-                      ? DonyColors.primary
+                      ? cs.primary
                       : confirmed
-                          ? DonyColors.success
-                          : DonyColors.textMuted,
+                          ? cs.success
+                          : cs.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
                 ),
                 // Hint visible uniquement après que le label a flotté
                 hintText: isFocused ? 'Tapez pour rechercher une adresse…' : null,
                 hintStyle: tt.bodyMedium?.copyWith(
-                  color: DonyColors.textSubtle,
+                  color: cs.onSurfaceVariant,
                 ),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
@@ -420,10 +421,10 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
                     confirmed ? Icons.place_rounded : Icons.place_outlined,
                     size: 18,
                     color: confirmed
-                        ? DonyColors.success
+                        ? cs.success
                         : isFocused
-                            ? DonyColors.primary
-                            : DonyColors.textMuted,
+                            ? cs.primary
+                            : cs.onSurfaceVariant,
                   ),
                 ),
                 prefixIconConstraints: const BoxConstraints(
@@ -438,7 +439,7 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
                           height: 16,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: DonyColors.primary,
+                            color: cs.primary,
                           ),
                         ),
                       )
@@ -446,9 +447,9 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
                         ? Padding(
                             padding: const EdgeInsets.only(
                                 right: DonySpacing.md),
-                            child: const Icon(
+                            child: Icon(
                               Icons.check_circle_rounded,
-                              color: DonyColors.success,
+                              color: cs.success,
                               size: 20,
                             ),
                           )
@@ -472,20 +473,20 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
                       width: 28,
                       height: 28,
                       decoration: BoxDecoration(
-                        color: DonyColors.primarySoft,
+                        color: cs.primaryContainer,
                         borderRadius: BorderRadius.circular(DonyRadius.sm),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.my_location_rounded,
                         size: 14,
-                        color: DonyColors.primary,
+                        color: cs.primary,
                       ),
                     ),
                     const SizedBox(width: DonySpacing.sm),
                     Text(
                       'Utiliser ma position actuelle',
                       style: tt.bodySmall?.copyWith(
-                        color: DonyColors.primary,
+                        color: cs.primary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -502,7 +503,7 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
               child: Text(
                 errorText!,
                 style: TextStyle(
-                  color: DonyColors.error,
+                  color: cs.error,
                   fontSize: 12,
                 ),
               ),
@@ -515,16 +516,16 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.wifi_off_rounded,
                     size: 12,
-                    color: DonyColors.warning,
+                    color: cs.warning,
                   ),
                   const SizedBox(width: DonySpacing.xs),
                   Text(
                     'Connexion requise pour la recherche d\'adresse',
                     style: TextStyle(
-                      color: DonyColors.warning,
+                      color: cs.warning,
                       fontSize: 12,
                     ),
                   ),
@@ -538,7 +539,7 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
               padding: const EdgeInsets.only(top: 4, left: 4),
               child: Text(
                 'Aucun résultat — essayez "Ma position actuelle"',
-                style: tt.bodySmall?.copyWith(color: DonyColors.textSubtle),
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
         ],
@@ -556,6 +557,7 @@ class _PermissionSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: EdgeInsets.fromLTRB(
         DonySpacing.lg,
@@ -570,13 +572,13 @@ class _PermissionSheet extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: DonyColors.warningLight,
+              color: cs.warningLight,
               borderRadius: BorderRadius.circular(DonyRadius.md),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.location_off_outlined,
               size: 24,
-              color: DonyColors.warning,
+              color: cs.warning,
             ),
           ),
           const SizedBox(height: DonySpacing.base),
@@ -590,7 +592,7 @@ class _PermissionSheet extends StatelessWidget {
           const SizedBox(height: DonySpacing.sm),
           Text(
             'Activez la localisation dans vos paramètres pour utiliser cette fonctionnalité.',
-            style: tt.bodyMedium?.copyWith(color: DonyColors.textMuted),
+            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: DonySpacing.xl),
@@ -618,6 +620,7 @@ class _GpsDisabledSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: EdgeInsets.fromLTRB(
         DonySpacing.lg,
@@ -632,13 +635,13 @@ class _GpsDisabledSheet extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: DonyColors.warningLight,
+              color: cs.warningLight,
               borderRadius: BorderRadius.circular(DonyRadius.md),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.gps_off,
               size: 24,
-              color: DonyColors.warning,
+              color: cs.warning,
             ),
           ),
           const SizedBox(height: DonySpacing.base),
@@ -650,7 +653,7 @@ class _GpsDisabledSheet extends StatelessWidget {
           const SizedBox(height: DonySpacing.sm),
           Text(
             'Activez la géolocalisation dans vos paramètres système.',
-            style: tt.bodyMedium?.copyWith(color: DonyColors.textMuted),
+            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: DonySpacing.xl),
