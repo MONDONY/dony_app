@@ -1,9 +1,27 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:intl/date_symbol_data_local.dart';
+import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/same_address_announcements_sheet.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:mocktail/mocktail.dart';
+
+class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
+
+Widget _wrap(Widget child) {
+  final bidBloc = _MockBidBloc();
+  when(() => bidBloc.state).thenReturn(BidInitial());
+  when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
+  return BlocProvider<BidBloc>.value(
+    value: bidBloc,
+    child: MaterialApp(home: Scaffold(body: child)),
+  );
+}
 
 AnnouncementModel _ann(String id, String dep, String arr) => AnnouncementModel(
       id: id,
@@ -26,15 +44,11 @@ void main() {
 
   testWidgets('lists all announcements', (tester) async {
     final list = [_ann('a1', 'Paris', 'Dakar'), _ann('a2', 'Paris', 'Dakar')];
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: SameAddressAnnouncementsSheet(
-          addressLabel: '12 rue Hugo, Paris',
-          announcements: list,
-          onTap: (_) {},
-        ),
-      ),
-    ));
+    await tester.pumpWidget(_wrap(SameAddressAnnouncementsSheet(
+      addressLabel: '12 rue Hugo, Paris',
+      announcements: list,
+      onTap: (_) {},
+    )));
     await tester.pumpAndSettle();
     expect(find.text('12 rue Hugo, Paris'), findsOneWidget);
     expect(find.text('Sékou Ba'), findsNWidgets(2));
@@ -43,15 +57,11 @@ void main() {
   testWidgets('tap on item invokes onTap with that announcement', (tester) async {
     String? tappedId;
     final list = [_ann('a1', 'Paris', 'Dakar'), _ann('a2', 'Paris', 'Dakar')];
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: SameAddressAnnouncementsSheet(
-          addressLabel: 'X',
-          announcements: list,
-          onTap: (a) => tappedId = a.id,
-        ),
-      ),
-    ));
+    await tester.pumpWidget(_wrap(SameAddressAnnouncementsSheet(
+      addressLabel: 'X',
+      announcements: list,
+      onTap: (a) => tappedId = a.id,
+    )));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Sékou Ba').last);
     await tester.pumpAndSettle();
@@ -61,16 +71,12 @@ void main() {
   testWidgets('isOwnAnnouncement: own card disables tap', (tester) async {
     String? tappedId;
     final list = [_ann('a1', 'Paris', 'Dakar')]; // travelerId == 't1'
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: SameAddressAnnouncementsSheet(
-          addressLabel: 'X',
-          announcements: list,
-          currentUserId: 't1', // matches the traveler — it's "own"
-          onTap: (a) => tappedId = a.id,
-        ),
-      ),
-    ));
+    await tester.pumpWidget(_wrap(SameAddressAnnouncementsSheet(
+      addressLabel: 'X',
+      announcements: list,
+      currentUserId: 't1', // matches the traveler — it's "own"
+      onTap: (a) => tappedId = a.id,
+    )));
     await tester.pumpAndSettle();
     expect(find.text('Votre trajet'), findsOneWidget);
     await tester.tap(find.text('Sékou Ba'));

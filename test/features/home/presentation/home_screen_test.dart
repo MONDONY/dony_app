@@ -11,6 +11,9 @@ import 'package:dony/features/home/presentation/home_screen.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
@@ -34,6 +37,8 @@ class MockNotificationBloc
 class MockAnnouncementBloc
     extends MockBloc<AnnouncementEvent, AnnouncementState>
     implements AnnouncementBloc {}
+
+class MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 class MockActiveRoleCubit extends MockCubit<ActiveRole>
     implements ActiveRoleCubit {}
@@ -86,11 +91,13 @@ Widget _buildHome({
   AnnouncementState? announcementState,
   ActiveRole role = ActiveRole.sender,
   UserModel? user,
+  BidState? bidState,
 }) {
   final announcementBloc = MockAnnouncementBloc();
   final authBloc = MockAuthBloc();
   final roleCubit = MockActiveRoleCubit();
   final notifBloc = MockNotificationBloc();
+  final bidBloc = MockBidBloc();
 
   when(() => announcementBloc.state)
       .thenReturn(announcementState ?? AnnouncementInitial());
@@ -101,6 +108,8 @@ Widget _buildHome({
   when(() => roleCubit.stream).thenAnswer((_) => const Stream.empty());
   when(() => notifBloc.state).thenReturn(const NotificationInitial());
   when(() => notifBloc.stream).thenAnswer((_) => const Stream.empty());
+  when(() => bidBloc.state).thenReturn(bidState ?? BidInitial());
+  when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
 
   return MultiBlocProvider(
     providers: [
@@ -108,6 +117,7 @@ Widget _buildHome({
       BlocProvider<AuthBloc>.value(value: authBloc),
       BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
       BlocProvider<NotificationBloc>.value(value: notifBloc),
+      BlocProvider<BidBloc>.value(value: bidBloc),
     ],
     child: MaterialApp(
       theme: AppTheme.light,

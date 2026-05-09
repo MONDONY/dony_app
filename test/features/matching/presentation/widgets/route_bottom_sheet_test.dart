@@ -1,10 +1,18 @@
+import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/constants/cities.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/route_bottom_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:mocktail/mocktail.dart';
+
+class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 AnnouncementModel _ann(String dep, String arr, {String id = 'a1'}) =>
     AnnouncementModel(
@@ -27,6 +35,9 @@ final _dakar = CityConstants.findById('dakar')!;
 final _abidjan = CityConstants.findById('abidjan')!;
 
 Widget _wrap(Widget child) {
+  final bidBloc = _MockBidBloc();
+  when(() => bidBloc.state).thenReturn(BidInitial());
+  when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
   final router = GoRouter(
     initialLocation: '/',
     routes: [
@@ -34,7 +45,10 @@ Widget _wrap(Widget child) {
       GoRoute(path: '/search/:id', builder: (_, __) => const Scaffold()),
     ],
   );
-  return MaterialApp.router(routerConfig: router);
+  return BlocProvider<BidBloc>.value(
+    value: bidBloc,
+    child: MaterialApp.router(routerConfig: router),
+  );
 }
 
 void main() {

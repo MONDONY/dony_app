@@ -1,9 +1,12 @@
 import 'package:dony/core/constants/cities.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 // ── Filtre scellé ─────────────────────────────────────────────────────────────
@@ -119,28 +122,45 @@ class RouteBottomSheet extends StatelessWidget {
                         textAlign: TextAlign.center,
                       ),
                     )
-                  : ListView.separated(
-                      controller: scrollCtrl,
-                      padding: const EdgeInsets.fromLTRB(
-                        DonySpacing.base,
-                        0,
-                        DonySpacing.base,
-                        DonySpacing.huge,
-                      ),
-                      itemCount: items.length,
-                      separatorBuilder: (_, __) =>
-                          const SizedBox(height: DonySpacing.md),
-                      itemBuilder: (_, i) {
-                        final ann = items[i];
-                        return TravelerCard(
-                          key: Key('traveler-card-${ann.id}'),
-                          announcement: ann,
-                          index: i,
-                          isOwnAnnouncement: false,
-                          onTap: () {
-                            ctx.pop();
-                            showTravelerAnnouncementSheet(context,
-                                announcement: ann);
+                  : BlocBuilder<BidBloc, BidState>(
+                      buildWhen: (prev, curr) =>
+                          curr is BidListLoaded || prev is BidListLoaded,
+                      builder: (context, bidState) {
+                        final activeBids = bidState.activeBidsByAnnouncement();
+                        return ListView.separated(
+                          controller: scrollCtrl,
+                          padding: const EdgeInsets.fromLTRB(
+                            DonySpacing.base,
+                            0,
+                            DonySpacing.base,
+                            DonySpacing.huge,
+                          ),
+                          itemCount: items.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: DonySpacing.md),
+                          itemBuilder: (_, i) {
+                            final ann = items[i];
+                            final existingBid = activeBids[ann.id];
+                            return TravelerCard(
+                              key: Key('traveler-card-${ann.id}'),
+                              announcement: ann,
+                              index: i,
+                              isOwnAnnouncement: false,
+                              existingBidStatus: existingBid?.status,
+                              onTap: existingBid != null
+                                  ? () {
+                                      ctx.pop();
+                                      context.push(
+                                        '/bids/${existingBid.id}',
+                                        extra: existingBid,
+                                      );
+                                    }
+                                  : () {
+                                      ctx.pop();
+                                      showTravelerAnnouncementSheet(context,
+                                          announcement: ann);
+                                    },
+                            );
                           },
                         );
                       },

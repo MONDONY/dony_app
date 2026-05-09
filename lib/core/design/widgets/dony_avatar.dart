@@ -83,8 +83,8 @@ class DonyAvatar extends StatelessWidget {
         if (verified)
           Positioned(
             right: -dim * 0.02,
-            bottom: -dim * 0.02,
-            child: _VerifiedBadge(size: dim * 0.42, isPro: pro),
+            bottom: 0,
+            child: _VerifiedBadge(size: dim * 0.30, isPro: pro),
           ),
       ],
     );

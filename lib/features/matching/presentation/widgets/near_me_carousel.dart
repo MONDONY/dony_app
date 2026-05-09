@@ -1,12 +1,15 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
 
 /// Returns a formatted badge like "CDG · 3 km" or null when unavailable.
 String? buildDistanceBadge(
@@ -166,25 +169,39 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
                         : null;
                     final isOwn = currentUserId != null &&
                         a.travelerId == currentUserId;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: DonySpacing.sm),
-                      child: TravelerCard(
-                        announcement: a,
-                        index: i,
-                        isOwnAnnouncement: isOwn,
-                        distanceBadge: badge,
-                        onTap: isOwn
-                            ? null
-                            : () {
-                                if (widget.onTapCard != null) {
-                                  widget.onTapCard!(a);
-                                } else {
-                                  showTravelerAnnouncementSheet(context,
-                                      announcement: a);
-                                }
-                              },
-                      ),
+                    return BlocBuilder<BidBloc, BidState>(
+                      buildWhen: (prev, curr) =>
+                          curr is BidListLoaded || prev is BidListLoaded,
+                      builder: (context, bidState) {
+                        final existingBid =
+                            bidState.activeBidsByAnnouncement()[a.id];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: DonySpacing.sm),
+                          child: TravelerCard(
+                            announcement: a,
+                            index: i,
+                            isOwnAnnouncement: isOwn,
+                            distanceBadge: badge,
+                            existingBidStatus: existingBid?.status,
+                            onTap: isOwn
+                                ? null
+                                : existingBid != null
+                                    ? () => context.push(
+                                          '/bids/${existingBid.id}',
+                                          extra: existingBid,
+                                        )
+                                    : () {
+                                        if (widget.onTapCard != null) {
+                                          widget.onTapCard!(a);
+                                        } else {
+                                          showTravelerAnnouncementSheet(context,
+                                              announcement: a);
+                                        }
+                                      },
+                          ),
+                        );
+                      },
                     );
                   },
                 ),

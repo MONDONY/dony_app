@@ -12,6 +12,7 @@ class TravelerCard extends StatelessWidget {
     required this.isOwnAnnouncement,
     required this.onTap,
     this.distanceBadge,
+    this.existingBidStatus,
   });
 
   final AnnouncementModel announcement;
@@ -19,10 +20,35 @@ class TravelerCard extends StatelessWidget {
   final int index;
   final bool isOwnAnnouncement;
   final String? distanceBadge;
+  /// Statut d'un bid actif (PENDING ou ACCEPTED) déjà déposé par l'expéditeur
+  /// courant sur cette annonce. Si non null, la carte affiche un chip de
+  /// statut + une bordure colorée pour rappeler à l'expéditeur qu'il a déjà
+  /// une demande en cours sur ce trajet.
+  final String? existingBidStatus;
 
   static const int _maxVisibleChips = 3;
 
   String get _displayName => announcement.traveler?.resolvedName ?? 'Voyageur';
+
+  ({Color border, Color chipBg, Color chipFg, String label}) get _bidStyle {
+    switch (existingBidStatus) {
+      case 'ACCEPTED':
+        return (
+          border: DonyColors.success,
+          chipBg: DonyColors.successLight,
+          chipFg: DonyColors.success,
+          label: 'Demande acceptée',
+        );
+      case 'PENDING':
+      default:
+        return (
+          border: DonyColors.warning,
+          chipBg: DonyColors.warning50,
+          chipFg: DonyColors.amberDark,
+          label: 'Demande en attente',
+        );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +60,8 @@ class TravelerCard extends StatelessWidget {
     final isProAccount = traveler?.isProAccount ?? false;
     final dateStr = DateFormat('EEE d', 'fr').format(announcement.departureDate);
     final categories = announcement.acceptedContentTypes ?? [];
+    final hasExistingBid = existingBidStatus != null;
+    final bidStyle = _bidStyle;
 
     return GestureDetector(
       onTap: onTap,
@@ -41,12 +69,23 @@ class TravelerCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: DonyColors.surface,
           borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: DonyColors.borderDefault),
+          border: Border.all(
+            color: hasExistingBid ? bidStyle.border : DonyColors.borderDefault,
+            width: hasExistingBid ? 1.5 : 1,
+          ),
         ),
         padding: const EdgeInsets.all(DonySpacing.base),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (hasExistingBid) ...[
+              _ExistingBidChip(
+                label: bidStyle.label,
+                bg: bidStyle.chipBg,
+                fg: bidStyle.chipFg,
+              ),
+              const SizedBox(height: DonySpacing.sm),
+            ],
             if (distanceBadge != null) ...[
               _DistanceBadge(label: distanceBadge!),
               const SizedBox(height: DonySpacing.sm),
@@ -111,32 +150,9 @@ class TravelerCard extends StatelessWidget {
               const SizedBox(height: DonySpacing.sm),
               _CategoryChips(categories: categories, maxVisible: _maxVisibleChips),
             ],
-            if (distanceBadge != null || isOwnAnnouncement) ...[
+            if (isOwnAnnouncement) ...[
               const SizedBox(height: DonySpacing.sm),
-              Row(
-                children: [
-                  if (distanceBadge != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.sm, vertical: DonySpacing.xxs,
-                      ),
-                      decoration: BoxDecoration(
-                        color: DonyColors.primarySoft,
-                        borderRadius: BorderRadius.circular(DonyRadius.xl),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.location_on_rounded, size: 11, color: DonyColors.primary),
-                          const SizedBox(width: 3),
-                          Text(distanceBadge!, style: tt.labelSmall?.copyWith(color: DonyColors.primary, fontWeight: FontWeight.w600)),
-                        ],
-                      ),
-                    ),
-                  if (isOwnAnnouncement)
-                    Text('Votre trajet', style: tt.labelMedium?.copyWith(color: DonyColors.textMuted)),
-                ],
-              ),
+              Text('Votre trajet', style: tt.labelMedium?.copyWith(color: DonyColors.textMuted)),
             ],
           ],
         ),
@@ -144,6 +160,51 @@ class TravelerCard extends StatelessWidget {
           .animate()
           .fadeIn(delay: Duration(milliseconds: 60 * index))
           .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+    );
+  }
+}
+
+class _ExistingBidChip extends StatelessWidget {
+  const _ExistingBidChip({
+    required this.label,
+    required this.bg,
+    required this.fg,
+  });
+
+  final String label;
+  final Color bg;
+  final Color fg;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      key: const Key('traveler-card-existing-bid-chip'),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.check_circle_rounded, size: 13, color: fg),
+          const SizedBox(width: DonySpacing.xs),
+          Flexible(
+            child: Text(
+              label,
+              style: tt.labelSmall?.copyWith(
+                color: fg,
+                fontWeight: FontWeight.w700,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

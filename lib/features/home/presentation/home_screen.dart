@@ -12,6 +12,9 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
 import 'package:dony/features/matching/data/models/search_params.dart';
@@ -200,6 +203,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
         _dispatchSearch();
       }
       _loadPopularCorridors();
+      // Charger la liste des bids de l'expéditeur pour pouvoir indiquer sur
+      // chaque carte de trajet s'il a déjà une demande active dessus.
+      // Le BidBloc cache la liste, c'est silencieux si déjà chargée récemment.
+      context.read<BidBloc>().add(BidMyListRequested());
     });
   }
 
@@ -721,40 +728,56 @@ class _MapSenderViewState extends State<_MapSenderView> {
                       DonySpacing.base,
                       bottomPad + DonySpacing.huge,
                     ),
-                    sliver: SliverList.separated(
-                      itemCount: count,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: DonySpacing.md),
-                      itemBuilder: (context, i) {
-                        final a = announcements[i];
-                        final authState = context.read<AuthBloc>().state;
-                        final currentUserId = authState is AuthAuthenticated
-                            ? authState.user.id
-                            : null;
-                        final isOwn = currentUserId != null &&
-                            a.travelerId == currentUserId;
-                        final badge = _isNearMeActive
-                            ? buildDistanceBadge(
-                                a,
-                                _userPosition != null
-                                    ? (
-                                        lat: _userPosition!.latitude,
-                                        lng: _userPosition!.longitude
-                                      )
-                                    : null,
-                              )
-                            : null;
-                        return TravelerCard(
-                          announcement: a,
-                          index: i,
-                          isOwnAnnouncement: isOwn,
-                          distanceBadge: badge,
-                          onTap: isOwn
-                              ? null
-                              : () => showTravelerAnnouncementSheet(
-                                    context,
-                                    announcement: a,
-                                  ),
+                    sliver: BlocBuilder<BidBloc, BidState>(
+                      buildWhen: (prev, curr) =>
+                          curr is BidListLoaded || prev is BidListLoaded,
+                      builder: (context, bidState) {
+                        final myActiveBidsByAnnouncement =
+                            bidState.activeBidsByAnnouncement();
+                        return SliverList.separated(
+                          itemCount: count,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: DonySpacing.md),
+                          itemBuilder: (context, i) {
+                            final a = announcements[i];
+                            final authState = context.read<AuthBloc>().state;
+                            final currentUserId = authState is AuthAuthenticated
+                                ? authState.user.id
+                                : null;
+                            final isOwn = currentUserId != null &&
+                                a.travelerId == currentUserId;
+                            final badge = _isNearMeActive
+                                ? buildDistanceBadge(
+                                    a,
+                                    _userPosition != null
+                                        ? (
+                                            lat: _userPosition!.latitude,
+                                            lng: _userPosition!.longitude
+                                          )
+                                        : null,
+                                  )
+                                : null;
+                            final existingBid =
+                                myActiveBidsByAnnouncement[a.id];
+                            return TravelerCard(
+                              announcement: a,
+                              index: i,
+                              isOwnAnnouncement: isOwn,
+                              distanceBadge: badge,
+                              existingBidStatus: existingBid?.status,
+                              onTap: isOwn
+                                  ? null
+                                  : existingBid != null
+                                      ? () => context.push(
+                                            '/bids/${existingBid.id}',
+                                            extra: existingBid,
+                                          )
+                                      : () => showTravelerAnnouncementSheet(
+                                            context,
+                                            announcement: a,
+                                          ),
+                            );
+                          },
                         );
                       },
                     ),
@@ -766,6 +789,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       ),
     );
   }
+
 }
 
 // ══════════════════════════════════════════════════════════════════════════════

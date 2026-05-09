@@ -106,4 +106,48 @@ void main() {
       expect(find.text('CDG · 8 km'), findsNothing);
     });
   });
+
+  group('TravelerCard – existingBidStatus', () {
+    const chipKey = Key('traveler-card-existing-bid-chip');
+
+    testWidgets('affiche le chip "Demande en attente" pour status PENDING',
+        (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+        existingBidStatus: 'PENDING',
+      )));
+      await tester.pumpAndSettle();
+      expect(find.byKey(chipKey), findsOneWidget);
+      expect(find.text('Demande en attente'), findsOneWidget);
+    });
+
+    testWidgets('affiche le chip "Demande acceptée" pour status ACCEPTED',
+        (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+        existingBidStatus: 'ACCEPTED',
+      )));
+      await tester.pumpAndSettle();
+      expect(find.byKey(chipKey), findsOneWidget);
+      expect(find.text('Demande acceptée'), findsOneWidget);
+    });
+
+    testWidgets("n'affiche pas le chip quand existingBidStatus est null",
+        (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+      )));
+      await tester.pumpAndSettle();
+      expect(find.byKey(chipKey), findsNothing);
+    });
+  });
 }
