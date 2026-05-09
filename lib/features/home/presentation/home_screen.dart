@@ -391,6 +391,27 @@ class _MapSenderViewState extends State<_MapSenderView> {
     _dispatchSearch();
   }
 
+  void _exitNearMeAndShowList() {
+    _deactivateNearMe();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _sheetController.animateTo(
+        1.0,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+    });
+  }
+
+  void _onTravelerCardTap(BuildContext context, AnnouncementModel a) {
+    final bidState = context.read<BidBloc>().state;
+    final existingBid = bidState.activeBidsByAnnouncement()[a.id];
+    if (existingBid != null) {
+      context.push('/bids/${existingBid.id}', extra: existingBid);
+    } else {
+      showTravelerAnnouncementSheet(context, announcement: a);
+    }
+  }
+
   void _showMap() {
     _sheetController.animateTo(
       0.45,
@@ -573,21 +594,50 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 ),
               ),
 
-              // ── DraggableScrollableSheet ──────────────────────────────────
-              DraggableScrollableSheet(
-                controller: _sheetController,
-                initialChildSize: 0.20,
-                minChildSize: 0.15,
-                maxChildSize: 1.0,
-                snap: true,
-                snapSizes: const [0.20, 0.45, 1.0],
-                builder: (ctx, scrollCtrl) => _buildSheet(
-                  ctx,
-                  scrollCtrl,
-                  announcements,
-                  MediaQuery.of(context).padding.bottom,
+              // ── Liste ou Carousel selon le mode Près de moi ───────────────
+              if (!_isNearMeActive)
+                DraggableScrollableSheet(
+                  controller: _sheetController,
+                  initialChildSize: 0.20,
+                  minChildSize: 0.15,
+                  maxChildSize: 1.0,
+                  snap: true,
+                  snapSizes: const [0.20, 0.45, 1.0],
+                  builder: (ctx, scrollCtrl) => _buildSheet(
+                    ctx,
+                    scrollCtrl,
+                    announcements,
+                    MediaQuery.of(context).padding.bottom,
+                  ),
+                )
+              else
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: SafeArea(
+                    child: SizedBox(
+                      height: 280,
+                      child: NearMeCarousel(
+                        announcements: announcements,
+                        userPosition: _userPosition != null
+                            ? (
+                                lat: _userPosition!.latitude,
+                                lng: _userPosition!.longitude
+                              )
+                            : null,
+                        selectedAnnouncementId: _selectedAnnouncementId,
+                        onCardChanged: (id) =>
+                            setState(() => _selectedAnnouncementId = id),
+                        onSeeAll: _exitNearMeAndShowList,
+                        onTapCard: (a) => _onTravelerCardTap(context, a),
+                      )
+                          .animate()
+                          .fadeIn(duration: 250.ms)
+                          .slideY(begin: 0.1, curve: Curves.easeOutCubic),
+                    ),
+                  ),
                 ),
-              ),
 
               // ── FAB "Carte" (visible quand sheet plein écran) ─────────────
               AnimatedPositioned(
