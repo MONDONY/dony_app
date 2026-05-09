@@ -79,6 +79,9 @@ Widget _wrap(
       .thenReturn(authState ?? AuthAuthenticated(_makeUser()));
   when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
 
+  addTearDown(bidBloc.close);
+  addTearDown(authBloc.close);
+
   final router = GoRouter(
     initialLocation: '/',
     routes: [
@@ -150,15 +153,22 @@ void main() {
       '4 — selectedAnnouncementId initialise le PageController sur la bonne page',
       (tester) async {
     final anns = [_ann('a1'), _ann('a2'), _ann('a3')];
+    String? changed;
+
     await tester.pumpWidget(_wrap(NearMeCarousel(
       announcements: anns,
       userPosition: null,
       onSeeAll: () {},
-      selectedAnnouncementId: 'a2',
+      selectedAnnouncementId: 'a2', // should start at index 1
+      onCardChanged: (id) => changed = id,
     )));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('near-me-card-a2')), findsWidgets);
+    // Starting at a2 (page 1), swiping left must land on a3 (page 2)
+    await tester.drag(find.byType(PageView), const Offset(-500, 0));
+    await tester.pumpAndSettle();
+
+    expect(changed, 'a3');
   });
 
   testWidgets(
@@ -175,6 +185,7 @@ void main() {
     )));
     await tester.pumpAndSettle();
 
+    // 500 px > 50 % of the 800 px default test viewport → triggers page change
     await tester.drag(find.byType(PageView), const Offset(-500, 0));
     await tester.pumpAndSettle();
 
@@ -235,5 +246,22 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(called, isTrue);
+  });
+
+  testWidgets(
+      '9 — tap sur une card sans bid et sans onTapCard ouvre le bottom sheet',
+      (tester) async {
+    await tester.pumpWidget(_wrap(NearMeCarousel(
+      announcements: [_ann('a1')],
+      userPosition: null,
+      onSeeAll: () {},
+      // onTapCard intentionally omitted → fallback to showTravelerAnnouncementSheet
+    )));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('near-me-card-a1')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(BottomSheet), findsOneWidget);
   });
 }
