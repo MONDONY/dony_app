@@ -323,7 +323,8 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
         final earliest = cluster.items
             .map((it) => it.announcement.departureDate)
             .reduce((a, b) => a.isBefore(b) ? a : b);
-        final urgencyColor = MarkerUrgencyColor.fromDeparture(earliest);
+        final urgencyColor = MarkerUrgencyColor.fromDeparture(earliest,
+            brightness: Theme.of(context).brightness);
         final isSelected = cluster.items
             .any((it) => it.announcement.id == widget.selectedAnnouncementId);
         final icon = await MarkerBitmapFactory.stackedPricePill(
@@ -356,8 +357,9 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
 
     // Single marker.
     final item = cluster.items.first;
-    final urgencyColor =
-        MarkerUrgencyColor.fromDeparture(item.announcement.departureDate);
+    final urgencyColor = MarkerUrgencyColor.fromDeparture(
+        item.announcement.departureDate,
+        brightness: Theme.of(context).brightness);
     final isSelected = item.announcement.id == widget.selectedAnnouncementId;
     final icon = await MarkerBitmapFactory.pricePill(
       pricePerKg: item.announcement.pricePerKg,
