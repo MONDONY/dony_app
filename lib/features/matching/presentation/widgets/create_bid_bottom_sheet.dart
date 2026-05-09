@@ -39,13 +39,21 @@ class CreateBidBottomSheet {
           ? 5 * announcement.pricePerKg * 1.12
           : announcement.availableKg * announcement.pricePerKg * 1.12,
     );
+    // Création explicite des BLoCs ici pour qu'ils soient l'unique source
+    // de vérité partagée entre le child (qui dispatch les events) et le
+    // stickyBottom (qui observe le state pour le spinner). Sans ça, le
+    // scope du BlocProvider via wrapper a parfois des bugs subtils où
+    // BlocBuilder du stickyBottom et context.read du child ne pointent
+    // pas sur la même instance.
+    final bidBloc = getIt<BidBloc>();
+    final paymentBloc = getIt<PaymentBloc>();
     return DonyBottomSheet.show(
       context,
       title: 'Envoyer un colis',
       wrapper: (child) => MultiBlocProvider(
         providers: [
-          BlocProvider(create: (_) => getIt<BidBloc>()),
-          BlocProvider(create: (_) => getIt<PaymentBloc>()),
+          BlocProvider<BidBloc>.value(value: bidBloc),
+          BlocProvider<PaymentBloc>.value(value: paymentBloc),
         ],
         child: child,
       ),
@@ -54,6 +62,7 @@ class CreateBidBottomSheet {
         builder: (ctx, canSubmit, _) => ValueListenableBuilder<double>(
           valueListenable: totalPriceNotifier,
           builder: (ctx, totalPrice, _) => BlocBuilder<BidBloc, BidState>(
+            bloc: bidBloc,
             builder: (ctx, state) {
               final isLoading = state is BidLoading;
               return DonyButton(
@@ -76,6 +85,8 @@ class CreateBidBottomSheet {
     ).whenComplete(() {
       canSubmitNotifier.dispose();
       totalPriceNotifier.dispose();
+      bidBloc.close();
+      paymentBloc.close();
     });
   }
 }

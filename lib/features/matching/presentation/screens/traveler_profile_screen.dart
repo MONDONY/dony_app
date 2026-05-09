@@ -7,12 +7,12 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/services/saved_trips_service.dart';
+import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_profile_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class TravelerProfileScreen extends StatefulWidget {
@@ -208,10 +208,8 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                 ),
                 child: DonyButton(
                   label: 'Envoyer un colis',
-                  onPressed: () => context.push(
-                    '/search/${_a.id}/bid',
-                    extra: _a,
-                  ),
+                  onPressed: () =>
+                      CreateBidBottomSheet.show(context, announcement: _a),
                 ),
               ).animate().slideY(
                     begin: 0.5,

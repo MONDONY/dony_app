@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 
 enum DonyAvatarSize { sm, md, lg, xl }
 
+const Color _kVerifiedBlue = DonyColors.primary;
+const Color _kVerifiedGold = Color(0xFFF0B829);
+
 class DonyAvatar extends StatelessWidget {
   const DonyAvatar({
     super.key,
@@ -79,30 +82,34 @@ class DonyAvatar extends StatelessWidget {
         ),
         if (verified)
           Positioned(
-            right: 0,
-            bottom: 0,
-            child: Container(
-              width: dim * 0.33,
-              height: dim * 0.33,
-              decoration: const BoxDecoration(color: DonyColors.success, shape: BoxShape.circle),
-              child: Icon(Icons.check, color: DonyColors.white, size: dim * 0.2),
-            ),
-          ),
-        if (pro)
-          Positioned(
-            left: 0,
-            bottom: 0,
-            child: Container(
-              width: dim * 0.36,
-              height: dim * 0.36,
-              decoration: const BoxDecoration(
-                color: DonyColors.warning,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.star_rounded, color: DonyColors.white, size: dim * 0.22),
-            ),
+            right: -dim * 0.02,
+            bottom: -dim * 0.02,
+            child: _VerifiedBadge(size: dim * 0.42, isPro: pro),
           ),
       ],
+    );
+  }
+}
+
+class _VerifiedBadge extends StatelessWidget {
+  const _VerifiedBadge({required this.size, required this.isPro});
+
+  final double size;
+  final bool isPro;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isPro ? _kVerifiedGold : _kVerifiedBlue;
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Icon(Icons.verified_rounded, size: size, color: DonyColors.white),
+          Icon(Icons.verified_rounded, size: size * 0.88, color: color),
+        ],
+      ),
     );
   }
 }

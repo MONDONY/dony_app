@@ -183,6 +183,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     isTraveler: isTraveler,
                                     isSender: isSender,
                                     isKycVerified: isKycVerified,
+                                    isProAccount: isProAccount,
                                     totalTrips: user?.totalTrips ?? 0,
                                     totalShipments: user?.totalShipments ?? 0,
                                     isLoadingStats: bidState is BidLoading ||

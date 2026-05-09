@@ -156,7 +156,7 @@ void main() {
       verify: (bloc) {
         verify(() => mockRepo.register(
               phoneNumber: any(named: 'phoneNumber'),
-              roles: ['ROLE_TRAVELER', 'ROLE_SENDER'],
+              roles: ['TRAVELER', 'SENDER'],
             )).called(1);
         verify(() => mockLocalAuth.clearPin()).called(1);
       },

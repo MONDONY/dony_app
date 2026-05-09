@@ -12,6 +12,7 @@ class ProfileHeader extends StatelessWidget {
     required this.isTraveler,
     required this.isSender,
     required this.isKycVerified,
+    required this.isProAccount,
     required this.totalTrips,
     required this.totalShipments,
     this.isLoadingStats = false,
@@ -24,6 +25,7 @@ class ProfileHeader extends StatelessWidget {
   final bool isTraveler;
   final bool isSender;
   final bool isKycVerified;
+  final bool isProAccount;
   final int totalTrips;
   final int totalShipments;
   final bool isLoadingStats;
@@ -71,6 +73,7 @@ class ProfileHeader extends StatelessWidget {
                   name: displayName,
                   size: DonyAvatarSize.xl,
                   verified: isKycVerified,
+                  pro: isProAccount,
                 ),
               ),
               const SizedBox(height: DonySpacing.md),
@@ -88,7 +91,7 @@ class ProfileHeader extends StatelessWidget {
               // ── Badge KYC ─────────────────────────────────────────────
               if (isKycVerified) ...[
                 const SizedBox(height: DonySpacing.xs),
-                _KycBadge(),
+                _KycBadge(isPro: isProAccount),
               ],
 
               const SizedBox(height: DonySpacing.md),
@@ -134,29 +137,37 @@ class ProfileHeader extends StatelessWidget {
 
 // ── KYC Badge ─────────────────────────────────────────────────────────────────
 
+const Color _kKycBadgeBlue = Color(0xFF6FA8FF);
+const Color _kKycBadgeGold = Color(0xFFF0B829);
+
 class _KycBadge extends StatelessWidget {
+  const _KycBadge({required this.isPro});
+
+  final bool isPro;
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final accent = isPro ? _kKycBadgeGold : _kKycBadgeBlue;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: DonySpacing.md,
         vertical: DonySpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: DonyColors.success.withValues(alpha: 0.2),
+        color: DonyColors.surface.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(DonyRadius.full),
-        border: Border.all(color: DonyColors.success.withValues(alpha: 0.5)),
+        border: Border.all(color: accent.withValues(alpha: 0.6)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.verified_rounded, color: DonyColors.success, size: 13),
+          Icon(Icons.verified_rounded, color: accent, size: 13),
           const SizedBox(width: DonySpacing.xs),
           Text(
-            'Identité vérifiée',
+            isPro ? 'Profil pro vérifié' : 'Identité vérifiée',
             style: tt.labelSmall?.copyWith(
-              color: DonyColors.success,
+              color: DonyColors.textOnBrand,
               fontWeight: FontWeight.w600,
             ),
           ),

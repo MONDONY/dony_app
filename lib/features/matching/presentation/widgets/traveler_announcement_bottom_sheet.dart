@@ -2,8 +2,9 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/traveler_profile_sheet.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 void showTravelerAnnouncementSheet(
@@ -13,13 +14,17 @@ void showTravelerAnnouncementSheet(
   DonyBottomSheet.show<void>(
     context,
     title: 'Détail du trajet',
-    stickyBottom: DonyButton(
-      label: 'Faire une demande',
-      icon: Icons.send_rounded,
-      onPressed: () {
-        Navigator.of(context, rootNavigator: true).pop();
-        context.push('/announcements/${announcement.id}');
-      },
+    stickyBottom: Builder(
+      builder: (innerCtx) => DonyButton(
+        label: 'Faire une demande',
+        icon: Icons.send_rounded,
+        onPressed: () {
+          final navigator = Navigator.of(innerCtx, rootNavigator: true);
+          final rootCtx = navigator.context;
+          navigator.pop();
+          CreateBidBottomSheet.show(rootCtx, announcement: announcement);
+        },
+      ),
     ),
     child: _TravelerAnnouncementContent(announcement: announcement),
   );
@@ -39,50 +44,78 @@ class _TravelerAnnouncementContent extends StatelessWidget {
     final dateStr = DateFormat('EEEE d MMMM yyyy', 'fr').format(announcement.departureDate);
     final categories = announcement.acceptedContentTypes ?? [];
 
+    final totalTrips = traveler?.totalTrips ?? 0;
+    final isKycVerified = traveler?.kycVerified ?? false;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Voyageur
-        Row(
-          children: [
-            DonyAvatar(
-              name: traveler?.resolvedName ?? 'Voyageur',
-              size: DonyAvatarSize.lg,
-            ),
-            const SizedBox(width: DonySpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    traveler?.resolvedName ?? 'Voyageur',
-                    style: tt.titleLarge,
-                  ),
-                  const SizedBox(height: DonySpacing.xxs),
-                  Row(
+        // Voyageur — tappable pour ouvrir le profil complet (avec avis)
+        InkWell(
+          key: const Key('traveler-block'),
+          borderRadius: BorderRadius.circular(DonyRadius.lg),
+          onTap: traveler == null
+              ? null
+              : () => showTravelerProfileSheet(context, traveler),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
+            child: Row(
+              children: [
+                DonyAvatar(
+                  name: traveler?.resolvedName ?? 'Voyageur',
+                  size: DonyAvatarSize.lg,
+                  verified: isKycVerified,
+                ),
+                const SizedBox(width: DonySpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.star_rounded, size: 14, color: DonyColors.warning),
-                      const SizedBox(width: DonySpacing.xxs),
-                      Text(
-                        rating != null ? '${rating.toStringAsFixed(1)}/5' : 'Nouveau',
-                        style: tt.bodySmall?.copyWith(
-                          color: DonyColors.textMuted,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              traveler?.resolvedName ?? 'Voyageur',
+                              style: tt.titleLarge,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (isKycVerified) ...[
+                            const SizedBox(width: DonySpacing.xs),
+                            const _KycVerifiedBadge(),
+                          ],
+                        ],
                       ),
-                      if (traveler?.totalTrips != null && traveler!.totalTrips! > 0) ...[
-                        const SizedBox(width: DonySpacing.xs),
-                        Text(
-                          '· ${traveler.totalTrips} trajet${traveler.totalTrips! > 1 ? 's' : ''}',
-                          style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
-                        ),
-                      ],
+                      const SizedBox(height: DonySpacing.xxs),
+                      Row(
+                        children: [
+                          const Icon(Icons.star_rounded, size: 14, color: DonyColors.warning),
+                          const SizedBox(width: DonySpacing.xxs),
+                          Text(
+                            rating != null ? '${rating.toStringAsFixed(1)}/5' : 'Nouveau',
+                            style: tt.bodySmall?.copyWith(
+                              color: DonyColors.textMuted,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: DonySpacing.xs),
+                          Text(
+                            '· $totalTrips trajet${totalTrips > 1 ? 's' : ''}',
+                            style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
+                ),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: DonyColors.textSubtle,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
 
         const SizedBox(height: DonySpacing.lg),
@@ -202,6 +235,44 @@ class _CategoryChip extends StatelessWidget {
         border: Border.all(color: DonyColors.borderDefault),
       ),
       child: Text(label, style: tt.labelSmall?.copyWith(color: DonyColors.textMuted)),
+    );
+  }
+}
+
+class _KycVerifiedBadge extends StatelessWidget {
+  const _KycVerifiedBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      key: const Key('traveler-kyc-badge'),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: DonyColors.successLight,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.verified_rounded,
+            size: 11,
+            color: DonyColors.success,
+          ),
+          const SizedBox(width: DonySpacing.xxs),
+          Text(
+            'KYC',
+            style: tt.labelSmall?.copyWith(
+              color: DonyColors.success,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
