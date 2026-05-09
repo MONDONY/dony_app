@@ -42,6 +42,7 @@ class OfflineScanQueueScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final queue = getIt<HiveService>().offlineQueue;
     final entries = queue.values
@@ -50,14 +51,14 @@ class OfflineScanQueueScreen extends StatelessWidget {
     final count = entries.length;
 
     return Scaffold(
-      backgroundColor: DonyColors.bg,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: DonyColors.white,
+        backgroundColor: cs.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
-          color: DonyColors.ink900,
+          color: cs.onSurface,
           onPressed: () => context.pop(),
         ),
         actions: [
@@ -93,9 +94,9 @@ class OfflineScanQueueScreen extends StatelessWidget {
             ),
           ),
         ],
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: DonyColors.neutral200),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Divider(height: 1, color: cs.outlineVariant),
         ),
       ),
       body: Builder(builder: (context) {
@@ -113,7 +114,7 @@ class OfflineScanQueueScreen extends StatelessWidget {
             Text(
               "FILE D'ATTENTE — $count",
               style: tt.labelMedium?.copyWith(
-                color: DonyColors.neutral400,
+                color: cs.onSurfaceVariant,
                 letterSpacing: 0.8,
               ),
             ),
@@ -125,7 +126,7 @@ class OfflineScanQueueScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(DonySpacing.xxl),
                   child: Text(
                     'Aucun scan en attente.',
-                    style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400),
+                    style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ),
               )
@@ -143,7 +144,7 @@ class OfflineScanQueueScreen extends StatelessWidget {
             Center(
               child: Text(
                 'Continuez à scanner même sans réseau.',
-                style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -192,7 +193,7 @@ class _AlertBanner extends StatelessWidget {
                 const SizedBox(height: DonySpacing.xs),
                 Text(
                   '$count scans en attente. On les enverra dès que vous récupérez du réseau.',
-                  style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
+                  style: tt.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
@@ -225,6 +226,7 @@ class _QueueItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final label = OfflineScanQueueScreen._eventLabel(eventType);
     final description = OfflineScanQueueScreen._eventDescription(eventType);
@@ -233,16 +235,16 @@ class _QueueItemCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
-        color: DonyColors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.neutral200),
+        border: Border.all(color: cs.outline),
       ),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.qr_code_rounded,
             size: DonySpacing.iconSm,
-            color: DonyColors.neutral400,
+            color: cs.onSurfaceVariant,
           ),
           const SizedBox(width: DonySpacing.md),
           Expanded(
@@ -263,15 +265,15 @@ class _QueueItemCard extends StatelessWidget {
                 const SizedBox(height: DonySpacing.xxs),
                 Text(
                   '$description · $relTime',
-                  style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
             ),
           ),
-          const Icon(
+          Icon(
             Icons.schedule_outlined,
             size: 16,
-            color: DonyColors.neutral400,
+            color: cs.onSurfaceVariant,
           ),
         ],
       ),
@@ -287,6 +289,7 @@ class _EventChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -294,12 +297,12 @@ class _EventChip extends StatelessWidget {
         vertical: DonySpacing.xxs,
       ),
       decoration: BoxDecoration(
-        color: DonyColors.neutral200,
+        color: cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(DonyRadius.full),
       ),
       child: Text(
         label,
-        style: tt.labelMedium?.copyWith(color: DonyColors.neutral400),
+        style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
       ),
     );
   }

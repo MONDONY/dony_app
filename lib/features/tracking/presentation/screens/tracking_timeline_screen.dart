@@ -1,9 +1,9 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/presentation/widgets/route_map_components.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
-import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -59,11 +59,12 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final corridorCodes = _parseCorridor();
 
     return Scaffold(
-      backgroundColor: DonyColors.bg,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,13 +88,13 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
                     'Bonjour 👋',
                     style: DonyTypography.caveat(
                       fontSize: 28,
-                      color: DonyColors.ink900,
+                      color: cs.onSurface,
                     ),
                   ),
                   const SizedBox(height: DonySpacing.xs),
                   Text(
                     'Un colis vous est envoyé depuis ${corridorCodes.$2}.',
-                    style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400),
+                    style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -104,9 +105,9 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
               child: BlocBuilder<TrackingBloc, TrackingState>(
                 builder: (context, state) {
                   if (state is TrackingEventsLoading) {
-                    return const Center(
+                    return Center(
                       child: CircularProgressIndicator(
-                          color: DonyColors.primary),
+                          color: cs.primary),
                     );
                   }
                   if (state is TrackingEventsError) {
@@ -118,7 +119,7 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
                   }
                   if (state is TrackingEventsLoaded) {
                     return RefreshIndicator(
-                      color: DonyColors.primary,
+                      color: cs.primary,
                       onRefresh: () async {
                         context.read<TrackingBloc>().add(
                             TrackingEventsRequested(widget.bidId));
@@ -148,7 +149,7 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
                                 const SizedBox(height: DonySpacing.base),
 
                                 // "Pas besoin d'app !" banner
-                                _ApplessBanner(
+                                const _ApplessBanner(
                                   travelerName: 'le voyageur',
                                 ),
                               ],
@@ -178,6 +179,7 @@ class _Timeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
     if (events.isEmpty) {
@@ -192,7 +194,7 @@ class _Timeline extends StatelessWidget {
         Text(
           'ÉTAPES',
           style: tt.labelMedium?.copyWith(
-            color: DonyColors.neutral400,
+            color: cs.onSurfaceVariant,
             letterSpacing: 0.8,
           ),
         ),
@@ -224,14 +226,15 @@ class _TimelineItem extends StatelessWidget {
   const _TimelineItem(
       {required this.event, required this.isLast, required this.index});
 
-  Color get _stepColor => switch (event.eventType) {
-        'ARRIVEE' => DonyColors.success,
-        _ => DonyColors.primary,
-      };
-
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+
+    final Color stepColor = switch (event.eventType) {
+      'ARRIVEE' => cs.success,
+      _ => cs.primary,
+    };
 
     return IntrinsicHeight(
       child: Row(
@@ -246,7 +249,7 @@ class _TimelineItem extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: _stepColor,
+                    color: stepColor,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -259,7 +262,7 @@ class _TimelineItem extends StatelessWidget {
                   Expanded(
                     child: Container(
                       width: 2,
-                      color: DonyColors.neutral200,
+                      color: cs.outlineVariant,
                       margin: const EdgeInsets.symmetric(
                           vertical: DonySpacing.xs),
                     ),
@@ -276,34 +279,34 @@ class _TimelineItem extends StatelessWidget {
                   bottom: isLast ? 0 : DonySpacing.base),
               padding: const EdgeInsets.all(DonySpacing.md),
               decoration: BoxDecoration(
-                color: DonyColors.white,
+                color: cs.surface,
                 borderRadius: BorderRadius.circular(DonyRadius.lg),
-                border: Border.all(color: DonyColors.neutral200),
+                border: Border.all(color: cs.outline),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     event.stepLabel,
-                    style: tt.titleSmall?.copyWith(color: DonyColors.ink900),
+                    style: tt.titleSmall?.copyWith(color: cs.onSurface),
                   ),
                   const SizedBox(height: DonySpacing.xs),
                   Text(
                     DateFormat('dd/MM/yyyy à HH:mm')
                         .format(event.scannedAt.toLocal()),
-                    style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                   if (event.gpsLat != null && event.gpsLon != null) ...[
                     const SizedBox(height: DonySpacing.xs),
                     Row(
                       children: [
-                        const Icon(Icons.location_on_rounded,
-                            size: 12, color: DonyColors.neutral400),
+                        Icon(Icons.location_on_rounded,
+                            size: 12, color: cs.onSurfaceVariant),
                         const SizedBox(width: DonySpacing.xs),
                         Text(
                           '${event.gpsLat!.toStringAsFixed(4)}, ${event.gpsLon!.toStringAsFixed(4)}',
                           style: tt.bodySmall
-                              ?.copyWith(color: DonyColors.neutral400),
+                              ?.copyWith(color: cs.onSurfaceVariant),
                         ),
                       ],
                     ),
@@ -322,20 +325,20 @@ class _TimelineItem extends StatelessWidget {
                           if (progress == null) return child;
                           return Container(
                             height: 120,
-                            color: DonyColors.green100,
-                            child: const Center(
+                            color: cs.primaryContainer,
+                            child: Center(
                               child: CircularProgressIndicator(
-                                  color: DonyColors.primary,
+                                  color: cs.primary,
                                   strokeWidth: 2),
                             ),
                           );
                         },
                         errorBuilder: (_, __, ___) => Container(
                           height: 60,
-                          color: DonyColors.neutral100,
-                          child: const Center(
+                          color: cs.surfaceContainerHighest,
+                          child: Center(
                               child: Icon(Icons.broken_image_rounded,
-                                  color: DonyColors.neutral400)),
+                                  color: cs.onSurfaceVariant)),
                         ),
                       ),
                     ),
@@ -344,13 +347,13 @@ class _TimelineItem extends StatelessWidget {
                     const SizedBox(height: DonySpacing.sm),
                     Row(
                       children: [
-                        const Icon(Icons.wifi_off_rounded,
-                            size: 12, color: DonyColors.warning),
+                        Icon(Icons.wifi_off_rounded,
+                            size: 12, color: cs.warning),
                         const SizedBox(width: DonySpacing.xs),
                         Text(
                           'Scan offline synchronisé',
                           style: tt.bodySmall?.copyWith(
-                            color: DonyColors.warning,
+                            color: cs.warning,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -370,19 +373,20 @@ class _TimelineItem extends StatelessWidget {
 class _PendingConfirmationBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
-        color: DonyColors.warning.withValues(alpha: 0.08),
+        color: cs.warning.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(DonyRadius.lg),
-        border: Border.all(color: DonyColors.warning.withValues(alpha: 0.3)),
+        border: Border.all(color: cs.warning.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.hourglass_top_rounded,
-              color: DonyColors.warning, size: 22),
+          Icon(Icons.hourglass_top_rounded,
+              color: cs.warning, size: 22),
           const SizedBox(width: DonySpacing.md),
           Expanded(
             child: Column(
@@ -390,13 +394,13 @@ class _PendingConfirmationBanner extends StatelessWidget {
               children: [
                 Text(
                   'En attente de confirmation',
-                  style: tt.titleSmall?.copyWith(color: DonyColors.warning),
+                  style: tt.titleSmall?.copyWith(color: cs.warning),
                 ),
                 const SizedBox(height: DonySpacing.xxs),
                 Text(
                   'Le destinataire doit confirmer la réception via le code SMS.',
                   style: tt.bodySmall
-                      ?.copyWith(color: DonyColors.neutral400, height: 1.4),
+                      ?.copyWith(color: cs.onSurfaceVariant, height: 1.4),
                 ),
               ],
             ),
@@ -410,25 +414,26 @@ class _PendingConfirmationBanner extends StatelessWidget {
 class _EmptyTimeline extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
     return Container(
       padding: const EdgeInsets.all(DonySpacing.xl),
       decoration: BoxDecoration(
-        color: DonyColors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.neutral200),
+        border: Border.all(color: cs.outline),
       ),
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(DonySpacing.md),
             decoration: BoxDecoration(
-              color: DonyColors.green100,
+              color: cs.primaryContainer,
               borderRadius: BorderRadius.circular(DonyRadius.lg),
             ),
-            child: const Icon(Icons.hourglass_empty_rounded,
-                color: DonyColors.primary, size: 32),
+            child: Icon(Icons.hourglass_empty_rounded,
+                color: cs.primary, size: 32),
           ),
           const SizedBox(height: DonySpacing.base),
           Text(
@@ -439,7 +444,7 @@ class _EmptyTimeline extends StatelessWidget {
           Text(
             'Le voyageur scannera le QR code lors de la remise du colis.',
             textAlign: TextAlign.center,
-            style: tt.bodySmall?.copyWith(color: DonyColors.neutral400, height: 1.4),
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, height: 1.4),
           ),
         ],
       ),
@@ -485,7 +490,7 @@ class _ApplessBanner extends StatelessWidget {
           Text(
             'Quand $travelerName sera devant votre porte, vous confirmerez avec un QR ou un code à 4 chiffres.',
             style: tt.bodySmall
-                ?.copyWith(color: DonyColors.ink900, height: 1.4),
+                ?.copyWith(color: Theme.of(context).colorScheme.onSurface, height: 1.4),
           ),
           const SizedBox(height: DonySpacing.md),
           DonyButton(
@@ -508,6 +513,7 @@ class _ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
     return Center(
@@ -516,13 +522,13 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline_rounded,
-                color: DonyColors.error, size: 40),
+            Icon(Icons.error_outline_rounded,
+                color: cs.error, size: 40),
             const SizedBox(height: DonySpacing.md),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400),
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.lg),
             DonyButton(

@@ -61,21 +61,21 @@ void main() {
       expect(filledBtn.onPressed, isNull);
     });
 
-    testWidgets('CTA is enabled after entering 4-digit code', (tester) async {
+    testWidgets('CTA is enabled after entering 6-digit code', (tester) async {
       await _pump(tester);
 
       final pinput = find.byType(Pinput);
-      await tester.enterText(pinput, '4721');
+      await tester.enterText(pinput, '472135');
       await tester.pump();
 
       final filledBtn = tester.widget<FilledButton>(find.byType(FilledButton));
       expect(filledBtn.onPressed, isNotNull);
     });
 
-    testWidgets('CTA remains disabled with fewer than 4 digits', (tester) async {
+    testWidgets('CTA remains disabled with fewer than 6 digits', (tester) async {
       await _pump(tester);
 
-      await tester.enterText(find.byType(Pinput), '47');
+      await tester.enterText(find.byType(Pinput), '4721');
       await tester.pump();
 
       final filledBtn = tester.widget<FilledButton>(find.byType(FilledButton));
@@ -84,14 +84,14 @@ void main() {
 
     testWidgets('timer shows initial countdown', (tester) async {
       await _pump(tester);
-      // "04:32" is the initial display matching _kInitialSeconds = 272
-      expect(find.textContaining('04:32'), findsOneWidget);
+      // "15:00" is the initial display matching _kInitialSeconds = 900 (15 min)
+      expect(find.textContaining('15:00'), findsOneWidget);
     });
 
     testWidgets('timer decrements after 1 second', (tester) async {
       await _pump(tester);
       await tester.pump(const Duration(seconds: 1));
-      expect(find.textContaining('04:31'), findsOneWidget);
+      expect(find.textContaining('14:59'), findsOneWidget);
     });
 
     testWidgets('switching to QR tab hides code input', (tester) async {
