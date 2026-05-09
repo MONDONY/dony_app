@@ -50,10 +50,18 @@ class TrackingConfirmCodeLoading extends TrackingState {}
 
 class TrackingConfirmCodeLoaded extends TrackingState {
   final String? code;
-  TrackingConfirmCodeLoaded(this.code);
+  final DateTime? expiresAt;
+  TrackingConfirmCodeLoaded(this.code, {this.expiresAt});
 }
 
 class TrackingConfirmCodeError extends TrackingState {}
+
+class TrackingRefreshCodeLoading extends TrackingState {}
+
+class TrackingRefreshCodeError extends TrackingState {
+  final String message;
+  TrackingRefreshCodeError(this.message);
+}
 
 // QR scan submission
 class QrScanSubmitting extends TrackingState {}
