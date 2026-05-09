@@ -62,11 +62,8 @@ class _UpgradeToProViewState extends State<_UpgradeToProView> {
       context,
       title: 'Confirmer le passage en PRO',
       message:
-          'Ce choix est définitif tant que la recréation de compte Connect n\'est pas implémentée. Êtes-vous sûr ?',
-      confirmLabel: 'Confirmer',
-      cancelLabel: 'Annuler',
-      variant: DonyDialogVariant.destructive,
-      icon: Icons.warning_amber_rounded,
+          'Votre profil sera mis à jour avec le statut PRO. Vous pourrez modifier ces informations à tout moment.',
+      icon: Icons.verified_rounded,
     );
     return result ?? false;
   }
@@ -137,12 +134,12 @@ class _UpgradeToProViewState extends State<_UpgradeToProView> {
                     ).animate().fadeIn(delay: 100.ms),
                     const SizedBox(height: DonySpacing.xxl),
 
-                    // Warning
+                    // Info
                     const DonyStatusBanner(
-                      type: DonyStatusBannerType.warning,
-                      icon: Icons.warning_amber_rounded,
+                      type: DonyStatusBannerType.info,
+                      icon: Icons.info_outline_rounded,
                       message:
-                          'Cette action est définitive. Tu ne pourras pas revenir au statut standard sans contacter le support.',
+                          'Vos informations d\'entreprise seront visibles sur votre profil public.',
                     ).animate().fadeIn(delay: 140.ms),
                     const SizedBox(height: DonySpacing.xl),
 

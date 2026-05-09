@@ -36,6 +36,8 @@ class DonyTripCard extends StatelessWidget {
     this.badge,
     this.onTap,
     this.animationDelay,
+    this.verified = false,
+    this.pro = false,
   });
 
   final String travelerName;
@@ -48,6 +50,8 @@ class DonyTripCard extends StatelessWidget {
   final DonyBadge? badge;
   final VoidCallback? onTap;
   final Duration? animationDelay;
+  final bool verified;
+  final bool pro;
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +70,8 @@ class DonyTripCard extends StatelessWidget {
               DonyAvatar(
                 name: travelerName,
                 imageUrl: imageUrl,
+                verified: verified,
+                pro: pro,
               ),
               const SizedBox(width: DonySpacing.md),
               Expanded(

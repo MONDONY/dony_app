@@ -75,7 +75,10 @@ class HomeScreen extends StatelessWidget {
                     : null;
 
             if (activeRole == ActiveRole.traveler) {
-              return _TravelerView(displayName: user?.displayName ?? 'Voyageur');
+              return _TravelerView(
+                displayName: user?.displayName ?? 'Voyageur',
+                isProAccount: user?.isProAccount ?? false,
+              );
             }
             return const _MapSenderView();
           },
@@ -848,9 +851,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
 // ══════════════════════════════════════════════════════════════════════════════
 
 class _TravelerView extends StatefulWidget {
-  const _TravelerView({required this.displayName});
+  const _TravelerView({required this.displayName, this.isProAccount = false});
 
   final String displayName;
+  final bool isProAccount;
 
   @override
   State<_TravelerView> createState() => _TravelerViewState();
@@ -1065,6 +1069,7 @@ class _TravelerViewState extends State<_TravelerView> {
                           name: widget.displayName,
                           size: DonyAvatarSize.md,
                           verified: true,
+                          pro: widget.isProAccount,
                         ).animate().fadeIn(delay: 80.ms, duration: 280.ms),
                       ],
                     ),

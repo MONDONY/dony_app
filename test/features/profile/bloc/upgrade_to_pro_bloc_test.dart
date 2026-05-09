@@ -55,7 +55,7 @@ void main() {
     );
 
     blocTest<UpgradeToProBloc, UpgradeToProState>(
-      'emits [Loading, Error] with 409 message when repo throws AppException with code 409',
+      'emits [Loading, Error] with generic message when repo throws AppException with code 409',
       build: () {
         when(
           () => mockRepo.upgradeToPro(
@@ -71,7 +71,7 @@ void main() {
         isA<UpgradeToProError>().having(
           (s) => s.message,
           'message',
-          'Un compte Stripe Connect existe déjà. Contactez le support.',
+          'Une erreur est survenue. Veuillez réessayer.',
         ),
       ],
     );

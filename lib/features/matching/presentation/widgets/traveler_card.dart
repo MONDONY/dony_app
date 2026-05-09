@@ -93,7 +93,12 @@ class TravelerCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                DonyAvatar(name: _displayName, size: DonyAvatarSize.md),
+                DonyAvatar(
+                  name: _displayName,
+                  size: DonyAvatarSize.md,
+                  verified: traveler?.kycVerified ?? false,
+                  pro: isProAccount,
+                ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(
                   child: Column(

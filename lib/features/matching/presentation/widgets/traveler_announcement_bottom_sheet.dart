@@ -65,6 +65,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
                   name: traveler?.resolvedName ?? 'Voyageur',
                   size: DonyAvatarSize.lg,
                   verified: isKycVerified,
+                  pro: traveler?.isProAccount ?? false,
                 ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(

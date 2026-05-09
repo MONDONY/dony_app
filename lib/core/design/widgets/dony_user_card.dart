@@ -21,6 +21,7 @@ class DonyUserCard extends StatelessWidget {
     this.imageUrl,
     this.subtitle,
     this.verified = false,
+    this.pro = false,
     this.rating,
     this.trailing,
     this.onTap,
@@ -32,6 +33,7 @@ class DonyUserCard extends StatelessWidget {
   final String? imageUrl;
   final String? subtitle;
   final bool verified;
+  final bool pro;
   final double? rating;
   final Widget? trailing;
   final VoidCallback? onTap;
@@ -53,6 +55,7 @@ class DonyUserCard extends StatelessWidget {
             imageUrl: imageUrl,
             size: avatarSize,
             verified: verified,
+            pro: pro,
           ),
           const SizedBox(width: DonySpacing.md),
           Expanded(
