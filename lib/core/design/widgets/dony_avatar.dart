@@ -60,6 +60,7 @@ class DonyAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final dim = _dimension;
     return Stack(
       children: [
@@ -67,7 +68,7 @@ class DonyAvatar extends StatelessWidget {
           width: dim,
           height: dim,
           decoration: BoxDecoration(
-            color: imageUrl != null ? DonyColors.neutral100 : _bgColor,
+            color: imageUrl != null ? cs.surfaceContainerHighest : _bgColor,
             shape: BoxShape.circle,
           ),
           child: imageUrl != null

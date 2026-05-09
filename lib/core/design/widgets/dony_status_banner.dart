@@ -1,4 +1,4 @@
-import 'package:dony/core/design/tokens/color_tokens.dart';
+import 'package:dony/core/design/tokens/color_tokens.dart'; // DonyStatusColors extension
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:flutter/material.dart';
 
@@ -56,40 +56,41 @@ class DonyStatusBanner extends StatelessWidget {
   /// Optional action widget (e.g. a TextButton) displayed below the message.
   final Widget? action;
 
-  _BannerStyle get _style => switch (type) {
+  _BannerStyle _resolveStyle(ColorScheme cs) => switch (type) {
         DonyStatusBannerType.info => _BannerStyle(
-            background: DonyColors.info50,
-            border: DonyColors.info500,
-            iconColor: DonyColors.info500,
+            background: cs.infoLight,
+            border: cs.info,
+            iconColor: cs.info,
             defaultIcon: Icons.info_outline_rounded,
           ),
         DonyStatusBannerType.success => _BannerStyle(
-            background: DonyColors.successLight,
-            border: DonyColors.success500,
-            iconColor: DonyColors.success500,
+            background: cs.successLight,
+            border: cs.success,
+            iconColor: cs.success,
             defaultIcon: Icons.check_circle_outline_rounded,
           ),
         DonyStatusBannerType.warning => _BannerStyle(
-            background: DonyColors.warningLight,
-            border: DonyColors.warning500,
-            iconColor: DonyColors.warning500,
+            background: cs.warningLight,
+            border: cs.warning,
+            iconColor: cs.warning,
             defaultIcon: Icons.warning_amber_rounded,
           ),
         DonyStatusBannerType.error => _BannerStyle(
-            background: DonyColors.errorLight,
-            border: DonyColors.danger500,
-            iconColor: DonyColors.danger500,
+            background: cs.errorLight,
+            border: cs.error,
+            iconColor: cs.error,
             defaultIcon: Icons.error_outline_rounded,
           ),
       };
 
   @override
   Widget build(BuildContext context) {
-    final style = _style;
+    final cs = Theme.of(context).colorScheme;
+    final style = _resolveStyle(cs);
     final tt = Theme.of(context).textTheme;
     final effectiveIcon = icon ?? style.defaultIcon;
 
-    final baseTextStyle = tt.bodySmall?.copyWith(color: DonyColors.textPrimary);
+    final baseTextStyle = tt.bodySmall?.copyWith(color: cs.onSurface);
     Widget messageWidget;
     if (messageSpan != null) {
       // Use Text.rich so find.textContaining works in widget tests.
@@ -128,7 +129,7 @@ class DonyStatusBanner extends StatelessWidget {
                   Text(
                     title!,
                     style: tt.bodySmall?.copyWith(
-                      color: DonyColors.textPrimary,
+                      color: cs.onSurface,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

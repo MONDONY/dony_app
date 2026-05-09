@@ -1,4 +1,4 @@
-import 'package:dony/core/design/tokens/color_tokens.dart';
+import 'package:dony/core/design/tokens/color_tokens.dart'; // DonyStatusColors extension
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/design/widgets/dony_icon_container.dart';
@@ -46,7 +46,7 @@ class DonyEmptyState extends StatelessWidget {
               const SizedBox(height: DonySpacing.lg),
               Text(
                 'Chargement en cours...',
-                style: tt.bodyMedium?.copyWith(color: DonyColors.textMuted),
+                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               ),
             ],
           ),
@@ -56,13 +56,13 @@ class DonyEmptyState extends StatelessWidget {
 
     final (bg, ic, defaultIcon) = switch (type) {
       DonyEmptyStateType.empty => (
-          DonyColors.primarySoft,
-          DonyColors.primary,
+          cs.primaryContainer,
+          cs.primary,
           Icons.inbox_outlined,
         ),
       DonyEmptyStateType.error => (
-          DonyColors.errorLight,
-          DonyColors.error,
+          cs.errorLight,
+          cs.error,
           Icons.wifi_off_rounded,
         ),
       _ => throw StateError('DonyEmptyState: type loading handled by early return'),
