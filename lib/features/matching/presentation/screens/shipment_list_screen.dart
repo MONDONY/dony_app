@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -159,6 +161,7 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
         ),
       ],
       child: Scaffold(
+        backgroundColor: Colors.transparent,
         floatingActionButton: Builder(
           builder: (context) {
             final authState = context.watch<AuthBloc>().state;
@@ -168,7 +171,10 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
             return const SizedBox.shrink();
           },
         ),
-        body: BlocBuilder<BidBloc, BidState>(
+        body: Stack(
+          children: [
+            const Positioned.fill(child: _AuroraMeshBackground()),
+            BlocBuilder<BidBloc, BidState>(
           builder: (context, state) {
             if (!_hasData && (state is BidLoading || state is BidInitial)) {
               return const _LoadingView();
@@ -249,6 +255,8 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
             );
           },
         ),
+          ],
+        ),
       ),
     );
   }
@@ -292,7 +300,7 @@ class _EnvoisHeaderState extends State<_EnvoisHeader> {
     final topPad = MediaQuery.of(context).padding.top;
 
     return Container(
-      color: cs.surface,
+      color: Colors.transparent,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -319,24 +327,35 @@ class _EnvoisHeaderState extends State<_EnvoisHeader> {
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: savedCount > 0
-                              ? cs.primaryContainer
-                              : cs.surface,
-                          borderRadius: BorderRadius.circular(DonyRadius.md),
-                          border: Border.all(color: cs.outline),
-                        ),
-                        child: Icon(
-                          savedCount > 0
-                              ? Icons.bookmark_rounded
-                              : Icons.bookmark_border_rounded,
-                          color: savedCount > 0
-                              ? cs.primary
-                              : cs.onSurfaceVariant,
-                          size: 20,
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.62),
+                              borderRadius: BorderRadius.circular(DonyRadius.md),
+                              border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.92)),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: DonyColors.primary.withValues(alpha: 0.10),
+                                  blurRadius: 10,
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              savedCount > 0
+                                  ? Icons.bookmark_rounded
+                                  : Icons.bookmark_border_rounded,
+                              color: savedCount > 0
+                                  ? cs.primary
+                                  : cs.onSurfaceVariant,
+                              size: 20,
+                            ),
+                          ),
                         ),
                       ),
                       if (savedCount > 0)
@@ -425,32 +444,39 @@ class _StatChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.md, vertical: 7),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(DonyRadius.xl),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '$count',
-            style: tt.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: color,
-            ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(DonyRadius.xl),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.md, vertical: 7),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(DonyRadius.xl),
+            border: Border.all(color: color.withValues(alpha: 0.22)),
           ),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: tt.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w500,
-              color: color,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '$count',
+                style: tt.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: color,
+                ),
+              ),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: tt.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: color,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -480,40 +506,41 @@ class _ActiveShipmentBanner extends StatelessWidget {
           context.read<BidBloc>().add(BidMyListRequested());
         }
       },
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(DonySpacing.lg),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [DonyColors.blue700, cs.primary],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          boxShadow: [
-            BoxShadow(
-              color: cs.primary.withValues(alpha: 0.28),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(DonySpacing.lg),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.58),
+              borderRadius: BorderRadius.circular(DonyRadius.card),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.88)),
+              boxShadow: [
+                BoxShadow(
+                  color: DonyColors.primary.withValues(alpha: 0.09),
+                  blurRadius: 20,
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
             Row(
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
                   decoration: BoxDecoration(
-                    color: cs.onPrimary.withValues(alpha: 0.2),
+                    color: cs.primary.withValues(alpha: 0.08),
+                    border: Border.all(color: cs.primary.withValues(alpha: 0.18)),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     'COLIS EN TRANSIT',
                     style: tt.labelSmall?.copyWith(
-                      color: cs.onPrimary,
+                      color: cs.primary,
                       letterSpacing: 0.8,
                     ),
                   ),
@@ -521,7 +548,7 @@ class _ActiveShipmentBanner extends StatelessWidget {
                 const Spacer(),
                 Icon(
                   Icons.arrow_forward_ios_rounded,
-                  color: cs.onPrimary,
+                  color: cs.onSurface,
                   size: 14,
                 ),
               ],
@@ -530,7 +557,7 @@ class _ActiveShipmentBanner extends StatelessWidget {
             Text(
               shortDesc,
               style: tt.headlineMedium?.copyWith(
-                color: cs.onPrimary,
+                color: cs.onSurface,
                 height: 1.2,
               ),
             ),
@@ -538,19 +565,18 @@ class _ActiveShipmentBanner extends StatelessWidget {
             Row(
               children: [
                 Icon(Icons.flight_takeoff_rounded,
-                    color: cs.onPrimary.withValues(alpha: 0.7), size: 13),
+                    color: cs.onSurfaceVariant, size: 13),
                 const SizedBox(width: 6),
                 Text(
                   '${bid.departureCity ?? '—'} → ${bid.arrivalCity ?? '—'}',
-                  style: tt.bodySmall?.copyWith(
-                      color: cs.onPrimary.withValues(alpha: 0.7)),
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 const Spacer(),
                 Text(
                   '${bid.weightKg} kg',
                   style: tt.bodySmall?.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: cs.onPrimary,
+                    color: cs.onSurface,
                   ),
                 ),
               ],
@@ -560,18 +586,19 @@ class _ActiveShipmentBanner extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: _progress,
-                backgroundColor: cs.onPrimary.withValues(alpha: 0.2),
-                valueColor: AlwaysStoppedAnimation<Color>(cs.onPrimary),
+                backgroundColor: cs.primary.withValues(alpha: 0.15),
+                valueColor: AlwaysStoppedAnimation<Color>(cs.primary),
                 minHeight: 4,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               _progressLabel,
-              style: tt.bodySmall?.copyWith(
-                  color: cs.onPrimary.withValues(alpha: 0.7)),
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -590,45 +617,51 @@ class _SegmentedTabs extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     return Container(
-      color: DonyColors.bgApp,
+      color: Colors.transparent,
       padding: const EdgeInsets.fromLTRB(
           DonySpacing.lg, 10, DonySpacing.lg, 10),
-      child: Container(
-        height: 44,
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          border: Border.all(color: cs.outline),
-        ),
-        child: TabBar(
-          controller: controller,
-          indicator: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [DonyColors.blue700, cs.primary],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+          child: Container(
+            height: 44,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.50),
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.80)),
             ),
-            borderRadius: BorderRadius.circular(9),
+            child: TabBar(
+              controller: controller,
+              indicator: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [DonyColors.blue700, cs.primary],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(9),
+              ),
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: Colors.transparent,
+              labelPadding: EdgeInsets.zero,
+              padding: const EdgeInsets.all(3),
+              labelColor: cs.onPrimary,
+              unselectedLabelColor: cs.onSurfaceVariant,
+              labelStyle: tt.labelMedium?.copyWith(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+              unselectedLabelStyle: tt.labelMedium?.copyWith(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+              tabs: const [
+                Tab(text: 'En cours'),
+                Tab(text: 'À venir'),
+                Tab(text: 'Passés'),
+              ],
+            ),
           ),
-          indicatorSize: TabBarIndicatorSize.tab,
-          dividerColor: Colors.transparent,
-          labelPadding: EdgeInsets.zero,
-          padding: const EdgeInsets.all(3),
-          labelColor: cs.onPrimary,
-          unselectedLabelColor: cs.onSurfaceVariant,
-          labelStyle: tt.labelMedium?.copyWith(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-          ),
-          unselectedLabelStyle: tt.labelMedium?.copyWith(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-          ),
-          tabs: const [
-            Tab(text: 'En cours'),
-            Tab(text: 'À venir'),
-            Tab(text: 'Passés'),
-          ],
         ),
       ),
     );
@@ -838,19 +871,17 @@ class _ShipmentCard extends StatelessWidget {
           context.read<BidBloc>().add(BidMyListRequested());
         }
       },
-      child: Container(
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: cs.outline),
-          boxShadow: [
-            BoxShadow(
-              color: DonyColors.shadow,
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.60),
+              borderRadius: BorderRadius.circular(DonyRadius.card),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.88)),
+              boxShadow: DonyShadow.sm,
             ),
-          ],
-        ),
         clipBehavior: Clip.antiAlias,
         child: IntrinsicHeight(
           child: Row(
@@ -995,10 +1026,12 @@ class _ShipmentCard extends StatelessWidget {
             ],
           ),
         ),
-      )
-          .animate()
-          .fadeIn(delay: Duration(milliseconds: 50 * index))
-          .slideY(begin: 0.05, curve: Curves.easeOutCubic),
+        ),
+      ),
+    )
+        .animate()
+        .fadeIn(delay: Duration(milliseconds: 50 * index))
+        .slideY(begin: 0.05, curve: Curves.easeOutCubic),
     );
   }
 }
@@ -1105,6 +1138,98 @@ class _InfoChip extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ── Aurora Mesh Background ───────────────────────────────────────────────────
+
+class _AuroraMeshBackground extends StatelessWidget {
+  const _AuroraMeshBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFFEDF5FF),
+                Color(0xFFF2F0FF),
+                Color(0xFFF7F3ED),
+              ],
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              stops: [0.0, 0.4, 1.0],
+            ),
+          ),
+        ),
+        // Orbe bleu nord-est
+        Positioned(
+          top: -80,
+          right: -60,
+          child: IgnorePointer(
+            child: Container(
+              width: 280,
+              height: 280,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    Color(0x240B5FFF),
+                    Color(0x146C63FF),
+                    Colors.transparent,
+                  ],
+                  stops: [0.0, 0.4, 0.7],
+                ),
+              ),
+            ),
+          ),
+        ),
+        // Orbe terracotta ouest
+        Positioned(
+          top: 120,
+          left: -80,
+          child: IgnorePointer(
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    Color(0x17D96A3A),
+                    Colors.transparent,
+                  ],
+                  stops: [0.0, 0.65],
+                ),
+              ),
+            ),
+          ),
+        ),
+        // Orbe vert sud-est
+        Positioned(
+          bottom: 100,
+          right: -40,
+          child: IgnorePointer(
+            child: Container(
+              width: 180,
+              height: 180,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    Color(0x0F22C55E),
+                    Colors.transparent,
+                  ],
+                  stops: [0.0, 0.65],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

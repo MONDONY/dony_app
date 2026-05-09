@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
@@ -116,19 +117,15 @@ class _DonyBottomNav extends StatelessWidget {
             ? Icons.qr_code_scanner_rounded
             : Icons.track_changes_rounded;
 
-        return Container(
-      decoration: const BoxDecoration(
-        color: DonyColors.white,
-        border: Border(top: BorderSide(color: DonyColors.borderDefault)),
-        boxShadow: [
-          BoxShadow(
-            color: DonyColors.shadow,
-            blurRadius: 16,
-            offset: Offset(0, -4),
+        return ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+            child: Container(
+          decoration: const BoxDecoration(
+            color: Color(0xB8FFFFFF),
+            border: Border(top: BorderSide(color: Color(0x99FFFFFF), width: 1)),
           ),
-        ],
-      ),
-      child: Padding(
+          child: Padding(
         padding: EdgeInsets.only(bottom: bottomPadding),
         child: SizedBox(
           height: 68,
@@ -223,7 +220,9 @@ class _DonyBottomNav extends StatelessWidget {
           ),
         ),
       ),
-        );
+        ),
+      ),
+    );
       },
         );
       },
