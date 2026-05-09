@@ -49,3 +49,8 @@ class AnnouncementSearchLoaded extends AnnouncementState {
 }
 
 class AnnouncementNotFound extends AnnouncementState {}
+
+class AnnouncementProLimitReached extends AnnouncementState {
+  final String message;
+  AnnouncementProLimitReached(this.message);
+}

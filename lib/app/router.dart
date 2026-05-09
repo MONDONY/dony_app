@@ -28,6 +28,7 @@ import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/presentation/screens/connect_onboarding_intro_screen.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
+import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/presentation/settings_screen.dart';
@@ -269,6 +270,12 @@ final appRouter = GoRouter(
           child: TrackingTimelineScreen(bidId: bidId, corridor: corridor),
         );
       },
+    ),
+
+    // ── Upgrade PRO (hors shell) ──────────────────────────────────────
+    GoRoute(
+      path: '/profile/upgrade-to-pro',
+      builder: (context, state) => const UpgradeToProScreen(),
     ),
 
     // ── Settings (hors shell) ──────────────────────────────────────────

@@ -28,6 +28,7 @@ import 'package:dony/features/matching/presentation/widgets/traveler_announcemen
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
+import 'package:dony/features/profile/presentation/widgets/pro_stats_card.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:dony/features/notifications/presentation/notification_bottom_sheet.dart';
 import 'package:flutter/material.dart';
@@ -1124,10 +1125,11 @@ class _TravelerViewState extends State<_TravelerView> {
                   },
                 ),
                 const SizedBox(height: DonySpacing.md),
-                const _StatsCard()
-                    .animate()
-                    .fadeIn(delay: 60.ms)
-                    .slideY(begin: 0.03, curve: Curves.easeOutCubic),
+                if (widget.isProAccount)
+                  ProStatsCard.withBloc()
+                      .animate()
+                      .fadeIn(delay: 60.ms)
+                      .slideY(begin: 0.03, curve: Curves.easeOutCubic),
 
                 const SizedBox(height: DonySpacing.xxl),
 

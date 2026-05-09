@@ -257,11 +257,14 @@ void main() {
   });
 
   group('HomeScreen — Traveler view', () {
-    testWidgets('renders traveler-specific stats label', (tester) async {
+    testWidgets('renders traveler-specific section label', (tester) async {
       await tester.pumpWidget(_buildHome(role: ActiveRole.traveler));
       await tester.pump(const Duration(milliseconds: 600));
 
-      expect(find.text('CE MOIS-CI'), findsOneWidget);
+      // La carte stats PRO n'est visible que pour les comptes PRO.
+      // Pour un compte standard, on vérifie les éléments voyageur toujours présents.
+      expect(find.text('MES TRAJETS ACTIFS'), findsOneWidget);
+      expect(find.text('Publier un trajet'), findsOneWidget);
     });
   });
 }

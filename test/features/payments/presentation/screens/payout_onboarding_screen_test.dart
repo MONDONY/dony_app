@@ -1,5 +1,9 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/presentation/screens/payout_onboarding_screen.dart';
 import 'package:flutter/material.dart';
@@ -11,14 +15,36 @@ import 'package:mocktail/mocktail.dart';
 class MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
     implements PaymentBloc {}
 
-Widget _wrap(PaymentBloc bloc) {
+class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
+
+class FakeAuthEvent extends Fake implements AuthEvent {}
+
+final _kUser = UserModel(
+  id: 'uid-1',
+  firstName: 'Ibrahima',
+  lastName: 'Diallo',
+  roles: const ['ROLE_TRAVELER'],
+  kycStatus: 'VERIFIED',
+  status: 'ACTIVE',
+  stripeAccountStatus: 'NOT_CREATED',
+);
+
+Widget _wrap(PaymentBloc bloc, {MockAuthBloc? authBloc}) {
+  final auth = authBloc ?? MockAuthBloc();
+  if (authBloc == null) {
+    when(() => auth.state).thenReturn(AuthAuthenticated(_kUser));
+    when(() => auth.stream).thenAnswer((_) => const Stream.empty());
+  }
   return MaterialApp.router(
     theme: AppTheme.light,
     routerConfig: GoRouter(routes: [
       GoRoute(
         path: '/',
-        builder: (_, __) => BlocProvider.value(
-          value: bloc,
+        builder: (_, __) => MultiBlocProvider(
+          providers: [
+            BlocProvider<AuthBloc>.value(value: auth),
+            BlocProvider<PaymentBloc>.value(value: bloc),
+          ],
           child: const PayoutOnboardingScreen(),
         ),
       ),
@@ -27,6 +53,8 @@ Widget _wrap(PaymentBloc bloc) {
 }
 
 void main() {
+  setUpAll(() => registerFallbackValue(FakeAuthEvent()));
+
   late MockPaymentBloc mockBloc;
 
   setUp(() {

@@ -143,6 +143,75 @@ void main() {
         isA<AnnouncementError>(),
       ],
     );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'ForbiddenException pro-limit-reached → [Loading, AnnouncementProLimitReached]',
+      build: () {
+        when(() => mockRepo.createAnnouncement(
+              departureCity: any(named: 'departureCity'),
+              arrivalCity: any(named: 'arrivalCity'),
+              departureDate: any(named: 'departureDate'),
+              departureTime: any(named: 'departureTime'),
+              arrivalTime: any(named: 'arrivalTime'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
+              availableKg: any(named: 'availableKg'),
+              pricePerKg: any(named: 'pricePerKg'),
+              transportMode: any(named: 'transportMode'),
+            )).thenThrow(ForbiddenException(
+                'Vous avez atteint votre quota mensuel', 'pro-limit-reached'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementCreateRequested(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime.now().add(const Duration(days: 10)),
+        pickupAddress: kTestPickupAddress,
+        deliveryAddress: kTestDeliveryAddress,
+        availableKg: 20.0,
+        pricePerKg: 5.0,
+        transportMode: TransportMode.plane,
+      )),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        predicate<AnnouncementState>((s) =>
+            s is AnnouncementProLimitReached &&
+            s.message.contains('quota mensuel')),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'ForbiddenException autre code → [Loading, AnnouncementError]',
+      build: () {
+        when(() => mockRepo.createAnnouncement(
+              departureCity: any(named: 'departureCity'),
+              arrivalCity: any(named: 'arrivalCity'),
+              departureDate: any(named: 'departureDate'),
+              departureTime: any(named: 'departureTime'),
+              arrivalTime: any(named: 'arrivalTime'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
+              availableKg: any(named: 'availableKg'),
+              pricePerKg: any(named: 'pricePerKg'),
+              transportMode: any(named: 'transportMode'),
+            )).thenThrow(ForbiddenException('Accès refusé', 'account-banned'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementCreateRequested(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime.now().add(const Duration(days: 10)),
+        pickupAddress: kTestPickupAddress,
+        deliveryAddress: kTestDeliveryAddress,
+        availableKg: 20.0,
+        pricePerKg: 5.0,
+        transportMode: TransportMode.plane,
+      )),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementError>(),
+      ],
+    );
   });
 
   // ─── AnnouncementListRequested ────────────────────────────────────────────────

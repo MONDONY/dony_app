@@ -44,6 +44,12 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       await _hive.userPrefs
           .put(HiveService.kHasPublishedAsTraveler, true);
       emit(AnnouncementCreated(announcement));
+    } on ForbiddenException catch (e) {
+      if (e.code == 'pro-limit-reached') {
+        emit(AnnouncementProLimitReached(e.message));
+      } else {
+        emit(AnnouncementError(e.message));
+      }
     } catch (e) {
       emit(AnnouncementError(e.toString()));
     }
