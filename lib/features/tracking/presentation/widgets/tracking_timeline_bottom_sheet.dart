@@ -430,27 +430,28 @@ class _ApplessBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
-        color: DonyColors.terra50,
+        color: cs.secondaryContainer,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.terra500),
+        border: Border.all(color: cs.secondary),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.check_circle_outline_rounded,
-                  color: DonyColors.terra500, size: 20),
+              Icon(Icons.check_circle_outline_rounded,
+                  color: cs.secondary, size: 20),
               const SizedBox(width: DonySpacing.sm),
               Text(
                 'Pas besoin d\'app !',
                 style: tt.titleSmall?.copyWith(
-                  color: DonyColors.terra500,
+                  color: cs.secondary,
                   fontWeight: FontWeight.w700,
                 ),
               ),

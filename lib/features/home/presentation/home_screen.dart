@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
@@ -522,15 +524,15 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 ),
               ),
 
-              // ── Top overlay (disparaît en plein écran) ────────────────────
+              // ── Top overlay (disparaît en plein écran ou mode Près de moi) ──
               Positioned(
                 top: MediaQuery.of(context).padding.top + DonySpacing.sm,
                 left: DonySpacing.md,
                 right: DonySpacing.md,
                 child: IgnorePointer(
-                  ignoring: _isMapHidden,
+                  ignoring: _isMapHidden || _isNearMeActive,
                   child: AnimatedOpacity(
-                    opacity: _isMapHidden ? 0.0 : 1.0,
+                    opacity: (_isMapHidden || _isNearMeActive) ? 0.0 : 1.0,
                     duration: const Duration(milliseconds: 220),
                     curve: Curves.easeInOut,
                     child: Column(
@@ -593,6 +595,24 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         ),
                       ],
                     ),
+                  ),
+                ),
+              ),
+
+              // ── Bouton retour mode Près de moi ────────────────────────────
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutCubic,
+                top: _isNearMeActive
+                    ? MediaQuery.of(context).padding.top + DonySpacing.sm
+                    : MediaQuery.of(context).padding.top - 80,
+                left: DonySpacing.md,
+                child: AnimatedOpacity(
+                  opacity: _isNearMeActive ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 220),
+                  child: IgnorePointer(
+                    ignoring: !_isNearMeActive,
+                    child: _NearMeBackButton(onTap: _deactivateNearMe),
                   ),
                 ),
               ),
@@ -1506,6 +1526,7 @@ class _TabToggle extends StatelessWidget {
       padding: const EdgeInsets.all(3),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _TabPill(
             label: voyageursCount != null
@@ -1549,12 +1570,10 @@ class _TabPill extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.base,
-          vertical: DonySpacing.xs,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
+        alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: isActive ? cs.onSurface : Colors.transparent,
+          color: isActive ? cs.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(DonyRadius.full),
         ),
         child: Row(
@@ -1564,7 +1583,7 @@ class _TabPill extends StatelessWidget {
               width: 7,
               height: 7,
               decoration: BoxDecoration(
-                color: isActive ? cs.surface : dotColor,
+                color: isActive ? Colors.white : dotColor,
                 shape: BoxShape.circle,
               ),
             ),
@@ -1572,7 +1591,7 @@ class _TabPill extends StatelessWidget {
             Text(
               label,
               style: tt.labelMedium?.copyWith(
-                color: isActive ? cs.surface : cs.onSurface,
+                color: isActive ? Colors.white : cs.onSurface,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1666,6 +1685,65 @@ class _HomeCarteFab extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── _NearMeBackButton ─────────────────────────────────────────────────────────
+
+class _NearMeBackButton extends StatelessWidget {
+  const _NearMeBackButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = cs.brightness == Brightness.dark;
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? cs.surface.withValues(alpha: 0.85)
+                  : Colors.white.withValues(alpha: 0.82),
+              borderRadius: BorderRadius.circular(DonyRadius.full),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.07)
+                    : Colors.white.withValues(alpha: 0.6),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.12),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.arrow_back_rounded, size: 18, color: cs.onSurface),
+                const SizedBox(width: DonySpacing.xs),
+                Text(
+                  'Retour',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: cs.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -1833,7 +1911,7 @@ class _SmallChip extends StatelessWidget {
           vertical: DonySpacing.xs,
         ),
         decoration: BoxDecoration(
-          color: isActive ? cs.onSurface : cs.surface,
+          color: isActive ? cs.primary : cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.full),
           boxShadow: [
             BoxShadow(
@@ -1850,14 +1928,14 @@ class _SmallChip extends StatelessWidget {
               Icon(
                 icon,
                 size: 13,
-                color: isActive ? cs.surface : cs.onSurfaceVariant,
+                color: isActive ? Colors.white : cs.onSurfaceVariant,
               ),
               const SizedBox(width: DonySpacing.xxs),
             ],
             Text(
               label,
               style: tt.labelSmall?.copyWith(
-                color: isActive ? cs.surface : cs.onSurface,
+                color: isActive ? Colors.white : cs.onSurface,
                 fontWeight: FontWeight.w600,
               ),
             ),

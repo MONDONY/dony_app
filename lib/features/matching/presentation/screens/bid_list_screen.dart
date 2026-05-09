@@ -185,7 +185,7 @@ class _BidListViewState extends State<_BidListView>
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: AppBar(
-            backgroundColor: DonyColors.white,
+            backgroundColor: cs.surface,
             elevation: 0,
             scrolledUnderElevation: 0,
             centerTitle: false,

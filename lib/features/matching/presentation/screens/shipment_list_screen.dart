@@ -288,6 +288,7 @@ class _EnvoisHeaderState extends State<_EnvoisHeader> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final isDark = cs.brightness == Brightness.dark;
     final savedCount = _savedService.getSavedTrips().length;
     final topPad = MediaQuery.of(context).padding.top;
 
@@ -327,10 +328,14 @@ class _EnvoisHeaderState extends State<_EnvoisHeader> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.62),
+                              color: isDark
+                                  ? cs.surface.withValues(alpha: 0.85)
+                                  : Colors.white.withValues(alpha: 0.62),
                               borderRadius: BorderRadius.circular(DonyRadius.md),
                               border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.92)),
+                                  color: isDark
+                                      ? Colors.white.withValues(alpha: 0.07)
+                                      : Colors.white.withValues(alpha: 0.92)),
                               boxShadow: [
                                 BoxShadow(
                                   color: cs.primary.withValues(alpha: 0.10),
@@ -487,6 +492,7 @@ class _ActiveShipmentBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final isDark = cs.brightness == Brightness.dark;
     final shortDesc = bid.description.length > 36
         ? '${bid.description.substring(0, 36)}…'
         : bid.description;
@@ -506,9 +512,14 @@ class _ActiveShipmentBanner extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(DonySpacing.lg),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.58),
+              color: isDark
+                  ? cs.surface.withValues(alpha: 0.85)
+                  : Colors.white.withValues(alpha: 0.58),
               borderRadius: BorderRadius.circular(DonyRadius.card),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.88)),
+              border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.07)
+                      : Colors.white.withValues(alpha: 0.88)),
               boxShadow: [
                 BoxShadow(
                   color: cs.primary.withValues(alpha: 0.09),
@@ -607,6 +618,7 @@ class _SegmentedTabs extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final isDark = cs.brightness == Brightness.dark;
 
     return Container(
       color: Colors.transparent,
@@ -619,9 +631,14 @@ class _SegmentedTabs extends StatelessWidget {
           child: Container(
             height: 44,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.50),
+              color: isDark
+                  ? cs.surface.withValues(alpha: 0.75)
+                  : Colors.white.withValues(alpha: 0.50),
               borderRadius: BorderRadius.circular(DonyRadius.md),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.80)),
+              border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.07)
+                      : Colors.white.withValues(alpha: 0.80)),
             ),
             child: TabBar(
               controller: controller,
@@ -855,6 +872,7 @@ class _ShipmentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final isDark = cs.brightness == Brightness.dark;
     final info = _statusInfo(cs);
 
     return GestureDetector(
@@ -870,9 +888,14 @@ class _ShipmentCard extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.60),
+              color: isDark
+                  ? cs.surface.withValues(alpha: 0.85)
+                  : Colors.white.withValues(alpha: 0.60),
               borderRadius: BorderRadius.circular(DonyRadius.card),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.88)),
+              border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.07)
+                      : Colors.white.withValues(alpha: 0.88)),
               boxShadow: DonyShadow.sm,
             ),
         clipBehavior: Clip.antiAlias,
@@ -1142,19 +1165,27 @@ class _AuroraMeshBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Stack(
       children: [
         Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Color(0xFFEDF5FF),
-                Color(0xFFF2F0FF),
-                Color(0xFFF7F3ED),
-              ],
+              colors: isDark
+                  ? const [
+                      Color(0xFF080D18),
+                      Color(0xFF0B0918),
+                      Color(0xFF0E0C09),
+                    ]
+                  : const [
+                      Color(0xFFEDF5FF),
+                      Color(0xFFF2F0FF),
+                      Color(0xFFF7F3ED),
+                    ],
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
-              stops: [0.0, 0.4, 1.0],
+              stops: const [0.0, 0.4, 1.0],
             ),
           ),
         ),
@@ -1166,15 +1197,15 @@ class _AuroraMeshBackground extends StatelessWidget {
             child: Container(
               width: 280,
               height: 280,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    Color(0x240B5FFF),
-                    Color(0x146C63FF),
+                    Color(isDark ? 0x420B5FFF : 0x240B5FFF),
+                    Color(isDark ? 0x2C6C63FF : 0x146C63FF),
                     Colors.transparent,
                   ],
-                  stops: [0.0, 0.4, 0.7],
+                  stops: const [0.0, 0.4, 0.7],
                 ),
               ),
             ),
@@ -1188,14 +1219,14 @@ class _AuroraMeshBackground extends StatelessWidget {
             child: Container(
               width: 200,
               height: 200,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    Color(0x17D96A3A),
+                    Color(isDark ? 0x2AD96A3A : 0x17D96A3A),
                     Colors.transparent,
                   ],
-                  stops: [0.0, 0.65],
+                  stops: const [0.0, 0.65],
                 ),
               ),
             ),
@@ -1209,14 +1240,14 @@ class _AuroraMeshBackground extends StatelessWidget {
             child: Container(
               width: 180,
               height: 180,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    Color(0x0F22C55E),
+                    Color(isDark ? 0x1E22C55E : 0x0F22C55E),
                     Colors.transparent,
                   ],
-                  stops: [0.0, 0.65],
+                  stops: const [0.0, 0.65],
                 ),
               ),
             ),

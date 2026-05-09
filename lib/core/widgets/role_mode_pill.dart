@@ -10,6 +10,7 @@ class RoleModePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return BlocBuilder<ActiveRoleCubit, ActiveRole>(
       builder: (context, activeRole) {
         return ClipRRect(
@@ -20,11 +21,11 @@ class RoleModePill extends StatelessWidget {
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeOutCubic,
               decoration: BoxDecoration(
-                color: DonyColors.surface.withValues(alpha: 0.72),
+                color: cs.surface.withValues(alpha: 0.72),
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: DonyColors.ink900.withValues(alpha: 0.10),
+                    color: Colors.black.withValues(alpha: 0.10),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -66,6 +67,7 @@ class _PillTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -74,7 +76,7 @@ class _PillTab extends StatelessWidget {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: isActive ? DonyColors.surface : Colors.transparent,
+          color: isActive ? cs.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(22),
         ),
         child: Center(
