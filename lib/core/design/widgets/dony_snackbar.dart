@@ -16,8 +16,8 @@ abstract final class DonySnackbar {
 
     final (bg, fg) = switch (type) {
       DonySnackbarType.info    => (cs.inverseSurface,  cs.onInverseSurface),
-      DonySnackbarType.success => (DonyColors.success, DonyColors.white),
-      DonySnackbarType.warning => (DonyColors.warning, DonyColors.white),
+      DonySnackbarType.success => (cs.success,         DonyColors.white),
+      DonySnackbarType.warning => (cs.warning,         DonyColors.white),
       DonySnackbarType.error   => (cs.error,           cs.onError),
     };
 

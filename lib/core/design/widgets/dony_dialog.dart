@@ -118,7 +118,7 @@ class _DonyDialogWidget extends StatelessWidget {
               const SizedBox(height: DonySpacing.sm),
               Text(
                 message!,
-                style: tt.bodyMedium?.copyWith(color: DonyColors.textMuted),
+                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                 textAlign: icon != null ? TextAlign.center : TextAlign.left,
               ),
             ],

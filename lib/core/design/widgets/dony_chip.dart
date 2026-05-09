@@ -38,9 +38,9 @@ class DonyChip extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
-    final bg = selected ? cs.primaryContainer : DonyColors.surface;
-    final fg = selected ? cs.primary : DonyColors.textMuted;
-    final border = selected ? cs.primary : DonyColors.borderDefault;
+    final bg = selected ? cs.primaryContainer : cs.surface;
+    final fg = selected ? cs.primary : cs.onSurfaceVariant;
+    final border = selected ? cs.primary : cs.outline;
 
     return GestureDetector(
       onTap: enabled ? onTap : null,

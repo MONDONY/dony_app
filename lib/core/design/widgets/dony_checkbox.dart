@@ -66,7 +66,7 @@ class DonyCheckbox extends StatelessWidget {
                   activeColor: cs.primary,
                   checkColor: cs.onPrimary,
                   side: BorderSide(
-                    color: value == true ? cs.primary : DonyColors.neutral400,
+                    color: value == true ? cs.primary : cs.outline,
                     width: 1.5,
                   ),
                   shape: RoundedRectangleBorder(
@@ -84,7 +84,7 @@ class DonyCheckbox extends StatelessWidget {
                   Text(
                     label,
                     style: tt.bodyMedium?.copyWith(
-                      color: enabled ? DonyColors.textPrimary : DonyColors.textMuted,
+                      color: enabled ? cs.onSurface : cs.onSurfaceVariant,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -92,7 +92,7 @@ class DonyCheckbox extends StatelessWidget {
                     const SizedBox(height: DonySpacing.xxs),
                     Text(
                       subtitle!,
-                      style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ],
                 ],

@@ -1,4 +1,3 @@
-import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:flutter/material.dart';
 
@@ -22,6 +21,8 @@ class DonyIconContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     final (containerSize, iconSize) = switch (size) {
       DonyIconContainerSize.sm  => (32.0, 16.0),
       DonyIconContainerSize.md  => (DonySpacing.icon, DonySpacing.iconSm),
@@ -30,8 +31,8 @@ class DonyIconContainer extends StatelessWidget {
       DonyIconContainerSize.xxl => (80.0, 44.0),
     };
 
-    final bg = backgroundColor ?? DonyColors.green50;
-    final ic = iconColor ?? DonyColors.primary;
+    final bg = backgroundColor ?? cs.primaryContainer;
+    final ic = iconColor ?? cs.primary;
     final radius = borderRadius ?? containerSize / 2;
 
     return Container(
