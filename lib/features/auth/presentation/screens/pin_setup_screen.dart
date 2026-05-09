@@ -81,7 +81,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     final h = DonyLayout.hPadding(context);
     final bottom = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
-      backgroundColor: DonyColors.bgApp,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: DonyLayout.constrained(
           context,

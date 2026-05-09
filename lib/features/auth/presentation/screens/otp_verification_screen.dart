@@ -59,7 +59,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: DonyColors.bgApp,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthOtpVerified) {
@@ -92,7 +92,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     alignment: Alignment.centerLeft,
                     child: IconButton(
                       icon: Icon(Icons.arrow_back_ios_rounded,
-                          size: 20, color: DonyColors.textPrimary),
+                          size: 20, color: cs.onSurface),
                       onPressed: () => context.pop(),
                     ),
                   ),
@@ -112,7 +112,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           Text(
                             'Entrez le code',
                             style: tt.displayLarge?.copyWith(
-                              color: DonyColors.textPrimary,
+                              color: cs.onSurface,
                               letterSpacing: -0.8,
                             ),
                           ),
@@ -120,7 +120,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           Text.rich(
                             TextSpan(
                               style: tt.bodyLarge?.copyWith(
-                                  color: DonyColors.textMuted, height: 1.5),
+                                  color: cs.onSurfaceVariant, height: 1.5),
                               children: [
                                 const TextSpan(text: 'Code envoyé au '),
                                 TextSpan(
@@ -129,7 +129,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                       : '',
                                   style: tt.bodyLarge?.copyWith(
                                     fontWeight: FontWeight.w700,
-                                    color: DonyColors.primary,
+                                    color: cs.primary,
                                   ),
                                 ),
                               ],
@@ -159,23 +159,23 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                   ],
                                   style: tt.headlineMedium?.copyWith(
                                     fontWeight: FontWeight.w700,
-                                    color: DonyColors.textPrimary,
+                                    color: cs.onSurface,
                                   ),
                                   decoration: InputDecoration(
                                     counterText: '',
                                     filled: true,
-                                    fillColor: DonyColors.surface,
+                                    fillColor: cs.surface,
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(
                                           DonyRadius.md),
-                                      borderSide: const BorderSide(
-                                          color: DonyColors.borderDefault),
+                                      borderSide: BorderSide(
+                                          color: cs.outline),
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(
                                           DonyRadius.md),
-                                      borderSide: const BorderSide(
-                                          color: DonyColors.borderDefault),
+                                      borderSide: BorderSide(
+                                          color: cs.outline),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(
@@ -210,8 +210,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                   : 'Renvoyer le code',
                               style: tt.bodyMedium?.copyWith(
                                 color: secondsLeft > 0
-                                    ? DonyColors.textSubtle
-                                    : DonyColors.primary,
+                                    ? cs.onSurfaceVariant
+                                    : cs.primary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -224,10 +224,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
                 // ── Pinned CTA ───────────────────────────────────
                 Container(
-                  decoration: const BoxDecoration(
-                    color: DonyColors.bgApp,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).scaffoldBackgroundColor,
                     border: Border(
-                        top: BorderSide(color: DonyColors.borderDefault)),
+                        top: BorderSide(color: cs.outline)),
                   ),
                   padding: EdgeInsets.fromLTRB(
                       h, DonySpacing.base, h, DonySpacing.base + bottom),

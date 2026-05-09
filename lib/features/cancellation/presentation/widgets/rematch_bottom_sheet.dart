@@ -83,7 +83,7 @@ class RematchBottomSheet extends StatelessWidget {
                           Text(
                             _dateFmt.format(suggestion.departureDate),
                             style: tt.bodySmall?.copyWith(
-                              color: DonyColors.textMuted,
+                              color: cs.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: DonySpacing.xxs),
