@@ -51,6 +51,9 @@ class _FakeBox extends Fake implements Box<dynamic> {
     }
     return defaultValue;
   }
+
+  @override
+  Future<void> put(dynamic key, dynamic value) async {}
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

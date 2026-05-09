@@ -1,10 +1,12 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
-class RoleGuidanceBanner extends StatelessWidget {
+class RoleGuidanceBanner extends StatefulWidget {
   const RoleGuidanceBanner({
     super.key,
     required this.role,
@@ -18,20 +20,89 @@ class RoleGuidanceBanner extends StatelessWidget {
   final VoidCallback? onCtaTap;
   final bool forceHide;
 
-  String get _key => role == ActiveRole.traveler
+  // Pour l'expéditeur, le banner se masque automatiquement après cette durée
+  // à compter de la première vue (timestamp persisté dans Hive).
+  static const Duration senderBannerLifetime = Duration(minutes: 5);
+
+  @override
+  State<RoleGuidanceBanner> createState() => _RoleGuidanceBannerState();
+}
+
+class _RoleGuidanceBannerState extends State<RoleGuidanceBanner> {
+  Timer? _expirationTimer;
+
+  String get _publishKey => widget.role == ActiveRole.traveler
       ? HiveService.kHasPublishedAsTraveler
       : HiveService.kHasPublishedAsSender;
 
+  String get _dismissKey => widget.role == ActiveRole.traveler
+      ? HiveService.kTravelerBannerDismissed
+      : HiveService.kSenderBannerDismissed;
+
+  List<String> get _watchedKeys => [_publishKey, _dismissKey];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.role == ActiveRole.sender) {
+      _scheduleSenderExpiration();
+    }
+  }
+
+  void _scheduleSenderExpiration() {
+    final box = widget.hiveService.userPrefs;
+    final firstSeenMs =
+        box.get(HiveService.kSenderBannerFirstSeenAt) as int?;
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+
+    if (firstSeenMs == null) {
+      box.put(HiveService.kSenderBannerFirstSeenAt, nowMs);
+      _expirationTimer = Timer(
+        RoleGuidanceBanner.senderBannerLifetime,
+        _onExpire,
+      );
+      return;
+    }
+
+    final elapsed = Duration(milliseconds: nowMs - firstSeenMs);
+    final remaining = RoleGuidanceBanner.senderBannerLifetime - elapsed;
+    if (remaining > Duration.zero) {
+      _expirationTimer = Timer(remaining, _onExpire);
+    }
+  }
+
+  void _onExpire() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _expirationTimer?.cancel();
+    super.dispose();
+  }
+
+  bool get _isSenderBannerExpired {
+    if (widget.role != ActiveRole.sender) return false;
+    final firstSeenMs = widget.hiveService.userPrefs
+        .get(HiveService.kSenderBannerFirstSeenAt) as int?;
+    if (firstSeenMs == null) return false;
+    final elapsed = Duration(
+      milliseconds: DateTime.now().millisecondsSinceEpoch - firstSeenMs,
+    );
+    return elapsed >= RoleGuidanceBanner.senderBannerLifetime;
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (forceHide) {
+    if (widget.forceHide || _isSenderBannerExpired) {
       return const SizedBox.shrink();
     }
     return ValueListenableBuilder<Box>(
-      valueListenable: hiveService.listenUserPrefs(keys: [_key]),
+      valueListenable: widget.hiveService.listenUserPrefs(keys: _watchedKeys),
       builder: (context, box, _) {
-        final hasPublished = box.get(_key, defaultValue: false) as bool;
-        if (hasPublished) {
+        final hasPublished = box.get(_publishKey, defaultValue: false) as bool;
+        final dismissed = box.get(_dismissKey, defaultValue: false) as bool;
+        if (hasPublished || dismissed) {
           return const SizedBox.shrink();
         }
         return _buildBanner(context);
@@ -39,11 +110,17 @@ class RoleGuidanceBanner extends StatelessWidget {
     );
   }
 
+  void _onDismiss() {
+    widget.hiveService.userPrefs.put(_dismissKey, true);
+  }
+
   Widget _buildBanner(BuildContext context) {
-    final isSender = role == ActiveRole.sender;
-    final title = isSender ? 'Envoyer ton premier colis' : 'Publier ton premier trajet';
+    final isSender = widget.role == ActiveRole.sender;
+    final title =
+        isSender ? 'Envoyer ton premier colis' : 'Publier ton premier trajet';
     final emoji = isSender ? '📦' : '🧭';
-    final ctaLabel = isSender ? "Publier ma demande d'envoi" : 'Publier mon trajet';
+    final ctaLabel =
+        isSender ? "Publier ma demande d'envoi" : 'Publier mon trajet';
     final steps = isSender
         ? [
             'Compte créé ✓',
@@ -73,6 +150,7 @@ class RoleGuidanceBanner extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(emoji, style: const TextStyle(fontSize: 18)),
               const SizedBox(width: DonySpacing.xs),
@@ -83,6 +161,19 @@ class RoleGuidanceBanner extends StatelessWidget {
                     color: DonyColors.primary,
                     fontWeight: FontWeight.w700,
                   ),
+                ),
+              ),
+              SizedBox(
+                width: 32,
+                height: 32,
+                child: IconButton(
+                  key: const Key('role-guidance-banner-dismiss'),
+                  padding: EdgeInsets.zero,
+                  iconSize: 18,
+                  icon: const Icon(Icons.close_rounded),
+                  color: DonyColors.primary,
+                  onPressed: _onDismiss,
+                  tooltip: 'Masquer ce conseil',
                 ),
               ),
             ],
@@ -118,7 +209,7 @@ class RoleGuidanceBanner extends StatelessWidget {
           }),
           const SizedBox(height: DonySpacing.md),
           GestureDetector(
-            onTap: onCtaTap,
+            onTap: widget.onCtaTap,
             child: Container(
               constraints: const BoxConstraints(minHeight: 44),
               alignment: Alignment.center,
