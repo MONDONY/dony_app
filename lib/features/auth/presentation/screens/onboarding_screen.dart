@@ -47,6 +47,7 @@ class OnboardingScreen extends StatelessWidget {
                       DonyMascotte(
                         type: DonyMascotteType.salue,
                         size: DonyMascotteSize.lg,
+                        borderRadius: BorderRadius.circular(DonyRadius.card),
                       )
                           .animate()
                           .fadeIn(duration: 400.ms)
