@@ -74,12 +74,13 @@ class _ReceptionConfirmScreenState extends State<ReceptionConfirmScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: DonyColors.bg,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: DonyColors.bg,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         scrolledUnderElevation: 0,
         automaticallyImplyLeading: false,
@@ -89,15 +90,15 @@ class _ReceptionConfirmScreenState extends State<ReceptionConfirmScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.arrow_back_ios_rounded,
                 size: 16,
-                color: DonyColors.ink900,
+                color: cs.onSurface,
               ),
               const SizedBox(width: DonySpacing.xs),
               Text(
                 'Retour',
-                style: tt.bodyMedium?.copyWith(color: DonyColors.ink900),
+                style: tt.bodyMedium?.copyWith(color: cs.onSurface),
               ),
             ],
           ),
@@ -117,13 +118,13 @@ class _ReceptionConfirmScreenState extends State<ReceptionConfirmScreen> {
               'Confirmer la réception',
               style: DonyTypography.caveat(
                 fontSize: 28,
-                color: DonyColors.ink900,
+                color: cs.onSurface,
               ),
             ),
             const SizedBox(height: DonySpacing.xs),
             Text(
               'Devant ${widget.travelerName}, choisissez :',
-              style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400),
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.lg),
 
@@ -198,10 +199,11 @@ class _TabToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(DonySpacing.xs),
       decoration: BoxDecoration(
-        color: DonyColors.neutral200,
+        color: cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(DonyRadius.card),
       ),
       child: Row(
@@ -227,6 +229,7 @@ class _TabItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return GestureDetector(
       onTap: onTap,
@@ -238,14 +241,14 @@ class _TabItem extends StatelessWidget {
           horizontal: DonySpacing.xs,
         ),
         decoration: BoxDecoration(
-          color: selected ? DonyColors.white : Colors.transparent,
+          color: selected ? cs.surface : Colors.transparent,
           borderRadius: BorderRadius.circular(DonyRadius.md),
           boxShadow: selected
               ? [
-                  BoxShadow(
+                  const BoxShadow(
                     color: DonyColors.shadow,
                     blurRadius: 8,
-                    offset: const Offset(0, 2),
+                    offset: Offset(0, 2),
                   )
                 ]
               : null,
@@ -254,7 +257,7 @@ class _TabItem extends StatelessWidget {
           label,
           textAlign: TextAlign.center,
           style: tt.labelLarge?.copyWith(
-            color: selected ? DonyColors.ink900 : DonyColors.neutral400,
+            color: selected ? cs.onSurface : cs.onSurfaceVariant,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
           ),
         ),
@@ -270,20 +273,21 @@ class _QrTabContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Container(
       padding: const EdgeInsets.all(DonySpacing.xl),
       decoration: BoxDecoration(
-        color: DonyColors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.neutral200),
+        border: Border.all(color: cs.outline),
       ),
       child: Column(
         children: [
-          const Icon(
+          Icon(
             Icons.qr_code_scanner_rounded,
             size: 48,
-            color: DonyColors.primary,
+            color: cs.primary,
           ),
           const SizedBox(height: DonySpacing.base),
           Text(
@@ -293,7 +297,7 @@ class _QrTabContent extends StatelessWidget {
           const SizedBox(height: DonySpacing.xs),
           Text(
             'Demandez au voyageur d\'afficher le QR code sur son téléphone.',
-            style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
         ],
@@ -319,24 +323,25 @@ class _CodeTabContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
     final defaultTheme = PinTheme(
       width: 64,
       height: 72,
       textStyle: tt.headlineMedium?.copyWith(
-        color: DonyColors.ink900,
+        color: cs.onSurface,
         fontWeight: FontWeight.w700,
       ),
       decoration: BoxDecoration(
-        color: DonyColors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.neutral200, width: 1.5),
+        border: Border.all(color: cs.outline, width: 1.5),
       ),
     );
 
     final focusedTheme = defaultTheme.copyDecorationWith(
-      border: Border.all(color: DonyColors.primary, width: 2),
+      border: Border.all(color: cs.primary, width: 2),
       borderRadius: BorderRadius.circular(DonyRadius.card),
     );
 
@@ -346,7 +351,7 @@ class _CodeTabContent extends StatelessWidget {
         Text(
           'OPTION 2 · CODE',
           style: tt.labelMedium?.copyWith(
-            color: DonyColors.neutral400,
+            color: cs.onSurfaceVariant,
             letterSpacing: 0.8,
           ),
         ),
@@ -370,23 +375,26 @@ class _CodeTabContent extends StatelessWidget {
         const SizedBox(height: DonySpacing.base),
         ValueListenableBuilder<int>(
           valueListenable: secondsLeft,
-          builder: (context, secs, _) => Center(
-            child: Text.rich(
-              TextSpan(
-                style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
-                children: [
-                  const TextSpan(text: 'Reçu par SMS · expire dans '),
-                  TextSpan(
-                    text: formatTime(secs),
-                    style: const TextStyle(
-                      color: DonyColors.primary,
-                      fontWeight: FontWeight.w700,
+          builder: (context, secs, _) {
+            final innerCs = Theme.of(context).colorScheme;
+            return Center(
+              child: Text.rich(
+                TextSpan(
+                  style: tt.bodySmall?.copyWith(color: innerCs.onSurfaceVariant),
+                  children: [
+                    const TextSpan(text: 'Reçu par SMS · expire dans '),
+                    TextSpan(
+                      text: formatTime(secs),
+                      style: TextStyle(
+                        color: innerCs.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ],
     );
@@ -403,27 +411,28 @@ class _LegalNote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
-        color: DonyColors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.neutral200),
+        border: Border.all(color: cs.outline),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
+          Icon(
             Icons.shield_outlined,
             size: DonySpacing.iconSm,
-            color: DonyColors.neutral400,
+            color: cs.onSurfaceVariant,
           ),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text.rich(
               TextSpan(
-                style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 children: [
                   TextSpan(
                     text:
@@ -436,7 +445,7 @@ class _LegalNote extends StatelessWidget {
                       child: Text(
                         'contestez d\'abord',
                         style: tt.bodySmall?.copyWith(
-                          color: DonyColors.neutral400,
+                          color: cs.onSurfaceVariant,
                           decoration: TextDecoration.underline,
                         ),
                       ),

@@ -118,11 +118,13 @@ class _DonyAppState extends State<DonyApp> {
             systemNavigationBarDividerColor: Colors.transparent,
             systemNavigationBarContrastEnforced: false,
             statusBarColor: Colors.transparent,
-            statusBarIconBrightness: Brightness.dark,
           ),
           child: MaterialApp.router(
             title: 'dony',
             theme: AppTheme.light,
+            darkTheme: AppTheme.dark,
+            // ignore: avoid_redundant_argument_values
+            themeMode: ThemeMode.system,
             routerConfig: appRouter,
             debugShowCheckedModeBanner: false,
             localizationsDelegates: const [

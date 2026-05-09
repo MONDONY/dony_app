@@ -51,6 +51,7 @@ class DonyRadioGroup<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
 
     final items = options.map(
       (opt) => _DonyRadioTile<T>(
@@ -66,7 +67,7 @@ class DonyRadioGroup<T> extends StatelessWidget {
         if (label != null) ...[
           Text(
             label!,
-            style: tt.titleMedium?.copyWith(color: DonyColors.textMuted),
+            style: tt.titleMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: DonySpacing.sm),
         ],
@@ -120,7 +121,7 @@ class _DonyRadioTile<T> extends StatelessWidget {
               Icon(
                 option.icon,
                 size: 18,
-                color: _selected ? cs.primary : DonyColors.textMuted,
+                color: _selected ? cs.primary : cs.onSurfaceVariant,
               ),
               const SizedBox(width: DonySpacing.xs),
             ],
@@ -133,15 +134,15 @@ class _DonyRadioTile<T> extends StatelessWidget {
                     style: tt.bodyMedium?.copyWith(
                       fontWeight: _selected ? FontWeight.w600 : FontWeight.w400,
                       color: option.enabled
-                          ? DonyColors.textPrimary
-                          : DonyColors.textMuted,
+                          ? cs.onSurface
+                          : cs.onSurfaceVariant,
                     ),
                   ),
                   if (option.subtitle != null) ...[
                     const SizedBox(height: DonySpacing.xxs),
                     Text(
                       option.subtitle!,
-                      style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ],
                 ],
@@ -162,7 +163,7 @@ class _RadioDot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final borderColor = selected ? cs.primary : DonyColors.neutral400;
+    final borderColor = selected ? cs.primary : cs.onSurfaceVariant;
     final fillColor   = selected ? cs.primary : Colors.transparent;
 
     return AnimatedContainer(
@@ -172,7 +173,7 @@ class _RadioDot extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: enabled ? borderColor : DonyColors.neutral300,
+          color: enabled ? borderColor : cs.outline.withValues(alpha: 0.5),
           width: selected ? 0 : 1.5,
         ),
         color: enabled ? fillColor : Colors.transparent,
@@ -182,8 +183,8 @@ class _RadioDot extends StatelessWidget {
               child: Container(
                 width: 8,
                 height: 8,
-                decoration: const BoxDecoration(
-                  color: DonyColors.surface,
+                decoration: BoxDecoration(
+                  color: cs.surface,
                   shape: BoxShape.circle,
                 ),
               ),

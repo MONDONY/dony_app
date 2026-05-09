@@ -221,13 +221,13 @@ class _TrackingResultCard extends StatelessWidget {
                         vertical: DonySpacing.xs,
                       ),
                       decoration: BoxDecoration(
-                        color: DonyColors.neutral0.withValues(alpha: 0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(DonyRadius.sm),
                       ),
                       child: Text(
                         result.trackingNumber,
                         style: tt.labelLarge?.copyWith(
-                          color: DonyColors.neutral0,
+                          color: Colors.white,
                           letterSpacing: 1.5,
                         ),
                       ),
@@ -243,21 +243,21 @@ class _TrackingResultCard extends StatelessWidget {
                         result.departureCity,
                         textAlign: TextAlign.center,
                         style: tt.headlineMedium?.copyWith(
-                          color: DonyColors.neutral0,
+                          color: Colors.white,
                         ),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
                       child: Icon(Icons.arrow_forward_rounded,
-                          color: DonyColors.neutral0.withValues(alpha: 0.7), size: 24),
+                          color: Colors.white.withValues(alpha: 0.7), size: 24),
                     ),
                     Expanded(
                       child: Text(
                         result.arrivalCity,
                         textAlign: TextAlign.center,
                         style: tt.headlineMedium?.copyWith(
-                          color: DonyColors.neutral0,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -320,14 +320,14 @@ class _TrackingResultCard extends StatelessWidget {
 
   (IconData, Color, String) _stepVisuals(String step, ColorScheme cs) {
     return switch (step) {
-      'DELIVERED'       => (Icons.check_circle_rounded, DonyColors.success, step),
+      'DELIVERED'       => (Icons.check_circle_rounded, cs.success, step),
       'IN_TRANSIT'      => (Icons.local_shipping_rounded, cs.primary, step),
       'DEPARTED'        => (Icons.flight_takeoff_rounded, cs.primary, step),
       'PAYMENT_SECURED' => (Icons.lock_rounded, cs.primary, step),
-      'ACCEPTED'        => (Icons.handshake_outlined, DonyColors.warning, step),
-      'REJECTED'        => (Icons.cancel_outlined, DonyColors.error, step),
-      'CANCELLED'       => (Icons.block_outlined, DonyColors.neutral400, step),
-      _                 => (Icons.hourglass_empty_rounded, DonyColors.warning, step),
+      'ACCEPTED'        => (Icons.handshake_outlined, cs.warning, step),
+      'REJECTED'        => (Icons.cancel_outlined, cs.error, step),
+      'CANCELLED'       => (Icons.block_outlined, cs.onSurfaceVariant, step),
+      _                 => (Icons.hourglass_empty_rounded, cs.warning, step),
     };
   }
 }

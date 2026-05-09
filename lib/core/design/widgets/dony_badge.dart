@@ -17,11 +17,12 @@ class DonyBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final (bg, fg) = switch (type) {
-      DonyBadgeType.info    => (DonyColors.infoLight,    DonyColors.info),
-      DonyBadgeType.success => (DonyColors.successLight, DonyColors.success),
-      DonyBadgeType.warning => (DonyColors.warningLight, DonyColors.warning),
-      DonyBadgeType.error   => (DonyColors.errorLight,   DonyColors.error),
+      DonyBadgeType.info    => (cs.infoLight,    cs.info),
+      DonyBadgeType.success => (cs.successLight, cs.success),
+      DonyBadgeType.warning => (cs.warningLight, cs.warning),
+      DonyBadgeType.error   => (cs.errorLight,   cs.error),
     };
 
     return Container(

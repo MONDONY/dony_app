@@ -36,6 +36,8 @@ class DonyTripCard extends StatelessWidget {
     this.badge,
     this.onTap,
     this.animationDelay,
+    this.verified = false,
+    this.pro = false,
   });
 
   final String travelerName;
@@ -48,6 +50,8 @@ class DonyTripCard extends StatelessWidget {
   final DonyBadge? badge;
   final VoidCallback? onTap;
   final Duration? animationDelay;
+  final bool verified;
+  final bool pro;
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +70,8 @@ class DonyTripCard extends StatelessWidget {
               DonyAvatar(
                 name: travelerName,
                 imageUrl: imageUrl,
+                verified: verified,
+                pro: pro,
               ),
               const SizedBox(width: DonySpacing.md),
               Expanded(
@@ -76,16 +82,16 @@ class DonyTripCard extends StatelessWidget {
                     if (rating != null)
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.star_rounded,
                             size: 13,
-                            color: DonyColors.warning,
+                            color: cs.warning,
                           ),
                           const SizedBox(width: DonySpacing.xxs),
                           Text(
                             '${rating!.toStringAsFixed(1)}/5',
                             style: tt.bodySmall?.copyWith(
-                              color: DonyColors.textMuted,
+                              color: cs.onSurfaceVariant,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -99,7 +105,7 @@ class DonyTripCard extends StatelessWidget {
           ),
 
           const SizedBox(height: DonySpacing.base),
-          Container(height: 1, color: DonyColors.borderDefault),
+          Container(height: 1, color: cs.outline),
           const SizedBox(height: DonySpacing.base),
 
           // — Route avec flèche animée
@@ -109,33 +115,33 @@ class DonyTripCard extends StatelessWidget {
           ),
 
           const SizedBox(height: DonySpacing.base),
-          Container(height: 1, color: DonyColors.borderDefault),
+          Container(height: 1, color: cs.outline),
           const SizedBox(height: DonySpacing.base),
 
           // — Pied : date + prix
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.calendar_today_outlined,
                 size: 13,
-                color: DonyColors.textMuted,
+                color: cs.onSurfaceVariant,
               ),
               const SizedBox(width: DonySpacing.xs),
               Text(
                 date,
-                style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
               const Spacer(),
               if (availableKg != null) ...[
                 Text(
                   '${availableKg!.toStringAsFixed(0)} kg',
-                  style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 const SizedBox(width: DonySpacing.sm),
                 Container(
                   width: 1,
                   height: 12,
-                  color: DonyColors.borderDefault,
+                  color: cs.outline,
                 ),
                 const SizedBox(width: DonySpacing.sm),
               ],
@@ -201,8 +207,8 @@ class _RouteDisplay extends StatelessWidget {
                 height: 1.5,
                 color: cs.primary.withValues(alpha: 0.3),
               ),
-              Container(width: 6, height: 6, decoration: const BoxDecoration(
-                color: DonyColors.accent, shape: BoxShape.circle,
+              Container(width: 6, height: 6, decoration: BoxDecoration(
+                color: cs.secondary, shape: BoxShape.circle,
               )),
             ],
           ),

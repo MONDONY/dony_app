@@ -127,7 +127,7 @@ class DonySliverAppBar extends StatelessWidget {
       bottom: bottom ??
           PreferredSize(
             preferredSize: const Size.fromHeight(1),
-            child: Container(color: DonyColors.borderDefault, height: 1),
+            child: Container(color: Theme.of(context).colorScheme.outline, height: 1),
           ),
     );
   }

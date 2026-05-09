@@ -1,4 +1,3 @@
-import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
@@ -59,6 +58,7 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,17 +68,17 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
           focusNode: _focusNode,
           style: GoogleFonts.plusJakartaSans(
             fontSize: 15,
-            color: DonyColors.textPrimary,
+            color: cs.onSurface,
           ),
           decoration: InputDecoration(
             labelText: widget.label,
             prefixIcon: widget.prefixIcon,
             suffixIcon: _controller.text.isNotEmpty
                 ? IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.close,
                       size: 18,
-                      color: DonyColors.textMuted,
+                      color: cs.onSurfaceVariant,
                     ),
                     onPressed: () {
                       _controller.clear();
@@ -100,10 +100,10 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
         BlocBuilder<CitySearchBloc, CitySearchState>(
           builder: (ctx, state) {
             if (state is CitySearchLoading) {
-              return const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 child: LinearProgressIndicator(
-                  color: DonyColors.primary,
+                  color: cs.primary,
                 ),
               );
             }
@@ -129,17 +129,18 @@ class _ResultList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.only(top: 4),
       decoration: BoxDecoration(
-        color: DonyColors.surface,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: DonyColors.borderDefault),
-        boxShadow: const [
+        border: Border.all(color: cs.outline),
+        boxShadow: [
           BoxShadow(
-            color: DonyColors.shadow,
+            color: cs.shadow,
             blurRadius: 8,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -148,14 +149,14 @@ class _ResultList extends StatelessWidget {
         physics: const NeverScrollableScrollPhysics(),
         itemCount: cities.length,
         separatorBuilder: (_, __) =>
-            const Divider(height: 1, color: DonyColors.borderDefault),
+            Divider(height: 1, color: cs.outline),
         itemBuilder: (ctx, i) {
           final city = cities[i];
           return ListTile(
             dense: true,
-            leading: const Icon(
+            leading: Icon(
               Icons.location_on_outlined,
-              color: DonyColors.primary,
+              color: cs.primary,
               size: 20,
             ),
             title: Text(
@@ -163,14 +164,14 @@ class _ResultList extends StatelessWidget {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: DonyColors.textPrimary,
+                color: cs.onSurface,
               ),
             ),
             subtitle: Text(
               city.countryName,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
-                color: DonyColors.textMuted,
+                color: cs.onSurfaceVariant,
               ),
             ),
             onTap: () => onTap(city),

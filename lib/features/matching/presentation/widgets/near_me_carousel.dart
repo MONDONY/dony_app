@@ -99,6 +99,7 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
 
     if (widget.announcements.isEmpty) {
       return Center(
@@ -108,15 +109,20 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: const BoxDecoration(
-                  color: DonyColors.primarySoft,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.near_me_rounded,
-                    color: DonyColors.primary, size: 26),
+              Builder(
+                builder: (context) {
+                  final cs = Theme.of(context).colorScheme;
+                  return Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: cs.primaryContainer,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.near_me_rounded,
+                        color: cs.primary, size: 26),
+                  );
+                },
               ),
               const SizedBox(height: DonySpacing.md),
               Text(
@@ -125,10 +131,12 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: DonySpacing.xs),
-              Text(
-                "Essaie d'augmenter le rayon ou de changer de date.",
-                style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
-                textAlign: TextAlign.center,
+              Builder(
+                builder: (context) => Text(
+                  "Essaie d'augmenter le rayon ou de changer de date.",
+                  style: tt.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  textAlign: TextAlign.center,
+                ),
               ),
             ],
           ),
@@ -201,15 +209,15 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: DonySpacing.base),
               decoration: BoxDecoration(
-                color: DonyColors.primarySoft,
+                color: cs.primaryContainer,
                 borderRadius: BorderRadius.circular(DonyRadius.card),
                 border: Border.all(
-                    color: DonyColors.primary.withValues(alpha: 0.3)),
+                    color: cs.primary.withValues(alpha: 0.3)),
               ),
               child: Text(
                 'Voir les ${widget.announcements.length} annonce${widget.announcements.length > 1 ? 's' : ''}',
                 style: tt.labelLarge?.copyWith(
-                    color: DonyColors.primary, fontWeight: FontWeight.w700),
+                    color: cs.primary, fontWeight: FontWeight.w700),
                 textAlign: TextAlign.center,
               ),
             ),

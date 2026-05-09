@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
@@ -6,7 +8,6 @@ import 'package:dony/core/widgets/role_guidance_banner.dart';
 import 'package:dony/core/widgets/role_mode_pill.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/city/data/city_repository.dart';
-import 'package:dony/features/city/data/popular_corridor_model.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -75,7 +76,10 @@ class HomeScreen extends StatelessWidget {
                     : null;
 
             if (activeRole == ActiveRole.traveler) {
-              return _TravelerView(displayName: user?.displayName ?? 'Voyageur');
+              return _TravelerView(
+                displayName: user?.displayName ?? 'Voyageur',
+                isProAccount: user?.isProAccount ?? false,
+              );
             }
             return const _MapSenderView();
           },
@@ -485,7 +489,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: DonyColors.bgApp,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: BlocBuilder<AnnouncementBloc, AnnouncementState>(
         builder: (context, state) {
           final raw = state is AnnouncementSearchLoaded
@@ -520,15 +524,15 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 ),
               ),
 
-              // ── Top overlay (disparaît en plein écran) ────────────────────
+              // ── Top overlay (disparaît en plein écran ou mode Près de moi) ──
               Positioned(
                 top: MediaQuery.of(context).padding.top + DonySpacing.sm,
                 left: DonySpacing.md,
                 right: DonySpacing.md,
                 child: IgnorePointer(
-                  ignoring: _isMapHidden,
+                  ignoring: _isMapHidden || _isNearMeActive,
                   child: AnimatedOpacity(
-                    opacity: _isMapHidden ? 0.0 : 1.0,
+                    opacity: (_isMapHidden || _isNearMeActive) ? 0.0 : 1.0,
                     duration: const Duration(milliseconds: 220),
                     curve: Curves.easeInOut,
                     child: Column(
@@ -591,6 +595,24 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         ),
                       ],
                     ),
+                  ),
+                ),
+              ),
+
+              // ── Bouton retour mode Près de moi ────────────────────────────
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutCubic,
+                top: _isNearMeActive
+                    ? MediaQuery.of(context).padding.top + DonySpacing.sm
+                    : MediaQuery.of(context).padding.top - 80,
+                left: DonySpacing.md,
+                child: AnimatedOpacity(
+                  opacity: _isNearMeActive ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 220),
+                  child: IgnorePointer(
+                    ignoring: !_isNearMeActive,
+                    child: _NearMeBackButton(onTap: _deactivateNearMe),
                   ),
                 ),
               ),
@@ -665,6 +687,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     double bottomPad,
   ) {
     final tt = Theme.of(ctx).textTheme;
+    final cs = Theme.of(ctx).colorScheme;
     final count = announcements.length;
 
     final statusBarHeight = MediaQuery.of(ctx).padding.top;
@@ -672,7 +695,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     return Container(
       key: const Key('home-sheet'),
       decoration: BoxDecoration(
-        color: DonyColors.surface,
+        color: cs.surface,
         borderRadius: _isMapHidden
             ? BorderRadius.zero
             : const BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
@@ -687,7 +710,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: DonyColors.neutral200,
+                color: cs.outline,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -710,7 +733,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             ? 'VOYAGEURS DISPONIBLES'
                             : 'DEMANDES D\'ENVOI',
                         style: tt.labelSmall?.copyWith(
-                          color: DonyColors.textMuted,
+                          color: cs.onSurfaceVariant,
                           letterSpacing: 0.8,
                         ),
                       ),
@@ -734,7 +757,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                     child: Text(
                       'Trier',
                       style: tt.labelMedium?.copyWith(
-                        color: DonyColors.primary,
+                        color: cs.primary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -742,7 +765,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
               ],
             ),
           ),
-          const Divider(height: 1, color: DonyColors.neutral200),
+          Divider(height: 1, color: cs.outline),
           Expanded(
             child: CustomScrollView(
               controller: scrollCtrl,
@@ -767,7 +790,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             ? 'Aucun voyageur à proximité'
                             : 'Aucun voyageur sur ce corridor',
                         style: tt.bodyMedium
-                            ?.copyWith(color: DonyColors.textMuted),
+                            ?.copyWith(color: cs.onSurfaceVariant),
                       ),
                     ),
                   )
@@ -848,9 +871,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
 // ══════════════════════════════════════════════════════════════════════════════
 
 class _TravelerView extends StatefulWidget {
-  const _TravelerView({required this.displayName});
+  const _TravelerView({required this.displayName, this.isProAccount = false});
 
   final String displayName;
+  final bool isProAccount;
 
   @override
   State<_TravelerView> createState() => _TravelerViewState();
@@ -879,6 +903,7 @@ class _TravelerViewState extends State<_TravelerView> {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     final topPad = MediaQuery.of(context).padding.top;
 
     final expandedHeight = topPad + 56.0 + _kContentHeight;
@@ -888,16 +913,16 @@ class _TravelerViewState extends State<_TravelerView> {
         : 0.0;
     final progress = (offset / _kContentHeight).clamp(0.0, 1.0);
 
-    final headerBg = Color.lerp(DonyColors.ink800, DonyColors.surface, progress)!;
-    final iconColor = Color.lerp(DonyColors.white, DonyColors.ink900, progress)!;
+    final headerBg = Color.lerp(DonyColors.ink800, cs.surface, progress)!;
+    final iconColor = Color.lerp(DonyColors.white, cs.onSurface, progress)!;
     final titleColor = Color.lerp(
       DonyColors.white.withValues(alpha: 0.0),
-      DonyColors.ink900,
+      cs.onSurface,
       progress,
     )!;
 
     return Scaffold(
-      backgroundColor: DonyColors.bg,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: CustomScrollView(
         controller: _scroll,
         slivers: [
@@ -957,7 +982,7 @@ class _TravelerViewState extends State<_TravelerView> {
               preferredSize: const Size.fromHeight(1),
               child: Opacity(
                 opacity: progress,
-                child: const Divider(height: 1, color: DonyColors.borderDefault),
+                child: Divider(height: 1, color: cs.outline),
               ),
             ),
             flexibleSpace: FlexibleSpaceBar(
@@ -1017,8 +1042,8 @@ class _TravelerViewState extends State<_TravelerView> {
                               const SizedBox(height: DonySpacing.xxs),
                               Row(
                                 children: [
-                                  const Icon(Icons.star_rounded,
-                                      color: DonyColors.warning, size: 14),
+                                  Icon(Icons.star_rounded,
+                                      color: cs.warning, size: 14),
                                   const SizedBox(width: DonySpacing.xxs),
                                   Text(
                                     '4.9',
@@ -1065,6 +1090,7 @@ class _TravelerViewState extends State<_TravelerView> {
                           name: widget.displayName,
                           size: DonyAvatarSize.md,
                           verified: true,
+                          pro: widget.isProAccount,
                         ).animate().fadeIn(delay: 80.ms, duration: 280.ms),
                       ],
                     ),
@@ -1108,7 +1134,7 @@ class _TravelerViewState extends State<_TravelerView> {
                 Text(
                   'MES TRAJETS ACTIFS',
                   style: tt.labelMedium!.copyWith(
-                    color: DonyColors.textMuted,
+                    color: cs.onSurfaceVariant,
                     letterSpacing: 0.8,
                   ),
                 ),
@@ -1151,7 +1177,7 @@ class _StatsCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(DonySpacing.xl),
       decoration: BoxDecoration(
-        color: DonyColors.ink800,
+        color: DonyColors.ink800,  // intentional dark brand bg
         borderRadius: BorderRadius.circular(DonyRadius.card),
       ),
       child: Column(
@@ -1234,15 +1260,16 @@ class _ActiveTripCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     const double reserved = 5;
     const double total = 15;
 
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
-        color: DonyColors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.borderDefault),
+        border: Border.all(color: cs.outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1252,7 +1279,7 @@ class _ActiveTripCard extends StatelessWidget {
               Text(
                 'CDG → DSS',
                 style: tt.titleLarge!.copyWith(
-                  color: DonyColors.ink900,
+                  color: cs.onSurface,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -1261,13 +1288,13 @@ class _ActiveTripCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(
                     horizontal: DonySpacing.sm, vertical: DonySpacing.xxs),
                 decoration: BoxDecoration(
-                  color: DonyColors.successLight,
+                  color: cs.successLight,
                   borderRadius: BorderRadius.circular(DonyRadius.full),
                 ),
                 child: Text(
                   'OUVERT',
                   style: tt.labelSmall!.copyWith(
-                    color: DonyColors.success,
+                    color: cs.success,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -1277,7 +1304,7 @@ class _ActiveTripCard extends StatelessWidget {
           const SizedBox(height: DonySpacing.xs),
           Text(
             'Ven 18 · 14h05 · 5 kg réservés',
-            style: tt.bodySmall!.copyWith(color: DonyColors.textMuted),
+            style: tt.bodySmall!.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: DonySpacing.sm),
           ClipRRect(
@@ -1285,8 +1312,8 @@ class _ActiveTripCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: reserved / total,
               minHeight: 6,
-              color: DonyColors.primary,
-              backgroundColor: DonyColors.borderDefault,
+              color: cs.primary,
+              backgroundColor: cs.outline,
             ),
           ),
           const SizedBox(height: DonySpacing.xxs),
@@ -1294,7 +1321,7 @@ class _ActiveTripCard extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: Text(
               '${reserved.toStringAsFixed(0)} / ${total.toStringAsFixed(0)} kg',
-              style: tt.bodySmall!.copyWith(color: DonyColors.textMuted),
+              style: tt.bodySmall!.copyWith(color: cs.onSurfaceVariant),
             ),
           ),
         ],
@@ -1311,13 +1338,14 @@ class _NotifBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final label = count > 99 ? '99+' : count.toString();
     return Container(
       constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
       padding: const EdgeInsets.symmetric(horizontal: 4),
-      decoration: const BoxDecoration(
-        color: DonyColors.error,
-        borderRadius: BorderRadius.all(Radius.circular(DonyRadius.sm)),
+      decoration: BoxDecoration(
+        color: cs.error,
+        borderRadius: const BorderRadius.all(Radius.circular(DonyRadius.sm)),
       ),
       child: Text(
         label,
@@ -1341,19 +1369,20 @@ class _PayoutFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
-        const Icon(Icons.access_time_rounded, color: DonyColors.textMuted, size: 16),
+        Icon(Icons.access_time_rounded, color: cs.onSurfaceVariant, size: 16),
         const SizedBox(width: DonySpacing.xs),
         Text(
           'Prochain payout · mer. 23/04',
-          style: tt.bodyMedium!.copyWith(color: DonyColors.ink900),
+          style: tt.bodyMedium!.copyWith(color: cs.onSurface),
         ),
         const Spacer(),
         Text(
           '248,50 €',
           style: tt.titleMedium!.copyWith(
-            color: DonyColors.primary,
+            color: cs.primary,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -1384,12 +1413,13 @@ class _CorridorBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 48,
         decoration: BoxDecoration(
-          color: DonyColors.surface,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.full),
           boxShadow: [
             BoxShadow(
@@ -1402,13 +1432,13 @@ class _CorridorBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
         child: Row(
           children: [
-            const Icon(Icons.search_rounded, size: 18, color: DonyColors.textMuted),
+            Icon(Icons.search_rounded, size: 18, color: cs.onSurfaceVariant),
             const SizedBox(width: DonySpacing.sm),
             Expanded(
               child: Text(
                 label,
                 style: tt.bodyMedium?.copyWith(
-                  color: DonyColors.ink900,
+                  color: cs.onSurface,
                   fontWeight: FontWeight.w600,
                 ),
                 overflow: TextOverflow.ellipsis,
@@ -1422,13 +1452,13 @@ class _CorridorBar extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: _hasActive ? DonyColors.primary : DonyColors.bgApp,
+                    color: _hasActive ? cs.primary : Theme.of(context).scaffoldBackgroundColor,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.tune_rounded,
                     size: 18,
-                    color: _hasActive ? DonyColors.surface : DonyColors.ink900,
+                    color: _hasActive ? cs.surface : cs.onSurface,
                   ),
                 ),
                 if (_hasActive)
@@ -1439,9 +1469,9 @@ class _CorridorBar extends StatelessWidget {
                       duration: const Duration(milliseconds: 200),
                       constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
                       padding: const EdgeInsets.symmetric(horizontal: 4),
-                      decoration: const BoxDecoration(
-                        color: DonyColors.error,
-                        borderRadius: BorderRadius.all(Radius.circular(8)),
+                      decoration: BoxDecoration(
+                        color: cs.error,
+                        borderRadius: const BorderRadius.all(Radius.circular(8)),
                       ),
                       child: Text(
                         '$activeFilterCount',
@@ -1479,10 +1509,11 @@ class _TabToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       height: 40,
       decoration: BoxDecoration(
-        color: DonyColors.surface,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(DonyRadius.full),
         boxShadow: [
           BoxShadow(
@@ -1495,20 +1526,21 @@ class _TabToggle extends StatelessWidget {
       padding: const EdgeInsets.all(3),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _TabPill(
             label: voyageursCount != null
                 ? 'Voyageurs · $voyageursCount'
                 : 'Voyageurs',
             isActive: tab == _HomeTab.voyageurs,
-            dotColor: DonyColors.primary,
+            dotColor: cs.primary,
             onTap: () => onChanged(_HomeTab.voyageurs),
           ),
           const SizedBox(width: 2),
           _TabPill(
             label: 'Demandes',
             isActive: tab == _HomeTab.demandes,
-            dotColor: DonyColors.success,
+            dotColor: cs.success,
             onTap: () => onChanged(_HomeTab.demandes),
           ),
         ],
@@ -1533,16 +1565,15 @@ class _TabPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.base,
-          vertical: DonySpacing.xs,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
+        alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: isActive ? DonyColors.ink900 : Colors.transparent,
+          color: isActive ? cs.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(DonyRadius.full),
         ),
         child: Row(
@@ -1552,7 +1583,7 @@ class _TabPill extends StatelessWidget {
               width: 7,
               height: 7,
               decoration: BoxDecoration(
-                color: isActive ? DonyColors.surface : dotColor,
+                color: isActive ? Colors.white : dotColor,
                 shape: BoxShape.circle,
               ),
             ),
@@ -1560,7 +1591,7 @@ class _TabPill extends StatelessWidget {
             Text(
               label,
               style: tt.labelMedium?.copyWith(
-                color: isActive ? DonyColors.surface : DonyColors.ink900,
+                color: isActive ? Colors.white : cs.onSurface,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1579,6 +1610,7 @@ class _DemandesPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.all(DonySpacing.xl),
       child: Column(
@@ -1588,16 +1620,16 @@ class _DemandesPlaceholder extends StatelessWidget {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: DonyColors.primarySoft,
+              color: cs.primaryContainer,
               borderRadius: BorderRadius.circular(DonyRadius.full),
             ),
-            child: const Icon(Icons.inbox_outlined, color: DonyColors.primary, size: 28),
+            child: Icon(Icons.inbox_outlined, color: cs.primary, size: 28),
           ),
           const SizedBox(height: DonySpacing.md),
           Text(
             'Demandes bientôt disponibles',
             style: tt.titleMedium?.copyWith(
-              color: DonyColors.ink900,
+              color: cs.onSurface,
               fontWeight: FontWeight.w700,
             ),
             textAlign: TextAlign.center,
@@ -1605,7 +1637,7 @@ class _DemandesPlaceholder extends StatelessWidget {
           const SizedBox(height: DonySpacing.xs),
           Text(
             'Tu pourras bientôt consulter les demandes d\'envoi postées par les expéditeurs.',
-            style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
         ],
@@ -1624,12 +1656,13 @@ class _HomeCarteFab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: DonyColors.ink900,
+          color: cs.onSurface,
           borderRadius: BorderRadius.circular(DonyRadius.full),
           boxShadow: [
             BoxShadow(
@@ -1642,16 +1675,75 @@ class _HomeCarteFab extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.map_outlined, size: 16, color: Colors.white),
+            Icon(Icons.map_outlined, size: 16, color: cs.surface),
             const SizedBox(width: DonySpacing.xs),
             Text(
               'Carte',
               style: tt.labelMedium?.copyWith(
-                color: Colors.white,
+                color: cs.surface,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── _NearMeBackButton ─────────────────────────────────────────────────────────
+
+class _NearMeBackButton extends StatelessWidget {
+  const _NearMeBackButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = cs.brightness == Brightness.dark;
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? cs.surface.withValues(alpha: 0.85)
+                  : Colors.white.withValues(alpha: 0.82),
+              borderRadius: BorderRadius.circular(DonyRadius.full),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.07)
+                    : Colors.white.withValues(alpha: 0.6),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.12),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.arrow_back_rounded, size: 18, color: cs.onSurface),
+                const SizedBox(width: DonySpacing.xs),
+                Text(
+                  'Retour',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: cs.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -1808,6 +1900,7 @@ class _SmallChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -1818,7 +1911,7 @@ class _SmallChip extends StatelessWidget {
           vertical: DonySpacing.xs,
         ),
         decoration: BoxDecoration(
-          color: isActive ? DonyColors.ink900 : DonyColors.surface,
+          color: isActive ? cs.primary : cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.full),
           boxShadow: [
             BoxShadow(
@@ -1835,14 +1928,14 @@ class _SmallChip extends StatelessWidget {
               Icon(
                 icon,
                 size: 13,
-                color: isActive ? DonyColors.surface : DonyColors.textMuted,
+                color: isActive ? Colors.white : cs.onSurfaceVariant,
               ),
               const SizedBox(width: DonySpacing.xxs),
             ],
             Text(
               label,
               style: tt.labelSmall?.copyWith(
-                color: isActive ? DonyColors.surface : DonyColors.ink900,
+                color: isActive ? Colors.white : cs.onSurface,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1884,16 +1977,17 @@ class _HomeCorridorSheetState extends State<_HomeCorridorSheet> {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return DraggableScrollableSheet(
       initialChildSize: 0.70,
       minChildSize: 0.50,
       maxChildSize: 0.95,
       expand: false,
       builder: (sheetCtx, scrollCtrl) => Container(
-        decoration: const BoxDecoration(
-          color: DonyColors.white,
+        decoration: BoxDecoration(
+          color: cs.surface,
           borderRadius:
-              BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+              const BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
         ),
         child: Column(
           children: [
@@ -1903,7 +1997,7 @@ class _HomeCorridorSheetState extends State<_HomeCorridorSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: DonyColors.neutral200,
+                  color: cs.outline,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -1923,7 +2017,7 @@ class _HomeCorridorSheetState extends State<_HomeCorridorSheet> {
                 ),
               ),
             ),
-            const Divider(height: 1, color: DonyColors.neutral200),
+            Divider(height: 1, color: cs.outline),
             Expanded(
               child: SingleChildScrollView(
                 controller: scrollCtrl,
@@ -1948,13 +2042,13 @@ class _HomeCorridorSheetState extends State<_HomeCorridorSheet> {
                         ),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? DonyColors.primarySoft
-                              : DonyColors.bgApp,
+                              ? cs.primaryContainer
+                              : Theme.of(context).scaffoldBackgroundColor,
                           borderRadius: BorderRadius.circular(DonyRadius.card),
                           border: Border.all(
                             color: isSelected
-                                ? DonyColors.primary
-                                : DonyColors.neutral200,
+                                ? cs.primary
+                                : cs.outline,
                           ),
                         ),
                         child: Row(
@@ -1964,8 +2058,8 @@ class _HomeCorridorSheetState extends State<_HomeCorridorSheet> {
                                 opt.label,
                                 style: tt.bodyMedium?.copyWith(
                                   color: isSelected
-                                      ? DonyColors.primary
-                                      : DonyColors.ink900,
+                                      ? cs.primary
+                                      : cs.onSurface,
                                   fontWeight: isSelected
                                       ? FontWeight.w600
                                       : FontWeight.w400,
@@ -1973,10 +2067,10 @@ class _HomeCorridorSheetState extends State<_HomeCorridorSheet> {
                               ),
                             ),
                             if (isSelected)
-                              const Icon(
+                              Icon(
                                 Icons.check_circle_rounded,
                                 size: 18,
-                                color: DonyColors.primary,
+                                color: cs.primary,
                               ),
                           ],
                         ),
@@ -1993,9 +2087,9 @@ class _HomeCorridorSheetState extends State<_HomeCorridorSheet> {
                 DonySpacing.lg,
                 MediaQuery.of(sheetCtx).padding.bottom + DonySpacing.base,
               ),
-              decoration: const BoxDecoration(
-                color: DonyColors.white,
-                border: Border(top: BorderSide(color: DonyColors.neutral200)),
+              decoration: BoxDecoration(
+                color: cs.surface,
+                border: Border(top: BorderSide(color: cs.outline)),
               ),
               child: DonyButton(
                 label: 'Appliquer',
@@ -2057,12 +2151,13 @@ class _DatePresetSheetState extends State<_DatePresetSheet> {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     final bottomPad = MediaQuery.of(context).padding.bottom;
     return Container(
-      decoration: const BoxDecoration(
-        color: DonyColors.white,
+      decoration: BoxDecoration(
+        color: cs.surface,
         borderRadius:
-            BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+            const BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
       ),
       padding: EdgeInsets.fromLTRB(
         DonySpacing.lg,
@@ -2080,7 +2175,7 @@ class _DatePresetSheetState extends State<_DatePresetSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: DonyColors.neutral200,
+                color: cs.outline,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -2123,15 +2218,15 @@ class _DatePresetSheetState extends State<_DatePresetSheet> {
                   child: Container(
                     height: 50,
                     decoration: BoxDecoration(
-                      color: DonyColors.bgApp,
+                      color: Theme.of(context).scaffoldBackgroundColor,
                       borderRadius: BorderRadius.circular(DonyRadius.card),
-                      border: Border.all(color: DonyColors.neutral200),
+                      border: Border.all(color: cs.outline),
                     ),
                     child: Center(
                       child: Text(
                         'Effacer',
                         style: tt.labelLarge?.copyWith(
-                          color: DonyColors.ink900,
+                          color: cs.onSurface,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -2172,6 +2267,7 @@ class _PresetOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -2181,7 +2277,7 @@ class _PresetOption extends StatelessWidget {
         ),
         margin: const EdgeInsets.only(bottom: DonySpacing.xs),
         decoration: BoxDecoration(
-          color: isSelected ? DonyColors.primarySoft : Colors.transparent,
+          color: isSelected ? cs.primaryContainer : Colors.transparent,
           borderRadius: BorderRadius.circular(DonyRadius.card),
         ),
         child: Row(
@@ -2190,17 +2286,17 @@ class _PresetOption extends StatelessWidget {
               child: Text(
                 label,
                 style: tt.bodyMedium?.copyWith(
-                  color: isSelected ? DonyColors.primary : DonyColors.ink900,
+                  color: isSelected ? cs.primary : cs.onSurface,
                   fontWeight:
                       isSelected ? FontWeight.w600 : FontWeight.w400,
                 ),
               ),
             ),
             if (isSelected)
-              const Icon(
+              Icon(
                 Icons.check_rounded,
                 size: 18,
-                color: DonyColors.primary,
+                color: cs.primary,
               ),
           ],
         ),
@@ -2231,14 +2327,15 @@ class _RatingFilterSheetState extends State<_RatingFilterSheet> {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     const ratings = [4.0, 4.5, 4.7, 5.0];
     return Container(
-      decoration: const BoxDecoration(
-        color: DonyColors.white,
+      decoration: BoxDecoration(
+        color: cs.surface,
         borderRadius:
-            BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+            const BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
       ),
       padding: EdgeInsets.fromLTRB(
           DonySpacing.lg, 0, DonySpacing.lg, bottomPad + DonySpacing.base),
@@ -2252,7 +2349,7 @@ class _RatingFilterSheetState extends State<_RatingFilterSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                  color: DonyColors.neutral200,
+                  color: cs.outline,
                   borderRadius: BorderRadius.circular(2)),
             ),
           ),
@@ -2276,14 +2373,14 @@ class _RatingFilterSheetState extends State<_RatingFilterSheet> {
                   child: Container(
                     height: 50,
                     decoration: BoxDecoration(
-                      color: DonyColors.bgApp,
+                      color: Theme.of(context).scaffoldBackgroundColor,
                       borderRadius: BorderRadius.circular(DonyRadius.card),
-                      border: Border.all(color: DonyColors.neutral200),
+                      border: Border.all(color: cs.outline),
                     ),
                     child: Center(
                       child: Text('Effacer',
                           style: tt.labelLarge?.copyWith(
-                              color: DonyColors.ink900,
+                              color: cs.onSurface,
                               fontWeight: FontWeight.w600)),
                     ),
                   ),
@@ -2333,13 +2430,14 @@ class _WeightRangeSheetState extends State<_WeightRangeSheet> {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: DonyColors.white,
+      decoration: BoxDecoration(
+        color: cs.surface,
         borderRadius:
-            BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+            const BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
       ),
       padding: EdgeInsets.fromLTRB(
           DonySpacing.lg, 0, DonySpacing.lg, bottomPad + DonySpacing.base),
@@ -2353,7 +2451,7 @@ class _WeightRangeSheetState extends State<_WeightRangeSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                  color: DonyColors.neutral200,
+                  color: cs.outline,
                   borderRadius: BorderRadius.circular(2)),
             ),
           ),
@@ -2365,17 +2463,17 @@ class _WeightRangeSheetState extends State<_WeightRangeSheet> {
               '${_min.toInt()} – ${_max.toInt()} kg',
               style: tt.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: DonyColors.primary,
+                color: cs.primary,
               ),
             ),
           ),
           const SizedBox(height: DonySpacing.sm),
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
-              activeTrackColor: DonyColors.primary,
-              thumbColor: DonyColors.primary,
-              overlayColor: DonyColors.primarySoft,
-              inactiveTrackColor: DonyColors.neutral200,
+              activeTrackColor: cs.primary,
+              thumbColor: cs.primary,
+              overlayColor: cs.primaryContainer,
+              inactiveTrackColor: cs.outline,
             ),
             child: RangeSlider(
               values: RangeValues(_min, _max),
@@ -2395,9 +2493,9 @@ class _WeightRangeSheetState extends State<_WeightRangeSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('1 kg',
-                    style: tt.bodySmall?.copyWith(color: DonyColors.textMuted)),
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
                 Text('50 kg',
-                    style: tt.bodySmall?.copyWith(color: DonyColors.textMuted)),
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
               ],
             ),
           ),
@@ -2411,14 +2509,14 @@ class _WeightRangeSheetState extends State<_WeightRangeSheet> {
                   child: Container(
                     height: 50,
                     decoration: BoxDecoration(
-                      color: DonyColors.bgApp,
+                      color: Theme.of(context).scaffoldBackgroundColor,
                       borderRadius: BorderRadius.circular(DonyRadius.card),
-                      border: Border.all(color: DonyColors.neutral200),
+                      border: Border.all(color: cs.outline),
                     ),
                     child: Center(
                       child: Text('Effacer',
                           style: tt.labelLarge?.copyWith(
-                              color: DonyColors.ink900,
+                              color: cs.onSurface,
                               fontWeight: FontWeight.w600)),
                     ),
                   ),
@@ -2465,14 +2563,15 @@ class _PriceFilterSheetState extends State<_PriceFilterSheet> {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     final bottomPad = MediaQuery.of(context).padding.bottom;
     final isAtMax = _maxPrice >= _kMax;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: DonyColors.white,
+      decoration: BoxDecoration(
+        color: cs.surface,
         borderRadius:
-            BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+            const BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
       ),
       padding: EdgeInsets.fromLTRB(
           DonySpacing.lg, 0, DonySpacing.lg, bottomPad + DonySpacing.base),
@@ -2486,7 +2585,7 @@ class _PriceFilterSheetState extends State<_PriceFilterSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                  color: DonyColors.neutral200,
+                  color: cs.outline,
                   borderRadius: BorderRadius.circular(2)),
             ),
           ),
@@ -2498,17 +2597,17 @@ class _PriceFilterSheetState extends State<_PriceFilterSheet> {
               isAtMax ? 'Tous les prix' : '≤ ${_maxPrice.toInt()} €/kg',
               style: tt.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: isAtMax ? DonyColors.textMuted : DonyColors.primary,
+                color: isAtMax ? cs.onSurfaceVariant : cs.primary,
               ),
             ),
           ),
           const SizedBox(height: DonySpacing.sm),
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
-              activeTrackColor: DonyColors.primary,
-              thumbColor: DonyColors.primary,
-              overlayColor: DonyColors.primarySoft,
-              inactiveTrackColor: DonyColors.neutral200,
+              activeTrackColor: cs.primary,
+              thumbColor: cs.primary,
+              overlayColor: cs.primaryContainer,
+              inactiveTrackColor: cs.outline,
             ),
             child: Slider(
               value: _maxPrice,
@@ -2524,9 +2623,9 @@ class _PriceFilterSheetState extends State<_PriceFilterSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('3 €/kg',
-                    style: tt.bodySmall?.copyWith(color: DonyColors.textMuted)),
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
                 Text('25 €/kg',
-                    style: tt.bodySmall?.copyWith(color: DonyColors.textMuted)),
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
               ],
             ),
           ),
@@ -2539,14 +2638,14 @@ class _PriceFilterSheetState extends State<_PriceFilterSheet> {
                   child: Container(
                     height: 50,
                     decoration: BoxDecoration(
-                      color: DonyColors.bgApp,
+                      color: Theme.of(context).scaffoldBackgroundColor,
                       borderRadius: BorderRadius.circular(DonyRadius.card),
-                      border: Border.all(color: DonyColors.neutral200),
+                      border: Border.all(color: cs.outline),
                     ),
                     child: Center(
                       child: Text('Effacer',
                           style: tt.labelLarge?.copyWith(
-                              color: DonyColors.ink900,
+                              color: cs.onSurface,
                               fontWeight: FontWeight.w600)),
                     ),
                   ),

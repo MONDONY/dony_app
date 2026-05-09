@@ -4,7 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-AnnouncementModel _makeAnn({String arrivalCity = 'Dakar', bool kiloPro = false}) =>
+AnnouncementModel _makeAnn({
+  String arrivalCity = 'Dakar',
+  bool kiloPro = false,
+  bool isProAccount = false,
+  bool kycVerified = false,
+}) =>
     AnnouncementModel(
       id: 'a1',
       travelerId: 't1',
@@ -23,6 +28,8 @@ AnnouncementModel _makeAnn({String arrivalCity = 'Dakar', bool kiloPro = false})
         averageRating: 4.8,
         totalTrips: 5,
         kiloPro: kiloPro,
+        isProAccount: isProAccount,
+        kycVerified: kycVerified,
       ),
     );
 
@@ -55,6 +62,59 @@ void main() {
       )));
       await tester.pumpAndSettle();
       expect(find.text('KYC'), findsOneWidget);
+    });
+
+    testWidgets('shows PRO badge when isProAccount is true', (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(isProAccount: true),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+      )));
+      await tester.pumpAndSettle();
+      expect(find.text('PRO'), findsOneWidget);
+    });
+
+    testWidgets('does NOT show PRO badge when isProAccount is false',
+        (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(isProAccount: false),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+      )));
+      await tester.pumpAndSettle();
+      expect(find.text('PRO'), findsNothing);
+    });
+
+    testWidgets('avatar shows gold verified badge when pro + kycVerified',
+        (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(isProAccount: true, kycVerified: true),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+      )));
+      await tester.pumpAndSettle();
+      final goldIcons = tester.widgetList<Icon>(find.byIcon(Icons.verified_rounded)).where(
+        (icon) => icon.color == const Color(0xFFF0B829),
+      );
+      expect(goldIcons, isNotEmpty);
+    });
+
+    testWidgets('avatar shows blue verified badge when kycVerified but NOT pro',
+        (tester) async {
+      await tester.pumpWidget(_wrap(TravelerCard(
+        announcement: _makeAnn(isProAccount: false, kycVerified: true),
+        index: 0,
+        isOwnAnnouncement: false,
+        onTap: () {},
+      )));
+      await tester.pumpAndSettle();
+      final blueIcons = tester.widgetList<Icon>(find.byIcon(Icons.verified_rounded)).where(
+        (icon) => icon.color != const Color(0xFFF0B829),
+      );
+      expect(blueIcons, isNotEmpty);
     });
 
     testWidgets('shows Votre trajet label when isOwnAnnouncement', (tester) async {

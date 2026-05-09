@@ -75,9 +75,9 @@ class RouteBottomSheet extends StatelessWidget {
       maxChildSize: 0.92,
       expand: false,
       builder: (ctx, scrollCtrl) => Container(
-        decoration: const BoxDecoration(
-          color: DonyColors.surface,
-          borderRadius: BorderRadius.vertical(
+        decoration: BoxDecoration(
+          color: Theme.of(ctx).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(
             top: Radius.circular(DonyRadius.sheet),
           ),
         ),
@@ -90,7 +90,7 @@ class RouteBottomSheet extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: DonyColors.borderDefault,
+                  color: Theme.of(ctx).colorScheme.outline,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -105,7 +105,7 @@ class RouteBottomSheet extends StatelessWidget {
                   ),
                   Text(
                     '${items.length} trajet${items.length != 1 ? 's' : ''}',
-                    style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+                    style: tt.bodySmall?.copyWith(color: Theme.of(ctx).colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -118,7 +118,7 @@ class RouteBottomSheet extends StatelessWidget {
                       child: Text(
                         'Aucun trajet disponible sur cette route',
                         style: tt.bodyMedium
-                            ?.copyWith(color: DonyColors.textMuted),
+                            ?.copyWith(color: Theme.of(ctx).colorScheme.onSurfaceVariant),
                         textAlign: TextAlign.center,
                       ),
                     )

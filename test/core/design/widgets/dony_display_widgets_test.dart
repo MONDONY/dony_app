@@ -521,13 +521,13 @@ void main() {
         verified: true,
       )));
       await tester.pump();
-      expect(find.byIcon(Icons.check), findsOneWidget);
+      expect(find.byIcon(Icons.verified_rounded), findsWidgets);
     });
 
     testWidgets('no check icon when verified=false', (tester) async {
       await tester.pumpWidget(_wrap(const DonyUserCard(name: 'Unverified')));
       await tester.pump();
-      expect(find.byIcon(Icons.check), findsNothing);
+      expect(find.byIcon(Icons.verified_rounded), findsNothing);
     });
 
     testWidgets('onTap callback fires', (tester) async {
@@ -638,7 +638,7 @@ void main() {
       expect(find.text('All Params'), findsOneWidget);
       expect(find.text('Expéditeur • 5 envois'), findsOneWidget);
       expect(find.text('4.5/5'), findsOneWidget);
-      expect(find.byIcon(Icons.check), findsOneWidget);
+      expect(find.byIcon(Icons.verified_rounded), findsWidgets);
       expect(find.byIcon(Icons.arrow_forward), findsOneWidget);
       await tester.tap(find.byType(DonyUserCard));
       expect(tapped, isTrue);

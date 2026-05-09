@@ -59,7 +59,7 @@ class OfflineQueueBottomSheet extends StatelessWidget {
               decoration: BoxDecoration(
                 color: cs.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(DonyRadius.card),
-                border: Border.all(color: DonyColors.borderDefault),
+                border: Border.all(color: cs.outline),
               ),
               child: Row(
                 children: [
@@ -74,7 +74,7 @@ class OfflineQueueBottomSheet extends StatelessWidget {
                         Text(
                           item.eventType,
                           style: tt.bodySmall?.copyWith(
-                            color: DonyColors.textMuted,
+                            color: cs.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -83,7 +83,7 @@ class OfflineQueueBottomSheet extends StatelessWidget {
                   Text(
                     _relativeTime(item.timestamp),
                     style: tt.bodySmall?.copyWith(
-                      color: DonyColors.textSubtle,
+                      color: cs.onSurfaceVariant,
                     ),
                   ),
                 ],

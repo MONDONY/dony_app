@@ -143,7 +143,7 @@ class _DeleteAccountBottomSheetState
             icon: Icons.hourglass_empty_rounded,
             title: 'Pause 30 jours',
             badge: 'RÉVERSIBLE',
-            badgeColor: DonyColors.success,
+            isDestructive: false,
             description:
                 'Votre compte est suspendu. Vous pouvez revenir à tout moment dans les 30 jours. Après ce délai, vos données personnelles sont pseudonymisées (RGPD).',
           ),
@@ -154,7 +154,7 @@ class _DeleteAccountBottomSheetState
             icon: Icons.delete_forever_rounded,
             title: 'Supprimer définitivement',
             badge: 'IRRÉVERSIBLE',
-            badgeColor: DonyColors.error,
+            isDestructive: true,
             description:
                 'Toutes vos données personnelles sont effacées immédiatement. Cette action est définitive et ne peut pas être annulée.',
           ),
@@ -184,7 +184,7 @@ class _ModeCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String badge;
-  final Color badgeColor;
+  final bool isDestructive;
   final String description;
 
   const _ModeCard({
@@ -193,20 +193,22 @@ class _ModeCard extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.badge,
-    required this.badgeColor,
+    required this.isDestructive,
     required this.description,
   });
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final badgeColor = isDestructive ? cs.error : cs.success;
 
     return ValueListenableBuilder<DeleteMode?>(
       valueListenable: modeNotifier,
       builder: (_, selected, __) {
         final isSelected = selected == mode;
         final borderColor =
-            isSelected ? badgeColor : DonyColors.borderDefault;
+            isSelected ? badgeColor : cs.outline;
         final bgColor = isSelected
             ? badgeColor.withValues(alpha: 0.06)
             : Colors.transparent;
@@ -251,7 +253,7 @@ class _ModeCard extends StatelessWidget {
                 const SizedBox(height: DonySpacing.sm),
                 Text(description,
                     style: tt.bodySmall
-                        ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                        ?.copyWith(color: cs.onSurfaceVariant)),
               ],
             ),
           ),

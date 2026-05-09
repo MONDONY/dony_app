@@ -160,6 +160,7 @@ class _BidListViewState extends State<_BidListView>
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     final subtitle = _buildSubtitle();
 
     return BlocConsumer<BidBloc, BidState>(
@@ -182,15 +183,15 @@ class _BidListViewState extends State<_BidListView>
             isOnPendingTab ? pendingBids.length : acceptedBids.length;
 
         return Scaffold(
-          backgroundColor: DonyColors.bg,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: AppBar(
-            backgroundColor: DonyColors.white,
+            backgroundColor: cs.surface,
             elevation: 0,
             scrolledUnderElevation: 0,
             centerTitle: false,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_rounded,
-                  size: 20, color: DonyColors.primary),
+              icon: Icon(Icons.arrow_back_ios_rounded,
+                  size: 20, color: cs.primary),
               onPressed: () {
                 if (context.canPop()) context.pop();
                 else context.go('/home');
@@ -215,7 +216,7 @@ class _BidListViewState extends State<_BidListView>
                   Text(
                     subtitle,
                     style:
-                        tt.bodySmall?.copyWith(color: DonyColors.neutral400),
+                        tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
               ],
             ),
@@ -235,9 +236,9 @@ class _BidListViewState extends State<_BidListView>
                 children: [
                   TabBar(
                     controller: _tabController,
-                    labelColor: DonyColors.primary,
-                    unselectedLabelColor: DonyColors.neutral400,
-                    indicatorColor: DonyColors.primary,
+                    labelColor: cs.primary,
+                    unselectedLabelColor: cs.onSurfaceVariant,
+                    indicatorColor: cs.primary,
                     indicatorSize: TabBarIndicatorSize.tab,
                     labelStyle: tt.labelLarge,
                     unselectedLabelStyle: tt.labelLarge,
@@ -254,7 +255,7 @@ class _BidListViewState extends State<_BidListView>
                       ),
                     ],
                   ),
-                  const Divider(height: 1, color: DonyColors.neutral200),
+                  Divider(height: 1, color: cs.outline),
                 ],
               ),
             ),
@@ -274,8 +275,8 @@ class _BidListViewState extends State<_BidListView>
     List<BidModel> acceptedBids,
   ) {
     if (state is BidLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: DonyColors.primary),
+      return Center(
+        child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
       );
     }
 
@@ -457,9 +458,10 @@ class _BidCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
 
     return Material(
-      color: DonyColors.white,
+      color: cs.surface,
       borderRadius: BorderRadius.circular(DonyRadius.card),
       child: InkWell(
         borderRadius: BorderRadius.circular(DonyRadius.card),
@@ -468,7 +470,7 @@ class _BidCard extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(DonyRadius.card),
-            border: Border.all(color: DonyColors.neutral200),
+            border: Border.all(color: cs.outline),
           ),
           padding: const EdgeInsets.all(DonySpacing.base),
           child: Column(
@@ -494,19 +496,19 @@ class _BidCard extends StatelessWidget {
                         const SizedBox(height: DonySpacing.xxs),
                         Row(
                           children: [
-                            const Icon(Icons.star_rounded,
-                                size: 13, color: DonyColors.warning),
+                            Icon(Icons.star_rounded,
+                                size: 13, color: cs.warning),
                             const SizedBox(width: DonySpacing.xxs),
                             Text(
                               '—',
                               style: tt.bodySmall
-                                  ?.copyWith(color: DonyColors.neutral400),
+                                  ?.copyWith(color: cs.onSurfaceVariant),
                             ),
                             const SizedBox(width: DonySpacing.xs),
                             Text(
                               '· ${bid.weightKg.toStringAsFixed(0)} kg',
                               style: tt.bodySmall
-                                  ?.copyWith(color: DonyColors.neutral400),
+                                  ?.copyWith(color: cs.onSurfaceVariant),
                             ),
                           ],
                         ),
@@ -519,7 +521,7 @@ class _BidCard extends StatelessWidget {
                         ? '${(bid.weightKg * bid.pricePerKg!).toStringAsFixed(0)} €'
                         : '—',
                     style: tt.titleLarge
-                        ?.copyWith(color: DonyColors.primary),
+                        ?.copyWith(color: cs.primary),
                   ),
                 ],
               ),
@@ -528,17 +530,17 @@ class _BidCard extends StatelessWidget {
               // ── Content label ────────────────────────────────────
               Text(
                 'CONTENU DÉCLARÉ',
-                style: tt.labelSmall?.copyWith(color: DonyColors.neutral400),
+                style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
               ),
               const SizedBox(height: DonySpacing.xxs),
               Text(
                 bid.contentCategory ?? bid.description,
-                style: tt.bodySmall?.copyWith(color: DonyColors.ink900),
+                style: tt.bodySmall?.copyWith(color: cs.onSurface),
               ),
               const SizedBox(height: DonySpacing.md),
 
               // ── Divider ──────────────────────────────────────────
-              const Divider(color: DonyColors.neutral200, height: 1),
+              Divider(color: cs.outline, height: 1),
               const SizedBox(height: DonySpacing.md),
 
               // ── Bottom area: actions OR status badge ─────────────
@@ -549,32 +551,32 @@ class _BidCard extends StatelessWidget {
                   onReject: onReject!,
                 )
               else if (bid.status == _kAccepted)
-                const _StatusBadge(
+                _StatusBadge(
                   label: '✓ Accepté',
                   icon: Icons.check_circle_rounded,
-                  color: DonyColors.success,
-                  bgColor: DonyColors.successLight,
+                  color: cs.success,
+                  bgColor: cs.successLight,
                 )
               else if (bid.status == _kInTransit)
-                const _StatusBadge(
+                _StatusBadge(
                   label: '↗ En transit',
                   icon: Icons.local_shipping_outlined,
-                  color: DonyColors.info,
-                  bgColor: DonyColors.infoLight,
+                  color: cs.info,
+                  bgColor: cs.infoLight,
                 )
               else if (bid.status == _kCompleted)
-                const _StatusBadge(
+                _StatusBadge(
                   label: '✓ Livré',
                   icon: Icons.verified_rounded,
                   color: DonyColors.success700,
-                  bgColor: DonyColors.successLight,
+                  bgColor: cs.successLight,
                 )
               else if (_isRejected)
-                const _StatusBadge(
+                _StatusBadge(
                   label: 'Refusé',
                   icon: Icons.cancel_rounded,
-                  color: DonyColors.error,
-                  bgColor: DonyColors.errorLight,
+                  color: cs.error,
+                  bgColor: cs.errorLight,
                 ),
             ],
           ),
@@ -677,11 +679,12 @@ class _StatusBadge extends StatelessWidget {
 class _DismissBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       alignment: Alignment.centerRight,
       padding: const EdgeInsets.only(right: DonySpacing.xl),
       decoration: BoxDecoration(
-        color: DonyColors.error,
+        color: cs.error,
         borderRadius: BorderRadius.circular(DonyRadius.card),
       ),
       child: Column(
@@ -715,6 +718,7 @@ class _ScannerChipButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -723,19 +727,19 @@ class _ScannerChipButton extends StatelessWidget {
           vertical: DonySpacing.xs,
         ),
         decoration: BoxDecoration(
-          color: DonyColors.white,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.full),
-          border: Border.all(color: DonyColors.neutral200),
+          border: Border.all(color: cs.outline),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.qr_code_scanner_rounded,
-                size: 16, color: DonyColors.ink900),
+            Icon(Icons.qr_code_scanner_rounded,
+                size: 16, color: cs.onSurface),
             const SizedBox(width: DonySpacing.xs),
             Text(
               'Scanner',
-              style: tt.labelMedium?.copyWith(color: DonyColors.ink900),
+              style: tt.labelMedium?.copyWith(color: cs.onSurface),
             ),
           ],
         ),
@@ -757,19 +761,20 @@ class _ErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(DonySpacing.huge),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline_rounded,
-                size: 48, color: DonyColors.neutral200),
+            Icon(Icons.error_outline_rounded,
+                size: 48, color: cs.outlineVariant),
             const SizedBox(height: DonySpacing.md),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400),
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.base),
             DonyButton(

@@ -136,12 +136,12 @@ void main() {
 
     testWidgets('verified shows check icon', (tester) async {
       await tester.pumpWidget(_wrap(const DonyAvatar(name: 'Test User', verified: true)));
-      expect(find.byIcon(Icons.check), findsOneWidget);
+      expect(find.byIcon(Icons.verified_rounded), findsWidgets);
     });
 
     testWidgets('not verified hides check icon', (tester) async {
       await tester.pumpWidget(_wrap(const DonyAvatar(name: 'Test User')));
-      expect(find.byIcon(Icons.check), findsNothing);
+      expect(find.byIcon(Icons.verified_rounded), findsNothing);
     });
 
     testWidgets('same name produces same initials text', (tester) async {

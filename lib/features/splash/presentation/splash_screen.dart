@@ -120,8 +120,9 @@ class _SplashScreenState extends State<SplashScreen> {
     final bottom = MediaQuery.paddingOf(context).bottom;
     final h = DonyLayout.hPadding(context);
 
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: DonyColors.surface,
+      backgroundColor: cs.surface,
       body: SafeArea(
         child: Stack(
           children: [
@@ -134,7 +135,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   Text(
                     'Livrez en confiance',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: DonyColors.textPrimary.withValues(alpha: 0.45),
+                      color: cs.onSurface.withValues(alpha: 0.45),
                       letterSpacing: 0.4,
                     ),
                   ),
@@ -142,7 +143,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   Text(
                     'v1.0.0',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: DonyColors.textSubtle.withValues(alpha: 0.6),
+                      color: cs.onSurfaceVariant.withValues(alpha: 0.6),
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -167,12 +168,12 @@ class _SplashScreenState extends State<SplashScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.wifi_off_rounded,
-                            color: DonyColors.textSubtle, size: 16),
+                            color: cs.onSurfaceVariant, size: 16),
                         const SizedBox(width: 8),
                         Text(
                           'Impossible de se connecter',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: DonyColors.textMuted,
+                            color: cs.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -181,11 +182,11 @@ class _SplashScreenState extends State<SplashScreen> {
                     OutlinedButton.icon(
                       onPressed: _retry,
                       icon: Icon(Icons.refresh_rounded,
-                          color: DonyColors.primary, size: 16),
+                          color: cs.primary, size: 16),
                       label: const Text('Réessayer'),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(
-                            color: DonyColors.primary.withValues(alpha: 0.4)),
+                            color: cs.primary.withValues(alpha: 0.4)),
                         shape: RoundedRectangleBorder(
                           borderRadius:
                               BorderRadius.circular(DonyRadius.md),
@@ -208,6 +209,7 @@ class _SplashScreenState extends State<SplashScreen> {
 class _LoadingDots extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(3, (i) {
@@ -216,7 +218,7 @@ class _LoadingDots extends StatelessWidget {
           width: 7,
           height: 7,
           decoration: BoxDecoration(
-            color: DonyColors.primary.withValues(alpha: 0.3),
+            color: cs.primary.withValues(alpha: 0.3),
             shape: BoxShape.circle,
           ),
         )

@@ -33,10 +33,10 @@ class SameAddressAnnouncementsSheet extends StatelessWidget {
         DonySpacing.lg,
         MediaQuery.of(context).viewPadding.bottom + DonySpacing.lg,
       ),
-      decoration: const BoxDecoration(
-        color: DonyColors.surface,
+      decoration: BoxDecoration(
+        color: cs.surface,
         borderRadius:
-            BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+            const BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -49,7 +49,7 @@ class SameAddressAnnouncementsSheet extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: DonyColors.borderDefault,
+                color: cs.outline,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -72,7 +72,7 @@ class SameAddressAnnouncementsSheet extends StatelessWidget {
           const SizedBox(height: DonySpacing.sm),
           Text(
             '${announcements.length} voyageur${announcements.length > 1 ? "s" : ""} disponible${announcements.length > 1 ? "s" : ""} à cette adresse',
-            style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: DonySpacing.md),
           // List of TravelerCard — same card as the list view

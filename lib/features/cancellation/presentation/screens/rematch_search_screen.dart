@@ -86,19 +86,19 @@ class _ConfirmationBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: cs.successLight,
         borderRadius: BorderRadius.circular(DonyRadius.md),
-        border: Border.all(color: DonyColors.success.withValues(alpha: 0.3)),
+        border: Border.all(color: cs.success.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.check_circle_outline_rounded,
-                  color: DonyColors.success, size: 20),
+              Icon(Icons.check_circle_outline_rounded,
+                  color: cs.success, size: 20),
               const SizedBox(width: DonySpacing.sm),
               Text(
                 'Trajet annulé',
-                style: tt.titleMedium?.copyWith(color: DonyColors.success),
+                style: tt.titleMedium?.copyWith(color: cs.success),
               ),
             ],
           ),

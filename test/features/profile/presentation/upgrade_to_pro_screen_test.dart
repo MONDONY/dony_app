@@ -305,7 +305,7 @@ void main() {
       );
     });
 
-    testWidgets('shows 409 error message when upgradeToPro throws AppException with code 409',
+    testWidgets('shows generic error message when upgradeToPro throws AppException with code 409',
         (tester) async {
       when(() => mockRepo.upgradeToPro(
             companyName: any(named: 'companyName'),
@@ -333,8 +333,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text(
-            'Un compte Stripe Connect existe déjà. Contactez le support.'),
+        find.text('Une erreur est survenue. Veuillez réessayer.'),
         findsOneWidget,
       );
     });

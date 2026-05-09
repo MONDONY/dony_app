@@ -28,13 +28,14 @@ class _TrackingHubView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final offlineItems = _getOfflineItems();
 
     return Scaffold(
-      backgroundColor: DonyColors.bgApp,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: DonyColors.surface,
+        backgroundColor: cs.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
         title: Text(
@@ -42,9 +43,9 @@ class _TrackingHubView extends StatelessWidget {
           style: tt.headlineLarge,
         ),
         centerTitle: false,
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: DonyColors.borderDefault),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Divider(height: 1, color: cs.outline),
         ),
       ),
       body: SingleChildScrollView(
@@ -77,8 +78,8 @@ class _TrackingHubView extends StatelessWidget {
             const SizedBox(height: DonySpacing.md),
             _HubCard(
               icon: Icons.qr_code_scanner_rounded,
-              iconBg: DonyColors.blue50,
-              iconColor: DonyColors.blue500,
+              iconBg: cs.primaryContainer,
+              iconColor: cs.primary,
               title: 'Scanner le QR code d\'un colis',
               subtitle: 'À la remise, en transit ou à la livraison',
               onTap: () => context.push('/tracking/scan'),
@@ -93,8 +94,8 @@ class _TrackingHubView extends StatelessWidget {
             const SizedBox(height: DonySpacing.md),
             _HubCard(
               icon: Icons.search_rounded,
-              iconBg: DonyColors.neutral100,
-              iconColor: DonyColors.textMuted,
+              iconBg: cs.surfaceContainerHighest,
+              iconColor: cs.onSurfaceVariant,
               title: 'Suivre un colis par numéro',
               subtitle: 'Entrez votre numéro DON-XXXXXX',
               onTap: () => TrackingSearchBottomSheet.show(context),
@@ -116,6 +117,7 @@ class _OfflineBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
     return GestureDetector(
@@ -123,16 +125,16 @@ class _OfflineBanner extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(DonySpacing.base),
         decoration: BoxDecoration(
-          color: DonyColors.terra50,
+          color: cs.secondaryContainer,
           borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: DonyColors.terra500),
+          border: Border.all(color: cs.secondary),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(
+            Icon(
               Icons.wifi_off_rounded,
-              color: DonyColors.terra500,
+              color: cs.secondary,
               size: DonySpacing.iconSm,
             ),
             const SizedBox(width: DonySpacing.sm),
@@ -144,20 +146,20 @@ class _OfflineBanner extends StatelessWidget {
                     '$count scan${count > 1 ? 's' : ''} en attente',
                     style: tt.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: DonyColors.terra600,
+                      color: cs.onSecondaryContainer,
                     ),
                   ),
                   const SizedBox(height: DonySpacing.xxs),
                   Text(
                     'Appuyez pour voir et synchroniser',
-                    style: tt.bodySmall?.copyWith(color: DonyColors.terra500),
+                    style: tt.bodySmall?.copyWith(color: cs.secondary),
                   ),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
-              color: DonyColors.terra500,
+              color: cs.secondary,
               size: DonySpacing.iconSm,
             ),
           ],
@@ -177,16 +179,17 @@ class _HubSectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
     return Row(
       children: [
-        Icon(icon, size: 14, color: DonyColors.textMuted),
+        Icon(icon, size: 14, color: cs.onSurfaceVariant),
         const SizedBox(width: DonySpacing.xs),
         Text(
           label.toUpperCase(),
           style: tt.labelMedium?.copyWith(
-            color: DonyColors.textMuted,
+            color: cs.onSurfaceVariant,
             letterSpacing: 0.8,
           ),
         ),
@@ -216,6 +219,7 @@ class _HubCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
     return GestureDetector(
@@ -223,9 +227,9 @@ class _HubCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(DonySpacing.base + 2),
         decoration: BoxDecoration(
-          color: DonyColors.surface,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: DonyColors.borderDefault),
+          border: Border.all(color: cs.outline),
         ),
         child: Row(
           children: [
@@ -249,14 +253,14 @@ class _HubCard extends StatelessWidget {
                   const SizedBox(height: DonySpacing.xxs),
                   Text(
                     subtitle,
-                    style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
-              color: DonyColors.textSubtle,
+              color: cs.onSurfaceVariant,
               size: DonySpacing.iconSm,
             ),
           ],

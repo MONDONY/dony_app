@@ -52,9 +52,9 @@ class KycOnboardingScreen extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    decoration: const BoxDecoration(
-                      color: DonyColors.bgApp,
-                      border: Border(top: BorderSide(color: DonyColors.borderDefault)),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      border: Border(top: BorderSide(color: cs.outline)),
                     ),
                     padding: EdgeInsets.fromLTRB(h, DonySpacing.base, h, DonySpacing.base + bottom),
                     child: _buildButton(context, state),

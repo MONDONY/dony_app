@@ -300,6 +300,7 @@ class _CreateAnnouncementContentState
   }
 
   Future<void> _selectDate() async {
+    final cs = Theme.of(context).colorScheme;
     final picked = await showDatePicker(
       context: context,
       initialDate: _departureDateNotifier.value ??
@@ -309,7 +310,7 @@ class _CreateAnnouncementContentState
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
           colorScheme:
-              const ColorScheme.light(primary: DonyColors.primary),
+              ColorScheme.light(primary: cs.primary),
         ),
         child: child!,
       ),
@@ -320,6 +321,7 @@ class _CreateAnnouncementContentState
   }
 
   Future<void> _selectDepartureTime() async {
+    final cs = Theme.of(context).colorScheme;
     final picked = await showTimePicker(
       context: context,
       initialTime:
@@ -327,7 +329,7 @@ class _CreateAnnouncementContentState
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
           colorScheme:
-              const ColorScheme.light(primary: DonyColors.primary),
+              ColorScheme.light(primary: cs.primary),
         ),
         child: child!,
       ),
@@ -338,6 +340,7 @@ class _CreateAnnouncementContentState
   }
 
   Future<void> _selectArrivalTime() async {
+    final cs = Theme.of(context).colorScheme;
     final picked = await showTimePicker(
       context: context,
       initialTime:
@@ -345,7 +348,7 @@ class _CreateAnnouncementContentState
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
           colorScheme:
-              const ColorScheme.light(primary: DonyColors.primary),
+              ColorScheme.light(primary: cs.primary),
         ),
         child: child!,
       ),
@@ -374,6 +377,7 @@ class _CreateAnnouncementContentState
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
 
     return BlocConsumer<AnnouncementBloc, AnnouncementState>(
       listener: (context, state) {
@@ -439,7 +443,7 @@ class _CreateAnnouncementContentState
                                       Text(
                                         dateStr,
                                         style: tt.bodySmall?.copyWith(
-                                          color: DonyColors.textSubtle,
+                                          color: cs.onSurfaceVariant,
                                         ),
                                       ),
                                   ],
@@ -451,14 +455,14 @@ class _CreateAnnouncementContentState
                                   vertical: DonySpacing.xs,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: DonyColors.primarySoft,
+                                  color: cs.primaryContainer,
                                   borderRadius: BorderRadius.circular(
                                       DonyRadius.full),
                                 ),
                                 child: Text(
                                   'Confirmé',
                                   style: tt.labelSmall?.copyWith(
-                                    color: DonyColors.primary,
+                                    color: cs.primary,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -493,8 +497,8 @@ class _CreateAnnouncementContentState
                           child: CityAutocompleteField(
                             label: 'Ville de départ',
                             initialValue: _departureCityNotifier.value,
-                            prefixIcon: const Icon(Icons.flight_takeoff_rounded,
-                                color: DonyColors.primary, size: 20),
+                            prefixIcon: Icon(Icons.flight_takeoff_rounded,
+                                color: cs.primary, size: 20),
                             onSelected: (CityModel city) {
                               _departureCityNotifier.value = city.name;
                             },
@@ -548,7 +552,7 @@ class _CreateAnnouncementContentState
               const SizedBox(height: DonySpacing.xs),
               Text(
                 'Précisez l\'endroit exact de remise et récupération',
-                style: tt.bodySmall?.copyWith(color: DonyColors.textSubtle),
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
               const SizedBox(height: DonySpacing.sm),
               AddressPickerField(
@@ -588,13 +592,13 @@ class _CreateAnnouncementContentState
                             style: tt.displayLarge?.copyWith(
                               fontSize: 56,
                               fontWeight: FontWeight.w800,
-                              color: DonyColors.textPrimary,
+                              color: cs.onSurface,
                             ),
                           ),
                           Text(
                             ' kg',
                             style: tt.headlineMedium?.copyWith(
-                              color: DonyColors.textSubtle,
+                              color: cs.onSurfaceVariant,
                             ),
                           ),
                           Expanded(
@@ -606,14 +610,14 @@ class _CreateAnnouncementContentState
                                   vertical: DonySpacing.xs,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: DonyColors.neutral100,
+                                  color: cs.surfaceContainerHighest,
                                   borderRadius: BorderRadius.circular(
                                       DonyRadius.full),
                                 ),
                                 child: Text(
                                   'VALISE',
                                   style: tt.labelSmall?.copyWith(
-                                    color: DonyColors.textSubtle,
+                                    color: cs.onSurfaceVariant,
                                   ),
                                 ),
                               ),
@@ -624,11 +628,11 @@ class _CreateAnnouncementContentState
                       const SizedBox(height: DonySpacing.xs),
                       SliderTheme(
                         data: SliderTheme.of(context).copyWith(
-                          activeTrackColor: DonyColors.primary,
-                          inactiveTrackColor: DonyColors.borderDefault,
-                          thumbColor: DonyColors.primary,
+                          activeTrackColor: cs.primary,
+                          inactiveTrackColor: cs.outline,
+                          thumbColor: cs.primary,
                           overlayColor:
-                              DonyColors.primary.withValues(alpha: 0.1),
+                              cs.primary.withValues(alpha: 0.1),
                           trackHeight: 5,
                         ),
                         child: Slider(
@@ -645,10 +649,10 @@ class _CreateAnnouncementContentState
                         children: [
                           Text('1 kg',
                               style: tt.bodySmall
-                                  ?.copyWith(color: DonyColors.textSubtle)),
+                                  ?.copyWith(color: cs.onSurfaceVariant)),
                           Text('max 23 kg',
                               style: tt.bodySmall
-                                  ?.copyWith(color: DonyColors.textSubtle)),
+                                  ?.copyWith(color: cs.onSurfaceVariant)),
                         ],
                       ),
                     ],
@@ -692,14 +696,14 @@ class _CreateAnnouncementContentState
                                   ),
                                   decoration: BoxDecoration(
                                     color: selected
-                                        ? DonyColors.successLight
-                                        : DonyColors.surface,
+                                        ? cs.successLight
+                                        : cs.surface,
                                     borderRadius: BorderRadius.circular(
                                         DonyRadius.lg),
                                     border: Border.all(
                                       color: selected
-                                          ? DonyColors.success
-                                          : DonyColors.borderDefault,
+                                          ? cs.success
+                                          : cs.outline,
                                       width: selected ? 1.5 : 1,
                                     ),
                                   ),
@@ -708,8 +712,8 @@ class _CreateAnnouncementContentState
                                       '${_priceOptions[i].toStringAsFixed(0)}€',
                                       style: tt.titleMedium?.copyWith(
                                         color: selected
-                                            ? DonyColors.success
-                                            : DonyColors.textPrimary,
+                                            ? cs.success
+                                            : cs.onSurface,
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
@@ -724,7 +728,7 @@ class _CreateAnnouncementContentState
                       Text(
                         'Estimation : ${grossEstimate.toStringAsFixed(0)}€ · vous touchez ${netEstimate.toStringAsFixed(0)}€',
                         style: tt.bodySmall
-                            ?.copyWith(color: DonyColors.textSubtle),
+                            ?.copyWith(color: cs.onSurfaceVariant),
                       ),
                     ],
                   );
@@ -802,14 +806,14 @@ class _CreateAnnouncementContentState
                                   ),
                                   decoration: BoxDecoration(
                                     color: isSelected
-                                        ? DonyColors.success
-                                        : DonyColors.bgApp,
+                                        ? cs.success
+                                        : Theme.of(context).scaffoldBackgroundColor,
                                     borderRadius: BorderRadius.circular(
                                         DonyRadius.full),
                                     border: Border.all(
                                       color: isSelected
-                                          ? DonyColors.success
-                                          : DonyColors.borderDefault,
+                                          ? cs.success
+                                          : cs.outline,
                                     ),
                                   ),
                                   child: Row(
@@ -818,15 +822,15 @@ class _CreateAnnouncementContentState
                                       if (isSelected) ...[
                                         const Icon(Icons.check_rounded,
                                             size: 12,
-                                            color: DonyColors.surface),
+                                            color: DonyColors.white),
                                         const SizedBox(width: DonySpacing.xs),
                                       ],
                                       Text(
                                         type,
                                         style: tt.bodySmall?.copyWith(
                                           color: isSelected
-                                              ? DonyColors.surface
-                                              : DonyColors.textPrimary,
+                                              ? DonyColors.white
+                                              : cs.onSurface,
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
@@ -850,7 +854,7 @@ class _CreateAnnouncementContentState
                               runSpacing: DonySpacing.xs,
                               children: custom.map((item) => _RemovableChip(
                                 label: item,
-                                accentColor: DonyColors.success,
+                                accentColor: cs.success,
                                 onRemove: () {
                                   final updated =
                                       Set<String>.from(custom)
@@ -898,7 +902,7 @@ class _CreateAnnouncementContentState
                         _InlineAddRow(
                           controller: _refusedCtrl,
                           hint: 'Ex: Liquides, Denrées périssables…',
-                          accentColor: DonyColors.error,
+                          accentColor: cs.error,
                           onAdd: () {
                             final val = _refusedCtrl.text.trim();
                             if (val.isEmpty) {
@@ -920,7 +924,7 @@ class _CreateAnnouncementContentState
                               runSpacing: DonySpacing.xs,
                               children: refused.map((item) => _RemovableChip(
                                 label: item,
-                                accentColor: DonyColors.error,
+                                accentColor: cs.error,
                                 onRemove: () {
                                   final updated =
                                       Set<String>.from(refused)
@@ -960,12 +964,12 @@ class _CreateAnnouncementContentState
                             scrollPadding: const EdgeInsets.only(bottom: 120),
                             buildCounter: (_, {required currentLength, required isFocused, maxLength}) => null,
                             style: tt.bodyMedium
-                                ?.copyWith(color: DonyColors.textPrimary),
+                                ?.copyWith(color: cs.onSurface),
                             decoration: InputDecoration(
                               hintText:
                                   'Ex: Je préfère les colis bien emballés. Contactez-moi avant le départ.',
                               hintStyle: tt.bodyMedium
-                                  ?.copyWith(color: DonyColors.textSubtle),
+                                  ?.copyWith(color: cs.onSurfaceVariant),
                               border: InputBorder.none,
                               contentPadding: const EdgeInsets.symmetric(
                                 vertical: DonySpacing.md,
@@ -981,7 +985,7 @@ class _CreateAnnouncementContentState
                           child: Text(
                             '${value.text.length}/500',
                             style: tt.bodySmall
-                                ?.copyWith(color: DonyColors.textSubtle),
+                                ?.copyWith(color: cs.onSurfaceVariant),
                           ),
                         ),
                       ],
@@ -1006,10 +1010,11 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return ClipRRect(
       borderRadius: BorderRadius.circular(DonyRadius.card),
       child: Container(
-        color: DonyColors.surface,
+        color: cs.surface,
         child: child,
       ),
     );
@@ -1023,7 +1028,8 @@ class _RowDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(height: 0.5, color: DonyColors.borderDefault);
+    final cs = Theme.of(context).colorScheme;
+    return Container(height: 0.5, color: cs.outline);
   }
 }
 
@@ -1037,10 +1043,11 @@ class _SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     final labelWidget = Text(
       label,
       style: tt.labelSmall?.copyWith(
-        color: DonyColors.textSubtle,
+        color: cs.onSurfaceVariant,
         letterSpacing: 0.8,
         fontWeight: FontWeight.w600,
       ),
@@ -1049,7 +1056,7 @@ class _SectionLabel extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 13, color: DonyColors.textSubtle),
+        Icon(icon, size: 13, color: cs.onSurfaceVariant),
         const SizedBox(width: DonySpacing.xs),
         labelWidget,
       ],
@@ -1075,6 +1082,7 @@ class _InlineAddRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: DonySpacing.base,
@@ -1086,14 +1094,14 @@ class _InlineAddRow extends StatelessWidget {
             child: TextField(
               controller: controller,
               style:
-                  tt.bodyMedium?.copyWith(color: DonyColors.textPrimary),
+                  tt.bodyMedium?.copyWith(color: cs.onSurface),
               onSubmitted: (_) => onAdd(),
               textInputAction: TextInputAction.done,
               scrollPadding: const EdgeInsets.only(bottom: 120),
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle:
-                    tt.bodyMedium?.copyWith(color: DonyColors.textSubtle),
+                    tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: DonySpacing.md,
@@ -1112,7 +1120,7 @@ class _InlineAddRow extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.add_rounded,
-                  size: 18, color: DonyColors.surface),
+                  size: 18, color: DonyColors.white),
             ),
           ),
         ],
@@ -1188,7 +1196,8 @@ class _TimeRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final color = isDeparture ? DonyColors.primary : DonyColors.accent;
+    final cs = Theme.of(context).colorScheme;
+    final color = isDeparture ? cs.primary : DonyColors.accent;
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -1212,20 +1221,20 @@ class _TimeRow extends StatelessWidget {
                   fontWeight:
                       time != null ? FontWeight.w600 : FontWeight.w400,
                   color: time != null
-                      ? DonyColors.textPrimary
-                      : DonyColors.textSubtle,
+                      ? cs.onSurface
+                      : cs.onSurfaceVariant,
                 ),
               ),
             ),
             if (time != null && onClear != null)
               GestureDetector(
                 onTap: onClear,
-                child: const Icon(Icons.close_rounded,
-                    size: 16, color: DonyColors.textSubtle),
+                child: Icon(Icons.close_rounded,
+                    size: 16, color: cs.onSurfaceVariant),
               )
             else
-              const Icon(Icons.chevron_right_rounded,
-                  size: 18, color: DonyColors.textSubtle),
+              Icon(Icons.chevron_right_rounded,
+                  size: 18, color: cs.onSurfaceVariant),
           ],
         ),
       ),
@@ -1244,6 +1253,7 @@ class _DateRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -1253,8 +1263,8 @@ class _DateRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(Icons.calendar_today_rounded,
-                size: 14, color: DonyColors.textSubtle),
+            Icon(Icons.calendar_today_rounded,
+                size: 14, color: cs.onSurfaceVariant),
             const SizedBox(width: DonySpacing.md),
             Expanded(
               child: Text(
@@ -1265,13 +1275,13 @@ class _DateRow extends StatelessWidget {
                   fontWeight:
                       date != null ? FontWeight.w600 : FontWeight.w400,
                   color: date != null
-                      ? DonyColors.textPrimary
-                      : DonyColors.textSubtle,
+                      ? cs.onSurface
+                      : cs.onSurfaceVariant,
                 ),
               ),
             ),
-            const Icon(Icons.chevron_right_rounded,
-                size: 18, color: DonyColors.textSubtle),
+            Icon(Icons.chevron_right_rounded,
+                size: 18, color: cs.onSurfaceVariant),
           ],
         ),
       ),

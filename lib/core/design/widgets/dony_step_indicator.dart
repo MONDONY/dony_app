@@ -66,7 +66,7 @@ class _DotsIndicator extends StatelessWidget {
           width: active ? 20 : 8,
           height: 8,
           decoration: BoxDecoration(
-            color: active ? cs.primary : DonyColors.neutral200,
+            color: active ? cs.primary : cs.outline,
             borderRadius: BorderRadius.circular(DonyRadius.full),
           ),
         );
@@ -94,7 +94,7 @@ class _BarIndicator extends StatelessWidget {
             margin: EdgeInsets.only(right: i < total - 1 ? DonySpacing.xs : 0),
             height: 4,
             decoration: BoxDecoration(
-              color: done ? cs.primary : DonyColors.neutral200,
+              color: done ? cs.primary : cs.outline,
               borderRadius: BorderRadius.circular(DonyRadius.full),
             ),
           ),
@@ -121,8 +121,8 @@ class _LabeledIndicator extends StatelessWidget {
         final done   = i < current;
         final active = i == current;
 
-        final circleColor = done || active ? cs.primary : DonyColors.neutral200;
-        final labelColor  = active ? cs.primary : done ? DonyColors.textSubtle : DonyColors.textMuted;
+        final circleColor = done || active ? cs.primary : cs.outline;
+        final labelColor  = active ? cs.primary : cs.onSurfaceVariant;
 
         return Expanded(
           child: Row(
@@ -140,7 +140,7 @@ class _LabeledIndicator extends StatelessWidget {
                       child: Icon(
                         done ? Icons.check_rounded : null,
                         size: 14,
-                        color: (done || active) ? cs.onPrimary : DonyColors.neutral400,
+                        color: (done || active) ? cs.onPrimary : cs.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: DonySpacing.xs),
@@ -162,7 +162,7 @@ class _LabeledIndicator extends StatelessWidget {
                   child: Container(
                     height: 2,
                     margin: const EdgeInsets.only(bottom: DonySpacing.xl),
-                    color: i < current ? cs.primary : DonyColors.neutral200,
+                    color: i < current ? cs.primary : cs.outline,
                   ),
                 ),
             ],

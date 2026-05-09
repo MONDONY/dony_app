@@ -85,7 +85,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
     final bgColor = isDanger ? cs.errorContainer : cs.surface;
     final handleColor = isDanger
         ? cs.error.withValues(alpha: 0.35)
-        : DonyColors.neutral300;
+        : cs.onSurfaceVariant.withValues(alpha: 0.4);
 
     return Container(
       margin: expand ? EdgeInsets.zero : EdgeInsets.only(top: topMargin),
@@ -134,7 +134,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
                           Text(
                             subtitle!,
                             style: tt.bodySmall?.copyWith(
-                              color: DonyColors.textMuted,
+                              color: cs.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -145,7 +145,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.close_rounded, size: 20),
                     style: IconButton.styleFrom(
-                      foregroundColor: DonyColors.textMuted,
+                      foregroundColor: cs.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -170,7 +170,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
               decoration: BoxDecoration(
                 color: bgColor,
                 border: Border(
-                  top: BorderSide(color: DonyColors.neutral200, width: 1),
+                  top: BorderSide(color: cs.outline, width: 1),
                 ),
                 boxShadow: [
                   BoxShadow(

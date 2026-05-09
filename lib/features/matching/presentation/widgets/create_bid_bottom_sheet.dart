@@ -305,7 +305,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
                       helperStyle: Theme.of(context)
                           .textTheme
                           .bodySmall
-                          ?.copyWith(color: DonyColors.neutral400),
+                          ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: DonySpacing.base,
                         vertical: DonySpacing.md,
@@ -403,12 +403,13 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Text(
       label,
       style: Theme.of(context)
           .textTheme
           .labelMedium
-          ?.copyWith(color: DonyColors.neutral400),
+          ?.copyWith(color: cs.onSurfaceVariant),
     );
   }
 }
@@ -429,6 +430,7 @@ class _WeightSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return Column(
       children: [
         // Large weight display
@@ -437,20 +439,20 @@ class _WeightSection extends StatelessWidget {
           children: [
             Text(
               weightKg.toStringAsFixed(0),
-              style: tt.displayLarge?.copyWith(color: DonyColors.ink900),
+              style: tt.displayLarge?.copyWith(color: cs.onSurface),
             ),
             const SizedBox(width: DonySpacing.xs),
             Padding(
               padding: const EdgeInsets.only(bottom: DonySpacing.sm),
               child: Text(
                 'kg',
-                style: tt.headlineMedium?.copyWith(color: DonyColors.neutral400),
+                style: tt.headlineMedium?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
             const Spacer(),
             Text(
               'max ${maxKg.toStringAsFixed(0)} kg',
-              style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
           ],
         ),
@@ -458,10 +460,10 @@ class _WeightSection extends StatelessWidget {
         // Slider
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
-            activeTrackColor: DonyColors.primary,
-            inactiveTrackColor: DonyColors.neutral200,
-            thumbColor: DonyColors.primary,
-            overlayColor: DonyColors.primary.withValues(alpha: 0.1),
+            activeTrackColor: cs.primary,
+            inactiveTrackColor: cs.outline,
+            thumbColor: cs.primary,
+            overlayColor: cs.primary.withValues(alpha: 0.1),
             trackHeight: 4,
             thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
           ),
@@ -479,11 +481,11 @@ class _WeightSection extends StatelessWidget {
           children: [
             Text(
               '1 kg',
-              style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             Text(
               '${maxKg.toStringAsFixed(0)} kg',
-              style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
           ],
         ),
@@ -508,6 +510,7 @@ class _CategoryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -517,23 +520,23 @@ class _CategoryChip extends StatelessWidget {
           vertical: DonySpacing.sm,
         ),
         decoration: BoxDecoration(
-          color: selected ? DonyColors.ink900 : DonyColors.white,
+          color: selected ? cs.onSurface : cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.full),
           border: Border.all(
-            color: selected ? DonyColors.ink900 : DonyColors.neutral200,
+            color: selected ? cs.onSurface : cs.outline,
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (selected) ...[
-              const Icon(Icons.check_rounded, size: 14, color: DonyColors.white),
+              Icon(Icons.check_rounded, size: 14, color: cs.surface),
               const SizedBox(width: DonySpacing.xxs),
             ],
             Text(
               label,
               style: tt.labelMedium?.copyWith(
-                color: selected ? DonyColors.white : DonyColors.ink900,
+                color: selected ? cs.surface : cs.onSurface,
               ),
             ),
           ],
@@ -557,12 +560,13 @@ class _DisclaimerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: DonyColors.terra50,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: const Border(
-          left: BorderSide(color: DonyColors.terra500, width: _kAccentBorder),
+        color: cs.secondaryContainer,
+        borderRadius: const BorderRadius.all(Radius.circular(DonyRadius.card)),
+        border: Border(
+          left: BorderSide(color: cs.secondary, width: _kAccentBorder),
         ),
       ),
       padding: const EdgeInsets.all(DonySpacing.md),
@@ -572,10 +576,10 @@ class _DisclaimerCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(
+              Icon(
                 Icons.warning_amber_rounded,
                 size: 20,
-                color: DonyColors.terra500,
+                color: cs.secondary,
               ),
               const SizedBox(width: DonySpacing.sm),
               Expanded(
@@ -584,14 +588,14 @@ class _DisclaimerCard extends StatelessWidget {
                   children: [
                     Text(
                       'Disclaimer douane.',
-                      style: tt.titleMedium?.copyWith(color: DonyColors.terra700),
+                      style: tt.titleMedium?.copyWith(color: cs.onSecondaryContainer),
                     ),
                     const SizedBox(height: DonySpacing.xxs),
                     Text(
                       'Pas d\'armes, drogues, liquides inflammables ou espèces. '
                       'Le voyageur peut refuser au contrôle douanier.',
                       style: tt.bodySmall
-                          ?.copyWith(color: DonyColors.terra700, height: 1.5),
+                          ?.copyWith(color: cs.onSecondaryContainer, height: 1.5),
                     ),
                   ],
                 ),
@@ -606,7 +610,7 @@ class _DisclaimerCard extends StatelessWidget {
                 Checkbox(
                   value: accepted,
                   onChanged: (v) => onChanged(v ?? false),
-                  activeColor: DonyColors.terra500,
+                  activeColor: cs.secondary,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 const SizedBox(width: DonySpacing.xs),
@@ -614,7 +618,7 @@ class _DisclaimerCard extends StatelessWidget {
                   child: Text(
                     'Je signe & j\'accepte',
                     style: tt.bodySmall?.copyWith(
-                      color: DonyColors.ink900,
+                      color: cs.onSurface,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -648,14 +652,15 @@ class _PriceBreakdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: '€');
 
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
-        color: DonyColors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.neutral200),
+        border: Border.all(color: cs.outline),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -677,13 +682,13 @@ class _PriceBreakdown extends StatelessWidget {
             children: [
               Text(
                 'Frais de service',
-                style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400),
+                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               ),
               Text(fmt.format(serviceFee), style: tt.bodyMedium),
             ],
           ),
           const SizedBox(height: DonySpacing.sm),
-          const Divider(color: DonyColors.neutral200),
+          Divider(color: cs.outline),
           const SizedBox(height: DonySpacing.sm),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -691,7 +696,7 @@ class _PriceBreakdown extends StatelessWidget {
               Text('Total', style: tt.titleLarge),
               Text(
                 fmt.format(totalPrice),
-                style: tt.titleLarge?.copyWith(color: DonyColors.primary),
+                style: tt.titleLarge?.copyWith(color: cs.primary),
               ),
             ],
           ),

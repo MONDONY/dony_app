@@ -21,6 +21,7 @@ class DonyUserCard extends StatelessWidget {
     this.imageUrl,
     this.subtitle,
     this.verified = false,
+    this.pro = false,
     this.rating,
     this.trailing,
     this.onTap,
@@ -32,6 +33,7 @@ class DonyUserCard extends StatelessWidget {
   final String? imageUrl;
   final String? subtitle;
   final bool verified;
+  final bool pro;
   final double? rating;
   final Widget? trailing;
   final VoidCallback? onTap;
@@ -41,6 +43,7 @@ class DonyUserCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
 
     return DonyCard(
       onTap: onTap,
@@ -52,6 +55,7 @@ class DonyUserCard extends StatelessWidget {
             imageUrl: imageUrl,
             size: avatarSize,
             verified: verified,
+            pro: pro,
           ),
           const SizedBox(width: DonySpacing.md),
           Expanded(
@@ -69,12 +73,12 @@ class DonyUserCard extends StatelessWidget {
                     ),
                     if (rating != null) ...[
                       const SizedBox(width: DonySpacing.xs),
-                      const Icon(Icons.star_rounded, size: 13, color: DonyColors.warning),
+                      Icon(Icons.star_rounded, size: 13, color: cs.warning),
                       const SizedBox(width: DonySpacing.xxs),
                       Text(
                         '${rating!.toStringAsFixed(1)}/5',
                         style: tt.bodySmall?.copyWith(
-                          color: DonyColors.textMuted,
+                          color: cs.onSurfaceVariant,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -85,7 +89,7 @@ class DonyUserCard extends StatelessWidget {
                   const SizedBox(height: DonySpacing.xxs),
                   Text(
                     subtitle!,
-                    style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
@@ -96,10 +100,10 @@ class DonyUserCard extends StatelessWidget {
             const SizedBox(width: DonySpacing.sm),
             trailing!,
           ] else if (onTap != null)
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               size: 20,
-              color: DonyColors.neutral400,
+              color: cs.onSurfaceVariant,
             ),
         ],
       ),

@@ -97,6 +97,46 @@ cs.errorLight
 
 ---
 
+## Dark mode
+
+L'app supporte le dark mode via `ThemeMode.system` — adaptation automatique au réglage OS.
+
+### Règle d'or
+
+**Tout widget DS doit lire ses couleurs sémantiques via `Theme.of(context).colorScheme.X`, JAMAIS via `DonyColors.surface`, `DonyColors.textPrimary`, `DonyColors.bgApp`, `DonyColors.borderDefault` directement.** Ces tokens sont light-only.
+
+| Hardcodé (interdit) | À utiliser à la place |
+|---|---|
+| `DonyColors.surface` | `cs.surface` |
+| `DonyColors.bgApp` | `Theme.of(context).scaffoldBackgroundColor` |
+| `DonyColors.textPrimary` | `cs.onSurface` |
+| `DonyColors.textMuted` | `cs.onSurfaceVariant` |
+| `DonyColors.borderDefault` | `cs.outline` |
+| `DonyColors.primary` | `cs.primary` |
+| `DonyColors.success`, `successLight` | `cs.success`, `cs.successLight` (extension) |
+
+`DonyColors.blue500`, `DonyColors.terra500`, etc. (palette primitive) restent autorisés en contexte `const` ou pour des dégradés — ils ne sont pas brightness-aware par design.
+
+### Extension `DonyStatusColors`
+
+Pour les couleurs de statut (success / warning / info / error light variants + surfaceWarm), passer par l'extension :
+
+```dart
+final cs = Theme.of(context).colorScheme;
+cs.success      // brightness-aware
+cs.successLight // brightness-aware
+cs.warning
+cs.warningLight
+cs.info
+cs.infoLight
+cs.errorLight
+cs.surfaceWarm  // sand100 ↔ sandDark100
+```
+
+Voir `DARK_MODE.md` pour le guide d'auteur complet.
+
+---
+
 ## Typographie — `DonyTypography`
 
 Le système typographique combine deux familles :

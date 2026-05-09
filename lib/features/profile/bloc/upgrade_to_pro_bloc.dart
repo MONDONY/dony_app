@@ -25,15 +25,8 @@ class UpgradeToProBloc extends Bloc<UpgradeToProEvent, UpgradeToProState> {
         siret: event.siret,
       );
       emit(UpgradeToProSuccess());
-    } on AppException catch (e) {
-      final isConflict = e.code == '409';
-      emit(
-        UpgradeToProError(
-          isConflict
-              ? 'Un compte Stripe Connect existe déjà. Contactez le support.'
-              : 'Une erreur est survenue. Veuillez réessayer.',
-        ),
-      );
+    } on AppException catch (_) {
+      emit(const UpgradeToProError('Une erreur est survenue. Veuillez réessayer.'));
     } catch (e) {
       emit(const UpgradeToProError('Une erreur est survenue. Veuillez réessayer.'));
     }

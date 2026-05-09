@@ -239,8 +239,8 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
                   ),
                 ),
                 if (_isRefreshing)
-                  const LinearProgressIndicator(
-                    color: DonyColors.primary,
+                  LinearProgressIndicator(
+                    color: Theme.of(context).colorScheme.primary,
                     minHeight: 2,
                   ),
               ],
@@ -288,6 +288,7 @@ class _EnvoisHeaderState extends State<_EnvoisHeader> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final isDark = cs.brightness == Brightness.dark;
     final savedCount = _savedService.getSavedTrips().length;
     final topPad = MediaQuery.of(context).padding.top;
 
@@ -327,13 +328,17 @@ class _EnvoisHeaderState extends State<_EnvoisHeader> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.62),
+                              color: isDark
+                                  ? cs.surface.withValues(alpha: 0.85)
+                                  : Colors.white.withValues(alpha: 0.62),
                               borderRadius: BorderRadius.circular(DonyRadius.md),
                               border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.92)),
+                                  color: isDark
+                                      ? Colors.white.withValues(alpha: 0.07)
+                                      : Colors.white.withValues(alpha: 0.92)),
                               boxShadow: [
                                 BoxShadow(
-                                  color: DonyColors.primary.withValues(alpha: 0.10),
+                                  color: cs.primary.withValues(alpha: 0.10),
                                   blurRadius: 10,
                                 ),
                               ],
@@ -388,15 +393,15 @@ class _EnvoisHeaderState extends State<_EnvoisHeader> {
                 _StatChip(
                   count: widget.inProgressCount,
                   label: 'en cours',
-                  color: DonyColors.success,
-                  bgColor: DonyColors.successLight,
+                  color: cs.success,
+                  bgColor: cs.successLight,
                 ),
                 const SizedBox(width: DonySpacing.sm),
                 _StatChip(
                   count: widget.upcomingCount,
                   label: 'en attente',
-                  color: DonyColors.warning,
-                  bgColor: DonyColors.warningLight,
+                  color: cs.warning,
+                  bgColor: cs.warningLight,
                 ),
               ],
             ).animate().fadeIn(delay: 80.ms),
@@ -487,6 +492,7 @@ class _ActiveShipmentBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final isDark = cs.brightness == Brightness.dark;
     final shortDesc = bid.description.length > 36
         ? '${bid.description.substring(0, 36)}…'
         : bid.description;
@@ -506,12 +512,17 @@ class _ActiveShipmentBanner extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(DonySpacing.lg),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.58),
+              color: isDark
+                  ? cs.surface.withValues(alpha: 0.85)
+                  : Colors.white.withValues(alpha: 0.58),
               borderRadius: BorderRadius.circular(DonyRadius.card),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.88)),
+              border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.07)
+                      : Colors.white.withValues(alpha: 0.88)),
               boxShadow: [
                 BoxShadow(
-                  color: DonyColors.primary.withValues(alpha: 0.09),
+                  color: cs.primary.withValues(alpha: 0.09),
                   blurRadius: 20,
                 ),
               ],
@@ -607,6 +618,7 @@ class _SegmentedTabs extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final isDark = cs.brightness == Brightness.dark;
 
     return Container(
       color: Colors.transparent,
@@ -619,9 +631,14 @@ class _SegmentedTabs extends StatelessWidget {
           child: Container(
             height: 44,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.50),
+              color: isDark
+                  ? cs.surface.withValues(alpha: 0.75)
+                  : Colors.white.withValues(alpha: 0.50),
               borderRadius: BorderRadius.circular(DonyRadius.md),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.80)),
+              border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.07)
+                      : Colors.white.withValues(alpha: 0.80)),
             ),
             child: TabBar(
               controller: controller,
@@ -735,7 +752,7 @@ class _ShipmentListView extends StatelessWidget {
     if (onRefresh == null) return child;
     return RefreshIndicator(
       onRefresh: onRefresh!,
-      color: DonyColors.primary,
+      color: Theme.of(context).colorScheme.primary,
       child: child,
     );
   }
@@ -756,12 +773,13 @@ Future<bool> _confirmDelete(BuildContext context) async {
 class _DeleteBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Container(
       alignment: Alignment.centerRight,
       padding: const EdgeInsets.only(right: DonySpacing.xl),
       decoration: BoxDecoration(
-        color: DonyColors.error,
+        color: cs.error,
         borderRadius: BorderRadius.circular(DonyRadius.card),
       ),
       child: Column(
@@ -801,17 +819,17 @@ class _ShipmentCard extends StatelessWidget {
         'AWAITING_PAYMENT' => (
             label: 'Paiement requis',
             type: DonyBadgeType.error,
-            barColor: DonyColors.warning,
+            barColor: cs.warning,
           ),
         'PENDING' => (
             label: 'En attente',
             type: DonyBadgeType.warning,
-            barColor: DonyColors.warning,
+            barColor: cs.warning,
           ),
         'ACCEPTED' => (
             label: 'Accepté',
             type: DonyBadgeType.success,
-            barColor: DonyColors.success,
+            barColor: cs.success,
           ),
         'REJECTED' => (
             label: 'Refusé',
@@ -854,6 +872,7 @@ class _ShipmentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final isDark = cs.brightness == Brightness.dark;
     final info = _statusInfo(cs);
 
     return GestureDetector(
@@ -869,9 +888,14 @@ class _ShipmentCard extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.60),
+              color: isDark
+                  ? cs.surface.withValues(alpha: 0.85)
+                  : Colors.white.withValues(alpha: 0.60),
               borderRadius: BorderRadius.circular(DonyRadius.card),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.88)),
+              border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.07)
+                      : Colors.white.withValues(alpha: 0.88)),
               boxShadow: DonyShadow.sm,
             ),
         clipBehavior: Clip.antiAlias,
@@ -953,7 +977,7 @@ class _ShipmentCard extends StatelessWidget {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: DonySpacing.md, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: DonyColors.warning,
+                                  color: cs.warning,
                                   borderRadius:
                                       BorderRadius.circular(DonyRadius.sm),
                                 ),
@@ -1112,7 +1136,7 @@ class _InfoChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(
           horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
       decoration: BoxDecoration(
-        color: DonyColors.bgApp,
+        color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: cs.outline),
       ),
@@ -1141,19 +1165,27 @@ class _AuroraMeshBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Stack(
       children: [
         Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Color(0xFFEDF5FF),
-                Color(0xFFF2F0FF),
-                Color(0xFFF7F3ED),
-              ],
+              colors: isDark
+                  ? const [
+                      Color(0xFF080D18),
+                      Color(0xFF0B0918),
+                      Color(0xFF0E0C09),
+                    ]
+                  : const [
+                      Color(0xFFEDF5FF),
+                      Color(0xFFF2F0FF),
+                      Color(0xFFF7F3ED),
+                    ],
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
-              stops: [0.0, 0.4, 1.0],
+              stops: const [0.0, 0.4, 1.0],
             ),
           ),
         ),
@@ -1165,15 +1197,15 @@ class _AuroraMeshBackground extends StatelessWidget {
             child: Container(
               width: 280,
               height: 280,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    Color(0x240B5FFF),
-                    Color(0x146C63FF),
+                    Color(isDark ? 0x420B5FFF : 0x240B5FFF),
+                    Color(isDark ? 0x2C6C63FF : 0x146C63FF),
                     Colors.transparent,
                   ],
-                  stops: [0.0, 0.4, 0.7],
+                  stops: const [0.0, 0.4, 0.7],
                 ),
               ),
             ),
@@ -1187,14 +1219,14 @@ class _AuroraMeshBackground extends StatelessWidget {
             child: Container(
               width: 200,
               height: 200,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    Color(0x17D96A3A),
+                    Color(isDark ? 0x2AD96A3A : 0x17D96A3A),
                     Colors.transparent,
                   ],
-                  stops: [0.0, 0.65],
+                  stops: const [0.0, 0.65],
                 ),
               ),
             ),
@@ -1208,14 +1240,14 @@ class _AuroraMeshBackground extends StatelessWidget {
             child: Container(
               width: 180,
               height: 180,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    Color(0x0F22C55E),
+                    Color(isDark ? 0x1E22C55E : 0x0F22C55E),
                     Colors.transparent,
                   ],
-                  stops: [0.0, 0.65],
+                  stops: const [0.0, 0.65],
                 ),
               ),
             ),
@@ -1294,14 +1326,14 @@ class _EmptyView extends StatelessWidget {
                     horizontal: DonySpacing.xl, vertical: 13),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [DonyColors.blue700, DonyColors.primary],
+                    colors: [DonyColors.blue700, cs.primary],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(DonyRadius.md),
                   boxShadow: [
                     BoxShadow(
-                      color: DonyColors.primary.withValues(alpha: 0.28),
+                      color: cs.primary.withValues(alpha: 0.28),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -1529,7 +1561,7 @@ class _SavedTripsSheetState extends State<_SavedTripsSheet> {
                   final a = _trips[i];
                   return Container(
                     decoration: BoxDecoration(
-                      color: DonyColors.bgApp,
+                      color: Theme.of(context).scaffoldBackgroundColor,
                       borderRadius: BorderRadius.circular(DonyRadius.lg),
                       border: Border.all(color: cs.outline),
                     ),

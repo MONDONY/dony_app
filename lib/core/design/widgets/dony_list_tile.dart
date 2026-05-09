@@ -48,8 +48,8 @@ class DonyListTile extends StatelessWidget {
     final labelColor = destructive
         ? cs.error
         : enabled
-            ? DonyColors.textPrimary
-            : DonyColors.textMuted;
+            ? cs.onSurface
+            : cs.onSurfaceVariant;
 
     final effectiveIconColor = destructive
         ? cs.error
@@ -99,7 +99,7 @@ class DonyListTile extends StatelessWidget {
                         const SizedBox(height: DonySpacing.xxs),
                         Text(
                           subtitle!,
-                          style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+                          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                         ),
                       ],
                     ],
@@ -108,10 +108,10 @@ class DonyListTile extends StatelessWidget {
                 const SizedBox(width: DonySpacing.sm),
                 trailing ??
                     (onTap != null
-                        ? const Icon(
+                        ? Icon(
                             Icons.chevron_right_rounded,
                             size: 18,
-                            color: DonyColors.neutral400,
+                            color: cs.onSurfaceVariant,
                           )
                         : const SizedBox.shrink()),
               ],
@@ -139,6 +139,7 @@ class DonyListSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,7 +152,7 @@ class DonyListSection extends StatelessWidget {
             ),
             child: Text(
               title!.toUpperCase(),
-              style: tt.labelMedium?.copyWith(color: DonyColors.textMuted),
+              style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           ),
         ],

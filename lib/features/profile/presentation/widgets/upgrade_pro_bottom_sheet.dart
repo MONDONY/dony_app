@@ -202,10 +202,10 @@ class _ProActiveView extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(DonySpacing.base),
           decoration: BoxDecoration(
-            color: DonyColors.successLight,
+            color: cs.successLight,
             borderRadius: BorderRadius.circular(DonyRadius.md),
             border: Border.all(
-              color: DonyColors.success.withValues(alpha: 0.3),
+              color: cs.success.withValues(alpha: 0.3),
             ),
           ),
           child: Row(
@@ -213,12 +213,12 @@ class _ProActiveView extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(DonySpacing.sm),
                 decoration: BoxDecoration(
-                  color: DonyColors.success.withValues(alpha: 0.12),
+                  color: cs.success.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(DonyRadius.md),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.verified_rounded,
-                  color: DonyColors.success,
+                  color: cs.success,
                   size: 20,
                 ),
               ),
@@ -231,7 +231,7 @@ class _ProActiveView extends StatelessWidget {
                       'Compte PRO actif',
                       style: tt.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: DonyColors.success,
+                        color: cs.success,
                       ),
                     ),
                     Text(

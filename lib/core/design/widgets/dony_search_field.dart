@@ -81,21 +81,21 @@ class _DonySearchFieldState extends State<DonySearchField> {
       onSubmitted: widget.onSubmitted,
       textInputAction: TextInputAction.search,
       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: DonyColors.textPrimary,
+            color: cs.onSurface,
           ),
       decoration: InputDecoration(
         hintText: widget.hint,
-        prefixIcon: Icon(widget.prefixIcon, size: 20, color: DonyColors.neutral400),
+        prefixIcon: Icon(widget.prefixIcon, size: 20, color: cs.onSurfaceVariant),
         suffixIcon: _hasText
             ? IconButton(
                 icon: const Icon(Icons.close_rounded, size: 18),
-                color: DonyColors.neutral400,
+                color: cs.onSurfaceVariant,
                 onPressed: _clear,
                 tooltip: 'Effacer',
               )
             : null,
         filled: true,
-        fillColor: DonyColors.neutral100,
+        fillColor: cs.surfaceContainerHighest,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: DonySpacing.base,
           vertical: DonySpacing.sm + 2,

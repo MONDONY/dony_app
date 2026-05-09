@@ -94,7 +94,7 @@ class _CancellationDialogState extends State<CancellationDialog> {
             if (!widget.isInTransit) ...[
               Text(
                 "L'expéditeur sera remboursé automatiquement.",
-                style: tt.bodyMedium?.copyWith(color: DonyColors.textMuted),
+                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               ),
               const SizedBox(height: DonySpacing.base),
             ],
@@ -104,18 +104,18 @@ class _CancellationDialogState extends State<CancellationDialog> {
               Container(
                 padding: const EdgeInsets.all(DonySpacing.md),
                 decoration: BoxDecoration(
-                  color: DonyColors.error.withValues(alpha: 0.1),
+                  color: cs.error.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(DonyRadius.md),
                   border: Border.all(
-                    color: DonyColors.error.withValues(alpha: 0.35),
+                    color: cs.error.withValues(alpha: 0.35),
                   ),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.warning_amber_rounded,
-                      color: DonyColors.error,
+                      color: cs.error,
                       size: 18,
                     ),
                     const SizedBox(width: DonySpacing.sm),
@@ -123,7 +123,7 @@ class _CancellationDialogState extends State<CancellationDialog> {
                       child: Text(
                         'Vous devez retourner le colis à l\'expéditeur avant de confirmer l\'annulation.',
                         style: tt.bodySmall?.copyWith(
-                          color: DonyColors.error,
+                          color: cs.error,
                           height: 1.4,
                         ),
                       ),
@@ -149,7 +149,7 @@ class _CancellationDialogState extends State<CancellationDialog> {
                     ? 'Motif de l\'annulation *'
                     : 'Motif (optionnel)',
                 hintStyle: tt.bodySmall?.copyWith(
-                  color: DonyColors.neutral400,
+                  color: cs.onSurfaceVariant,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -168,7 +168,7 @@ class _CancellationDialogState extends State<CancellationDialog> {
                   borderSide: BorderSide(
                     color: _showReasonError
                         ? cs.error
-                        : DonyColors.primary,
+                        : cs.primary,
                     width: 1.5,
                   ),
                 ),

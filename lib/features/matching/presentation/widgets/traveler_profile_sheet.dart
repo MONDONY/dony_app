@@ -48,9 +48,9 @@ class _TravelerProfileSheet extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: DonyColors.bgApp,
-        borderRadius: BorderRadius.vertical(
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(
           top: Radius.circular(DonyRadius.sheet),
         ),
       ),
@@ -123,12 +123,12 @@ class _TravelerProfileSheet extends StatelessWidget {
                         alignment: WrapAlignment.center,
                         children: [
                           if (traveler.isProAccount)
-                            const _SheetBadge(
+                            _SheetBadge(
                               icon: Icons.star_rounded,
                               label: 'Compte PRO',
-                              iconColor: DonyColors.warning,
-                              bgColor: DonyColors.warning50,
-                              textColor: DonyColors.warning,
+                              iconColor: cs.warning,
+                              bgColor: cs.warningLight,
+                              textColor: cs.warning,
                             ),
                           if (traveler.kiloPro)
                             const _SheetBadge(
@@ -172,7 +172,7 @@ class _TravelerProfileSheet extends StatelessWidget {
                             : '–',
                         label: 'Note',
                         icon: Icons.star_rounded,
-                        iconColor: DonyColors.warning,
+                        iconColor: cs.warning,
                       ),
                       Container(width: 1, height: 36, color: cs.outline),
                       _SheetStat(
@@ -184,11 +184,11 @@ class _TravelerProfileSheet extends StatelessWidget {
                         iconColor: cs.primary,
                       ),
                       Container(width: 1, height: 36, color: cs.outline),
-                      const _SheetStat(
+                      _SheetStat(
                         value: '–',
                         label: 'Livraison',
                         icon: Icons.check_circle_outline_rounded,
-                        iconColor: DonyColors.success,
+                        iconColor: cs.success,
                       ),
                     ],
                   ),
@@ -427,7 +427,7 @@ class _ReviewTile extends StatelessWidget {
                           ? Icons.star_rounded
                           : Icons.star_border_rounded,
                       size: 13,
-                      color: DonyColors.warning,
+                      color: Theme.of(context).colorScheme.warning,
                     ),
                   ),
                 ),

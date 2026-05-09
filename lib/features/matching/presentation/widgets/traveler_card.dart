@@ -30,20 +30,20 @@ class TravelerCard extends StatelessWidget {
 
   String get _displayName => announcement.traveler?.resolvedName ?? 'Voyageur';
 
-  ({Color border, Color chipBg, Color chipFg, String label}) get _bidStyle {
+  ({Color border, Color chipBg, Color chipFg, String label}) _bidStyle(ColorScheme cs) {
     switch (existingBidStatus) {
       case 'ACCEPTED':
         return (
-          border: DonyColors.success,
-          chipBg: DonyColors.successLight,
-          chipFg: DonyColors.success,
+          border: cs.success,
+          chipBg: cs.successLight,
+          chipFg: cs.success,
           label: 'Demande acceptée',
         );
       case 'PENDING':
       default:
         return (
-          border: DonyColors.warning,
-          chipBg: DonyColors.warning50,
+          border: cs.warning,
+          chipBg: cs.warningLight,
           chipFg: DonyColors.amberDark,
           label: 'Demande en attente',
         );
@@ -53,6 +53,7 @@ class TravelerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     final traveler = announcement.traveler;
     final rating = traveler?.averageRating;
     final totalTrips = traveler?.totalTrips;
@@ -61,16 +62,16 @@ class TravelerCard extends StatelessWidget {
     final dateStr = DateFormat('EEE d', 'fr').format(announcement.departureDate);
     final categories = announcement.acceptedContentTypes ?? [];
     final hasExistingBid = existingBidStatus != null;
-    final bidStyle = _bidStyle;
+    final bidStyle = _bidStyle(cs);
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: DonyColors.surface,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.card),
           border: Border.all(
-            color: hasExistingBid ? bidStyle.border : DonyColors.borderDefault,
+            color: hasExistingBid ? bidStyle.border : cs.outline,
             width: hasExistingBid ? 1.5 : 1,
           ),
         ),
@@ -93,7 +94,12 @@ class TravelerCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                DonyAvatar(name: _displayName, size: DonyAvatarSize.md),
+                DonyAvatar(
+                  name: _displayName,
+                  size: DonyAvatarSize.md,
+                  verified: traveler?.kycVerified ?? false,
+                  pro: isProAccount,
+                ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(
                   child: Column(
@@ -103,13 +109,13 @@ class TravelerCard extends StatelessWidget {
                       const SizedBox(height: DonySpacing.xxs),
                       Row(
                         children: [
-                          const Icon(Icons.star_rounded, size: 13, color: DonyColors.warning),
+                          Icon(Icons.star_rounded, size: 13, color: cs.warning),
                           const SizedBox(width: DonySpacing.xxs),
                           Text(rating != null ? rating.toStringAsFixed(1) : '—', style: tt.titleSmall),
                           const SizedBox(width: DonySpacing.xxs),
                           Text(
                             '· ${totalTrips ?? 0} trajet${(totalTrips ?? 0) > 1 ? 's' : ''}',
-                            style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+                            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                           ),
                           if (isKiloPro) ...[
                             const SizedBox(width: DonySpacing.xs),
@@ -127,22 +133,22 @@ class TravelerCard extends StatelessWidget {
                 const SizedBox(width: DonySpacing.sm),
                 Text(
                   '${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
-                  style: tt.titleLarge?.copyWith(color: DonyColors.success, fontWeight: FontWeight.w700),
+                  style: tt.titleLarge?.copyWith(color: cs.success, fontWeight: FontWeight.w700),
                 ),
               ],
             ),
             const SizedBox(height: DonySpacing.sm),
             Row(
               children: [
-                const Icon(Icons.calendar_today_rounded, size: 13, color: DonyColors.textSubtle),
+                Icon(Icons.calendar_today_rounded, size: 13, color: cs.onSurfaceVariant),
                 const SizedBox(width: DonySpacing.xxs),
-                Text(dateStr, style: tt.bodySmall?.copyWith(color: DonyColors.textMuted)),
+                Text(dateStr, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
                 const SizedBox(width: DonySpacing.md),
-                const Icon(Icons.inventory_2_outlined, size: 13, color: DonyColors.textSubtle),
+                Icon(Icons.inventory_2_outlined, size: 13, color: cs.onSurfaceVariant),
                 const SizedBox(width: DonySpacing.xxs),
                 Text(
                   '${announcement.availableKg.toStringAsFixed(0)} kg dispo',
-                  style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
             ),
@@ -152,7 +158,7 @@ class TravelerCard extends StatelessWidget {
             ],
             if (isOwnAnnouncement) ...[
               const SizedBox(height: DonySpacing.sm),
-              Text('Votre trajet', style: tt.labelMedium?.copyWith(color: DonyColors.textMuted)),
+              Text('Votre trajet', style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant)),
             ],
           ],
         ),
@@ -215,24 +221,25 @@ class _DistanceBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: DonySpacing.sm,
         vertical: DonySpacing.xxs,
       ),
       decoration: BoxDecoration(
-        color: DonyColors.ink900,
+        color: cs.onSurface,
         borderRadius: BorderRadius.circular(DonyRadius.full),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.location_on_rounded, size: 11, color: Colors.white),
+          Icon(Icons.location_on_rounded, size: 11, color: cs.surface),
           const SizedBox(width: DonySpacing.xxs),
           Text(
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Colors.white,
+                  color: cs.surface,
                   fontWeight: FontWeight.w600,
                 ),
           ),
@@ -248,24 +255,25 @@ class _ProBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(
           horizontal: DonySpacing.sm, vertical: DonySpacing.xxs),
       decoration: BoxDecoration(
-        color: DonyColors.warning50,
+        color: cs.warningLight,
         borderRadius: BorderRadius.circular(DonyRadius.full),
-        border: Border.all(color: DonyColors.warning.withValues(alpha: 0.4)),
+        border: Border.all(color: cs.warning.withValues(alpha: 0.4)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.star_rounded, size: 10, color: DonyColors.warning),
+          Icon(Icons.star_rounded, size: 10, color: cs.warning),
           const SizedBox(width: DonySpacing.xxs),
           Text(
             'PRO',
             style: tt.labelSmall?.copyWith(
               fontWeight: FontWeight.w700,
-              color: DonyColors.warning,
+              color: cs.warning,
               letterSpacing: 0.5,
             ),
           ),
@@ -281,10 +289,11 @@ class _KycBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: DonySpacing.xxs),
       decoration: BoxDecoration(
-        color: DonyColors.successLight,
+        color: cs.successLight,
         borderRadius: BorderRadius.circular(DonyRadius.full),
       ),
       child: Row(
@@ -293,10 +302,10 @@ class _KycBadge extends StatelessWidget {
           Container(
             width: 6,
             height: 6,
-            decoration: const BoxDecoration(color: DonyColors.success, shape: BoxShape.circle),
+            decoration: BoxDecoration(color: cs.success, shape: BoxShape.circle),
           ),
           const SizedBox(width: DonySpacing.xxs),
-          Text('KYC', style: tt.labelSmall?.copyWith(color: DonyColors.success, fontWeight: FontWeight.w600)),
+          Text('KYC', style: tt.labelSmall?.copyWith(color: cs.success, fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -330,14 +339,15 @@ class _CategoryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: DonySpacing.xxs),
       decoration: BoxDecoration(
-        color: DonyColors.bgApp,
+        color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(DonyRadius.xl),
-        border: Border.all(color: DonyColors.borderDefault),
+        border: Border.all(color: cs.outline),
       ),
-      child: Text(label, style: tt.labelSmall?.copyWith(color: DonyColors.textMuted)),
+      child: Text(label, style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
     );
   }
 }

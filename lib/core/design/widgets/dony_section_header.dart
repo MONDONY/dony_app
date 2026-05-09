@@ -47,7 +47,7 @@ class DonySectionHeader extends StatelessWidget {
                   const SizedBox(height: DonySpacing.xxs),
                   Text(
                     subtitle!,
-                    style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ],
               ],

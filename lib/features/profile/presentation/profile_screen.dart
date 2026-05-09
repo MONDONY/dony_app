@@ -80,7 +80,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ],
       child: Scaffold(
-        backgroundColor: DonyColors.bgApp,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, authState) {
             UserModel? user;
@@ -112,6 +112,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             .length;
 
                         final tt = Theme.of(context).textTheme;
+                        final cs = Theme.of(context).colorScheme;
                         final topPad = MediaQuery.of(context).padding.top;
                         final expandedHeight = topPad + 56.0 + _kContentHeight;
                         final offset = _scroll.hasClients
@@ -120,23 +121,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         final progress =
                             (offset / _kContentHeight).clamp(0.0, 1.0);
                         final headerBg = Color.lerp(
-                          DonyColors.primary,
-                          DonyColors.surface,
+                          cs.primary,
+                          cs.surface,
                           progress,
                         )!;
                         final iconColor = Color.lerp(
-                          DonyColors.white,
-                          DonyColors.ink900,
+                          cs.onPrimary,
+                          cs.onSurface,
                           progress,
                         )!;
                         final titleColor = Color.lerp(
-                          DonyColors.white.withValues(alpha: 0.0),
-                          DonyColors.ink900,
+                          cs.onPrimary.withValues(alpha: 0.0),
+                          cs.onSurface,
                           progress,
                         )!;
 
                         return RefreshIndicator(
-                          color: DonyColors.primary,
+                          color: cs.primary,
                           onRefresh: () async {
                             context.read<BidBloc>().add(BidMyListRequested());
                             context
@@ -260,18 +261,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             ),
                                             DonyListTile(
                                               icon: Icons.account_balance_wallet_rounded,
-                                              iconColor: DonyColors.success,
-                                              iconBgColor: DonyColors.successLight,
+                                              iconColor: cs.success,
+                                              iconBgColor: cs.successLight,
                                               label: 'Recevoir mes paiements',
                                               onTap: () => context.push('/payments/onboarding'),
                                             ),
                                             DonyListTile(
                                               icon: Icons.business_center_rounded,
-                                              iconColor: isProAccount ? DonyColors.success : DonyColors.warning,
-                                              iconBgColor: isProAccount ? DonyColors.successLight : DonyColors.warningLight,
+                                              iconColor: isProAccount ? cs.success : cs.warning,
+                                              iconBgColor: isProAccount ? cs.successLight : cs.warningLight,
                                               label: isProAccount ? 'Mon profil PRO' : 'Passer en compte PRO',
                                               trailing: isProAccount
-                                                  ? const Icon(Icons.verified_rounded, color: DonyColors.success, size: 18)
+                                                  ? Icon(Icons.verified_rounded, color: cs.success, size: 18)
                                                   : null,
                                               onTap: user != null
                                                   ? () => UpgradeProBottomSheet.show(context, user: user!)
@@ -310,19 +311,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               'VERIFIED' => Text(
                                                   'Vérifié',
                                                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                                    color: DonyColors.success,
+                                                    color: cs.success,
                                                     fontWeight: FontWeight.w600,
                                                   ),
                                                 ),
                                               'REJECTED' => Row(
                                                   mainAxisSize: MainAxisSize.min,
                                                   children: [
-                                                    const Icon(Icons.warning_amber_rounded, color: DonyColors.warning, size: 16),
+                                                    Icon(Icons.warning_amber_rounded, color: cs.warning, size: 16),
                                                     const SizedBox(width: DonySpacing.xs),
                                                     Text(
                                                       'Réessayer',
                                                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                                        color: DonyColors.warning,
+                                                        color: cs.warning,
                                                         fontWeight: FontWeight.w600,
                                                       ),
                                                     ),
@@ -331,19 +332,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               'PENDING' => Row(
                                                   mainAxisSize: MainAxisSize.min,
                                                   children: [
-                                                    const SizedBox(
+                                                    SizedBox(
                                                       width: 12,
                                                       height: 12,
                                                       child: CircularProgressIndicator(
                                                         strokeWidth: 1.5,
-                                                        color: DonyColors.warning,
+                                                        color: cs.warning,
                                                       ),
                                                     ),
                                                     const SizedBox(width: DonySpacing.xs),
                                                     Text(
                                                       'En cours',
                                                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                                        color: DonyColors.warning,
+                                                        color: cs.warning,
                                                         fontWeight: FontWeight.w600,
                                                       ),
                                                     ),
@@ -362,8 +363,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           ),
                                           DonyListTile(
                                             icon: Icons.people_outline_rounded,
-                                            iconColor: DonyColors.success,
-                                            iconBgColor: DonyColors.successLight,
+                                            iconColor: cs.success,
+                                            iconBgColor: cs.successLight,
                                             label: 'Parrainages',
                                             trailing: Text(
                                               '0 invité',
@@ -388,8 +389,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           ),
                                           DonyListTile(
                                             icon: Icons.notifications_outlined,
-                                            iconColor: DonyColors.warning,
-                                            iconBgColor: DonyColors.warningLight,
+                                            iconColor: cs.warning,
+                                            iconBgColor: cs.warningLight,
                                             label: 'Notifications',
                                             onTap: () {},
                                           ),
@@ -496,9 +497,9 @@ class _ProfileCompletionBanner extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(DonySpacing.base),
         decoration: BoxDecoration(
-          color: DonyColors.warningLight,
+          color: cs.warningLight,
           borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: DonyColors.warning.withValues(alpha: 0.3)),
+          border: Border.all(color: cs.warning.withValues(alpha: 0.3)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -508,11 +509,11 @@ class _ProfileCompletionBanner extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(DonySpacing.sm),
                   decoration: BoxDecoration(
-                    color: DonyColors.warning.withValues(alpha: 0.12),
+                    color: cs.warning.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(DonyRadius.md),
                   ),
-                  child: const Icon(Icons.edit_note_rounded,
-                      color: DonyColors.warning, size: 18),
+                  child: Icon(Icons.edit_note_rounded,
+                      color: cs.warning, size: 18),
                 ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(
@@ -529,7 +530,7 @@ class _ProfileCompletionBanner extends StatelessWidget {
                       Text(
                         '${(completed / total * 100).round()}% complété · Compléter maintenant',
                         style: tt.bodySmall?.copyWith(
-                          color: DonyColors.warning,
+                          color: cs.warning,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -546,7 +547,7 @@ class _ProfileCompletionBanner extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: completed / total,
                 backgroundColor: cs.outline,
-                valueColor: const AlwaysStoppedAnimation<Color>(DonyColors.warning),
+                valueColor: AlwaysStoppedAnimation<Color>(cs.warning),
                 minHeight: 5,
               ),
             ),
@@ -572,26 +573,27 @@ class _MissingChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: DonySpacing.sm,
         vertical: DonySpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: DonyColors.warning.withValues(alpha: 0.1),
+        color: cs.warning.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(DonyRadius.sm),
-        border: Border.all(color: DonyColors.warning.withValues(alpha: 0.3)),
+        border: Border.all(color: cs.warning.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.add_rounded, color: DonyColors.warning, size: 12),
+          Icon(Icons.add_rounded, color: cs.warning, size: 12),
           const SizedBox(width: DonySpacing.xs),
           Text(
             label,
             style: tt.labelSmall?.copyWith(
               fontWeight: FontWeight.w600,
-              color: DonyColors.warning,
+              color: cs.warning,
             ),
           ),
         ],
@@ -608,11 +610,12 @@ class DonyListSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: DonyColors.surface,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.borderDefault),
+        border: Border.all(color: cs.outline),
       ),
       child: Column(
         children: tiles,

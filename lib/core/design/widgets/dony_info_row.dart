@@ -49,12 +49,12 @@ class DonyInfoRow extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     final valueColor = switch (valueStyle) {
-      DonyInfoRowValueStyle.normal  => DonyColors.textPrimary,
+      DonyInfoRowValueStyle.normal  => cs.onSurface,
       DonyInfoRowValueStyle.accent  => cs.secondary,
-      DonyInfoRowValueStyle.success => DonyColors.success,
-      DonyInfoRowValueStyle.warning => DonyColors.warning,
+      DonyInfoRowValueStyle.success => cs.success,
+      DonyInfoRowValueStyle.warning => cs.warning,
       DonyInfoRowValueStyle.danger  => cs.error,
-      DonyInfoRowValueStyle.muted   => DonyColors.textMuted,
+      DonyInfoRowValueStyle.muted   => cs.onSurfaceVariant,
     };
 
     final valueFw = switch (valueStyle) {
@@ -71,13 +71,13 @@ class DonyInfoRow extends StatelessWidget {
       child: Row(
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 14, color: DonyColors.textMuted),
+            Icon(icon, size: 14, color: cs.onSurfaceVariant),
             const SizedBox(width: DonySpacing.xs),
           ],
           Expanded(
             child: Text(
               label,
-              style: tt.bodyMedium?.copyWith(color: DonyColors.textMuted),
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
           ),
           const SizedBox(width: DonySpacing.sm),

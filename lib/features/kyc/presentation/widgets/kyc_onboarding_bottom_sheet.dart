@@ -69,10 +69,10 @@ class KycOnboardingBottomSheet extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Icon(
+            Icon(
               Icons.badge_rounded,
               size: 48,
-              color: DonyColors.primary,
+              color: cs.primary,
             ),
             const SizedBox(height: DonySpacing.base),
             Text(
@@ -84,7 +84,7 @@ class KycOnboardingBottomSheet extends StatelessWidget {
             Text(
               'Requis pour publier des annonces sur dony',
               style: tt.bodyMedium?.copyWith(
-                color: DonyColors.textMuted,
+                color: cs.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),
@@ -137,7 +137,7 @@ class _InfoRow extends StatelessWidget {
         Icon(
           icon,
           size: 16,
-          color: DonyColors.primary,
+          color: cs.primary,
         ),
         const SizedBox(width: DonySpacing.sm),
         Expanded(

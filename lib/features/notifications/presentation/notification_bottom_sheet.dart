@@ -73,7 +73,7 @@ class _NotificationBottomSheetState extends State<NotificationBottomSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: DonyColors.borderDefault,
+              color: cs.outline,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -111,7 +111,7 @@ class _NotificationBottomSheetState extends State<NotificationBottomSheet> {
               ],
             ),
           ),
-          const Divider(height: 1, color: DonyColors.borderDefault),
+          Divider(height: 1, color: cs.outline),
           Expanded(child: _NotificationList()),
         ],
       ),
@@ -339,13 +339,13 @@ class _NotificationIcon extends StatelessWidget {
 
     final (icon, color) = switch (type) {
       'BID_CREATED'        => (Icons.inbox_rounded,           cs.primary),
-      'BID_ACCEPTED'       => (Icons.check_circle_rounded,    DonyColors.success),
+      'BID_ACCEPTED'       => (Icons.check_circle_rounded,    cs.success),
       'BID_REJECTED'       => (Icons.cancel_rounded,          cs.error),
       'HANDOVER_DEFINED'   => (Icons.location_on_rounded,     cs.secondary),
       'TRIP_CANCELLED'     => (Icons.block_rounded,           cs.error),
-      'PAYMENT_RELEASED'   => (Icons.payments_rounded,        DonyColors.success),
-      'DELIVERY_CONFIRMED' => (Icons.local_shipping_rounded,  DonyColors.success),
-      'DISPUTE_OPENED'     => (Icons.warning_amber_rounded,   DonyColors.warning),
+      'PAYMENT_RELEASED'   => (Icons.payments_rounded,        cs.success),
+      'DELIVERY_CONFIRMED' => (Icons.local_shipping_rounded,  cs.success),
+      'DISPUTE_OPENED'     => (Icons.warning_amber_rounded,   cs.warning),
       _                    => (Icons.notifications_rounded,   cs.onSurfaceVariant),
     };
 

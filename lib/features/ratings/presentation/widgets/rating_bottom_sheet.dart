@@ -89,6 +89,7 @@ class _RatingBottomSheetState extends State<RatingBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
 
     return BlocConsumer<RatingBloc, RatingState>(
       listener: (context, state) {
@@ -118,7 +119,7 @@ class _RatingBottomSheetState extends State<RatingBottomSheet> {
                   child: Text(
                     _starLabel(stars),
                     style: tt.labelLarge?.copyWith(
-                      color: DonyColors.primary,
+                      color: cs.primary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -134,18 +135,18 @@ class _RatingBottomSheetState extends State<RatingBottomSheet> {
                   labelText: 'Commentaire (facultatif)',
                   hintText: 'Partagez votre expérience…',
                   filled: true,
-                  fillColor: DonyColors.white,
+                  fillColor: cs.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(DonyRadius.card),
-                    borderSide: const BorderSide(color: DonyColors.neutral200),
+                    borderSide: BorderSide(color: cs.outline),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(DonyRadius.card),
-                    borderSide: const BorderSide(color: DonyColors.neutral200),
+                    borderSide: BorderSide(color: cs.outline),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(DonyRadius.card),
-                    borderSide: const BorderSide(color: DonyColors.primary, width: 2),
+                    borderSide: BorderSide(color: cs.primary, width: 2),
                   ),
                 ),
               ),
@@ -187,11 +188,15 @@ class _StarSelector extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 180),
-                  child: Icon(
-                    filled ? Icons.star_rounded : Icons.star_outline_rounded,
-                    key: ValueKey(filled),
-                    size: 44,
-                    color: filled ? const Color(0xFFF59E0B) : DonyColors.neutral200,
+                  child: Builder(
+                    builder: (context) => Icon(
+                      filled ? Icons.star_rounded : Icons.star_outline_rounded,
+                      key: ValueKey(filled),
+                      size: 44,
+                      color: filled
+                          ? const Color(0xFFF59E0B)
+                          : Theme.of(context).colorScheme.outlineVariant,
+                    ),
                   ),
                 ),
               ),

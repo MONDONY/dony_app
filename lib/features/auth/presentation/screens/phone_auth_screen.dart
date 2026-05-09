@@ -83,7 +83,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: DonyColors.bgApp,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: BlocConsumer<AuthBloc, AuthState>(
         listenWhen: (previous, current) {
           if (current is AuthOtpSent) return previous is! AuthOtpSent;
@@ -131,7 +131,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             Text(
                               'Bienvenue',
                               style: tt.displayLarge?.copyWith(
-                                color: DonyColors.textPrimary,
+                                color: cs.onSurface,
                                 letterSpacing: -0.8,
                               ),
                             ),
@@ -139,7 +139,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             Text(
                               'Entrez votre numéro pour continuer. Nous vous enverrons un code par SMS.',
                               style: tt.bodyLarge?.copyWith(
-                                color: DonyColors.textMuted,
+                                color: cs.onSurfaceVariant,
                                 height: 1.55,
                               ),
                             ),
@@ -147,7 +147,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             Text(
                               'NUMÉRO DE TÉLÉPHONE',
                               style: tt.labelMedium?.copyWith(
-                                color: DonyColors.textSubtle,
+                                color: cs.onSurfaceVariant,
                                 letterSpacing: 0.8,
                               ),
                             ),
@@ -156,10 +156,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             Container(
                               decoration: BoxDecoration(
                                 border: Border.all(
-                                    color: DonyColors.borderDefault),
+                                    color: cs.outline),
                                 borderRadius:
                                     BorderRadius.circular(DonyRadius.md),
-                                color: DonyColors.surface,
+                                color: cs.surface,
                               ),
                               child: Row(
                                 children: [
@@ -179,15 +179,14 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                               width: DonySpacing.sm),
                                           Text(dialCode,
                                               style: tt.titleLarge?.copyWith(
-                                                  color: DonyColors
-                                                      .textPrimary)),
+                                                  color: cs.onSurface)),
                                           const SizedBox(
                                               width: DonySpacing.xxs),
                                           Icon(
                                             Icons
                                                 .keyboard_arrow_down_rounded,
                                             size: 16,
-                                            color: DonyColors.textSubtle,
+                                            color: cs.onSurfaceVariant,
                                           ),
                                         ],
                                       ),
@@ -196,7 +195,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                   Container(
                                       width: 1,
                                       height: 28,
-                                      color: DonyColors.borderDefault),
+                                      color: cs.outline),
                                   Expanded(
                                     child: TextFormField(
                                       controller: _phoneController,
@@ -207,11 +206,11 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                             .digitsOnly,
                                       ],
                                       style: tt.titleLarge?.copyWith(
-                                          color: DonyColors.textPrimary),
+                                          color: cs.onSurface),
                                       decoration: InputDecoration(
                                         hintText: '06 12 34 56 78',
                                         hintStyle: tt.bodyLarge?.copyWith(
-                                            color: DonyColors.neutral400),
+                                            color: cs.onSurfaceVariant),
                                         border: InputBorder.none,
                                         enabledBorder: InputBorder.none,
                                         focusedBorder: InputBorder.none,
@@ -249,10 +248,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
 
                   // ── Pinned bottom CTA ───────────────────────────
                   Container(
-                    decoration: const BoxDecoration(
-                      color: DonyColors.bgApp,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).scaffoldBackgroundColor,
                       border: Border(
-                          top: BorderSide(color: DonyColors.borderDefault)),
+                          top: BorderSide(color: cs.outline)),
                     ),
                     padding: EdgeInsets.fromLTRB(
                         h, DonySpacing.base, h, DonySpacing.base + bottom),
@@ -268,7 +267,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                         Text.rich(
                           TextSpan(
                             style: tt.bodySmall?.copyWith(
-                                color: DonyColors.textSubtle, height: 1.6),
+                                color: cs.onSurfaceVariant, height: 1.6),
                             children: [
                               const TextSpan(
                                   text:

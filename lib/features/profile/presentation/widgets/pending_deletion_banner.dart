@@ -23,21 +23,21 @@ class PendingDeletionBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
-        color: DonyColors.errorLight,
+        color: cs.errorLight,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.error.withValues(alpha: 0.25)),
+        border: Border.all(color: cs.error.withValues(alpha: 0.25)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(DonySpacing.sm),
             decoration: BoxDecoration(
-              color: DonyColors.error.withValues(alpha: 0.12),
+              color: cs.error.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(DonyRadius.md),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.warning_amber_rounded,
-              color: DonyColors.error,
+              color: cs.error,
               size: 18,
             ),
           ),
@@ -63,7 +63,7 @@ class PendingDeletionBanner extends StatelessWidget {
                   child: Text(
                     'Annuler la suppression',
                     style: tt.bodySmall?.copyWith(
-                      color: DonyColors.error,
+                      color: cs.error,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
