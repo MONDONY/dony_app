@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 
 class RoleGuidanceBanner extends StatelessWidget {
   const RoleGuidanceBanner({
@@ -9,25 +10,36 @@ class RoleGuidanceBanner extends StatelessWidget {
     required this.role,
     required this.hiveService,
     this.onCtaTap,
+    this.forceHide = false,
   });
 
   final ActiveRole role;
   final HiveService hiveService;
   final VoidCallback? onCtaTap;
+  final bool forceHide;
 
-  bool get _hasPublished {
-    final key = role == ActiveRole.traveler
-        ? HiveService.kHasPublishedAsTraveler
-        : HiveService.kHasPublishedAsSender;
-    return hiveService.userPrefs.get(key, defaultValue: false) as bool;
-  }
+  String get _key => role == ActiveRole.traveler
+      ? HiveService.kHasPublishedAsTraveler
+      : HiveService.kHasPublishedAsSender;
 
   @override
   Widget build(BuildContext context) {
-    if (_hasPublished) {
+    if (forceHide) {
       return const SizedBox.shrink();
     }
+    return ValueListenableBuilder<Box>(
+      valueListenable: hiveService.listenUserPrefs(keys: [_key]),
+      builder: (context, box, _) {
+        final hasPublished = box.get(_key, defaultValue: false) as bool;
+        if (hasPublished) {
+          return const SizedBox.shrink();
+        }
+        return _buildBanner(context);
+      },
+    );
+  }
 
+  Widget _buildBanner(BuildContext context) {
     final isSender = role == ActiveRole.sender;
     final title = isSender ? 'Envoyer ton premier colis' : 'Publier ton premier trajet';
     final emoji = isSender ? '📦' : '🧭';

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class HiveService {
@@ -17,4 +18,7 @@ class HiveService {
   Box<Map> get offlineQueue => Hive.box<Map>(offlineQueueBox);
 
   Box get userPrefs => Hive.box(userPrefsBox);
+
+  ValueListenable<Box> listenUserPrefs({required List<String> keys}) =>
+      userPrefs.listenable(keys: keys);
 }

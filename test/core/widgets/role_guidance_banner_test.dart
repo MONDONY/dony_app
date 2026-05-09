@@ -20,6 +20,8 @@ Widget _buildBanner({
       .thenReturn(role == ActiveRole.traveler ? hasPublished : false);
   when(() => mockBox.get(HiveService.kHasPublishedAsSender, defaultValue: false))
       .thenReturn(role == ActiveRole.sender ? hasPublished : false);
+  when(() => hive.listenUserPrefs(keys: any(named: 'keys')))
+      .thenReturn(ValueNotifier<Box>(mockBox));
 
   return MaterialApp(
     home: Scaffold(

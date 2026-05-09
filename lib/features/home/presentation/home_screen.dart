@@ -505,13 +505,21 @@ class _MapSenderViewState extends State<_MapSenderView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _CorridorBar(
-                          key: const Key('corridor-bar'),
-                          label: _allCorridors
-                              ? 'Tous les corridors'
-                              : _corridor.label,
-                          activeFilterCount: _activeFilterCount,
-                          onTap: () => _showFilterSheet(context),
+                        Row(
+                          children: [
+                            const RoleModePill(),
+                            const SizedBox(width: DonySpacing.sm),
+                            Expanded(
+                              child: _CorridorBar(
+                                key: const Key('corridor-bar'),
+                                label: _allCorridors
+                                    ? 'Tous les corridors'
+                                    : _corridor.label,
+                                activeFilterCount: _activeFilterCount,
+                                onTap: () => _showFilterSheet(context),
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: DonySpacing.sm),
                         Center(
@@ -556,13 +564,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
                     ),
                   ),
                 ),
-              ),
-
-              // ── RoleModePill (coin supérieur gauche) ──────────────────────
-              Positioned(
-                top: MediaQuery.of(context).padding.top + DonySpacing.sm,
-                left: DonySpacing.sm,
-                child: const RoleModePill(),
               ),
 
               // ── DraggableScrollableSheet ──────────────────────────────────
@@ -684,85 +685,82 @@ class _MapSenderViewState extends State<_MapSenderView> {
             ),
           ),
           const Divider(height: 1, color: DonyColors.neutral200),
-          RoleGuidanceBanner(
-            role: ActiveRole.sender,
-            hiveService: getIt<HiveService>(),
-          ),
           Expanded(
-            child: _tab == _HomeTab.demandes
-                ? CustomScrollView(
-                    controller: scrollCtrl,
-                    slivers: const [
-                      SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: _DemandesPlaceholder(),
-                      ),
-                    ],
+            child: CustomScrollView(
+              controller: scrollCtrl,
+              slivers: [
+                SliverToBoxAdapter(
+                  child: RoleGuidanceBanner(
+                    role: ActiveRole.sender,
+                    hiveService: getIt<HiveService>(),
+                  ),
+                ),
+                if (_tab == _HomeTab.demandes)
+                  const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: _DemandesPlaceholder(),
                   )
-                : count == 0
-                        ? CustomScrollView(
-                            controller: scrollCtrl,
-                            slivers: [
-                              SliverFillRemaining(
-                                hasScrollBody: false,
-                                child: Center(
-                                  child: Text(
-                                    _isNearMeActive
-                                        ? 'Aucun voyageur à proximité'
-                                        : 'Aucun voyageur sur ce corridor',
-                                    style: tt.bodyMedium?.copyWith(
-                                        color: DonyColors.textMuted),
+                else if (count == 0)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Text(
+                        _isNearMeActive
+                            ? 'Aucun voyageur à proximité'
+                            : 'Aucun voyageur sur ce corridor',
+                        style: tt.bodyMedium
+                            ?.copyWith(color: DonyColors.textMuted),
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(
+                      DonySpacing.base,
+                      DonySpacing.sm,
+                      DonySpacing.base,
+                      bottomPad + DonySpacing.huge,
+                    ),
+                    sliver: SliverList.separated(
+                      itemCount: count,
+                      separatorBuilder: (_, _) =>
+                          const SizedBox(height: DonySpacing.md),
+                      itemBuilder: (context, i) {
+                        final a = announcements[i];
+                        final authState = context.read<AuthBloc>().state;
+                        final currentUserId = authState is AuthAuthenticated
+                            ? authState.user.id
+                            : null;
+                        final isOwn = currentUserId != null &&
+                            a.travelerId == currentUserId;
+                        final badge = _isNearMeActive
+                            ? buildDistanceBadge(
+                                a,
+                                _userPosition != null
+                                    ? (
+                                        lat: _userPosition!.latitude,
+                                        lng: _userPosition!.longitude
+                                      )
+                                    : null,
+                              )
+                            : null;
+                        return TravelerCard(
+                          announcement: a,
+                          index: i,
+                          isOwnAnnouncement: isOwn,
+                          distanceBadge: badge,
+                          onTap: isOwn
+                              ? null
+                              : () => showTravelerAnnouncementSheet(
+                                    context,
+                                    announcement: a,
                                   ),
-                                ),
-                              ),
-                            ],
-                          )
-                        : ListView.separated(
-                            key: const Key('home-announcements-list'),
-                            controller: scrollCtrl,
-                            padding: EdgeInsets.fromLTRB(
-                              DonySpacing.base,
-                              DonySpacing.sm,
-                              DonySpacing.base,
-                              bottomPad + DonySpacing.huge,
-                            ),
-                            itemCount: count,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: DonySpacing.md),
-                            itemBuilder: (context, i) {
-                              final a = announcements[i];
-                              final authState = context.read<AuthBloc>().state;
-                              final currentUserId =
-                                  authState is AuthAuthenticated
-                                      ? authState.user.id
-                                      : null;
-                              final isOwn = currentUserId != null &&
-                                  a.travelerId == currentUserId;
-                              final badge = _isNearMeActive
-                                  ? buildDistanceBadge(
-                                      a,
-                                      _userPosition != null
-                                          ? (
-                                              lat: _userPosition!.latitude,
-                                              lng: _userPosition!.longitude
-                                            )
-                                          : null,
-                                    )
-                                  : null;
-                              return TravelerCard(
-                                announcement: a,
-                                index: i,
-                                isOwnAnnouncement: isOwn,
-                                distanceBadge: badge,
-                                onTap: isOwn
-                                    ? null
-                                    : () => showTravelerAnnouncementSheet(
-                                          context,
-                                          announcement: a,
-                                        ),
-                              );
-                            },
-                          ),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
           ),
         ],
       ),
@@ -1011,10 +1009,18 @@ class _TravelerViewState extends State<_TravelerView> {
             ),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                RoleGuidanceBanner(
-                  role: ActiveRole.traveler,
-                  hiveService: getIt<HiveService>(),
-                  onCtaTap: () => CreateAnnouncementBottomSheet.show(context),
+                BlocBuilder<AnnouncementBloc, AnnouncementState>(
+                  builder: (context, state) {
+                    final hasItems = state is AnnouncementListLoaded &&
+                        state.announcements.isNotEmpty;
+                    return RoleGuidanceBanner(
+                      role: ActiveRole.traveler,
+                      hiveService: getIt<HiveService>(),
+                      forceHide: hasItems,
+                      onCtaTap: () =>
+                          CreateAnnouncementBottomSheet.show(context),
+                    );
+                  },
                 ),
                 const SizedBox(height: DonySpacing.md),
                 const _StatsCard()

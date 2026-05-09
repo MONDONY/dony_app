@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -9,9 +10,25 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockAnnouncementRepository extends Mock implements AnnouncementRepository {}
+
+class MockHiveService extends Mock implements HiveService {}
+
+class _FakeBox extends Fake implements Box<dynamic> {
+  final Map<dynamic, dynamic> _store = {};
+
+  @override
+  Future<void> put(dynamic key, dynamic value) async {
+    _store[key] = value;
+  }
+
+  @override
+  dynamic get(dynamic key, {dynamic defaultValue}) =>
+      _store[key] ?? defaultValue;
+}
 
 const kTestPickupAddress = AddressData(label: 'CDG Terminal 2', lat: 49.0097, lng: 2.5479);
 const kTestDeliveryAddress = AddressData(label: 'Aéroport LSS', lat: 14.7397, lng: -17.4902);
@@ -32,6 +49,7 @@ AnnouncementModel buildAnnouncement({String id = 'ann-001'}) => AnnouncementMode
 
 void main() {
   late MockAnnouncementRepository mockRepo;
+  late MockHiveService mockHive;
 
   setUpAll(() {
     registerFallbackValue(kTestPickupAddress);
@@ -40,9 +58,11 @@ void main() {
 
   setUp(() {
     mockRepo = MockAnnouncementRepository();
+    mockHive = MockHiveService();
+    when(() => mockHive.userPrefs).thenReturn(_FakeBox());
   });
 
-  AnnouncementBloc buildBloc() => AnnouncementBloc(mockRepo);
+  AnnouncementBloc buildBloc() => AnnouncementBloc(mockRepo, mockHive);
 
   // ─── État initial ────────────────────────────────────────────────────────────
 

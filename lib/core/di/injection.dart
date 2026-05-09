@@ -118,7 +118,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => AnnouncementRepository(getIt<AnnouncementRemoteDatasource>()),
   );
   getIt.registerFactory<AnnouncementBloc>(
-    () => AnnouncementBloc(getIt<AnnouncementRepository>()),
+    () => AnnouncementBloc(
+      getIt<AnnouncementRepository>(),
+      getIt<HiveService>(),
+    ),
   );
 
   // Matching — Bids

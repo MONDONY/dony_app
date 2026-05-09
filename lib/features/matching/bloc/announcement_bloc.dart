@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
@@ -8,8 +9,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
   final AnnouncementRepository _repository;
+  final HiveService _hive;
 
-  AnnouncementBloc(this._repository) : super(AnnouncementInitial()) {
+  AnnouncementBloc(this._repository, this._hive) : super(AnnouncementInitial()) {
     on<AnnouncementCreateRequested>(_onCreateRequested);
     on<AnnouncementListRequested>(_onListRequested);
     on<AnnouncementDetailRequested>(_onDetailRequested);
@@ -39,6 +41,8 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         acceptedContentTypes: event.acceptedContentTypes,
         refusedTypes: event.refusedTypes,
       );
+      await _hive.userPrefs
+          .put(HiveService.kHasPublishedAsTraveler, true);
       emit(AnnouncementCreated(announcement));
     } catch (e) {
       emit(AnnouncementError(e.toString()));
