@@ -221,13 +221,13 @@ class _TrackingResultCard extends StatelessWidget {
                         vertical: DonySpacing.xs,
                       ),
                       decoration: BoxDecoration(
-                        color: DonyColors.neutral0.withValues(alpha: 0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(DonyRadius.sm),
                       ),
                       child: Text(
                         result.trackingNumber,
                         style: tt.labelLarge?.copyWith(
-                          color: DonyColors.neutral0,
+                          color: Colors.white,
                           letterSpacing: 1.5,
                         ),
                       ),
@@ -243,21 +243,21 @@ class _TrackingResultCard extends StatelessWidget {
                         result.departureCity,
                         textAlign: TextAlign.center,
                         style: tt.headlineMedium?.copyWith(
-                          color: DonyColors.neutral0,
+                          color: Colors.white,
                         ),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
                       child: Icon(Icons.arrow_forward_rounded,
-                          color: DonyColors.neutral0.withValues(alpha: 0.7), size: 24),
+                          color: Colors.white.withValues(alpha: 0.7), size: 24),
                     ),
                     Expanded(
                       child: Text(
                         result.arrivalCity,
                         textAlign: TextAlign.center,
                         style: tt.headlineMedium?.copyWith(
-                          color: DonyColors.neutral0,
+                          color: Colors.white,
                         ),
                       ),
                     ),

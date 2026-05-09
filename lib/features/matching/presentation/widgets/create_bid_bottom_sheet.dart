@@ -562,11 +562,11 @@ class _DisclaimerCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     return Container(
-      decoration: const BoxDecoration(
-        color: DonyColors.terra50,
-        borderRadius: BorderRadius.all(Radius.circular(DonyRadius.card)),
+      decoration: BoxDecoration(
+        color: cs.secondaryContainer,
+        borderRadius: const BorderRadius.all(Radius.circular(DonyRadius.card)),
         border: Border(
-          left: BorderSide(color: DonyColors.terra500, width: _kAccentBorder),
+          left: BorderSide(color: cs.secondary, width: _kAccentBorder),
         ),
       ),
       padding: const EdgeInsets.all(DonySpacing.md),
@@ -576,10 +576,10 @@ class _DisclaimerCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(
+              Icon(
                 Icons.warning_amber_rounded,
                 size: 20,
-                color: DonyColors.terra500,
+                color: cs.secondary,
               ),
               const SizedBox(width: DonySpacing.sm),
               Expanded(
@@ -588,14 +588,14 @@ class _DisclaimerCard extends StatelessWidget {
                   children: [
                     Text(
                       'Disclaimer douane.',
-                      style: tt.titleMedium?.copyWith(color: DonyColors.terra700),
+                      style: tt.titleMedium?.copyWith(color: cs.onSecondaryContainer),
                     ),
                     const SizedBox(height: DonySpacing.xxs),
                     Text(
                       'Pas d\'armes, drogues, liquides inflammables ou espèces. '
                       'Le voyageur peut refuser au contrôle douanier.',
                       style: tt.bodySmall
-                          ?.copyWith(color: DonyColors.terra700, height: 1.5),
+                          ?.copyWith(color: cs.onSecondaryContainer, height: 1.5),
                     ),
                   ],
                 ),
@@ -610,7 +610,7 @@ class _DisclaimerCard extends StatelessWidget {
                 Checkbox(
                   value: accepted,
                   onChanged: (v) => onChanged(v ?? false),
-                  activeColor: DonyColors.terra500,
+                  activeColor: cs.secondary,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 const SizedBox(width: DonySpacing.xs),

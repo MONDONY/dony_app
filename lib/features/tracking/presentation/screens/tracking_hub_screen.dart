@@ -117,6 +117,7 @@ class _OfflineBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
     return GestureDetector(
@@ -124,16 +125,16 @@ class _OfflineBanner extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(DonySpacing.base),
         decoration: BoxDecoration(
-          color: DonyColors.terra50,
+          color: cs.secondaryContainer,
           borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: DonyColors.terra500),
+          border: Border.all(color: cs.secondary),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(
+            Icon(
               Icons.wifi_off_rounded,
-              color: DonyColors.terra500,
+              color: cs.secondary,
               size: DonySpacing.iconSm,
             ),
             const SizedBox(width: DonySpacing.sm),
@@ -145,20 +146,20 @@ class _OfflineBanner extends StatelessWidget {
                     '$count scan${count > 1 ? 's' : ''} en attente',
                     style: tt.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: DonyColors.terra600,
+                      color: cs.onSecondaryContainer,
                     ),
                   ),
                   const SizedBox(height: DonySpacing.xxs),
                   Text(
                     'Appuyez pour voir et synchroniser',
-                    style: tt.bodySmall?.copyWith(color: DonyColors.terra500),
+                    style: tt.bodySmall?.copyWith(color: cs.secondary),
                   ),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
-              color: DonyColors.terra500,
+              color: cs.secondary,
               size: DonySpacing.iconSm,
             ),
           ],

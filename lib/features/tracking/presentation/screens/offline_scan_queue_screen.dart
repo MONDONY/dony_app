@@ -71,22 +71,22 @@ class OfflineScanQueueScreen extends StatelessWidget {
                   vertical: DonySpacing.xs,
                 ),
                 decoration: BoxDecoration(
-                  color: DonyColors.terra50,
+                  color: cs.secondaryContainer,
                   borderRadius: BorderRadius.circular(DonyRadius.full),
-                  border: Border.all(color: DonyColors.terra500),
+                  border: Border.all(color: cs.secondary),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.wifi_off_rounded,
                       size: 12,
-                      color: DonyColors.terra500,
+                      color: cs.secondary,
                     ),
                     const SizedBox(width: DonySpacing.xs),
                     Text(
                       'Hors-ligne',
-                      style: tt.labelMedium?.copyWith(color: DonyColors.terra500),
+                      style: tt.labelMedium?.copyWith(color: cs.secondary),
                     ),
                   ],
                 ),
@@ -165,20 +165,21 @@ class _AlertBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
-        color: DonyColors.terra50,
+        color: cs.secondaryContainer,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.terra500),
+        border: Border.all(color: cs.secondary),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
+          Icon(
             Icons.shield_outlined,
-            color: DonyColors.terra500,
+            color: cs.secondary,
             size: DonySpacing.iconSm,
           ),
           const SizedBox(width: DonySpacing.sm),
