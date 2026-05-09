@@ -211,6 +211,46 @@ DonySnackbar.show(
 );
 ```
 
+### `DonyMascotte`
+
+```dart
+DonyMascotte(
+  type: DonyMascotteType.salue,
+  size: DonyMascotteSize.lg,        // sm=64 | md=96 | lg=160 | xl=240
+  borderRadius: BorderRadius.circular(DonyRadius.card),  // optionnel
+)
+```
+
+**Mapping des mascottes disponibles :**
+
+| Type | Usage recommandé |
+|------|------------------|
+| `salue` | Splash natif, onboarding |
+| `tenantColis` | Tutoriel envoi (rôle expéditeur) |
+| `colisLivre` | Confirmation livraison finale |
+| `pouceLeve` | Confirmation étape intermédiaire (scan) |
+| `dansAvion` / `surAvion` | Étapes "embarqué" / "en vol" du tracking |
+| `aMoto` / `aVoiture` | Étapes "remise destinataire" / "transit" |
+| `courir` | Loadings longs (option) |
+| `noData` | `DonyEmptyState(type: empty, mascotte: DonyMascotteType.noData)` |
+| `perdu` | `DonyEmptyState(type: error, mascotte: DonyMascotteType.perdu)` |
+
+**Avec `DonyEmptyState` :**
+
+```dart
+DonyEmptyState(
+  title: 'Aucune annonce',
+  description: 'Reviens plus tard !',
+  type: DonyEmptyStateType.empty,
+  mascotte: DonyMascotteType.noData,
+)
+```
+
+**Règles :**
+- **Jamais** `Image.asset('assets/mascottes/...')` — toujours `DonyMascotte(type:)`
+- Les JPG ont un fond non transparent — utiliser `borderRadius` pour adoucir l'intégration
+- Ne pas mettre `mascotte:` dans un `DonyEmptyState(type: loading)` (la branche loading l'ignore)
+
 ---
 
 ## Règles obligatoires
@@ -224,6 +264,7 @@ DonySnackbar.show(
 7. **Toujours** `Theme.of(context).colorScheme` dans `build()` pour les couleurs sémantiques
 8. `DonyColors.X` uniquement pour les contextes `const` ou les couleurs primitives non-sémantiques
 9. `DonyTypography.caveat()` uniquement pour les accents cursifs décoratifs — jamais sur le corps du texte
+10. **Jamais** `Image.asset('assets/mascottes/...')` direct — utiliser `DonyMascotte(type:)`
 
 ---
 
