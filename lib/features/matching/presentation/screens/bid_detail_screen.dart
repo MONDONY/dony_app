@@ -384,6 +384,21 @@ class _BidDetailViewState extends State<_BidDetailView> {
                         ),
                       ],
 
+                      // Rating CTA (traveler only, bid completed)
+                      if (!isSender && _bid.status == 'COMPLETED') ...[
+                        const SizedBox(height: DonySpacing.base),
+                        OutlinedButton.icon(
+                          onPressed: () => RatingBottomSheet.show(
+                            context,
+                            bidId: _bid.id,
+                            travelerName: _bid.resolvedSenderName,
+                            isTravelerRating: true,
+                          ),
+                          icon: const Icon(Icons.star_outline_rounded),
+                          label: const Text('Évaluer l\'expéditeur'),
+                        ),
+                      ],
+
                       // Cancel section (traveler only, ACCEPTED or IN_TRANSIT)
                       if (!isSender &&
                           (_bid.status == 'ACCEPTED' ||

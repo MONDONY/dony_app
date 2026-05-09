@@ -13,24 +13,27 @@ class RatingBottomSheet extends StatefulWidget {
     required this.travelerName,
     this.starsNotifier,
     this.onSubmitReady,
+    this.isTravelerRating = false,
   });
 
   final String bidId;
   final String travelerName;
   final ValueNotifier<int>? starsNotifier;
   final void Function(VoidCallback)? onSubmitReady;
+  final bool isTravelerRating;
 
   static Future<void> show(
     BuildContext context, {
     required String bidId,
     required String travelerName,
+    bool isTravelerRating = false,
   }) {
     final ratingBloc = context.read<RatingBloc>();
     final starsNotifier = ValueNotifier<int>(0);
     VoidCallback? submit;
     return DonyBottomSheet.show(
       context,
-      title: 'Évaluer $travelerName',
+      title: isTravelerRating ? 'Évaluer l\'expéditeur' : 'Évaluer $travelerName',
       subtitle: 'Votre avis aide la communauté dony',
       wrapper: (child) => BlocProvider.value(value: ratingBloc, child: child),
       stickyBottom: ValueListenableBuilder<int>(
@@ -52,6 +55,7 @@ class RatingBottomSheet extends StatefulWidget {
         travelerName: travelerName,
         starsNotifier: starsNotifier,
         onSubmitReady: (fn) => submit = fn,
+        isTravelerRating: isTravelerRating,
       ),
     ).whenComplete(starsNotifier.dispose);
   }
@@ -79,11 +83,21 @@ class _RatingBottomSheetState extends State<RatingBottomSheet> {
 
   void _submit() {
     if (_stars == 0) return;
-    context.read<RatingBloc>().add(RatingSubmitRequested(
-      bidId: widget.bidId,
-      stars: _stars,
-      comment: _commentCtrl.text.trim().isEmpty ? null : _commentCtrl.text.trim(),
-    ));
+    final comment =
+        _commentCtrl.text.trim().isEmpty ? null : _commentCtrl.text.trim();
+    if (widget.isTravelerRating) {
+      context.read<RatingBloc>().add(TravelerRatingSubmitRequested(
+        bidId: widget.bidId,
+        stars: _stars,
+        comment: comment,
+      ));
+    } else {
+      context.read<RatingBloc>().add(RatingSubmitRequested(
+        bidId: widget.bidId,
+        stars: _stars,
+        comment: comment,
+      ));
+    }
   }
 
   @override
