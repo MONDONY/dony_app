@@ -43,6 +43,15 @@ class OnboardingScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      DonyMascotte(
+                        type: DonyMascotteType.salue,
+                        size: DonyMascotteSize.lg,
+                        borderRadius: BorderRadius.circular(DonyRadius.card),
+                      )
+                          .animate()
+                          .fadeIn(duration: 400.ms)
+                          .scaleXY(begin: 0.85, duration: 500.ms, curve: Curves.easeOutBack),
+                      const SizedBox(height: DonySpacing.lg),
                       const DonyLogo(fontSize: 48),
                       const SizedBox(height: DonySpacing.xxl),
 

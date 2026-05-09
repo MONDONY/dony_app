@@ -119,11 +119,11 @@ flutter_launcher_icons:
 flutter_native_splash:
   color: "#FFFFFF"
   color_dark: "#FFFFFF"
-  image: assets/logos/splash_colis.png
+  image: assets/mascottes/salue.jpg
   android_12:
     color: "#FFFFFF"
     icon_background_color: "#FFFFFF"
-    image: assets/logos/splash_colis.png
+    image: assets/mascottes/salue.jpg
   ios: true
   android: true
 
@@ -133,3 +133,4 @@ flutter:
     - assets/logos/
     - assets/logos/2.0x/
     - assets/logos/3.0x/
+    - assets/mascottes/

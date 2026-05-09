@@ -438,6 +438,11 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
   void _showSuccessDialog(String label) {
     final tt = Theme.of(context).textTheme;
+    final isFinal = isFinalDeliveryStep(label);
+    final mascotteType =
+        isFinal ? DonyMascotteType.colisLivre : DonyMascotteType.pouceLeve;
+    final title = isFinal ? 'Colis livré !' : 'Scan enregistré !';
+
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -447,17 +452,13 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: const EdgeInsets.all(DonySpacing.base),
-              decoration: BoxDecoration(
-                color: DonyColors.successLight,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.check_circle_rounded,
-                  color: DonyColors.success, size: 40),
+            DonyMascotte(
+              type: mascotteType,
+              size: DonyMascotteSize.lg,
+              borderRadius: BorderRadius.circular(DonyRadius.card),
             ),
             const SizedBox(height: DonySpacing.base),
-            Text('Scan enregistré !',
+            Text(title,
                 style: tt.headlineMedium?.copyWith(color: DonyColors.ink900)),
             const SizedBox(height: DonySpacing.sm),
             Text(label,
@@ -486,6 +487,18 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       ),
     );
   }
+}
+
+/// Renvoie true si le label correspond à une étape de livraison finale.
+///
+/// Le `stepLabel` est une chaîne libre côté serveur ; ce matching est
+/// pragmatique pour le MVP. Si un enum d'événement est exposé plus tard,
+/// migrer vers un match d'enum.
+bool isFinalDeliveryStep(String label) {
+  final l = label.toLowerCase();
+  return l.contains('livr') ||
+      l.contains('remis') ||
+      l.contains('deliver');
 }
 
 // ── Scan frame overlay ────────────────────────────────────────────────────────

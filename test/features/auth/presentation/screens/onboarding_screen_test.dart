@@ -1,9 +1,10 @@
 import 'dart:io';
 
+import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/design/widgets/dony_logo.dart';
-import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/widgets/dony_mascotte.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -146,5 +147,18 @@ void main() {
     verify(() => mockAuthBloc.add(const OnboardingCompleted())).called(1);
     expect(find.text('Phone Auth'), findsOneWidget);
     expect(Hive.box('user_prefs').get('onboarding_done'), isTrue);
+  });
+
+  testWidgets('OnboardingScreen affiche la mascotte salue au-dessus du logo',
+      (tester) async {
+    await _pump(tester, mockAuthBloc);
+
+    final mascotteFinder = find.byType(DonyMascotte);
+    expect(mascotteFinder, findsOneWidget);
+
+    final mascotte = tester.widget<DonyMascotte>(mascotteFinder);
+    expect(mascotte.type, DonyMascotteType.salue);
+    expect(mascotte.size, DonyMascotteSize.lg);
+    expect(mascotte.borderRadius, isNotNull);
   });
 }

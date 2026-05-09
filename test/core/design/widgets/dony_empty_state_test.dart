@@ -1,4 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/design/widgets/dony_icon_container.dart';
+import 'package:dony/core/design/widgets/dony_mascotte.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -109,6 +111,41 @@ void main() {
       ));
       await tester.pumpAndSettle();
       expect(find.byType(DonyButton), findsNothing);
+    });
+  });
+
+  group('DonyEmptyState — param mascotte', () {
+    testWidgets('mascotte remplace DonyIconContainer quand fournie', (tester) async {
+      await tester.pumpWidget(wrap(
+        const DonyEmptyState(
+          title: 'Aucun envoi',
+          mascotte: DonyMascotteType.noData,
+        ),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.byType(DonyMascotte), findsOneWidget);
+      expect(find.byType(DonyIconContainer), findsNothing);
+    });
+
+    testWidgets('mascotte absente → DonyIconContainer présent', (tester) async {
+      await tester.pumpWidget(wrap(
+        const DonyEmptyState(title: 'Aucun envoi'),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.byType(DonyMascotte), findsNothing);
+      expect(find.byType(DonyIconContainer), findsOneWidget);
+    });
+
+    testWidgets('mascotte rendue en taille lg (160px)', (tester) async {
+      await tester.pumpWidget(wrap(
+        const DonyEmptyState(
+          title: 'Aucun envoi',
+          mascotte: DonyMascotteType.noData,
+        ),
+      ));
+      await tester.pumpAndSettle();
+      final mascotte = tester.widget<DonyMascotte>(find.byType(DonyMascotte));
+      expect(mascotte.size, DonyMascotteSize.lg);
     });
   });
 }

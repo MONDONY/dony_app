@@ -26,6 +26,7 @@ export 'package:dony/core/design/widgets/dony_empty_state.dart';
 export 'package:dony/core/design/widgets/dony_icon_container.dart';
 export 'package:dony/core/design/widgets/dony_info_row.dart';
 export 'package:dony/core/design/widgets/dony_list_tile.dart';
+export 'package:dony/core/design/widgets/dony_mascotte.dart';
 export 'package:dony/core/design/widgets/dony_page_scaffold.dart';
 export 'package:dony/core/design/widgets/dony_radio_group.dart';
 export 'package:dony/core/design/widgets/dony_search_field.dart';

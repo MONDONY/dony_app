@@ -2,6 +2,7 @@ import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/design/widgets/dony_icon_container.dart';
+import 'package:dony/core/design/widgets/dony_mascotte.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -13,6 +14,7 @@ class DonyEmptyState extends StatelessWidget {
     required this.title,
     this.description,
     this.icon,
+    this.mascotte,
     this.type = DonyEmptyStateType.empty,
     this.actionLabel,
     this.onAction,
@@ -22,6 +24,7 @@ class DonyEmptyState extends StatelessWidget {
   final String title;
   final String? description;
   final IconData? icon;
+  final DonyMascotteType? mascotte;
   final DonyEmptyStateType type;
   final String? actionLabel;
   final VoidCallback? onAction;
@@ -62,11 +65,7 @@ class DonyEmptyState extends StatelessWidget {
           DonyColors.error,
           Icons.wifi_off_rounded,
         ),
-      DonyEmptyStateType.loading => (
-          DonyColors.primarySoft,
-          DonyColors.primary,
-          Icons.sync_rounded,
-        ),
+      _ => throw StateError('DonyEmptyState: type loading handled by early return'),
     };
 
     return Center(
@@ -75,12 +74,14 @@ class DonyEmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DonyIconContainer(
-              icon: icon ?? defaultIcon,
-              size: DonyIconContainerSize.xl,
-              backgroundColor: bg,
-              iconColor: ic,
-            )
+            (mascotte != null
+                    ? DonyMascotte(type: mascotte!, size: DonyMascotteSize.lg)
+                    : DonyIconContainer(
+                        icon: icon ?? defaultIcon,
+                        size: DonyIconContainerSize.xl,
+                        backgroundColor: bg,
+                        iconColor: ic,
+                      ))
                 .animate()
                 .fadeIn(duration: 400.ms, curve: Curves.easeOutCubic)
                 .scaleXY(begin: 0.82, duration: 400.ms, curve: Curves.easeOutBack),
@@ -94,7 +95,7 @@ class DonyEmptyState extends StatelessWidget {
               const SizedBox(height: DonySpacing.sm),
               Text(
                 description!,
-                style: tt.bodyMedium?.copyWith(color: DonyColors.neutral400),
+                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                 textAlign: TextAlign.center,
               ).animate(delay: 140.ms).fadeIn(duration: 300.ms),
             ],
