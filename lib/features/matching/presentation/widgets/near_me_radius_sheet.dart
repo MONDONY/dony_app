@@ -22,7 +22,7 @@ class NearMeRadiusSheet {
         valueListenable: radiusNotifier,
         builder: (_, radius, __) => DonyButton(
           label: 'Activer le filtre',
-          onPressed: () => Navigator.of(context).pop(radius),
+          onPressed: () => Navigator.of(context, rootNavigator: true).pop(radius),
         ),
       ),
       child: _NearMeRadiusContent(radiusNotifier: radiusNotifier),

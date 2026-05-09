@@ -91,7 +91,7 @@ class _MapSenderView extends StatefulWidget {
 
 class _MapSenderViewState extends State<_MapSenderView> {
   final _sheetController = DraggableScrollableController();
-  double _sheetSize = 0.45;
+  double _sheetSize = 0.20;
   bool get _isMapHidden => _sheetSize > 0.92;
 
   _HomeTab _tab = _HomeTab.voyageurs;
@@ -103,7 +103,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
   _DatePreset _datePreset = _DatePreset.thisWeek;
   DateTime? _customDate;
   bool _kiloProOnly = false;
-  bool _allCorridors = false;
+  bool _allCorridors = true;
 
   bool _isNearMeActive = false;
   double? _nearMeRadiusKm;
@@ -124,7 +124,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
   int get _activeFilterCount {
     int n = 0;
     if (_kiloProOnly) n++;
-    if (_allCorridors) n++;
+    if (!_allCorridors) n++;
     if (_minRating != null) n++;
     if (_weightMin != null || _weightMax != null) n++;
     if (_maxPricePerKg != null) n++;
@@ -533,11 +533,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
               // ── DraggableScrollableSheet ──────────────────────────────────
               DraggableScrollableSheet(
                 controller: _sheetController,
-                initialChildSize: 0.45,
+                initialChildSize: 0.20,
                 minChildSize: 0.15,
                 maxChildSize: 1.0,
                 snap: true,
-                snapSizes: const [0.45, 1.0],
+                snapSizes: const [0.20, 0.45, 1.0],
                 builder: (ctx, scrollCtrl) => _buildSheet(
                   ctx,
                   scrollCtrl,
@@ -625,7 +625,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         _tab == _HomeTab.voyageurs
                             ? _isNearMeActive
                                 ? '$count voyageur${count > 1 ? 's' : ''} à proximité'
-                                : '$count résultat${count > 1 ? 's' : ''} · ${_corridor.label}'
+                                : _allCorridors
+                                    ? '$count résultat${count > 1 ? 's' : ''} · Tous les corridors'
+                                    : '$count résultat${count > 1 ? 's' : ''} · ${_corridor.label}'
                             : _corridor.label,
                         style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                       ),
@@ -1622,13 +1624,6 @@ class _HomeFilterChipsRow extends StatelessWidget {
             isActive: weightMin != null || weightMax != null,
             icon: Icons.fitness_center_rounded,
             onTap: onWeightTap,
-          ),
-          const SizedBox(width: DonySpacing.xs),
-          _SmallChip(
-            label: 'Près de moi',
-            isActive: isNearMeActive,
-            icon: Icons.near_me_rounded,
-            onTap: onNearMeTap,
           ),
           const SizedBox(width: DonySpacing.xs),
           _SmallChip(
