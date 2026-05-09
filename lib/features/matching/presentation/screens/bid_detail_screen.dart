@@ -9,6 +9,8 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:dony/features/tracking/bloc/tracking_event.dart';
+import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/presentation/widgets/qr_code_card.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:dony/core/constants/city_airport_codes.dart';
@@ -26,7 +28,11 @@ import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.dart';
 import 'package:dony/features/matching/presentation/widgets/handover_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/route_map_components.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/widgets/sender_profile_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/traveler_profile_sheet.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
+import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:intl/intl.dart';
 
@@ -116,7 +122,13 @@ class _BidDetailViewState extends State<_BidDetailView> {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
-    return BlocListener<ConversationOpenBloc, ConversationOpenState>(
+    return BlocListener<RatingBloc, RatingState>(
+      listener: (context, state) {
+        if (state is RatingSuccess) {
+          context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+        }
+      },
+      child: BlocListener<ConversationOpenBloc, ConversationOpenState>(
       listener: (context, state) {
         if (state is ConversationOpenSuccess) {
           context.push(
@@ -298,9 +310,12 @@ class _BidDetailViewState extends State<_BidDetailView> {
                         const SizedBox(height: DonySpacing.base),
                       ],
 
-                      // Sender card (visible to traveler)
+                      // Sender card (visible to traveler — tappable pour voir le profil)
                       if (!isSender) ...[
-                        _SenderCard(bid: _bid),
+                        _SenderCard(
+                          bid: _bid,
+                          onTap: () => showSenderProfileSheet(context, _bid),
+                        ),
                         const SizedBox(height: DonySpacing.base),
                       ],
 
@@ -342,12 +357,18 @@ class _BidDetailViewState extends State<_BidDetailView> {
                         _TrackingLinkCard(bid: _bid),
                       ],
 
-                      // Confirmation code (sender)
+                      // Confirmation code (sender) — affiché uniquement après le scan de départ
                       if (isSender &&
                           _bid.status == 'ACCEPTED' &&
                           _bid.confirmationCode != null) ...[
                         const SizedBox(height: DonySpacing.base),
-                        _ConfirmationCodeCard(code: _bid.confirmationCode!),
+                        _ConfirmationCodeCard(
+                          bidId: _bid.id,
+                          initialCode: _bid.confirmationCode!,
+                          refreshCount: _bid.confirmationCodeRefreshCount,
+                          refreshWindowStart:
+                              _bid.confirmationCodeRefreshWindowStart,
+                        ),
                       ],
 
                       // Timeline section ("ÉTAPES")
@@ -372,16 +393,28 @@ class _BidDetailViewState extends State<_BidDetailView> {
                       // Rating CTA (sender only, bid completed)
                       if (isSender && _bid.status == 'COMPLETED') ...[
                         const SizedBox(height: DonySpacing.base),
-                        DonyButton(
-                          label: 'Noter le voyageur',
-                          icon: Icons.star_rounded,
-                          variant: DonyButtonVariant.secondary,
-                          onPressed: () => RatingBottomSheet.show(
-                            context,
-                            bidId: _bid.id,
-                            travelerName: _bid.travelerName ?? 'le voyageur',
+                        if (_bid.senderHasRated)
+                          const _RatingDoneCard()
+                        else
+                          DonyButton(
+                            label: 'Noter le voyageur',
+                            icon: Icons.star_rounded,
+                            variant: DonyButtonVariant.secondary,
+                            onPressed: () => RatingBottomSheet.show(
+                              context,
+                              bidId: _bid.id,
+                              travelerName: _bid.travelerName ?? 'le voyageur',
+                            ),
                           ),
-                        ),
+                      ],
+
+                      // Rating CTA (traveler only, bid completed)
+                      // La notation s'affiche automatiquement après validation du code.
+                      if (!isSender &&
+                          _bid.status == 'COMPLETED' &&
+                          _bid.travelerHasRated) ...[
+                        const SizedBox(height: DonySpacing.base),
+                        const _RatingDoneCard(),
                       ],
 
                       // Cancel section (traveler only, ACCEPTED or IN_TRANSIT)
@@ -429,9 +462,46 @@ class _BidDetailViewState extends State<_BidDetailView> {
         );
       },
     ), // BlocConsumer<BidBloc>
-    ); // BlocListener<ConversationOpenBloc>
+    ), // BlocListener<ConversationOpenBloc>
+    ); // BlocListener<RatingBloc>
   }
 
+}
+
+// ── Rating done card ──────────────────────────────────────────────────────────
+
+class _RatingDoneCard extends StatelessWidget {
+  const _RatingDoneCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.base,
+        vertical: DonySpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: cs.primaryContainer,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.check_circle_rounded, size: 16, color: cs.primary),
+          const SizedBox(width: DonySpacing.xs),
+          Text(
+            'Évaluation envoyée',
+            style: tt.bodyMedium?.copyWith(
+              color: cs.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ── Status badge ──────────────────────────────────────────────────────────────
@@ -500,101 +570,166 @@ class _TravelerCard extends StatelessWidget {
   final BidModel bid;
   const _TravelerCard({required this.bid});
 
+  TravelerProfile _buildTravelerProfile() => TravelerProfile(
+        id: bid.travelerId ?? '',
+        displayName: bid.travelerName,
+        phoneNumber: bid.travelerPhone,
+        averageRating: bid.travelerAverageRating,
+        totalTrips: bid.travelerTotalTrips,
+        kycVerified: bid.travelerKycVerified,
+        isProAccount: bid.travelerIsProAccount,
+        kiloPro: bid.travelerKiloPro,
+      );
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final name = bid.travelerName ?? 'Voyageur';
+    final canOpenProfile = bid.travelerId != null;
 
-    return Container(
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'VOYAGEUR',
-            style: tt.labelSmall?.copyWith(
-              color: cs.onSurfaceVariant,
-              letterSpacing: 0.8,
+    final ratingLabel = bid.travelerAverageRating != null
+        ? '★ ${bid.travelerAverageRating!.toStringAsFixed(1)}'
+        : '★ —';
+    final tripsLabel = bid.travelerTotalTrips != null
+        ? '· ${bid.travelerTotalTrips} trajet${bid.travelerTotalTrips! > 1 ? 's' : ''}'
+        : '';
+
+    return InkWell(
+      onTap: canOpenProfile
+          ? () => showTravelerProfileSheet(context, _buildTravelerProfile())
+          : null,
+      borderRadius: BorderRadius.circular(DonyRadius.card),
+      child: Container(
+        padding: const EdgeInsets.all(DonySpacing.base),
+        decoration: BoxDecoration(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(DonyRadius.card),
+          border: Border.all(color: cs.outline),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'VOYAGEUR',
+              style: tt.labelSmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                letterSpacing: 0.8,
+              ),
             ),
-          ),
-          const SizedBox(height: DonySpacing.md),
-          Row(
-            children: [
-              DonyAvatar(name: name, size: DonyAvatarSize.md, verified: true),
-              const SizedBox(width: DonySpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            name,
-                            overflow: TextOverflow.ellipsis,
-                            style: tt.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: DonySpacing.sm),
-                        // KYC badge
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: DonySpacing.sm,
-                            vertical: DonySpacing.xxs,
-                          ),
-                          decoration: BoxDecoration(
-                            color: cs.primaryContainer,
-                            borderRadius: BorderRadius.circular(DonyRadius.full),
-                          ),
-                          child: Text(
-                            'KYC',
-                            style: tt.labelSmall?.copyWith(
-                              color: cs.primary,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      '★ — · ${bid.travelerPhone != null ? 'Vérifié' : '—'}',
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                    ),
-                  ],
+            const SizedBox(height: DonySpacing.md),
+            Row(
+              children: [
+                DonyAvatar(
+                  name: name,
+                  size: DonyAvatarSize.md,
+                  verified: bid.travelerKycVerified,
+                  pro: bid.travelerIsProAccount,
                 ),
-              ),
-              // Phone button
-              _IconActionButton(
-                icon: Icons.phone_rounded,
-                onTap: () {},
-              ),
-              const SizedBox(width: DonySpacing.sm),
-              // Chat button
-              BlocBuilder<ConversationOpenBloc, ConversationOpenState>(
-                builder: (context, openState) {
-                  final isOpening = openState is ConversationOpenLoading;
-                  return _IconActionButton(
-                    icon: Icons.chat_bubble_outline_rounded,
-                    isLoading: isOpening,
-                    onTap: isOpening
-                        ? null
-                        : () => context.read<ConversationOpenBloc>().add(
-                              ConversationOpenRequested(bid.id),
+                const SizedBox(width: DonySpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Nom + badges
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              name,
+                              overflow: TextOverflow.ellipsis,
+                              style: tt.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                  );
-                },
-              ),
-            ],
-          ),
-        ],
+                          ),
+                          if (bid.travelerKycVerified) ...[
+                            const SizedBox(width: DonySpacing.xs),
+                            _MiniChip(
+                              label: 'KYC',
+                              color: cs.primary,
+                              bg: cs.primaryContainer,
+                            ),
+                          ],
+                          if (bid.travelerKiloPro) ...[
+                            const SizedBox(width: DonySpacing.xs),
+                            const _MiniChip(
+                              label: 'Kilo Pro',
+                              color: DonyColors.amberDark,
+                              bg: DonyColors.amberLight,
+                            ),
+                          ],
+                        ],
+                      ),
+                      // Note + trajets
+                      Text(
+                        '$ratingLabel $tripsLabel'.trim(),
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Actions
+                _IconActionButton(
+                  icon: Icons.phone_rounded,
+                  onTap: () {},
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                BlocBuilder<ConversationOpenBloc, ConversationOpenState>(
+                  builder: (context, openState) {
+                    final isOpening = openState is ConversationOpenLoading;
+                    return _IconActionButton(
+                      icon: Icons.chat_bubble_outline_rounded,
+                      isLoading: isOpening,
+                      onTap: isOpening
+                          ? null
+                          : () => context.read<ConversationOpenBloc>().add(
+                                ConversationOpenRequested(bid.id),
+                              ),
+                    );
+                  },
+                ),
+                if (canOpenProfile) ...[
+                  const SizedBox(width: DonySpacing.xs),
+                  Icon(Icons.chevron_right_rounded,
+                      color: cs.onSurfaceVariant, size: 18),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Mini chip (badge compact dans les cards) ───────────────────────────────────
+
+class _MiniChip extends StatelessWidget {
+  final String label;
+  final Color color;
+  final Color bg;
+  const _MiniChip({required this.label, required this.color, required this.bg});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
       ),
     );
   }
@@ -867,72 +1002,102 @@ class _PaymentReleaseCard extends StatelessWidget {
 
 class _SenderCard extends StatelessWidget {
   final BidModel bid;
-  const _SenderCard({required this.bid});
+  final VoidCallback? onTap;
+  const _SenderCard({required this.bid, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    return _Card(
-      title: 'Expéditeur',
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: cs.primaryContainer,
-              borderRadius: BorderRadius.circular(DonyRadius.lg),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(DonyRadius.card),
+      child: _Card(
+        title: 'Expéditeur',
+        child: Row(
+          children: [
+            DonyAvatar(
+              name: bid.resolvedSenderName,
+              size: DonyAvatarSize.md,
+              verified: bid.senderKycVerified,
+              pro: bid.senderIsProAccount,
             ),
-            child: Icon(Icons.person_rounded,
-                color: cs.primary, size: 24),
-          ),
-          const SizedBox(width: DonySpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  bid.resolvedSenderName,
-                  style: tt.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: cs.onSurface,
-                  ),
-                ),
-                if (bid.senderName != null &&
-                    bid.senderName!.isNotEmpty &&
-                    bid.senderPhone != null)
+            const SizedBox(width: DonySpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Nom + badges
                   Row(
                     children: [
-                      Icon(Icons.phone_rounded,
-                          size: 12, color: cs.onSurfaceVariant),
-                      const SizedBox(width: DonySpacing.xs),
-                      Text(
-                        bid.senderPhone!,
-                        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                      Flexible(
+                        child: Text(
+                          bid.resolvedSenderName,
+                          overflow: TextOverflow.ellipsis,
+                          style: tt.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: cs.onSurface,
+                          ),
+                        ),
                       ),
+                      if (bid.senderKycVerified) ...[
+                        const SizedBox(width: DonySpacing.xs),
+                        _MiniChip(
+                          label: 'KYC',
+                          color: cs.primary,
+                          bg: cs.primaryContainer,
+                        ),
+                      ],
+                      if (bid.senderKiloPro) ...[
+                        const SizedBox(width: DonySpacing.xs),
+                        const _MiniChip(
+                          label: 'Kilo Pro',
+                          color: DonyColors.amberDark,
+                          bg: DonyColors.amberLight,
+                        ),
+                      ],
                     ],
                   ),
-                if (bid.senderTotalShipments != null)
-                  Row(
-                    children: [
-                      Icon(Icons.local_shipping_rounded,
-                          size: 12, color: cs.onSurfaceVariant),
-                      const SizedBox(width: DonySpacing.xs),
-                      Text(
-                        '${bid.senderTotalShipments} envoi${(bid.senderTotalShipments ?? 0) > 1 ? 's' : ''}',
-                        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                      ),
-                    ],
+                  if (bid.senderPhone != null)
+                    Row(
+                      children: [
+                        Icon(Icons.phone_rounded,
+                            size: 12, color: cs.onSurfaceVariant),
+                        const SizedBox(width: DonySpacing.xs),
+                        Text(
+                          bid.senderPhone!,
+                          style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  if (bid.senderTotalShipments != null)
+                    Row(
+                      children: [
+                        Icon(Icons.local_shipping_rounded,
+                            size: 12, color: cs.onSurfaceVariant),
+                        const SizedBox(width: DonySpacing.xs),
+                        Text(
+                          '${bid.senderTotalShipments} envoi${(bid.senderTotalShipments ?? 0) > 1 ? 's' : ''}',
+                          style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  Text(
+                    'Soumis le ${DateFormat('dd/MM/yyyy').format(bid.createdAt.toLocal())}',
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
-                Text(
-                  'Demande soumise le ${DateFormat('dd/MM/yyyy à HH:mm').format(bid.createdAt.toLocal())}',
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+            if (onTap != null) ...[
+              const SizedBox(width: DonySpacing.xs),
+              Icon(Icons.chevron_right_rounded,
+                  color: cs.onSurfaceVariant, size: 20),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -2225,114 +2390,300 @@ class _TrackingLinkCard extends StatelessWidget {
 
 // ── Confirmation code card ────────────────────────────────────────────────────
 
-class _ConfirmationCodeCard extends StatelessWidget {
-  final String code;
-  const _ConfirmationCodeCard({required this.code});
+class _ConfirmationCodeCard extends StatefulWidget {
+  final String bidId;
+  final String initialCode;
+  final int refreshCount;
+  final DateTime? refreshWindowStart;
+
+  const _ConfirmationCodeCard({
+    required this.bidId,
+    required this.initialCode,
+    required this.refreshCount,
+    this.refreshWindowStart,
+  });
+
+  @override
+  State<_ConfirmationCodeCard> createState() => _ConfirmationCodeCardState();
+}
+
+class _ConfirmationCodeCardState extends State<_ConfirmationCodeCard> {
+  static const int _maxRefreshes = 5;
+  static const Duration _window = Duration(hours: 24);
+
+  Timer? _timer;
+  Duration _remaining = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _initCountdown(widget.refreshCount, widget.refreshWindowStart);
+  }
+
+  @override
+  void didUpdateWidget(_ConfirmationCodeCard old) {
+    super.didUpdateWidget(old);
+    if (old.refreshCount != widget.refreshCount ||
+        old.refreshWindowStart != widget.refreshWindowStart) {
+      _timer?.cancel();
+      _initCountdown(widget.refreshCount, widget.refreshWindowStart);
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _initCountdown(int count, DateTime? windowStart) {
+    if (count < _maxRefreshes || windowStart == null) {
+      _remaining = Duration.zero;
+      return;
+    }
+    final expiry = windowStart.toUtc().add(_window);
+    final now = DateTime.now().toUtc();
+    if (!now.isBefore(expiry)) {
+      _remaining = Duration.zero;
+      return;
+    }
+    _remaining = expiry.difference(now);
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() {
+        _remaining = _remaining - const Duration(seconds: 1);
+        if (_remaining <= Duration.zero) {
+          _remaining = Duration.zero;
+          _timer?.cancel();
+        }
+      });
+    });
+  }
+
+  bool get _isRateLimited => _remaining > Duration.zero;
+
+  String _formatRemaining() {
+    final h = _remaining.inHours;
+    final m = _remaining.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = _remaining.inSeconds.remainder(60).toString().padLeft(2, '0');
+    if (h > 0) return '${h}h ${m}min ${s}s';
+    return '${m}min ${s}s';
+  }
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'CODE DE CONFIRMATION',
-            style: tt.labelMedium?.copyWith(
-              color: cs.onSurfaceVariant,
-              letterSpacing: 0.8,
-            ),
+
+    return BlocConsumer<TrackingBloc, TrackingState>(
+      listenWhen: (_, c) =>
+          c is TrackingConfirmCodeLoaded || c is TrackingRefreshCodeError,
+      listener: (ctx, state) {
+        if (state is TrackingRefreshCodeError) {
+          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+            content: Text(state.message,
+                style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+            backgroundColor: cs.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(DonyRadius.sm)),
+          ));
+        } else if (state is TrackingConfirmCodeLoaded) {
+          ctx.read<BidBloc>().add(BidDetailRequested(widget.bidId));
+        }
+      },
+      buildWhen: (_, c) =>
+          c is TrackingRefreshCodeLoading ||
+          c is TrackingConfirmCodeLoaded ||
+          c is TrackingRefreshCodeError,
+      builder: (ctx, state) {
+        final isApiLoading = state is TrackingRefreshCodeLoading;
+        final isBlocked = _isRateLimited || isApiLoading;
+        final displayCode = state is TrackingConfirmCodeLoaded
+            ? state.code ?? widget.initialCode
+            : widget.initialCode;
+
+        return Container(
+          padding: const EdgeInsets.all(DonySpacing.base),
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(DonyRadius.card),
+            border: Border.all(color: cs.outline),
           ),
-          const SizedBox(height: DonySpacing.md),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: DonySpacing.lg),
-            decoration: BoxDecoration(
-              color: cs.primaryContainer,
-              borderRadius: BorderRadius.circular(DonyRadius.md),
-            ),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                code,
-                textAlign: TextAlign.center,
-                style: tt.displayLarge?.copyWith(
-                  color: DonyColors.blue700,
-                  letterSpacing: 10,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'CODE DE CONFIRMATION',
+                style: tt.labelMedium?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  letterSpacing: 0.8,
                 ),
               ),
-            ),
-          ),
-          const SizedBox(height: DonySpacing.md),
-          GestureDetector(
-            onTap: () {
-              Clipboard.setData(ClipboardData(text: code));
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Code copié',
-                      style: tt.bodyMedium
-                          ?.copyWith(fontWeight: FontWeight.w500)),
-                  backgroundColor: cs.success,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(DonyRadius.sm)),
+              const SizedBox(height: DonySpacing.md),
+              // Code display
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: DonySpacing.lg),
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer,
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
                 ),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
-              decoration: BoxDecoration(
-                border: Border.all(color: cs.primary),
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.copy_rounded,
-                      size: 16, color: cs.primary),
-                  const SizedBox(width: DonySpacing.sm),
-                  Text(
-                    'Copier le code',
-                    style: tt.titleSmall?.copyWith(color: cs.primary),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: DonySpacing.sm),
-          Container(
-            padding: const EdgeInsets.all(DonySpacing.sm),
-            decoration: BoxDecoration(
-              color: cs.warningLight,
-              borderRadius: BorderRadius.circular(DonyRadius.sm),
-              border: Border.all(color: cs.warning.withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.info_outline_rounded,
-                    size: 14, color: cs.warning),
-                const SizedBox(width: DonySpacing.sm),
-                Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
                   child: Text(
-                    'Transmettez ce code au destinataire par vos propres moyens (SMS, WhatsApp…). Le voyageur devra le saisir à la livraison.',
-                    style: tt.bodySmall
-                        ?.copyWith(color: cs.onSurfaceVariant, height: 1.4),
+                    displayCode,
+                    textAlign: TextAlign.center,
+                    style: tt.displayLarge?.copyWith(
+                      color: DonyColors.blue700,
+                      letterSpacing: 10,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: DonySpacing.md),
+              // Copy button
+              GestureDetector(
+                onTap: () {
+                  Clipboard.setData(ClipboardData(text: displayCode));
+                  ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+                    content: Text('Code copié',
+                        style: tt.bodyMedium
+                            ?.copyWith(fontWeight: FontWeight.w500)),
+                    backgroundColor: cs.success,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(DonyRadius.sm)),
+                  ));
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: DonySpacing.sm),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: cs.primary),
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.copy_rounded, size: 16, color: cs.primary),
+                      const SizedBox(width: DonySpacing.sm),
+                      Text('Copier le code',
+                          style: tt.titleSmall?.copyWith(color: cs.primary)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: DonySpacing.sm),
+              // Regenerate button — grisé + countdown si limite atteinte
+              Opacity(
+                opacity: isBlocked ? 0.45 : 1.0,
+                child: GestureDetector(
+                  onTap: isBlocked
+                      ? null
+                      : () => ctx
+                          .read<TrackingBloc>()
+                          .add(TrackingRefreshCodeRequested(widget.bidId)),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: DonySpacing.sm),
+                    decoration: BoxDecoration(
+                      color: cs.secondaryContainer,
+                      borderRadius: BorderRadius.circular(DonyRadius.md),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (isApiLoading)
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: cs.onSecondaryContainer),
+                          )
+                        else if (_isRateLimited)
+                          Icon(Icons.lock_clock_rounded,
+                              size: 16, color: cs.onSecondaryContainer)
+                        else
+                          Icon(Icons.refresh_rounded,
+                              size: 16, color: cs.onSecondaryContainer),
+                        const SizedBox(width: DonySpacing.sm),
+                        if (isApiLoading)
+                          Text('Régénération…',
+                              style: tt.titleSmall?.copyWith(
+                                  color: cs.onSecondaryContainer))
+                        else if (_isRateLimited)
+                          Text('Disponible dans ${_formatRemaining()}',
+                              style: tt.titleSmall?.copyWith(
+                                  color: cs.onSecondaryContainer))
+                        else
+                          Text('Régénérer le code',
+                              style: tt.titleSmall?.copyWith(
+                                  color: cs.onSecondaryContainer)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (_isRateLimited) ...[
+                const SizedBox(height: DonySpacing.sm),
+                Container(
+                  padding: const EdgeInsets.all(DonySpacing.sm),
+                  decoration: BoxDecoration(
+                    color: cs.errorContainer.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(DonyRadius.sm),
+                    border: Border.all(
+                        color: cs.error.withValues(alpha: 0.25)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.block_rounded,
+                          size: 14, color: cs.error),
+                      const SizedBox(width: DonySpacing.sm),
+                      Expanded(
+                        child: Text(
+                          'Limite de 5 régénérations atteinte. Le bouton se réactivera automatiquement dans ${_formatRemaining()}.',
+                          style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant, height: 1.4),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ] else ...[
+                const SizedBox(height: DonySpacing.sm),
+                Container(
+                  padding: const EdgeInsets.all(DonySpacing.sm),
+                  decoration: BoxDecoration(
+                    color: cs.warningLight,
+                    borderRadius: BorderRadius.circular(DonyRadius.sm),
+                    border:
+                        Border.all(color: cs.warning.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.info_outline_rounded,
+                          size: 14, color: cs.warning),
+                      const SizedBox(width: DonySpacing.sm),
+                      Expanded(
+                        child: Text(
+                          'Transmettez ce code au voyageur par vos propres moyens (SMS, WhatsApp…). Il devra le saisir à la livraison.',
+                          style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant, height: 1.4),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
-            ),
+            ],
           ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 300.ms);
+        ).animate().fadeIn(duration: 300.ms);
+      },
+    );
   }
 }
 

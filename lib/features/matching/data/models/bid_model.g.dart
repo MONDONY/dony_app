@@ -13,6 +13,9 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
   senderName: json['senderName'] as String?,
   senderPhone: json['senderPhone'] as String?,
   senderTotalShipments: (json['senderTotalShipments'] as num?)?.toInt(),
+  senderKycVerified: json['senderKycVerified'] as bool? ?? false,
+  senderIsProAccount: json['senderIsProAccount'] as bool? ?? false,
+  senderKiloPro: json['senderKiloPro'] as bool? ?? false,
   weightKg: (json['weightKg'] as num).toDouble(),
   declaredValueEur: (json['declaredValueEur'] as num).toDouble(),
   description: json['description'] as String,
@@ -48,6 +51,19 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
   travelerId: json['travelerId'] as String?,
   travelerName: json['travelerName'] as String?,
   travelerPhone: json['travelerPhone'] as String?,
+  travelerKycVerified: json['travelerKycVerified'] as bool? ?? false,
+  travelerIsProAccount: json['travelerIsProAccount'] as bool? ?? false,
+  travelerKiloPro: json['travelerKiloPro'] as bool? ?? false,
+  travelerTotalTrips: (json['travelerTotalTrips'] as num?)?.toInt(),
+  travelerAverageRating: (json['travelerAverageRating'] as num?)?.toDouble(),
+  senderHasRated: json['senderHasRated'] as bool? ?? false,
+  travelerHasRated: json['travelerHasRated'] as bool? ?? false,
+  confirmationCodeRefreshCount:
+      (json['confirmationCodeRefreshCount'] as num?)?.toInt() ?? 0,
+  confirmationCodeRefreshWindowStart:
+      json['confirmationCodeRefreshWindowStart'] == null
+          ? null
+          : DateTime.parse(json['confirmationCodeRefreshWindowStart'] as String),
 );
 
 Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
@@ -57,6 +73,9 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'senderName': instance.senderName,
   'senderPhone': instance.senderPhone,
   'senderTotalShipments': instance.senderTotalShipments,
+  'senderKycVerified': instance.senderKycVerified,
+  'senderIsProAccount': instance.senderIsProAccount,
+  'senderKiloPro': instance.senderKiloPro,
   'weightKg': instance.weightKg,
   'declaredValueEur': instance.declaredValueEur,
   'description': instance.description,
@@ -84,4 +103,14 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'travelerId': instance.travelerId,
   'travelerName': instance.travelerName,
   'travelerPhone': instance.travelerPhone,
+  'travelerKycVerified': instance.travelerKycVerified,
+  'travelerIsProAccount': instance.travelerIsProAccount,
+  'travelerKiloPro': instance.travelerKiloPro,
+  'travelerTotalTrips': instance.travelerTotalTrips,
+  'travelerAverageRating': instance.travelerAverageRating,
+  'senderHasRated': instance.senderHasRated,
+  'travelerHasRated': instance.travelerHasRated,
+  'confirmationCodeRefreshCount': instance.confirmationCodeRefreshCount,
+  'confirmationCodeRefreshWindowStart':
+      instance.confirmationCodeRefreshWindowStart?.toIso8601String(),
 };

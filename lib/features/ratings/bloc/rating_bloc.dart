@@ -8,28 +8,69 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class RatingBloc extends Bloc<RatingEvent, RatingState> {
   RatingBloc(this._repository) : super(const RatingInitial()) {
     on<RatingSubmitRequested>(_onSubmit);
+    on<TravelerRatingSubmitRequested>(_onTravelerSubmit);
+    on<PendingRatingChecked>(_onPendingChecked);
+    on<UserRatingsLoadRequested>(_onUserRatingsLoad);
   }
 
   final RatingRepository _repository;
 
-  Future<void> _onSubmit(
-    RatingSubmitRequested event,
-    Emitter<RatingState> emit,
-  ) async {
+  Future<void> _onSubmit(RatingSubmitRequested event, Emitter<RatingState> emit) async {
     emit(const RatingLoading());
     try {
-      await _repository.submitRating(
-        bidId: event.bidId,
-        stars: event.stars,
-        comment: event.comment,
-      );
+      await _repository.submitRating(bidId: event.bidId, stars: event.stars, comment: event.comment);
       emit(const RatingSuccess());
     } catch (e) {
-      final inner = e is DioException ? e.error : e;
-      final message = inner is AppException
-          ? inner.message
-          : 'Impossible d\'envoyer l\'évaluation. Réessayez.';
-      emit(RatingError(message));
+      emit(RatingError(_extractMessage(e, 'Impossible d\'envoyer l\'évaluation. Réessayez.')));
     }
+  }
+
+  Future<void> _onTravelerSubmit(TravelerRatingSubmitRequested event, Emitter<RatingState> emit) async {
+    emit(const RatingLoading());
+    try {
+      await _repository.submitTravelerRating(bidId: event.bidId, stars: event.stars, comment: event.comment);
+      emit(const RatingSuccess());
+    } catch (e) {
+      emit(RatingError(_extractMessage(e, 'Impossible d\'envoyer l\'évaluation. Réessayez.')));
+    }
+  }
+
+  Future<void> _onPendingChecked(PendingRatingChecked event, Emitter<RatingState> emit) async {
+    try {
+      final pending = await _repository.getPendingRating();
+      if (pending != null) {
+        emit(PendingRatingFound(
+          bidId: pending.bidId,
+          otherPartyName: pending.otherPartyName,
+          otherPartyId: pending.otherPartyId,
+          isTravelerRating: pending.isTravelerRating,
+        ));
+      } else {
+        emit(const PendingRatingNone());
+      }
+    } catch (_) {
+      emit(const PendingRatingNone());
+    }
+  }
+
+  Future<void> _onUserRatingsLoad(UserRatingsLoadRequested event, Emitter<RatingState> emit) async {
+    try {
+      final summary = await _repository.getUserRatings(event.userId, page: event.page);
+      emit(UserRatingsLoaded(
+        averageRating: summary.averageRating,
+        ratingCount: summary.ratingCount,
+        distribution: summary.distribution,
+        ratings: summary.ratings,
+        page: summary.page,
+        totalPages: summary.totalPages,
+      ));
+    } catch (e) {
+      emit(RatingError(_extractMessage(e, 'Impossible de charger les évaluations.')));
+    }
+  }
+
+  String _extractMessage(Object e, String fallback) {
+    final inner = e is DioException ? e.error : e;
+    return inner is AppException ? inner.message : fallback;
   }
 }

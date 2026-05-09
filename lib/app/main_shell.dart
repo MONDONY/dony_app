@@ -12,6 +12,10 @@ import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
+import 'package:dony/features/ratings/bloc/rating_bloc.dart';
+import 'package:dony/features/ratings/bloc/rating_event.dart';
+import 'package:dony/features/ratings/bloc/rating_state.dart';
+import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -29,6 +33,7 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   StreamSubscription<void>? _fcmSub;
+  bool _ratingPromptShown = false;
 
   void _onTap(int index) {
     HapticFeedback.selectionClick();
@@ -49,6 +54,7 @@ class _MainShellState extends State<MainShell> {
         return;
       }
       context.read<NotificationBloc>().add(const NotificationsLoadRequested());
+      context.read<RatingBloc>().add(const PendingRatingChecked());
       _fcmSub = getIt<NotificationService>().newNotificationStream.listen((_) {
         if (mounted) {
           context.read<NotificationBloc>().add(const NotificationsLoadRequested());
@@ -65,11 +71,27 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: widget.navigationShell,
-      bottomNavigationBar: _DonyBottomNav(
-        currentIndex: widget.navigationShell.currentIndex,
-        onTap: _onTap,
+    return BlocListener<RatingBloc, RatingState>(
+      listener: (context, state) {
+        if (state is PendingRatingFound && !_ratingPromptShown) {
+          _ratingPromptShown = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            RatingBottomSheet.show(
+              context,
+              bidId: state.bidId,
+              travelerName: state.otherPartyName,
+              isTravelerRating: state.isTravelerRating,
+            );
+          });
+        }
+      },
+      child: Scaffold(
+        body: widget.navigationShell,
+        bottomNavigationBar: _DonyBottomNav(
+          currentIndex: widget.navigationShell.currentIndex,
+          onTap: _onTap,
+        ),
       ),
     );
   }

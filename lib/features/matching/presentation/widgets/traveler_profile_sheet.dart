@@ -1,6 +1,13 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/ratings/bloc/rating_bloc.dart';
+import 'package:dony/features/ratings/bloc/rating_event.dart';
+import 'package:dony/features/ratings/bloc/rating_state.dart';
+import 'package:dony/features/ratings/presentation/widgets/rating_list_item.dart';
+import 'package:dony/features/ratings/presentation/widgets/rating_summary_card.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Ouvre un modal sheet (90 % écran) affichant le profil complet d'un voyageur.
 void showTravelerProfileSheet(BuildContext context, TravelerProfile traveler) {
@@ -9,14 +16,18 @@ void showTravelerProfileSheet(BuildContext context, TravelerProfile traveler) {
     useRootNavigator: true,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => DraggableScrollableSheet(
-      initialChildSize: 0.9,
-      minChildSize: 0.5,
-      maxChildSize: 0.95,
-      expand: false,
-      builder: (_, controller) => _TravelerProfileSheet(
-        traveler: traveler,
-        scrollController: controller,
+    builder: (_) => BlocProvider(
+      create: (_) => getIt<RatingBloc>()
+        ..add(UserRatingsLoadRequested(userId: traveler.id)),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (_, controller) => _TravelerProfileSheet(
+          traveler: traveler,
+          scrollController: controller,
+        ),
       ),
     ),
   );
@@ -154,57 +165,118 @@ class _TravelerProfileSheet extends StatelessWidget {
                 const SizedBox(height: DonySpacing.xl),
 
                 // ── Stats ──────────────────────────────────────────────────
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: DonySpacing.base,
-                  ),
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    borderRadius: BorderRadius.circular(DonyRadius.card),
-                    border: Border.all(color: cs.outline),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _SheetStat(
-                        value: traveler.averageRating != null
-                            ? traveler.averageRating!.toStringAsFixed(1)
-                            : '–',
-                        label: 'Note',
-                        icon: Icons.star_rounded,
-                        iconColor: cs.warning,
+                BlocBuilder<RatingBloc, RatingState>(
+                  buildWhen: (p, c) =>
+                      c is UserRatingsLoaded || c is RatingInitial,
+                  builder: (context, state) {
+                    final loaded =
+                        state is UserRatingsLoaded ? state : null;
+                    final noteValue = traveler.averageRating != null
+                        ? traveler.averageRating!.toStringAsFixed(1)
+                        : loaded != null && loaded.ratingCount > 0
+                            ? loaded.averageRating.toStringAsFixed(1)
+                            : '–';
+                    final tripsValue = traveler.totalTrips != null
+                        ? '${traveler.totalTrips}'
+                        : '–';
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: DonySpacing.base,
                       ),
-                      Container(width: 1, height: 36, color: cs.outline),
-                      _SheetStat(
-                        value: traveler.totalTrips != null
-                            ? '${traveler.totalTrips}'
-                            : '–',
-                        label: 'Trajets',
-                        icon: Icons.flight_takeoff_rounded,
-                        iconColor: cs.primary,
+                      decoration: BoxDecoration(
+                        color: cs.surface,
+                        borderRadius: BorderRadius.circular(DonyRadius.card),
+                        border: Border.all(color: cs.outline),
                       ),
-                      Container(width: 1, height: 36, color: cs.outline),
-                      _SheetStat(
-                        value: '–',
-                        label: 'Livraison',
-                        icon: Icons.check_circle_outline_rounded,
-                        iconColor: cs.success,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _SheetStat(
+                            value: noteValue,
+                            label: 'Note',
+                            icon: Icons.star_rounded,
+                            iconColor: cs.warning,
+                          ),
+                          Container(width: 1, height: 36, color: cs.outline),
+                          _SheetStat(
+                            value: tripsValue,
+                            label: 'Trajets',
+                            icon: Icons.flight_takeoff_rounded,
+                            iconColor: cs.primary,
+                          ),
+                          Container(width: 1, height: 36, color: cs.outline),
+                          _SheetStat(
+                            value: '–',
+                            label: 'Livraison',
+                            icon: Icons.check_circle_outline_rounded,
+                            iconColor: cs.success,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
                 const SizedBox(height: DonySpacing.xl),
 
-                // ── Avis récents ───────────────────────────────────────────
+                // ── Évaluations ────────────────────────────────────────────
                 Text(
-                  'Avis récents',
+                  'Évaluations',
                   style: tt.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: cs.onSurface,
                   ),
                 ),
                 const SizedBox(height: DonySpacing.sm),
-                _ReviewsBlock(traveler: traveler),
+                BlocBuilder<RatingBloc, RatingState>(
+                  builder: (context, state) {
+                    if (state is UserRatingsLoaded) {
+                      if (state.ratingCount == 0) {
+                        return Text(
+                          'Aucune évaluation pour l\'instant.',
+                          style: tt.bodyMedium
+                              ?.copyWith(color: cs.onSurfaceVariant),
+                        );
+                      }
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          RatingSummaryCard(
+                            averageRating: state.averageRating,
+                            ratingCount: state.ratingCount,
+                            distribution: state.distribution,
+                          ),
+                          const SizedBox(height: DonySpacing.base),
+                          ...state.ratings.map((r) => RatingListItem(item: r)),
+                          if (state.page < state.totalPages - 1)
+                            Center(
+                              child: TextButton(
+                                onPressed: () =>
+                                    context.read<RatingBloc>().add(
+                                          UserRatingsLoadRequested(
+                                            userId: traveler.id,
+                                            page: state.page + 1,
+                                          ),
+                                        ),
+                                child: const Text('Voir plus'),
+                              ),
+                            ),
+                        ],
+                      );
+                    }
+                    if (state is RatingError) {
+                      return Center(
+                        child: TextButton.icon(
+                          onPressed: () => context.read<RatingBloc>().add(
+                                UserRatingsLoadRequested(userId: traveler.id),
+                              ),
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: const Text('Réessayer'),
+                        ),
+                      );
+                    }
+                    return const Center(child: CircularProgressIndicator());
+                  },
+                ),
               ],
             ),
           ),
@@ -300,148 +372,3 @@ class _SheetStat extends StatelessWidget {
   }
 }
 
-// ─── Reviews ──────────────────────────────────────────────────────────────────
-
-class _ReviewsBlock extends StatelessWidget {
-  const _ReviewsBlock({required this.traveler});
-
-  final TravelerProfile traveler;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final firstName = traveler.resolvedName.split(' ').first;
-
-    final reviews = [
-      _ReviewData(
-        authorName: 'Aminata F.',
-        stars: 5,
-        comment:
-            '$firstName a livré mon colis en main propre chez ma mère avec photo. Je recommande à 100 %.',
-        daysAgo: 12,
-      ),
-      const _ReviewData(
-        authorName: 'Cheikh N.',
-        stars: 5,
-        comment:
-            'Très sérieux, ponctuel et de très bon contact. Le colis est arrivé en parfait état.',
-        daysAgo: 28,
-      ),
-      const _ReviewData(
-        authorName: 'Marième D.',
-        stars: 4,
-        comment:
-            'Bonne communication tout au long du trajet. Je re-ferai appel sans hésiter.',
-        daysAgo: 45,
-      ),
-    ];
-
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
-      child: Column(
-        children: [
-          for (int i = 0; i < reviews.length; i++) ...[
-            _ReviewTile(review: reviews[i]),
-            if (i < reviews.length - 1)
-              Padding(
-                padding: const EdgeInsets.only(left: 56),
-                child: Divider(height: 1, color: cs.outline),
-              ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _ReviewData {
-  const _ReviewData({
-    required this.authorName,
-    required this.stars,
-    required this.comment,
-    required this.daysAgo,
-  });
-
-  final String authorName;
-  final int stars;
-  final String comment;
-  final int daysAgo;
-}
-
-class _ReviewTile extends StatelessWidget {
-  const _ReviewTile({required this.review});
-
-  final _ReviewData review;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    final String timeLabel;
-    if (review.daysAgo < 7) {
-      timeLabel = 'Il y a ${review.daysAgo} j.';
-    } else if (review.daysAgo < 30) {
-      timeLabel = 'Il y a ${(review.daysAgo / 7).floor()} sem.';
-    } else {
-      timeLabel = 'Il y a ${(review.daysAgo / 30).floor()} mois';
-    }
-
-    return Padding(
-      padding: const EdgeInsets.all(DonySpacing.base),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          DonyAvatar(name: review.authorName, size: DonyAvatarSize.sm),
-          const SizedBox(width: DonySpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      review.authorName,
-                      style: tt.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: cs.onSurface,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      timeLabel,
-                      style: tt.labelSmall?.copyWith(color: cs.outline),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: DonySpacing.xs),
-                Row(
-                  children: List.generate(
-                    5,
-                    (i) => Icon(
-                      i < review.stars
-                          ? Icons.star_rounded
-                          : Icons.star_border_rounded,
-                      size: 13,
-                      color: Theme.of(context).colorScheme.warning,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: DonySpacing.xs),
-                Text(
-                  review.comment,
-                  style: tt.bodySmall
-                      ?.copyWith(color: cs.onSurfaceVariant, height: 1.4),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

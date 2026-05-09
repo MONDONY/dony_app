@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/ratings/bloc/rating_bloc.dart';
+import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -68,13 +70,27 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       isDismissible: false,
-      builder: (_) => BlocProvider.value(
-        value: context.read<TrackingBloc>(),
+      builder: (_) => MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: context.read<TrackingBloc>()),
+          BlocProvider.value(value: context.read<RatingBloc>()),
+        ],
         child: _ScanConfirmSheet(
           bidId: bidId,
           onClose: () {
             _detectedNotifier.value = false;
             _scanner.start();
+          },
+          onDeliveryConfirmed: (confirmedBidId) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              RatingBottomSheet.show(
+                context,
+                bidId: confirmedBidId,
+                travelerName: "l'expéditeur",
+                isTravelerRating: true,
+              );
+            });
           },
         ),
       ),
@@ -605,8 +621,13 @@ class _CornerPainter extends CustomPainter {
 class _ScanConfirmSheet extends StatefulWidget {
   final String bidId;
   final VoidCallback onClose;
+  final void Function(String bidId)? onDeliveryConfirmed;
 
-  const _ScanConfirmSheet({required this.bidId, required this.onClose});
+  const _ScanConfirmSheet({
+    required this.bidId,
+    required this.onClose,
+    this.onDeliveryConfirmed,
+  });
 
   @override
   State<_ScanConfirmSheet> createState() => _ScanConfirmSheetState();
@@ -742,9 +763,10 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
       ),
       child: BlocConsumer<TrackingBloc, TrackingState>(
         listener: (context, state) {
-          if (state is DeliveryConfirmSuccess ||
-              state is QrScanSuccess ||
-              state is QrScanQueued) {
+          if (state is DeliveryConfirmSuccess) {
+            context.pop();
+            widget.onDeliveryConfirmed?.call(state.event.bidId);
+          } else if (state is QrScanSuccess || state is QrScanQueued) {
             context.pop();
             widget.onClose();
           }
