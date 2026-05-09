@@ -5,95 +5,107 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 abstract final class AppTheme {
-  static ThemeData get light => _build();
+  static ThemeData get light => _build(Brightness.light);
+  static ThemeData get dark => _build(Brightness.dark);
 
-  static ThemeData _build() {
-    const cs = ColorScheme(
-      brightness: Brightness.light,
-      primary:              DonyColors.primary,        // blue500 #0B5FFF
-      onPrimary:            DonyColors.textOnBrand,
-      primaryContainer:     DonyColors.primarySoft,    // blue50
-      onPrimaryContainer:   DonyColors.primaryHover,   // blue600
-      secondary:            DonyColors.accent,         // terra500
-      onSecondary:          DonyColors.textOnBrand,
-      secondaryContainer:   DonyColors.accentSoft,     // terra50
-      onSecondaryContainer: DonyColors.terra700,
-      surface:              DonyColors.surface,        // white
-      onSurface:            DonyColors.textPrimary,    // ink800
-      surfaceContainerHighest: DonyColors.neutral100,
-      surfaceContainerLow:  DonyColors.bgApp,          // neutral50
-      outline:              DonyColors.borderDefault,  // neutral200
-      outlineVariant:       DonyColors.neutral100,
-      error:                DonyColors.danger500,
-      onError:              DonyColors.textOnBrand,
-      shadow:               DonyColors.shadow,
+  static ThemeData _build(Brightness brightness) {
+    final isLight = brightness == Brightness.light;
+
+    final cs = ColorScheme(
+      brightness: brightness,
+      primary: isLight ? DonyColors.primary : DonyColors.blueDark500,
+      onPrimary: DonyColors.textOnBrand,
+      primaryContainer: isLight ? DonyColors.primarySoft : DonyColors.blueDark50,
+      onPrimaryContainer: isLight ? DonyColors.primaryHover : DonyColors.blueDark500,
+      secondary: isLight ? DonyColors.accent : DonyColors.terraDark500,
+      onSecondary: DonyColors.textOnBrand,
+      secondaryContainer: isLight ? DonyColors.accentSoft : DonyColors.terraDark50,
+      onSecondaryContainer: isLight ? DonyColors.terra700 : DonyColors.terraDark500,
+      surface: isLight ? DonyColors.surface : DonyColors.neutralDark100,
+      onSurface: isLight ? DonyColors.textPrimary : DonyColors.neutralDark700,
+      onSurfaceVariant: isLight ? DonyColors.textMuted : DonyColors.neutralDark500,
+      surfaceContainerHighest: isLight ? DonyColors.neutral100 : DonyColors.neutralDark200,
+      surfaceContainerLow: isLight ? DonyColors.bgApp : DonyColors.neutralDark50,
+      outline: isLight ? DonyColors.borderDefault : DonyColors.neutralDark300,
+      outlineVariant: isLight ? DonyColors.neutral100 : DonyColors.neutralDark200,
+      error: isLight ? DonyColors.danger500 : DonyColors.dangerDark500,
+      onError: DonyColors.textOnBrand,
+      errorContainer: isLight ? DonyColors.danger50 : DonyColors.dangerDark50,
+      onErrorContainer: isLight ? DonyColors.danger500 : DonyColors.dangerDark500,
+      shadow: isLight ? DonyColors.shadow : DonyColors.shadowDark,
+      inverseSurface: isLight ? DonyColors.ink800 : DonyColors.neutral0,
+      onInverseSurface: isLight ? DonyColors.neutral0 : DonyColors.textPrimary,
     );
+
+    final scaffoldBg = isLight ? DonyColors.bgApp : DonyColors.neutralDark0;
 
     return ThemeData(
       useMaterial3: true,
+      brightness: brightness,
       colorScheme: cs,
-      scaffoldBackgroundColor: DonyColors.bgApp,
+      scaffoldBackgroundColor: scaffoldBg,
       textTheme: DonyTypography.textTheme.apply(
-        bodyColor: DonyColors.textPrimary,
-        displayColor: DonyColors.textPrimary,
+        bodyColor: cs.onSurface,
+        displayColor: cs.onSurface,
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: DonyColors.surface,
-        foregroundColor: DonyColors.textPrimary,
+        backgroundColor: cs.surface,
+        foregroundColor: cs.onSurface,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
         titleTextStyle: DonyTypography.textTheme.headlineMedium?.copyWith(
-          color: DonyColors.textPrimary,
+          color: cs.onSurface,
         ),
-        // Barre nav transparente sur tous les écrans avec AppBar
-        systemOverlayStyle: const SystemUiOverlayStyle(
+        systemOverlayStyle: SystemUiOverlayStyle(
           systemNavigationBarColor: Colors.transparent,
           systemNavigationBarDividerColor: Colors.transparent,
           systemNavigationBarContrastEnforced: false,
           statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
+          statusBarIconBrightness: isLight ? Brightness.dark : Brightness.light,
         ),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        color: DonyColors.surface,
+        color: cs.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(DonyRadius.card),
-          side: const BorderSide(color: DonyColors.borderDefault),
+          side: BorderSide(color: cs.outline),
         ),
         margin: EdgeInsets.zero,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: DonyColors.surface,
+        fillColor: cs.surface,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: DonySpacing.base,
           vertical: DonySpacing.md,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: const BorderSide(color: DonyColors.borderDefault),
+          borderSide: BorderSide(color: cs.outline),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: const BorderSide(color: DonyColors.borderDefault),
+          borderSide: BorderSide(color: cs.outline),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: const BorderSide(color: DonyColors.borderFocus, width: 1.5),
+          borderSide: BorderSide(color: cs.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: const BorderSide(color: DonyColors.danger500),
+          borderSide: BorderSide(color: cs.error),
         ),
-        labelStyle: DonyTypography.textTheme.bodyMedium?.copyWith(color: DonyColors.textMuted),
-        hintStyle: DonyTypography.textTheme.bodyMedium?.copyWith(color: DonyColors.neutral400),
+        labelStyle: DonyTypography.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+        hintStyle: DonyTypography.textTheme.bodyMedium?.copyWith(
+          color: isLight ? DonyColors.neutral400 : DonyColors.neutralDark400,
+        ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: DonyColors.primary,
-          foregroundColor: DonyColors.textOnBrand,
+          backgroundColor: cs.primary,
+          foregroundColor: cs.onPrimary,
           minimumSize: const Size.fromHeight(52),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(DonyRadius.lg),
@@ -104,23 +116,23 @@ abstract final class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: DonyColors.textPrimary,
+          foregroundColor: cs.onSurface,
           minimumSize: const Size.fromHeight(52),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(DonyRadius.lg),
           ),
-          side: const BorderSide(color: DonyColors.borderDefault),
+          side: BorderSide(color: cs.outline),
           textStyle: DonyTypography.textTheme.labelLarge,
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: DonyColors.primary,
+          foregroundColor: cs.primary,
           textStyle: DonyTypography.textTheme.labelLarge,
         ),
       ),
-      dividerTheme: const DividerThemeData(
-        color: DonyColors.borderDefault,
+      dividerTheme: DividerThemeData(
+        color: cs.outline,
         space: 1,
         thickness: 1,
       ),
@@ -131,10 +143,10 @@ abstract final class AppTheme {
         ),
       ),
       sliderTheme: SliderThemeData(
-        activeTrackColor: DonyColors.primary,
-        thumbColor: DonyColors.primary,
-        inactiveTrackColor: DonyColors.borderDefault,
-        overlayColor: DonyColors.primary.withValues(alpha: 0.12),
+        activeTrackColor: cs.primary,
+        thumbColor: cs.primary,
+        inactiveTrackColor: cs.outline,
+        overlayColor: cs.primary.withValues(alpha: 0.12),
         trackHeight: 3,
         thumbShape: const RoundSliderThumbShape(),
       ),
