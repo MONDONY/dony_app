@@ -35,6 +35,7 @@ class ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     final topPad = MediaQuery.of(context).padding.top;
 
     return Container(
@@ -45,11 +46,11 @@ class ProfileHeader extends StatelessWidget {
         DonySpacing.lg,
         DonySpacing.md,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [DonyColors.primary, DonyColors.blue900],
+          colors: [cs.primary, DonyColors.blue900],
         ),
       ),
       child: Stack(
@@ -155,7 +156,7 @@ class _KycBadge extends StatelessWidget {
         vertical: DonySpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: DonyColors.surface.withValues(alpha: 0.18),
+        color: Colors.white.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(DonyRadius.full),
         border: Border.all(color: accent.withValues(alpha: 0.6)),
       ),
@@ -190,9 +191,9 @@ class _RolePillB extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: DonyColors.surface.withValues(alpha: 0.18),
+        color: Colors.white.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(DonyRadius.full),
-        border: Border.all(color: DonyColors.surface.withValues(alpha: 0.3)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -241,7 +242,7 @@ class _PillBTab extends StatelessWidget {
           vertical: DonySpacing.sm,
         ),
         decoration: BoxDecoration(
-          color: isActive ? DonyColors.surface : Colors.transparent,
+          color: isActive ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(DonyRadius.full),
         ),
         child: Row(
@@ -298,9 +299,9 @@ class _GlassStats extends StatelessWidget {
             vertical: DonySpacing.md,
           ),
           decoration: BoxDecoration(
-            color: DonyColors.surface.withValues(alpha: 0.15),
+            color: Colors.white.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(DonyRadius.card),
-            border: Border.all(color: DonyColors.surface.withValues(alpha: 0.25)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
           ),
           child: Row(
             children: [

@@ -114,8 +114,8 @@ class _UpgradeToProViewState extends State<_UpgradeToProView> {
                       icon: Icons.business_center_rounded,
                       size: DonyIconContainerSize.xl,
                       borderRadius: DonyRadius.xl,
-                      backgroundColor: DonyColors.warning50,
-                      iconColor: DonyColors.warning,
+                      backgroundColor: cs.warningLight,
+                      iconColor: cs.warning,
                     ).animate().fadeIn(duration: 260.ms),
                     const SizedBox(height: DonySpacing.xl),
 
