@@ -24,7 +24,9 @@ class RoleGuidanceBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (_hasPublished) return const SizedBox.shrink();
+    if (_hasPublished) {
+      return const SizedBox.shrink();
+    }
 
     final isSender = role == ActiveRole.sender;
     final title = isSender ? 'Envoyer ton premier colis' : 'Publier ton premier trajet';
@@ -38,7 +40,7 @@ class RoleGuidanceBanner extends StatelessWidget {
           ]
         : [
             'Compte créé ✓',
-            "Vérifie ton identité (KYC) — obligatoire pour voyager",
+            'Vérifie ton identité (KYC) — obligatoire pour voyager',
             'Publie les détails de ton trajet (date, corridor, kg dispo)',
           ];
 
@@ -106,6 +108,8 @@ class RoleGuidanceBanner extends StatelessWidget {
           GestureDetector(
             onTap: onCtaTap,
             child: Container(
+              constraints: const BoxConstraints(minHeight: 44),
+              alignment: Alignment.center,
               padding: const EdgeInsets.symmetric(
                 horizontal: DonySpacing.base,
                 vertical: DonySpacing.sm,
