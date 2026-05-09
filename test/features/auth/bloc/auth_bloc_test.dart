@@ -148,7 +148,7 @@ void main() {
         when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
         return buildBloc();
       },
-      act: (bloc) => bloc.add(const AuthRegisterRequested(['SENDER'])),
+      act: (bloc) => bloc.add(const AuthRegisterRequested()),
       expect: () => [
         isA<AuthLoading>(),
         isA<AuthAuthenticated>(),
@@ -156,7 +156,7 @@ void main() {
       verify: (bloc) {
         verify(() => mockRepo.register(
               phoneNumber: any(named: 'phoneNumber'),
-              roles: any(named: 'roles'),
+              roles: ['ROLE_TRAVELER', 'ROLE_SENDER'],
             )).called(1);
         verify(() => mockLocalAuth.clearPin()).called(1);
       },
@@ -171,7 +171,7 @@ void main() {
             )).thenThrow(Exception('Ce numéro est déjà associé à un compte'));
         return buildBloc();
       },
-      act: (bloc) => bloc.add(const AuthRegisterRequested(['SENDER'])),
+      act: (bloc) => bloc.add(const AuthRegisterRequested()),
       expect: () => [
         isA<AuthLoading>(),
         predicate<AuthState>((s) =>
@@ -188,7 +188,7 @@ void main() {
             )).thenThrow(Exception('Server error'));
         return buildBloc();
       },
-      act: (bloc) => bloc.add(const AuthRegisterRequested(['TRAVELER'])),
+      act: (bloc) => bloc.add(const AuthRegisterRequested()),
       expect: () => [
         isA<AuthLoading>(),
         isA<AuthError>(),
@@ -579,42 +579,6 @@ void main() {
       final s = AuthLocked();
       expect(s, isA<AuthLocked>());
     });
-  });
-
-  // ─── AuthRoleToggled ─────────────────────────────────────────────────────────
-
-  group('AuthRoleToggled', () {
-    blocTest<AuthBloc, AuthState>(
-      'adds role to empty selection',
-      build: buildBloc,
-      act: (bloc) => bloc.add(const AuthRoleToggled('SENDER')),
-      expect: () => [
-        AuthSelectingRoles(selectedRoles: const {'SENDER'}),
-      ],
-    );
-
-    blocTest<AuthBloc, AuthState>(
-      'removes role when already selected',
-      build: buildBloc,
-      seed: () => AuthSelectingRoles(selectedRoles: const {'SENDER'}),
-      act: (bloc) => bloc.add(const AuthRoleToggled('SENDER')),
-      expect: () => [
-        AuthSelectingRoles(selectedRoles: const {}),
-      ],
-    );
-
-    blocTest<AuthBloc, AuthState>(
-      'toggles two roles independently',
-      build: buildBloc,
-      act: (bloc) async {
-        bloc.add(const AuthRoleToggled('SENDER'));
-        bloc.add(const AuthRoleToggled('TRAVELER'));
-      },
-      expect: () => [
-        AuthSelectingRoles(selectedRoles: const {'SENDER'}),
-        AuthSelectingRoles(selectedRoles: const {'SENDER', 'TRAVELER'}),
-      ],
-    );
   });
 
   // ─── AuthDialCodeChanged ─────────────────────────────────────────────────────

@@ -32,12 +32,7 @@ class AuthPhoneVerified extends AuthEvent {
 }
 
 class AuthRegisterRequested extends AuthEvent {
-  final List<String> roles;
-
-  const AuthRegisterRequested(this.roles);
-
-  @override
-  List<Object?> get props => [roles];
+  const AuthRegisterRequested();
 }
 
 class AuthCheckRequested extends AuthEvent {
@@ -73,13 +68,6 @@ class AuthUpdateProfileRequested extends AuthEvent {
 
 class OnboardingCompleted extends AuthEvent {
   const OnboardingCompleted();
-}
-
-class AuthRoleToggled extends AuthEvent {
-  final String role;
-  const AuthRoleToggled(this.role);
-  @override
-  List<Object?> get props => [role];
 }
 
 class AuthDialCodeChanged extends AuthEvent {

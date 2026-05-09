@@ -1,5 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/core/widgets/role_guidance_banner.dart';
+import 'package:dony/core/widgets/role_mode_pill.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/city/data/popular_corridor_model.dart';
@@ -530,6 +533,13 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 ),
               ),
 
+              // ── RoleModePill (coin supérieur gauche) ──────────────────────
+              Positioned(
+                top: MediaQuery.of(context).padding.top + DonySpacing.sm,
+                left: DonySpacing.sm,
+                child: const RoleModePill(),
+              ),
+
               // ── DraggableScrollableSheet ──────────────────────────────────
               DraggableScrollableSheet(
                 controller: _sheetController,
@@ -649,6 +659,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
             ),
           ),
           const Divider(height: 1, color: DonyColors.neutral200),
+          RoleGuidanceBanner(
+            role: ActiveRole.sender,
+            hiveService: getIt<HiveService>(),
+          ),
           Expanded(
             child: _tab == _HomeTab.demandes
                 ? CustomScrollView(
@@ -800,6 +814,11 @@ class _TravelerViewState extends State<_TravelerView> {
             scrolledUnderElevation: 0,
             centerTitle: false,
             automaticallyImplyLeading: false,
+            leading: const Padding(
+              padding: EdgeInsets.only(left: DonySpacing.sm),
+              child: Center(child: RoleModePill()),
+            ),
+            leadingWidth: 96,
             // Titre (visible seulement quand collapsed)
             title: Text(
               widget.displayName,
@@ -967,6 +986,12 @@ class _TravelerViewState extends State<_TravelerView> {
             ),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
+                RoleGuidanceBanner(
+                  role: ActiveRole.traveler,
+                  hiveService: getIt<HiveService>(),
+                  onCtaTap: () => CreateAnnouncementBottomSheet.show(context),
+                ),
+                const SizedBox(height: DonySpacing.md),
                 const _StatsCard()
                     .animate()
                     .fadeIn(delay: 60.ms)

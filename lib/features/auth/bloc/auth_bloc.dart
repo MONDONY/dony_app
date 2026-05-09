@@ -31,7 +31,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthDeleteAccountRequested>(_onDeleteAccountRequested);
     on<AuthUpdateProfileRequested>(_onUpdateProfileRequested);
     on<OnboardingCompleted>(_onOnboardingCompleted);
-    on<AuthRoleToggled>(_onRoleToggled);
     on<AuthDialCodeChanged>(_onDialCodeChanged);
     on<AuthOtpTimerTicked>(_onOtpTimerTicked);
   }
@@ -124,8 +123,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   // ─── Vérification OTP + détection compte existant ────────────────────────
   //
   // Après OTP validé, on tente getProfile() pour savoir si l'user est déjà inscrit :
-  //   • 200 → AuthAuthenticated → OTP screen va à /auth/local (PIN existant)
-  //   • 404 → AuthOtpVerified  → OTP screen va à /auth/role  (nouveau compte)
+  //   • 200 → AuthAuthenticated → OTP screen navigue vers /auth/local (PIN existant)
+  //   • 404 → AuthOtpVerified  → OTP screen dispatche AuthRegisterRequested() (nouveau compte)
+  //           → AuthRegisterRequested crée le compte avec les deux rôles
+  //           → AuthAuthenticated est émis → navigation vers /auth/local
 
   Future<void> _onPhoneVerified(
     AuthPhoneVerified event,
@@ -175,7 +176,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final user = await _authRepository.register(
         phoneNumber: _pendingPhoneNumber ?? '',
-        roles: event.roles,
+        roles: ['ROLE_TRAVELER', 'ROLE_SENDER'],
       );
       // Nouveau compte → effacer tout PIN résiduel d'un compte précédent
       // (le PIN est lié à l'appareil, pas à l'utilisateur Firebase)
@@ -191,7 +192,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   // On déconnecte Firebase seulement. Le PIN est CONSERVÉ.
   // Après re-authentification OTP :
   //   • numéro existant → AuthAuthenticated → /auth/local (PIN screen, même PIN)
-  //   • numéro inconnu  → AuthOtpVerified    → /auth/role  (nouveau compte)
+  //   • numéro inconnu  → AuthOtpVerified   → OTP screen dispatche AuthRegisterRequested() (nouveau compte)
 
   Future<void> _onLogoutRequested(
     AuthLogoutRequested event,
@@ -249,21 +250,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     await Hive.box('user_prefs').put('onboarding_done', true);
-  }
-
-  // ─── Sélection de rôles ──────────────────────────────────────────────────
-
-  void _onRoleToggled(AuthRoleToggled event, Emitter<AuthState> emit) {
-    final currentRoles = state is AuthSelectingRoles
-        ? (state as AuthSelectingRoles).selectedRoles
-        : <String>{};
-    final updated = Set<String>.from(currentRoles);
-    if (updated.contains(event.role)) {
-      updated.remove(event.role);
-    } else {
-      updated.add(event.role);
-    }
-    emit(AuthSelectingRoles(selectedRoles: updated));
   }
 
   // ─── Code pays téléphone ─────────────────────────────────────────────────

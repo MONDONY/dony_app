@@ -1,5 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -18,6 +20,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
@@ -34,6 +37,21 @@ class MockAnnouncementBloc
 
 class MockActiveRoleCubit extends MockCubit<ActiveRole>
     implements ActiveRoleCubit {}
+
+class MockHiveService extends Mock implements HiveService {}
+
+// Simule un utilisateur qui a déjà publié → banner masqué pour tester la liste principale
+// (le banner est testé séparément dans role_guidance_banner_test.dart)
+class _FakeBox extends Fake implements Box<dynamic> {
+  @override
+  dynamic get(dynamic key, {dynamic defaultValue}) {
+    if (key == HiveService.kHasPublishedAsTraveler ||
+        key == HiveService.kHasPublishedAsSender) {
+      return true;
+    }
+    return defaultValue;
+  }
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -105,6 +123,14 @@ Widget _buildHome({
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 void main() {
+  setUp(() {
+    final hive = MockHiveService();
+    when(() => hive.userPrefs).thenReturn(_FakeBox());
+    getIt.registerSingleton<HiveService>(hive);
+  });
+
+  tearDown(getIt.reset);
+
   group('HomeScreen — Map sender view', () {
     testWidgets('shows corridor label in search bar', (tester) async {
       await tester.pumpWidget(_buildHome());
