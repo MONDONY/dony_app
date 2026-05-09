@@ -117,13 +117,11 @@ flutter_launcher_icons:
     theme_color: "#0B5FFF"
 
 flutter_native_splash:
-  color: "#FFFFFF"
-  color_dark: "#FFFFFF"
-  image: assets/mascottes/salue.png
+  background_image: assets/splash_full_screen.png
   android_12:
     color: "#FFFFFF"
     icon_background_color: "#FFFFFF"
-    image: assets/mascottes/salue.png
+    image: assets/splash_icon_android12.png
   ios: true
   android: true
 
