@@ -13,6 +13,7 @@ import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/data/account_deletion_repository.dart';
 import 'package:dony/features/settings/data/firebase_phone_reauth.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
+import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
@@ -76,6 +77,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => NotificationBloc(getIt<NotificationRepository>()),
   );
   getIt.registerLazySingleton<EnvoisRefreshNotifier>(() => EnvoisRefreshNotifier());
+  getIt.registerLazySingleton<PendingSearchNotifier>(() => PendingSearchNotifier());
   getIt.registerLazySingleton<SavedTripsService>(
     () => SavedTripsService(getIt<HiveService>()),
   );

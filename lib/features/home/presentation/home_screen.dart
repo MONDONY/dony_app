@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/role_guidance_banner.dart';
 import 'package:dony/core/widgets/role_mode_pill.dart';
@@ -99,6 +100,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   _HomeTab _tab = _HomeTab.voyageurs;
 
+  PendingSearchNotifier? _pendingSearchNotifier;
+
   // Liste mutable — initialisée avec le fallback statique, remplacée par l'API
   List<_CorridorOpt> _corridorOptions = List.of(_defaultCorridorOptions);
   _CorridorOpt _corridor = _defaultCorridorOptions.first;
@@ -183,11 +186,28 @@ class _MapSenderViewState extends State<_MapSenderView> {
   @override
   void initState() {
     super.initState();
+    if (getIt.isRegistered<PendingSearchNotifier>()) {
+      _pendingSearchNotifier = getIt<PendingSearchNotifier>();
+      _pendingSearchNotifier!.addListener(_consumePendingSearch);
+    }
     _sheetController.addListener(_onSheetSizeChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _dispatchSearch();
+      // Si l'utilisateur arrive depuis Envoyer avec des params en attente,
+      // les appliquer au lieu de la recherche par défaut.
+      if (_pendingSearchNotifier?.params != null) {
+        _consumePendingSearch();
+      } else {
+        _dispatchSearch();
+      }
       _loadPopularCorridors();
     });
+  }
+
+  void _consumePendingSearch() {
+    if (!mounted) return;
+    final pending = _pendingSearchNotifier?.consume();
+    if (pending == null) return;
+    _applySearchParams(pending);
   }
 
   Future<void> _loadPopularCorridors() async {
@@ -223,6 +243,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   @override
   void dispose() {
+    _pendingSearchNotifier?.removeListener(_consumePendingSearch);
     _sheetController.removeListener(_onSheetSizeChanged);
     _sheetController.dispose();
     super.dispose();
@@ -393,7 +414,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
     );
 
     if (result == null || !mounted) return;
+    _applySearchParams(result);
+  }
 
+  void _applySearchParams(SearchParams result) {
+    if (!mounted) return;
     final dep = result.departureCity;
     final arr = result.arrivalCity;
     final matchedCorridor = _corridorOptions.firstWhere(

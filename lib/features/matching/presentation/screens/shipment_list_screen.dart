@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
@@ -1293,7 +1294,8 @@ class _EmptyView extends StatelessWidget {
               onTap: () async {
                 final params = await SearchFormBottomSheet.show(context);
                 if (params != null && context.mounted) {
-                  context.push('/search', extra: params);
+                  getIt<PendingSearchNotifier>().setPending(params);
+                  context.go('/home');
                 }
               },
               child: Container(
