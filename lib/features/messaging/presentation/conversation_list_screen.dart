@@ -29,7 +29,7 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: DonyColors.bgApp,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: BlocBuilder<ConversationListBloc, ConversationListState>(
         builder: (context, state) {
           if (state is ConversationListLoading || state is ConversationListInitial) {

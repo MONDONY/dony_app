@@ -47,6 +47,7 @@ class _RatingScreenState extends State<RatingScreen> {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
 
     return BlocConsumer<RatingBloc, RatingState>(
       listener: (context, state) {
@@ -69,9 +70,9 @@ class _RatingScreenState extends State<RatingScreen> {
         final isLoading = state is RatingLoading;
 
         return Scaffold(
-          backgroundColor: DonyColors.bg,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: AppBar(
-            backgroundColor: DonyColors.bg,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             elevation: 0,
             scrolledUnderElevation: 0,
             automaticallyImplyLeading: false,
@@ -81,16 +82,15 @@ class _RatingScreenState extends State<RatingScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.arrow_back_ios_rounded,
                     size: 16,
-                    color: DonyColors.ink900,
+                    color: cs.onSurface,
                   ),
                   const SizedBox(width: DonySpacing.xs),
                   Text(
                     'Retour',
-                    style:
-                        tt.bodyMedium?.copyWith(color: DonyColors.ink900),
+                    style: tt.bodyMedium?.copyWith(color: cs.onSurface),
                   ),
                 ],
               ),
@@ -111,14 +111,14 @@ class _RatingScreenState extends State<RatingScreen> {
                       'Évaluer le voyageur',
                       style: DonyTypography.caveat(
                         fontSize: 28,
-                        color: DonyColors.ink900,
+                        color: cs.onSurface,
                       ),
                     ),
                     const SizedBox(height: DonySpacing.xs),
                     Text(
                       'Comment s\'est passée votre expérience avec ${widget.travelerName} ?',
                       style: tt.bodyMedium
-                          ?.copyWith(color: DonyColors.neutral400),
+                          ?.copyWith(color: cs.onSurfaceVariant),
                     ),
                     const SizedBox(height: DonySpacing.xl),
 
@@ -133,7 +133,7 @@ class _RatingScreenState extends State<RatingScreen> {
                         child: Text(
                           _starLabel(_stars),
                           style: tt.labelLarge?.copyWith(
-                            color: DonyColors.primary,
+                            color: cs.primary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -151,26 +151,26 @@ class _RatingScreenState extends State<RatingScreen> {
                         labelText: 'Commentaire (facultatif)',
                         hintText: 'Partagez votre expérience…',
                         hintStyle: tt.bodyMedium
-                            ?.copyWith(color: DonyColors.neutral400),
+                            ?.copyWith(color: cs.onSurfaceVariant),
                         filled: true,
-                        fillColor: DonyColors.white,
+                        fillColor: cs.surface,
                         border: OutlineInputBorder(
                           borderRadius:
                               BorderRadius.circular(DonyRadius.card),
                           borderSide:
-                              const BorderSide(color: DonyColors.neutral200),
+                              BorderSide(color: cs.outline),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius:
                               BorderRadius.circular(DonyRadius.card),
                           borderSide:
-                              const BorderSide(color: DonyColors.neutral200),
+                              BorderSide(color: cs.outline),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius:
                               BorderRadius.circular(DonyRadius.card),
-                          borderSide: const BorderSide(
-                              color: DonyColors.primary, width: 2),
+                          borderSide: BorderSide(
+                              color: cs.primary, width: 2),
                         ),
                       ),
                     ),
@@ -227,11 +227,15 @@ class _StarSelector extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 180),
-                child: Icon(
-                  filled ? Icons.star_rounded : Icons.star_outline_rounded,
-                  key: ValueKey(filled),
-                  size: 44,
-                  color: filled ? const Color(0xFFF59E0B) : DonyColors.neutral200,
+                child: Builder(
+                  builder: (context) => Icon(
+                    filled ? Icons.star_rounded : Icons.star_outline_rounded,
+                    key: ValueKey(filled),
+                    size: 44,
+                    color: filled
+                        ? const Color(0xFFF59E0B)
+                        : Theme.of(context).colorScheme.outlineVariant,
+                  ),
                 ),
               ),
             ),

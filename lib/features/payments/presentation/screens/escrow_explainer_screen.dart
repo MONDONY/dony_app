@@ -20,9 +20,10 @@ class EscrowExplainerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: DonyColors.bgApp,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: const DonyAppBar(title: 'Garde de confiance'),
       body: Builder(builder: (context) {
         final h = DonyLayout.hPadding(context);
@@ -42,7 +43,7 @@ class EscrowExplainerScreen extends StatelessWidget {
                 Text(
                   'COMMENT ÇA MARCHE',
                   style: tt.labelMedium?.copyWith(
-                    color: DonyColors.neutral400,
+                    color: cs.onSurfaceVariant,
                     letterSpacing: 0.8,
                   ),
                 ),
@@ -96,7 +97,7 @@ class _AmountCard extends StatelessWidget {
           Text(
             'BLOQUÉS EN ESCROW',
             style: tt.labelMedium?.copyWith(
-              color: DonyColors.neutral400,
+              color: cs.onSurfaceVariant,
               letterSpacing: 0.8,
             ),
           ),
@@ -113,7 +114,7 @@ class _AmountCard extends StatelessWidget {
           const SizedBox(height: DonySpacing.xs),
           Text(
             'Pour $travelerName · libérés à la remise',
-            style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
       ),
@@ -170,10 +171,12 @@ class _HowItWorksCard extends StatelessWidget {
             if (i < steps.length - 1)
               Padding(
                 padding: const EdgeInsets.only(left: DonySpacing.xl + DonySpacing.xs),
-                child: Container(
-                  width: 2,
-                  height: DonySpacing.base,
-                  color: DonyColors.borderDefault,
+                child: Builder(
+                  builder: (context) => Container(
+                    width: 2,
+                    height: DonySpacing.base,
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
                 ),
               ),
           ],
@@ -217,7 +220,7 @@ class _StepRow extends StatelessWidget {
             icon: Icons.check_rounded,
             size: DonyIconContainerSize.md,
             backgroundColor: cs.primary,
-            iconColor: DonyColors.surface,
+            iconColor: cs.surface,
             borderRadius: DonyRadius.full,
           )
         else
@@ -226,12 +229,12 @@ class _StepRow extends StatelessWidget {
             height: DonySpacing.icon,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: DonyColors.neutral400, width: 2),
+              border: Border.all(color: cs.onSurfaceVariant, width: 2),
             ),
             child: Center(
               child: Text(
                 '${step.stepNumber}',
-                style: tt.labelMedium?.copyWith(color: DonyColors.neutral400),
+                style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
           ),
@@ -245,7 +248,7 @@ class _StepRow extends StatelessWidget {
               const SizedBox(height: DonySpacing.xxs),
               Text(
                 step.description,
-                style: tt.bodySmall?.copyWith(color: DonyColors.neutral400),
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ],
           ),
@@ -263,23 +266,24 @@ class _InsuranceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
 
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
-        color: DonyColors.primarySoft,
+        color: cs.primaryContainer,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.primary),
+        border: Border.all(color: cs.primary),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.shield_outlined, color: DonyColors.primary, size: DonySpacing.iconSm),
+          Icon(Icons.shield_outlined, color: cs.primary, size: DonySpacing.iconSm),
           const SizedBox(width: DonySpacing.sm),
           Expanded(
             child: Text.rich(
               TextSpan(
-                style: tt.bodySmall?.copyWith(color: DonyColors.textPrimary),
+                style: tt.bodySmall?.copyWith(color: cs.onSurface),
                 children: const [
                   TextSpan(text: "Si le colis n'arrive pas, on vous rembourse "),
                   TextSpan(

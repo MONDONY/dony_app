@@ -41,7 +41,7 @@ class EscrowExplainerBottomSheet extends StatelessWidget {
         Text(
           fmt.format(amount),
           style: tt.displaySmall?.copyWith(
-            color: DonyColors.primary,
+            color: cs.primary,
             fontWeight: FontWeight.w800,
           ),
           textAlign: TextAlign.center,
@@ -49,7 +49,7 @@ class EscrowExplainerBottomSheet extends StatelessWidget {
         const SizedBox(height: DonySpacing.xs),
         Text(
           "Retenu jusqu'à la livraison",
-          style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: DonySpacing.xl),
@@ -97,7 +97,7 @@ class _InfoTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: DonyColors.primary),
+          Icon(icon, size: 16, color: cs.primary),
           const SizedBox(width: DonySpacing.sm),
           Expanded(child: Text(text, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant))),
         ],

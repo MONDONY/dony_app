@@ -81,7 +81,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               );
             },
-            style: TextButton.styleFrom(foregroundColor: DonyColors.error),
+            style: TextButton.styleFrom(foregroundColor: Theme.of(ctx).colorScheme.error),
             child: const Text('Supprimer'),
           ),
         ],
@@ -171,7 +171,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: DonyColors.bgApp,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: cs.surface,
         elevation: 0,
@@ -510,12 +510,12 @@ class _BidStatusBanner extends StatelessWidget {
       'BID_ACCEPTED' => (
           Icons.check_circle_rounded,
           'Offre acceptée',
-          DonyColors.success,
+          cs.success,
         ),
       'DELIVERY_CONFIRMED' => (
           Icons.local_shipping_rounded,
           'Livraison confirmée',
-          DonyColors.success,
+          cs.success,
         ),
       'TRIP_CANCELLED' => (
           Icons.cancel_rounded,
@@ -759,17 +759,24 @@ class _ImageContent extends StatelessWidget {
         width: 220,
         height: 180,
         fit: BoxFit.cover,
-        placeholder: (_, __) => Container(
-          width: 220,
-          height: 180,
-          color: DonyColors.neutral100,
-          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        placeholder: (_, __) => Builder(
+          builder: (context) => Container(
+            width: 220,
+            height: 180,
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          ),
         ),
-        errorWidget: (_, __, ___) => Container(
-          width: 220,
-          height: 180,
-          color: DonyColors.neutral100,
-          child: Icon(Icons.broken_image_outlined, color: DonyColors.textSubtle),
+        errorWidget: (_, __, ___) => Builder(
+          builder: (context) {
+            final cs = Theme.of(context).colorScheme;
+            return Container(
+              width: 220,
+              height: 180,
+              color: cs.surfaceContainerHighest,
+              child: Icon(Icons.broken_image_outlined, color: cs.onSurfaceVariant),
+            );
+          },
         ),
       ),
     );
@@ -960,7 +967,7 @@ class _InputBar extends StatelessWidget {
               child: Container(
                 constraints: const BoxConstraints(maxHeight: 120),
                 decoration: BoxDecoration(
-                  color: DonyColors.bgApp,
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   borderRadius: BorderRadius.circular(DonyRadius.xl),
                   border: Border.all(color: cs.outlineVariant),
                 ),
