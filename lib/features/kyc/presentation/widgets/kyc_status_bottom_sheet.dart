@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
@@ -23,6 +24,10 @@ class KycStatusBottomSheet extends StatefulWidget {
 
   static Future<void> show(BuildContext context) {
     final authBloc = context.read<AuthBloc>();
+    final authState = authBloc.state;
+    final initialKycStatus = authState is AuthAuthenticated
+        ? authState.user.kycStatus
+        : null;
     final stickyBtnNotifier = ValueNotifier<_StickyBtnConfig?>(null);
     return DonyBottomSheet.show(
       context,
@@ -44,6 +49,7 @@ class KycStatusBottomSheet extends StatefulWidget {
       ),
       child: _KycStatusContent(
         authBloc: authBloc,
+        initialKycStatus: initialKycStatus,
         stickyBtnNotifier: stickyBtnNotifier,
       ),
     ).whenComplete(stickyBtnNotifier.dispose);
@@ -63,10 +69,14 @@ class _KycStatusBottomSheetState extends State<KycStatusBottomSheet> {
 class _KycStatusContent extends StatefulWidget {
   const _KycStatusContent({
     required this.authBloc,
+    this.initialKycStatus,
     this.stickyBtnNotifier,
   });
 
   final AuthBloc authBloc;
+  /// Optimistic initial KYC status from AuthBloc — avoids showing an
+  /// indeterminate spinner on first open while KycBloc loads fresh data.
+  final String? initialKycStatus;
   final ValueNotifier<_StickyBtnConfig?>? stickyBtnNotifier;
 
   @override
@@ -201,25 +211,36 @@ class _KycStatusContentState extends State<_KycStatusContent> {
         }
       },
       builder: (context, state) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) _updateStickyBtn(state);
-        });
         final h = DonyLayout.hPadding(context);
+        // When the BLoC hasn't loaded yet, use the optimistic status from
+        // AuthBloc so we never show an indeterminate spinner on first open.
+        final effectiveState = (state is KycInitial || state is KycLoading) &&
+                widget.initialKycStatus != null
+            ? KycStatusLoaded(
+                kycStatus: widget.initialKycStatus!,
+                // verificationStatus is not used by the UI — we use kycStatus
+                // as a placeholder since AuthBloc doesn't expose it.
+                verificationStatus: widget.initialKycStatus!,
+              )
+            : state;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _updateStickyBtn(effectiveState);
+        });
         return Padding(
           padding: EdgeInsets.symmetric(horizontal: h),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (state is KycLoading || state is KycInitial)
+              if (effectiveState is KycLoading || effectiveState is KycInitial)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: DonySpacing.huge),
                   child: CircularProgressIndicator(color: cs.primary),
                 )
-              else if (state is KycStatusLoaded)
-                _buildStatusContent(context, cs, tt, state)
-              else if (state is KycError)
-                _buildErrorContent(cs, tt, state.message),
+              else if (effectiveState is KycStatusLoaded)
+                _buildStatusContent(context, cs, tt, effectiveState)
+              else if (effectiveState is KycError)
+                _buildErrorContent(cs, tt, effectiveState.message),
             ],
           ).animate().fadeIn(duration: 300.ms),
         );
