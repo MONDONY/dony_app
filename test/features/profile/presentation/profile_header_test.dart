@@ -12,6 +12,7 @@ Widget _buildHeader({
   int totalTrips = 0,
   int totalShipments = 0,
   bool isLoadingStats = false,
+  bool isProAccount = false,
   VoidCallback? onNotificationTap,
   ValueChanged<ActiveRole>? onRoleSwitch,
 }) {
@@ -24,6 +25,7 @@ Widget _buildHeader({
         isTraveler: isTraveler,
         isSender: isSender,
         isKycVerified: isKycVerified,
+        isProAccount: isProAccount,
         totalTrips: totalTrips,
         totalShipments: totalShipments,
         isLoadingStats: isLoadingStats,
