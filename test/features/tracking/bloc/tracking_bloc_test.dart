@@ -165,7 +165,7 @@ void main() {
       build: buildBloc,
       setUp: () {
         when(() => mockRepo.getEvents(any()))
-            .thenThrow(const ForbiddenException());
+            .thenThrow(ForbiddenException());
       },
       act: (b) => b.add(TrackingEventsRequested('bid-no-access')),
       expect: () => [

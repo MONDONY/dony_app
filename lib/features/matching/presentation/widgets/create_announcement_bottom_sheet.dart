@@ -380,10 +380,25 @@ class _CreateAnnouncementContentState
     final cs = Theme.of(context).colorScheme;
 
     return BlocConsumer<AnnouncementBloc, AnnouncementState>(
-      listener: (context, state) {
+      listener: (context, state) async {
         if (state is AnnouncementCreated || state is AnnouncementUpdated) {
           Navigator.of(context, rootNavigator: true).pop();
           if (context.mounted) context.go('/announcements');
+        } else if (state is AnnouncementProLimitReached) {
+          Navigator.of(context, rootNavigator: true).pop();
+          if (context.mounted) {
+            final confirmed = await DonyDialog.show(
+              context,
+              title: 'Limite mensuelle atteinte',
+              message: state.message,
+              confirmLabel: 'Passer en PRO',
+              cancelLabel: 'Plus tard',
+              variant: DonyDialogVariant.info,
+            );
+            if (confirmed == true && context.mounted) {
+              context.push('/profile/upgrade-to-pro');
+            }
+          }
         } else if (state is AnnouncementError) {
           DonySnackbar.show(
             context,

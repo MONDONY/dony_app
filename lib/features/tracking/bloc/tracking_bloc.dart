@@ -17,6 +17,7 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
     on<TrackingSearchRequested>(_onSearchRequested);
     on<TrackingEventsRequested>(_onEventsRequested);
     on<TrackingConfirmCodeRequested>(_onConfirmCodeRequested);
+    on<TrackingRefreshCodeRequested>(_onRefreshCodeRequested);
     on<QrScanSubmitRequested>(_onScanSubmit);
     on<ConfirmDeliveryRequested>(_onConfirmDelivery);
     on<OfflineSyncRequested>(_onOfflineSync);
@@ -78,10 +79,24 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
   ) async {
     emit(TrackingConfirmCodeLoading());
     try {
-      final code = await _repository.getConfirmationCode(event.bidId);
-      emit(TrackingConfirmCodeLoaded(code));
+      final result = await _repository.getConfirmationCode(event.bidId);
+      emit(TrackingConfirmCodeLoaded(result.code, expiresAt: result.expiresAt));
     } catch (e) {
       emit(TrackingConfirmCodeError());
+    }
+  }
+
+  Future<void> _onRefreshCodeRequested(
+    TrackingRefreshCodeRequested event,
+    Emitter<TrackingState> emit,
+  ) async {
+    emit(TrackingRefreshCodeLoading());
+    try {
+      final result = await _repository.refreshCode(event.bidId);
+      emit(TrackingConfirmCodeLoaded(result.code, expiresAt: result.expiresAt));
+    } catch (e) {
+      if (kDebugMode) debugPrint('[TrackingBloc] refreshCode error: $e');
+      emit(TrackingRefreshCodeError('Impossible de régénérer le code. Réessayez.'));
     }
   }
 

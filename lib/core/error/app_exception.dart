@@ -40,8 +40,8 @@ class UnauthorizedException extends AppException {
 }
 
 class ForbiddenException extends AppException {
-  const ForbiddenException([super.message = 'Forbidden'])
-      : super(code: 'FORBIDDEN');
+  ForbiddenException([String message = 'Forbidden', String? apiCode])
+      : super(message, code: apiCode ?? 'FORBIDDEN');
 }
 
 class NotFoundException extends AppException {

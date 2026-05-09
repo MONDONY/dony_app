@@ -8,6 +8,8 @@ import 'package:dony/features/config/data/config_repository.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/data/connect_onboarding_datasource.dart';
 import 'package:dony/features/connect_onboarding/data/connect_onboarding_repository.dart';
+import 'package:dony/features/profile/bloc/pro_stats_bloc.dart';
+import 'package:dony/features/profile/data/pro_stats_repository.dart';
 import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/data/account_deletion_repository.dart';
@@ -203,9 +205,15 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => ConnectOnboardingBloc(getIt<IConnectOnboardingRepository>()),
   );
 
-  // Profile (upgrade PRO)
+  // Profile (upgrade PRO + statistiques PRO)
   getIt.registerLazySingleton<ProfileRepository>(
     () => ProfileRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<ProStatsRepository>(
+    () => ProStatsRepository(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<ProStatsBloc>(
+    () => ProStatsBloc(getIt<ProStatsRepository>()),
   );
 
   // Settings — Account Deletion

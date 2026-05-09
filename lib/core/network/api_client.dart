@@ -105,13 +105,15 @@ class _AuthInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     final statusCode = err.response?.statusCode;
-    final detail = err.response?.data?['detail'] as String?;
+    final data = err.response?.data;
+    final detail = data?['detail'] as String?;
+    final errorCode = data?['errorCode'] as String?;
 
     final AppException appException;
     if (statusCode == 401) {
       appException = UnauthorizedException(detail ?? 'Session expirée');
     } else if (statusCode == 403) {
-      appException = ForbiddenException(detail ?? 'Accès refusé');
+      appException = ForbiddenException(detail ?? 'Accès refusé', errorCode);
     } else if (statusCode == 404) {
       appException = NotFoundException(message: detail ?? 'Ressource introuvable');
     } else if (statusCode == 422) {

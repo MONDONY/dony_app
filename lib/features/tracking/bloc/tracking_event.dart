@@ -44,4 +44,9 @@ class ConfirmDeliveryRequested extends TrackingEvent {
   ConfirmDeliveryRequested({required this.bidId, required this.code});
 }
 
+class TrackingRefreshCodeRequested extends TrackingEvent {
+  final String bidId;
+  TrackingRefreshCodeRequested(this.bidId);
+}
+
 class OfflineSyncRequested extends TrackingEvent {}
