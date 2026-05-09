@@ -165,44 +165,56 @@ class _TravelerProfileSheet extends StatelessWidget {
                 const SizedBox(height: DonySpacing.xl),
 
                 // ── Stats ──────────────────────────────────────────────────
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: DonySpacing.base,
-                  ),
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    borderRadius: BorderRadius.circular(DonyRadius.card),
-                    border: Border.all(color: cs.outline),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _SheetStat(
-                        value: traveler.averageRating != null
-                            ? traveler.averageRating!.toStringAsFixed(1)
-                            : '–',
-                        label: 'Note',
-                        icon: Icons.star_rounded,
-                        iconColor: cs.warning,
+                BlocBuilder<RatingBloc, RatingState>(
+                  buildWhen: (p, c) =>
+                      c is UserRatingsLoaded || c is RatingInitial,
+                  builder: (context, state) {
+                    final loaded =
+                        state is UserRatingsLoaded ? state : null;
+                    final noteValue = traveler.averageRating != null
+                        ? traveler.averageRating!.toStringAsFixed(1)
+                        : loaded != null && loaded.ratingCount > 0
+                            ? loaded.averageRating.toStringAsFixed(1)
+                            : '–';
+                    final tripsValue = traveler.totalTrips != null
+                        ? '${traveler.totalTrips}'
+                        : '–';
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: DonySpacing.base,
                       ),
-                      Container(width: 1, height: 36, color: cs.outline),
-                      _SheetStat(
-                        value: traveler.totalTrips != null
-                            ? '${traveler.totalTrips}'
-                            : '–',
-                        label: 'Trajets',
-                        icon: Icons.flight_takeoff_rounded,
-                        iconColor: cs.primary,
+                      decoration: BoxDecoration(
+                        color: cs.surface,
+                        borderRadius: BorderRadius.circular(DonyRadius.card),
+                        border: Border.all(color: cs.outline),
                       ),
-                      Container(width: 1, height: 36, color: cs.outline),
-                      _SheetStat(
-                        value: '–',
-                        label: 'Livraison',
-                        icon: Icons.check_circle_outline_rounded,
-                        iconColor: cs.success,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _SheetStat(
+                            value: noteValue,
+                            label: 'Note',
+                            icon: Icons.star_rounded,
+                            iconColor: cs.warning,
+                          ),
+                          Container(width: 1, height: 36, color: cs.outline),
+                          _SheetStat(
+                            value: tripsValue,
+                            label: 'Trajets',
+                            icon: Icons.flight_takeoff_rounded,
+                            iconColor: cs.primary,
+                          ),
+                          Container(width: 1, height: 36, color: cs.outline),
+                          _SheetStat(
+                            value: '–',
+                            label: 'Livraison',
+                            icon: Icons.check_circle_outline_rounded,
+                            iconColor: cs.success,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
                 const SizedBox(height: DonySpacing.xl),
 

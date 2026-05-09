@@ -32,6 +32,7 @@ import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen
 import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/presentation/settings_screen.dart';
+import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/presentation/screens/offline_scan_queue_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/qr_scanner_screen.dart';
@@ -149,8 +150,11 @@ final appRouter = GoRouter(
     // ── Routes plein écran (hors shell) ─────────────────────────────────
     GoRoute(
       path: '/tracking/scan',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<TrackingBloc>(),
+      builder: (context, state) => MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => getIt<TrackingBloc>()),
+          BlocProvider(create: (_) => getIt<RatingBloc>()),
+        ],
         child: const QrScannerScreen(),
       ),
     ),

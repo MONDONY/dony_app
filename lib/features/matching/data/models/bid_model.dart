@@ -10,6 +10,9 @@ class BidModel {
   final String? senderName;
   final String? senderPhone;
   final int? senderTotalShipments;
+  final bool senderKycVerified;
+  final bool senderIsProAccount;
+  final bool senderKiloPro;
   final double weightKg;
   final double declaredValueEur;
   final String description;
@@ -37,6 +40,15 @@ class BidModel {
   final String? travelerId;
   final String? travelerName;
   final String? travelerPhone;
+  final bool travelerKycVerified;
+  final bool travelerIsProAccount;
+  final bool travelerKiloPro;
+  final int? travelerTotalTrips;
+  final double? travelerAverageRating;
+  final bool senderHasRated;
+  final bool travelerHasRated;
+  final int confirmationCodeRefreshCount;
+  final DateTime? confirmationCodeRefreshWindowStart;
 
   const BidModel({
     required this.id,
@@ -45,6 +57,9 @@ class BidModel {
     this.senderName,
     this.senderPhone,
     this.senderTotalShipments,
+    this.senderKycVerified = false,
+    this.senderIsProAccount = false,
+    this.senderKiloPro = false,
     required this.weightKg,
     required this.declaredValueEur,
     required this.description,
@@ -72,6 +87,15 @@ class BidModel {
     this.travelerId,
     this.travelerName,
     this.travelerPhone,
+    this.travelerKycVerified = false,
+    this.travelerIsProAccount = false,
+    this.travelerKiloPro = false,
+    this.travelerTotalTrips,
+    this.travelerAverageRating,
+    this.senderHasRated = false,
+    this.travelerHasRated = false,
+    this.confirmationCodeRefreshCount = 0,
+    this.confirmationCodeRefreshWindowStart,
   });
 
   factory BidModel.fromJson(Map<String, dynamic> json) =>
