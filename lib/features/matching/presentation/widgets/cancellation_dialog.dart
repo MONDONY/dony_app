@@ -94,7 +94,7 @@ class _CancellationDialogState extends State<CancellationDialog> {
             if (!widget.isInTransit) ...[
               Text(
                 "L'expéditeur sera remboursé automatiquement.",
-                style: tt.bodyMedium?.copyWith(color: DonyColors.textMuted),
+                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               ),
               const SizedBox(height: DonySpacing.base),
             ],
@@ -104,10 +104,10 @@ class _CancellationDialogState extends State<CancellationDialog> {
               Container(
                 padding: const EdgeInsets.all(DonySpacing.md),
                 decoration: BoxDecoration(
-                  color: DonyColors.error.withValues(alpha: 0.1),
+                  color: cs.error.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(DonyRadius.md),
                   border: Border.all(
-                    color: DonyColors.error.withValues(alpha: 0.35),
+                    color: cs.error.withValues(alpha: 0.35),
                   ),
                 ),
                 child: Row(
@@ -149,7 +149,7 @@ class _CancellationDialogState extends State<CancellationDialog> {
                     ? 'Motif de l\'annulation *'
                     : 'Motif (optionnel)',
                 hintStyle: tt.bodySmall?.copyWith(
-                  color: DonyColors.neutral400,
+                  color: cs.onSurfaceVariant,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(DonyRadius.md),

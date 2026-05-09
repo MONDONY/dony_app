@@ -75,9 +75,9 @@ class RouteBottomSheet extends StatelessWidget {
       maxChildSize: 0.92,
       expand: false,
       builder: (ctx, scrollCtrl) => Container(
-        decoration: const BoxDecoration(
-          color: DonyColors.surface,
-          borderRadius: BorderRadius.vertical(
+        decoration: BoxDecoration(
+          color: Theme.of(ctx).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(
             top: Radius.circular(DonyRadius.sheet),
           ),
         ),
