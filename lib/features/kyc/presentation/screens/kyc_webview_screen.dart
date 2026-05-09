@@ -83,7 +83,7 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
           IconButton(
             tooltip: 'Fermer',
             icon: Icon(Icons.close, color: cs.onSurface),
-            onPressed: () => context.go('/kyc'),
+            onPressed: () => context.go('/kyc/status'),
           ),
         ],
       ),
