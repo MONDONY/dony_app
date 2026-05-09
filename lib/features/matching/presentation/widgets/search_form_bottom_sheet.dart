@@ -50,6 +50,7 @@ class SearchFormBottomSheet {
       stickyBottom: ValueListenableBuilder<int>(
         valueListenable: filterCount,
         builder: (ctx, count, _) {
+          final cs = Theme.of(ctx).colorScheme;
           return Row(
             children: [
               if (count > 0) ...[
@@ -60,15 +61,15 @@ class SearchFormBottomSheet {
                     child: Container(
                       height: 52,
                       decoration: BoxDecoration(
-                        color: DonyColors.bgApp,
+                        color: Theme.of(ctx).scaffoldBackgroundColor,
                         borderRadius: BorderRadius.circular(DonyRadius.lg),
-                        border: Border.all(color: DonyColors.neutral200),
+                        border: Border.all(color: cs.outline),
                       ),
                       child: Center(
                         child: Text(
                           'Réinitialiser',
                           style: Theme.of(ctx).textTheme.labelLarge?.copyWith(
-                            color: DonyColors.ink900,
+                            color: cs.onSurface,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -256,6 +257,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return ListenableBuilder(
       listenable: Listenable.merge([
         _departureCityNotifier,
@@ -284,8 +286,8 @@ class _SearchFormContentState extends State<_SearchFormContent> {
                   child: CityAutocompleteField(
                     label: 'Ville de départ',
                     initialValue: _departureCityNotifier.value,
-                    prefixIcon: const Icon(Icons.flight_takeoff_rounded,
-                        color: DonyColors.primary, size: 20),
+                    prefixIcon: Icon(Icons.flight_takeoff_rounded,
+                        color: cs.primary, size: 20),
                     onSelected: (CityModel city) {
                       _departureCityNotifier.value = city.name;
                     },
@@ -353,7 +355,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
             // ── Filtres rapides ──────────────────────────────────────────
             Text(
               'FILTRES RAPIDES',
-              style: tt.labelMedium?.copyWith(color: DonyColors.neutral400),
+              style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.md),
             Wrap(
@@ -391,7 +393,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
             // ── Type de contenu ──────────────────────────────────────────
             Text(
               'MON COLIS CONTIENT',
-              style: tt.labelMedium?.copyWith(color: DonyColors.neutral400),
+              style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.md),
             Wrap(
@@ -414,12 +416,12 @@ class _SearchFormContentState extends State<_SearchFormContent> {
             // ── Urgence du départ ────────────────────────────────────────
             Text(
               'URGENCE DU DÉPART',
-              style: tt.labelMedium?.copyWith(color: DonyColors.neutral400),
+              style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.xs),
             Text(
               'Filtrer les trajets selon leur proximité de départ',
-              style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.md),
             Wrap(
@@ -440,10 +442,10 @@ class _SearchFormContentState extends State<_SearchFormContent> {
                     decoration: BoxDecoration(
                       color: isSelected
                           ? f.color.withValues(alpha: 0.12)
-                          : DonyColors.bgApp,
+                          : Theme.of(context).scaffoldBackgroundColor,
                       borderRadius: BorderRadius.circular(DonyRadius.full),
                       border: Border.all(
-                        color: isSelected ? f.color : DonyColors.neutral200,
+                        color: isSelected ? f.color : cs.outline,
                         width: isSelected ? 1.5 : 1.0,
                       ),
                     ),
@@ -465,7 +467,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
                         Text(
                           f.label,
                           style: tt.labelSmall?.copyWith(
-                            color: isSelected ? f.color : DonyColors.ink900,
+                            color: isSelected ? f.color : cs.onSurface,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -484,6 +486,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
 
   Future<void> _showPricePicker(BuildContext context) async {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     const double kMin = 3;
     const double kMax = 25;
     double local = _priceFilterNotifier.value ? _maxPricePerKgNotifier.value : kMax;
@@ -504,17 +507,17 @@ class _SearchFormContentState extends State<_SearchFormContent> {
                   localEnabled ? '≤ ${local.toInt()} €/kg' : 'Tous les prix',
                   style: tt.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: localEnabled ? DonyColors.primary : DonyColors.textMuted,
+                    color: localEnabled ? cs.primary : cs.onSurfaceVariant,
                   ),
                 ),
               ),
               const SizedBox(height: DonySpacing.sm),
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
-                  activeTrackColor: DonyColors.primary,
-                  thumbColor: DonyColors.primary,
-                  overlayColor: DonyColors.primarySoft,
-                  inactiveTrackColor: DonyColors.neutral200,
+                  activeTrackColor: cs.primary,
+                  thumbColor: cs.primary,
+                  overlayColor: cs.primaryContainer,
+                  inactiveTrackColor: cs.outline,
                 ),
                 child: Slider(
                   value: local,
@@ -532,8 +535,8 @@ class _SearchFormContentState extends State<_SearchFormContent> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('3 €/kg', style: tt.bodySmall?.copyWith(color: DonyColors.textMuted)),
-                    Text('25 €/kg', style: tt.bodySmall?.copyWith(color: DonyColors.textMuted)),
+                    Text('3 €/kg', style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                    Text('25 €/kg', style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
                   ],
                 ),
               ),
@@ -563,6 +566,7 @@ class _SearchFormContentState extends State<_SearchFormContent> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setS) {
           final tt = Theme.of(ctx).textTheme;
+          final cs = Theme.of(ctx).colorScheme;
           return _SimpleSheet(
             title: 'Mode de transport',
             child: Column(
@@ -580,30 +584,30 @@ class _SearchFormContentState extends State<_SearchFormContent> {
                         vertical: DonySpacing.md,
                       ),
                       decoration: BoxDecoration(
-                        color: selected ? DonyColors.primarySoft : DonyColors.bgApp,
+                        color: selected ? cs.primaryContainer : Theme.of(ctx).scaffoldBackgroundColor,
                         borderRadius: BorderRadius.circular(DonyRadius.card),
                         border: Border.all(
-                          color: selected ? DonyColors.primary : DonyColors.neutral200,
+                          color: selected ? cs.primary : cs.outline,
                         ),
                       ),
                       child: Row(
                         children: [
                           Icon(mode.icon,
                               size: 18,
-                              color: selected ? DonyColors.primary : DonyColors.textMuted),
+                              color: selected ? cs.primary : cs.onSurfaceVariant),
                           const SizedBox(width: DonySpacing.md),
                           Expanded(
                             child: Text(
                               mode.label,
                               style: tt.bodyMedium?.copyWith(
-                                color: selected ? DonyColors.primary : DonyColors.ink900,
+                                color: selected ? cs.primary : cs.onSurface,
                                 fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                               ),
                             ),
                           ),
                           if (selected)
-                            const Icon(Icons.check_circle_rounded,
-                                size: 18, color: DonyColors.primary),
+                            Icon(Icons.check_circle_rounded,
+                                size: 18, color: cs.primary),
                         ],
                       ),
                     ),
@@ -637,11 +641,12 @@ class _SimpleSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     final bottomPad = MediaQuery.of(context).padding.bottom;
     return Container(
-      decoration: const BoxDecoration(
-        color: DonyColors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
       ),
       padding: EdgeInsets.fromLTRB(
         DonySpacing.lg, 0, DonySpacing.lg, bottomPad + DonySpacing.base,
@@ -656,7 +661,7 @@ class _SimpleSheet extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: DonyColors.neutral200,
+                color: cs.outline,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -679,30 +684,31 @@ class _PriceField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     final active = maxPrice != null;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.md),
         decoration: BoxDecoration(
-          color: active ? DonyColors.primarySoft : DonyColors.white,
+          color: active ? cs.primaryContainer : cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          border: Border.all(color: active ? DonyColors.primary : DonyColors.neutral200),
+          border: Border.all(color: active ? cs.primary : cs.outline),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('PRIX MAX', style: tt.labelSmall?.copyWith(color: DonyColors.neutral400)),
+            Text('PRIX MAX', style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
             const SizedBox(height: DonySpacing.xs),
             Row(
               children: [
                 Icon(Icons.euro_rounded,
-                    size: 14, color: active ? DonyColors.primary : DonyColors.primary),
+                    size: 14, color: cs.primary),
                 const SizedBox(width: DonySpacing.xs),
                 Text(
                   active ? '≤ ${maxPrice!.toInt()} €/kg' : 'Tous',
                   style: tt.titleSmall?.copyWith(
-                    color: active ? DonyColors.primary : DonyColors.neutral400,
+                    color: active ? cs.primary : cs.onSurfaceVariant,
                     fontWeight: active ? FontWeight.w700 : FontWeight.w400,
                   ),
                 ),
@@ -724,41 +730,42 @@ class _TransportModeField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     final active = mode != null;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.md),
         decoration: BoxDecoration(
-          color: active ? DonyColors.primarySoft : DonyColors.white,
+          color: active ? cs.primaryContainer : cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          border: Border.all(color: active ? DonyColors.primary : DonyColors.neutral200),
+          border: Border.all(color: active ? cs.primary : cs.outline),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('TRANSPORT', style: tt.labelSmall?.copyWith(color: DonyColors.neutral400)),
+            Text('TRANSPORT', style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
             const SizedBox(height: DonySpacing.xs),
             Row(
               children: [
                 Icon(
                   active ? mode!.icon : Icons.commute_rounded,
                   size: 14,
-                  color: active ? DonyColors.primary : DonyColors.neutral400,
+                  color: active ? cs.primary : cs.onSurfaceVariant,
                 ),
                 const SizedBox(width: DonySpacing.xs),
                 Expanded(
                   child: Text(
                     active ? mode!.label : 'Tous',
                     style: tt.titleSmall?.copyWith(
-                      color: active ? DonyColors.primary : DonyColors.neutral400,
+                      color: active ? cs.primary : cs.onSurfaceVariant,
                       fontWeight: active ? FontWeight.w700 : FontWeight.w400,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 Icon(Icons.chevron_right_rounded,
-                    size: 16, color: DonyColors.neutral400),
+                    size: 16, color: cs.onSurfaceVariant),
               ],
             ),
           ],
@@ -784,16 +791,17 @@ class _ContentTypeChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: 180.ms,
         padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.sm),
         decoration: BoxDecoration(
-          color: selected ? DonyColors.primarySoft : DonyColors.bgApp,
+          color: selected ? cs.primaryContainer : Theme.of(context).scaffoldBackgroundColor,
           borderRadius: BorderRadius.circular(DonyRadius.full),
           border: Border.all(
-            color: selected ? DonyColors.primary : DonyColors.neutral200,
+            color: selected ? cs.primary : cs.outline,
           ),
         ),
         child: Row(
@@ -801,12 +809,12 @@ class _ContentTypeChip extends StatelessWidget {
           children: [
             Icon(icon,
                 size: 14,
-                color: selected ? DonyColors.primary : DonyColors.textMuted),
+                color: selected ? cs.primary : cs.onSurfaceVariant),
             const SizedBox(width: DonySpacing.xs),
             Text(
               label,
               style: tt.labelMedium?.copyWith(
-                color: selected ? DonyColors.primary : DonyColors.ink900,
+                color: selected ? cs.primary : cs.onSurface,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
@@ -833,6 +841,7 @@ class _QuickChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: () => onChanged(!active),
       child: AnimatedContainer(
@@ -842,23 +851,23 @@ class _QuickChip extends StatelessWidget {
           vertical: DonySpacing.sm,
         ),
         decoration: BoxDecoration(
-          color: active ? DonyColors.primarySoft : DonyColors.white,
+          color: active ? cs.primaryContainer : cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.full),
           border: Border.all(
-            color: active ? DonyColors.primary : DonyColors.neutral200,
+            color: active ? cs.primary : cs.outline,
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 14, color: active ? DonyColors.primary : DonyColors.textMuted),
+              Icon(icon, size: 14, color: active ? cs.primary : cs.onSurfaceVariant),
               const SizedBox(width: DonySpacing.xs),
             ],
             Text(
               label,
               style: tt.labelMedium?.copyWith(
-                color: active ? DonyColors.primary : DonyColors.ink900,
+                color: active ? cs.primary : cs.onSurface,
                 fontWeight: active ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
@@ -880,6 +889,7 @@ class _DateField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: () async {
         final d = await showDatePicker(
@@ -889,7 +899,7 @@ class _DateField extends StatelessWidget {
           lastDate: DateTime.now().add(const Duration(days: 365)),
           builder: (c, child) => Theme(
             data: Theme.of(c).copyWith(
-              colorScheme: const ColorScheme.light(primary: DonyColors.primary),
+              colorScheme: ColorScheme.light(primary: cs.primary),
             ),
             child: child!,
           ),
@@ -899,24 +909,24 @@ class _DateField extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.md),
         decoration: BoxDecoration(
-          color: date != null ? DonyColors.primarySoft : DonyColors.white,
+          color: date != null ? cs.primaryContainer : cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          border: Border.all(color: date != null ? DonyColors.primary : DonyColors.neutral200),
+          border: Border.all(color: date != null ? cs.primary : cs.outline),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('DATE', style: tt.labelSmall?.copyWith(color: DonyColors.neutral400)),
+            Text('DATE', style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
             const SizedBox(height: DonySpacing.xs),
             Row(
               children: [
                 Icon(Icons.calendar_today_rounded,
-                    size: 14, color: DonyColors.primary),
+                    size: 14, color: cs.primary),
                 const SizedBox(width: DonySpacing.xs),
                 Text(
                   date != null ? DateFormat('d MMM', 'fr').format(date!) : 'Choisir',
                   style: tt.titleSmall?.copyWith(
-                    color: date != null ? DonyColors.primary : DonyColors.neutral400,
+                    color: date != null ? cs.primary : cs.onSurfaceVariant,
                     fontWeight: date != null ? FontWeight.w700 : FontWeight.w400,
                   ),
                 ),
@@ -940,30 +950,31 @@ class _WeightField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     final active = weightKg != 6;
     return GestureDetector(
       onTap: () => _showWeightPicker(context),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: DonySpacing.md),
         decoration: BoxDecoration(
-          color: active ? DonyColors.primarySoft : DonyColors.white,
+          color: active ? cs.primaryContainer : cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          border: Border.all(color: active ? DonyColors.primary : DonyColors.neutral200),
+          border: Border.all(color: active ? cs.primary : cs.outline),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('POIDS MIN', style: tt.labelSmall?.copyWith(color: DonyColors.neutral400)),
+            Text('POIDS MIN', style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
             const SizedBox(height: DonySpacing.xs),
             Row(
               children: [
                 Icon(Icons.scale_rounded,
-                    size: 14, color: active ? DonyColors.primary : DonyColors.primary),
+                    size: 14, color: cs.primary),
                 const SizedBox(width: DonySpacing.xs),
                 Text(
                   '${weightKg.toStringAsFixed(0)} kg',
                   style: tt.titleSmall?.copyWith(
-                    color: active ? DonyColors.primary : DonyColors.ink900,
+                    color: active ? cs.primary : cs.onSurface,
                     fontWeight: active ? FontWeight.w700 : FontWeight.w400,
                   ),
                 ),
@@ -977,6 +988,7 @@ class _WeightField extends StatelessWidget {
 
   void _showWeightPicker(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     double local = weightKg;
     showModalBottomSheet<void>(
       context: context,
@@ -994,22 +1006,22 @@ class _WeightField extends StatelessWidget {
                   children: [
                     Text(
                       local.toStringAsFixed(0),
-                      style: tt.displayLarge?.copyWith(color: DonyColors.primary),
+                      style: tt.displayLarge?.copyWith(color: cs.primary),
                     ),
                     const SizedBox(width: DonySpacing.sm),
                     Padding(
                       padding: const EdgeInsets.only(top: DonySpacing.md),
                       child: Text('kg',
-                          style: tt.headlineMedium?.copyWith(color: DonyColors.neutral400)),
+                          style: tt.headlineMedium?.copyWith(color: cs.onSurfaceVariant)),
                     ),
                   ],
                 ),
               ),
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
-                  activeTrackColor: DonyColors.primary,
-                  inactiveTrackColor: DonyColors.neutral200,
-                  thumbColor: DonyColors.primary,
+                  activeTrackColor: cs.primary,
+                  inactiveTrackColor: cs.outline,
+                  thumbColor: cs.primary,
                   trackHeight: 4,
                 ),
                 child: Slider(
