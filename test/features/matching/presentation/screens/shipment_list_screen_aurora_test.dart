@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -9,6 +12,7 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/services/saved_trips_service.dart';
 import 'package:dony/features/matching/presentation/screens/shipment_list_screen.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
@@ -30,7 +34,7 @@ class MockAuthBloc extends MockBloc<AuthEvent, AuthState>
 
 class MockSavedTripsService extends Mock implements SavedTripsService {}
 
-// ── Fixture ───────────────────────────────────────────────────────────────────
+// ── Fixtures ──────────────────────────────────────────────────────────────────
 
 const _testUser = UserModel(
   id: 'u-1',
@@ -40,6 +44,24 @@ const _testUser = UserModel(
   status: 'ACTIVE',
   stripeAccountStatus: 'NOT_CREATED',
 );
+
+BidModel _makeBid({
+  String id = 'bid-00000001',
+  String status = 'PENDING',
+}) =>
+    BidModel(
+      id: id,
+      announcementId: 'ann-00000001',
+      senderId: 'u-1',
+      weightKg: 5,
+      declaredValueEur: 100,
+      description: 'Vêtements pour la famille',
+      status: status,
+      createdAt: DateTime(2026, 1, 1),
+      updatedAt: DateTime(2026, 1, 1),
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+    );
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -76,7 +98,7 @@ Widget _buildScreen({
   return MaterialApp.router(routerConfig: router, theme: AppTheme.light);
 }
 
-Future<void> _pumpScreen(
+Future<void> _pump(
   WidgetTester tester, {
   required MockBidBloc bidBloc,
   required MockPaymentBloc paymentBloc,
@@ -99,7 +121,8 @@ void main() {
   late MockAuthBloc authBloc;
   late MockSavedTripsService savedService;
 
-  setUpAll(() {
+  setUpAll(() async {
+    await initializeDateFormatting('fr');
     registerFallbackValue(const BidMyListAutoRefreshRequested());
     registerFallbackValue(const AuthCheckRequested());
   });
@@ -118,9 +141,7 @@ void main() {
     if (getIt.isRegistered<EnvoisRefreshNotifier>()) {
       getIt.unregister<EnvoisRefreshNotifier>();
     }
-    getIt.registerLazySingleton<EnvoisRefreshNotifier>(
-      () => EnvoisRefreshNotifier(),
-    );
+    getIt.registerLazySingleton<EnvoisRefreshNotifier>(EnvoisRefreshNotifier.new);
 
     if (getIt.isRegistered<SavedTripsService>()) {
       getIt.unregister<SavedTripsService>();
@@ -137,72 +158,104 @@ void main() {
     }
   });
 
-  // ── Smoke test ────────────────────────────────────────────────────────────
+  // ── Smoke ─────────────────────────────────────────────────────────────────
 
-  testWidgets('ShipmentListScreen — rendu sans crash', (tester) async {
-    await _pumpScreen(
-      tester,
-      bidBloc: bidBloc,
-      paymentBloc: paymentBloc,
-      authBloc: authBloc,
-    );
-
+  testWidgets('rendu sans crash (BidListLoaded vide)', (tester) async {
+    await _pump(tester, bidBloc: bidBloc, paymentBloc: paymentBloc, authBloc: authBloc);
     expect(find.byType(ShipmentListScreen), findsOneWidget);
   });
 
   // ── Aurora background ─────────────────────────────────────────────────────
 
-  testWidgets('ShipmentListScreen — fond aurora : BackdropFilter présent', (tester) async {
-    await _pumpScreen(
-      tester,
-      bidBloc: bidBloc,
-      paymentBloc: paymentBloc,
-      authBloc: authBloc,
-    );
-
-    // Le fond Aurora et les composants glass utilisent BackdropFilter
+  testWidgets('fond aurora : BackdropFilter présent dans le widget tree', (tester) async {
+    await _pump(tester, bidBloc: bidBloc, paymentBloc: paymentBloc, authBloc: authBloc);
     expect(find.byType(BackdropFilter), findsWidgets);
   });
 
-  testWidgets('ShipmentListScreen — Scaffold transparent (fond aurora visible)', (tester) async {
-    await _pumpScreen(
-      tester,
-      bidBloc: bidBloc,
-      paymentBloc: paymentBloc,
-      authBloc: authBloc,
-    );
-
+  testWidgets('Scaffold transparent pour laisser transparaître le fond aurora', (tester) async {
+    await _pump(tester, bidBloc: bidBloc, paymentBloc: paymentBloc, authBloc: authBloc);
     final scaffold = tester.widget<Scaffold>(find.byType(Scaffold).first);
     expect(scaffold.backgroundColor, Colors.transparent);
   });
 
   // ── Onglets ───────────────────────────────────────────────────────────────
 
-  testWidgets('ShipmentListScreen — 3 onglets visibles', (tester) async {
-    await _pumpScreen(
-      tester,
-      bidBloc: bidBloc,
-      paymentBloc: paymentBloc,
-      authBloc: authBloc,
-    );
-
+  testWidgets('3 onglets visibles : En cours, À venir, Passés', (tester) async {
+    await _pump(tester, bidBloc: bidBloc, paymentBloc: paymentBloc, authBloc: authBloc);
     expect(find.text('En cours'), findsOneWidget);
     expect(find.text('À venir'), findsOneWidget);
     expect(find.text('Passés'), findsOneWidget);
   });
 
-  // ── Vue vide ──────────────────────────────────────────────────────────────
+  // ── État loading ──────────────────────────────────────────────────────────
 
-  testWidgets('ShipmentListScreen — vue vide affichée quand liste est vide', (tester) async {
+  testWidgets('affiche _LoadingView quand BidLoading et pas encore de données', (tester) async {
+    when(() => bidBloc.state).thenReturn(BidLoading());
+    await _pump(tester, bidBloc: bidBloc, paymentBloc: paymentBloc, authBloc: authBloc);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
+
+  testWidgets('affiche _LoadingView quand BidInitial et pas encore de données', (tester) async {
+    when(() => bidBloc.state).thenReturn(BidInitial());
+    await _pump(tester, bidBloc: bidBloc, paymentBloc: paymentBloc, authBloc: authBloc);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
+
+  // ── État erreur ───────────────────────────────────────────────────────────
+
+  testWidgets('affiche _ErrorView quand BidError et pas encore de données', (tester) async {
+    when(() => bidBloc.state).thenReturn(BidError('Erreur réseau'));
+    await _pump(tester, bidBloc: bidBloc, paymentBloc: paymentBloc, authBloc: authBloc);
+    expect(find.text('Erreur réseau'), findsOneWidget);
+  });
+
+  // ── Vues vides ────────────────────────────────────────────────────────────
+
+  testWidgets('vue vide "Aucun envoi en cours" sur onglet En cours', (tester) async {
     when(() => bidBloc.state).thenReturn(BidListLoaded(const []));
-
-    await _pumpScreen(
-      tester,
-      bidBloc: bidBloc,
-      paymentBloc: paymentBloc,
-      authBloc: authBloc,
-    );
-
+    await _pump(tester, bidBloc: bidBloc, paymentBloc: paymentBloc, authBloc: authBloc);
     expect(find.text('Aucun envoi en cours'), findsOneWidget);
+  });
+
+  // ── Banner active (bid ACCEPTED) ──────────────────────────────────────────
+
+  testWidgets('affiche la banner "COLIS EN TRANSIT" pour un bid ACCEPTED', (tester) async {
+    final bid = _makeBid(status: 'ACCEPTED');
+    final ctrl = StreamController<BidState>.broadcast();
+    addTearDown(ctrl.close);
+    whenListen(bidBloc, ctrl.stream, initialState: BidInitial());
+
+    await _pump(tester, bidBloc: bidBloc, paymentBloc: paymentBloc, authBloc: authBloc);
+    ctrl.add(BidListLoaded([bid]));
+    await tester.pump();
+    await tester.pump(_kSettle);
+
+    expect(find.text('COLIS EN TRANSIT'), findsOneWidget);
+  });
+
+  // ── Header stats ──────────────────────────────────────────────────────────
+
+  testWidgets('header affiche les chips de stat (en cours / en attente)', (tester) async {
+    final bids = [
+      _makeBid(id: 'bid-00000001', status: 'ACCEPTED'),
+      _makeBid(id: 'bid-00000002', status: 'PENDING'),
+    ];
+    final ctrl = StreamController<BidState>.broadcast();
+    addTearDown(ctrl.close);
+    whenListen(bidBloc, ctrl.stream, initialState: BidInitial());
+
+    await _pump(tester, bidBloc: bidBloc, paymentBloc: paymentBloc, authBloc: authBloc);
+    ctrl.add(BidListLoaded(bids));
+    await tester.pump();
+    await tester.pump(_kSettle);
+
+    expect(find.textContaining('en cours'), findsWidgets);
+  });
+
+  // ── Titre ─────────────────────────────────────────────────────────────────
+
+  testWidgets('titre "Mes envois" visible dans le header', (tester) async {
+    await _pump(tester, bidBloc: bidBloc, paymentBloc: paymentBloc, authBloc: authBloc);
+    expect(find.text('Mes envois'), findsOneWidget);
   });
 }
