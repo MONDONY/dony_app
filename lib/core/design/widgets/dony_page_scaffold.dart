@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 /// Scaffold standardisé pour les écrans secondaires dony.
 ///
 /// - [DonyAppBar] avec back button
-/// - Fond [DonyColors.bgApp]
+/// - Fond [Theme.scaffoldBackgroundColor] (brightness-aware)
 /// - Padding horizontal adaptatif (responsive via [DonyLayout])
 /// - Bottom padding = safe area + keyboard inset (keyboard ne cache jamais les inputs)
 /// - Max-width centré sur tablette
@@ -65,7 +65,7 @@ class DonyPageScaffold extends StatelessWidget {
 
     Widget scaffold = Scaffold(
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,
-      backgroundColor: DonyColors.bgApp,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: DonyAppBar(
         title: title,
         onBack: onBack,
@@ -96,11 +96,12 @@ class _StickyBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final bottom = MediaQuery.paddingOf(context).bottom;
     return Container(
-      decoration: const BoxDecoration(
-        color: DonyColors.surface,
-        border: Border(top: BorderSide(color: DonyColors.borderDefault)),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        border: Border(top: BorderSide(color: cs.outline)),
         boxShadow: DonyShadows.sticky,
       ),
       padding: EdgeInsets.fromLTRB(

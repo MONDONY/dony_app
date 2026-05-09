@@ -1,4 +1,3 @@
-import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -43,11 +42,12 @@ class _DonyButtonState extends State<DonyButton> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final spinnerColor = switch (widget.variant) {
-      DonyButtonVariant.primary     => DonyColors.white,
-      DonyButtonVariant.destructive => DonyColors.white,
-      DonyButtonVariant.secondary   => DonyColors.ink900,
-      DonyButtonVariant.ghost       => DonyColors.primary,
+      DonyButtonVariant.primary     => cs.onPrimary,
+      DonyButtonVariant.destructive => cs.onPrimary,
+      DonyButtonVariant.secondary   => cs.onSurface,
+      DonyButtonVariant.ghost       => cs.primary,
     };
 
     final child = widget.isLoading
@@ -98,14 +98,14 @@ class _DonyButtonState extends State<DonyButton> {
           style: TextButton.styleFrom(
             minimumSize: minSize,
             padding: contentPadding,
-            side: const BorderSide(color: DonyColors.borderDefault),
+            side: BorderSide(color: cs.outline),
           ),
           child: child,
         ),
       DonyButtonVariant.destructive => FilledButton(
           onPressed: widget.isLoading ? null : widget.onPressed,
           style: FilledButton.styleFrom(
-            backgroundColor: DonyColors.error,
+            backgroundColor: cs.error,
             minimumSize: minSize,
             padding: contentPadding,
           ),
