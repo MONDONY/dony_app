@@ -1724,6 +1724,14 @@ class _HomeFilterChipsRow extends StatelessWidget {
             isActive: allCorridors,
             onTap: onAllCorridorsToggle,
           ),
+          const SizedBox(width: DonySpacing.xs),
+          _SmallChip(
+            key: const Key('chip-near-me'),
+            label: 'Près de moi',
+            isActive: isNearMeActive,
+            icon: Icons.near_me_rounded,
+            onTap: onNearMeTap,
+          ),
         ],
       ),
     );
@@ -1734,6 +1742,7 @@ class _HomeFilterChipsRow extends StatelessWidget {
 
 class _SmallChip extends StatelessWidget {
   const _SmallChip({
+    super.key,
     required this.label,
     required this.isActive,
     required this.onTap,
