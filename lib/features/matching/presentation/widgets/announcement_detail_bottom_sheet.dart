@@ -403,14 +403,14 @@ class _AnnouncementDetailContent extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(DonySpacing.md),
             decoration: BoxDecoration(
-              color: DonyColors.warning50,
+              color: cs.warningLight,
               borderRadius: BorderRadius.circular(DonyRadius.md),
               border: Border.all(color: DonyColors.amberLight),
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline_rounded,
-                    color: DonyColors.warning, size: 18),
+                Icon(Icons.info_outline_rounded,
+                    color: cs.warning, size: 18),
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Text(

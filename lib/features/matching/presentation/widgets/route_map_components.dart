@@ -17,12 +17,13 @@ class RouteMapCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
-        color: DonyColors.white,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: DonyColors.neutral200),
+        border: Border.all(color: cs.outline),
       ),
       child: Row(
         children: [
@@ -56,6 +57,7 @@ class CityChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -63,14 +65,14 @@ class CityChip extends StatelessWidget {
         vertical: DonySpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: DonyColors.neutral100,
+        color: cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(DonyRadius.full),
       ),
       child: Text(
         '$cityCode · $airportCode',
         style: tt.bodySmall?.copyWith(
           fontWeight: FontWeight.w700,
-          color: DonyColors.ink900,
+          color: cs.onSurface,
         ),
       ),
     );

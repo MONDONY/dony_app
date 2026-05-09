@@ -125,7 +125,7 @@ class _TravelerProfileScreenState extends State<TravelerProfileScreen> {
                   const SizedBox(height: DonySpacing.sm),
                   _ContentTypesCard(
                     types: acceptedTypes,
-                    chipColor: DonyColors.success,
+                    chipColor: cs.success,
                     cs: cs,
                     tt: tt,
                   ).animate().fadeIn(delay: 90.ms),
@@ -667,23 +667,24 @@ class _ProBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: DonySpacing.md,
         vertical: DonySpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: DonyColors.warning50,
+        color: cs.warningLight,
         borderRadius: BorderRadius.circular(DonyRadius.xl),
-        border: Border.all(color: DonyColors.warning.withValues(alpha: 0.4)),
+        border: Border.all(color: cs.warning.withValues(alpha: 0.4)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.verified_rounded,
             size: 13,
-            color: DonyColors.warning,
+            color: cs.warning,
           ),
           const SizedBox(width: DonySpacing.xs),
           Text(

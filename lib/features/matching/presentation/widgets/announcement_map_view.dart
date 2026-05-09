@@ -261,11 +261,23 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   final Map<int, BitmapDescriptor> _clusterIcons = {};
   bool _isLocating = false;
   double _currentZoom = 3.5;
+  // Cached brightness — updated in didChangeDependencies (safe to read in initState-triggered async work).
+  Brightness _brightness = Brightness.light;
 
   @override
   void initState() {
     super.initState();
     _prewarmCommonIcons();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final newBrightness = Theme.of(context).brightness;
+    if (newBrightness != _brightness) {
+      _brightness = newBrightness;
+      _rebuildMarkers();
+    }
   }
 
   @override
@@ -324,7 +336,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
             .map((it) => it.announcement.departureDate)
             .reduce((a, b) => a.isBefore(b) ? a : b);
         final urgencyColor = MarkerUrgencyColor.fromDeparture(earliest,
-            brightness: Theme.of(context).brightness);
+            brightness: _brightness);
         final isSelected = cluster.items
             .any((it) => it.announcement.id == widget.selectedAnnouncementId);
         final icon = await MarkerBitmapFactory.stackedPricePill(
@@ -359,7 +371,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     final item = cluster.items.first;
     final urgencyColor = MarkerUrgencyColor.fromDeparture(
         item.announcement.departureDate,
-        brightness: Theme.of(context).brightness);
+        brightness: _brightness);
     final isSelected = item.announcement.id == widget.selectedAnnouncementId;
     final icon = await MarkerBitmapFactory.pricePill(
       pricePerKg: item.announcement.pricePerKg,
@@ -554,14 +566,15 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
         widget.activeRadiusKm == null) {
       return {};
     }
+    final primary = Theme.of(context).colorScheme.primary;
     return {
       Circle(
         circleId: const CircleId('near-me-radius'),
         center: widget.userPosition!,
         radius: widget.activeRadiusKm! * 1000,
-        strokeColor: DonyColors.primary,
+        strokeColor: primary,
         strokeWidth: 2,
-        fillColor: DonyColors.primary.withValues(alpha: 0.08),
+        fillColor: primary.withValues(alpha: 0.08),
       ),
     };
   }
@@ -635,6 +648,7 @@ class _NearMeFab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: isLoading ? null : onTap,
       onDoubleTap: isLoading ? null : onDoubleTap,
@@ -643,10 +657,10 @@ class _NearMeFab extends StatelessWidget {
         width: 48,
         height: 48,
         decoration: BoxDecoration(
-          color: isActive ? DonyColors.primary : DonyColors.surface,
+          color: isActive ? cs.primary : cs.surface,
           shape: BoxShape.circle,
           border: Border.all(
-            color: isActive ? DonyColors.primary : DonyColors.borderDefault,
+            color: isActive ? cs.primary : cs.outline,
           ),
           boxShadow: [
             BoxShadow(
@@ -663,7 +677,7 @@ class _NearMeFab extends StatelessWidget {
                   height: 18,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: isActive ? Colors.white : DonyColors.primary,
+                    color: isActive ? Colors.white : cs.primary,
                   ),
                 )
               : Icon(
@@ -671,7 +685,7 @@ class _NearMeFab extends StatelessWidget {
                       ? Icons.my_location_rounded
                       : Icons.my_location_outlined,
                   size: 22,
-                  color: isActive ? Colors.white : DonyColors.primary,
+                  color: isActive ? Colors.white : cs.primary,
                 ),
         ),
       ),
@@ -688,6 +702,7 @@ class _PermissionDeniedSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: EdgeInsets.fromLTRB(
         DonySpacing.lg,
@@ -695,10 +710,10 @@ class _PermissionDeniedSheet extends StatelessWidget {
         DonySpacing.lg,
         MediaQuery.of(context).padding.bottom + DonySpacing.lg,
       ),
-      decoration: const BoxDecoration(
-        color: DonyColors.surface,
+      decoration: BoxDecoration(
+        color: cs.surface,
         borderRadius:
-            BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+            const BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -709,20 +724,20 @@ class _PermissionDeniedSheet extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: DonyColors.neutral200,
+                color: cs.outline,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
-          const Icon(Icons.location_off_rounded,
-              size: 48, color: DonyColors.primary),
+          Icon(Icons.location_off_rounded,
+              size: 48, color: cs.primary),
           const SizedBox(height: DonySpacing.md),
           Text('Géolocalisation désactivée',
               style: tt.titleLarge, textAlign: TextAlign.center),
           const SizedBox(height: DonySpacing.sm),
           Text(
             "Autorise l'accès à ta position dans les réglages pour utiliser \"Près de moi\".",
-            style: tt.bodyMedium?.copyWith(color: DonyColors.textMuted),
+            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: DonySpacing.xl),

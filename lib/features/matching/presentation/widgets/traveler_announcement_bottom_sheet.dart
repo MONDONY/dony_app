@@ -90,29 +90,29 @@ class _TravelerAnnouncementContent extends StatelessWidget {
                       const SizedBox(height: DonySpacing.xxs),
                       Row(
                         children: [
-                          const Icon(Icons.star_rounded, size: 14, color: DonyColors.warning),
+                          Icon(Icons.star_rounded, size: 14, color: cs.warning),
                           const SizedBox(width: DonySpacing.xxs),
                           Text(
                             rating != null ? '${rating.toStringAsFixed(1)}/5' : 'Nouveau',
                             style: tt.bodySmall?.copyWith(
-                              color: DonyColors.textMuted,
+                              color: cs.onSurfaceVariant,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           const SizedBox(width: DonySpacing.xs),
                           Text(
                             '· $totalTrips trajet${totalTrips > 1 ? 's' : ''}',
-                            style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+                            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                           ),
                         ],
                       ),
                     ],
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.chevron_right_rounded,
                   size: 20,
-                  color: DonyColors.textSubtle,
+                  color: cs.onSurfaceVariant,
                 ),
               ],
             ),
@@ -120,7 +120,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
         ),
 
         const SizedBox(height: DonySpacing.lg),
-        Container(height: 1, color: DonyColors.borderDefault),
+        Container(height: 1, color: cs.outline),
         const SizedBox(height: DonySpacing.lg),
 
         // Route
@@ -175,7 +175,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
 
         if (categories.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.lg),
-          Text('Types de colis acceptés', style: tt.labelMedium?.copyWith(color: DonyColors.textMuted)),
+          Text('Types de colis acceptés', style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant)),
           const SizedBox(height: DonySpacing.sm),
           Wrap(
             spacing: DonySpacing.xs,
@@ -186,7 +186,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
 
         if (announcement.description != null && announcement.description!.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.lg),
-          Text('Message du voyageur', style: tt.labelMedium?.copyWith(color: DonyColors.textMuted)),
+          Text('Message du voyageur', style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant)),
           const SizedBox(height: DonySpacing.sm),
           Text(announcement.description!, style: tt.bodyMedium),
         ],
@@ -206,9 +206,10 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Icon(icon, size: 16, color: DonyColors.textSubtle),
+        Icon(icon, size: 16, color: cs.onSurfaceVariant),
         const SizedBox(width: DonySpacing.sm),
         Expanded(
           child: Text(
@@ -228,14 +229,15 @@ class _CategoryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: DonySpacing.xxs),
       decoration: BoxDecoration(
-        color: DonyColors.bgApp,
+        color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(DonyRadius.xl),
-        border: Border.all(color: DonyColors.borderDefault),
+        border: Border.all(color: cs.outline),
       ),
-      child: Text(label, style: tt.labelSmall?.copyWith(color: DonyColors.textMuted)),
+      child: Text(label, style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
     );
   }
 }
@@ -246,6 +248,7 @@ class _KycVerifiedBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return Container(
       key: const Key('traveler-kyc-badge'),
       padding: const EdgeInsets.symmetric(
@@ -253,22 +256,22 @@ class _KycVerifiedBadge extends StatelessWidget {
         vertical: DonySpacing.xxs,
       ),
       decoration: BoxDecoration(
-        color: DonyColors.successLight,
+        color: cs.successLight,
         borderRadius: BorderRadius.circular(DonyRadius.full),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.verified_rounded,
             size: 11,
-            color: DonyColors.success,
+            color: cs.success,
           ),
           const SizedBox(width: DonySpacing.xxs),
           Text(
             'KYC',
             style: tt.labelSmall?.copyWith(
-              color: DonyColors.success,
+              color: cs.success,
               fontWeight: FontWeight.w600,
             ),
           ),

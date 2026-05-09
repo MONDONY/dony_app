@@ -38,6 +38,7 @@ class _NearMeRadiusContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
 
     return ValueListenableBuilder<double>(
       valueListenable: radiusNotifier,
@@ -48,14 +49,14 @@ class _NearMeRadiusContent extends StatelessWidget {
           children: [
             Text(
               'On garde uniquement les annonces dont le point de remise est dans ce rayon autour de toi.',
-              style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.lg),
             Center(
               child: Text(
                 '${radius.round()} km',
                 style: tt.displaySmall?.copyWith(
-                  color: DonyColors.primary,
+                  color: cs.primary,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -66,7 +67,7 @@ class _NearMeRadiusContent extends StatelessWidget {
               max: NearMeRadiusSheet.maxRadiusKm,
               divisions: 39,
               label: '${radius.round()} km',
-              activeColor: DonyColors.primary,
+              activeColor: cs.primary,
               onChanged: (v) => radiusNotifier.value = v,
             ),
           ],

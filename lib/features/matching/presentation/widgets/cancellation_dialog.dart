@@ -113,9 +113,9 @@ class _CancellationDialogState extends State<CancellationDialog> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.warning_amber_rounded,
-                      color: DonyColors.error,
+                      color: cs.error,
                       size: 18,
                     ),
                     const SizedBox(width: DonySpacing.sm),
@@ -123,7 +123,7 @@ class _CancellationDialogState extends State<CancellationDialog> {
                       child: Text(
                         'Vous devez retourner le colis à l\'expéditeur avant de confirmer l\'annulation.',
                         style: tt.bodySmall?.copyWith(
-                          color: DonyColors.error,
+                          color: cs.error,
                           height: 1.4,
                         ),
                       ),
@@ -168,7 +168,7 @@ class _CancellationDialogState extends State<CancellationDialog> {
                   borderSide: BorderSide(
                     color: _showReasonError
                         ? cs.error
-                        : DonyColors.primary,
+                        : cs.primary,
                     width: 1.5,
                   ),
                 ),
