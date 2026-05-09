@@ -32,11 +32,28 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  final _scroll = ScrollController();
+
+  // Hauteur du contenu sous l'AppBar de base (56) — donne expandedHeight total :
+  // topPad + 56 + _kContentHeight. Le ProfileHeader rendu en flexibleSpace a sa
+  // propre hauteur naturelle ; ce paramètre détermine juste la zone collapsable.
+  static const double _kContentHeight = 264.0;
+
   @override
   void initState() {
     super.initState();
+    _scroll.addListener(_onScroll);
     context.read<BidBloc>().add(BidMyListRequested());
     context.read<AnnouncementBloc>().add(AnnouncementListRequested());
+  }
+
+  void _onScroll() => setState(() {});
+
+  @override
+  void dispose() {
+    _scroll.removeListener(_onScroll);
+    _scroll.dispose();
+    super.dispose();
   }
 
   @override
@@ -94,46 +111,108 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             .where((a) => a.status == 'ACTIVE' || a.status == 'FULL')
                             .length;
 
-                        return Column(
-                          children: [
-                            // Header fixe
-                            ProfileHeader(
-                              displayName: displayName,
-                              activeRole: activeRole,
-                              isTraveler: isTraveler,
-                              isSender: isSender,
-                              isKycVerified: isKycVerified,
-                              totalTrips: user?.totalTrips ?? 0,
-                              totalShipments: user?.totalShipments ?? 0,
-                              isLoadingStats: bidState is BidLoading ||
-                                  announcementState is AnnouncementLoading,
-                              onNotificationTap: () {},
-                              onRoleSwitch: (isTraveler && isSender)
-                                  ? (role) {
-                                      if (role == ActiveRole.traveler) {
-                                        context.read<ActiveRoleCubit>().switchToTraveler();
-                                      } else {
-                                        context.read<ActiveRoleCubit>().switchToSender();
-                                      }
-                                      context.go('/home');
-                                    }
-                                  : null,
-                            ),
-                            // Corps scrollable
-                            Expanded(
-                              child: RefreshIndicator(
-                                color: DonyColors.primary,
-                                onRefresh: () async {
-                                  context.read<BidBloc>().add(BidMyListRequested());
-                                  context.read<AnnouncementBloc>().add(AnnouncementListRequested());
-                                },
-                                child: SingleChildScrollView(
-                                  physics: const AlwaysScrollableScrollPhysics(),
-                                  padding: const EdgeInsets.fromLTRB(
-                                    DonySpacing.lg, DonySpacing.xl, DonySpacing.lg, DonySpacing.huge,
+                        final tt = Theme.of(context).textTheme;
+                        final topPad = MediaQuery.of(context).padding.top;
+                        final expandedHeight = topPad + 56.0 + _kContentHeight;
+                        final offset = _scroll.hasClients
+                            ? _scroll.offset.clamp(0.0, double.infinity)
+                            : 0.0;
+                        final progress =
+                            (offset / _kContentHeight).clamp(0.0, 1.0);
+                        final headerBg = Color.lerp(
+                          DonyColors.primary,
+                          DonyColors.surface,
+                          progress,
+                        )!;
+                        final iconColor = Color.lerp(
+                          DonyColors.white,
+                          DonyColors.ink900,
+                          progress,
+                        )!;
+                        final titleColor = Color.lerp(
+                          DonyColors.white.withValues(alpha: 0.0),
+                          DonyColors.ink900,
+                          progress,
+                        )!;
+
+                        return RefreshIndicator(
+                          color: DonyColors.primary,
+                          onRefresh: () async {
+                            context.read<BidBloc>().add(BidMyListRequested());
+                            context
+                                .read<AnnouncementBloc>()
+                                .add(AnnouncementListRequested());
+                          },
+                          child: CustomScrollView(
+                            controller: _scroll,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            slivers: [
+                              SliverAppBar(
+                                expandedHeight: expandedHeight,
+                                pinned: true,
+                                elevation: 0,
+                                scrolledUnderElevation: 0,
+                                automaticallyImplyLeading: false,
+                                centerTitle: false,
+                                backgroundColor: headerBg,
+                                surfaceTintColor: Colors.transparent,
+                                title: Text(
+                                  displayName,
+                                  style: tt.titleMedium!.copyWith(
+                                    color: titleColor,
+                                    fontWeight: FontWeight.w700,
                                   ),
-                                  child: Column(
-                                    children: [
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                actions: [
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.notifications_outlined,
+                                      color: iconColor,
+                                    ),
+                                    onPressed: () {},
+                                    tooltip: 'Notifications',
+                                  ),
+                                ],
+                                flexibleSpace: FlexibleSpaceBar(
+                                  collapseMode: CollapseMode.parallax,
+                                  background: ProfileHeader(
+                                    displayName: displayName,
+                                    activeRole: activeRole,
+                                    isTraveler: isTraveler,
+                                    isSender: isSender,
+                                    isKycVerified: isKycVerified,
+                                    totalTrips: user?.totalTrips ?? 0,
+                                    totalShipments: user?.totalShipments ?? 0,
+                                    isLoadingStats: bidState is BidLoading ||
+                                        announcementState is AnnouncementLoading,
+                                    onRoleSwitch: (isTraveler && isSender)
+                                        ? (role) {
+                                            if (role == ActiveRole.traveler) {
+                                              context
+                                                  .read<ActiveRoleCubit>()
+                                                  .switchToTraveler();
+                                            } else {
+                                              context
+                                                  .read<ActiveRoleCubit>()
+                                                  .switchToSender();
+                                            }
+                                            context.go('/home');
+                                          }
+                                        : null,
+                                  ),
+                                ),
+                              ),
+                              SliverPadding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  DonySpacing.lg,
+                                  DonySpacing.xl,
+                                  DonySpacing.lg,
+                                  DonySpacing.huge,
+                                ),
+                                sliver: SliverList(
+                                  delegate: SliverChildListDelegate([
                                       // Bannière suppression en attente
                                       if (user != null &&
                                           user.isPendingDeletion &&
@@ -360,12 +439,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           color: Theme.of(context).colorScheme.outline,
                                         ),
                                       ).animate().fadeIn(delay: 320.ms),
-                                    ],
-                                  ),
+                                  ]),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         );
                       },
                     );

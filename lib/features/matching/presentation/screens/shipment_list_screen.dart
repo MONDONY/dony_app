@@ -163,15 +163,6 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
       ],
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        floatingActionButton: Builder(
-          builder: (context) {
-            final authState = context.watch<AuthBloc>().state;
-            if (authState is AuthAuthenticated && authState.user.isTraveler) {
-              return _SendFab();
-            }
-            return const SizedBox.shrink();
-          },
-        ),
         body: Stack(
           children: [
             const Positioned.fill(child: _AuroraMeshBackground()),
@@ -1413,55 +1404,6 @@ class _ErrorView extends StatelessWidget {
                   style: tt.labelLarge?.copyWith(color: cs.primary),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── FAB ──────────────────────────────────────────────────────────────────────
-
-class _SendFab extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return GestureDetector(
-      onTap: () async {
-        final params = await SearchFormBottomSheet.show(context);
-        if (params != null && context.mounted) {
-          context.push('/search', extra: params);
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-            horizontal: DonySpacing.lg, vertical: 14),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [DonyColors.blue700, cs.primary],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          boxShadow: [
-            BoxShadow(
-              color: cs.primary.withValues(alpha: 0.35),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.add_rounded, color: cs.onPrimary, size: 20),
-            const SizedBox(width: DonySpacing.sm),
-            Text(
-              'Envoyer un colis',
-              style: tt.labelLarge?.copyWith(color: cs.onPrimary),
             ),
           ],
         ),

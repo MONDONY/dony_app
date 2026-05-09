@@ -39,9 +39,9 @@ class ProfileHeader extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(
         DonySpacing.lg,
-        topPad + DonySpacing.xxl,
+        topPad + DonySpacing.lg,
         DonySpacing.lg,
-        DonySpacing.xl,
+        DonySpacing.md,
       ),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -53,6 +53,7 @@ class ProfileHeader extends StatelessWidget {
       child: Stack(
         children: [
           Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               // ── Avatar + ring ─────────────────────────────────────────
               Container(
@@ -111,19 +112,20 @@ class ProfileHeader extends StatelessWidget {
             ],
           ),
 
-          // ── Notification bell ──────────────────────────────────────────
-          Positioned(
-            top: 0,
-            right: 0,
-            child: IconButton(
-              icon: const Icon(
-                Icons.notifications_outlined,
-                color: DonyColors.textOnBrand,
+          // ── Notification bell (uniquement si callback fourni) ─────────
+          if (onNotificationTap != null)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: IconButton(
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: DonyColors.textOnBrand,
+                ),
+                onPressed: onNotificationTap,
+                tooltip: 'Notifications',
               ),
-              onPressed: onNotificationTap,
-              tooltip: 'Notifications',
             ),
-          ),
         ],
       ),
     );
