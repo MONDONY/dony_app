@@ -18,17 +18,17 @@ enum DonyMascotteType {
   perdu;
 
   String get assetPath => switch (this) {
-        salue       => 'assets/mascottes/salue.jpg',
-        tenantColis => 'assets/mascottes/tenant_colis.jpg',
-        colisLivre  => 'assets/mascottes/colis_livre.jpg',
-        pouceLeve   => 'assets/mascottes/pouce_leve.jpg',
-        dansAvion   => 'assets/mascottes/dans_avion.jpg',
-        surAvion    => 'assets/mascottes/sur_avion.jpg',
-        aMoto       => 'assets/mascottes/a_moto.jpg',
-        aVoiture    => 'assets/mascottes/a_voiture.jpg',
-        courir      => 'assets/mascottes/courir.jpg',
-        noData      => 'assets/mascottes/no_data.jpg',
-        perdu       => 'assets/mascottes/perdu.jpg',
+        salue       => 'assets/mascottes/salue.png',
+        tenantColis => 'assets/mascottes/tenant_colis.png',
+        colisLivre  => 'assets/mascottes/colis_livre.png',
+        pouceLeve   => 'assets/mascottes/pouce_leve.png',
+        dansAvion   => 'assets/mascottes/dans_avion.png',
+        surAvion    => 'assets/mascottes/sur_avion.png',
+        aMoto       => 'assets/mascottes/a_moto.png',
+        aVoiture    => 'assets/mascottes/a_voiture.png',
+        courir      => 'assets/mascottes/courir.png',
+        noData      => 'assets/mascottes/no_data.png',
+        perdu       => 'assets/mascottes/perdu.png',
       };
 
   String get semanticLabel => switch (this) {
@@ -74,7 +74,7 @@ class DonyMascotte extends StatelessWidget {
 
   final BoxFit fit;
 
-  /// Si non null, applique un ClipRRect — utile pour adoucir le fond JPG.
+  /// Si non null, applique un ClipRRect.
   final BorderRadius? borderRadius;
 
   @override

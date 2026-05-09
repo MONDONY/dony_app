@@ -11,7 +11,7 @@ void main() {
       for (final p in paths) {
         expect(p, isNotEmpty);
         expect(p, startsWith('assets/mascottes/'));
-        expect(p, endsWith('.jpg'));
+        expect(p, endsWith('.png'));
       }
     });
 
@@ -23,13 +23,13 @@ void main() {
 
     test('mappings sémantiques attendus', () {
       expect(DonyMascotteType.salue.assetPath,
-          'assets/mascottes/salue.jpg');
+          'assets/mascottes/salue.png');
       expect(DonyMascotteType.pouceLeve.assetPath,
-          'assets/mascottes/pouce_leve.jpg');
+          'assets/mascottes/pouce_leve.png');
       expect(DonyMascotteType.colisLivre.assetPath,
-          'assets/mascottes/colis_livre.jpg');
+          'assets/mascottes/colis_livre.png');
       expect(DonyMascotteType.noData.assetPath,
-          'assets/mascottes/no_data.jpg');
+          'assets/mascottes/no_data.png');
     });
   });
 
@@ -52,7 +52,7 @@ void main() {
 
       final image = tester.widget<Image>(find.byType(Image));
       final assetImage = image.image as AssetImage;
-      expect(assetImage.assetName, 'assets/mascottes/salue.jpg');
+      expect(assetImage.assetName, 'assets/mascottes/salue.png');
     });
 
     testWidgets('utilise dimension par défaut (md = 96)', (tester) async {

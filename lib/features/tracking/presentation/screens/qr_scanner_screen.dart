@@ -455,7 +455,6 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             DonyMascotte(
               type: mascotteType,
               size: DonyMascotteSize.lg,
-              borderRadius: BorderRadius.circular(DonyRadius.card),
             ),
             const SizedBox(height: DonySpacing.base),
             Text(title,
