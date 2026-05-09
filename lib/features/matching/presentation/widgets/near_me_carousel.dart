@@ -11,7 +11,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
-/// Returns a formatted badge like "CDG · 3 km" or null when unavailable.
+/// Retourne un badge formaté "CDG · 3 km" ou null si indisponible.
 String? buildDistanceBadge(
   AnnouncementModel announcement,
   ({double lat, double lng})? userPos,
@@ -38,7 +38,6 @@ class NearMeCarousel extends StatefulWidget {
     super.key,
     required this.announcements,
     required this.userPosition,
-    required this.scrollController,
     required this.onSeeAll,
     this.selectedAnnouncementId,
     this.onCardChanged,
@@ -47,11 +46,10 @@ class NearMeCarousel extends StatefulWidget {
 
   final List<AnnouncementModel> announcements;
   final ({double lat, double lng})? userPosition;
-  final ScrollController scrollController;
   final VoidCallback onSeeAll;
   final String? selectedAnnouncementId;
   final void Function(String id)? onCardChanged;
-  /// Custom tap handler. When null, defaults to [showTravelerAnnouncementSheet].
+  /// Gestionnaire de tap custom. Si null, ouvre [showTravelerAnnouncementSheet].
   final void Function(AnnouncementModel)? onTapCard;
 
   @override
@@ -101,150 +99,120 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final bottomPad = MediaQuery.of(context).padding.bottom;
 
     if (widget.announcements.isEmpty) {
-      return CustomScrollView(
-        controller: widget.scrollController,
-        slivers: [
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: Padding(
-              padding: const EdgeInsets.all(DonySpacing.xl),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: DonyColors.primarySoft,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.near_me_rounded,
-                        color: DonyColors.primary, size: 26),
-                  ),
-                  const SizedBox(height: DonySpacing.md),
-                  Text(
-                    'Aucun voyageur à proximité',
-                    style: tt.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w700),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: DonySpacing.xs),
-                  Text(
-                    'Essaie d\'augmenter le rayon ou de changer de date.',
-                    style:
-                        tt.bodySmall?.copyWith(color: DonyColors.textMuted),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(DonySpacing.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: const BoxDecoration(
+                  color: DonyColors.primarySoft,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.near_me_rounded,
+                    color: DonyColors.primary, size: 26),
               ),
-            ),
+              const SizedBox(height: DonySpacing.md),
+              Text(
+                'Aucun voyageur à proximité',
+                style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: DonySpacing.xs),
+              Text(
+                "Essaie d'augmenter le rayon ou de changer de date.",
+                style: tt.bodySmall?.copyWith(color: DonyColors.textMuted),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
-        ],
+        ),
       );
     }
 
-    return CustomScrollView(
-      controller: widget.scrollController,
-      slivers: [
-        SliverFillRemaining(
-          hasScrollBody: false,
-          child: Column(
-            children: [
-              Expanded(
-                child: PageView.builder(
-                  controller: _pageController,
-                  itemCount: widget.announcements.length,
-                  onPageChanged: (i) {
-                    widget.onCardChanged?.call(widget.announcements[i].id);
-                  },
-                  itemBuilder: (context, i) {
-                    final a = widget.announcements[i];
-                    final badge = buildDistanceBadge(a, widget.userPosition);
-                    final authState = context.read<AuthBloc>().state;
-                    final currentUserId = authState is AuthAuthenticated
-                        ? authState.user.id
-                        : null;
-                    final isOwn = currentUserId != null &&
-                        a.travelerId == currentUserId;
-                    return BlocBuilder<BidBloc, BidState>(
-                      buildWhen: (prev, curr) =>
-                          curr is BidListLoaded || prev is BidListLoaded,
-                      builder: (context, bidState) {
-                        final existingBid =
-                            bidState.activeBidsByAnnouncement()[a.id];
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: DonySpacing.sm),
-                          child: TravelerCard(
-                            announcement: a,
-                            index: i,
-                            isOwnAnnouncement: isOwn,
-                            distanceBadge: badge,
-                            existingBidStatus: existingBid?.status,
-                            onTap: isOwn
-                                ? null
-                                : existingBid != null
-                                    ? () => context.push(
-                                          '/bids/${existingBid.id}',
-                                          extra: existingBid,
-                                        )
-                                    : () {
-                                        if (widget.onTapCard != null) {
-                                          widget.onTapCard!(a);
-                                        } else {
-                                          showTravelerAnnouncementSheet(context,
-                                              announcement: a);
-                                        }
-                                      },
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.md,
-                    DonySpacing.lg, bottomPad + DonySpacing.md),
-                child: GestureDetector(
-                  onTap: widget.onSeeAll,
-                  child: Container(
-                    width: double.infinity,
-                    padding:
-                        const EdgeInsets.symmetric(vertical: DonySpacing.md),
-                    decoration: BoxDecoration(
-                      color: DonyColors.primarySoft,
-                      borderRadius:
-                          BorderRadius.circular(DonyRadius.card),
-                      border: Border.all(
-                          color:
-                              DonyColors.primary.withValues(alpha: 0.3)),
+    return Column(
+      children: [
+        Expanded(
+          child: PageView.builder(
+            controller: _pageController,
+            itemCount: widget.announcements.length,
+            onPageChanged: (i) {
+              widget.onCardChanged?.call(widget.announcements[i].id);
+            },
+            itemBuilder: (context, i) {
+              final a = widget.announcements[i];
+              final badge = buildDistanceBadge(a, widget.userPosition);
+              final authState = context.read<AuthBloc>().state;
+              final currentUserId =
+                  authState is AuthAuthenticated ? authState.user.id : null;
+              final isOwn =
+                  currentUserId != null && a.travelerId == currentUserId;
+              return BlocBuilder<BidBloc, BidState>(
+                buildWhen: (prev, curr) =>
+                    curr is BidListLoaded || prev is BidListLoaded,
+                builder: (context, bidState) {
+                  final existingBid =
+                      bidState.activeBidsByAnnouncement()[a.id];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.sm),
+                    child: TravelerCard(
+                      key: Key('near-me-card-${a.id}'),
+                      announcement: a,
+                      index: i,
+                      isOwnAnnouncement: isOwn,
+                      distanceBadge: badge,
+                      existingBidStatus: existingBid?.status,
+                      onTap: isOwn
+                          ? null
+                          : existingBid != null
+                              ? () => context.push(
+                                    '/bids/${existingBid.id}',
+                                    extra: existingBid,
+                                  )
+                              : () {
+                                  if (widget.onTapCard != null) {
+                                    widget.onTapCard!(a);
+                                  } else {
+                                    showTravelerAnnouncementSheet(context,
+                                        announcement: a);
+                                  }
+                                },
                     ),
-                    child: Column(
-                      children: [
-                        Text(
-                          'Voir les ${widget.announcements.length} annonce${widget.announcements.length > 1 ? 's' : ''}',
-                          style: tt.labelLarge?.copyWith(
-                              color: DonyColors.primary,
-                              fontWeight: FontWeight.w700),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: DonySpacing.xxs),
-                        Text(
-                          'Tirez vers le haut pour la liste',
-                          style: tt.bodySmall
-                              ?.copyWith(color: DonyColors.primary),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+              DonySpacing.lg, DonySpacing.md, DonySpacing.lg, DonySpacing.md),
+          child: GestureDetector(
+            onTap: widget.onSeeAll,
+            child: Container(
+              key: const Key('near-me-see-all-btn'),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+              decoration: BoxDecoration(
+                color: DonyColors.primarySoft,
+                borderRadius: BorderRadius.circular(DonyRadius.card),
+                border: Border.all(
+                    color: DonyColors.primary.withValues(alpha: 0.3)),
               ),
-            ],
+              child: Text(
+                'Voir les ${widget.announcements.length} annonce${widget.announcements.length > 1 ? 's' : ''}',
+                style: tt.labelLarge?.copyWith(
+                    color: DonyColors.primary, fontWeight: FontWeight.w700),
+                textAlign: TextAlign.center,
+              ),
+            ),
           ),
         ),
       ],
