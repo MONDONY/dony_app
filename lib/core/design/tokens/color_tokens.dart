@@ -204,13 +204,35 @@ abstract final class DonyColors {
 }
 
 extension DonyStatusColors on ColorScheme {
-  Color get success      => DonyColors.success;
-  Color get warning      => DonyColors.warning;
-  Color get info         => DonyColors.info;
-  Color get successLight => DonyColors.successLight;
-  Color get warningLight => DonyColors.warningLight;
-  Color get infoLight    => DonyColors.infoLight;
-  Color get errorLight   => brightness == Brightness.light
-      ? DonyColors.errorLight
-      : DonyColors.error.withValues(alpha: 0.15);
+  Color get success => brightness == Brightness.light
+      ? DonyColors.success500
+      : DonyColors.successDark500;
+
+  Color get warning => brightness == Brightness.light
+      ? DonyColors.warning500
+      : DonyColors.warningDark500;
+
+  Color get info => brightness == Brightness.light
+      ? DonyColors.info500
+      : DonyColors.infoDark500;
+
+  Color get successLight => brightness == Brightness.light
+      ? DonyColors.success50
+      : DonyColors.successDark50;
+
+  Color get warningLight => brightness == Brightness.light
+      ? DonyColors.warning50
+      : DonyColors.warningDark50;
+
+  Color get infoLight => brightness == Brightness.light
+      ? DonyColors.info50
+      : DonyColors.infoDark50;
+
+  Color get errorLight => brightness == Brightness.light
+      ? DonyColors.danger50
+      : DonyColors.dangerDark50;
+
+  Color get surfaceWarm => brightness == Brightness.light
+      ? DonyColors.sand100
+      : DonyColors.sandDark100;
 }
