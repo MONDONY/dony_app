@@ -19,12 +19,16 @@ import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
+import 'package:dony/features/matching/presentation/widgets/near_me_carousel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geolocator_platform_interface/geolocator_platform_interface.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -44,6 +48,30 @@ class MockActiveRoleCubit extends MockCubit<ActiveRole>
     implements ActiveRoleCubit {}
 
 class MockHiveService extends Mock implements HiveService {}
+
+class _MockGeolocatorPlatform extends Mock
+    with MockPlatformInterfaceMixin
+    implements GeolocatorPlatform {
+  @override
+  Future<LocationPermission> checkPermission() async =>
+      LocationPermission.always;
+
+  @override
+  Future<Position> getCurrentPosition(
+          {LocationSettings? locationSettings}) async =>
+      Position(
+        latitude: 48.8566,
+        longitude: 2.3522,
+        timestamp: DateTime.now(),
+        accuracy: 5,
+        altitude: 0,
+        altitudeAccuracy: 0,
+        heading: 0,
+        headingAccuracy: 0,
+        speed: 0,
+        speedAccuracy: 0,
+      );
+}
 
 // Simule un utilisateur qui a déjà publié → banner masqué pour tester la liste principale
 // (le banner est testé séparément dans role_guidance_banner_test.dart)
@@ -193,6 +221,38 @@ void main() {
       await tester.pump();
 
       expect(find.text('Aucun voyageur sur ce corridor'), findsOneWidget);
+    });
+
+    testWidgets('shows DraggableScrollableSheet by default (regression)',
+        (tester) async {
+      await tester.pumpWidget(_buildHome(
+        announcementState: AnnouncementSearchLoaded([_makeAnn()]),
+      ));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.byType(DraggableScrollableSheet), findsOneWidget);
+      expect(find.byType(NearMeCarousel), findsNothing);
+    });
+
+    testWidgets(
+        'shows NearMeCarousel and hides sheet when near-me chip activated',
+        (tester) async {
+      GeolocatorPlatform.instance = _MockGeolocatorPlatform();
+
+      await tester.pumpWidget(_buildHome(
+        announcementState: AnnouncementSearchLoaded([_makeAnn()]),
+      ));
+      await tester.pump();
+
+      await tester.ensureVisible(find.byKey(const Key('chip-near-me')));
+      await tester.tap(find.byKey(const Key('chip-near-me')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Activer le filtre'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(NearMeCarousel), findsOneWidget);
+      expect(find.byType(DraggableScrollableSheet), findsNothing);
     });
   });
 
