@@ -121,17 +121,46 @@ void main() {
   });
 
   group('search', () {
+    final searchItemJson = <String, dynamic>{
+      'id': 'pr-1',
+      'departureCity': 'Paris',
+      'arrivalCity': 'Dakar',
+      'departureLat': 48.85,
+      'departureLng': 2.35,
+      'arrivalLat': 14.69,
+      'arrivalLng': -17.44,
+      'desiredDate': '2026-06-15',
+      'dateToleranceDays': 2,
+      'weightKg': 5.0,
+      'parcelSize': 'SMALL',
+      'contentCategory': 'vetements',
+      'targetPriceEur': 25.0,
+      'sender': {
+        'id': 'sender-1',
+        'displayName': 'Alice',
+        'averageRating': 4.5,
+        'totalRatings': 10,
+        'kycVerified': true,
+      },
+    };
+
     test('GETs /package-requests with filters and returns page', () async {
       when(
         () => mockDio.get<Map<String, dynamic>>(
           '/package-requests',
           queryParameters: any(named: 'queryParameters'),
         ),
-      ).thenAnswer((_) async => _ok(_pageJson, '/package-requests'));
+      ).thenAnswer((_) async => _ok({
+            'content': [searchItemJson],
+            'totalElements': 1,
+            'number': 0,
+            'size': 20,
+          }, '/package-requests'));
 
       final page = await repo.search(departure: 'Paris', arrival: 'Dakar');
 
       expect(page.content.isNotEmpty, true);
+      expect(page.content.first.departureLat, 48.85);
     });
   });
 }

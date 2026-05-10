@@ -1,6 +1,6 @@
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
-import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -203,7 +203,7 @@ class _SearchViewState extends State<_SearchView> {
 
 class _PublicRequestCard extends StatelessWidget {
   const _PublicRequestCard({required this.request});
-  final PackageRequest request;
+  final PackageRequestSearchItem request;
 
   @override
   Widget build(BuildContext context) {

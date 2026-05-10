@@ -27,6 +27,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geolocator_platform_interface/geolocator_platform_interface.dart';
 import 'package:hive/hive.dart';
+import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
@@ -48,6 +49,10 @@ class MockActiveRoleCubit extends MockCubit<ActiveRole>
     implements ActiveRoleCubit {}
 
 class MockHiveService extends Mock implements HiveService {}
+
+class MockPackageRequestSearchBloc
+    extends MockBloc<PackageRequestSearchEvent, PackageRequestSearchState>
+    implements PackageRequestSearchBloc {}
 
 class _MockGeolocatorPlatform extends Mock
     with MockPlatformInterfaceMixin
@@ -171,6 +176,17 @@ void main() {
     when(() => hive.listenUserPrefs(keys: any(named: 'keys')))
         .thenReturn(ValueNotifier<Box>(box));
     getIt.registerSingleton<HiveService>(hive);
+
+    getIt.registerFactory<PackageRequestSearchBloc>(() {
+      final mock = MockPackageRequestSearchBloc();
+      when(() => mock.state)
+          .thenReturn(const PackageRequestSearchState());
+      whenListen(mock,
+          Stream<PackageRequestSearchState>.fromIterable(
+              const [PackageRequestSearchState()]),
+          initialState: const PackageRequestSearchState());
+      return mock;
+    });
   });
 
   tearDown(getIt.reset);

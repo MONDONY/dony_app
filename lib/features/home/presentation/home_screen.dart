@@ -28,6 +28,10 @@ import 'package:dony/features/matching/presentation/widgets/traveler_announcemen
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
+import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
+import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
+import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
 import 'package:dony/features/profile/presentation/widgets/pro_stats_card.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:dony/features/notifications/presentation/notification_bottom_sheet.dart';
@@ -82,7 +86,10 @@ class HomeScreen extends StatelessWidget {
                 isProAccount: user?.isProAccount ?? false,
               );
             }
-            return const _MapSenderView();
+            return BlocProvider<PackageRequestSearchBloc>(
+              create: (_) => getIt<PackageRequestSearchBloc>(),
+              child: const _MapSenderView(),
+            );
           },
         );
       },
@@ -107,6 +114,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
   bool get _isMapHidden => _sheetSize > 0.92;
 
   _HomeTab _tab = _HomeTab.voyageurs;
+
+  // Cached markers for package_requests (rebuilt when search results change).
+  Set<Marker> _packageRequestMarkers = {};
+  List<PackageRequestSearchItem> _lastBuiltRequests = const [];
 
   PendingSearchNotifier? _pendingSearchNotifier;
 
@@ -487,6 +498,44 @@ class _MapSenderViewState extends State<_MapSenderView> {
     _dispatchSearch();
   }
 
+  Future<void> _rebuildPackageRequestMarkers(
+      List<PackageRequestSearchItem> items) async {
+    if (identical(items, _lastBuiltRequests)) return;
+    _lastBuiltRequests = items;
+
+    final markers = <Marker>{};
+    for (final item in items) {
+      if (item.departureLat == null || item.departureLng == null) continue;
+      final price = item.targetPriceEur ?? 0;
+      final icon = await MarkerBitmapFactory.pricePill(
+        pricePerKg: price,
+        dotColor: DonyColors.terra500,
+      );
+      markers.add(Marker(
+        markerId: MarkerId('pkg-${item.id}'),
+        position: LatLng(item.departureLat!, item.departureLng!),
+        icon: icon,
+        onTap: () => PackageRequestPreviewBottomSheet.show(
+          context,
+          item: item,
+        ),
+      ));
+    }
+    if (mounted) {
+      setState(() => _packageRequestMarkers = markers);
+    }
+  }
+
+  void _onTabChanged(_HomeTab newTab) {
+    setState(() => _tab = newTab);
+    if (newTab == _HomeTab.demandes) {
+      // Trigger fetch of all open package requests (no filters by default).
+      context
+          .read<PackageRequestSearchBloc>()
+          .add(const SearchFiltersChanged());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -500,12 +549,23 @@ class _MapSenderViewState extends State<_MapSenderView> {
               ? raw
               : raw.where((a) => _urgencyFilter!.matches(a.departureDate)).toList();
 
-          return Stack(
+          return BlocConsumer<PackageRequestSearchBloc,
+              PackageRequestSearchState>(
+            listener: (ctx, prState) {
+              if (prState.status == SearchStatus.loaded) {
+                _rebuildPackageRequestMarkers(prState.results);
+              }
+            },
+            builder: (ctx, prState) {
+              return Stack(
             children: [
               Positioned.fill(
                 child: AnnouncementMapView(
                   announcements:
                       _tab == _HomeTab.voyageurs ? announcements : const [],
+                  extraMarkers: _tab == _HomeTab.demandes
+                      ? _packageRequestMarkers
+                      : const {},
                   isNearMeActive: _isNearMeActive,
                   activeRadiusKm: _nearMeRadiusKm,
                   userPosition: _userPosition,
@@ -560,7 +620,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                           child: _TabToggle(
                             tab: _tab,
                             voyageursCount: announcements.length,
-                            onChanged: (t) => setState(() => _tab = t),
+                            onChanged: _onTabChanged,
                           ),
                         ),
                         const SizedBox(height: DonySpacing.xs),
@@ -675,6 +735,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 child: Center(child: _HomeCarteFab(onTap: _showMap)),
               ),
             ],
+          );
+            },
           );
         },
       ),

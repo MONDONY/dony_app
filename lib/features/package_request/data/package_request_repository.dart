@@ -1,5 +1,6 @@
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 
 class PackageRequestPage {
@@ -19,6 +20,30 @@ class PackageRequestPage {
       PackageRequestPage(
         content: (json['content'] as List<dynamic>)
             .map((e) => PackageRequest.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        totalElements: (json['totalElements'] as num?)?.toInt() ?? 0,
+        page: ((json['number'] as num?) ?? 0).toInt(),
+        size: ((json['size'] as num?) ?? 20).toInt(),
+      );
+}
+
+class PackageRequestSearchPage {
+  const PackageRequestSearchPage({
+    required this.content,
+    required this.totalElements,
+    required this.page,
+    required this.size,
+  });
+
+  final List<PackageRequestSearchItem> content;
+  final int totalElements;
+  final int page;
+  final int size;
+
+  factory PackageRequestSearchPage.fromJson(Map<String, dynamic> json) =>
+      PackageRequestSearchPage(
+        content: (json['content'] as List<dynamic>)
+            .map((e) => PackageRequestSearchItem.fromJson(e as Map<String, dynamic>))
             .toList(),
         totalElements: (json['totalElements'] as num?)?.toInt() ?? 0,
         page: ((json['number'] as num?) ?? 0).toInt(),
@@ -114,7 +139,7 @@ class PackageRequestRepository {
     return PackageRequest.fromJson(response.data!);
   }
 
-  Future<PackageRequestPage> search({
+  Future<PackageRequestSearchPage> search({
     String? departure,
     String? arrival,
     DateTime? dateFrom,
@@ -138,6 +163,6 @@ class PackageRequestRepository {
       '/package-requests',
       queryParameters: query,
     );
-    return PackageRequestPage.fromJson(response.data!);
+    return PackageRequestSearchPage.fromJson(response.data!);
   }
 }

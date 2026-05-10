@@ -1,6 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
-import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,9 +8,8 @@ import 'package:mocktail/mocktail.dart';
 
 class _MockRepo extends Mock implements PackageRequestRepository {}
 
-PackageRequest _fakeRequest(String id) => PackageRequest(
+PackageRequestSearchItem _fakeRequest(String id) => PackageRequestSearchItem(
       id: id,
-      senderId: 's-1',
       departureCity: 'Paris',
       arrivalCity: 'Dakar',
       desiredDate: DateTime(2026, 6, 15),
@@ -18,8 +17,13 @@ PackageRequest _fakeRequest(String id) => PackageRequest(
       weightKg: 5,
       parcelSize: ParcelSize.small,
       contentCategory: 'vetements',
-      status: PackageRequestStatus.open,
-      createdAt: DateTime(2026, 5, 10),
+      sender: const SenderPublicProfile(
+        id: 's-1',
+        displayName: 'Sender',
+        averageRating: 0,
+        totalRatings: 0,
+        kycVerified: true,
+      ),
     );
 
 void main() {
@@ -44,7 +48,7 @@ void main() {
             maxWeight: any(named: 'maxWeight'),
             parcelSize: any(named: 'parcelSize'),
             page: any(named: 'page'),
-          )).thenAnswer((_) async => PackageRequestPage(
+          )).thenAnswer((_) async => PackageRequestSearchPage(
             content: [_fakeRequest('r-1'), _fakeRequest('r-2')],
             totalElements: 2,
             page: 0,
@@ -80,7 +84,7 @@ void main() {
             maxWeight: any(named: 'maxWeight'),
             parcelSize: any(named: 'parcelSize'),
             page: any(named: 'page'),
-          )).thenAnswer((_) async => PackageRequestPage(
+          )).thenAnswer((_) async => PackageRequestSearchPage(
             content: [_fakeRequest('r-3'), _fakeRequest('r-4')],
             totalElements: 4,
             page: 1,
@@ -170,7 +174,7 @@ void main() {
             maxWeight: any(named: 'maxWeight'),
             parcelSize: any(named: 'parcelSize'),
             page: any(named: 'page'),
-          )).thenAnswer((_) async => PackageRequestPage(
+          )).thenAnswer((_) async => PackageRequestSearchPage(
             content: [_fakeRequest('r-fresh')],
             totalElements: 1,
             page: 0,

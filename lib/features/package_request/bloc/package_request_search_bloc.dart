@@ -1,6 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import '../data/models/package_request.dart';
+import '../data/models/package_request_search_item.dart';
 import '../data/models/parcel_size.dart';
 import '../data/package_request_repository.dart';
 
@@ -51,7 +51,7 @@ class PackageRequestSearchState extends Equatable {
   });
 
   final SearchStatus status;
-  final List<PackageRequest> results;
+  final List<PackageRequestSearchItem> results;
   final int page;
   final bool hasMore;
   final String? errorMessage;
@@ -64,7 +64,7 @@ class PackageRequestSearchState extends Equatable {
 
   PackageRequestSearchState copyWith({
     SearchStatus? status,
-    List<PackageRequest>? results,
+    List<PackageRequestSearchItem>? results,
     int? page,
     bool? hasMore,
     String? errorMessage,

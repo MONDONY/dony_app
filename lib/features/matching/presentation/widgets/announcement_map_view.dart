@@ -219,6 +219,7 @@ class AnnouncementMapView extends StatefulWidget {
   const AnnouncementMapView({
     super.key,
     required this.announcements,
+    this.extraMarkers = const {},
     this.searchDepartureCity,
     this.searchArrivalCity,
     this.locationService = const GeolocatorLocationService(),
@@ -234,6 +235,9 @@ class AnnouncementMapView extends StatefulWidget {
   });
 
   final List<AnnouncementModel> announcements;
+  /// Additional markers to render alongside announcement markers (e.g. package requests).
+  /// They bypass the cluster logic and are drawn as-is.
+  final Set<Marker> extraMarkers;
   final String? searchDepartureCity;
   final String? searchArrivalCity;
   final LocationService locationService;
@@ -537,7 +541,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
           onCameraIdle: () {
             _rebuildMarkers();
           },
-          markers: _markers,
+          markers: {..._markers, ...widget.extraMarkers},
           circles: _radiusCircle(),
           myLocationButtonEnabled: false,
           zoomControlsEnabled: false,
