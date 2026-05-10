@@ -1,5 +1,10 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
+import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -83,7 +88,11 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
           IconButton(
             tooltip: 'Fermer',
             icon: Icon(Icons.close, color: cs.onSurface),
-            onPressed: () => context.go('/kyc/status'),
+            onPressed: () {
+              context.read<KycBloc>().add(const KycSessionAbandoned());
+              context.read<AuthBloc>().add(const AuthCheckRequested());
+              context.go('/home');
+            },
           ),
         ],
       ),

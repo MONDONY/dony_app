@@ -85,7 +85,11 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
     return Scaffold(
       body: BlocConsumer<KycBloc, KycState>(
         listener: (context, state) {
-          if (state is! KycStatusLoaded) return;
+          if (state is KycSessionCreated) {
+          context.go('/kyc/verify', extra: state.stripeUrl);
+          return;
+        }
+        if (state is! KycStatusLoaded) return;
           if (state.kycStatus == 'VERIFIED') {
             _stopPolling();
             // Cancellable timer: auto-navigate after a short visual delay.
@@ -173,7 +177,7 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
         const SizedBox(height: DonySpacing.huge),
         DonyButton(
           label: 'Commencer la vérification',
-          onPressed: () => context.go('/kyc'),
+          onPressed: () => context.read<KycBloc>().add(const KycSessionRequested()),
         ),
       ],
     );
@@ -321,7 +325,7 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
         const SizedBox(height: DonySpacing.huge),
         DonyButton(
           label: 'Réessayer la vérification',
-          onPressed: () => context.go('/kyc'),
+          onPressed: () => context.read<KycBloc>().add(const KycSessionRequested()),
         ),
       ],
     );

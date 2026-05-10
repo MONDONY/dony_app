@@ -24,4 +24,12 @@ class KycRepository {
       throw unwrapDioError(e);
     }
   }
+
+  Future<void> abandonSession() async {
+    try {
+      await _apiClient.dio.delete<void>('/kyc/session');
+    } catch (e) {
+      throw unwrapDioError(e);
+    }
+  }
 }

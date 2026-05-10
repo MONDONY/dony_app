@@ -12,8 +12,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/presentation/screens/rematch_search_screen.dart';
 import 'package:dony/features/home/presentation/home_screen.dart';
+import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_status_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
@@ -109,7 +111,10 @@ final appRouter = GoRouter(
         if (!isStripe) {
           return const KycStatusScreen();
         }
-        return KycWebViewScreen(stripeUrl: raw);
+        return BlocProvider(
+          create: (_) => getIt<KycBloc>(),
+          child: KycWebViewScreen(stripeUrl: raw),
+        );
       },
     ),
     GoRoute(

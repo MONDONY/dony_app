@@ -22,37 +22,47 @@ typedef _StickyBtnConfig = ({
 class KycStatusBottomSheet extends StatefulWidget {
   const KycStatusBottomSheet({super.key});
 
-  static Future<void> show(BuildContext context) {
+  static Future<void> show(BuildContext context) async {
     final authBloc = context.read<AuthBloc>();
     final authState = authBloc.state;
     final initialKycStatus = authState is AuthAuthenticated
         ? authState.user.kycStatus
         : null;
     final stickyBtnNotifier = ValueNotifier<_StickyBtnConfig?>(null);
-    return DonyBottomSheet.show(
-      context,
-      title: 'Vérification d\'identité',
-      wrapper: (child) => BlocProvider(
-        create: (_) => getIt<KycBloc>(),
-        child: child,
-      ),
-      stickyBottom: ValueListenableBuilder<_StickyBtnConfig?>(
-        valueListenable: stickyBtnNotifier,
-        builder: (ctx, config, _) {
-          if (config == null) return const SizedBox.shrink();
-          return DonyButton(
-            label: config.label,
-            onPressed: config.onPressed,
-            variant: config.variant,
-          );
-        },
-      ),
-      child: _KycStatusContent(
-        authBloc: authBloc,
-        initialKycStatus: initialKycStatus,
-        stickyBtnNotifier: stickyBtnNotifier,
-      ),
-    ).whenComplete(stickyBtnNotifier.dispose);
+
+    String? stripeUrl;
+    try {
+      stripeUrl = await DonyBottomSheet.show<String>(
+        context,
+        title: 'Vérification d\'identité',
+        wrapper: (child) => BlocProvider(
+          create: (_) => getIt<KycBloc>(),
+          child: child,
+        ),
+        stickyBottom: ValueListenableBuilder<_StickyBtnConfig?>(
+          valueListenable: stickyBtnNotifier,
+          builder: (ctx, config, _) {
+            if (config == null) return const SizedBox.shrink();
+            return DonyButton(
+              label: config.label,
+              onPressed: config.onPressed,
+              variant: config.variant,
+            );
+          },
+        ),
+        child: _KycStatusContent(
+          authBloc: authBloc,
+          initialKycStatus: initialKycStatus,
+          stickyBtnNotifier: stickyBtnNotifier,
+        ),
+      );
+    } finally {
+      stickyBtnNotifier.dispose();
+    }
+
+    if (stripeUrl != null && context.mounted) {
+      GoRouter.of(context).go('/kyc/verify', extra: stripeUrl);
+    }
   }
 
   @override
@@ -150,7 +160,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
         case 'NOT_STARTED':
           config = (
             label: 'Commencer la vérification',
-            onPressed: () => context.go('/kyc/verify'),
+            onPressed: () => context.read<KycBloc>().add(const KycSessionRequested()),
             variant: DonyButtonVariant.primary,
           );
         case 'VERIFIED':
@@ -158,7 +168,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
         case 'REJECTED':
           config = (
             label: 'Réessayer la vérification',
-            onPressed: () => context.go('/kyc/verify'),
+            onPressed: () => context.read<KycBloc>().add(const KycSessionRequested()),
             variant: DonyButtonVariant.primary,
           );
         default:
@@ -196,6 +206,10 @@ class _KycStatusContentState extends State<_KycStatusContent> {
 
     return BlocConsumer<KycBloc, KycState>(
       listener: (context, state) {
+        if (state is KycSessionCreated) {
+          Navigator.of(context, rootNavigator: true).pop(state.stripeUrl);
+          return;
+        }
         if (state is! KycStatusLoaded) return;
         if (state.kycStatus == 'VERIFIED') {
           _stopPolling();
