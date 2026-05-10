@@ -278,7 +278,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                   ? () => UpgradeProBottomSheet.show(context, user: user!)
                                                   : null,
                                             ),
-                                          ] else
+                                          ] else ...[
                                             DonyListTile(
                                               icon: Icons.inventory_2_outlined,
                                               iconColor: Theme.of(context).colorScheme.secondary,
@@ -294,6 +294,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                     )
                                                   : null,
                                               onTap: () => context.push('/announcements'),
+                                            ),
+                                            DonyListTile(
+                                              icon: Icons.outbox_rounded,
+                                              iconColor: Theme.of(context).colorScheme.primary,
+                                              iconBgColor: Theme.of(context).colorScheme.primaryContainer,
+                                              label: 'Mes demandes d\'envoi',
+                                              onTap: () => context.push('/package-requests/me'),
+                                            ),
+                                            DonyListTile(
+                                              icon: Icons.add_circle_outline_rounded,
+                                              iconColor: cs.success,
+                                              iconBgColor: cs.successLight,
+                                              label: 'Publier une demande d\'envoi',
+                                              onTap: () => context.push('/package-requests/new'),
+                                            ),
+                                          ],
+                                          if (activeRole == ActiveRole.traveler)
+                                            DonyListTile(
+                                              icon: Icons.search_rounded,
+                                              iconColor: cs.success,
+                                              iconBgColor: cs.successLight,
+                                              label: 'Demandes d\'envoi à transporter',
+                                              onTap: () => context.push('/package-requests/search'),
                                             ),
                                           DonyListTile(
                                             icon: Icons.credit_card_outlined,
