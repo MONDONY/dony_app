@@ -141,18 +141,27 @@ class _ThreadView extends StatelessWidget {
         ),
         const Divider(height: 1, color: kBorder),
         Expanded(
-          child: ListView.builder(
-            padding: EdgeInsets.fromLTRB(
-                20, 16, 20, MediaQuery.of(context).padding.bottom + 100),
-            itemCount: thread.messages.length,
-            itemBuilder: (context, i) {
-              final m = thread.messages[i];
-              final mine = m.fromUserId == viewerUserId;
-              return _MessageBubble(message: m, mine: mine)
-                  .animate()
-                  .fadeIn(duration: 200.ms, delay: (40 * i).ms)
-                  .slideY(begin: 0.05);
+          child: RefreshIndicator(
+            color: kGreenPrimary,
+            onRefresh: () async {
+              context
+                  .read<NegotiationBloc>()
+                  .add(NegotiationFetchRequested(thread.id));
             },
+            child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(
+                  20, 16, 20, MediaQuery.of(context).padding.bottom + 100),
+              itemCount: thread.messages.length,
+              itemBuilder: (context, i) {
+                final m = thread.messages[i];
+                final mine = m.fromUserId == viewerUserId;
+                return _MessageBubble(message: m, mine: mine)
+                    .animate()
+                    .fadeIn(duration: 200.ms, delay: (40 * i).ms)
+                    .slideY(begin: 0.05);
+              },
+            ),
           ),
         ),
         if (canCounter && !lastFromMe)

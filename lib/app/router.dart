@@ -33,6 +33,7 @@ import 'package:dony/features/package_request/presentation/screens/sender/comple
 import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/package_request_create_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/package_request_detail_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/shared/my_negotiations_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/shared/negotiation_thread_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_public_detail_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_search_screen.dart';
@@ -393,6 +394,10 @@ final appRouter = GoRouter(
       path: '/package-requests/:id/complete-details',
       builder: (_, state) =>
           CompleteDetailsScreen(requestId: state.pathParameters['id']!),
+    ),
+    GoRoute(
+      path: '/negotiations',
+      builder: (_, __) => const MyNegotiationsScreen(),
     ),
     GoRoute(
       path: '/negotiations/:id',

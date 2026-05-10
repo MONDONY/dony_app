@@ -322,6 +322,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               onTap: () => context.push('/package-requests/search'),
                                             ),
                                           DonyListTile(
+                                            icon: Icons.handshake_rounded,
+                                            iconColor: Theme.of(context).colorScheme.tertiary,
+                                            iconBgColor: Theme.of(context).colorScheme.tertiaryContainer,
+                                            label: 'Mes négociations',
+                                            onTap: () => context.push('/negotiations'),
+                                          ),
+                                          DonyListTile(
                                             icon: Icons.credit_card_outlined,
                                             iconColor: DonyColors.purple,
                                             iconBgColor: DonyColors.violetLight,
