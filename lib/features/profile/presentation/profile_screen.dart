@@ -20,6 +20,7 @@ import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
 import 'package:dony/features/profile/presentation/widgets/upgrade_pro_bottom_sheet.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:dony/features/package_request/presentation/widgets/publish_package_request_bottom_sheet.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -307,7 +308,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               iconColor: cs.success,
                                               iconBgColor: cs.successLight,
                                               label: 'Publier une demande d\'envoi',
-                                              onTap: () => context.push('/package-requests/new'),
+                                              onTap: () =>
+                                                  PublishPackageRequestBottomSheet
+                                                      .show(context),
                                             ),
                                           ],
                                           if (activeRole == ActiveRole.traveler)

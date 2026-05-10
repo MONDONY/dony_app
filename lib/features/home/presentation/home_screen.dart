@@ -30,6 +30,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
+import 'package:dony/features/package_request/presentation/widgets/package_request_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
 import 'package:dony/features/profile/presentation/widgets/pro_stats_card.dart';
@@ -840,9 +841,41 @@ class _MapSenderViewState extends State<_MapSenderView> {
                   ),
                 ),
                 if (_tab == _HomeTab.demandes)
-                  const SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: _DemandesPlaceholder(),
+                  BlocBuilder<PackageRequestSearchBloc,
+                      PackageRequestSearchState>(
+                    builder: (ctx, prState) {
+                      if (prState.status == SearchStatus.loading) {
+                        return SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: Center(
+                            child: CircularProgressIndicator(color: cs.primary),
+                          ),
+                        );
+                      }
+                      if (prState.results.isEmpty) {
+                        return const SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: _DemandesPlaceholder(),
+                        );
+                      }
+                      return SliverPadding(
+                        padding: EdgeInsets.fromLTRB(
+                          DonySpacing.base,
+                          DonySpacing.sm,
+                          DonySpacing.base,
+                          bottomPad + DonySpacing.huge,
+                        ),
+                        sliver: SliverList.separated(
+                          itemCount: prState.results.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: DonySpacing.md),
+                          itemBuilder: (_, i) => PackageRequestCard(
+                            item: prState.results[i],
+                            index: i,
+                          ),
+                        ),
+                      );
+                    },
                   )
                 else if (count == 0)
                   SliverFillRemaining(
