@@ -5,6 +5,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_detail_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement_bottom_sheet.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -117,8 +118,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
           if (state is AnnouncementDeleted) {
             context.read<AnnouncementBloc>().add(AnnouncementListRequested());
           } else if (state is AnnouncementError && _lastList.isNotEmpty) {
-            DonySnackbar.show(context,
-                message: state.message, type: DonySnackbarType.error);
+            ErrorPresenter.show(context, state.error);
             context.read<AnnouncementBloc>().add(AnnouncementListRequested());
           }
         },
@@ -133,7 +133,8 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
           }
 
           if (state is AnnouncementError && _lastList.isEmpty) {
-            return _ErrorView(message: state.message);
+            return _ErrorView(
+                message: ErrorPresenter.resolve(state.error).message);
           }
 
           final inProgressList = _inProgress();

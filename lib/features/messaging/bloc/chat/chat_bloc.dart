@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
@@ -64,7 +65,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       _firestoreRepo.messagesStream(event.firestoreConversationId),
       onData: (messages) =>
           event.isReadOnly ? ChatReadOnly(messages) : ChatLoaded(messages),
-      onError: (e, st) => const ChatError('Erreur de connexion au chat'),
+      onError: (e, st) => ChatError(NetworkException(
+        'Erreur de connexion au chat',
+        code: 'chat-stream-error',
+      )),
     );
   }
 
@@ -144,8 +148,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     try {
       await _conversationRepo.deleteConversation(event.conversationId);
       emit(const ChatConversationDeleted());
-    } catch (_) {
-      emit(const ChatError('Impossible de supprimer la conversation'));
+    } catch (e) {
+      emit(ChatError(unwrapDioError(e)));
     }
   }
 

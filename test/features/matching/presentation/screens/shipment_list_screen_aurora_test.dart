@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
@@ -204,7 +205,7 @@ void main() {
   // ── État erreur ───────────────────────────────────────────────────────────
 
   testWidgets('affiche _ErrorView quand BidError et pas encore de données', (tester) async {
-    when(() => bidBloc.state).thenReturn(BidError('Erreur réseau'));
+    when(() => bidBloc.state).thenReturn(BidError(NetworkException('Erreur réseau')));
     await _pump(tester, bidBloc: bidBloc, paymentBloc: paymentBloc, authBloc: authBloc);
     expect(find.text('Erreur réseau'), findsOneWidget);
   });

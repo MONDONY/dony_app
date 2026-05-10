@@ -29,17 +29,16 @@ class AccountDeletionBloc
     try {
       await _repository.requestDeletion();
       emit(const AccountDeletionRequested());
-    } on ValidationException {
-      emit(const AccountDeletionError(
-        message:
-            'Vous avez un paiement en cours. La suppression sera possible une fois la livraison confirmée.',
+    } on ValidationException catch (e) {
+      emit(AccountDeletionError(
+        error: ValidationException(
+          'Vous avez un paiement en cours. La suppression sera possible une fois la livraison confirmée.',
+          code: e.code ?? 'escrow-blocked',
+        ),
         isEscrowBlocked: true,
       ));
-    } on AppException catch (e) {
-      emit(AccountDeletionError(message: e.message));
-    } catch (_) {
-      emit(const AccountDeletionError(
-          message: 'Une erreur est survenue. Veuillez réessayer.'));
+    } catch (e) {
+      emit(AccountDeletionError(error: unwrapDioError(e)));
     }
   }
 
@@ -51,11 +50,8 @@ class AccountDeletionBloc
     try {
       final user = await _repository.reactivateAccount();
       emit(AccountReactivated(user));
-    } on AppException catch (e) {
-      emit(AccountDeletionError(message: e.message));
-    } catch (_) {
-      emit(const AccountDeletionError(
-          message: 'Une erreur est survenue. Veuillez réessayer.'));
+    } catch (e) {
+      emit(AccountDeletionError(error: unwrapDioError(e)));
     }
   }
 
@@ -71,11 +67,8 @@ class AccountDeletionBloc
         verificationId: verificationId,
         phoneHint: _maskPhone(phone),
       ));
-    } on AppException catch (e) {
-      emit(AccountDeletionError(message: e.message));
-    } catch (_) {
-      emit(const AccountDeletionError(
-          message: 'Impossible d\'envoyer le code SMS. Veuillez réessayer.'));
+    } catch (e) {
+      emit(AccountDeletionError(error: unwrapDioError(e)));
     }
   }
 
@@ -88,22 +81,24 @@ class AccountDeletionBloc
       await _reauth.reauthenticate(event.verificationId, event.smsCode);
       await _repository.deleteImmediately();
       emit(const AccountDeletionImmediate());
-    } on ValidationException {
-      emit(const AccountDeletionError(
-        message:
-            'Vous avez un paiement en cours. La suppression sera possible une fois la livraison confirmée.',
+    } on ValidationException catch (e) {
+      emit(AccountDeletionError(
+        error: ValidationException(
+          'Vous avez un paiement en cours. La suppression sera possible une fois la livraison confirmée.',
+          code: e.code ?? 'escrow-blocked',
+        ),
         isEscrowBlocked: true,
       ));
-    } on UnauthorizedException {
-      emit(const AccountDeletionError(
-        message: 'Session expirée. Veuillez recommencer la procédure.',
+    } on UnauthorizedException catch (e) {
+      emit(AccountDeletionError(
+        error: UnauthorizedException(
+          'Session expirée. Veuillez recommencer la procédure.',
+          e.code,
+        ),
         isReauthRequired: true,
       ));
-    } on AppException catch (e) {
-      emit(AccountDeletionError(message: e.message));
-    } catch (_) {
-      emit(const AccountDeletionError(
-          message: 'Une erreur est survenue lors de la suppression.'));
+    } catch (e) {
+      emit(AccountDeletionError(error: unwrapDioError(e)));
     }
   }
 

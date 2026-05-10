@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -46,7 +46,7 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
       final link = await _repository.createOnboardingLink();
       emit(PaymentOnboardingUrlReady(link));
     } catch (e) {
-      emit(PaymentError(_friendlyError(e)));
+      emit(PaymentError(unwrapDioError(e)));
     }
   }
 
@@ -63,7 +63,7 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
         emit(const PaymentOnboardingPending());
       }
     } catch (e) {
-      emit(PaymentError(_friendlyError(e)));
+      emit(PaymentError(unwrapDioError(e)));
     }
   }
 
@@ -80,7 +80,7 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
         emit(const PaymentOnboardingPending());
       }
     } catch (e) {
-      emit(PaymentError(_friendlyError(e)));
+      emit(PaymentError(unwrapDioError(e)));
     }
   }
 
@@ -92,7 +92,10 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
     try {
       final payment = await _repository.createPayment(event.bidId);
       if (payment.clientSecret == null) {
-        emit(const PaymentError('Paiement déjà effectué pour cette demande.'));
+        emit(PaymentError(NetworkException(
+          'Paiement déjà effectué pour cette demande.',
+          code: 'payment-already-done',
+        )));
         return;
       }
       emit(PaymentSheetReady(
@@ -102,7 +105,7 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
         paymentId: payment.id,
       ));
     } catch (e) {
-      emit(PaymentError(_friendlyError(e)));
+      emit(PaymentError(unwrapDioError(e)));
     }
   }
 
@@ -120,20 +123,6 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
     PaymentFailed event,
     Emitter<PaymentState> emit,
   ) async {
-    emit(PaymentError(event.message));
-  }
-
-  String _friendlyError(Object e) {
-    if (e is DioException) {
-      final status = e.response?.statusCode;
-      if (status == 401 || status == 403) return 'Session expirée. Reconnectez-vous.';
-      if (status == 422) {
-        final detail = e.response?.data?['detail'] as String?;
-        return detail ?? 'Données invalides.';
-      }
-      if (status != null && status >= 500) return 'Erreur serveur. Réessayez plus tard.';
-      return 'Erreur réseau. Vérifiez votre connexion.';
-    }
-    return 'Une erreur inattendue est survenue.';
+    emit(PaymentError(NetworkException(event.message, code: 'payment-failed')));
   }
 }

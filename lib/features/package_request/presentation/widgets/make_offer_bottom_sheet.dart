@@ -1,6 +1,7 @@
 import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/price_estimate.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
@@ -21,14 +22,6 @@ class MakeOfferBottomSheet {
     required String departureCity,
     required String arrivalCity,
   }) async {
-    final formKey = GlobalKey<FormState>();
-    final priceCtrl = TextEditingController(
-      text: targetPriceEur != null ? targetPriceEur.toStringAsFixed(0) : '',
-    );
-    final kgCtrl = TextEditingController(text: weightKg.toStringAsFixed(1));
-    final dateNotifier = ValueNotifier<DateTime?>(null);
-    final bodyCtrl = TextEditingController();
-
     PriceEstimate? estimate;
     try {
       estimate = await getIt<PriceEstimationRepository>().estimate(
@@ -37,66 +30,121 @@ class MakeOfferBottomSheet {
         weight: weightKg,
       );
     } catch (_) {
-      // ignore
+      // estimate optional
     }
 
     if (!context.mounted) return;
-    final future = DonyBottomSheet.show<void>(
+
+    // Capture root references BEFORE the sheet opens — using `ctx` from
+    // inside the listener after pop() would touch a disposed subtree.
+    final rootRouter = GoRouter.of(context);
+
+    await DonyBottomSheet.show<void>(
       context,
       title: 'Faire une offre',
       wrapper: (child) => BlocProvider(
         create: (_) => getIt<NegotiationBloc>(),
         child: child,
       ),
-      stickyBottom: BlocConsumer<NegotiationBloc, NegotiationState>(
-        listener: (ctx, state) {
-          if (state is NegotiationLoaded) {
-            ScaffoldMessenger.of(ctx).showSnackBar(
-              const SnackBar(
-                content: Text('Offre envoyée'),
-                backgroundColor: kSuccess,
-              ),
-            );
-            Navigator.of(ctx, rootNavigator: true).pop();
-            ctx.push('/negotiations/${state.thread.id}');
-          } else if (state is NegotiationError) {
-            ScaffoldMessenger.of(ctx).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: kError),
-            );
-          }
-        },
-        builder: (ctx, state) {
-          final loading = state is NegotiationLoading;
-          return DonyButton(
-            label: loading ? 'Envoi…' : 'Envoyer l\'offre',
-            isLoading: loading,
-            onPressed: () {
-              if (!formKey.currentState!.validate()) return;
-              if (dateNotifier.value == null) {
-                ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(
-                    content: Text('Sélectionnez votre date de voyage'),
-                  ),
-                );
-                return;
-              }
-              ctx.read<NegotiationBloc>().add(NegotiationStartRequested(
-                    packageRequestId: packageRequestId,
-                    proposedPriceEur: double.parse(
-                        priceCtrl.text.replaceAll(',', '.')),
-                    travelerTravelDate: dateNotifier.value!,
-                    travelerAvailableKg: double.parse(
-                        kgCtrl.text.replaceAll(',', '.')),
-                    body: bodyCtrl.text.trim().isEmpty
-                        ? null
-                        : bodyCtrl.text.trim(),
-                  ));
-            },
-          );
-        },
+      child: _MakeOfferContent(
+        packageRequestId: packageRequestId,
+        targetPriceEur: targetPriceEur,
+        weightKg: weightKg,
+        estimate: estimate,
+        rootRouter: rootRouter,
       ),
+    );
+  }
+}
+
+class _MakeOfferContent extends StatefulWidget {
+  const _MakeOfferContent({
+    required this.packageRequestId,
+    required this.targetPriceEur,
+    required this.weightKg,
+    required this.estimate,
+    required this.rootRouter,
+  });
+
+  final String packageRequestId;
+  final double? targetPriceEur;
+  final double weightKg;
+  final PriceEstimate? estimate;
+  final GoRouter rootRouter;
+
+  @override
+  State<_MakeOfferContent> createState() => _MakeOfferContentState();
+}
+
+class _MakeOfferContentState extends State<_MakeOfferContent> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _priceCtrl;
+  late final TextEditingController _kgCtrl;
+  late final TextEditingController _bodyCtrl;
+  final _dateNotifier = ValueNotifier<DateTime?>(null);
+
+  @override
+  void initState() {
+    super.initState();
+    _priceCtrl = TextEditingController(
+      text: widget.targetPriceEur != null
+          ? widget.targetPriceEur!.toStringAsFixed(0)
+          : '',
+    );
+    _kgCtrl = TextEditingController(text: widget.weightKg.toStringAsFixed(1));
+    _bodyCtrl = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _priceCtrl.dispose();
+    _kgCtrl.dispose();
+    _bodyCtrl.dispose();
+    _dateNotifier.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    if (_dateNotifier.value == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sélectionnez votre date de voyage')),
+      );
+      return;
+    }
+    context.read<NegotiationBloc>().add(NegotiationStartRequested(
+          packageRequestId: widget.packageRequestId,
+          proposedPriceEur:
+              double.parse(_priceCtrl.text.replaceAll(',', '.')),
+          travelerTravelDate: _dateNotifier.value!,
+          travelerAvailableKg:
+              double.parse(_kgCtrl.text.replaceAll(',', '.')),
+          body: _bodyCtrl.text.trim().isEmpty ? null : _bodyCtrl.text.trim(),
+        ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final estimate = widget.estimate;
+    return BlocListener<NegotiationBloc, NegotiationState>(
+      listener: (ctx, state) {
+        if (state is NegotiationLoaded) {
+          ScaffoldMessenger.of(ctx).showSnackBar(
+            const SnackBar(
+              content: Text('Offre envoyée'),
+              backgroundColor: kSuccess,
+            ),
+          );
+          // Pop sheet first, then push using the captured root router so we
+          // don't dereference a disposed subtree context.
+          Navigator.of(ctx, rootNavigator: true).pop();
+          widget.rootRouter.push('/negotiations/${state.thread.id}');
+        } else if (state is NegotiationError) {
+          ErrorPresenter.show(ctx, state.error);
+        }
+      },
       child: Form(
-        key: formKey,
+        key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -127,8 +175,9 @@ class MakeOfferBottomSheet {
               ),
             const SizedBox(height: 16),
             TextFormField(
-              controller: priceCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              controller: _priceCtrl,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(
                 labelText: 'Votre prix',
                 suffixText: '€',
@@ -142,8 +191,9 @@ class MakeOfferBottomSheet {
             ),
             const SizedBox(height: 12),
             TextFormField(
-              controller: kgCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              controller: _kgCtrl,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(
                 labelText: 'Capacité disponible',
                 suffixText: 'kg',
@@ -156,7 +206,7 @@ class MakeOfferBottomSheet {
             ),
             const SizedBox(height: 12),
             ValueListenableBuilder<DateTime?>(
-              valueListenable: dateNotifier,
+              valueListenable: _dateNotifier,
               builder: (ctx, date, _) => InkWell(
                 onTap: () async {
                   final picked = await showDatePicker(
@@ -167,7 +217,7 @@ class MakeOfferBottomSheet {
                     lastDate:
                         DateTime.now().add(const Duration(days: 90)),
                   );
-                  if (picked != null) dateNotifier.value = picked;
+                  if (picked != null) _dateNotifier.value = picked;
                 },
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
@@ -199,7 +249,7 @@ class MakeOfferBottomSheet {
             ),
             const SizedBox(height: 12),
             TextFormField(
-              controller: bodyCtrl,
+              controller: _bodyCtrl,
               maxLines: 2,
               maxLength: 280,
               decoration: const InputDecoration(
@@ -207,15 +257,20 @@ class MakeOfferBottomSheet {
                 hintText: 'Je voyage exactement ce jour-là',
               ),
             ),
+            const SizedBox(height: 16),
+            BlocBuilder<NegotiationBloc, NegotiationState>(
+              builder: (ctx, state) {
+                final loading = state is NegotiationLoading;
+                return DonyButton(
+                  label: loading ? 'Envoi…' : 'Envoyer l\'offre',
+                  isLoading: loading,
+                  onPressed: loading ? null : _submit,
+                );
+              },
+            ),
           ],
         ),
       ),
     );
-    await future.whenComplete(() {
-      priceCtrl.dispose();
-      kgCtrl.dispose();
-      bodyCtrl.dispose();
-      dateNotifier.dispose();
-    });
   }
 }

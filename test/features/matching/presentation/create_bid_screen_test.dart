@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -484,7 +485,7 @@ void main() {
       addTearDown(tester.view.reset);
       whenListen<BidState>(
         bidBloc,
-        Stream.fromIterable([BidError('Erreur réseau')]),
+        Stream.fromIterable([BidError(NetworkException('Erreur réseau'))]),
         initialState: BidInitial(),
       );
 

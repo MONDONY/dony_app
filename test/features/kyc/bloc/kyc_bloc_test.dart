@@ -72,7 +72,7 @@ void main() {
       expect: () => [
         const KycLoading(),
         isA<KycError>().having(
-          (s) => s.message,
+          (s) => s.error.message,
           'message',
           contains('déjà vérifiée'),
         ),
@@ -97,7 +97,7 @@ void main() {
       expect: () => [
         const KycLoading(),
         isA<KycError>().having(
-          (s) => s.message,
+          (s) => s.error.message,
           'message',
           contains('indisponible'),
         ),
@@ -122,7 +122,7 @@ void main() {
       expect: () => [
         const KycLoading(),
         isA<KycError>().having(
-          (s) => s.message,
+          (s) => s.error.message,
           'message',
           contains('Session expirée'),
         ),
@@ -173,7 +173,7 @@ void main() {
       act: (b) => b.add(const KycStatusRefreshed()),
       expect: () => [
         isA<KycError>().having(
-          (s) => s.message,
+          (s) => s.error.message,
           'message',
           contains('indisponible'),
         ),
@@ -190,7 +190,7 @@ void main() {
       act: (b) => b.add(const KycStatusRefreshed()),
       expect: () => [
         isA<KycError>().having(
-          (s) => s.message,
+          (s) => s.error.message,
           'message',
           contains('déjà vérifiée'),
         ),

@@ -171,7 +171,7 @@ void main() {
       expect: () => [
         isA<TrackingEventsLoading>(),
         isA<TrackingEventsError>().having(
-          (s) => s.message,
+          (s) => s.error.message,
           'message',
           contains('Accès refusé'),
         ),
@@ -189,7 +189,7 @@ void main() {
       expect: () => [
         isA<TrackingEventsLoading>(),
         isA<TrackingEventsError>().having(
-          (s) => s.message,
+          (s) => s.error.message,
           'message',
           contains('Session expirée'),
         ),
@@ -208,7 +208,7 @@ void main() {
       expect: () => [
         isA<TrackingEventsLoading>(),
         predicate<TrackingState>((s) =>
-            s is TrackingEventsError && s.message.contains('archivé')),
+            s is TrackingEventsError && s.error.message.contains('archivé')),
       ],
     );
   });
@@ -287,7 +287,7 @@ void main() {
       expect: () => [
         isA<DeliveryConfirmLoading>(),
         isA<DeliveryConfirmError>().having(
-          (s) => s.message,
+          (s) => s.error.message,
           'message',
           'Code invalide',
         ),

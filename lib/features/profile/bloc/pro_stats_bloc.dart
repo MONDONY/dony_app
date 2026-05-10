@@ -21,10 +21,8 @@ class ProStatsBloc extends Bloc<ProStatsEvent, ProStatsState> {
     try {
       final stats = await _repository.fetchStats();
       emit(ProStatsLoaded(stats));
-    } on AppException catch (e) {
-      emit(ProStatsError(e.message));
-    } catch (_) {
-      emit(ProStatsError('Impossible de charger les statistiques.'));
+    } catch (e) {
+      emit(ProStatsError(unwrapDioError(e)));
     }
   }
 }

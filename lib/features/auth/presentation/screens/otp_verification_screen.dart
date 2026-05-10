@@ -2,6 +2,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -67,8 +68,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           } else if (state is AuthAuthenticated) {
             context.go('/auth/local');
           } else if (state is AuthError) {
-            DonySnackbar.show(context,
-                message: state.message, type: DonySnackbarType.error);
+            ErrorPresenter.show(context, state.error);
           }
         },
         builder: (context, state) {

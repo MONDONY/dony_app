@@ -12,6 +12,6 @@ class ProStatsLoaded extends ProStatsState {
 }
 
 class ProStatsError extends ProStatsState {
-  final String message;
-  ProStatsError(this.message);
+  final AppException error;
+  ProStatsError(this.error);
 }

@@ -69,7 +69,7 @@ void main() {
       expect: () => [
         isA<UpgradeToProLoading>(),
         isA<UpgradeToProError>().having(
-          (s) => s.message,
+          (s) => s.error.message,
           'message',
           'Une erreur est survenue. Veuillez réessayer.',
         ),
@@ -91,7 +91,7 @@ void main() {
       expect: () => [
         isA<UpgradeToProLoading>(),
         isA<UpgradeToProError>().having(
-          (s) => s.message,
+          (s) => s.error.message,
           'message',
           'Une erreur est survenue. Veuillez réessayer.',
         ),
@@ -113,7 +113,7 @@ void main() {
       expect: () => [
         isA<UpgradeToProLoading>(),
         isA<UpgradeToProError>().having(
-          (s) => s.message,
+          (s) => s.error.message,
           'message',
           'Une erreur est survenue. Veuillez réessayer.',
         ),

@@ -18,6 +18,6 @@ class ConfigLoaded extends ConfigState {
 }
 
 class ConfigError extends ConfigState {
-  final String message;
-  const ConfigError(this.message);
+  final AppException error;
+  const ConfigError(this.error);
 }

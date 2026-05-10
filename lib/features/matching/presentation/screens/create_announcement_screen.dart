@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
@@ -330,7 +331,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
           ));
           context.go('/announcements');
         } else if (state is AnnouncementError) {
-          _showError(state.message);
+          ErrorPresenter.show(context, state.error);
         }
       },
       builder: (context, state) {

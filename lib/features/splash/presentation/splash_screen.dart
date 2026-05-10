@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart' show Options;
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -95,7 +96,7 @@ class _SplashScreenState extends State<SplashScreen> {
         )
         .timeout(
           const Duration(seconds: 15),
-          onTimeout: () => const AuthError(''),
+          onTimeout: () => const AuthError(TimeoutException()),
         );
 
     if (!mounted) {

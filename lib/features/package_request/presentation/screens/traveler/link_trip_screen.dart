@@ -3,6 +3,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement_bottom_sheet.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
@@ -93,37 +94,64 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
   }
 
   Future<void> _createNewTrip() async {
-    // Open the existing CreateAnnouncementBottomSheet. After it closes,
-    // refresh our matching list — if a new matching trip exists, the user
-    // can tap it to link.
-    await CreateAnnouncementBottomSheet.show(context);
+    final r = _request;
+    if (r == null) return;
+    final lockContext = LockedTripContext(
+      threadId: widget.thread.id,
+      packageRequestId: r.id,
+      departureCity: r.departureCity,
+      arrivalCity: r.arrivalCity,
+      desiredDate: r.desiredDate,
+      dateToleranceDays: r.dateToleranceDays,
+      weightKg: r.weightKg,
+      transportMode: r.transportMode,
+      agreedPriceEur: widget.thread.currentPriceEur,
+    );
+    await CreateAnnouncementBottomSheet.show(
+      context,
+      lockContext: lockContext,
+      negotiationBloc: context.read<NegotiationBloc>(),
+    );
+    // The sheet's BlocListener pops itself on success and the screen-level
+    // listener below will pop us back. If the user cancelled, we still
+    // refresh the matching list.
     if (mounted) await _load();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kBackground,
-      appBar: AppBar(
-        backgroundColor: kSurface,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded,
-              size: 20, color: kGreenPrimary),
-          onPressed: () => context.pop(),
+    return BlocListener<NegotiationBloc, NegotiationState>(
+      listenWhen: (prev, curr) => curr is NegotiationLoaded,
+      listener: (context, state) {
+        if (state is NegotiationLoaded
+            && state.thread.status == NegotiationThreadStatus.awaitingPayment) {
+          // Trip linked (existing or freshly created): leave this screen.
+          if (context.canPop()) context.pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: kBackground,
+        appBar: AppBar(
+          backgroundColor: kSurface,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_rounded,
+                size: 20, color: kGreenPrimary),
+            onPressed: () => context.pop(),
+          ),
+          title: Text(
+            'Lier un trajet',
+            style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w700, fontSize: 18),
+          ),
+          centerTitle: false,
         ),
-        title: Text(
-          'Lier un trajet',
-          style: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.w700, fontSize: 18),
-        ),
-        centerTitle: false,
+        body: _loading
+            ? const Center(child: CircularProgressIndicator(color: kGreenPrimary))
+            : _error != null
+                ? _ErrorView(message: _error!, onRetry: _load)
+                : _buildBody(),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator(color: kGreenPrimary))
-          : _error != null
-              ? _ErrorView(message: _error!, onRetry: _load)
-              : _buildBody(),
     );
   }
 

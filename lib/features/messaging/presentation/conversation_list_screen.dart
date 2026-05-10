@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_state.dart';
@@ -41,7 +42,7 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
               type: DonyEmptyStateType.error,
               icon: Icons.wifi_off_rounded,
               title: 'Erreur de chargement',
-              description: state.message,
+              description: ErrorPresenter.resolve(state.error).message,
               actionLabel: 'Réessayer',
               onAction: () => context
                   .read<ConversationListBloc>()

@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -73,9 +74,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             if (state is AccountReactivated) {
               context.read<AuthBloc>().add(const AuthCheckRequested());
             } else if (state is AccountDeletionError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
-              );
+              ErrorPresenter.show(context, state.error);
             }
           },
         ),

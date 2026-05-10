@@ -104,7 +104,7 @@ void main() {
       )),
       expect: () => [
         isA<BidLoading>(),
-        predicate<BidState>((s) => s is BidError && s.message == 'Valeur maximum : 500 €'),
+        predicate<BidState>((s) => s is BidError && s.error.message == 'Valeur maximum : 500 €'),
       ],
     );
 
@@ -168,7 +168,7 @@ void main() {
       act: (bloc) => bloc.add(BidListRequested('ann-001')),
       expect: () => [
         isA<BidLoading>(),
-        predicate<BidState>((s) => s is BidError && s.message == 'Accès refusé'),
+        predicate<BidState>((s) => s is BidError && s.error.message == 'Accès refusé'),
       ],
     );
 
@@ -217,7 +217,7 @@ void main() {
       act: (bloc) => bloc.add(BidMyListRequested()),
       expect: () => [
         isA<BidLoading>(),
-        predicate<BidState>((s) => s is BidError && s.message == 'Serveur indisponible'),
+        predicate<BidState>((s) => s is BidError && s.error.message == 'Serveur indisponible'),
       ],
     );
 
@@ -295,7 +295,7 @@ void main() {
       act: (bloc) => bloc.add(BidAcceptRequested('bid-001')),
       expect: () => [
         isA<BidLoading>(),
-        predicate<BidState>((s) => s is BidError && s.message == 'Capacité insuffisante'),
+        predicate<BidState>((s) => s is BidError && s.error.message == 'Capacité insuffisante'),
       ],
     );
 
@@ -344,7 +344,7 @@ void main() {
       act: (bloc) => bloc.add(BidRejectRequested('bid-001', reason: 'reason')),
       expect: () => [
         isA<BidLoading>(),
-        predicate<BidState>((s) => s is BidError && s.message == 'Déjà rejeté'),
+        predicate<BidState>((s) => s is BidError && s.error.message == 'Déjà rejeté'),
       ],
     );
 
@@ -419,7 +419,7 @@ void main() {
       expect: () => [
         isA<BidLoading>(),
         predicate<BidState>(
-            (s) => s is BidError && s.message == 'Bid déjà terminé'),
+            (s) => s is BidError && s.error.message == 'Bid déjà terminé'),
       ],
     );
 
@@ -464,7 +464,7 @@ void main() {
       act: (bloc) => bloc.add(BidHideRequested('bid-001')),
       expect: () => [
         isA<BidLoading>(),
-        predicate<BidState>((s) => s is BidError && s.message == 'Bid introuvable'),
+        predicate<BidState>((s) => s is BidError && s.error.message == 'Bid introuvable'),
       ],
     );
 
@@ -509,7 +509,7 @@ void main() {
       act: (bloc) => bloc.add(BidTravelerDismissRequested('bid-001')),
       expect: () => [
         isA<BidLoading>(),
-        predicate<BidState>((s) => s is BidError && s.message == 'Action non autorisée'),
+        predicate<BidState>((s) => s is BidError && s.error.message == 'Action non autorisée'),
       ],
     );
 
@@ -574,7 +574,7 @@ void main() {
       )),
       expect: () => [
         isA<BidLoading>(),
-        predicate<BidState>((s) => s is BidError && s.message == 'Fenêtre invalide'),
+        predicate<BidState>((s) => s is BidError && s.error.message == 'Fenêtre invalide'),
       ],
     );
 
@@ -633,7 +633,7 @@ void main() {
       expect: () => [
         isA<BidLoading>(),
         predicate<BidState>(
-            (s) => s is BidError && s.message == 'Présence déjà confirmée'),
+            (s) => s is BidError && s.error.message == 'Présence déjà confirmée'),
       ],
     );
 
@@ -679,7 +679,7 @@ void main() {
       act: (bloc) => bloc.add(BidConfirmPaymentRequested('bid-001')),
       expect: () => [
         predicate<BidState>(
-            (s) => s is BidError && s.message == 'Stripe indisponible'),
+            (s) => s is BidError && s.error.message == 'Stripe indisponible'),
       ],
     );
 
@@ -725,7 +725,7 @@ void main() {
       expect: () => [
         isA<BidLoading>(),
         predicate<BidState>(
-            (s) => s is BidError && s.message == 'Bid introuvable'),
+            (s) => s is BidError && s.error.message == 'Bid introuvable'),
       ],
     );
 

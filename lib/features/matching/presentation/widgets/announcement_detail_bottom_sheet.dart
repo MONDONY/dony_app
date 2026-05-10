@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/presentation/widgets/cancellation_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -137,8 +138,10 @@ class _AnnouncementDetailContent extends StatelessWidget {
             type: DonySnackbarType.warning,
           );
           Navigator.of(context, rootNavigator: true).pop();
+        } else if (state is AnnouncementDeleteBlockedByAcceptedBid) {
+          _onDeleteBlocked(context, state.announcementId);
         } else if (state is AnnouncementError) {
-          DonySnackbar.show(context, message: state.message, type: DonySnackbarType.error);
+          ErrorPresenter.show(context, state.error);
         }
       },
       builder: (context, state) {
@@ -424,6 +427,25 @@ class _AnnouncementDetailContent extends StatelessWidget {
         ],
       ],
     );
+  }
+
+  Future<void> _onDeleteBlocked(
+    BuildContext context,
+    String announcementId,
+  ) async {
+    final confirmed = await DonyDialog.show(
+      context,
+      title: 'Suppression impossible',
+      message:
+          "Un colis est déjà accepté sur ce trajet. Pour le retirer, vous devez d'abord annuler le voyage : l'expéditeur sera remboursé automatiquement.",
+      confirmLabel: 'Annuler le voyage',
+      cancelLabel: 'Fermer',
+      variant: DonyDialogVariant.destructive,
+      icon: Icons.event_busy_rounded,
+    );
+    if (confirmed == true && context.mounted) {
+      await CancellationBottomSheet.show(context, announcementId: announcementId);
+    }
   }
 }
 

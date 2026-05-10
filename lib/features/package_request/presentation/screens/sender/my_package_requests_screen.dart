@@ -1,4 +1,5 @@
 import 'package:dony/features/package_request/presentation/_theme.dart';
+import 'package:dony/features/package_request/presentation/widgets/publish_package_request_bottom_sheet.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
@@ -61,7 +62,7 @@ class _ListView extends StatelessWidget {
           }
           if (state.requests.isEmpty) {
             return _Empty(
-              onCreate: () => context.push('/package-requests/new'),
+              onCreate: () => PublishPackageRequestBottomSheet.show(context),
             );
           }
           return RefreshIndicator(
@@ -90,7 +91,7 @@ class _ListView extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/package-requests/new'),
+        onPressed: () => PublishPackageRequestBottomSheet.show(context),
         backgroundColor: kGreenPrimary,
         icon: const Icon(Icons.add_rounded, color: Colors.white),
         label: Text(

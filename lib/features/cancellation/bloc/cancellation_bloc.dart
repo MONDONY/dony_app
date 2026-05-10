@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/cancellation/data/repositories/cancellation_repository.dart';
@@ -23,11 +23,8 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
         reason: event.reason,
       );
       emit(CancellationSuccess(result));
-    } on DioException catch (e) {
-      final detail = e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
-      emit(CancellationError(detail));
     } catch (e) {
-      emit(CancellationError(e.toString()));
+      emit(CancellationError(unwrapDioError(e)));
     }
   }
 
@@ -39,11 +36,8 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
     try {
       final suggestions = await _repository.getRematchSuggestions(event.cancellationId);
       emit(RematchSuggestionsLoaded(suggestions));
-    } on DioException catch (e) {
-      final detail = e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
-      emit(CancellationError(detail));
     } catch (e) {
-      emit(CancellationError(e.toString()));
+      emit(CancellationError(unwrapDioError(e)));
     }
   }
 }

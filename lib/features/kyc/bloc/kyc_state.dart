@@ -1,3 +1,5 @@
+import 'package:dony/core/error/app_exception.dart';
+
 abstract class KycState {
   const KycState();
 }
@@ -23,6 +25,6 @@ class KycStatusLoaded extends KycState {
 }
 
 class KycError extends KycState {
-  const KycError(this.message);
-  final String message;
+  const KycError(this.error);
+  final AppException error;
 }

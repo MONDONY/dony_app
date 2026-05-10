@@ -82,6 +82,37 @@ class NegotiationRepository {
     return NegotiationThread.fromJson(response.data!);
   }
 
+  /// Traveler creates a brand-new "dedicated" trip linked exclusively to this
+  /// thread's package_request. Locked fields (corridor, weight, transport mode,
+  /// agreed price) are derived server-side from the request — only the editable
+  /// fields are sent. Thread atomically transitions AWAITING_TRIP → AWAITING_PAYMENT.
+  Future<NegotiationThread> createDedicatedTrip(
+    String threadId, {
+    required DateTime departureDate,
+    String? departureTime,
+    String? arrivalTime,
+    required Map<String, dynamic> pickupAddress,
+    required Map<String, dynamic> deliveryAddress,
+    String? description,
+    List<String>? acceptedContentTypes,
+    List<String>? refusedTypes,
+  }) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/negotiations/$threadId/create-dedicated-trip',
+      data: {
+        'departureDate': departureDate.toIso8601String().substring(0, 10),
+        if (departureTime != null) 'departureTime': departureTime,
+        if (arrivalTime != null) 'arrivalTime': arrivalTime,
+        'pickupAddress': pickupAddress,
+        'deliveryAddress': deliveryAddress,
+        if (description != null) 'description': description,
+        if (acceptedContentTypes != null) 'acceptedContentTypes': acceptedContentTypes,
+        if (refusedTypes != null) 'refusedTypes': refusedTypes,
+      },
+    );
+    return NegotiationThread.fromJson(response.data!);
+  }
+
   /// Sender initiates the Stripe escrow payment for an AWAITING_PAYMENT thread.
   /// Returns the Stripe clientSecret to confirm via PaymentSheet on Flutter side.
   /// The thread is finalized to ACCEPTED async via webhook.

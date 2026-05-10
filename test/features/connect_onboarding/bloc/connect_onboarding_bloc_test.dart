@@ -170,7 +170,7 @@ void main() {
       ),
       expect: () => [
         isA<ConnectOnboardingError>().having(
-          (s) => s.message,
+          (s) => s.error.message,
           'message',
           "Impossible d'ouvrir le navigateur.",
         ),

@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -72,7 +73,10 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
                       );
                     }
                     if (state is TrackingSearchError) {
-                      return _buildError(state.message, cs, context);
+                      return _buildError(
+                          ErrorPresenter.resolve(state.error).message,
+                          cs,
+                          context);
                     }
                     if (state is TrackingSearchLoaded) {
                       return _TrackingResultCard(result: state.result);

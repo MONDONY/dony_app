@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -247,7 +248,7 @@ void main() {
     whenListen<AccountDeletionState>(
       deletionBloc,
       Stream.fromIterable([
-        const AccountDeletionError(message: errorMessage),
+        AccountDeletionError(error: NetworkException(errorMessage)),
       ]),
       initialState: const AccountDeletionInitial(),
     );

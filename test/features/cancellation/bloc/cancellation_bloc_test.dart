@@ -91,8 +91,8 @@ void main() {
       expect: () => [
         isA<CancellationLoading>(),
         isA<CancellationError>().having(
-          (s) => s.message,
-          'message',
+          (s) => s.error.message,
+          'error.message',
           'Announcement not found',
         ),
       ],

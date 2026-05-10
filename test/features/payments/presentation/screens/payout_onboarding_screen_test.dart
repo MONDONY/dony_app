@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -87,8 +88,8 @@ void main() {
     testWidgets('affiche le bandeau error en état error', (tester) async {
       whenListen<PaymentState>(
         mockBloc,
-        Stream.value(const PaymentError('Compte refusé')),
-        initialState: const PaymentError('Compte refusé'),
+        Stream.value(PaymentError(NetworkException('Compte refusé'))),
+        initialState: PaymentError(NetworkException('Compte refusé')),
       );
       await tester.pumpWidget(_wrap(mockBloc));
       await tester.pump(const Duration(milliseconds: 500));

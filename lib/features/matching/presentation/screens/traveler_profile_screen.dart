@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -734,7 +735,7 @@ class TravelerProfileLoaderScreen extends StatelessWidget {
           }
 
           final description = state is AnnouncementError
-              ? state.message
+              ? ErrorPresenter.resolve(state.error).message
               : 'Impossible de charger le détail';
           return Scaffold(
             appBar: const DonyAppBar(title: ''),

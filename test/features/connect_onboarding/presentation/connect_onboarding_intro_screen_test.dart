@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/presentation/screens/connect_onboarding_intro_screen.dart';
 import 'package:flutter/material.dart';
@@ -85,9 +86,9 @@ void main() {
         (tester) async {
       whenListen<ConnectOnboardingState>(
         mockBloc,
-        Stream.value(const ConnectOnboardingError('Stripe indisponible')),
+        Stream.value(ConnectOnboardingError(NetworkException('Stripe indisponible'))),
         initialState:
-            const ConnectOnboardingError('Stripe indisponible'),
+            ConnectOnboardingError(NetworkException('Stripe indisponible')),
       );
 
       await tester.pumpWidget(_wrap(mockBloc));

@@ -48,10 +48,10 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       if (e.code == 'pro-limit-reached') {
         emit(AnnouncementProLimitReached(e.message));
       } else {
-        emit(AnnouncementError(e.message));
+        emit(AnnouncementError(e));
       }
     } catch (e) {
-      emit(AnnouncementError(e.toString()));
+      emit(AnnouncementError(unwrapDioError(e)));
     }
   }
 
@@ -67,7 +67,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         totalElements: result.totalElements,
       ));
     } catch (e) {
-      emit(AnnouncementError(e.toString()));
+      emit(AnnouncementError(unwrapDioError(e)));
     }
   }
 
@@ -80,12 +80,11 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       final announcement = await _repository.getAnnouncementDetail(event.id);
       emit(AnnouncementDetailLoaded(announcement));
     } catch (e) {
-      final inner = e is DioException ? e.error : e;
-      if (inner is NotFoundException) {
+      final wrapped = unwrapDioError(e);
+      if (wrapped is NotFoundException) {
         emit(AnnouncementNotFound());
       } else {
-        emit(AnnouncementError(
-            inner is AppException ? inner.message : inner.toString()));
+        emit(AnnouncementError(wrapped));
       }
     }
   }
@@ -127,7 +126,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       if (kDebugMode) debugPrint(e.toString());
       if (kDebugMode) debugPrint(stacktrace.toString());
       emit(AnnouncementError(
-        e.toString(),
+        unwrapDioError(e),
         previousResults: current is AnnouncementSearchLoaded ? current.results : null,
       ));
     }
@@ -142,7 +141,11 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       await _repository.deleteAnnouncement(event.id);
       emit(AnnouncementDeleted());
     } catch (e) {
-      emit(AnnouncementError(e.toString()));
+      if (e is DioException && e.response?.statusCode == 409) {
+        emit(AnnouncementDeleteBlockedByAcceptedBid(event.id));
+      } else {
+        emit(AnnouncementError(unwrapDioError(e)));
+      }
     }
   }
 
@@ -172,10 +175,13 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     } catch (e) {
       if (e is DioException && e.response?.statusCode == 409) {
         emit(AnnouncementError(
-          'Modification impossible : des colis sont déjà acceptés pour ce trajet',
+          const ConflictException(
+            'Modification impossible : des colis sont déjà acceptés pour ce trajet',
+            code: 'announcement-update-blocked',
+          ),
         ));
       } else {
-        emit(AnnouncementError(e.toString()));
+        emit(AnnouncementError(unwrapDioError(e)));
       }
     }
   }

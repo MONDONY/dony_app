@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
@@ -118,7 +119,8 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
                     else if (state is KycStatusLoaded)
                       _buildStatusContent(context, cs, tt, state)
                     else if (state is KycError)
-                      _buildErrorContent(cs, tt, state.message),
+                      _buildErrorContent(
+                          cs, tt, ErrorPresenter.resolve(state.error).message),
                   ],
                 ).animate().fadeIn(duration: 300.ms),
               ),

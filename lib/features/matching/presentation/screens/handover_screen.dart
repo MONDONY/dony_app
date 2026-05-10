@@ -5,6 +5,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -110,7 +111,7 @@ class _HandoverScreenState extends State<HandoverScreen> {
           context.read<AnnouncementBloc>().add(AnnouncementListRequested());
           context.go('/announcements');
         } else if (state is BidError) {
-          DonySnackbar.show(context, message: state.message, type: DonySnackbarType.error);
+          ErrorPresenter.show(context, state.error);
         }
       },
       child: Scaffold(

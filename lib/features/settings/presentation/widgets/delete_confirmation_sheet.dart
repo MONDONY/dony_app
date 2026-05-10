@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/presentation/widgets/delete_otp_sheet.dart';
 import 'package:flutter/material.dart';
@@ -79,11 +80,7 @@ class _DeleteConfirmationSheetState extends State<DeleteConfirmationSheet> {
             phoneHint: state.phoneHint,
           );
         } else if (state is AccountDeletionError) {
-          DonySnackbar.show(
-            context,
-            message: state.message,
-            type: DonySnackbarType.error,
-          );
+          ErrorPresenter.show(context, state.error);
         }
       },
       child: Column(

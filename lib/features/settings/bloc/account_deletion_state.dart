@@ -42,16 +42,16 @@ class AccountReactivated extends AccountDeletionState {
 }
 
 class AccountDeletionError extends AccountDeletionState {
-  final String message;
+  final AppException error;
   final bool isEscrowBlocked;
   final bool isReauthRequired;
 
   const AccountDeletionError({
-    required this.message,
+    required this.error,
     this.isEscrowBlocked = false,
     this.isReauthRequired = false,
   });
 
   @override
-  List<Object?> get props => [message, isEscrowBlocked, isReauthRequired];
+  List<Object?> get props => [error, isEscrowBlocked, isReauthRequired];
 }

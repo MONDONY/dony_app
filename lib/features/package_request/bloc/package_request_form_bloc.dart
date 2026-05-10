@@ -21,6 +21,7 @@ class PackageRequestFormBloc extends Bloc<PackageRequestFormEvent, PackageReques
       arrivalCity: e.arrivalCity,
       desiredDate: e.desiredDate,
       dateToleranceDays: e.dateToleranceDays,
+      transportMode: e.transportMode,
     ));
   }
 
@@ -50,6 +51,7 @@ class PackageRequestFormBloc extends Bloc<PackageRequestFormEvent, PackageReques
         dateToleranceDays: state.dateToleranceDays!,
         weightKg: state.weightKg!,
         parcelSize: state.parcelSize!,
+        transportMode: state.transportMode!,
         contentCategory: state.contentCategory!,
         description: state.description,
         targetPriceEur: e.targetPriceEur,

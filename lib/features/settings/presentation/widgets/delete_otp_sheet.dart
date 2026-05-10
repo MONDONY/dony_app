@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
@@ -116,18 +117,10 @@ class _DeleteOtpSheetState extends State<DeleteOtpSheet> {
         } else if (state is AccountDeletionError && state.isReauthRequired) {
           final deletionBloc = context.read<AccountDeletionBloc>();
           Navigator.of(context, rootNavigator: true).pop();
-          DonySnackbar.show(
-            context,
-            message: state.message,
-            type: DonySnackbarType.error,
-          );
+          ErrorPresenter.show(context, state.error);
           DeleteConfirmationSheet.show(context, deletionBloc);
         } else if (state is AccountDeletionError) {
-          DonySnackbar.show(
-            context,
-            message: state.message,
-            type: DonySnackbarType.error,
-          );
+          ErrorPresenter.show(context, state.error);
         }
       },
       child: Column(

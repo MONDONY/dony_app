@@ -1,5 +1,6 @@
 // ignore_for_file: prefer_const_constructors
 import 'package:dony/core/di/envois_refresh_notifier.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/local_auth_state.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -23,8 +24,8 @@ void main() {
 
   group('QrScanError', () {
     test('holds message', () {
-      final state = QrScanError('Scan failed');
-      expect(state.message, 'Scan failed');
+      final state = QrScanError(NetworkException('Scan failed'));
+      expect(state.error.message, 'Scan failed');
     });
   });
 
@@ -42,8 +43,8 @@ void main() {
 
   group('LocalAuthError', () {
     test('holds message', () {
-      final state = LocalAuthError('Wrong PIN');
-      expect(state.message, 'Wrong PIN');
+      final state = LocalAuthError(NetworkException('Wrong PIN'));
+      expect(state.error.message, 'Wrong PIN');
     });
   });
 

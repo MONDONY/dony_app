@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
@@ -98,7 +99,7 @@ void main() {
 
     testWidgets('shows error state with retry', (tester) async {
       when(() => bloc.state)
-          .thenReturn(const ChatError('Erreur de connexion'));
+          .thenReturn(ChatError(NetworkException('Erreur de connexion')));
       await _pump(tester, bloc);
 
       expect(find.text('Connexion interrompue'), findsOneWidget);

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
@@ -1066,8 +1067,10 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                 const SizedBox(height: DonySpacing.md),
                 Text(
                   state is QrScanError
-                      ? state.message
-                      : (state as DeliveryConfirmError).message,
+                      ? ErrorPresenter.resolve(state.error).message
+                      : ErrorPresenter.resolve(
+                              (state as DeliveryConfirmError).error)
+                          .message,
                   style: tt.bodySmall?.copyWith(
                     color: cs.error,
                     fontWeight: FontWeight.w500,

@@ -1,6 +1,7 @@
 import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
@@ -12,6 +13,9 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/address_picker_field.dart';
+import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
+import 'package:dony/features/package_request/data/models/negotiation_thread.dart' show NegotiationThreadStatus;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -35,37 +39,64 @@ class CreateAnnouncementBottomSheet {
   static Future<void> show(
     BuildContext context, {
     AnnouncementModel? announcement,
+    LockedTripContext? lockContext,
+    NegotiationBloc? negotiationBloc,
   }) {
+    assert(lockContext == null || negotiationBloc != null,
+        'lockContext requires a negotiationBloc to dispatch the dedicated-trip event');
     final canSubmitNotifier =
-        ValueNotifier<bool>(announcement?.transportMode != null);
+        ValueNotifier<bool>(announcement?.transportMode != null || lockContext != null);
     VoidCallback? submit;
+    final isLocked = lockContext != null;
     return DonyBottomSheet.show(
       context,
-      title: announcement != null ? 'Modifier le trajet' : 'Publier un trajet',
-      wrapper: (child) => BlocProvider(
-        create: (_) => getIt<AnnouncementBloc>(),
-        child: child,
-      ),
+      title: isLocked
+          ? 'Créer le trajet pour cette demande'
+          : (announcement != null ? 'Modifier le trajet' : 'Publier un trajet'),
+      wrapper: (child) {
+        final providers = <BlocProvider>[
+          BlocProvider<AnnouncementBloc>(create: (_) => getIt<AnnouncementBloc>()),
+          if (negotiationBloc != null)
+            BlocProvider<NegotiationBloc>.value(value: negotiationBloc),
+        ];
+        return MultiBlocProvider(providers: providers, child: child);
+      },
       stickyBottom: ValueListenableBuilder<bool>(
         valueListenable: canSubmitNotifier,
-        builder: (ctx, canSubmit, _) =>
-            BlocBuilder<AnnouncementBloc, AnnouncementState>(
-          builder: (ctx, state) {
-            final isLoading = state is AnnouncementLoading;
-            return DonyButton(
-              key: const Key('create-announcement-submit'),
-              label: announcement != null
-                  ? 'Enregistrer les modifications'
-                  : 'Publier le trajet',
-              isLoading: isLoading,
-              onPressed:
-                  (canSubmit && !isLoading) ? () => submit?.call() : null,
+        builder: (ctx, canSubmit, _) {
+          if (isLocked) {
+            return BlocBuilder<NegotiationBloc, NegotiationState>(
+              builder: (ctx, state) {
+                final isLoading = state is NegotiationLoading
+                    || state is NegotiationActionInProgress;
+                return DonyButton(
+                  key: const Key('create-dedicated-trip-submit'),
+                  label: 'Confirmer le trajet',
+                  isLoading: isLoading,
+                  onPressed: (canSubmit && !isLoading) ? () => submit?.call() : null,
+                );
+              },
             );
-          },
-        ),
+          }
+          return BlocBuilder<AnnouncementBloc, AnnouncementState>(
+            builder: (ctx, state) {
+              final isLoading = state is AnnouncementLoading;
+              return DonyButton(
+                key: const Key('create-announcement-submit'),
+                label: announcement != null
+                    ? 'Enregistrer les modifications'
+                    : 'Publier le trajet',
+                isLoading: isLoading,
+                onPressed:
+                    (canSubmit && !isLoading) ? () => submit?.call() : null,
+              );
+            },
+          );
+        },
       ),
       child: _CreateAnnouncementContent(
         announcement: announcement,
+        lockContext: lockContext,
         canSubmitNotifier: canSubmitNotifier,
         onSubmitReady: (fn) => submit = fn,
       ),
@@ -77,10 +108,12 @@ class CreateAnnouncementBottomSheet {
 
 class _CreateAnnouncementContent extends StatefulWidget {
   final AnnouncementModel? announcement;
+  final LockedTripContext? lockContext;
   final ValueNotifier<bool>? canSubmitNotifier;
   final void Function(VoidCallback)? onSubmitReady;
   const _CreateAnnouncementContent({
     this.announcement,
+    this.lockContext,
     this.canSubmitNotifier,
     this.onSubmitReady,
   });
@@ -113,11 +146,20 @@ class _CreateAnnouncementContentState
   final _refusedCtrl = TextEditingController();
 
   bool get _isEdit => widget.announcement != null;
+  bool get _isLocked => widget.lockContext != null;
   double get _pricePerKg => _priceOptions[_priceOptionNotifier.value];
 
   @override
   void initState() {
     super.initState();
+    if (_isLocked) {
+      final ctx = widget.lockContext!;
+      _departureCityNotifier.value = ctx.departureCity;
+      _arrivalCityNotifier.value = ctx.arrivalCity;
+      _departureDateNotifier.value = ctx.desiredDate;
+      _availableKgNotifier.value = ctx.weightKg;
+      _transportModeNotifier.value = ctx.transportMode;
+    }
     if (_isEdit) {
       final a = widget.announcement!;
       _departureCityNotifier.value = a.departureCity;
@@ -259,6 +301,30 @@ class _CreateAnnouncementContentState
 
     final transportMode = _transportModeNotifier.value!;
 
+    if (_isLocked) {
+      final lc = widget.lockContext!;
+      context.read<NegotiationBloc>().add(NegotiationCreateDedicatedTripRequested(
+            threadId: lc.threadId,
+            departureDate: departureDate,
+            departureTime: departureTime,
+            arrivalTime: arrivalTime,
+            pickupAddress: {
+              'label': _pickupAddress!.label,
+              'lat': _pickupAddress!.lat,
+              'lng': _pickupAddress!.lng,
+            },
+            deliveryAddress: {
+              'label': _deliveryAddress!.label,
+              'lat': _deliveryAddress!.lat,
+              'lng': _deliveryAddress!.lng,
+            },
+            description: description,
+            acceptedContentTypes: allAccepted,
+            refusedTypes: refused,
+          ));
+      return;
+    }
+
     if (_isEdit) {
       context.read<AnnouncementBloc>().add(AnnouncementUpdateRequested(
             id: widget.announcement!.id,
@@ -301,12 +367,22 @@ class _CreateAnnouncementContentState
 
   Future<void> _selectDate() async {
     final cs = Theme.of(context).colorScheme;
+    final today = DateTime.now();
+    DateTime firstDate = today;
+    DateTime lastDate = today.add(const Duration(days: 365));
+    if (_isLocked) {
+      final lc = widget.lockContext!;
+      // Clamp to today as floor — backend rejects past dates regardless of tolerance.
+      firstDate = lc.earliestDate.isBefore(today) ? today : lc.earliestDate;
+      lastDate = lc.latestDate;
+    }
+    final initial = _departureDateNotifier.value ??
+        (_isLocked ? widget.lockContext!.desiredDate : today.add(const Duration(days: 1)));
     final picked = await showDatePicker(
       context: context,
-      initialDate: _departureDateNotifier.value ??
-          DateTime.now().add(const Duration(days: 1)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDate: initial.isBefore(firstDate) ? firstDate : initial,
+      firstDate: firstDate,
+      lastDate: lastDate,
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
           colorScheme:
@@ -379,6 +455,24 @@ class _CreateAnnouncementContentState
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
+    final formChild = _buildForm(context);
+    if (_isLocked) {
+      return BlocListener<NegotiationBloc, NegotiationState>(
+        listener: (context, state) {
+          if (state is NegotiationLoaded
+              && state.thread.status == NegotiationThreadStatus.awaitingPayment) {
+            Navigator.of(context, rootNavigator: true).pop();
+            DonySnackbar.show(context,
+                message: 'Trajet lié — l\'expéditeur peut désormais payer.',
+                type: DonySnackbarType.success);
+          } else if (state is NegotiationError) {
+            ErrorPresenter.show(context, state.error);
+          }
+        },
+        child: formChild,
+      );
+    }
+
     return BlocConsumer<AnnouncementBloc, AnnouncementState>(
       listener: (context, state) async {
         if (state is AnnouncementCreated || state is AnnouncementUpdated) {
@@ -400,19 +494,25 @@ class _CreateAnnouncementContentState
             }
           }
         } else if (state is AnnouncementError) {
-          DonySnackbar.show(
-            context,
-            message: state.message,
-            type: DonySnackbarType.error,
-          );
+          ErrorPresenter.show(context, state.error);
         }
       },
-      builder: (context, state) {
-        return Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      builder: (context, state) => formChild,
+    );
+  }
+
+  Widget _buildForm(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+              if (_isLocked) ...[
+                _LockedBanner(lockContext: widget.lockContext!),
+                const SizedBox(height: DonySpacing.lg),
+              ],
               // ── Corridor preview ────────────────────────────────────────
               ListenableBuilder(
                 listenable: Listenable.merge([
@@ -507,18 +607,26 @@ class _CreateAnnouncementContentState
                   return _SectionCard(
                     child: Column(
                       children: [
-                        BlocProvider(
-                          create: (_) => getIt<CitySearchBloc>(),
-                          child: CityAutocompleteField(
+                        if (_isLocked)
+                          _LockedCityRow(
                             label: 'Ville de départ',
-                            initialValue: _departureCityNotifier.value,
-                            prefixIcon: Icon(Icons.flight_takeoff_rounded,
-                                color: cs.primary, size: 20),
-                            onSelected: (CityModel city) {
-                              _departureCityNotifier.value = city.name;
-                            },
+                            value: _departureCityNotifier.value ?? '',
+                            icon: Icons.flight_takeoff_rounded,
+                            iconColor: cs.primary,
+                          )
+                        else
+                          BlocProvider(
+                            create: (_) => getIt<CitySearchBloc>(),
+                            child: CityAutocompleteField(
+                              label: 'Ville de départ',
+                              initialValue: _departureCityNotifier.value,
+                              prefixIcon: Icon(Icons.flight_takeoff_rounded,
+                                  color: cs.primary, size: 20),
+                              onSelected: (CityModel city) {
+                                _departureCityNotifier.value = city.name;
+                              },
+                            ),
                           ),
-                        ),
                         const _RowDivider(),
                         _TimeRow(
                           isDeparture: true,
@@ -529,18 +637,26 @@ class _CreateAnnouncementContentState
                               : null,
                         ),
                         const _RowDivider(),
-                        BlocProvider(
-                          create: (_) => getIt<CitySearchBloc>(),
-                          child: CityAutocompleteField(
+                        if (_isLocked)
+                          _LockedCityRow(
                             label: 'Ville d\'arrivée',
-                            initialValue: _arrivalCityNotifier.value,
-                            prefixIcon: const Icon(Icons.flight_land_rounded,
-                                color: DonyColors.accent, size: 20),
-                            onSelected: (CityModel city) {
-                              _arrivalCityNotifier.value = city.name;
-                            },
+                            value: _arrivalCityNotifier.value ?? '',
+                            icon: Icons.flight_land_rounded,
+                            iconColor: DonyColors.accent,
+                          )
+                        else
+                          BlocProvider(
+                            create: (_) => getIt<CitySearchBloc>(),
+                            child: CityAutocompleteField(
+                              label: 'Ville d\'arrivée',
+                              initialValue: _arrivalCityNotifier.value,
+                              prefixIcon: const Icon(Icons.flight_land_rounded,
+                                  color: DonyColors.accent, size: 20),
+                              onSelected: (CityModel city) {
+                                _arrivalCityNotifier.value = city.name;
+                              },
+                            ),
                           ),
-                        ),
                         const _RowDivider(),
                         _TimeRow(
                           isDeparture: false,
@@ -641,42 +757,57 @@ class _CreateAnnouncementContentState
                         ],
                       ),
                       const SizedBox(height: DonySpacing.xs),
-                      SliderTheme(
-                        data: SliderTheme.of(context).copyWith(
-                          activeTrackColor: cs.primary,
-                          inactiveTrackColor: cs.outline,
-                          thumbColor: cs.primary,
-                          overlayColor:
-                              cs.primary.withValues(alpha: 0.1),
-                          trackHeight: 5,
+                      if (_isLocked)
+                        Text(
+                          'Capacité fixée par la demande',
+                          style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                              fontStyle: FontStyle.italic),
+                        )
+                      else ...[
+                        SliderTheme(
+                          data: SliderTheme.of(context).copyWith(
+                            activeTrackColor: cs.primary,
+                            inactiveTrackColor: cs.outline,
+                            thumbColor: cs.primary,
+                            overlayColor:
+                                cs.primary.withValues(alpha: 0.1),
+                            trackHeight: 5,
+                          ),
+                          child: Slider(
+                            value: kg,
+                            min: 1,
+                            max: 23,
+                            divisions: 22,
+                            onChanged: (v) =>
+                                _availableKgNotifier.value = v,
+                          ),
                         ),
-                        child: Slider(
-                          value: kg,
-                          min: 1,
-                          max: 23,
-                          divisions: 22,
-                          onChanged: (v) =>
-                              _availableKgNotifier.value = v,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('1 kg',
+                                style: tt.bodySmall
+                                    ?.copyWith(color: cs.onSurfaceVariant)),
+                            Text('max 23 kg',
+                                style: tt.bodySmall
+                                    ?.copyWith(color: cs.onSurfaceVariant)),
+                          ],
                         ),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('1 kg',
-                              style: tt.bodySmall
-                                  ?.copyWith(color: cs.onSurfaceVariant)),
-                          Text('max 23 kg',
-                              style: tt.bodySmall
-                                  ?.copyWith(color: cs.onSurfaceVariant)),
-                        ],
-                      ),
+                      ],
                     ],
                   );
                 },
               ),
               const SizedBox(height: DonySpacing.xxl),
 
-              // ── PRIX PAR KG ─────────────────────────────────────────────
+              // ── PRIX (verrouillé en mode locked) ────────────────────────
+              if (_isLocked) ...[
+                _LockedTotalPriceCard(
+                  agreedPriceEur: widget.lockContext!.agreedPriceEur,
+                ),
+                const SizedBox(height: DonySpacing.xxl),
+              ] else ...[
               const _SectionLabel(label: 'PRIX PAR KG', icon: Icons.sell_rounded),
               const SizedBox(height: DonySpacing.md),
               ValueListenableBuilder<int>(
@@ -750,6 +881,7 @@ class _CreateAnnouncementContentState
                 },
               ).animate().fadeIn(delay: 100.ms),
               const SizedBox(height: DonySpacing.xxl),
+              ],
 
               // ── MODE DE TRANSPORT ───────────────────────────────────────
               const _SectionLabel(
@@ -757,24 +889,30 @@ class _CreateAnnouncementContentState
                 icon: Icons.commute_rounded,
               ),
               const SizedBox(height: DonySpacing.sm),
-              ValueListenableBuilder<TransportMode?>(
-                valueListenable: _transportModeNotifier,
-                builder: (context, current, _) {
-                  return Wrap(
-                    spacing: DonySpacing.sm,
-                    runSpacing: DonySpacing.sm,
-                    children: [
-                      for (final mode in TransportMode.values)
-                        DonyChip(
-                          key: Key('transport-chip-${mode.name}'),
-                          label: mode.label,
-                          icon: mode.icon,
-                          selected: current == mode,
-                          onTap: () => _transportModeNotifier.value = mode,
-                        ),
-                    ],
-                  );
-                },
+              IgnorePointer(
+                ignoring: _isLocked,
+                child: Opacity(
+                  opacity: _isLocked ? 0.7 : 1.0,
+                  child: ValueListenableBuilder<TransportMode?>(
+                    valueListenable: _transportModeNotifier,
+                    builder: (context, current, _) {
+                      return Wrap(
+                        spacing: DonySpacing.sm,
+                        runSpacing: DonySpacing.sm,
+                        children: [
+                          for (final mode in TransportMode.values)
+                            DonyChip(
+                              key: Key('transport-chip-${mode.name}'),
+                              label: mode.label,
+                              icon: mode.icon,
+                              selected: current == mode,
+                              onTap: () => _transportModeNotifier.value = mode,
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
               ).animate().fadeIn(delay: 110.ms),
               const SizedBox(height: DonySpacing.xxl),
 
@@ -1012,7 +1150,147 @@ class _CreateAnnouncementContentState
             ],
           ),
         );
-      },
+  }
+}
+
+// ─── Locked banner & locked-mode helpers ─────────────────────────────────────
+
+class _LockedCityRow extends StatelessWidget {
+  const _LockedCityRow({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.iconColor,
+  });
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color iconColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.base,
+        vertical: DonySpacing.md,
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: iconColor),
+          const SizedBox(width: DonySpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+                Text(
+                  value,
+                  style: tt.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: cs.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.lock_rounded, size: 14, color: cs.onSurfaceVariant),
+        ],
+      ),
+    );
+  }
+}
+
+class _LockedTotalPriceCard extends StatelessWidget {
+  const _LockedTotalPriceCard({required this.agreedPriceEur});
+  final double agreedPriceEur;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.lg),
+      decoration: BoxDecoration(
+        color: cs.successLight,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.success.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.check_circle_rounded, color: cs.success, size: 28),
+          const SizedBox(width: DonySpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Prix total convenu',
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+                Text(
+                  '${agreedPriceEur.toStringAsFixed(0)} €',
+                  style: tt.headlineSmall?.copyWith(
+                    color: cs.success,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.lock_rounded, size: 16, color: cs.onSurfaceVariant),
+        ],
+      ),
+    );
+  }
+}
+
+class _LockedBanner extends StatelessWidget {
+  const _LockedBanner({required this.lockContext});
+  final LockedTripContext lockContext;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: cs.primaryContainer.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.primary.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.lock_rounded, size: 20, color: cs.primary),
+          const SizedBox(width: DonySpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Trajet dédié à la demande',
+                  style: tt.titleMedium?.copyWith(
+                    color: cs.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Corridor, capacité, mode de transport et prix sont verrouillés. '
+                  'La date doit rester dans la fenêtre de tolérance de l\'expéditeur.',
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

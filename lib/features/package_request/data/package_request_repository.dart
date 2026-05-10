@@ -1,4 +1,5 @@
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
@@ -64,6 +65,7 @@ class PackageRequestRepository {
     required int dateToleranceDays,
     required double weightKg,
     required ParcelSize parcelSize,
+    required TransportMode transportMode,
     required String contentCategory,
     String? description,
     double? targetPriceEur,
@@ -80,6 +82,7 @@ class PackageRequestRepository {
         'dateToleranceDays': dateToleranceDays,
         'weightKg': weightKg,
         'parcelSize': parcelSize.wireName,
+        'transportMode': transportModeToWire(transportMode),
         'contentCategory': contentCategory,
         if (description != null) 'description': description,
         if (targetPriceEur != null) 'targetPriceEur': targetPriceEur,

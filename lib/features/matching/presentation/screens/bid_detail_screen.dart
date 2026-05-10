@@ -15,6 +15,7 @@ import 'package:dony/features/tracking/presentation/widgets/qr_code_card.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -136,11 +137,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
             extra: state.conversation,
           );
         } else if (state is ConversationOpenError) {
-          DonySnackbar.show(
-            context,
-            message: state.message,
-            type: DonySnackbarType.error,
-          );
+          ErrorPresenter.show(context, state.error);
         }
       },
       child: BlocConsumer<BidBloc, BidState>(
@@ -209,7 +206,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
             _skeletonLoading = false;
             if (context.canPop()) context.pop(); else context.go('/home');
           }
-          DonySnackbar.show(context, message: state.message, type: DonySnackbarType.error);
+          ErrorPresenter.show(context, state.error);
         }
       },
       builder: (context, state) {
@@ -1115,13 +1112,15 @@ class _PackageCard extends StatelessWidget {
         children: [
           _InfoRow(label: 'Catégorie', value: bid.contentCategory ?? '—'),
           const SizedBox(height: DonySpacing.sm),
-          _InfoRow(label: 'Description', value: bid.description),
+          _InfoRow(label: 'Description', value: bid.description ?? '—'),
           const SizedBox(height: DonySpacing.sm),
           _InfoRow(label: 'Poids', value: '${bid.weightKg} kg'),
           const SizedBox(height: DonySpacing.sm),
           _InfoRow(
               label: 'Valeur déclarée',
-              value: '${bid.declaredValueEur.toStringAsFixed(2)} €'),
+              value: bid.declaredValueEur != null
+                  ? '${bid.declaredValueEur!.toStringAsFixed(2)} €'
+                  : '— (à compléter)'),
         ],
       ),
     );
@@ -2480,14 +2479,7 @@ class _ConfirmationCodeCardState extends State<_ConfirmationCodeCard> {
           c is TrackingConfirmCodeLoaded || c is TrackingRefreshCodeError,
       listener: (ctx, state) {
         if (state is TrackingRefreshCodeError) {
-          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-            content: Text(state.message,
-                style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
-            backgroundColor: cs.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.sm)),
-          ));
+          ErrorPresenter.show(ctx, state.error);
         } else if (state is TrackingConfirmCodeLoaded) {
           ctx.read<BidBloc>().add(BidDetailRequested(widget.bidId));
         }

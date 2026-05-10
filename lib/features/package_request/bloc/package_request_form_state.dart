@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:equatable/equatable.dart';
 import '../data/models/package_request.dart';
 import '../data/models/parcel_size.dart';
@@ -11,6 +12,7 @@ class PackageRequestFormState extends Equatable {
     this.arrivalCity,
     this.desiredDate,
     this.dateToleranceDays,
+    this.transportMode,
     this.weightKg,
     this.parcelSize,
     this.contentCategory,
@@ -29,6 +31,7 @@ class PackageRequestFormState extends Equatable {
   final String? arrivalCity;
   final DateTime? desiredDate;
   final int? dateToleranceDays;
+  final TransportMode? transportMode;
   final double? weightKg;
   final ParcelSize? parcelSize;
   final String? contentCategory;
@@ -47,6 +50,7 @@ class PackageRequestFormState extends Equatable {
     String? arrivalCity,
     DateTime? desiredDate,
     int? dateToleranceDays,
+    TransportMode? transportMode,
     double? weightKg,
     ParcelSize? parcelSize,
     String? contentCategory,
@@ -65,6 +69,7 @@ class PackageRequestFormState extends Equatable {
         arrivalCity: arrivalCity ?? this.arrivalCity,
         desiredDate: desiredDate ?? this.desiredDate,
         dateToleranceDays: dateToleranceDays ?? this.dateToleranceDays,
+        transportMode: transportMode ?? this.transportMode,
         weightKg: weightKg ?? this.weightKg,
         parcelSize: parcelSize ?? this.parcelSize,
         contentCategory: contentCategory ?? this.contentCategory,
@@ -81,7 +86,7 @@ class PackageRequestFormState extends Equatable {
   @override
   List<Object?> get props => [
         currentStep, departureCity, arrivalCity, desiredDate, dateToleranceDays,
-        weightKg, parcelSize, contentCategory, description,
+        transportMode, weightKg, parcelSize, contentCategory, description,
         targetPriceEur, photoUrl, pickupNeighborhood, deliveryNeighborhood,
         submissionStatus, errorMessage, createdRequest,
       ];

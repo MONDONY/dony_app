@@ -6,6 +6,7 @@ import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -41,6 +42,7 @@ class _CreateViewState extends State<_CreateView> {
   final _arrCtrl = TextEditingController();
   DateTime? _date;
   int _tolerance = 2;
+  TransportMode _transportMode = TransportMode.plane;
   final _weightCtrl = TextEditingController();
   ParcelSize _size = ParcelSize.small;
   final _categoryCtrl = TextEditingController();
@@ -247,6 +249,33 @@ class _CreateViewState extends State<_CreateView> {
               divisions: 7,
               activeColor: kGreenPrimary,
               onChanged: (v) => setState(() => _tolerance = v.round()),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Mode de transport',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 14, fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: TransportMode.values.map((m) {
+                final selected = m == _transportMode;
+                return ChoiceChip(
+                  avatar: Icon(m.icon, size: 18,
+                      color: selected ? Colors.white : kGreenPrimary),
+                  label: Text(m.label),
+                  selected: selected,
+                  selectedColor: kGreenPrimary,
+                  labelStyle: GoogleFonts.plusJakartaSans(
+                    color: selected ? Colors.white : kTextPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  onSelected: (_) => setState(() => _transportMode = m),
+                );
+              }).toList(),
             ),
           ],
         ),
@@ -463,6 +492,7 @@ class _CreateViewState extends State<_CreateView> {
             arrivalCity: _arrCtrl.text.trim(),
             desiredDate: _date!,
             dateToleranceDays: _tolerance,
+            transportMode: _transportMode,
           ),
         );
   }

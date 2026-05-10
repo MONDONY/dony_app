@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
@@ -21,7 +20,7 @@ class RatingBloc extends Bloc<RatingEvent, RatingState> {
       await _repository.submitRating(bidId: event.bidId, stars: event.stars, comment: event.comment);
       emit(const RatingSuccess());
     } catch (e) {
-      emit(RatingError(_extractMessage(e, 'Impossible d\'envoyer l\'évaluation. Réessayez.')));
+      emit(RatingError(unwrapDioError(e)));
     }
   }
 
@@ -31,7 +30,7 @@ class RatingBloc extends Bloc<RatingEvent, RatingState> {
       await _repository.submitTravelerRating(bidId: event.bidId, stars: event.stars, comment: event.comment);
       emit(const RatingSuccess());
     } catch (e) {
-      emit(RatingError(_extractMessage(e, 'Impossible d\'envoyer l\'évaluation. Réessayez.')));
+      emit(RatingError(unwrapDioError(e)));
     }
   }
 
@@ -65,12 +64,8 @@ class RatingBloc extends Bloc<RatingEvent, RatingState> {
         totalPages: summary.totalPages,
       ));
     } catch (e) {
-      emit(RatingError(_extractMessage(e, 'Impossible de charger les évaluations.')));
+      emit(RatingError(unwrapDioError(e)));
     }
   }
 
-  String _extractMessage(Object e, String fallback) {
-    final inner = e is DioException ? e.error : e;
-    return inner is AppException ? inner.message : fallback;
-  }
 }

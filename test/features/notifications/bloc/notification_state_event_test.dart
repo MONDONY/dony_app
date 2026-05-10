@@ -1,4 +1,5 @@
 // ignore_for_file: prefer_const_constructors
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:dony/features/notifications/data/notification_model.dart';
@@ -45,8 +46,8 @@ void main() {
     });
 
     test('NotificationError stores message', () {
-      const state = NotificationError('Erreur réseau');
-      expect(state.message, 'Erreur réseau');
+      final state = NotificationError(NetworkException('Erreur réseau'));
+      expect(state.error.message, 'Erreur réseau');
     });
 
     test('NotificationLoaded copyWith updates notifications', () {

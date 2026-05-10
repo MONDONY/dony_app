@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:equatable/equatable.dart';
 import '../data/models/parcel_size.dart';
 
@@ -13,14 +14,16 @@ class FormStep1Submitted extends PackageRequestFormEvent {
     required this.arrivalCity,
     required this.desiredDate,
     required this.dateToleranceDays,
+    required this.transportMode,
   });
   final String departureCity;
   final String arrivalCity;
   final DateTime desiredDate;
   final int dateToleranceDays;
+  final TransportMode transportMode;
 
   @override
-  List<Object?> get props => [departureCity, arrivalCity, desiredDate, dateToleranceDays];
+  List<Object?> get props => [departureCity, arrivalCity, desiredDate, dateToleranceDays, transportMode];
 }
 
 class FormStep2Submitted extends PackageRequestFormEvent {

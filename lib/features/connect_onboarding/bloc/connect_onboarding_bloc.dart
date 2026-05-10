@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/connect_onboarding/data/connect_onboarding_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -31,7 +32,7 @@ class ConnectOnboardingBloc
         emit(const ConnectOnboardingPending());
       }
     } catch (e) {
-      emit(ConnectOnboardingError(e.toString()));
+      emit(ConnectOnboardingError(unwrapDioError(e)));
     }
   }
 
@@ -44,7 +45,7 @@ class ConnectOnboardingBloc
       final url = await _repository.createOnboardingLink();
       emit(ConnectOnboardingUrlReady(url));
     } catch (e) {
-      emit(ConnectOnboardingError(e.toString()));
+      emit(ConnectOnboardingError(unwrapDioError(e)));
     }
   }
 
@@ -60,7 +61,7 @@ class ConnectOnboardingBloc
         emit(const ConnectOnboardingPending());
       }
     } catch (e) {
-      emit(ConnectOnboardingError(e.toString()));
+      emit(ConnectOnboardingError(unwrapDioError(e)));
     }
   }
 
@@ -68,6 +69,6 @@ class ConnectOnboardingBloc
     ConnectOnboardingLaunchFailed event,
     Emitter<ConnectOnboardingState> emit,
   ) async {
-    emit(ConnectOnboardingError(event.message));
+    emit(ConnectOnboardingError(NetworkException(event.message, code: 'launch-failed')));
   }
 }

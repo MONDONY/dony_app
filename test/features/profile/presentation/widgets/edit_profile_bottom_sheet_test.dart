@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -198,7 +199,7 @@ void main() {
     await _openSheet(tester);
 
     // Emit the error state
-    stateController.add(const AuthError('Connexion impossible'));
+    stateController.add(AuthError(NetworkException('Connexion impossible')));
     await tester.pump(); // let the listener fire
     await tester.pump(const Duration(milliseconds: 100)); // let SnackBar render
 

@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/matching/presentation/widgets/route_map_components.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
@@ -118,7 +119,7 @@ class _TrackingTimelineScreenState extends State<TrackingTimelineScreen> {
                   }
                   if (state is TrackingEventsError) {
                     return _ErrorView(
-                      message: state.message,
+                      message: ErrorPresenter.resolve(state.error).message,
                       onRetry: () => context.read<TrackingBloc>().add(
                           TrackingEventsRequested(widget.bidId)),
                     );
@@ -541,8 +542,7 @@ class _ConfirmationCodeSheetBody extends StatelessWidget {
       listenWhen: (_, curr) => curr is TrackingRefreshCodeError,
       listener: (context, state) {
         if (state is TrackingRefreshCodeError) {
-          DonySnackbar.show(context,
-              message: state.message, type: DonySnackbarType.error);
+          ErrorPresenter.show(context, state.error);
         }
       },
       buildWhen: (_, curr) =>

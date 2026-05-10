@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
@@ -101,7 +102,7 @@ void main() {
   testWidgets('état Error n\'affiche pas de liste ni de progressbar',
       (tester) async {
     when(() => mockBloc.state)
-        .thenReturn(const CitySearchError('network error'));
+        .thenReturn(CitySearchError(NetworkException('network error')));
     await tester.pumpWidget(buildWidget());
     await tester.pump();
     expect(find.byType(LinearProgressIndicator), findsNothing);

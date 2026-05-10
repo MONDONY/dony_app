@@ -15,6 +15,7 @@ import 'package:dony/features/matching/presentation/widgets/search_form_bottom_s
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -68,11 +69,13 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
 
   void _startPayment(BidModel bid) {
     setState(() => _payingBidId = bid.id);
+    // The "Payer" CTA is shown only for AWAITING_PAYMENT bids from the
+    // classic flow — those always have declaredValue + description set.
     context.read<BidBloc>().add(BidCheckoutRequested(
       announcementId: bid.announcementId,
       weightKg: bid.weightKg,
-      declaredValueEur: bid.declaredValueEur,
-      description: bid.description,
+      declaredValueEur: bid.declaredValueEur ?? 0,
+      description: bid.description ?? '',
       contentCategory: bid.contentCategory ?? '',
       recipientName: bid.recipientName ?? '',
       recipientPhone: bid.recipientPhone ?? '',
@@ -148,8 +151,7 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
               context.read<BidBloc>().add(const BidMyListAutoRefreshRequested(force: true));
             } else if (state is BidError && _payingBidId != null) {
               setState(() => _payingBidId = null);
-              DonySnackbar.show(context,
-                  message: state.message, type: DonySnackbarType.error);
+              ErrorPresenter.show(context, state.error);
             }
           },
         ),
@@ -172,7 +174,8 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
               return const _LoadingView();
             }
             if (!_hasData && state is BidError) {
-              return _ErrorView(message: state.message);
+              return _ErrorView(
+                  message: ErrorPresenter.resolve(state.error).message);
             }
 
             return Stack(
@@ -493,9 +496,8 @@ class _ActiveShipmentBanner extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final isDark = cs.brightness == Brightness.dark;
-    final shortDesc = bid.description.length > 36
-        ? '${bid.description.substring(0, 36)}…'
-        : bid.description;
+    final desc = bid.description ?? bid.contentCategory ?? 'Demande';
+    final shortDesc = desc.length > 36 ? '${desc.substring(0, 36)}…' : desc;
 
     return GestureDetector(
       onTap: () async {
@@ -925,14 +927,21 @@ class _ShipmentCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: DonySpacing.md),
-                      Text(
-                        bid.description.length > 52
-                            ? '${bid.description.substring(0, 52)}…'
-                            : bid.description,
-                        style: tt.titleLarge?.copyWith(
-                          color: cs.onSurface,
-                          height: 1.3,
-                        ),
+                      Builder(
+                        builder: (_) {
+                          final desc = bid.description ??
+                              bid.contentCategory ??
+                              'Demande';
+                          return Text(
+                            desc.length > 52
+                                ? '${desc.substring(0, 52)}…'
+                                : desc,
+                            style: tt.titleLarge?.copyWith(
+                              color: cs.onSurface,
+                              height: 1.3,
+                            ),
+                          );
+                        },
                       ),
                       const SizedBox(height: 10),
                       _RouteRow(

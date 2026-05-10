@@ -638,7 +638,7 @@ void main() {
       expect: () => [
         isA<AnnouncementLoading>(),
         predicate<AnnouncementState>((s) =>
-            s is AnnouncementError && s.message.contains('Modification impossible')),
+            s is AnnouncementError && s.error.message.contains('Modification impossible')),
       ],
     );
 
@@ -700,13 +700,13 @@ void main() {
 
   group('AnnouncementError.previousResults', () {
     test('par défaut previousResults = null', () {
-      final state = AnnouncementError('boom');
+      final state = AnnouncementError(NetworkException('boom'));
       expect(state.previousResults, isNull);
     });
 
     test('peut transporter les résultats précédents', () {
       final ann = buildAnnouncement();
-      final state = AnnouncementError('boom', previousResults: [ann]);
+      final state = AnnouncementError(NetworkException('boom'), previousResults: [ann]);
       expect(state.previousResults, hasLength(1));
       expect(state.previousResults!.first.id, ann.id);
     });

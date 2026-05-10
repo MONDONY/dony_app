@@ -7,6 +7,7 @@ import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -88,6 +89,7 @@ class _PublishContentState extends State<_PublishContent> {
   String? _arrivalCity;
   DateTime? _date;
   int _tolerance = 2;
+  TransportMode _transportMode = TransportMode.plane;
 
   final _weightCtrl = TextEditingController();
   ParcelSize _size = ParcelSize.small;
@@ -144,6 +146,7 @@ class _PublishContentState extends State<_PublishContent> {
             arrivalCity: _arrivalCity!,
             desiredDate: _date!,
             dateToleranceDays: _tolerance,
+            transportMode: _transportMode,
           ));
       context.read<PackageRequestFormBloc>().add(FormStep2Submitted(
             weightKg: double.parse(_weightCtrl.text.replaceAll(',', '.')),
@@ -351,6 +354,23 @@ class _PublishContentState extends State<_PublishContent> {
             divisions: 7,
             label: '$_tolerance',
             onChanged: (v) => setState(() => _tolerance = v.round()),
+          ),
+          const SizedBox(height: DonySpacing.md),
+          Text('Mode de transport', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: DonySpacing.sm),
+          Wrap(
+            spacing: DonySpacing.sm,
+            runSpacing: DonySpacing.sm,
+            children: TransportMode.values.map((m) {
+              final selected = m == _transportMode;
+              return ChoiceChip(
+                avatar: Icon(m.icon, size: 18,
+                    color: selected ? cs.onPrimary : cs.primary),
+                label: Text(m.label),
+                selected: selected,
+                onSelected: (_) => setState(() => _transportMode = m),
+              );
+            }).toList(),
           ),
           const SizedBox(height: DonySpacing.lg),
           Text(

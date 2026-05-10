@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
@@ -69,7 +70,9 @@ class _OnboardingView extends StatelessWidget {
   Widget build(BuildContext context) {
     final isLoading = state is PaymentLoading;
     final isPending = state is PaymentOnboardingPending;
-    final error = state is PaymentError ? (state as PaymentError).message : null;
+    final error = state is PaymentError
+        ? ErrorPresenter.resolve((state as PaymentError).error).message
+        : null;
 
     return Scaffold(
       appBar: const DonyAppBar(title: 'Recevoir mes paiements'),

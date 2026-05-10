@@ -1,5 +1,6 @@
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
@@ -59,9 +60,7 @@ class _ThreadView extends StatelessWidget {
       body: BlocConsumer<NegotiationBloc, NegotiationState>(
         listener: (ctx, state) {
           if (state is NegotiationError) {
-            ScaffoldMessenger.of(ctx).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: kError),
-            );
+            ErrorPresenter.show(ctx, state.error);
           }
           if (state is NegotiationRejected) {
             ScaffoldMessenger.of(ctx).showSnackBar(

@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -150,8 +151,7 @@ class _BidListViewState extends State<_BidListView>
       if (_processingBidIds.isNotEmpty) {
         setState(() => _processingBidIds.clear());
       }
-      DonySnackbar.show(context,
-          message: state.message, type: DonySnackbarType.error);
+      ErrorPresenter.show(context, state.error);
     }
   }
 
@@ -283,7 +283,7 @@ class _BidListViewState extends State<_BidListView>
     if (state is BidError) {
       // Only show full-page error if there's no data loaded yet.
       return _ErrorView(
-        message: state.message,
+        message: ErrorPresenter.resolve(state.error).message,
         onRetry: () => context
             .read<BidBloc>()
             .add(BidListRequested(widget.announcementId)),
@@ -534,7 +534,7 @@ class _BidCard extends StatelessWidget {
               ),
               const SizedBox(height: DonySpacing.xxs),
               Text(
-                bid.contentCategory ?? bid.description,
+                bid.contentCategory ?? bid.description ?? '—',
                 style: tt.bodySmall?.copyWith(color: cs.onSurface),
               ),
               const SizedBox(height: DonySpacing.md),

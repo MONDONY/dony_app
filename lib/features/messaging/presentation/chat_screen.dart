@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
@@ -246,11 +247,8 @@ class _ChatScreenState extends State<ChatScreen> {
               );
               if (context.canPop()) context.pop();
             });
-          } else if (state is ChatError &&
-              state.message == 'Impossible de supprimer la conversation') {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
+          } else if (state is ChatError) {
+            ErrorPresenter.show(context, state.error);
           }
         },
         builder: (context, state) {
@@ -286,7 +284,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   type: DonyEmptyStateType.error,
                   icon: Icons.wifi_off_rounded,
                   title: 'Connexion interrompue',
-                  description: state.message,
+                  description: ErrorPresenter.resolve(state.error).message,
                   actionLabel: 'Réessayer',
                   onAction: () => context.read<ChatBloc>().add(
                         ChatSubscribeRequested(

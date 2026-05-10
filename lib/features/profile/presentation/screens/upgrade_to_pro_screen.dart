@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/profile/bloc/upgrade_to_pro_bloc.dart';
@@ -92,8 +93,9 @@ class _UpgradeToProViewState extends State<_UpgradeToProView> {
       child: BlocBuilder<UpgradeToProBloc, UpgradeToProState>(
         builder: (context, state) {
           final isLoading = state is UpgradeToProLoading;
-          final errorMessage =
-              state is UpgradeToProError ? state.message : null;
+          final errorMessage = state is UpgradeToProError
+              ? ErrorPresenter.resolve(state.error).message
+              : null;
 
           return Scaffold(
             appBar: const DonyAppBar(title: 'Compte PRO'),

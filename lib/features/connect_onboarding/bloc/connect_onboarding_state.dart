@@ -30,6 +30,6 @@ class ConnectOnboardingComplete extends ConnectOnboardingState {
 }
 
 class ConnectOnboardingError extends ConnectOnboardingState {
-  final String message;
-  const ConnectOnboardingError(this.message);
+  final AppException error;
+  const ConnectOnboardingError(this.error);
 }

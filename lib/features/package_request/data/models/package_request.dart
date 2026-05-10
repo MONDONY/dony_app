@@ -1,3 +1,4 @@
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:equatable/equatable.dart';
 
@@ -26,6 +27,7 @@ class PackageRequest extends Equatable {
     required this.dateToleranceDays,
     required this.weightKg,
     required this.parcelSize,
+    required this.transportMode,
     required this.contentCategory,
     this.description,
     this.targetPriceEur,
@@ -44,6 +46,7 @@ class PackageRequest extends Equatable {
   final int dateToleranceDays;
   final double weightKg;
   final ParcelSize parcelSize;
+  final TransportMode transportMode;
   final String contentCategory;
   final String? description;
   final double? targetPriceEur;
@@ -62,6 +65,7 @@ class PackageRequest extends Equatable {
         dateToleranceDays: json['dateToleranceDays'] as int,
         weightKg: (json['weightKg'] as num).toDouble(),
         parcelSize: ParcelSize.fromJson(json['parcelSize'] as String),
+        transportMode: transportModeFromWire(json['transportMode'] as String?) ?? TransportMode.plane,
         contentCategory: json['contentCategory'] as String,
         description: json['description'] as String?,
         targetPriceEur: (json['targetPriceEur'] as num?)?.toDouble(),
@@ -77,7 +81,7 @@ class PackageRequest extends Equatable {
         id, senderId,
         departureCity, arrivalCity,
         desiredDate, dateToleranceDays,
-        weightKg, parcelSize, contentCategory,
+        weightKg, parcelSize, transportMode, contentCategory,
         description, targetPriceEur, photoUrl,
         pickupNeighborhood, deliveryNeighborhood,
         status, createdAt,
