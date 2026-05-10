@@ -29,6 +29,13 @@ import 'package:dony/features/payments/presentation/screens/payout_onboarding_sc
 import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/presentation/screens/connect_onboarding_intro_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/complete_details_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/package_request_create_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/package_request_detail_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/shared/negotiation_thread_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/traveler/package_request_public_detail_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/traveler/package_request_search_screen.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
 import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
@@ -358,6 +365,45 @@ final appRouter = GoRouter(
           ],
         ),
       ],
+    ),
+    // ── Marketplace de demandes d'envoi (package requests) ─────────────────
+    GoRoute(
+      path: '/package-requests/new',
+      builder: (_, __) => const PackageRequestCreateScreen(),
+    ),
+    GoRoute(
+      path: '/package-requests/me',
+      builder: (_, __) => const MyPackageRequestsScreen(),
+    ),
+    GoRoute(
+      path: '/package-requests/search',
+      builder: (_, __) => const PackageRequestSearchScreen(),
+    ),
+    GoRoute(
+      path: '/package-requests/:id',
+      builder: (_, state) =>
+          PackageRequestDetailScreen(requestId: state.pathParameters['id']!),
+    ),
+    GoRoute(
+      path: '/package-requests/:id/public',
+      builder: (_, state) => PackageRequestPublicDetailScreen(
+          requestId: state.pathParameters['id']!),
+    ),
+    GoRoute(
+      path: '/package-requests/:id/complete-details',
+      builder: (_, state) =>
+          CompleteDetailsScreen(requestId: state.pathParameters['id']!),
+    ),
+    GoRoute(
+      path: '/negotiations/:id',
+      builder: (_, state) {
+        final firebaseUid =
+            FirebaseAuth.instance.currentUser?.uid ?? '';
+        return NegotiationThreadScreen(
+          threadId: state.pathParameters['id']!,
+          viewerUserId: firebaseUid,
+        );
+      },
     ),
   ],
 );
