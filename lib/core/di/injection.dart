@@ -46,6 +46,13 @@ import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/data/notification_remote_datasource.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
+import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
+import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
+import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
+import 'package:dony/features/package_request/data/negotiation_repository.dart';
+import 'package:dony/features/package_request/data/package_request_repository.dart';
+import 'package:dony/features/package_request/data/price_estimation_repository.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
@@ -259,5 +266,28 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<CitySearchBloc>(
     () => CitySearchBloc(getIt<CityRepository>()),
+  );
+
+  // Package request marketplace
+  getIt.registerLazySingleton<PackageRequestRepository>(
+    () => PackageRequestRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<NegotiationRepository>(
+    () => NegotiationRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<PriceEstimationRepository>(
+    () => PriceEstimationRepository(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<PackageRequestFormBloc>(
+    () => PackageRequestFormBloc(getIt<PackageRequestRepository>()),
+  );
+  getIt.registerFactory<PackageRequestSearchBloc>(
+    () => PackageRequestSearchBloc(getIt<PackageRequestRepository>()),
+  );
+  getIt.registerFactory<PackageRequestBloc>(
+    () => PackageRequestBloc(getIt<PackageRequestRepository>()),
+  );
+  getIt.registerFactory<NegotiationBloc>(
+    () => NegotiationBloc(getIt<NegotiationRepository>()),
   );
 }
