@@ -1,6 +1,8 @@
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/city/bloc/city_search_bloc.dart';
+import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -165,24 +167,30 @@ class _CreateViewState extends State<_CreateView> {
               ),
             ),
             const SizedBox(height: 32),
-            TextFormField(
-              controller: _depCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Ville de départ',
-                hintText: 'Paris',
+            BlocProvider(
+              create: (_) => getIt<CitySearchBloc>(),
+              child: CityAutocompleteField(
+                label: 'Ville de départ',
+                initialValue: _depCtrl.text.isEmpty ? null : _depCtrl.text,
+                prefixIcon: const Icon(Icons.flight_takeoff_rounded,
+                    color: kGreenPrimary, size: 20),
+                onSelected: (city) {
+                  _depCtrl.text = city.name;
+                },
               ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Requis' : null,
             ),
             const SizedBox(height: 16),
-            TextFormField(
-              controller: _arrCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Ville d\'arrivée',
-                hintText: 'Dakar',
+            BlocProvider(
+              create: (_) => getIt<CitySearchBloc>(),
+              child: CityAutocompleteField(
+                label: 'Ville d\'arrivée',
+                initialValue: _arrCtrl.text.isEmpty ? null : _arrCtrl.text,
+                prefixIcon: const Icon(Icons.flight_land_rounded,
+                    color: kGreenPrimary, size: 20),
+                onSelected: (city) {
+                  _arrCtrl.text = city.name;
+                },
               ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Requis' : null,
             ),
             const SizedBox(height: 16),
             InkWell(
