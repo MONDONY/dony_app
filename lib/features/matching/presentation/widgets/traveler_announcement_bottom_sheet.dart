@@ -1,16 +1,26 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_profile_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 void showTravelerAnnouncementSheet(
   BuildContext context, {
   required AnnouncementModel announcement,
 }) {
+  // Captured before DonyBottomSheet.show() — context may be invalid inside
+  // onPressed since useRootNavigator: true places the sheet outside BlocProvider.
+  final authState = context.read<AuthBloc>().state;
+  final isKycVerified =
+      authState is AuthAuthenticated && authState.user.isKycVerified;
+
   DonyBottomSheet.show<void>(
     context,
     title: 'Détail du trajet',
@@ -22,7 +32,11 @@ void showTravelerAnnouncementSheet(
           final navigator = Navigator.of(innerCtx, rootNavigator: true);
           final rootCtx = navigator.context;
           navigator.pop();
-          CreateBidBottomSheet.show(rootCtx, announcement: announcement);
+          if (isKycVerified) {
+            CreateBidBottomSheet.show(rootCtx, announcement: announcement);
+          } else {
+            KycStatusBottomSheet.show(rootCtx);
+          }
         },
       ),
     ),

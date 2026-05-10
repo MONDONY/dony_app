@@ -12,6 +12,7 @@ class KycBloc extends Bloc<KycEvent, KycState> {
     on<KycSessionRequested>(_onSessionRequested);
     on<KycStatusRefreshed>(_onStatusRefreshed);
     on<KycReset>((_, emit) => emit(const KycInitial()));
+    on<KycSessionAbandoned>(_onSessionAbandoned);
   }
 
   Future<void> _onSessionRequested(
@@ -42,6 +43,17 @@ class KycBloc extends Bloc<KycEvent, KycState> {
       ));
     } catch (e) {
       emit(KycError(_friendlyError(e)));
+    }
+  }
+
+  Future<void> _onSessionAbandoned(
+    KycSessionAbandoned event,
+    Emitter<KycState> emit,
+  ) async {
+    try {
+      await _repository.abandonSession();
+    } catch (_) {
+      // Erreur silencieuse — l'utilisateur part quand même
     }
   }
 
