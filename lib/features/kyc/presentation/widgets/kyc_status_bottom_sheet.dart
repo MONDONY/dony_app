@@ -150,7 +150,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
         case 'NOT_STARTED':
           config = (
             label: 'Commencer la vérification',
-            onPressed: () => context.go('/kyc'),
+            onPressed: () => context.go('/kyc/verify'),
             variant: DonyButtonVariant.primary,
           );
         case 'VERIFIED':
@@ -158,7 +158,7 @@ class _KycStatusContentState extends State<_KycStatusContent> {
         case 'REJECTED':
           config = (
             label: 'Réessayer la vérification',
-            onPressed: () => context.go('/kyc'),
+            onPressed: () => context.go('/kyc/verify'),
             variant: DonyButtonVariant.primary,
           );
         default:
