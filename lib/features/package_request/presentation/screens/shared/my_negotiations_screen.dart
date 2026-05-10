@@ -98,6 +98,8 @@ class _ThreadCard extends StatelessWidget {
 
   Color _statusColor() => switch (thread.status) {
         NegotiationThreadStatus.open => kWarning,
+        NegotiationThreadStatus.awaitingTrip => kGreenPrimary,
+        NegotiationThreadStatus.awaitingPayment => kGreenPrimary,
         NegotiationThreadStatus.accepted => kSuccess,
         NegotiationThreadStatus.rejected => kError,
         NegotiationThreadStatus.autoRejected => kTextHint,
@@ -106,6 +108,8 @@ class _ThreadCard extends StatelessWidget {
 
   String _statusLabel() => switch (thread.status) {
         NegotiationThreadStatus.open => 'En cours',
+        NegotiationThreadStatus.awaitingTrip => 'Attente trajet',
+        NegotiationThreadStatus.awaitingPayment => 'Attente paiement',
         NegotiationThreadStatus.accepted => 'Acceptée',
         NegotiationThreadStatus.rejected => 'Rejetée',
         NegotiationThreadStatus.autoRejected => 'Auto-rejetée',

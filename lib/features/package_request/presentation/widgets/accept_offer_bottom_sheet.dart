@@ -22,10 +22,13 @@ class AcceptOfferBottomSheet {
     required NegotiationBloc bloc,
     required String threadId,
     required double priceEur,
+    /// If true, this is the FINAL payment step (status was AWAITING_PAYMENT).
+    /// If false, this is the initial price acceptance (status was OPEN → AWAITING_TRIP).
+    bool isCheckout = false,
   }) async {
     await DonyBottomSheet.show<void>(
       context,
-      title: 'Accepter l\'offre',
+      title: isCheckout ? 'Payer en escrow' : 'Accepter l\'offre',
       wrapper: (child) => BlocProvider.value(value: bloc, child: child),
       stickyBottom: BlocBuilder<NegotiationBloc, NegotiationState>(
         bloc: bloc,
@@ -35,7 +38,9 @@ class AcceptOfferBottomSheet {
           return DonyButton(
             label: loading
                 ? 'Traitement…'
-                : 'Confirmer (${priceEur.toStringAsFixed(0)} €)',
+                : isCheckout
+                    ? 'Payer (${priceEur.toStringAsFixed(0)} €)'
+                    : 'Confirmer (${priceEur.toStringAsFixed(0)} €)',
             isLoading: loading,
             onPressed: () async {
               final auth = LocalAuthentication();
@@ -44,8 +49,9 @@ class AcceptOfferBottomSheet {
                     await auth.isDeviceSupported();
                 if (canCheck) {
                   final ok = await auth.authenticate(
-                    localizedReason:
-                        'Confirmez votre identité pour valider le paiement',
+                    localizedReason: isCheckout
+                        ? 'Confirmez votre identité pour valider le paiement'
+                        : 'Confirmez votre identité pour accepter l\'offre',
                     options: const AuthenticationOptions(
                       biometricOnly: false,
                       stickyAuth: true,
@@ -53,10 +59,16 @@ class AcceptOfferBottomSheet {
                   );
                   if (!ok) return;
                 }
-                // TODO(stripe-integration): use paymentIntentClientSecret from
-                // NegotiationLoaded to trigger Stripe.instance.confirmPayment(...)
-                // when the real Stripe flow is wired (V60 + PaymentService extension).
-                bloc.add(NegotiationAcceptRequested(threadId: threadId));
+                if (isCheckout) {
+                  // TODO(stripe-integration): replace placeholder paymentIntentId by
+                  // the real one returned by Stripe.instance.confirmPayment(...).
+                  bloc.add(NegotiationCheckoutRequested(
+                    threadId: threadId,
+                    paymentIntentId: 'pi_placeholder_$threadId',
+                  ));
+                } else {
+                  bloc.add(NegotiationAcceptRequested(threadId: threadId));
+                }
                 if (ctx.mounted) {
                   Navigator.of(ctx, rootNavigator: true).pop();
                 }

@@ -35,8 +35,11 @@ import 'package:dony/features/package_request/presentation/screens/sender/comple
 import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/package_request_create_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/package_request_detail_screen.dart';
+import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/presentation/screens/shared/my_negotiations_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/shared/negotiation_thread_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/traveler/link_trip_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_public_detail_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_search_screen.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
@@ -413,6 +416,17 @@ final appRouter = GoRouter(
         return NegotiationThreadScreen(
           threadId: state.pathParameters['id']!,
           viewerUserId: userId,
+        );
+      },
+    ),
+    GoRoute(
+      path: '/negotiations/:id/link-trip',
+      builder: (context, state) {
+        final thread = state.extra as NegotiationThread;
+        return BlocProvider.value(
+          value: getIt<NegotiationBloc>()
+            ..add(NegotiationFetchRequested(thread.id)),
+          child: LinkTripScreen(thread: thread),
         );
       },
     ),

@@ -164,7 +164,118 @@ class _ThreadView extends StatelessWidget {
             ),
           ),
         ),
-        if (canCounter && !lastFromMe)
+        // ── AWAITING_TRIP : Traveler must link a trip ──────────────────────
+        if (thread.status == NegotiationThreadStatus.awaitingTrip)
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: !isSender
+                  ? DonyButton(
+                      label: 'Lier un trajet à cette offre',
+                      onPressed: actionInProgress
+                          ? null
+                          : () => context.push(
+                              '/negotiations/${thread.id}/link-trip',
+                              extra: thread,
+                            ),
+                    )
+                  : Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: kGreenLight,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.hourglass_top_rounded,
+                              color: kGreenPrimary),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Le voyageur prépare son trajet…',
+                              style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w600,
+                                  color: kGreenDark),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+            ),
+          )
+        // ── AWAITING_PAYMENT : Sender must pay ─────────────────────────────
+        else if (thread.status == NegotiationThreadStatus.awaitingPayment)
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: isSender
+                  ? DonyButton(
+                      label: 'Payer ${thread.currentPriceEur.toStringAsFixed(0)} €',
+                      onPressed: actionInProgress
+                          ? null
+                          : () => AcceptOfferBottomSheet.show(
+                              context,
+                              bloc: context.read<NegotiationBloc>(),
+                              threadId: thread.id,
+                              priceEur: thread.currentPriceEur,
+                              isCheckout: true),
+                    )
+                  : Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: kGreenLight,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.payments_outlined,
+                              color: kGreenPrimary),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'En attente du paiement de l\'expéditeur',
+                              style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w600,
+                                  color: kGreenDark),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+            ),
+          )
+        // ── ACCEPTED final ─────────────────────────────────────────────────
+        else if (thread.status == NegotiationThreadStatus.accepted)
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: kSuccess.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle_rounded, color: kSuccess),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Demande acceptée et payée',
+                        style: GoogleFonts.plusJakartaSans(
+                            fontWeight: FontWeight.w600, color: kSuccess),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+        // ── OPEN : Counter / Reject / Accept (sender) ──────────────────────
+        else if (canCounter && !lastFromMe)
           SafeArea(
             top: false,
             child: Padding(
@@ -251,6 +362,8 @@ class _ThreadView extends StatelessWidget {
 
   String _statusLabel(NegotiationThreadStatus s) => switch (s) {
         NegotiationThreadStatus.open => 'En cours',
+        NegotiationThreadStatus.awaitingTrip => 'Attente trajet voyageur',
+        NegotiationThreadStatus.awaitingPayment => 'Attente paiement',
         NegotiationThreadStatus.accepted => 'Acceptée',
         NegotiationThreadStatus.rejected => 'Rejetée',
         NegotiationThreadStatus.autoRejected => 'Auto-rejetée',

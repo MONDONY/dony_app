@@ -70,4 +70,25 @@ class NegotiationRepository {
       data: {if (reason != null) 'reason': reason},
     );
   }
+
+  /// Traveler links a trip (existing announcement) to an AWAITING_TRIP thread.
+  /// Backend validates corridor + date window match the request.
+  /// Thread moves to AWAITING_PAYMENT.
+  Future<NegotiationThread> submitTrip(String id, {required String travelerAnnouncementId}) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/negotiations/$id/submit-trip',
+      data: {'travelerAnnouncementId': travelerAnnouncementId},
+    );
+    return NegotiationThread.fromJson(response.data!);
+  }
+
+  /// Sender confirms payment (Stripe paymentIntentId or placeholder) for an
+  /// AWAITING_PAYMENT thread. Thread → ACCEPTED, competing threads → AUTO_REJECTED.
+  Future<NegotiationThread> checkout(String id, {required String paymentIntentId}) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/negotiations/$id/checkout',
+      data: {'paymentIntentId': paymentIntentId},
+    );
+    return NegotiationThread.fromJson(response.data!);
+  }
 }

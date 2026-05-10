@@ -3,6 +3,8 @@ import 'package:equatable/equatable.dart';
 
 enum NegotiationThreadStatus {
   open('OPEN'),
+  awaitingTrip('AWAITING_TRIP'),
+  awaitingPayment('AWAITING_PAYMENT'),
   accepted('ACCEPTED'),
   rejected('REJECTED'),
   autoRejected('AUTO_REJECTED'),

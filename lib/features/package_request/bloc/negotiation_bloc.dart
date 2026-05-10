@@ -76,6 +76,32 @@ class NegotiationRejectRequested extends NegotiationEvent {
   List<Object?> get props => [threadId, reason];
 }
 
+/// Traveler links a trip (existing announcement) to an AWAITING_TRIP thread.
+class NegotiationSubmitTripRequested extends NegotiationEvent {
+  const NegotiationSubmitTripRequested({
+    required this.threadId,
+    required this.travelerAnnouncementId,
+  });
+  final String threadId;
+  final String travelerAnnouncementId;
+
+  @override
+  List<Object?> get props => [threadId, travelerAnnouncementId];
+}
+
+/// Sender confirms payment on an AWAITING_PAYMENT thread → finalize as ACCEPTED.
+class NegotiationCheckoutRequested extends NegotiationEvent {
+  const NegotiationCheckoutRequested({
+    required this.threadId,
+    required this.paymentIntentId,
+  });
+  final String threadId;
+  final String paymentIntentId;
+
+  @override
+  List<Object?> get props => [threadId, paymentIntentId];
+}
+
 sealed class NegotiationState extends Equatable {
   const NegotiationState();
   @override
@@ -126,6 +152,8 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     on<NegotiationCounterRequested>(_onCounter);
     on<NegotiationAcceptRequested>(_onAccept);
     on<NegotiationRejectRequested>(_onReject);
+    on<NegotiationSubmitTripRequested>(_onSubmitTrip);
+    on<NegotiationCheckoutRequested>(_onCheckout);
   }
 
   final NegotiationRepository _repository;
@@ -216,6 +244,48 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     try {
       await _repository.reject(e.threadId, reason: e.reason);
       emit(NegotiationRejected(e.threadId));
+    } catch (err) {
+      emit(NegotiationError(err.toString()));
+    }
+  }
+
+  Future<void> _onSubmitTrip(
+    NegotiationSubmitTripRequested e,
+    Emitter<NegotiationState> emit,
+  ) async {
+    final current = state;
+    if (current is NegotiationLoaded) {
+      emit(NegotiationActionInProgress(current.thread));
+    } else {
+      emit(const NegotiationLoading());
+    }
+    try {
+      final thread = await _repository.submitTrip(
+        e.threadId,
+        travelerAnnouncementId: e.travelerAnnouncementId,
+      );
+      emit(NegotiationLoaded(thread));
+    } catch (err) {
+      emit(NegotiationError(err.toString()));
+    }
+  }
+
+  Future<void> _onCheckout(
+    NegotiationCheckoutRequested e,
+    Emitter<NegotiationState> emit,
+  ) async {
+    final current = state;
+    if (current is NegotiationLoaded) {
+      emit(NegotiationActionInProgress(current.thread));
+    } else {
+      emit(const NegotiationLoading());
+    }
+    try {
+      final thread = await _repository.checkout(
+        e.threadId,
+        paymentIntentId: e.paymentIntentId,
+      );
+      emit(NegotiationLoaded(thread));
     } catch (err) {
       emit(NegotiationError(err.toString()));
     }
