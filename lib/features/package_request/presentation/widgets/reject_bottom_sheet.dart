@@ -11,42 +11,70 @@ class RejectBottomSheet {
     BuildContext context, {
     required NegotiationBloc bloc,
     required String threadId,
-  }) async {
-    final reasonCtrl = TextEditingController();
-
-    await DonyBottomSheet.show<void>(
+  }) {
+    return DonyBottomSheet.show<void>(
       context,
       title: 'Rejeter la négociation',
       wrapper: (child) => BlocProvider.value(value: bloc, child: child),
-      stickyBottom: BlocBuilder<NegotiationBloc, NegotiationState>(
-        bloc: bloc,
-        builder: (ctx, state) {
-          final loading = state is NegotiationActionInProgress ||
-              state is NegotiationLoading;
-          return DonyButton(
-            label: loading ? 'Envoi…' : 'Confirmer le rejet',
-            variant: DonyButtonVariant.destructive,
-            isLoading: loading,
-            onPressed: () {
-              bloc.add(NegotiationRejectRequested(
-                threadId: threadId,
-                reason: reasonCtrl.text.trim().isEmpty
-                    ? null
-                    : reasonCtrl.text.trim(),
-              ));
-              Navigator.of(ctx, rootNavigator: true).pop();
-            },
-          );
-        },
-      ),
-      child: TextField(
-        controller: reasonCtrl,
-        maxLines: 3,
-        maxLength: 280,
-        decoration: const InputDecoration(
-          labelText: 'Raison (optionnel)',
+      child: _RejectContent(bloc: bloc, threadId: threadId),
+    );
+  }
+}
+
+class _RejectContent extends StatefulWidget {
+  const _RejectContent({required this.bloc, required this.threadId});
+  final NegotiationBloc bloc;
+  final String threadId;
+
+  @override
+  State<_RejectContent> createState() => _RejectContentState();
+}
+
+class _RejectContentState extends State<_RejectContent> {
+  final _reasonCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _reasonCtrl.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    widget.bloc.add(NegotiationRejectRequested(
+      threadId: widget.threadId,
+      reason: _reasonCtrl.text.trim().isEmpty ? null : _reasonCtrl.text.trim(),
+    ));
+    Navigator.of(context, rootNavigator: true).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          controller: _reasonCtrl,
+          maxLines: 3,
+          maxLength: 280,
+          decoration: const InputDecoration(
+            labelText: 'Raison (optionnel)',
+          ),
         ),
-      ),
-    ).whenComplete(reasonCtrl.dispose);
+        const SizedBox(height: 16),
+        BlocBuilder<NegotiationBloc, NegotiationState>(
+          bloc: widget.bloc,
+          builder: (ctx, state) {
+            final loading = state is NegotiationActionInProgress ||
+                state is NegotiationLoading;
+            return DonyButton(
+              label: loading ? 'Envoi…' : 'Confirmer le rejet',
+              variant: DonyButtonVariant.destructive,
+              isLoading: loading,
+              onPressed: loading ? null : _submit,
+            );
+          },
+        ),
+      ],
+    );
   }
 }
