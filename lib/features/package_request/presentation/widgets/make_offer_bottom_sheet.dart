@@ -41,7 +41,7 @@ class MakeOfferBottomSheet {
     }
 
     if (!context.mounted) return;
-    await DonyBottomSheet.show<void>(
+    final future = DonyBottomSheet.show<void>(
       context,
       title: 'Faire une offre',
       wrapper: (child) => BlocProvider(
@@ -211,10 +211,11 @@ class MakeOfferBottomSheet {
         ),
       ),
     );
-
-    priceCtrl.dispose();
-    kgCtrl.dispose();
-    bodyCtrl.dispose();
-    dateNotifier.dispose();
+    await future.whenComplete(() {
+      priceCtrl.dispose();
+      kgCtrl.dispose();
+      bodyCtrl.dispose();
+      dateNotifier.dispose();
+    });
   }
 }

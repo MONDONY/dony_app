@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,7 @@ class PackageRequestDetailScreen extends StatefulWidget {
 class _PackageRequestDetailScreenState
     extends State<PackageRequestDetailScreen> {
   PackageRequest? _request;
+  List<NegotiationThread> _threads = const [];
   String? _error;
   bool _loading = true;
   bool _cancelling = false;
@@ -37,8 +39,20 @@ class _PackageRequestDetailScreenState
       _error = null;
     });
     try {
-      final r = await getIt<PackageRequestRepository>().getById(widget.requestId);
-      if (mounted) setState(() => _request = r);
+      final repo = getIt<PackageRequestRepository>();
+      final r = await repo.getById(widget.requestId);
+      List<NegotiationThread> threads = const [];
+      try {
+        threads = await repo.listThreadsForRequest(widget.requestId);
+      } catch (_) {
+        // Ignore thread fetch errors — detail still loads
+      }
+      if (mounted) {
+        setState(() {
+          _request = r;
+          _threads = threads;
+        });
+      }
     } on DioException catch (e) {
       if (mounted) setState(() => _error = e.message ?? 'Erreur');
     } catch (e) {
@@ -91,6 +105,7 @@ class _PackageRequestDetailScreenState
                   ? const SizedBox.shrink()
                   : _DetailView(
                       request: _request!,
+                      threads: _threads,
                       cancelling: _cancelling,
                       onCancel: _cancel,
                       onComplete: () => context.push(
@@ -103,11 +118,13 @@ class _PackageRequestDetailScreenState
 class _DetailView extends StatelessWidget {
   const _DetailView({
     required this.request,
+    required this.threads,
     required this.cancelling,
     required this.onCancel,
     required this.onComplete,
   });
   final PackageRequest request;
+  final List<NegotiationThread> threads;
   final bool cancelling;
   final VoidCallback onCancel;
   final VoidCallback onComplete;
@@ -180,6 +197,8 @@ class _DetailView extends StatelessWidget {
                   ],
                 ),
               ],
+              const SizedBox(height: 16),
+              _ThreadsSection(threads: threads),
             ],
           ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04),
         ),
@@ -310,6 +329,185 @@ class _ErrorView extends StatelessWidget {
             const SizedBox(height: 16),
             DonyButton(label: 'Réessayer', onPressed: onRetry),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+
+class _ThreadsSection extends StatelessWidget {
+  const _ThreadsSection({required this.threads});
+  final List<NegotiationThread> threads;
+
+  @override
+  Widget build(BuildContext context) {
+    if (threads.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: kSurface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: kBorder),
+        ),
+        child: Column(
+          children: [
+            const Icon(Icons.inbox_outlined, size: 36, color: kTextHint),
+            const SizedBox(height: 8),
+            Text(
+              "Aucune proposition pour le moment",
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: kTextSecondary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              "Tu seras notifié·e dès qu'un voyageur fait une offre",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                color: kTextHint,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Row(
+            children: [
+              Text(
+                "Propositions reçues",
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: kTextSecondary,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: kGreenLight,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  "${threads.length}",
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: kGreenDark,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        ...threads.map((t) => _ThreadTile(thread: t)),
+      ],
+    );
+  }
+}
+
+class _ThreadTile extends StatelessWidget {
+  const _ThreadTile({required this.thread});
+  final NegotiationThread thread;
+
+  Color _statusColor() => switch (thread.status) {
+        NegotiationThreadStatus.open => kWarning,
+        NegotiationThreadStatus.accepted => kSuccess,
+        NegotiationThreadStatus.rejected => kError,
+        NegotiationThreadStatus.autoRejected => kTextHint,
+        NegotiationThreadStatus.expired => kTextHint,
+      };
+
+  String _statusLabel() => switch (thread.status) {
+        NegotiationThreadStatus.open => "En cours",
+        NegotiationThreadStatus.accepted => "Acceptée",
+        NegotiationThreadStatus.rejected => "Rejetée",
+        NegotiationThreadStatus.autoRejected => "Auto-rejetée",
+        NegotiationThreadStatus.expired => "Expirée",
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: kSurface,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => context.push("/negotiations/${thread.id}"),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: kBorder),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: kGreenLight,
+                  child: const Icon(Icons.person_rounded, color: kGreenPrimary),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            "${thread.currentPriceEur.toStringAsFixed(0)} €",
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              color: kGreenPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: _statusColor().withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              _statusLabel(),
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: _statusColor(),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        "Round ${thread.roundsCount}/5  ·  ${thread.travelerAvailableKg.toStringAsFixed(1)} kg dispo",
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          color: kTextSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded, color: kTextHint),
+              ],
+            ),
+          ),
         ),
       ),
     );

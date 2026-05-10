@@ -160,47 +160,80 @@ class _ThreadView extends StatelessWidget {
             top: false,
             child: Padding(
               padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  if (canReject)
-                    Expanded(
-                      child: DonyButton(
-                        label: 'Rejeter',
-                        variant: DonyButtonVariant.secondary,
-                        onPressed: actionInProgress
-                            ? null
-                            : () => RejectBottomSheet.show(context,
-                                bloc: context.read<NegotiationBloc>(),
-                                threadId: thread.id),
-                      ),
+              child: canAccept
+                  // SENDER: 3 actions — Accept full-width prominent + Counter/Reject side by side
+                  ? Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        DonyButton(
+                          label: 'Accepter ${thread.currentPriceEur.toStringAsFixed(0)} €',
+                          onPressed: actionInProgress
+                              ? null
+                              : () => AcceptOfferBottomSheet.show(context,
+                                  bloc: context.read<NegotiationBloc>(),
+                                  threadId: thread.id,
+                                  priceEur: thread.currentPriceEur),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: DonyButton(
+                                label: 'Contre-offre',
+                                variant: DonyButtonVariant.secondary,
+                                onPressed: actionInProgress
+                                    ? null
+                                    : () => CounterOfferBottomSheet.show(
+                                        context,
+                                        bloc: context.read<NegotiationBloc>(),
+                                        threadId: thread.id,
+                                        currentPriceEur: thread.currentPriceEur),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: DonyButton(
+                                label: 'Rejeter',
+                                variant: DonyButtonVariant.ghost,
+                                onPressed: actionInProgress
+                                    ? null
+                                    : () => RejectBottomSheet.show(context,
+                                        bloc: context.read<NegotiationBloc>(),
+                                        threadId: thread.id),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    )
+                  // TRAVELER: 2 actions — Counter (primary) + Reject (secondary)
+                  : Row(
+                      children: [
+                        Expanded(
+                          child: DonyButton(
+                            label: 'Rejeter',
+                            variant: DonyButtonVariant.ghost,
+                            onPressed: actionInProgress
+                                ? null
+                                : () => RejectBottomSheet.show(context,
+                                    bloc: context.read<NegotiationBloc>(),
+                                    threadId: thread.id),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: DonyButton(
+                            label: 'Contre-offre',
+                            onPressed: actionInProgress
+                                ? null
+                                : () => CounterOfferBottomSheet.show(context,
+                                    bloc: context.read<NegotiationBloc>(),
+                                    threadId: thread.id,
+                                    currentPriceEur: thread.currentPriceEur),
+                          ),
+                        ),
+                      ],
                     ),
-                  if (canReject) const SizedBox(width: 12),
-                  Expanded(
-                    child: DonyButton(
-                      label: 'Contre-offre',
-                      onPressed: actionInProgress
-                          ? null
-                          : () => CounterOfferBottomSheet.show(context,
-                              bloc: context.read<NegotiationBloc>(),
-                              threadId: thread.id,
-                              currentPriceEur: thread.currentPriceEur),
-                    ),
-                  ),
-                  if (canAccept) const SizedBox(width: 12),
-                  if (canAccept)
-                    Expanded(
-                      child: DonyButton(
-                        label: 'Accepter',
-                        onPressed: actionInProgress
-                            ? null
-                            : () => AcceptOfferBottomSheet.show(context,
-                                bloc: context.read<NegotiationBloc>(),
-                                threadId: thread.id,
-                                priceEur: thread.currentPriceEur),
-                      ),
-                    ),
-                ],
-              ),
             ),
           ),
       ],

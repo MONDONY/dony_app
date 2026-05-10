@@ -1,4 +1,5 @@
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -102,6 +103,15 @@ class PackageRequestRepository {
     final response = await _apiClient.dio
         .get<Map<String, dynamic>>('/package-requests/$id');
     return PackageRequest.fromJson(response.data!);
+  }
+
+  /// All negotiation threads attached to a request (sender inbox view).
+  Future<List<NegotiationThread>> listThreadsForRequest(String requestId) async {
+    final response = await _apiClient.dio
+        .get<List<dynamic>>('/package-requests/$requestId/threads');
+    return (response.data ?? <dynamic>[])
+        .map((e) => NegotiationThread.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<void> cancel(String id) async {
