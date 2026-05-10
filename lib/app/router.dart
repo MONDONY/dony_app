@@ -1,5 +1,7 @@
 import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/presentation/screens/local_auth_screen.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
@@ -401,12 +403,16 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/negotiations/:id',
-      builder: (_, state) {
-        final firebaseUid =
-            FirebaseAuth.instance.currentUser?.uid ?? '';
+      builder: (context, state) {
+        final authState = context.read<AuthBloc>().state;
+        final userId = authState is AuthAuthenticated
+            ? authState.user.id
+            : authState is AuthProfileUpdated
+                ? authState.user.id
+                : '';
         return NegotiationThreadScreen(
           threadId: state.pathParameters['id']!,
-          viewerUserId: firebaseUid,
+          viewerUserId: userId,
         );
       },
     ),
