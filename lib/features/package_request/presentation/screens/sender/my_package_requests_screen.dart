@@ -10,21 +10,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+/// Route top-level `/package-requests/me` — wrapper Scaffold + AppBar.
+/// Le body est extrait dans [MyPackageRequestsBody] pour pouvoir être
+/// affiché en sous-onglet dans `EnvoyerHubScreen`.
 class MyPackageRequestsScreen extends StatelessWidget {
   const MyPackageRequestsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) =>
-          getIt<PackageRequestBloc>()..add(const FetchMyRequests()),
-      child: const _ListView(),
-    );
-  }
-}
-
-class _ListView extends StatelessWidget {
-  const _ListView();
 
   @override
   Widget build(BuildContext context) {
@@ -46,62 +36,117 @@ class _ListView extends StatelessWidget {
           child: Divider(height: 1),
         ),
       ),
-      body: BlocBuilder<PackageRequestBloc, PackageRequestState>(
-        builder: (context, state) {
-          if (state.status == PackageRequestListStatus.loading) {
-            return const Center(
-                child: CircularProgressIndicator(color: kGreenPrimary));
-          }
-          if (state.status == PackageRequestListStatus.error) {
-            return _Error(
-              message: state.errorMessage ?? 'Erreur',
-              onRetry: () => context
-                  .read<PackageRequestBloc>()
-                  .add(const FetchMyRequests()),
-            );
-          }
-          if (state.requests.isEmpty) {
-            return _Empty(
-              onCreate: () => PackageRequestCreateWizard.show(context),
-            );
-          }
-          return RefreshIndicator(
-            color: kGreenPrimary,
-            onRefresh: () async {
-              context
-                  .read<PackageRequestBloc>()
-                  .add(const RefreshMyRequests());
-            },
-            child: ListView.separated(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-              itemCount: state.requests.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, i) {
-                final r = state.requests[i];
-                return _RequestCard(request: r)
-                    .animate()
-                    .fadeIn(
-                      duration: 200.ms,
-                      delay: (60 * i).ms,
-                    )
-                    .slideY(begin: 0.04);
-              },
-            ),
+      body: const MyPackageRequestsBody(showFab: true),
+    );
+  }
+}
+
+/// Body public — pour standalone (`showFab: true`) ou sous-onglet du hub
+/// (`showFab: false`, le hub fournit son propre FAB Publier).
+class MyPackageRequestsBody extends StatelessWidget {
+  const MyPackageRequestsBody({super.key, this.showFab = false});
+
+  /// Affiche un FAB "Nouvelle demande" en bas droite. Désactivé en sous-
+  /// onglet du hub qui possède son propre FAB.
+  final bool showFab;
+
+  @override
+  Widget build(BuildContext context) {
+    // Réutilise le PackageRequestBloc parent si fourni (cas du hub
+    // `EnvoyerHubScreen` qui le partage avec son header pour les counters),
+    // sinon en crée un propre.
+    bool hasParent;
+    try {
+      BlocProvider.of<PackageRequestBloc>(context, listen: false);
+      hasParent = true;
+    } catch (_) {
+      hasParent = false;
+    }
+    if (hasParent) {
+      return _ListContent(showFab: showFab);
+    }
+    return BlocProvider(
+      create: (_) =>
+          getIt<PackageRequestBloc>()..add(const FetchMyRequests()),
+      child: _ListContent(showFab: showFab),
+    );
+  }
+}
+
+class _ListContent extends StatelessWidget {
+  const _ListContent({required this.showFab});
+  final bool showFab;
+
+  @override
+  Widget build(BuildContext context) {
+    final list = BlocBuilder<PackageRequestBloc, PackageRequestState>(
+      builder: (context, state) {
+        if (state.status == PackageRequestListStatus.loading) {
+          return const Center(
+              child: CircularProgressIndicator(color: kGreenPrimary));
+        }
+        if (state.status == PackageRequestListStatus.error) {
+          return _Error(
+            message: state.errorMessage ?? 'Erreur',
+            onRetry: () => context
+                .read<PackageRequestBloc>()
+                .add(const FetchMyRequests()),
           );
-        },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => PackageRequestCreateWizard.show(context),
-        backgroundColor: kGreenPrimary,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: Text(
-          'Nouvelle demande',
-          style: GoogleFonts.plusJakartaSans(
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
+        }
+        if (state.requests.isEmpty) {
+          return _Empty(
+            onCreate: () => PackageRequestCreateWizard.show(context),
+          );
+        }
+        return RefreshIndicator(
+          color: kGreenPrimary,
+          onRefresh: () async {
+            context
+                .read<PackageRequestBloc>()
+                .add(const RefreshMyRequests());
+          },
+          child: ListView.separated(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+            itemCount: state.requests.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            itemBuilder: (context, i) {
+              final r = state.requests[i];
+              return _RequestCard(request: r)
+                  .animate()
+                  .fadeIn(
+                    duration: 200.ms,
+                    delay: (60 * i).ms,
+                  )
+                  .slideY(begin: 0.04);
+            },
+          ),
+        );
+      },
+    );
+
+    if (!showFab) return list;
+
+    return Stack(
+      children: [
+        Positioned.fill(child: list),
+        Positioned(
+          right: 20,
+          bottom: 20,
+          child: FloatingActionButton.extended(
+            heroTag: 'my-package-requests-fab',
+            onPressed: () => PackageRequestCreateWizard.show(context),
+            backgroundColor: kGreenPrimary,
+            icon: const Icon(Icons.add_rounded, color: Colors.white),
+            label: Text(
+              'Nouvelle demande',
+              style: GoogleFonts.plusJakartaSans(
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 }

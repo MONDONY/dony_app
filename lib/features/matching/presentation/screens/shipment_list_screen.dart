@@ -24,10 +24,28 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class ShipmentListScreen extends StatefulWidget {
-  const ShipmentListScreen({super.key});
+  const ShipmentListScreen({super.key, this.embedded = false});
+
+  /// Quand `true`, l'écran omet son aurora background et son header avec le
+  /// titre "Mes envois" — adapté pour servir de sous-onglet dans le hub
+  /// `EnvoyerHubScreen`. Le wrapper [ShipmentListBody] expose ce mode.
+  final bool embedded;
 
   @override
   State<ShipmentListScreen> createState() => _ShipmentListScreenState();
+}
+
+/// Body extrait pour usage en sous-onglet du hub `EnvoyerHubScreen`.
+///
+/// Délègue à [ShipmentListScreen] en mode `embedded: true` — aucun
+/// changement comportemental, l'aurora et le header titre sont juste
+/// désactivés pour cohabiter avec le header du hub parent.
+class ShipmentListBody extends StatelessWidget {
+  const ShipmentListBody({super.key});
+
+  @override
+  Widget build(BuildContext context) =>
+      const ShipmentListScreen(embedded: true);
 }
 
 class _ShipmentListScreenState extends State<ShipmentListScreen>
@@ -167,7 +185,8 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
         backgroundColor: Colors.transparent,
         body: Stack(
           children: [
-            const Positioned.fill(child: _AuroraMeshBackground()),
+            if (!widget.embedded)
+              const Positioned.fill(child: _AuroraMeshBackground()),
             BlocBuilder<BidBloc, BidState>(
           builder: (context, state) {
             if (!_hasData && (state is BidLoading || state is BidInitial)) {
@@ -182,14 +201,15 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
               children: [
                 NestedScrollView(
                   headerSliverBuilder: (context, _) => [
-                    SliverToBoxAdapter(
-                      child: _EnvoisHeader(
-                        inProgressCount: _inProgress.length,
-                        upcomingCount: _upcoming.length,
-                        activeShipment:
-                            _inProgress.isNotEmpty ? _inProgress.first : null,
+                    if (!widget.embedded)
+                      SliverToBoxAdapter(
+                        child: _EnvoisHeader(
+                          inProgressCount: _inProgress.length,
+                          upcomingCount: _upcoming.length,
+                          activeShipment:
+                              _inProgress.isNotEmpty ? _inProgress.first : null,
+                        ),
                       ),
-                    ),
                     SliverPersistentHeader(
                       pinned: true,
                       delegate: _TabBarDelegate(

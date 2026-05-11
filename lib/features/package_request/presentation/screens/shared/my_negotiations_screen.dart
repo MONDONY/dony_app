@@ -9,14 +9,49 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
-class MyNegotiationsScreen extends StatefulWidget {
+/// Route top-level — wrapper Scaffold + AppBar avec bouton retour.
+/// Le body est extrait dans [MyNegotiationsBody] pour pouvoir être affiché
+/// en sous-onglet dans `EnvoyerHubScreen`.
+class MyNegotiationsScreen extends StatelessWidget {
   const MyNegotiationsScreen({super.key});
 
   @override
-  State<MyNegotiationsScreen> createState() => _MyNegotiationsScreenState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: kBackground,
+      appBar: AppBar(
+        backgroundColor: kSurface,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_rounded,
+              size: 20, color: kGreenPrimary),
+          onPressed: () => context.pop(),
+        ),
+        title: Text(
+          'Mes négociations',
+          style: GoogleFonts.plusJakartaSans(
+              fontWeight: FontWeight.w700, fontSize: 18),
+        ),
+        centerTitle: false,
+      ),
+      body: const MyNegotiationsBody(),
+    );
+  }
 }
 
-class _MyNegotiationsScreenState extends State<MyNegotiationsScreen> {
+/// Body public — utilisable en standalone (via `MyNegotiationsScreen`) ou
+/// en sous-onglet du hub `EnvoyerHubScreen`.
+///
+/// Dette technique notée : pas de BLoC, utilise `setState` + `getIt` direct.
+/// Migration vers `NegotiationListBloc` prévue dans une story dédiée.
+class MyNegotiationsBody extends StatefulWidget {
+  const MyNegotiationsBody({super.key});
+
+  @override
+  State<MyNegotiationsBody> createState() => _MyNegotiationsBodyState();
+}
+
+class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
   List<NegotiationThread> _threads = const [];
   String? _error;
   bool _loading = true;
@@ -49,44 +84,28 @@ class _MyNegotiationsScreenState extends State<MyNegotiationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kBackground,
-      appBar: AppBar(
-        backgroundColor: kSurface,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded,
-              size: 20, color: kGreenPrimary),
-          onPressed: () => context.pop(),
+    if (_loading) {
+      return const Center(
+          child: CircularProgressIndicator(color: kGreenPrimary));
+    }
+    if (_error != null) {
+      return _ErrorState(message: _error!, onRetry: _load);
+    }
+    if (_threads.isEmpty) {
+      return const _EmptyState();
+    }
+    return RefreshIndicator(
+      color: kGreenPrimary,
+      onRefresh: _load,
+      child: ListView.separated(
+        padding: const EdgeInsets.all(20),
+        itemCount: _threads.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 12),
+        itemBuilder: (_, i) => _ThreadCard(
+          thread: _threads[i],
+          index: i,
         ),
-        title: Text(
-          'Mes négociations',
-          style: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.w700, fontSize: 18),
-        ),
-        centerTitle: false,
       ),
-      body: _loading
-          ? const Center(
-              child: CircularProgressIndicator(color: kGreenPrimary))
-          : _error != null
-              ? _ErrorState(message: _error!, onRetry: _load)
-              : _threads.isEmpty
-                  ? const _EmptyState()
-                  : RefreshIndicator(
-                      color: kGreenPrimary,
-                      onRefresh: _load,
-                      child: ListView.separated(
-                        padding: const EdgeInsets.all(20),
-                        itemCount: _threads.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: 12),
-                        itemBuilder: (_, i) => _ThreadCard(
-                          thread: _threads[i],
-                          index: i,
-                        ),
-                      ),
-                    ),
     );
   }
 }
