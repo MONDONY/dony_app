@@ -4,6 +4,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/presentation/screens/shipment_list_screen.dart';
+import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
@@ -39,6 +40,10 @@ class EnvoyerHubScreen extends StatelessWidget {
         BlocProvider(
           create: (_) =>
               getIt<BidBloc>()..add(const BidMyListAutoRefreshRequested()),
+        ),
+        BlocProvider(
+          create: (_) => getIt<NegotiationListBloc>()
+            ..add(const NegotiationListFetchRequested()),
         ),
       ],
       child: const _EnvoyerHubView(),
@@ -121,50 +126,73 @@ class _EnvoyerHubHeader extends StatelessWidget {
       child: BlocBuilder<PackageRequestBloc, PackageRequestState>(
         builder: (context, state) {
           final count = state.requests.length;
-          final subtitle =
-              count == 0 ? 'Aucune demande en cours' : _pluralizeDemandes(count);
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Envoyer',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        color: kTextPrimary,
-                        height: 1.1,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: kTextSecondary,
-                      ),
-                    ),
-                  ],
-                ).animate().fadeIn(duration: 220.ms),
-              ),
-              _HeaderAction(onTap: () => PackageRequestCreateWizard.show(context))
-                  .animate()
-                  .fadeIn(delay: 80.ms),
-            ],
+          return BlocBuilder<NegotiationListBloc, NegotiationListState>(
+            buildWhen: (a, b) => a.activeCount != b.activeCount,
+            builder: (context, negoState) {
+              final negoCount = negoState.activeCount;
+              final subtitle = _buildSubtitle(count, negoCount);
+              return _HeaderRow(subtitle: subtitle);
+            },
           );
         },
       ),
     );
   }
 
-  String _pluralizeDemandes(int count) {
+  static String _buildSubtitle(int demandes, int negos) {
+    if (demandes == 0 && negos == 0) return 'Aucune demande en cours';
+    final demandesPart = demandes == 1 ? '1 demande active' : '$demandes demandes actives';
+    if (negos == 0) return demandesPart;
+    final negosPart = negos == 1 ? '1 nouvelle négo' : '$negos nouvelles négos';
+    return '$demandesPart · $negosPart';
+  }
+
+  static String _pluralizeDemandes(int count) {
     if (count == 1) return '1 demande active';
     return '$count demandes actives';
+  }
+}
+
+class _HeaderRow extends StatelessWidget {
+  const _HeaderRow({required this.subtitle});
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Envoyer',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  color: kTextPrimary,
+                  height: 1.1,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: kTextSecondary,
+                ),
+              ),
+            ],
+          ).animate().fadeIn(duration: 220.ms),
+        ),
+        _HeaderAction(onTap: () => PackageRequestCreateWizard.show(context))
+            .animate()
+            .fadeIn(delay: 80.ms),
+      ],
+    );
   }
 }
 
@@ -243,7 +271,15 @@ class _EnvoyerHubTabBar extends StatelessWidget {
               );
             },
           ),
-          const _CountedTab(label: 'Négos', counterBuilder: null),
+          _CountedTab(
+            label: 'Négos',
+            counterBuilder: (context) {
+              return BlocBuilder<NegotiationListBloc, NegotiationListState>(
+                buildWhen: (a, b) => a.activeCount != b.activeCount,
+                builder: (_, state) => _Counter(value: state.activeCount),
+              );
+            },
+          ),
         ],
       ),
     );

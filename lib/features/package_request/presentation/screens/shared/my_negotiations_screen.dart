@@ -1,10 +1,11 @@
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
-import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -34,7 +35,11 @@ class MyNegotiationsScreen extends StatelessWidget {
         ),
         centerTitle: false,
       ),
-      body: const MyNegotiationsBody(),
+      body: BlocProvider<NegotiationListBloc>(
+        create: (_) => getIt<NegotiationListBloc>()
+          ..add(const NegotiationListFetchRequested()),
+        child: const MyNegotiationsBody(),
+      ),
     );
   }
 }
@@ -42,70 +47,50 @@ class MyNegotiationsScreen extends StatelessWidget {
 /// Body public — utilisable en standalone (via `MyNegotiationsScreen`) ou
 /// en sous-onglet du hub `EnvoyerHubScreen`.
 ///
-/// Dette technique notée : pas de BLoC, utilise `setState` + `getIt` direct.
-/// Migration vers `NegotiationListBloc` prévue dans une story dédiée.
-class MyNegotiationsBody extends StatefulWidget {
+/// Requires a [NegotiationListBloc] provider in the tree. When embedded inside
+/// `EnvoyerHubScreen`, the hub provides it; standalone, [MyNegotiationsScreen]
+/// wraps in a [BlocProvider].
+class MyNegotiationsBody extends StatelessWidget {
   const MyNegotiationsBody({super.key});
 
   @override
-  State<MyNegotiationsBody> createState() => _MyNegotiationsBodyState();
-}
-
-class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
-  List<NegotiationThread> _threads = const [];
-  String? _error;
-  bool _loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    setState(() => _error = null);
-    try {
-      final threads = await getIt<NegotiationRepository>().findMine();
-      if (mounted) {
-        setState(() {
-          _threads = threads;
-          _loading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = e.toString();
-          _loading = false;
-        });
-      }
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return const Center(
-          child: CircularProgressIndicator(color: kGreenPrimary));
-    }
-    if (_error != null) {
-      return _ErrorState(message: _error!, onRetry: _load);
-    }
-    if (_threads.isEmpty) {
-      return const _EmptyState();
-    }
-    return RefreshIndicator(
-      color: kGreenPrimary,
-      onRefresh: _load,
-      child: ListView.separated(
-        padding: const EdgeInsets.all(20),
-        itemCount: _threads.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 12),
-        itemBuilder: (_, i) => _ThreadCard(
-          thread: _threads[i],
-          index: i,
-        ),
-      ),
+    return BlocBuilder<NegotiationListBloc, NegotiationListState>(
+      builder: (context, state) {
+        if (state.status == NegotiationListStatus.loading &&
+            state.threads.isEmpty) {
+          return const Center(
+              child: CircularProgressIndicator(color: kGreenPrimary));
+        }
+        if (state.status == NegotiationListStatus.error) {
+          return _ErrorState(
+            message: state.errorMessage ?? 'Erreur',
+            onRetry: () => context
+                .read<NegotiationListBloc>()
+                .add(const NegotiationListRefreshRequested()),
+          );
+        }
+        if (state.threads.isEmpty) {
+          return const _EmptyState();
+        }
+        return RefreshIndicator(
+          color: kGreenPrimary,
+          onRefresh: () async {
+            context
+                .read<NegotiationListBloc>()
+                .add(const NegotiationListRefreshRequested());
+          },
+          child: ListView.separated(
+            padding: const EdgeInsets.all(20),
+            itemCount: state.threads.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (_, i) => _ThreadCard(
+              thread: state.threads[i],
+              index: i,
+            ),
+          ),
+        );
+      },
     );
   }
 }
