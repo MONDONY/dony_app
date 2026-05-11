@@ -109,7 +109,7 @@ class _PackageRequestDetailScreenState
                       cancelling: _cancelling,
                       onCancel: _cancel,
                       onComplete: () => context.push(
-                          '/package-requests/${widget.requestId}/complete-details'),
+                          '/package-requests/${widget.requestId}/shipment'),
                     ),
     );
   }
@@ -133,8 +133,10 @@ class _DetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     final canCancel = request.status == PackageRequestStatus.open ||
         request.status == PackageRequestStatus.negotiating;
-    final showCompleteCta = request.status == PackageRequestStatus.accepted &&
-        request.pickupNeighborhood == null;
+    // After payment, always show a CTA to the shipment steps screen — even if
+    // pickup details are already filled, the sender may want to access the QR
+    // code or the tracking timeline.
+    final showCompleteCta = request.status == PackageRequestStatus.accepted;
     return Stack(
       children: [
         SingleChildScrollView(

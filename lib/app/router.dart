@@ -31,6 +31,7 @@ import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/presentation/screens/connect_onboarding_intro_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/complete_details_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/shipment_steps_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/package_request_detail_screen.dart';
@@ -398,6 +399,16 @@ final appRouter = GoRouter(
       path: '/package-requests/:id/complete-details',
       builder: (_, state) =>
           CompleteDetailsScreen(requestId: state.pathParameters['id']!),
+    ),
+    GoRoute(
+      path: '/package-requests/:id/shipment',
+      builder: (_, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        return ShipmentStepsScreen(
+          requestId: state.pathParameters['id']!,
+          travelerDisplayName: extra?['travelerDisplayName'] as String?,
+        );
+      },
     ),
     GoRoute(
       path: '/negotiations',
