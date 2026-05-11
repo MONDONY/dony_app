@@ -31,6 +31,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
+import 'package:dony/features/package_request/presentation/widgets/near_me_package_request_carousel.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
@@ -846,27 +847,70 @@ class _MapSenderViewState extends State<_MapSenderView> {
                           child: _DemandesPlaceholder(),
                         );
                       }
-                      return SliverPadding(
-                        padding: EdgeInsets.fromLTRB(
-                          DonySpacing.base,
-                          DonySpacing.sm,
-                          DonySpacing.base,
-                          bottomPad + DonySpacing.huge,
-                        ),
-                        sliver: SliverList.separated(
-                          itemCount: prState.results.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: DonySpacing.md),
-                          itemBuilder: (_, i) => PackageRequestListCard(
-                            item: prState.results[i],
-                            onTap: () => PackageRequestPreviewBottomSheet.show(
-                                context,
-                                item: prState.results[i]),
-                            onMakeOffer: () =>
-                                PackageRequestPreviewBottomSheet.show(context,
-                                    item: prState.results[i]),
+                      final showCarousel =
+                          _isNearMeActive && _userPosition != null;
+                      return SliverMainAxisGroup(
+                        slivers: [
+                          if (showCarousel)
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  DonySpacing.base,
+                                  DonySpacing.sm,
+                                  DonySpacing.base,
+                                  DonySpacing.xs,
+                                ),
+                                child: SizedBox(
+                                  height: 232,
+                                  child: NearMePackageRequestCarousel(
+                                    items: prState.results,
+                                    userPosition: (
+                                      lat: _userPosition!.latitude,
+                                      lng: _userPosition!.longitude,
+                                    ),
+                                    onSeeAll: () => _sheetController.animateTo(
+                                      1.0,
+                                      duration:
+                                          const Duration(milliseconds: 280),
+                                      curve: Curves.easeOutCubic,
+                                    ),
+                                    onTapCard: (it) =>
+                                        PackageRequestPreviewBottomSheet.show(
+                                            context,
+                                            item: it),
+                                    onMakeOffer: (it) =>
+                                        PackageRequestPreviewBottomSheet.show(
+                                            context,
+                                            item: it),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          SliverPadding(
+                            padding: EdgeInsets.fromLTRB(
+                              DonySpacing.base,
+                              DonySpacing.sm,
+                              DonySpacing.base,
+                              bottomPad + DonySpacing.huge,
+                            ),
+                            sliver: SliverList.separated(
+                              itemCount: prState.results.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: DonySpacing.md),
+                              itemBuilder: (_, i) => PackageRequestListCard(
+                                item: prState.results[i],
+                                onTap: () =>
+                                    PackageRequestPreviewBottomSheet.show(
+                                        context,
+                                        item: prState.results[i]),
+                                onMakeOffer: () =>
+                                    PackageRequestPreviewBottomSheet.show(
+                                        context,
+                                        item: prState.results[i]),
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       );
                     },
                   )
