@@ -160,6 +160,9 @@ class PackageRequestRepository {
     DateTime? dateTo,
     double? maxWeight,
     ParcelSize? parcelSize,
+    double? lat,
+    double? lng,
+    double? radiusKm,
     int page = 0,
     int size = 20,
   }) async {
@@ -172,6 +175,9 @@ class PackageRequestRepository {
       if (dateTo != null) 'dateTo': dateTo.toIso8601String().substring(0, 10),
       if (maxWeight != null) 'maxWeight': maxWeight,
       if (parcelSize != null) 'parcelSize': parcelSize.wireName,
+      if (lat != null) 'lat': lat,
+      if (lng != null) 'lng': lng,
+      if (radiusKm != null) 'radiusKm': radiusKm,
     };
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/package-requests',

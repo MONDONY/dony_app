@@ -26,6 +26,7 @@ import 'package:dony/features/matching/presentation/widgets/search_form_bottom_s
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
+import 'package:dony/features/home/presentation/map_traveler_view.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
@@ -73,25 +74,12 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ActiveRoleCubit, ActiveRole>(
       builder: (context, activeRole) {
-        return BlocBuilder<AuthBloc, AuthState>(
-          builder: (context, authState) {
-            final user = authState is AuthAuthenticated
-                ? authState.user
-                : authState is AuthProfileUpdated
-                    ? authState.user
-                    : null;
-
-            if (activeRole == ActiveRole.traveler) {
-              return _TravelerView(
-                displayName: user?.displayName ?? 'Voyageur',
-                isProAccount: user?.isProAccount ?? false,
-              );
-            }
-            return BlocProvider<PackageRequestSearchBloc>(
-              create: (_) => getIt<PackageRequestSearchBloc>(),
-              child: const _MapSenderView(),
-            );
-          },
+        if (activeRole == ActiveRole.traveler) {
+          return const MapTravelerView();
+        }
+        return BlocProvider<PackageRequestSearchBloc>(
+          create: (_) => getIt<PackageRequestSearchBloc>(),
+          child: const _MapSenderView(),
         );
       },
     );
