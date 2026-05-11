@@ -6,7 +6,6 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
-import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/create_bid_screen.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:flutter/material.dart';
@@ -42,18 +41,6 @@ final _testAnnouncement = AnnouncementModel(
     id: 'trav-1',
     displayName: 'Ibrahima Diallo',
   ),
-);
-
-final _testBid = BidModel(
-  id: 'bid-1',
-  announcementId: 'ann-1',
-  senderId: 'sender-1',
-  weightKg: 5,
-  declaredValueEur: 150,
-  description: 'Vêtements famille',
-  status: 'PENDING',
-  createdAt: DateTime(2026, 1, 1),
-  updatedAt: DateTime(2026, 1, 1),
 );
 
 // ── Builder ───────────────────────────────────────────────────────────────────

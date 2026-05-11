@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
@@ -15,6 +16,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(ParcelSize.small);
+    registerFallbackValue(TransportMode.plane);
   });
 
   setUp(() => repo = _MockRepo());
@@ -26,6 +28,7 @@ void main() {
     dateToleranceDays: 2,
     weightKg: 5,
     parcelSize: ParcelSize.small,
+    transportMode: TransportMode.plane,
     contentCategory: 'vetements',
     status: PackageRequestStatus.open,
     createdAt: DateTime(2026, 5, 10),
@@ -39,7 +42,8 @@ void main() {
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
           desiredDate: DateTime(2026, 6, 15),
-          dateToleranceDays: 2))
+          dateToleranceDays: 2,
+          transportMode: TransportMode.plane))
       ..add(const FormStep2Submitted(
           weightKg: 5,
           parcelSize: ParcelSize.small,
@@ -60,6 +64,7 @@ void main() {
             dateToleranceDays: any(named: 'dateToleranceDays'),
             weightKg: any(named: 'weightKg'),
             parcelSize: any(named: 'parcelSize'),
+            transportMode: any(named: 'transportMode'),
             contentCategory: any(named: 'contentCategory'),
             description: any(named: 'description'),
             targetPriceEur: any(named: 'targetPriceEur'),
@@ -74,7 +79,8 @@ void main() {
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
           desiredDate: DateTime(2026, 6, 15),
-          dateToleranceDays: 2))
+          dateToleranceDays: 2,
+          transportMode: TransportMode.plane))
       ..add(const FormStep2Submitted(
           weightKg: 5,
           parcelSize: ParcelSize.small,
@@ -96,6 +102,7 @@ void main() {
             dateToleranceDays: 2,
             weightKg: 5,
             parcelSize: ParcelSize.small,
+            transportMode: TransportMode.plane,
             contentCategory: 'vetements',
             description: null,
             targetPriceEur: 25,
@@ -116,6 +123,7 @@ void main() {
             dateToleranceDays: any(named: 'dateToleranceDays'),
             weightKg: any(named: 'weightKg'),
             parcelSize: any(named: 'parcelSize'),
+            transportMode: any(named: 'transportMode'),
             contentCategory: any(named: 'contentCategory'),
             description: any(named: 'description'),
             targetPriceEur: any(named: 'targetPriceEur'),
@@ -130,7 +138,8 @@ void main() {
           departureCity: 'Paris',
           arrivalCity: 'Dakar',
           desiredDate: DateTime(2026, 6, 15),
-          dateToleranceDays: 2))
+          dateToleranceDays: 2,
+          transportMode: TransportMode.plane))
       ..add(const FormStep2Submitted(
           weightKg: 5,
           parcelSize: ParcelSize.small,

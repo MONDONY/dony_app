@@ -85,6 +85,7 @@ void main() {
               recipientPhone: any(named: 'recipientPhone'),
             )).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids'),
+          error: const ValidationException('Valeur maximum : 500 €'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids'),
             statusCode: 422,
@@ -157,6 +158,7 @@ void main() {
       build: () {
         when(() => mockRepo.getBidsForAnnouncement(any())).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids'),
+          error: const ForbiddenException('Accès refusé'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids'),
             statusCode: 403,
@@ -206,6 +208,7 @@ void main() {
       build: () {
         when(() => mockRepo.getMyBids()).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/me'),
+          error: const ServerException('Serveur indisponible'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids/me'),
             statusCode: 500,
@@ -284,6 +287,7 @@ void main() {
       build: () {
         when(() => mockRepo.acceptBid(any())).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/bid-001/accept'),
+          error: const ConflictException('Capacité insuffisante'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids/bid-001/accept'),
             statusCode: 409,
@@ -333,6 +337,7 @@ void main() {
         when(() => mockRepo.rejectBid(any(), reason: any(named: 'reason')))
             .thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/bid-001/reject'),
+          error: const ConflictException('Déjà rejeté'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids/bid-001/reject'),
             statusCode: 409,
@@ -407,6 +412,7 @@ void main() {
         when(() => mockRepo.cancelBid(any(), reason: any(named: 'reason')))
             .thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/bid-001/cancel'),
+          error: const ConflictException('Bid déjà terminé'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids/bid-001/cancel'),
             statusCode: 409,
@@ -453,6 +459,7 @@ void main() {
       build: () {
         when(() => mockRepo.hideBid(any())).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/bid-001/me'),
+          error: const NotFoundException(message: 'Bid introuvable'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids/bid-001/me'),
             statusCode: 404,
@@ -498,6 +505,7 @@ void main() {
       build: () {
         when(() => mockRepo.dismissBidAsTraveler(any())).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/bid-001/traveler'),
+          error: const ForbiddenException('Action non autorisée'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids/bid-001/traveler'),
             statusCode: 403,
@@ -558,6 +566,7 @@ void main() {
               windowEnd: any(named: 'windowEnd'),
             )).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/bid-001/handover'),
+          error: const ValidationException('Fenêtre invalide'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids/bid-001/handover'),
             statusCode: 422,
@@ -621,6 +630,7 @@ void main() {
       build: () {
         when(() => mockRepo.confirmPresence(any())).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/bid-001/presence'),
+          error: const ConflictException('Présence déjà confirmée'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids/bid-001/presence'),
             statusCode: 409,
@@ -668,6 +678,7 @@ void main() {
       build: () {
         when(() => mockRepo.confirmPayment(any())).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/bid-001/confirm-payment'),
+          error: const ServerException('Stripe indisponible'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids/bid-001/confirm-payment'),
             statusCode: 502,
@@ -713,6 +724,7 @@ void main() {
       build: () {
         when(() => mockRepo.hideBid(any())).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/bid-001'),
+          error: const NotFoundException(message: 'Bid introuvable'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids/bid-001'),
             statusCode: 404,

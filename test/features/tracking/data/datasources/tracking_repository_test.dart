@@ -146,9 +146,10 @@ void main() {
               {'confirmationCode': '4721'},
               '/tracking/bid-001/confirmation-code'));
 
-      final code = await repo.getConfirmationCode('bid-001');
+      final result = await repo.getConfirmationCode('bid-001');
 
-      expect(code, '4721');
+      expect(result.code, '4721');
+      expect(result.expiresAt, isNull);
     });
 
     test('returns null when confirmationCode absent', () async {
@@ -157,9 +158,10 @@ void main() {
               {'confirmationCode': null},
               '/tracking/bid-001/confirmation-code'));
 
-      final code = await repo.getConfirmationCode('bid-001');
+      final result = await repo.getConfirmationCode('bid-001');
 
-      expect(code, isNull);
+      expect(result.code, isNull);
+      expect(result.expiresAt, isNull);
     });
   });
 

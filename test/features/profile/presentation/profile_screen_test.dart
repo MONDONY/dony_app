@@ -243,12 +243,12 @@ void main() {
       initialState: AuthAuthenticated(_pendingDeletionUser),
     );
 
-    const errorMessage = 'La réactivation a échoué. Veuillez réessayer.';
-
     whenListen<AccountDeletionState>(
       deletionBloc,
       Stream.fromIterable([
-        AccountDeletionError(error: NetworkException(errorMessage)),
+        AccountDeletionError(
+          error: const NetworkException('La réactivation a échoué.'),
+        ),
       ]),
       initialState: const AccountDeletionInitial(),
     );
@@ -264,7 +264,8 @@ void main() {
     await tester.pump(); // let BlocListener react and SnackBar appear
 
     expect(find.byType(SnackBar), findsOneWidget);
-    expect(find.text(errorMessage), findsOneWidget);
+    // ErrorPresenter resolves NetworkException → "Erreur réseau" title from catalog.
+    expect(find.text('Erreur réseau'), findsOneWidget);
   });
 
   // ── Test 5: Paramètres tile navigates to /settings ──────────────────────

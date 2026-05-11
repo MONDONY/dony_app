@@ -205,9 +205,13 @@ void main() {
   // ── État erreur ───────────────────────────────────────────────────────────
 
   testWidgets('affiche _ErrorView quand BidError et pas encore de données', (tester) async {
-    when(() => bidBloc.state).thenReturn(BidError(NetworkException('Erreur réseau')));
+    when(() => bidBloc.state).thenReturn(BidError(const NetworkException('Erreur réseau')));
     await _pump(tester, bidBloc: bidBloc, paymentBloc: paymentBloc, authBloc: authBloc);
-    expect(find.text('Erreur réseau'), findsOneWidget);
+    // _ErrorView affiche ErrorPresenter.resolve(error).message → message du catalog.
+    expect(
+      find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+      findsOneWidget,
+    );
   });
 
   // ── Vues vides ────────────────────────────────────────────────────────────

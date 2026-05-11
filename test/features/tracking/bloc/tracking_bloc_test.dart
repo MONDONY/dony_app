@@ -171,9 +171,9 @@ void main() {
       expect: () => [
         isA<TrackingEventsLoading>(),
         isA<TrackingEventsError>().having(
-          (s) => s.error.message,
-          'message',
-          contains('Accès refusé'),
+          (s) => s.error,
+          'error',
+          isA<ForbiddenException>(),
         ),
       ],
     );
@@ -189,15 +189,15 @@ void main() {
       expect: () => [
         isA<TrackingEventsLoading>(),
         isA<TrackingEventsError>().having(
-          (s) => s.error.message,
-          'message',
-          contains('Session expirée'),
+          (s) => s.error,
+          'error',
+          isA<UnauthorizedException>(),
         ),
       ],
     );
 
     blocTest<TrackingBloc, TrackingState>(
-      '404 → TrackingEventsError avec message archivage',
+      '404 → TrackingEventsError avec NotFoundException',
       build: buildBloc,
       setUp: () => when(() => mockRepo.getEvents(any()))
           .thenThrow(DioException(
@@ -207,8 +207,8 @@ void main() {
       act: (bloc) => bloc.add(TrackingEventsRequested('bid-1')),
       expect: () => [
         isA<TrackingEventsLoading>(),
-        predicate<TrackingState>((s) =>
-            s is TrackingEventsError && s.error.message.contains('archivé')),
+        predicate<TrackingState>(
+            (s) => s is TrackingEventsError && s.error is NotFoundException),
       ],
     );
   });
@@ -221,7 +221,7 @@ void main() {
       build: buildBloc,
       setUp: () {
         when(() => mockRepo.getConfirmationCode('bid-1'))
-            .thenAnswer((_) async => '472');
+            .thenAnswer((_) async => (code: '472', expiresAt: null));
       },
       act: (b) => b.add(TrackingConfirmCodeRequested('bid-1')),
       expect: () => [

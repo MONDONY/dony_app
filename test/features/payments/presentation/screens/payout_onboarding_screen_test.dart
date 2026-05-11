@@ -93,7 +93,11 @@ void main() {
       );
       await tester.pumpWidget(_wrap(mockBloc));
       await tester.pump(const Duration(milliseconds: 500));
-      expect(find.text('Compte refusé'), findsOneWidget);
+      // L'écran affiche ErrorPresenter.resolve(error).message → texte du catalog.
+      expect(
+        find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('affiche la vue succès en état complete', (tester) async {

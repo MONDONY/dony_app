@@ -203,7 +203,8 @@ void main() {
     await tester.pump(); // let the listener fire
     await tester.pump(const Duration(milliseconds: 100)); // let SnackBar render
 
-    expect(find.text('Connexion impossible'), findsOneWidget);
+    // ErrorPresenter resolves NetworkException via ErrorCatalog → _networkGeneric.
+    expect(find.text('Erreur réseau'), findsOneWidget);
 
     await stateController.close();
   });

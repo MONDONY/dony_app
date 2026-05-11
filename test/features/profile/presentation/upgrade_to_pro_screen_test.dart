@@ -300,7 +300,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('Une erreur est survenue. Veuillez réessayer.'),
+        find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
         findsOneWidget,
       );
     });
@@ -333,7 +333,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('Une erreur est survenue. Veuillez réessayer.'),
+        find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
         findsOneWidget,
       );
     });

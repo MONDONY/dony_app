@@ -94,7 +94,11 @@ void main() {
       await tester.pumpWidget(_wrap(mockBloc));
       await tester.pump(_kSettle);
 
-      expect(find.text('Stripe indisponible'), findsOneWidget);
+      // L'écran affiche ErrorPresenter.resolve(error).message → texte du catalog.
+      expect(
+        find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('dispatches ConnectOnboardingLinkRequested on button tap',

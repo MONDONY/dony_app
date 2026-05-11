@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
@@ -55,12 +56,13 @@ void main() {
     );
 
     blocTest<KycBloc, KycState>(
-      'emits [Loading, Error with conflict message] on DioException 409',
+      'emits [Loading, Error with ConflictException] on DioException 409',
       build: buildBloc,
       setUp: () {
         when(() => mockRepo.createSession()).thenThrow(
           DioException(
             requestOptions: RequestOptions(),
+            error: const ConflictException('Identité déjà vérifiée'),
             response: Response(
               statusCode: 409,
               requestOptions: RequestOptions(),
@@ -72,20 +74,21 @@ void main() {
       expect: () => [
         const KycLoading(),
         isA<KycError>().having(
-          (s) => s.error.message,
-          'message',
-          contains('déjà vérifiée'),
+          (s) => s.error,
+          'error',
+          isA<ConflictException>(),
         ),
       ],
     );
 
     blocTest<KycBloc, KycState>(
-      'emits [Loading, Error with unavailable message] on DioException 503',
+      'emits [Loading, Error with ServerException] on DioException 503',
       build: buildBloc,
       setUp: () {
         when(() => mockRepo.createSession()).thenThrow(
           DioException(
             requestOptions: RequestOptions(),
+            error: const ServerException('Service indisponible'),
             response: Response(
               statusCode: 503,
               requestOptions: RequestOptions(),
@@ -97,20 +100,21 @@ void main() {
       expect: () => [
         const KycLoading(),
         isA<KycError>().having(
-          (s) => s.error.message,
-          'message',
-          contains('indisponible'),
+          (s) => s.error,
+          'error',
+          isA<ServerException>(),
         ),
       ],
     );
 
     blocTest<KycBloc, KycState>(
-      'emits [Loading, Error with session message] on DioException 401',
+      'emits [Loading, Error with UnauthorizedException] on DioException 401',
       build: buildBloc,
       setUp: () {
         when(() => mockRepo.createSession()).thenThrow(
           DioException(
             requestOptions: RequestOptions(),
+            error: const UnauthorizedException('Session expirée'),
             response: Response(
               statusCode: 401,
               requestOptions: RequestOptions(),
@@ -122,9 +126,9 @@ void main() {
       expect: () => [
         const KycLoading(),
         isA<KycError>().having(
-          (s) => s.error.message,
-          'message',
-          contains('Session expirée'),
+          (s) => s.error,
+          'error',
+          isA<UnauthorizedException>(),
         ),
       ],
     );
@@ -164,7 +168,7 @@ void main() {
     );
 
     blocTest<KycBloc, KycState>(
-      'emits [Error with unavailable] on string containing 503',
+      'emits [Error] wrapping raw exception containing 503',
       build: buildBloc,
       setUp: () {
         when(() => mockRepo.getStatus())
@@ -175,13 +179,13 @@ void main() {
         isA<KycError>().having(
           (s) => s.error.message,
           'message',
-          contains('indisponible'),
+          contains('503'),
         ),
       ],
     );
 
     blocTest<KycBloc, KycState>(
-      'emits [Error with already verified] on string containing CONFLICT',
+      'emits [Error] wrapping raw exception containing CONFLICT',
       build: buildBloc,
       setUp: () {
         when(() => mockRepo.getStatus())
@@ -192,7 +196,7 @@ void main() {
         isA<KycError>().having(
           (s) => s.error.message,
           'message',
-          contains('déjà vérifiée'),
+          contains('CONFLICT'),
         ),
       ],
     );

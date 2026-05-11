@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -17,6 +18,7 @@ PackageRequest _fakeRequest(String id) => PackageRequest(
       dateToleranceDays: 2,
       weightKg: 5,
       parcelSize: ParcelSize.small,
+      transportMode: TransportMode.plane,
       contentCategory: 'vetements',
       status: PackageRequestStatus.open,
       createdAt: DateTime(2026, 5, 10),
