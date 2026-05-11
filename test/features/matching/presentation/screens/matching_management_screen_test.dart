@@ -9,6 +9,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/matching_management_screen.dart';
+import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/envoyer_hub_screen.dart';
@@ -30,6 +31,10 @@ class _MockPackageRequestBloc
     extends MockBloc<PackageRequestEvent, PackageRequestState>
     implements PackageRequestBloc {}
 
+class _MockNegotiationListBloc
+    extends MockBloc<NegotiationListEvent, NegotiationListState>
+    implements NegotiationListBloc {}
+
 class _MockNegotiationRepository extends Mock implements NegotiationRepository {
 }
 
@@ -37,12 +42,14 @@ void main() {
   late _MockAnnouncementBloc announcementBloc;
   late _MockBidBloc bidBloc;
   late _MockPackageRequestBloc packageBloc;
+  late _MockNegotiationListBloc negoListBloc;
   late _MockNegotiationRepository negoRepo;
 
   setUp(() {
     announcementBloc = _MockAnnouncementBloc();
     bidBloc = _MockBidBloc();
     packageBloc = _MockPackageRequestBloc();
+    negoListBloc = _MockNegotiationListBloc();
     negoRepo = _MockNegotiationRepository();
 
     when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
@@ -54,6 +61,9 @@ void main() {
     when(() => packageBloc.state).thenReturn(const PackageRequestState());
     when(() => packageBloc.stream)
         .thenAnswer((_) => const Stream<PackageRequestState>.empty());
+    when(() => negoListBloc.state).thenReturn(const NegotiationListState());
+    when(() => negoListBloc.stream)
+        .thenAnswer((_) => const Stream<NegotiationListState>.empty());
     when(() => negoRepo.findMine()).thenAnswer((_) async => []);
 
     if (getIt.isRegistered<AnnouncementBloc>()) {
@@ -63,12 +73,16 @@ void main() {
     if (getIt.isRegistered<PackageRequestBloc>()) {
       getIt.unregister<PackageRequestBloc>();
     }
+    if (getIt.isRegistered<NegotiationListBloc>()) {
+      getIt.unregister<NegotiationListBloc>();
+    }
     if (getIt.isRegistered<NegotiationRepository>()) {
       getIt.unregister<NegotiationRepository>();
     }
     getIt.registerFactory<AnnouncementBloc>(() => announcementBloc);
     getIt.registerFactory<BidBloc>(() => bidBloc);
     getIt.registerFactory<PackageRequestBloc>(() => packageBloc);
+    getIt.registerFactory<NegotiationListBloc>(() => negoListBloc);
     getIt.registerLazySingleton<NegotiationRepository>(() => negoRepo);
   });
 
@@ -79,6 +93,9 @@ void main() {
     if (getIt.isRegistered<BidBloc>()) getIt.unregister<BidBloc>();
     if (getIt.isRegistered<PackageRequestBloc>()) {
       getIt.unregister<PackageRequestBloc>();
+    }
+    if (getIt.isRegistered<NegotiationListBloc>()) {
+      getIt.unregister<NegotiationListBloc>();
     }
     if (getIt.isRegistered<NegotiationRepository>()) {
       getIt.unregister<NegotiationRepository>();
