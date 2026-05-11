@@ -1,9 +1,9 @@
 import 'package:dony/features/package_request/presentation/_theme.dart';
-import 'package:dony/features/package_request/presentation/widgets/publish_package_request_bottom_sheet.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -62,7 +62,7 @@ class _ListView extends StatelessWidget {
           }
           if (state.requests.isEmpty) {
             return _Empty(
-              onCreate: () => PublishPackageRequestBottomSheet.show(context),
+              onCreate: () => PackageRequestCreateWizard.show(context),
             );
           }
           return RefreshIndicator(
@@ -91,7 +91,7 @@ class _ListView extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => PublishPackageRequestBottomSheet.show(context),
+        onPressed: () => PackageRequestCreateWizard.show(context),
         backgroundColor: kGreenPrimary,
         icon: const Icon(Icons.add_rounded, color: Colors.white),
         label: Text(

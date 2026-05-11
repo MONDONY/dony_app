@@ -15,13 +15,13 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/profile/presentation/widgets/edit_profile_bottom_sheet.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
 import 'package:dony/features/profile/presentation/widgets/upgrade_pro_bottom_sheet.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:flutter/material.dart';
-import 'package:dony/features/package_request/presentation/widgets/publish_package_request_bottom_sheet.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -308,7 +308,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               iconBgColor: cs.successLight,
                                               label: 'Publier une demande d\'envoi',
                                               onTap: () =>
-                                                  PublishPackageRequestBottomSheet
+                                                  PackageRequestCreateWizard
                                                       .show(context),
                                             ),
                                           ],
