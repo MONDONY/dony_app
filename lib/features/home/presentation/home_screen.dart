@@ -30,7 +30,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
-import 'package:dony/features/package_request/presentation/widgets/package_request_card.dart';
+import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
 import 'package:dony/features/profile/presentation/widgets/pro_stats_card.dart';
@@ -869,9 +869,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
                           itemCount: prState.results.length,
                           separatorBuilder: (_, __) =>
                               const SizedBox(height: DonySpacing.md),
-                          itemBuilder: (_, i) => PackageRequestCard(
+                          itemBuilder: (_, i) => PackageRequestListCard(
                             item: prState.results[i],
-                            index: i,
+                            onTap: () => PackageRequestPreviewBottomSheet.show(
+                                context,
+                                item: prState.results[i]),
+                            onMakeOffer: () =>
+                                PackageRequestPreviewBottomSheet.show(context,
+                                    item: prState.results[i]),
                           ),
                         ),
                       );
