@@ -46,6 +46,7 @@ import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/data/notification_remote_datasource.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
+import 'package:dony/features/package_request/bloc/complete_details_bloc.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
@@ -293,5 +294,8 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<NegotiationListBloc>(
     () => NegotiationListBloc(getIt<NegotiationRepository>()),
+  );
+  getIt.registerFactory<CompleteDetailsBloc>(
+    () => CompleteDetailsBloc(getIt<PackageRequestRepository>()),
   );
 }
