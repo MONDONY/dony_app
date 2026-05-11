@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'content_category.dart';
 import 'parcel_size.dart';
 
 /// Lightweight item returned by the search endpoint (`GET /package-requests`).
@@ -36,7 +37,7 @@ class PackageRequestSearchItem extends Equatable {
   final int dateToleranceDays;
   final double weightKg;
   final ParcelSize parcelSize;
-  final String contentCategory;
+  final ContentCategory contentCategory;
   final double? targetPriceEur;
   final String? photoUrl;
   final String? pickupNeighborhood;
@@ -56,7 +57,8 @@ class PackageRequestSearchItem extends Equatable {
         dateToleranceDays: json['dateToleranceDays'] as int,
         weightKg: (json['weightKg'] as num).toDouble(),
         parcelSize: ParcelSize.fromJson(json['parcelSize'] as String),
-        contentCategory: json['contentCategory'] as String,
+        contentCategory:
+            ContentCategory.fromWire(json['contentCategory'] as String?),
         targetPriceEur: (json['targetPriceEur'] as num?)?.toDouble(),
         photoUrl: json['photoUrl'] as String?,
         pickupNeighborhood: json['pickupNeighborhood'] as String?,

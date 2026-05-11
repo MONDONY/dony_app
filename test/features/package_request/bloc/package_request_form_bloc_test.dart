@@ -3,6 +3,7 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
+import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
@@ -17,6 +18,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(ParcelSize.small);
     registerFallbackValue(TransportMode.plane);
+    registerFallbackValue(ContentCategory.vetements);
   });
 
   setUp(() => repo = _MockRepo());
@@ -29,7 +31,7 @@ void main() {
     weightKg: 5,
     parcelSize: ParcelSize.small,
     transportMode: TransportMode.plane,
-    contentCategory: 'vetements',
+    contentCategory: ContentCategory.vetements,
     status: PackageRequestStatus.open,
     createdAt: DateTime(2026, 5, 10),
   );
@@ -47,7 +49,7 @@ void main() {
       ..add(const FormStep2Submitted(
           weightKg: 5,
           parcelSize: ParcelSize.small,
-          contentCategory: 'vetements')),
+          contentCategory: ContentCategory.vetements)),
     expect: () => [
       isA<PackageRequestFormState>().having((s) => s.currentStep, 'currentStep', 1),
       isA<PackageRequestFormState>().having((s) => s.currentStep, 'currentStep', 2),
@@ -84,7 +86,7 @@ void main() {
       ..add(const FormStep2Submitted(
           weightKg: 5,
           parcelSize: ParcelSize.small,
-          contentCategory: 'vetements'))
+          contentCategory: ContentCategory.vetements))
       ..add(const FormStep3Submitted(targetPriceEur: 25)),
     skip: 2,
     expect: () => [
@@ -103,7 +105,7 @@ void main() {
             weightKg: 5,
             parcelSize: ParcelSize.small,
             transportMode: TransportMode.plane,
-            contentCategory: 'vetements',
+            contentCategory: ContentCategory.vetements,
             description: null,
             targetPriceEur: 25,
             photoUrl: null,
@@ -143,7 +145,7 @@ void main() {
       ..add(const FormStep2Submitted(
           weightKg: 5,
           parcelSize: ParcelSize.small,
-          contentCategory: 'vetements'))
+          contentCategory: ContentCategory.vetements))
       ..add(const FormStep3Submitted()),
     skip: 3,
     expect: () => [

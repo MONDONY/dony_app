@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:equatable/equatable.dart';
 
@@ -47,7 +48,7 @@ class PackageRequest extends Equatable {
   final double weightKg;
   final ParcelSize parcelSize;
   final TransportMode transportMode;
-  final String contentCategory;
+  final ContentCategory contentCategory;
   final String? description;
   final double? targetPriceEur;
   final String? photoUrl;
@@ -66,7 +67,8 @@ class PackageRequest extends Equatable {
         weightKg: (json['weightKg'] as num).toDouble(),
         parcelSize: ParcelSize.fromJson(json['parcelSize'] as String),
         transportMode: transportModeFromWire(json['transportMode'] as String?) ?? TransportMode.plane,
-        contentCategory: json['contentCategory'] as String,
+        contentCategory:
+            ContentCategory.fromWire(json['contentCategory'] as String?),
         description: json['description'] as String?,
         targetPriceEur: (json['targetPriceEur'] as num?)?.toDouble(),
         photoUrl: json['photoUrl'] as String?,

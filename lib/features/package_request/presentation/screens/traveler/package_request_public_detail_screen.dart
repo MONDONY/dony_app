@@ -139,7 +139,7 @@ class _PackageRequestPublicDetailScreenState
                 _kv(Icons.scale_rounded, 'Poids', '${r.weightKg} kg'),
                 _kv(Icons.archive_rounded, 'Taille',
                     r.parcelSize.name.toUpperCase()),
-                _kv(Icons.label_rounded, 'Catégorie', r.contentCategory),
+                _kv(Icons.label_rounded, 'Catégorie', r.contentCategory.label),
                 if (r.description != null)
                   _kv(Icons.notes_rounded, 'Description', r.description!),
               ]),

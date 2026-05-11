@@ -1,5 +1,6 @@
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:equatable/equatable.dart';
+import '../data/models/content_category.dart';
 import '../data/models/parcel_size.dart';
 
 sealed class PackageRequestFormEvent extends Equatable {
@@ -35,7 +36,7 @@ class FormStep2Submitted extends PackageRequestFormEvent {
   });
   final double weightKg;
   final ParcelSize parcelSize;
-  final String contentCategory;
+  final ContentCategory contentCategory;
   final String? description;
 
   @override

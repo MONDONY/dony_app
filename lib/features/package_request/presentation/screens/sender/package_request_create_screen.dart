@@ -7,6 +7,7 @@ import 'package:dony/features/package_request/bloc/package_request_form_bloc.dar
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -504,7 +505,16 @@ class _CreateViewState extends State<_CreateView> {
           FormStep2Submitted(
             weightKg: w,
             parcelSize: _size,
-            contentCategory: _categoryCtrl.text.trim(),
+            // Bridge legacy text input → ContentCategory enum (sera remplacé
+            // par des chips en Phase 2.4). fromWire tolère "vêtements",
+            // "VETEMENTS", etc. en uppercasing + fallback sur "autre".
+            contentCategory: ContentCategory.fromWire(
+              _categoryCtrl.text
+                  .trim()
+                  .toUpperCase()
+                  .replaceAll('É', 'E')
+                  .replaceAll('È', 'E'),
+            ),
             description: _descCtrl.text.trim().isEmpty
                 ? null
                 : _descCtrl.text.trim(),

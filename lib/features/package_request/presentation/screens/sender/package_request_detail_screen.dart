@@ -176,7 +176,7 @@ class _DetailView extends StatelessWidget {
                   _Row(
                       icon: Icons.label_rounded,
                       label: 'Catégorie',
-                      value: request.contentCategory),
+                      value: request.contentCategory.label),
                   if (request.description != null)
                     _Row(
                         icon: Icons.notes_rounded,

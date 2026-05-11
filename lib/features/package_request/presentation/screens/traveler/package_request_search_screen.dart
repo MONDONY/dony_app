@@ -268,7 +268,7 @@ class _PublicRequestCard extends StatelessWidget {
                   ),
                   _Pill(
                     icon: Icons.label_rounded,
-                    label: request.contentCategory,
+                    label: request.contentCategory.label,
                   ),
                 ],
               ),

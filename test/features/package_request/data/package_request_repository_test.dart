@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
@@ -67,7 +68,7 @@ void main() {
         weightKg: 5.0,
         parcelSize: ParcelSize.small,
         transportMode: TransportMode.plane,
-        contentCategory: 'vetements',
+        contentCategory: ContentCategory.vetements,
       );
 
       expect(result.id, 'pr-1');

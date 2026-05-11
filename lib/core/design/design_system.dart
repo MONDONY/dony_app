@@ -20,6 +20,9 @@ export 'package:dony/core/design/widgets/dony_card.dart';
 // Form controls
 export 'package:dony/core/design/widgets/dony_checkbox.dart';
 export 'package:dony/core/design/widgets/dony_chip.dart';
+// Glassmorphism
+export 'package:dony/core/design/widgets/dony_aurora_background.dart';
+export 'package:dony/core/design/widgets/dony_glass.dart';
 // Overlays
 export 'package:dony/core/design/widgets/dony_dialog.dart';
 export 'package:dony/core/design/widgets/dony_empty_state.dart';

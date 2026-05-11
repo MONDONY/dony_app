@@ -1,5 +1,6 @@
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:equatable/equatable.dart';
+import '../data/models/content_category.dart';
 import '../data/models/package_request.dart';
 import '../data/models/parcel_size.dart';
 
@@ -34,7 +35,7 @@ class PackageRequestFormState extends Equatable {
   final TransportMode? transportMode;
   final double? weightKg;
   final ParcelSize? parcelSize;
-  final String? contentCategory;
+  final ContentCategory? contentCategory;
   final String? description;
   final double? targetPriceEur;
   final String? photoUrl;
@@ -53,7 +54,7 @@ class PackageRequestFormState extends Equatable {
     TransportMode? transportMode,
     double? weightKg,
     ParcelSize? parcelSize,
-    String? contentCategory,
+    ContentCategory? contentCategory,
     String? description,
     double? targetPriceEur,
     String? photoUrl,

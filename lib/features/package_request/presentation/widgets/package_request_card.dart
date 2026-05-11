@@ -138,7 +138,7 @@ class PackageRequestCard extends StatelessWidget {
                       ),
                     _Pill(
                       icon: Icons.label_outline_rounded,
-                      label: item.contentCategory,
+                      label: item.contentCategory.label,
                     ),
                   ],
                 ),

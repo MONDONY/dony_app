@@ -75,7 +75,7 @@ class PackageRequestPreviewBottomSheet {
           _row(Icons.archive_rounded, 'Taille',
               item.parcelSize.name.toUpperCase()),
           const SizedBox(height: 8),
-          _row(Icons.label_rounded, 'Catégorie', item.contentCategory),
+          _row(Icons.label_rounded, 'Catégorie', item.contentCategory.label),
           if (item.pickupNeighborhood != null) ...[
             const SizedBox(height: 8),
             _row(Icons.location_on_rounded, 'Pickup', item.pickupNeighborhood!),

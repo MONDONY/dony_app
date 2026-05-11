@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
+import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
@@ -16,7 +17,7 @@ PackageRequestSearchItem _fakeRequest(String id) => PackageRequestSearchItem(
       dateToleranceDays: 2,
       weightKg: 5,
       parcelSize: ParcelSize.small,
-      contentCategory: 'vetements',
+      contentCategory: ContentCategory.vetements,
       sender: const SenderPublicProfile(
         id: 's-1',
         displayName: 'Sender',

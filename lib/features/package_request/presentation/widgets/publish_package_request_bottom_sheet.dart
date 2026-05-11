@@ -9,6 +9,7 @@ import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
+import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
@@ -19,17 +20,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 const _stepLabels = ['Trajet & colis', 'Prix & photo'];
-const _categories = [
-  'Vêtements',
-  'Médicaments',
-  'Alim. sèche',
-  'Hi-fi',
-  'Documents',
-  'Téléphone',
-  'Cosmétiques',
-  'Cadeaux',
-  'Autre',
-];
 
 class PublishPackageRequestBottomSheet {
   static Future<void> show(BuildContext context) async {
@@ -93,7 +83,7 @@ class _PublishContentState extends State<_PublishContent> {
 
   final _weightCtrl = TextEditingController();
   ParcelSize _size = ParcelSize.small;
-  String? _category;
+  ContentCategory? _category;
 
   final _priceCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
@@ -413,10 +403,10 @@ class _PublishContentState extends State<_PublishContent> {
           Wrap(
             spacing: DonySpacing.sm,
             runSpacing: DonySpacing.sm,
-            children: _categories.map((cat) {
+            children: ContentCategory.values.map((cat) {
               final selected = cat == _category;
               return ChoiceChip(
-                label: Text(cat),
+                label: Text(cat.label),
                 selected: selected,
                 onSelected: (_) => setState(() => _category = cat),
               );
