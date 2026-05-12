@@ -668,18 +668,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 ),
               ),
 
-              // ── Hero card expéditeur (au-dessus du sheet replié) ─────────
-              if (!_isNearMeActive && _tab == _HomeTab.voyageurs)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: MediaQuery.of(context).size.height * 0.20 + DonySpacing.xs,
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: DonySpacing.lg),
-                    child: _SenderHeroCard(),
-                  ),
-                ),
-
               // ── Liste ou Carousel selon le mode Près de moi ───────────────
               if (!_isNearMeActive)
                 DraggableScrollableSheet(
@@ -841,6 +829,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
                     hiveService: getIt<HiveService>(),
                   ),
                 ),
+                if (_tab == _HomeTab.voyageurs && _sheetSize > 0.20)
+                  const SliverToBoxAdapter(child: _SenderHeroCard()),
                 if (_tab == _HomeTab.demandes)
                   BlocBuilder<PackageRequestSearchBloc,
                       PackageRequestSearchState>(
