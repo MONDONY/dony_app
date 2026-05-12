@@ -68,6 +68,9 @@ import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/presentation/settings_screen.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
+import 'package:dony/features/referral/bloc/referral_bloc.dart';
+import 'package:dony/features/referral/bloc/referral_event.dart';
+import 'package:dony/features/referral/presentation/screens/referral_screen.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/presentation/screens/offline_scan_queue_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/qr_scanner_screen.dart';
@@ -407,6 +410,15 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/profile/upgrade-to-pro',
       builder: (context, state) => const UpgradeToProScreen(),
+    ),
+
+    // ── Referral (hors shell) ─────────────────────────────────────────
+    GoRoute(
+      path: '/profile/referral',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<ReferralBloc>()..add(const ReferralLoadRequested()),
+        child: const ReferralScreen(),
+      ),
     ),
 
     // ── Mes avis reçus (hors shell) ──────────────────────────────────

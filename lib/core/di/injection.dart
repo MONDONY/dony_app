@@ -75,6 +75,9 @@ import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/data/rating_repository.dart';
+import 'package:dony/features/referral/bloc/referral_bloc.dart';
+import 'package:dony/features/referral/data/referral_datasource.dart';
+import 'package:dony/features/referral/data/referral_repository.dart';
 import 'package:get_it/get_it.dart';
 
 final getIt = GetIt.instance;
@@ -325,6 +328,17 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<FavoriteTravelerBloc>(
     () => FavoriteTravelerBloc(getIt<FavoriteTravelerRepository>()),
+  );
+
+  // Referral
+  getIt.registerLazySingleton<ReferralDatasource>(
+    () => ReferralDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<ReferralRepository>(
+    () => ReferralRepository(getIt<ReferralDatasource>()),
+  );
+  getIt.registerFactory<ReferralBloc>(
+    () => ReferralBloc(getIt<ReferralRepository>()),
   );
 
   // Package request marketplace
