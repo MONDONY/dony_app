@@ -691,7 +691,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
                   bottom: 0,
                   child: SafeArea(
                     child: SizedBox(
-                      height: 280,
+                      height: (MediaQuery.of(context).size.height * 0.37)
+                          .clamp(310.0, 400.0),
                       child: NearMeCarousel(
                         announcements: announcements,
                         userPosition: _userPosition != null
