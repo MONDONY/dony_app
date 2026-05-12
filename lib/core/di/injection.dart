@@ -9,6 +9,7 @@ import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.da
 import 'package:dony/features/connect_onboarding/data/connect_onboarding_datasource.dart';
 import 'package:dony/features/connect_onboarding/data/connect_onboarding_repository.dart';
 import 'package:dony/features/profile/bloc/pro_stats_bloc.dart';
+import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
 import 'package:dony/features/profile/data/pro_stats_repository.dart';
 import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
@@ -223,6 +224,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<ProStatsBloc>(
     () => ProStatsBloc(getIt<ProStatsRepository>()),
+  );
+  getIt.registerFactory<SupportContactBloc>(
+    () => SupportContactBloc(),
   );
 
   // Settings — Account Deletion

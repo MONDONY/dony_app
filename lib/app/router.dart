@@ -42,7 +42,13 @@ import 'package:dony/features/package_request/presentation/screens/shared/negoti
 import 'package:dony/features/package_request/presentation/screens/traveler/link_trip_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_public_detail_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_search_screen.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
+import 'package:dony/features/profile/presentation/screens/faq_screen.dart';
+import 'package:dony/features/profile/presentation/screens/shipments_history_screen.dart';
+import 'package:dony/features/profile/presentation/screens/support_contact_screen.dart';
 import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
@@ -292,6 +298,26 @@ final appRouter = GoRouter(
           child: TrackingTimelineScreen(bidId: bidId, corridor: corridor),
         );
       },
+    ),
+
+    // ── Profile — quick wins (hors shell) ────────────────────────────
+    GoRoute(
+      path: '/profile/help/faq',
+      builder: (context, state) => const FaqScreen(),
+    ),
+    GoRoute(
+      path: '/profile/help/contact',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<SupportContactBloc>(),
+        child: const SupportContactScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/profile/shipments/history',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<BidBloc>()..add(BidMyListRequested()),
+        child: const ShipmentsHistoryScreen(),
+      ),
     ),
 
     // ── Upgrade PRO (hors shell) ──────────────────────────────────────
