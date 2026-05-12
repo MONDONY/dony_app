@@ -199,26 +199,14 @@ void main() {
       expect(find.text('Tous les corridors'), findsWidgets);
     });
 
-    testWidgets('shows Voyageurs tab active by default with count 0',
+    testWidgets('shows sender-specific filter chips when role is sender',
         (tester) async {
       await tester.pumpWidget(_buildHome());
       await tester.pump(const Duration(milliseconds: 1000));
 
-      expect(find.text('Voyageurs · 0'), findsOneWidget);
-    });
-
-    testWidgets('tapping Demandes tab shows placeholder', (tester) async {
-      await tester.pumpWidget(_buildHome());
-      await tester.pump(const Duration(milliseconds: 1000));
-
-      await tester.tap(find.text('Demandes'));
-      // pumpAndSettle rather than pump(1000ms) — DonyEmptyState crée des timers
-      // d'animation (flutter_animate initState) pendant le frame qui suit le tap;
-      // un second pump fixe drainerait la première vague mais pas ces nouveaux
-      // timers. pumpAndSettle itère jusqu'à quiescence totale.
-      await tester.pumpAndSettle(const Duration(milliseconds: 100));
-
-      expect(find.text('Demandes bientôt disponibles'), findsOneWidget);
+      // 'Note' est un chip sender uniquement (absent de _PackageRequestFilterChipsRow).
+      // Sa présence confirme que le rôle sender affiche les bons filtres.
+      expect(find.text('Note'), findsOneWidget);
     });
 
     testWidgets('shows TravelerCards when announcements loaded',

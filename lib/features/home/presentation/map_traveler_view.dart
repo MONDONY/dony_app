@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
@@ -11,7 +9,6 @@ import 'package:dony/features/package_request/presentation/widgets/near_me_packa
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -165,12 +162,10 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
               ),
               Positioned(
                 top: MediaQuery.of(context).padding.top + 8,
-                left: 16,
                 right: 16,
-                child: _TravelerHeader(
-                  count: state.results.length,
-                  isNearMe: isNearMe,
-                  onToggleNearMe: () =>
+                child: _NearMeChip(
+                  active: isNearMe,
+                  onTap: () =>
                       isNearMe ? _deactivateNearMe() : _activateNearMe(),
                 ),
               ),
@@ -202,72 +197,6 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
         );
       },
     );
-  }
-}
-
-class _TravelerHeader extends StatelessWidget {
-  const _TravelerHeader({
-    required this.count,
-    required this.isNearMe,
-    required this.onToggleNearMe,
-  });
-
-  final int count;
-  final bool isNearMe;
-  final VoidCallback onToggleNearMe;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(DonyRadius.card),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: cs.surface.withValues(alpha: 0.85),
-            borderRadius: BorderRadius.circular(DonyRadius.card),
-            border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.4)),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.inbox_rounded, color: cs.primary, size: 20),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Demandes à transporter',
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: cs.onSurface,
-                      ),
-                    ),
-                    Text(
-                      isNearMe
-                          ? '$count près de toi'
-                          : count > 0
-                              ? '$count demandes ouvertes'
-                              : 'Aucune demande ouverte',
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: cs.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              _NearMeChip(active: isNearMe, onTap: onToggleNearMe),
-            ],
-          ),
-        ),
-      ),
-    ).animate().fadeIn(duration: 220.ms).slideY(begin: -0.1);
   }
 }
 

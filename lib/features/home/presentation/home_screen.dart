@@ -26,11 +26,11 @@ import 'package:dony/features/matching/presentation/widgets/search_form_bottom_s
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_card.dart';
-import 'package:dony/features/home/presentation/map_traveler_view.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
+import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/widgets/near_me_package_request_carousel.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
@@ -46,8 +46,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 
 // ── Home-screen specific constants ────────────────────────────────────────────
-
-enum _HomeTab { voyageurs, demandes }
 
 enum _DatePreset { today, thisWeek, thisMonth, custom, none }
 
@@ -73,16 +71,9 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ActiveRoleCubit, ActiveRole>(
-      builder: (context, activeRole) {
-        if (activeRole == ActiveRole.traveler) {
-          return const MapTravelerView();
-        }
-        return BlocProvider<PackageRequestSearchBloc>(
-          create: (_) => getIt<PackageRequestSearchBloc>(),
-          child: const _MapSenderView(),
-        );
-      },
+    return BlocProvider<PackageRequestSearchBloc>(
+      create: (_) => getIt<PackageRequestSearchBloc>(),
+      child: const _MapSenderView(),
     );
   }
 }
@@ -102,8 +93,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
   final _sheetController = DraggableScrollableController();
   double _sheetSize = 0.20;
   bool get _isMapHidden => _sheetSize > 0.92;
-
-  _HomeTab _tab = _HomeTab.voyageurs;
 
   // Cached markers for package_requests (rebuilt when search results change).
   Set<Marker> _packageRequestMarkers = {};
@@ -135,6 +124,24 @@ class _MapSenderViewState extends State<_MapSenderView> {
   bool _kycVerifiedOnly = false;
   String? _contentType;
   UrgencyFilter? _urgencyFilter;
+
+  // Package request filters (traveler role)
+  String? _prDeparture;
+  String? _prArrival;
+  DateTime? _prDateFrom;
+  DateTime? _prDateTo;
+  double? _prMaxWeight;
+  ParcelSize? _prParcelSize;
+
+  int get _prActiveFilterCount {
+    int n = 0;
+    if (_prDeparture != null) n++;
+    if (_prDateFrom != null) n++;
+    if (_prMaxWeight != null) n++;
+    if (_prParcelSize != null) n++;
+    if (_isNearMeActive) n++;
+    return n;
+  }
 
   int get _activeFilterCount {
     int n = 0;
@@ -286,6 +293,20 @@ class _MapSenderViewState extends State<_MapSenderView> {
           userLng: _isNearMeActive ? _userPosition?.longitude : null,
           radiusKm: _isNearMeActive ? _nearMeRadiusKm : null,
         ));
+  }
+
+  void _dispatchPackageRequestSearch() {
+    context.read<PackageRequestSearchBloc>().add(SearchFiltersChanged(
+      departure: _prDeparture,
+      arrival: _prArrival,
+      dateFrom: _prDateFrom,
+      dateTo: _prDateTo,
+      maxWeight: _prMaxWeight,
+      parcelSize: _prParcelSize,
+      userLat: _isNearMeActive ? _userPosition?.latitude : null,
+      userLng: _isNearMeActive ? _userPosition?.longitude : null,
+      radiusKm: _isNearMeActive ? _nearMeRadiusKm : null,
+    ));
   }
 
   void _deactivateNearMe() {
@@ -452,6 +473,70 @@ class _MapSenderViewState extends State<_MapSenderView> {
     _applySearchParams(result);
   }
 
+  Future<void> _showPrFilterSheet(BuildContext ctx) async {
+    final depCtrl = TextEditingController(text: _prDeparture ?? '');
+    final arrCtrl = TextEditingController(text: _prArrival ?? '');
+    await DonyBottomSheet.show(
+      ctx,
+      title: 'Filtrer les demandes',
+      stickyBottom: DonyButton(
+        label: 'Appliquer',
+        onPressed: () {
+          final dep = depCtrl.text.trim().isEmpty ? null : depCtrl.text.trim();
+          final arr = arrCtrl.text.trim().isEmpty ? null : arrCtrl.text.trim();
+          setState(() {
+            _prDeparture = dep;
+            _prArrival = arr;
+          });
+          _dispatchPackageRequestSearch();
+          Navigator.of(ctx, rootNavigator: true).pop();
+        },
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          DonySpacing.lg, DonySpacing.sm, DonySpacing.lg, DonySpacing.xl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: depCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Ville de départ',
+                prefixIcon: Icon(Icons.flight_takeoff_rounded, size: 18),
+              ),
+            ),
+            const SizedBox(height: DonySpacing.md),
+            TextField(
+              controller: arrCtrl,
+              decoration: const InputDecoration(
+                labelText: "Ville d'arrivée",
+                prefixIcon: Icon(Icons.flight_land_rounded, size: 18),
+              ),
+            ),
+            const SizedBox(height: DonySpacing.lg),
+            if (_prDeparture != null || _prDateFrom != null || _prMaxWeight != null || _prParcelSize != null)
+              TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _prDeparture = null;
+                    _prArrival = null;
+                    _prDateFrom = null;
+                    _prDateTo = null;
+                    _prMaxWeight = null;
+                    _prParcelSize = null;
+                  });
+                  _dispatchPackageRequestSearch();
+                  Navigator.of(ctx, rootNavigator: true).pop();
+                },
+                icon: const Icon(Icons.clear_rounded, size: 16),
+                label: const Text('Effacer tous les filtres'),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _applySearchParams(SearchParams result) {
     if (!mounted) return;
     final dep = result.departureCity;
@@ -516,20 +601,23 @@ class _MapSenderViewState extends State<_MapSenderView> {
     }
   }
 
-  void _onTabChanged(_HomeTab newTab) {
-    setState(() => _tab = newTab);
-    if (newTab == _HomeTab.demandes) {
-      // Trigger fetch of all open package requests (no filters by default).
-      context
-          .read<PackageRequestSearchBloc>()
-          .add(const SearchFiltersChanged());
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final activeRole = context.watch<ActiveRoleCubit>().state;
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      floatingActionButton: activeRole == ActiveRole.traveler
+          ? FloatingActionButton.extended(
+              heroTag: 'traveler-publish-trip',
+              backgroundColor: cs.primary,
+              foregroundColor: cs.onPrimary,
+              icon: const Icon(Icons.flight_takeoff_rounded, size: 20),
+              label: const Text('Publier un trajet'),
+              onPressed: () => CreateAnnouncementBottomSheet.show(context),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       body: BlocBuilder<AnnouncementBloc, AnnouncementState>(
         builder: (context, state) {
           final raw = state is AnnouncementSearchLoaded
@@ -552,8 +640,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
               Positioned.fill(
                 child: AnnouncementMapView(
                   announcements:
-                      _tab == _HomeTab.voyageurs ? announcements : const [],
-                  extraMarkers: _tab == _HomeTab.demandes
+                      activeRole == ActiveRole.sender ? announcements : const [],
+                  extraMarkers: activeRole == ActiveRole.traveler
                       ? _packageRequestMarkers
                       : const {},
                   isNearMeActive: _isNearMeActive,
@@ -565,7 +653,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
                       _nearMeRadiusKm = radius;
                       _userPosition = LatLng(lat, lng);
                     });
-                    _dispatchSearch();
+                    if (activeRole == ActiveRole.traveler) {
+                      _dispatchPackageRequestSearch();
+                    } else {
+                      _dispatchSearch();
+                    }
                   },
                   onNearMeDisabled: _deactivateNearMe,
                   fabBottomPadding: MediaQuery.of(context).size.height * 0.45,
@@ -596,54 +688,101 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             Expanded(
                               child: _CorridorBar(
                                 key: const Key('corridor-bar'),
-                                label: _allCorridors
-                                    ? 'Tous les corridors'
-                                    : _corridor.label,
-                                activeFilterCount: _activeFilterCount,
-                                onTap: () => _showFilterSheet(context),
+                                label: activeRole == ActiveRole.traveler
+                                    ? (_prDeparture != null
+                                        ? '$_prDeparture → $_prArrival'
+                                        : 'Tous les corridors')
+                                    : (_allCorridors ? 'Tous les corridors' : _corridor.label),
+                                activeFilterCount: activeRole == ActiveRole.traveler
+                                    ? _prActiveFilterCount
+                                    : _activeFilterCount,
+                                onTap: () => activeRole == ActiveRole.traveler
+                                    ? _showPrFilterSheet(context)
+                                    : _showFilterSheet(context),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: DonySpacing.sm),
-                        Center(
-                          child: _TabToggle(
-                            tab: _tab,
-                            voyageursCount: announcements.length,
-                            onChanged: _onTabChanged,
-                          ),
-                        ),
                         const SizedBox(height: DonySpacing.xs),
-                        _HomeFilterChipsRow(
-                          datePreset: _datePreset,
-                          customDate: _customDate,
-                          kiloProOnly: _kiloProOnly,
-                          isNearMeActive: _isNearMeActive,
-                          allCorridors: _allCorridors,
-                          minRating: _minRating,
-                          weightMin: _weightMin,
-                          weightMax: _weightMax,
-                          maxPricePerKg: _maxPricePerKg,
-                          onDateTap: _showDatePresetSheet,
-                          onRatingTap: _showRatingSheet,
-                          onWeightTap: _showWeightSheet,
-                          onNearMeTap: () {
-                            if (_isNearMeActive) {
-                              _deactivateNearMe();
-                            } else {
-                              _activateNearMe();
-                            }
-                          },
-                          onPriceTap: _showPriceSheet,
-                          onKiloProToggle: () {
-                            setState(() => _kiloProOnly = !_kiloProOnly);
-                            _dispatchSearch();
-                          },
-                          onAllCorridorsToggle: () {
-                            setState(() => _allCorridors = !_allCorridors);
-                            _dispatchSearch();
-                          },
-                        ),
+                        if (activeRole == ActiveRole.sender)
+                          _HomeFilterChipsRow(
+                            datePreset: _datePreset,
+                            customDate: _customDate,
+                            kiloProOnly: _kiloProOnly,
+                            isNearMeActive: _isNearMeActive,
+                            allCorridors: _allCorridors,
+                            minRating: _minRating,
+                            weightMin: _weightMin,
+                            weightMax: _weightMax,
+                            maxPricePerKg: _maxPricePerKg,
+                            onDateTap: _showDatePresetSheet,
+                            onRatingTap: _showRatingSheet,
+                            onWeightTap: _showWeightSheet,
+                            onNearMeTap: () {
+                              if (_isNearMeActive) {
+                                _deactivateNearMe();
+                              } else {
+                                _activateNearMe();
+                              }
+                            },
+                            onPriceTap: _showPriceSheet,
+                            onKiloProToggle: () {
+                              setState(() => _kiloProOnly = !_kiloProOnly);
+                              _dispatchSearch();
+                            },
+                            onAllCorridorsToggle: () {
+                              setState(() => _allCorridors = !_allCorridors);
+                              _dispatchSearch();
+                            },
+                          )
+                        else
+                          _PackageRequestFilterChipsRow(
+                            isNearMeActive: _isNearMeActive,
+                            dateFrom: _prDateFrom,
+                            dateTo: _prDateTo,
+                            maxWeight: _prMaxWeight,
+                            parcelSize: _prParcelSize,
+                            onNearMeTap: () {
+                              if (_isNearMeActive) {
+                                _deactivateNearMe();
+                              } else {
+                                _activateNearMe();
+                              }
+                            },
+                            onDateTap: () async {
+                              final picked = await showDateRangePicker(
+                                context: context,
+                                firstDate: DateTime.now(),
+                                lastDate: DateTime.now().add(const Duration(days: 365)),
+                                initialDateRange: _prDateFrom != null && _prDateTo != null
+                                    ? DateTimeRange(start: _prDateFrom!, end: _prDateTo!)
+                                    : null,
+                                locale: const Locale('fr'),
+                                builder: (ctx, child) => Theme(data: Theme.of(ctx), child: child!),
+                              );
+                              if (picked != null) {
+                                setState(() {
+                                  _prDateFrom = picked.start;
+                                  _prDateTo = picked.end;
+                                });
+                                _dispatchPackageRequestSearch();
+                              }
+                            },
+                            onWeightTap: () async {
+                              final result = await _showMaxWeightSheet(context);
+                              if (result != null) {
+                                setState(() => _prMaxWeight = result);
+                                _dispatchPackageRequestSearch();
+                              }
+                            },
+                            onSizeTap: () async {
+                              final result = await _showParcelSizeSheet(context);
+                              if (result != null) {
+                                setState(() => _prParcelSize = result == _prParcelSize ? null : result);
+                                _dispatchPackageRequestSearch();
+                              }
+                            },
+                          ),
                       ],
                     ),
                   ),
@@ -682,6 +821,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                     scrollCtrl,
                     announcements,
                     MediaQuery.of(context).padding.bottom,
+                    activeRole,
                   ),
                 )
               else
@@ -693,23 +833,44 @@ class _MapSenderViewState extends State<_MapSenderView> {
                     child: SizedBox(
                       height: (MediaQuery.of(context).size.height * 0.37)
                           .clamp(310.0, 400.0),
-                      child: NearMeCarousel(
-                        announcements: announcements,
-                        userPosition: _userPosition != null
-                            ? (
-                                lat: _userPosition!.latitude,
-                                lng: _userPosition!.longitude
-                              )
-                            : null,
-                        selectedAnnouncementId: _selectedAnnouncementId,
-                        onCardChanged: (id) =>
-                            setState(() => _selectedAnnouncementId = id),
-                        onSeeAll: _exitNearMeAndShowList,
-                        onTapCard: (a) => _onTravelerCardTap(context, a),
-                      )
-                          .animate()
-                          .fadeIn(duration: 250.ms)
-                          .slideY(begin: 0.1, curve: Curves.easeOutCubic),
+                      child: activeRole == ActiveRole.traveler
+                          ? NearMePackageRequestCarousel(
+                              items: prState.results,
+                              userPosition: _userPosition != null
+                                  ? (
+                                      lat: _userPosition!.latitude,
+                                      lng: _userPosition!.longitude,
+                                    )
+                                  : null,
+                              selectedRequestId: _selectedAnnouncementId,
+                              onCardChanged: (id) =>
+                                  setState(() => _selectedAnnouncementId = id),
+                              onSeeAll: _exitNearMeAndShowList,
+                              onTapCard: (it) =>
+                                  PackageRequestPreviewBottomSheet.show(
+                                      context, item: it),
+                              onMakeOffer: (it) =>
+                                  PackageRequestPreviewBottomSheet.show(
+                                      context, item: it),
+                            ).animate()
+                                .fadeIn(duration: 250.ms)
+                                .slideY(begin: 0.1, curve: Curves.easeOutCubic)
+                          : NearMeCarousel(
+                              announcements: announcements,
+                              userPosition: _userPosition != null
+                                  ? (
+                                      lat: _userPosition!.latitude,
+                                      lng: _userPosition!.longitude
+                                    )
+                                  : null,
+                              selectedAnnouncementId: _selectedAnnouncementId,
+                              onCardChanged: (id) =>
+                                  setState(() => _selectedAnnouncementId = id),
+                              onSeeAll: _exitNearMeAndShowList,
+                              onTapCard: (a) => _onTravelerCardTap(context, a),
+                            ).animate()
+                                .fadeIn(duration: 250.ms)
+                                .slideY(begin: 0.1, curve: Curves.easeOutCubic),
                     ),
                   ),
                 ),
@@ -734,11 +895,82 @@ class _MapSenderViewState extends State<_MapSenderView> {
     );
   }
 
+  Future<double?> _showMaxWeightSheet(BuildContext ctx) async {
+    double? selected = _prMaxWeight;
+    return await showModalBottomSheet<double>(
+      context: ctx,
+      useRootNavigator: true,
+      builder: (_) => StatefulBuilder(
+        builder: (ctx2, setSt) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(DonySpacing.lg),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Poids max du colis',
+                    style: Theme.of(ctx2).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                const SizedBox(height: DonySpacing.md),
+                Wrap(
+                  spacing: DonySpacing.sm,
+                  runSpacing: DonySpacing.sm,
+                  children: [5.0, 10.0, 15.0, 20.0, 30.0].map((v) {
+                    final active = selected == v;
+                    return ChoiceChip(
+                      label: Text('≤ ${v.toInt()} kg'),
+                      selected: active,
+                      onSelected: (_) => setSt(() => selected = active ? null : v),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: DonySpacing.lg),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () => Navigator.pop(ctx2, selected),
+                    child: const Text('Appliquer'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<ParcelSize?> _showParcelSizeSheet(BuildContext ctx) async {
+    return await showModalBottomSheet<ParcelSize>(
+      context: ctx,
+      useRootNavigator: true,
+      builder: (sheetCtx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(DonySpacing.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Taille du colis',
+                  style: Theme.of(sheetCtx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+              const SizedBox(height: DonySpacing.md),
+              ...ParcelSize.values.map((s) => ListTile(
+                title: Text(s.wireName),
+                onTap: () => Navigator.pop(sheetCtx, s),
+              )),
+              const SizedBox(height: DonySpacing.sm),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSheet(
     BuildContext ctx,
     ScrollController scrollCtrl,
     List<AnnouncementModel> announcements,
     double bottomPad,
+    ActiveRole activeRole,
   ) {
     final tt = Theme.of(ctx).textTheme;
     final cs = Theme.of(ctx).colorScheme;
@@ -783,7 +1015,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _tab == _HomeTab.voyageurs
+                        activeRole == ActiveRole.sender
                             ? 'VOYAGEURS DISPONIBLES'
                             : 'DEMANDES D\'ENVOI',
                         style: tt.labelSmall?.copyWith(
@@ -793,19 +1025,21 @@ class _MapSenderViewState extends State<_MapSenderView> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        _tab == _HomeTab.voyageurs
+                        activeRole == ActiveRole.sender
                             ? _isNearMeActive
                                 ? '$count voyageur${count > 1 ? 's' : ''} à proximité'
                                 : _allCorridors
                                     ? '$count résultat${count > 1 ? 's' : ''} · Tous les corridors'
                                     : '$count résultat${count > 1 ? 's' : ''} · ${_corridor.label}'
-                            : _corridor.label,
+                            : _prDeparture != null
+                                ? '$_prDeparture → $_prArrival'
+                                : 'Toutes les demandes',
                         style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                       ),
                     ],
                   ),
                 ),
-                if (_tab == _HomeTab.voyageurs && count > 0)
+                if (activeRole == ActiveRole.sender && count > 0)
                   GestureDetector(
                     onTap: () => _showFilterSheet(ctx),
                     child: Text(
@@ -826,13 +1060,13 @@ class _MapSenderViewState extends State<_MapSenderView> {
               slivers: [
                 SliverToBoxAdapter(
                   child: RoleGuidanceBanner(
-                    role: ActiveRole.sender,
+                    role: activeRole,
                     hiveService: getIt<HiveService>(),
                   ),
                 ),
-                if (_tab == _HomeTab.voyageurs && _sheetSize > 0.20)
+                if (activeRole == ActiveRole.sender && _sheetSize > 0.20)
                   const SliverToBoxAdapter(child: _SenderHeroCard()),
-                if (_tab == _HomeTab.demandes)
+                if (activeRole == ActiveRole.traveler)
                   BlocBuilder<PackageRequestSearchBloc,
                       PackageRequestSearchState>(
                     builder: (ctx, prState) {
@@ -1109,115 +1343,6 @@ class _CorridorBar extends StatelessWidget {
     );
   }
 }
-
-// ── _TabToggle ────────────────────────────────────────────────────────────────
-
-class _TabToggle extends StatelessWidget {
-  const _TabToggle({
-    required this.tab,
-    required this.voyageursCount,
-    required this.onChanged,
-  });
-
-  final _HomeTab tab;
-  final int? voyageursCount;
-  final void Function(_HomeTab) onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      height: 40,
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.full),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(3),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _TabPill(
-            label: voyageursCount != null
-                ? 'Voyageurs · $voyageursCount'
-                : 'Voyageurs',
-            isActive: tab == _HomeTab.voyageurs,
-            dotColor: cs.primary,
-            onTap: () => onChanged(_HomeTab.voyageurs),
-          ),
-          const SizedBox(width: 2),
-          _TabPill(
-            label: 'Demandes',
-            isActive: tab == _HomeTab.demandes,
-            dotColor: cs.success,
-            onTap: () => onChanged(_HomeTab.demandes),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TabPill extends StatelessWidget {
-  const _TabPill({
-    required this.label,
-    required this.isActive,
-    required this.dotColor,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool isActive;
-  final Color dotColor;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: isActive ? cs.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(DonyRadius.full),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 7,
-              height: 7,
-              decoration: BoxDecoration(
-                color: isActive ? Colors.white : dotColor,
-                shape: BoxShape.circle,
-              ),
-            ),
-            const SizedBox(width: DonySpacing.xs),
-            Text(
-              label,
-              style: tt.labelMedium?.copyWith(
-                color: isActive ? Colors.white : cs.onSurface,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 
 // ── _HomeCarteFab ─────────────────────────────────────────────────────────────
 
@@ -2301,5 +2426,84 @@ class _SenderHeroCard extends StatelessWidget {
         .animate()
         .fadeIn(duration: 350.ms)
         .slideY(begin: 0.06, curve: Curves.easeOutCubic);
+  }
+}
+
+// ── _PackageRequestFilterChipsRow ─────────────────────────────────────────────
+
+class _PackageRequestFilterChipsRow extends StatelessWidget {
+  const _PackageRequestFilterChipsRow({
+    required this.isNearMeActive,
+    required this.onNearMeTap,
+    required this.onDateTap,
+    required this.onWeightTap,
+    required this.onSizeTap,
+    this.dateFrom,
+    this.dateTo,
+    this.maxWeight,
+    this.parcelSize,
+  });
+
+  final bool isNearMeActive;
+  final DateTime? dateFrom;
+  final DateTime? dateTo;
+  final double? maxWeight;
+  final ParcelSize? parcelSize;
+  final VoidCallback onNearMeTap;
+  final VoidCallback onDateTap;
+  final VoidCallback onWeightTap;
+  final VoidCallback onSizeTap;
+
+  String get _dateLabel {
+    if (dateFrom == null) return 'Toutes dates';
+    if (dateTo != null && dateTo!.difference(dateFrom!).inDays <= 1) {
+      return DateFormat('d MMM', 'fr').format(dateFrom!);
+    }
+    return '${DateFormat('d MMM', 'fr').format(dateFrom!)} – ${DateFormat('d MMM', 'fr').format(dateTo!)}';
+  }
+
+  String get _weightLabel =>
+      maxWeight != null ? '≤ ${maxWeight!.toInt()} kg' : 'Kilos';
+
+  String get _sizeLabel =>
+      parcelSize != null ? parcelSize!.wireName : 'Taille';
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _SmallChip(
+            label: _dateLabel,
+            isActive: dateFrom != null,
+            icon: Icons.calendar_today_rounded,
+            onTap: onDateTap,
+          ),
+          const SizedBox(width: DonySpacing.xs),
+          _SmallChip(
+            label: _weightLabel,
+            isActive: maxWeight != null,
+            icon: Icons.fitness_center_rounded,
+            onTap: onWeightTap,
+          ),
+          const SizedBox(width: DonySpacing.xs),
+          _SmallChip(
+            label: _sizeLabel,
+            isActive: parcelSize != null,
+            icon: Icons.inventory_2_outlined,
+            onTap: onSizeTap,
+          ),
+          const SizedBox(width: DonySpacing.xs),
+          _SmallChip(
+            key: const Key('chip-near-me'),
+            label: 'Près de moi',
+            isActive: isNearMeActive,
+            icon: Icons.near_me_rounded,
+            onTap: onNearMeTap,
+          ),
+        ],
+      ),
+    );
   }
 }

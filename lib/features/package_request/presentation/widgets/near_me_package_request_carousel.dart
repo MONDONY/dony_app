@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
-import 'package:dony/features/package_request/presentation/widgets/package_request_compact_card.dart';
+import 'package:dony/features/package_request/presentation/widgets/package_request_carousel_card.dart';
 import 'package:flutter/material.dart';
 
 /// Carousel near-me pour les demandes (côté voyageur, tab "Demandes" + filtre
@@ -121,14 +121,12 @@ class _NearMePackageRequestCarouselState
               final item = widget.items[i];
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: DonySpacing.sm),
-                child: PackageRequestCompactCard(
+                child: PackageRequestCarouselCard(
                   item: item,
+                  index: i,
                   distanceLabel: _formatDistance(item),
                   onTap: widget.onTapCard != null
                       ? () => widget.onTapCard!(item)
-                      : null,
-                  onMakeOffer: widget.onMakeOffer != null
-                      ? () => widget.onMakeOffer!(item)
                       : null,
                 ),
               );
