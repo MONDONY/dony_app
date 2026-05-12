@@ -131,6 +131,11 @@ class _SplashScreenState extends State<SplashScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  const DonyMascotteAnimated(
+                    type: DonyMascotteType.joyeux,
+                    size: DonyMascotteSize.sm,
+                  ),
+                  const SizedBox(height: DonySpacing.xl),
                   const DonyLogo(variant: DonyLogoVariant.onLight, fontSize: 104),
                   const SizedBox(height: DonySpacing.xxl),
                   Text(

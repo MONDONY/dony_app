@@ -212,7 +212,11 @@ void main() {
       await tester.pump(const Duration(milliseconds: 1000));
 
       await tester.tap(find.text('Demandes'));
-      await tester.pump(const Duration(milliseconds: 1000));
+      // pumpAndSettle rather than pump(1000ms) — DonyEmptyState crée des timers
+      // d'animation (flutter_animate initState) pendant le frame qui suit le tap;
+      // un second pump fixe drainerait la première vague mais pas ces nouveaux
+      // timers. pumpAndSettle itère jusqu'à quiescence totale.
+      await tester.pumpAndSettle(const Duration(milliseconds: 100));
 
       expect(find.text('Demandes bientôt disponibles'), findsOneWidget);
     });

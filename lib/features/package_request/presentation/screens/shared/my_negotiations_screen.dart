@@ -57,7 +57,14 @@ class MyNegotiationsBody extends StatelessWidget {
                 .add(const NegotiationListRefreshRequested()),
           );
         }
-        if (state.threads.isEmpty) return const _EmptyState();
+        if (state.threads.isEmpty) {
+          return const DonyEmptyState(
+            title: 'Aucune négociation',
+            description:
+                'Tes négociations actives apparaîtront ici dès qu\'un voyageur fait une offre.',
+            mascotte: DonyMascotteType.assis,
+          );
+        }
 
         return RefreshIndicator(
           color: Theme.of(context).colorScheme.primary,
@@ -262,48 +269,6 @@ class _NegoCard extends StatelessWidget {
 
 // ── Empty / Error ─────────────────────────────────────────────────────────────
 
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(DonySpacing.xl + 16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: DonyColors.primarySoft,
-                borderRadius: BorderRadius.circular(DonyRadius.xl),
-              ),
-              child: const Center(
-                  child: Text('🤝', style: TextStyle(fontSize: 36))),
-            ),
-            const SizedBox(height: DonySpacing.xl),
-            Text(
-              'Aucune négociation',
-              style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: DonySpacing.sm),
-            Text(
-              'Tes négociations actives apparaîtront ici dès qu\'un voyageur fait une offre.',
-              textAlign: TextAlign.center,
-              style: tt.bodyMedium?.copyWith(
-                  color: cs.onSurfaceVariant, height: 1.5),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _ErrorState extends StatelessWidget {
   const _ErrorState({required this.message, required this.onRetry});

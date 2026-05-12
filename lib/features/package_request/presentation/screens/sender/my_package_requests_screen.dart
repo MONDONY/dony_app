@@ -79,8 +79,13 @@ class _ListContent extends StatelessWidget {
           );
         }
         if (state.requests.isEmpty) {
-          return _EmptyView(
-            onCreate: () async {
+          return DonyEmptyState(
+            title: 'Tu n\'as encore rien envoyé',
+            description:
+                'Publie ta première demande et reçois des offres de voyageurs en quelques heures.',
+            mascotte: DonyMascotteType.assis,
+            actionLabel: '+ Publier ma première demande',
+            onAction: () async {
               await PackageRequestCreateWizard.show(context);
               if (context.mounted) {
                 context
@@ -379,77 +384,6 @@ class _CardFooter extends StatelessWidget {
         PackageRequestStatus.expired => 'Expirée',
         PackageRequestStatus.cancelled => 'Annulée',
       };
-}
-
-// ── Empty state ───────────────────────────────────────────────────────────────
-
-class _EmptyView extends StatelessWidget {
-  const _EmptyView({required this.onCreate});
-  final VoidCallback onCreate;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.xl, vertical: DonySpacing.xl),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Spacer(),
-          // Icône boîte dans un carré arrondi
-          Center(
-            child: Container(
-              width: 88,
-              height: 88,
-              decoration: BoxDecoration(
-                color: DonyColors.primarySoft,
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: const Center(
-                child: Text('📦', style: TextStyle(fontSize: 40)),
-              ),
-            )
-                .animate()
-                .scale(
-                    begin: const Offset(0.7, 0.7),
-                    duration: 350.ms,
-                    curve: Curves.elasticOut)
-                .fadeIn(duration: 220.ms),
-          ),
-          const SizedBox(height: DonySpacing.xl),
-          Text(
-            'Tu n\'as encore rien envoyé',
-            textAlign: TextAlign.center,
-            style: tt.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: cs.onSurface,
-              letterSpacing: -0.3,
-            ),
-          ).animate().fadeIn(delay: 80.ms, duration: 280.ms),
-          const SizedBox(height: DonySpacing.sm),
-          Text(
-            'Publie ta première demande et reçois des offres de voyageurs en quelques heures.',
-            textAlign: TextAlign.center,
-            style: tt.bodyMedium?.copyWith(
-              color: cs.onSurfaceVariant,
-              height: 1.5,
-            ),
-          ).animate().fadeIn(delay: 140.ms, duration: 280.ms),
-          const SizedBox(height: DonySpacing.xxl),
-          DonyButton(
-            label: '+ Publier ma première demande',
-            onPressed: onCreate,
-          ).animate().fadeIn(delay: 200.ms, duration: 280.ms).slideY(
-              begin: 0.15, curve: Curves.easeOutCubic),
-          const Spacer(flex: 2),
-        ],
-      ),
-    );
-  }
 }
 
 // ── Error view ────────────────────────────────────────────────────────────────

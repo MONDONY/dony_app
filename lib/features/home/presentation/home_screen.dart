@@ -856,7 +856,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
                       if (prState.results.isEmpty) {
                         return const SliverFillRemaining(
                           hasScrollBody: false,
-                          child: _DemandesPlaceholder(),
+                          child: DonyEmptyState(
+                            title: 'Demandes bientôt disponibles',
+                            description:
+                                'Tu pourras bientôt consulter les demandes d\'envoi postées par les expéditeurs.',
+                          ),
                         );
                       }
                       final showCarousel =
@@ -1223,49 +1227,6 @@ class _TabPill extends StatelessWidget {
   }
 }
 
-// ── _DemandesPlaceholder ──────────────────────────────────────────────────────
-
-class _DemandesPlaceholder extends StatelessWidget {
-  const _DemandesPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.all(DonySpacing.xl),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: cs.primaryContainer,
-              borderRadius: BorderRadius.circular(DonyRadius.full),
-            ),
-            child: Icon(Icons.inbox_outlined, color: cs.primary, size: 28),
-          ),
-          const SizedBox(height: DonySpacing.md),
-          Text(
-            'Demandes bientôt disponibles',
-            style: tt.titleMedium?.copyWith(
-              color: cs.onSurface,
-              fontWeight: FontWeight.w700,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: DonySpacing.xs),
-          Text(
-            'Tu pourras bientôt consulter les demandes d\'envoi postées par les expéditeurs.',
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 // ── _HomeCarteFab ─────────────────────────────────────────────────────────────
 

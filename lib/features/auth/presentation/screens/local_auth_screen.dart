@@ -84,6 +84,7 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: BlocConsumer<LocalAuthBloc, LocalAuthState>(
         listener: (context, state) {
           if (state is LocalAuthSuccess) {
@@ -107,7 +108,12 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
                 padding: EdgeInsets.symmetric(horizontal: h),
                 child: Column(
                   children: [
-                    const Spacer(flex: 2),
+                    const Spacer(),
+                    const DonyMascotteAnimated(
+                      type: DonyMascotteType.securise,
+                      size: DonyMascotteSize.sm,
+                    ),
+                    const SizedBox(height: DonySpacing.md),
                     _buildLockIcon(state, cs),
                     const SizedBox(height: DonySpacing.xl),
                     _buildTitle(cs),

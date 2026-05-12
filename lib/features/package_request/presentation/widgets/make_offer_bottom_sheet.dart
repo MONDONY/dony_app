@@ -39,6 +39,8 @@ class MakeOfferBottomSheet {
     // inside the listener after pop() would touch a disposed subtree.
     final rootRouter = GoRouter.of(context);
 
+    VoidCallback? submitFn;
+
     await DonyBottomSheet.show<void>(
       context,
       title: 'Faire une offre',
@@ -52,6 +54,17 @@ class MakeOfferBottomSheet {
         weightKg: weightKg,
         estimate: estimate,
         rootRouter: rootRouter,
+        onSubmitReady: (fn) => submitFn = fn,
+      ),
+      stickyBottom: BlocBuilder<NegotiationBloc, NegotiationState>(
+        builder: (ctx, state) {
+          final loading = state is NegotiationLoading;
+          return DonyButton(
+            label: loading ? 'Envoi…' : 'Envoyer l\'offre',
+            isLoading: loading,
+            onPressed: loading ? null : () => submitFn?.call(),
+          );
+        },
       ),
     );
   }
@@ -64,6 +77,7 @@ class _MakeOfferContent extends StatefulWidget {
     required this.weightKg,
     required this.estimate,
     required this.rootRouter,
+    required this.onSubmitReady,
   });
 
   final String packageRequestId;
@@ -71,6 +85,7 @@ class _MakeOfferContent extends StatefulWidget {
   final double weightKg;
   final PriceEstimate? estimate;
   final GoRouter rootRouter;
+  final void Function(VoidCallback) onSubmitReady;
 
   @override
   State<_MakeOfferContent> createState() => _MakeOfferContentState();
@@ -86,6 +101,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
   @override
   void initState() {
     super.initState();
+    widget.onSubmitReady(_submit);
     _priceCtrl = TextEditingController(
       text: widget.targetPriceEur != null
           ? widget.targetPriceEur!.toStringAsFixed(0)
@@ -257,17 +273,6 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                 labelText: 'Message (optionnel)',
                 hintText: 'Je voyage exactement ce jour-là',
               ),
-            ),
-            const SizedBox(height: DonySpacing.base),
-            BlocBuilder<NegotiationBloc, NegotiationState>(
-              builder: (ctx, state) {
-                final loading = state is NegotiationLoading;
-                return DonyButton(
-                  label: loading ? 'Envoi…' : 'Envoyer l\'offre',
-                  isLoading: loading,
-                  onPressed: loading ? null : _submit,
-                );
-              },
             ),
           ],
         ),
