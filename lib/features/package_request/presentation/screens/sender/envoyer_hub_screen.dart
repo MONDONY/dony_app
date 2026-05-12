@@ -78,15 +78,16 @@ class _EnvoyerHubViewState extends State<_EnvoyerHubView>
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: kSurface,
+      backgroundColor: cs.surface,
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
             const _EnvoyerHubHeader(),
             _EnvoyerHubTabBar(controller: _tabController),
-            const Divider(height: 1, thickness: 1, color: kBorder),
+            Divider(height: 1, thickness: 1, color: cs.outline),
             Expanded(
               child: TabBarView(
                 controller: _tabController,
@@ -103,7 +104,7 @@ class _EnvoyerHubViewState extends State<_EnvoyerHubView>
       ),
       floatingActionButton: FloatingActionButton(
         heroTag: 'envoyer-hub-fab',
-        backgroundColor: kGreenPrimary,
+        backgroundColor: cs.primary,
         foregroundColor: Colors.white,
         onPressed: () async {
           await PackageRequestCreateWizard.show(context);

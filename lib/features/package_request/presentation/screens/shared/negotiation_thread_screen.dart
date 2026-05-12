@@ -60,7 +60,7 @@ class _ThreadView extends StatelessWidget {
         if (state is NegotiationActionInProgress) thread = state.thread;
 
         return Scaffold(
-          backgroundColor: kBackground,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: _buildAppBar(context, thread),
           body: thread == null
               ? Center(

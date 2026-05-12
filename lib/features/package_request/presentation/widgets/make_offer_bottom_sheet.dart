@@ -141,6 +141,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final estimate = widget.estimate;
     final tt = Theme.of(context).textTheme;
     return BlocListener<NegotiationBloc, NegotiationState>(
@@ -169,13 +170,13 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: kGreenLight,
+                  color: cs.primaryContainer,
                   borderRadius: BorderRadius.circular(DonyRadius.md),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.trending_up_rounded,
-                        color: kGreenPrimary, size: 20),
+                    Icon(Icons.trending_up_rounded,
+                        color: cs.primary, size: 20),
                     const SizedBox(width: DonySpacing.md),
                     Expanded(
                       child: Text(
@@ -183,7 +184,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                         style: tt.bodyMedium!.copyWith(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: kGreenDark,
+                          color: cs.onPrimaryContainer,
                         ),
                       ),
                     ),
@@ -241,9 +242,9 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: DonySpacing.base, vertical: 18),
                   decoration: BoxDecoration(
-                    color: kSurface,
+                    color: cs.surface,
                     borderRadius: BorderRadius.circular(DonyRadius.md),
-                    border: Border.all(color: kBorder),
+                    border: Border.all(color: cs.outline),
                   ),
                   child: Row(
                     children: [

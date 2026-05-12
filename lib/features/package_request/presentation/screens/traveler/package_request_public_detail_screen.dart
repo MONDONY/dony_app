@@ -47,14 +47,15 @@ class _PackageRequestPublicDetailScreenState
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: kBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: kSurface,
+        backgroundColor: cs.surface,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded,
-              size: 20, color: kGreenPrimary),
+          icon: Icon(Icons.arrow_back_ios_rounded,
+              size: 20, color: cs.primary),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -65,7 +66,7 @@ class _PackageRequestPublicDetailScreenState
         centerTitle: false,
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: kGreenPrimary))
+          ? Center(child: CircularProgressIndicator(color: cs.primary))
           : _error != null
               ? Center(
                   child: Padding(
@@ -83,6 +84,7 @@ class _PackageRequestPublicDetailScreenState
   }
 
   Widget _buildBody(PackageRequest r) {
+    final cs = Theme.of(context).colorScheme;
     return Stack(
       children: [
         SingleChildScrollView(
@@ -98,7 +100,7 @@ class _PackageRequestPublicDetailScreenState
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [kGreenPrimary, kGreenDark],
+                    colors: [DonyColors.blue500, DonyColors.blue700],
                   ),
                   borderRadius: BorderRadius.circular(DonyRadius.xl),
                 ),
@@ -186,12 +188,13 @@ class _PackageRequestPublicDetailScreenState
   }
 
   Widget _detailCard(String title, List<Widget> children) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
-        color: kSurface,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: kBorder),
+        border: Border.all(color: cs.outline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

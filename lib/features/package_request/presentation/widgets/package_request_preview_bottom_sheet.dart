@@ -13,6 +13,7 @@ class PackageRequestPreviewBottomSheet {
     BuildContext context, {
     required PackageRequestSearchItem item,
   }) async {
+    final cs = Theme.of(context).colorScheme;
     await DonyBottomSheet.show<void>(
       context,
       title: '${item.departureCity} → ${item.arrivalCity}',
@@ -37,13 +38,13 @@ class PackageRequestPreviewBottomSheet {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: kGreenLight,
+                color: cs.primaryContainer,
                 borderRadius: BorderRadius.circular(DonyRadius.md),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.payments_rounded,
-                      color: kGreenPrimary, size: 22),
+                  Icon(Icons.payments_rounded,
+                      color: cs.primary, size: 22),
                   const SizedBox(width: DonySpacing.md),
                   Expanded(
                     child: Column(
@@ -51,13 +52,13 @@ class PackageRequestPreviewBottomSheet {
                       children: [
                         Text('Budget cible',
                             style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                fontSize: 12, color: kGreenDark)),
+                                fontSize: 12, color: cs.onPrimaryContainer)),
                         Text(
                           '${item.targetPriceEur!.toStringAsFixed(0)} €',
                           style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
-                            color: kGreenPrimary,
+                            color: cs.primary,
                           ),
                         ),
                       ],
@@ -89,17 +90,17 @@ class PackageRequestPreviewBottomSheet {
           Container(
             padding: const EdgeInsets.all(DonySpacing.md),
             decoration: BoxDecoration(
-              color: kSurface,
+              color: cs.surface,
               borderRadius: BorderRadius.circular(DonyRadius.md),
-              border: Border.all(color: kBorder),
+              border: Border.all(color: cs.outline),
             ),
             child: Row(
               children: [
                 CircleAvatar(
                   radius: 18,
-                  backgroundColor: kGreenLight,
-                  child: const Icon(Icons.person_rounded,
-                      color: kGreenPrimary, size: 18),
+                  backgroundColor: cs.primaryContainer,
+                  child: Icon(Icons.person_rounded,
+                      color: cs.primary, size: 18),
                 ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(
@@ -115,8 +116,8 @@ class PackageRequestPreviewBottomSheet {
                           ),
                           if (item.sender.kycVerified) ...[
                             const SizedBox(width: 6),
-                            const Icon(Icons.verified_rounded,
-                                color: kGreenPrimary, size: 14),
+                            Icon(Icons.verified_rounded,
+                                color: cs.primary, size: 14),
                           ],
                         ],
                       ),

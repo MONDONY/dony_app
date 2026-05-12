@@ -120,6 +120,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return BlocListener<NegotiationBloc, NegotiationState>(
       listenWhen: (prev, curr) => curr is NegotiationLoaded,
       listener: (context, state) {
@@ -130,13 +131,13 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: kBackground,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
-          backgroundColor: kSurface,
+          backgroundColor: cs.surface,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_rounded,
-                size: 20, color: kGreenPrimary),
+            icon: Icon(Icons.arrow_back_ios_rounded,
+                size: 20, color: cs.primary),
             onPressed: () => context.pop(),
           ),
           title: Text(
@@ -147,7 +148,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
           centerTitle: false,
         ),
         body: _loading
-            ? const Center(child: CircularProgressIndicator(color: kGreenPrimary))
+            ? Center(child: CircularProgressIndicator(color: cs.primary))
             : _error != null
                 ? _ErrorView(message: _error!, onRetry: _load)
                 : _buildBody(),
@@ -156,6 +157,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
   }
 
   Widget _buildBody() {
+    final cs = Theme.of(context).colorScheme;
     final r = _request!;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(DonySpacing.lg),
@@ -168,7 +170,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [kGreenPrimary, kGreenDark],
+                colors: [DonyColors.blue500, DonyColors.blue700],
               ),
               borderRadius: BorderRadius.circular(DonyRadius.card),
             ),
@@ -217,9 +219,9 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
             Container(
               padding: const EdgeInsets.all(DonySpacing.lg),
               decoration: BoxDecoration(
-                color: kSurface,
+                color: cs.surface,
                 borderRadius: BorderRadius.circular(DonyRadius.md),
-                border: Border.all(color: kBorder),
+                border: Border.all(color: cs.outline),
               ),
               child: Column(
                 children: [
@@ -253,8 +255,8 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
             label: const Text('Créer un nouveau trajet'),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size(double.infinity, 52),
-              foregroundColor: kGreenPrimary,
-              side: const BorderSide(color: kGreenPrimary, width: 1.5),
+              foregroundColor: cs.primary,
+              side: BorderSide(color: cs.primary, width: 1.5),
             ),
           ),
         ],
@@ -275,10 +277,11 @@ class _TripTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Material(
-        color: kSurface,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(DonyRadius.md),
         child: InkWell(
           borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -287,18 +290,18 @@ class _TripTile extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(DonyRadius.md),
-              border: Border.all(color: kBorder),
+              border: Border.all(color: cs.outline),
             ),
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: const BoxDecoration(
-                    color: kGreenLight,
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.flight_takeoff_rounded,
-                      color: kGreenPrimary, size: 20),
+                  child: Icon(Icons.flight_takeoff_rounded,
+                      color: cs.primary, size: 20),
                 ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(

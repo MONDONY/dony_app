@@ -84,6 +84,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return BlocListener<CompleteDetailsBloc, CompleteDetailsState>(
       listener: (context, state) {
         if (state.status == CompleteDetailsStatus.success) {
@@ -104,13 +105,13 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
         }
       },
       child: Scaffold(
-        backgroundColor: kBackground,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
-          backgroundColor: kSurface,
+          backgroundColor: cs.surface,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_rounded,
-                size: 20, color: kGreenPrimary),
+            icon: Icon(Icons.arrow_back_ios_rounded,
+                size: 20, color: cs.primary),
             onPressed: () => context.pop(),
           ),
           title: Text(
@@ -246,7 +247,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                       value: _disclaimer,
                       onChanged: (v) =>
                           setState(() => _disclaimer = v ?? false),
-                      activeColor: kGreenPrimary,
+                      activeColor: cs.primary,
                       contentPadding: EdgeInsets.zero,
                       controlAffinity: ListTileControlAffinity.leading,
                       title: Text(

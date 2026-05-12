@@ -52,10 +52,11 @@ class _SearchViewState extends State<_SearchView> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: kBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: kSurface,
+        backgroundColor: cs.surface,
         elevation: 0,
         title: Text(
           'Demandes ouvertes',
@@ -96,20 +97,20 @@ class _SearchViewState extends State<_SearchView> {
                   icon: const Icon(Icons.search_rounded),
                   onPressed: _applyFilters,
                   style: IconButton.styleFrom(
-                    backgroundColor: kGreenPrimary,
+                    backgroundColor: cs.primary,
                   ),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1, color: kBorder),
+          Divider(height: 1, color: cs.outline),
           Expanded(
             child: BlocBuilder<PackageRequestSearchBloc,
                 PackageRequestSearchState>(
               builder: (context, state) {
                 if (state.status == SearchStatus.loading) {
-                  return const Center(
-                      child: CircularProgressIndicator(color: kGreenPrimary));
+                  return Center(
+                      child: CircularProgressIndicator(color: cs.primary));
                 }
                 if (state.status == SearchStatus.error) {
                   return Center(
@@ -162,7 +163,7 @@ class _SearchViewState extends State<_SearchView> {
                     return false;
                   },
                   child: RefreshIndicator(
-                    color: kGreenPrimary,
+                    color: cs.primary,
                     onRefresh: () async {
                       context
                           .read<PackageRequestSearchBloc>()
@@ -175,11 +176,11 @@ class _SearchViewState extends State<_SearchView> {
                       separatorBuilder: (_, __) => const SizedBox(height: DonySpacing.md),
                       itemBuilder: (context, i) {
                         if (i >= state.results.length) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: DonySpacing.base),
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: DonySpacing.base),
                             child: Center(
                               child: CircularProgressIndicator(
-                                  color: kGreenPrimary),
+                                  color: cs.primary),
                             ),
                           );
                         }
@@ -207,8 +208,9 @@ class _PublicRequestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Material(
-      color: kSurface,
+      color: cs.surface,
       borderRadius: BorderRadius.circular(DonyRadius.card),
       child: InkWell(
         borderRadius: BorderRadius.circular(DonyRadius.card),
@@ -218,7 +220,7 @@ class _PublicRequestCard extends StatelessWidget {
           padding: const EdgeInsets.all(DonySpacing.base),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(DonyRadius.card),
-            border: Border.all(color: kBorder),
+            border: Border.all(color: cs.outline),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,7 +240,7 @@ class _PublicRequestCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
                     decoration: BoxDecoration(
-                      color: kGreenLight,
+                      color: cs.primaryContainer,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -246,7 +248,7 @@ class _PublicRequestCard extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: kGreenDark,
+                        color: cs.onPrimaryContainer,
                       ),
                     ),
                   ),
@@ -279,7 +281,7 @@ class _PublicRequestCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: kGreenPrimary,
+                    color: cs.primary,
                   ),
                 ),
               ],
