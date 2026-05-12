@@ -1,3 +1,4 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
@@ -9,7 +10,6 @@ import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class MakeOfferBottomSheet {
   const MakeOfferBottomSheet._();
@@ -126,6 +126,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
   @override
   Widget build(BuildContext context) {
     final estimate = widget.estimate;
+    final tt = Theme.of(context).textTheme;
     return BlocListener<NegotiationBloc, NegotiationState>(
       listener: (ctx, state) {
         if (state is NegotiationLoaded) {
@@ -153,17 +154,17 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: kGreenLight,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
                 ),
                 child: Row(
                   children: [
                     const Icon(Icons.trending_up_rounded,
                         color: kGreenPrimary, size: 20),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: DonySpacing.md),
                     Expanded(
                       child: Text(
                         'Estimation : ${estimate.lowEur!.toStringAsFixed(0)}–${estimate.highEur!.toStringAsFixed(0)} € (${estimate.confidence.wireName.toLowerCase()})',
-                        style: GoogleFonts.plusJakartaSans(
+                        style: tt.bodyMedium!.copyWith(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: kGreenDark,
@@ -173,7 +174,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                   ],
                 ),
               ),
-            const SizedBox(height: 16),
+            const SizedBox(height: DonySpacing.base),
             TextFormField(
               controller: _priceCtrl,
               keyboardType:
@@ -189,7 +190,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                 return null;
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: DonySpacing.md),
             TextFormField(
               controller: _kgCtrl,
               keyboardType:
@@ -204,7 +205,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                 return null;
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: DonySpacing.md),
             ValueListenableBuilder<DateTime?>(
               valueListenable: _dateNotifier,
               builder: (ctx, date, _) => InkWell(
@@ -219,25 +220,25 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                   );
                   if (picked != null) _dateNotifier.value = picked;
                 },
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(DonyRadius.md),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 18),
+                      horizontal: DonySpacing.base, vertical: 18),
                   decoration: BoxDecoration(
                     color: kSurface,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
                     border: Border.all(color: kBorder),
                   ),
                   child: Row(
                     children: [
                       const Icon(Icons.calendar_today_rounded,
                           size: 20, color: kTextSecondary),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: DonySpacing.md),
                       Text(
                         date == null
                             ? 'Date de voyage'
                             : '${date.day}/${date.month}/${date.year}',
-                        style: GoogleFonts.plusJakartaSans(
+                        style: tt.bodyMedium!.copyWith(
                           fontSize: 15,
                           color: date == null ? kTextHint : kTextPrimary,
                         ),
@@ -247,7 +248,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: DonySpacing.md),
             TextFormField(
               controller: _bodyCtrl,
               maxLines: 2,
@@ -257,7 +258,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                 hintText: 'Je voyage exactement ce jour-là',
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: DonySpacing.base),
             BlocBuilder<NegotiationBloc, NegotiationState>(
               builder: (ctx, state) {
                 final loading = state is NegotiationLoading;

@@ -1,4 +1,5 @@
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/tracking/presentation/screens/reception_confirm_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -28,7 +29,7 @@ Future<void> _pump(WidgetTester tester, {String travelerName = 'Ibrahima'}) asyn
     theme: AppTheme.light,
     routerConfig: _buildRouter(travelerName: travelerName),
   ));
-  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 900)); // drain mascotte confiant animation
 }
 
 void main() {
@@ -57,8 +58,10 @@ void main() {
 
     testWidgets('CTA is disabled when code is empty', (tester) async {
       await _pump(tester);
-      final filledBtn = tester.widget<FilledButton>(find.byType(FilledButton));
-      expect(filledBtn.onPressed, isNull);
+      final filledBtn = tester.widget<InkWell>(
+        find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)),
+      );
+      expect(filledBtn.onTap, isNull);
     });
 
     testWidgets('CTA is enabled after entering 6-digit code', (tester) async {
@@ -68,8 +71,10 @@ void main() {
       await tester.enterText(pinput, '472135');
       await tester.pump();
 
-      final filledBtn = tester.widget<FilledButton>(find.byType(FilledButton));
-      expect(filledBtn.onPressed, isNotNull);
+      final filledBtn = tester.widget<InkWell>(
+        find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)),
+      );
+      expect(filledBtn.onTap, isNotNull);
     });
 
     testWidgets('CTA remains disabled with fewer than 6 digits', (tester) async {
@@ -78,8 +83,10 @@ void main() {
       await tester.enterText(find.byType(Pinput), '4721');
       await tester.pump();
 
-      final filledBtn = tester.widget<FilledButton>(find.byType(FilledButton));
-      expect(filledBtn.onPressed, isNull);
+      final filledBtn = tester.widget<InkWell>(
+        find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)),
+      );
+      expect(filledBtn.onTap, isNull);
     });
 
     testWidgets('timer shows initial countdown', (tester) async {

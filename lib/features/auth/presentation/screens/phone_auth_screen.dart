@@ -127,7 +127,14 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const DonyLogo(fontSize: 48),
-                            const SizedBox(height: DonySpacing.xxl),
+                            const SizedBox(height: DonySpacing.lg),
+                            const Center(
+                              child: DonyMascotteAnimated(
+                                type: DonyMascotteType.joyeux,
+                                size: DonyMascotteSize.md,
+                              ),
+                            ),
+                            const SizedBox(height: DonySpacing.xl),
                             Text(
                               'Bienvenue',
                               style: tt.displayLarge?.copyWith(

@@ -39,7 +39,7 @@ class ShipmentsHistoryScreen extends StatelessWidget {
 
             if (delivered.isEmpty) {
               return const DonyEmptyState(
-                icon: Icons.history_rounded,
+                mascotte: DonyMascotteType.assis,
                 title: 'Aucune livraison terminée',
                 description: 'Tes livraisons terminées s\'afficheront ici.',
               );

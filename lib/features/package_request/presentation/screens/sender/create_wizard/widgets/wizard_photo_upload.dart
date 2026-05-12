@@ -31,12 +31,12 @@ class WizardPhotoUpload extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     return InkWell(
       onTap: () => _pick(context),
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(DonyRadius.lg),
       child: Container(
         height: 110,
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(DonyRadius.lg),
           border: Border.all(
             color: Theme.of(context).colorScheme.outline,
             style: BorderStyle.solid,
@@ -80,7 +80,7 @@ class WizardPhotoUpload extends StatelessWidget {
     return Row(
       children: [
         ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(DonyRadius.md),
           child: Image.file(
             photoFile!,
             width: 76,

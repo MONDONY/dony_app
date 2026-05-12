@@ -53,7 +53,7 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
           if (state is ConversationListLoaded) {
             if (state.conversations.isEmpty) {
               return const DonyEmptyState(
-                icon: Icons.chat_bubble_outline_rounded,
+                mascotte: DonyMascotteType.assis,
                 title: 'Aucun message',
                 description: 'Vos conversations apparaîtront ici\naprès l\'acceptation d\'une offre.',
               );
@@ -274,7 +274,7 @@ class _TripLabel extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(Icons.flight_rounded, size: 11, color: cs.primary),
-        const SizedBox(width: 4),
+        const SizedBox(width: DonySpacing.xs),
         Flexible(
           child: Text(
             label,

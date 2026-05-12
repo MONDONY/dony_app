@@ -75,7 +75,7 @@ class DonyEmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             (mascotte != null
-                    ? DonyMascotte(type: mascotte!, size: DonyMascotteSize.lg)
+                    ? DonyMascotteAnimated(type: mascotte!, size: DonyMascotteSize.lg)
                     : DonyIconContainer(
                         icon: icon ?? defaultIcon,
                         size: DonyIconContainerSize.xl,

@@ -234,10 +234,10 @@ class _ModeCard extends StatelessWidget {
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
+                          horizontal: DonySpacing.sm, vertical: 3),
                       decoration: BoxDecoration(
                         color: badgeColor.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(DonyRadius.xl),
                       ),
                       child: Text(
                         badge,

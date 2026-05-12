@@ -146,7 +146,7 @@ class _NotificationList extends StatelessWidget {
         if (state is NotificationLoaded) {
           if (state.notifications.isEmpty) {
             return const DonyEmptyState(
-              icon: Icons.notifications_none_rounded,
+              mascotte: DonyMascotteType.assis,
               title: 'Aucune notification',
               description: 'Vos notifications apparaîtront ici.',
             );

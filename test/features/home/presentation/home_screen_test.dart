@@ -194,7 +194,7 @@ void main() {
   group('HomeScreen — Map sender view', () {
     testWidgets('shows corridor label in search bar', (tester) async {
       await tester.pumpWidget(_buildHome());
-      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 1000));
 
       expect(find.text('Tous les corridors'), findsWidgets);
     });
@@ -202,17 +202,17 @@ void main() {
     testWidgets('shows Voyageurs tab active by default with count 0',
         (tester) async {
       await tester.pumpWidget(_buildHome());
-      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 1000));
 
       expect(find.text('Voyageurs · 0'), findsOneWidget);
     });
 
     testWidgets('tapping Demandes tab shows placeholder', (tester) async {
       await tester.pumpWidget(_buildHome());
-      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 1000));
 
       await tester.tap(find.text('Demandes'));
-      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 1000));
 
       expect(find.text('Demandes bientôt disponibles'), findsOneWidget);
     });
@@ -224,7 +224,7 @@ void main() {
           [_makeAnn(), _makeAnn(id: 'a2')],
         ),
       ));
-      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump(const Duration(milliseconds: 1000));
 
       expect(find.byType(TravelerCard), findsAtLeastNWidgets(1));
     });
@@ -234,7 +234,7 @@ void main() {
       await tester.pumpWidget(_buildHome(
         announcementState: AnnouncementSearchLoaded(const []),
       ));
-      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 1000));
 
       expect(find.text('Aucun voyageur sur ce corridor'), findsOneWidget);
     });

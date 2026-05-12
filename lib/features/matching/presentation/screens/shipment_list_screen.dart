@@ -608,7 +608,7 @@ class _ActiveShipmentBanner extends StatelessWidget {
             ),
             const SizedBox(height: DonySpacing.base),
             ClipRRect(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(DonyRadius.xs),
               child: LinearProgressIndicator(
                 value: _progress,
                 backgroundColor: cs.primary.withValues(alpha: 0.15),
@@ -1203,14 +1203,14 @@ class _AuroraMeshBackground extends StatelessWidget {
             gradient: LinearGradient(
               colors: isDark
                   ? const [
-                      Color(0xFF080D18),
-                      Color(0xFF0B0918),
-                      Color(0xFF0E0C09),
+                      DonyColors.heroGradientDarkA,
+                      DonyColors.heroGradientDarkB,
+                      DonyColors.heroGradientDarkC,
                     ]
                   : const [
-                      Color(0xFFEDF5FF),
-                      Color(0xFFF2F0FF),
-                      Color(0xFFF7F3ED),
+                      DonyColors.blue50,
+                      DonyColors.heroGradientLightB,
+                      DonyColors.sand100,
                     ],
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,

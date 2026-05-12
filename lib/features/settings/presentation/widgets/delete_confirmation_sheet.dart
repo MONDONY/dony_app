@@ -131,7 +131,7 @@ class _DeleteConfirmationSheetState extends State<DeleteConfirmationSheet> {
                   const SizedBox(width: DonySpacing.sm),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.only(top: 12),
+                      padding: const EdgeInsets.only(top: DonySpacing.md),
                       child: Text(
                         'Je comprends que cette suppression est définitive et irréversible.',
                         style: tt.bodyMedium?.copyWith(color: cs.onSurface),

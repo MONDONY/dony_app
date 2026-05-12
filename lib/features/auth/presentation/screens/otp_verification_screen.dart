@@ -109,6 +109,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          const Center(
+                            child: DonyMascotteAnimated(
+                              type: DonyMascotteType.confiant,
+                              size: DonyMascotteSize.md,
+                            ),
+                          ),
+                          const SizedBox(height: DonySpacing.xl),
                           Text(
                             'Entrez le code',
                             style: tt.displayLarge?.copyWith(

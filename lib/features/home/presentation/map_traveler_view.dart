@@ -14,7 +14,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 /// Traveler-side home view: map + draggable sheet listing nearby package
@@ -221,14 +220,14 @@ class _TravelerHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(DonyRadius.card),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             color: cs.surface.withValues(alpha: 0.85),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(DonyRadius.card),
             border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.4)),
           ),
           child: Row(
@@ -241,7 +240,7 @@ class _TravelerHeader extends StatelessWidget {
                   children: [
                     Text(
                       'Demandes à transporter',
-                      style: GoogleFonts.plusJakartaSans(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: cs.onSurface,
@@ -253,7 +252,7 @@ class _TravelerHeader extends StatelessWidget {
                           : count > 0
                               ? '$count demandes ouvertes'
                               : 'Aucune demande ouverte',
-                      style: GoogleFonts.plusJakartaSans(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                         color: cs.onSurfaceVariant,
@@ -286,13 +285,13 @@ class _NearMeChip extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(DonyRadius.full),
         child: Container(
           padding:
               const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(DonyRadius.full),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -302,7 +301,7 @@ class _NearMeChip extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 'Près de moi',
-                style: GoogleFonts.plusJakartaSans(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: textColor,
@@ -386,7 +385,7 @@ class _TravelerSheet extends StatelessWidget {
             )
           else
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+              padding: const EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.md, DonySpacing.lg, 40),
               sliver: SliverList.separated(
                 itemCount: state.results.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 16),
@@ -432,12 +431,12 @@ class _SheetTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+      padding: const EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.sm, DonySpacing.lg, DonySpacing.xs),
       child: Row(
         children: [
           Text(
             'Demandes',
-            style: GoogleFonts.plusJakartaSans(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontSize: 18,
               fontWeight: FontWeight.w800,
               color: cs.onSurface,
@@ -451,11 +450,11 @@ class _SheetTitle extends StatelessWidget {
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: cs.primaryContainer,
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(DonyRadius.full),
               ),
               child: Text(
                 '$count',
-                style: GoogleFonts.plusJakartaSans(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: cs.primary,
@@ -484,7 +483,7 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             isNearMe ? 'Aucune demande dans ce rayon' : 'Aucune demande pour le moment',
-            style: GoogleFonts.plusJakartaSans(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontSize: 15,
               fontWeight: FontWeight.w700,
               color: cs.onSurface,
@@ -496,7 +495,7 @@ class _EmptyState extends StatelessWidget {
             isNearMe
                 ? 'Élargis ta zone ou désactive “Près de moi”'
                 : 'Reviens dans un instant — de nouvelles demandes sont publiées chaque jour',
-            style: GoogleFonts.plusJakartaSans(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w500,
               color: cs.onSurfaceVariant,

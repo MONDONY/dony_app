@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
+import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/connect_onboarding/presentation/screens/connect_onboarding_intro_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -76,10 +77,10 @@ void main() {
       await tester.pump(_kSettle);
 
       // Button should be disabled (no tap handler)
-      final button = tester.widget<FilledButton>(
-        find.byType(FilledButton),
+      final button = tester.widget<InkWell>(
+        find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)),
       );
-      expect(button.onPressed, isNull);
+      expect(button.onTap, isNull);
     });
 
     testWidgets('shows error banner when state is ConnectOnboardingError',

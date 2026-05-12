@@ -132,7 +132,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const DonyLogo(variant: DonyLogoVariant.onLight, fontSize: 104),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: DonySpacing.xxl),
                   Text(
                     'Livrez en confiance',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -140,7 +140,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       letterSpacing: 0.4,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: DonySpacing.sm),
                   Text(
                     'v1.0.0',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -170,7 +170,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       children: [
                         Icon(Icons.wifi_off_rounded,
                             color: cs.onSurfaceVariant, size: 16),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: DonySpacing.sm),
                         Text(
                           'Impossible de se connecter',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -179,7 +179,7 @@ class _SplashScreenState extends State<SplashScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: DonySpacing.lg),
                     OutlinedButton.icon(
                       onPressed: _retry,
                       icon: Icon(Icons.refresh_rounded,

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
+import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/profile/presentation/screens/support_contact_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -58,13 +59,10 @@ void main() {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
-    final submitBtn = tester.widget<FilledButton>(
-      find.ancestor(
-        of: find.text('Envoyer un message'),
-        matching: find.byType(FilledButton),
-      ).last,
+    final submitBtn = tester.widget<InkWell>(
+      find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)),
     );
-    expect(submitBtn.onPressed, isNull);
+    expect(submitBtn.onTap, isNull);
   });
 
   testWidgets('submit button is enabled when state is valid', (tester) async {
@@ -77,13 +75,10 @@ void main() {
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
 
-    final submitBtn = tester.widget<FilledButton>(
-      find.ancestor(
-        of: find.text('Envoyer un message'),
-        matching: find.byType(FilledButton),
-      ).last,
+    final submitBtn = tester.widget<InkWell>(
+      find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)),
     );
-    expect(submitBtn.onPressed, isNotNull);
+    expect(submitBtn.onTap, isNotNull);
   });
 
   testWidgets('info card is rendered', (tester) async {

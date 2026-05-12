@@ -38,7 +38,7 @@ class FavoriteTravelersScreen extends StatelessWidget {
           }
           if (state.travelers.isEmpty) {
             return const DonyEmptyState(
-              icon: Icons.favorite_border_rounded,
+              mascotte: DonyMascotteType.assis,
               title: 'Aucun voyageur favori',
               description:
                   'Les voyageurs avec qui tu as envoyé apparaîtront ici. Re-contacte-les facilement !',

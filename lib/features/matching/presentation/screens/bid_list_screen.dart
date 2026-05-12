@@ -373,9 +373,9 @@ class _BidTabContent extends StatelessWidget {
   Widget build(BuildContext context) {
     if (bids.isEmpty) {
       return DonyEmptyState(
+        mascotte: DonyMascotteType.assis,
         title: emptyTitle,
         description: emptyDescription,
-        icon: emptyIcon,
       ).animate().fadeIn(duration: 300.ms);
     }
 

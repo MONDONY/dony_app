@@ -1,6 +1,6 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Banner d'attente affiché en bas du thread pour les statuts intermédiaires.
 ///
@@ -31,21 +31,21 @@ class ThreadStateBanner extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: tint.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(DonyRadius.md),
         border: Border.all(color: tint.withValues(alpha: 0.30)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: tint, size: 22),
-          const SizedBox(width: 12),
+          const SizedBox(width: DonySpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   message,
-                  style: GoogleFonts.plusJakartaSans(
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: tint,
@@ -56,7 +56,7 @@ class ThreadStateBanner extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle!,
-                    style: GoogleFonts.plusJakartaSans(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w500,
                       color: kTextSecondary,

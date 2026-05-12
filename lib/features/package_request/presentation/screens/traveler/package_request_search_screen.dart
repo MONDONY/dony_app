@@ -1,3 +1,4 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
@@ -6,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class PackageRequestSearchScreen extends StatelessWidget {
   const PackageRequestSearchScreen({super.key});
@@ -59,7 +59,7 @@ class _SearchViewState extends State<_SearchView> {
         elevation: 0,
         title: Text(
           'Demandes ouvertes',
-          style: GoogleFonts.plusJakartaSans(
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontWeight: FontWeight.w700, fontSize: 18),
         ),
         centerTitle: false,
@@ -67,7 +67,7 @@ class _SearchViewState extends State<_SearchView> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+            padding: const EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.base, DonySpacing.lg, DonySpacing.sm),
             child: Row(
               children: [
                 Expanded(
@@ -80,7 +80,7 @@ class _SearchViewState extends State<_SearchView> {
                     onSubmitted: (_) => _applyFilters(),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: DonySpacing.md),
                 Expanded(
                   child: TextField(
                     controller: _arrCtrl,
@@ -91,7 +91,7 @@ class _SearchViewState extends State<_SearchView> {
                     onSubmitted: (_) => _applyFilters(),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: DonySpacing.sm),
                 IconButton.filled(
                   icon: const Icon(Icons.search_rounded),
                   onPressed: _applyFilters,
@@ -118,7 +118,7 @@ class _SearchViewState extends State<_SearchView> {
                       child: Text(
                         state.errorMessage ?? 'Erreur',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.plusJakartaSans(
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontSize: 14,
                           color: kError,
                         ),
@@ -135,11 +135,11 @@ class _SearchViewState extends State<_SearchView> {
                         children: [
                           const Icon(Icons.inbox_rounded,
                               size: 64, color: kTextHint),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: DonySpacing.base),
                           Text(
                             'Aucune demande ne correspond à votre filtre',
                             textAlign: TextAlign.center,
-                            style: GoogleFonts.plusJakartaSans(
+                            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                               fontSize: 14,
                               color: kTextSecondary,
                             ),
@@ -169,14 +169,14 @@ class _SearchViewState extends State<_SearchView> {
                           .add(const SearchRefresh());
                     },
                     child: ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+                      padding: const EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.md, DonySpacing.lg, 40),
                       itemCount: state.results.length +
                           (state.status == SearchStatus.loadingMore ? 1 : 0),
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      separatorBuilder: (_, __) => const SizedBox(height: DonySpacing.md),
                       itemBuilder: (context, i) {
                         if (i >= state.results.length) {
                           return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 16),
+                            padding: EdgeInsets.symmetric(vertical: DonySpacing.base),
                             child: Center(
                               child: CircularProgressIndicator(
                                   color: kGreenPrimary),
@@ -209,15 +209,15 @@ class _PublicRequestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: kSurface,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(DonyRadius.card),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(DonyRadius.card),
         onTap: () =>
             context.push('/package-requests/${request.id}/public'),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(DonySpacing.base),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(DonyRadius.card),
             border: Border.all(color: kBorder),
           ),
           child: Column(
@@ -228,7 +228,7 @@ class _PublicRequestCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       '${request.departureCity} → ${request.arrivalCity}',
-                      style: GoogleFonts.plusJakartaSans(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                       ),
@@ -236,14 +236,14 @@ class _PublicRequestCard extends StatelessWidget {
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
+                        horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
                     decoration: BoxDecoration(
                       color: kGreenLight,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       request.parcelSize.name.toUpperCase(),
-                      style: GoogleFonts.plusJakartaSans(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: kGreenDark,
@@ -252,10 +252,10 @@ class _PublicRequestCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: DonySpacing.sm),
               Wrap(
-                spacing: 12,
-                runSpacing: 4,
+                spacing: DonySpacing.md,
+                runSpacing: DonySpacing.xs,
                 children: [
                   _Pill(
                     icon: Icons.calendar_today_rounded,
@@ -273,10 +273,10 @@ class _PublicRequestCard extends StatelessWidget {
                 ],
               ),
               if (request.targetPriceEur != null) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: DonySpacing.md),
                 Text(
                   'Budget: ${request.targetPriceEur!.toStringAsFixed(0)} €',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: kGreenPrimary,
@@ -302,10 +302,10 @@ class _Pill extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 13, color: kTextSecondary),
-        const SizedBox(width: 4),
+        const SizedBox(width: DonySpacing.xs),
         Text(
           label,
-          style: GoogleFonts.plusJakartaSans(
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
             fontSize: 12,
             color: kTextSecondary,
           ),

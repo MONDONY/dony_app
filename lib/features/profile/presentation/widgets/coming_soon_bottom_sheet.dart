@@ -1,6 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Bottom sheet "Bientôt disponible" réutilisable pour les entrées profil
 /// qui n'ont pas encore d'écran dédié (parrainage, factures, voyageurs
@@ -32,7 +31,7 @@ class ComingSoonBottomSheet extends StatelessWidget {
       isScrollControlled: true,
       useRootNavigator: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
       ),
       builder: (_) => ComingSoonBottomSheet(
         title: title,
@@ -45,6 +44,7 @@ class ComingSoonBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     return SafeArea(
       top: false,
       child: Padding(
@@ -74,14 +74,14 @@ class ComingSoonBottomSheet extends StatelessWidget {
               height: 56,
               decoration: BoxDecoration(
                 color: cs.primaryContainer,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(DonyRadius.card),
               ),
               child: Icon(icon, color: cs.primary, size: 28),
             ),
             const SizedBox(height: DonySpacing.md),
             Text(
               title,
-              style: GoogleFonts.plusJakartaSans(
+              style: tt.bodyMedium!.copyWith(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
                 color: cs.onSurface,
@@ -91,7 +91,7 @@ class ComingSoonBottomSheet extends StatelessWidget {
             const SizedBox(height: DonySpacing.xs),
             Text(
               description,
-              style: GoogleFonts.plusJakartaSans(
+              style: tt.bodyMedium!.copyWith(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: cs.onSurfaceVariant,
@@ -106,7 +106,7 @@ class ComingSoonBottomSheet extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: cs.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(DonyRadius.md),
               ),
               child: Row(
                 children: [
@@ -116,7 +116,7 @@ class ComingSoonBottomSheet extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'Bientôt disponible',
-                      style: GoogleFonts.plusJakartaSans(
+                      style: tt.bodyMedium!.copyWith(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: cs.onSurfaceVariant,
@@ -132,11 +132,11 @@ class ComingSoonBottomSheet extends StatelessWidget {
               child: TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
                 ),
                 child: Text(
                   'Compris',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: tt.bodyMedium!.copyWith(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: cs.primary,

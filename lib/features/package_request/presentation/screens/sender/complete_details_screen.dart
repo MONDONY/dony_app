@@ -1,3 +1,4 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/package_request/bloc/complete_details_bloc.dart';
@@ -6,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class CompleteDetailsScreen extends StatelessWidget {
   const CompleteDetailsScreen({required this.requestId, super.key});
@@ -115,7 +115,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
           ),
           title: Text(
             'Détails de livraison',
-            style: GoogleFonts.plusJakartaSans(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontWeight: FontWeight.w700, fontSize: 18),
           ),
           centerTitle: false,
@@ -124,7 +124,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
           children: [
             SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
-                  20, 24, 20, MediaQuery.of(context).padding.bottom + 100),
+                  DonySpacing.lg, DonySpacing.xl, DonySpacing.lg, MediaQuery.of(context).padding.bottom + 100),
               child: Form(
                 key: _form,
                 child: Column(
@@ -137,7 +137,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                           labelText: 'Adresse de récupération'),
                       validator: _required,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: DonySpacing.md),
                     Row(children: [
                       Expanded(
                         child: TextFormField(
@@ -150,7 +150,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                           validator: _coord,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: DonySpacing.md),
                       Expanded(
                         child: TextFormField(
                           controller: _pickupLngCtrl,
@@ -163,7 +163,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                         ),
                       ),
                     ]),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: DonySpacing.xl),
                     _section('Livraison'),
                     TextFormField(
                       controller: _deliveryAddrCtrl,
@@ -171,7 +171,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                           labelText: 'Adresse de livraison'),
                       validator: _required,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: DonySpacing.md),
                     Row(children: [
                       Expanded(
                         child: TextFormField(
@@ -184,7 +184,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                           validator: _coord,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: DonySpacing.md),
                       Expanded(
                         child: TextFormField(
                           controller: _deliveryLngCtrl,
@@ -197,7 +197,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                         ),
                       ),
                     ]),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: DonySpacing.xl),
                     _section('Destinataire'),
                     TextFormField(
                       controller: _recipientNameCtrl,
@@ -205,7 +205,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                           const InputDecoration(labelText: 'Nom complet'),
                       validator: _required,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: DonySpacing.md),
                     TextFormField(
                       controller: _recipientPhoneCtrl,
                       keyboardType: TextInputType.phone,
@@ -222,7 +222,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: DonySpacing.xl),
                     _section('Valeur déclarée'),
                     TextFormField(
                       controller: _declaredCtrl,
@@ -240,7 +240,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: DonySpacing.xl),
                     _section('Déclaration'),
                     CheckboxListTile(
                       value: _disclaimer,
@@ -251,7 +251,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                       controlAffinity: ListTileControlAffinity.leading,
                       title: Text(
                         'Je certifie que le contenu est légal et conforme à la valeur déclarée.',
-                        style: GoogleFonts.plusJakartaSans(
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontSize: 13,
                           color: kTextSecondary,
                           height: 1.4,
@@ -281,10 +281,10 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
   }
 
   Widget _section(String label) => Padding(
-        padding: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.only(bottom: DonySpacing.sm),
         child: Text(
           label.toUpperCase(),
-          style: GoogleFonts.plusJakartaSans(
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
             fontSize: 12,
             fontWeight: FontWeight.w700,
             color: kTextSecondary,

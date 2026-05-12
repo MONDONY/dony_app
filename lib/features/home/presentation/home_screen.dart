@@ -668,6 +668,18 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 ),
               ),
 
+              // ── Hero card expéditeur (au-dessus du sheet replié) ─────────
+              if (!_isNearMeActive && _tab == _HomeTab.voyageurs)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: MediaQuery.of(context).size.height * 0.20 + DonySpacing.xs,
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: DonySpacing.lg),
+                    child: _SenderHeroCard(),
+                  ),
+                ),
+
               // ── Liste ou Carousel selon le mode Près de moi ───────────────
               if (!_isNearMeActive)
                 DraggableScrollableSheet(
@@ -1077,10 +1089,10 @@ class _CorridorBar extends StatelessWidget {
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
                       decoration: BoxDecoration(
                         color: cs.error,
-                        borderRadius: const BorderRadius.all(Radius.circular(8)),
+                        borderRadius: const BorderRadius.all(Radius.circular(DonyRadius.sm)),
                       ),
                       child: Text(
                         '$activeFilterCount',
@@ -1269,7 +1281,7 @@ class _HomeCarteFab extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg, vertical: DonySpacing.md),
         decoration: BoxDecoration(
           color: cs.onSurface,
           borderRadius: BorderRadius.circular(DonyRadius.full),
@@ -2273,5 +2285,69 @@ class _PriceFilterSheetState extends State<_PriceFilterSheet> {
         ],
       ),
     );
+  }
+}
+
+// ── Hero card expéditeur — style B (Alan Warm) ────────────────────────────────
+
+class _SenderHeroCard extends StatelessWidget {
+  const _SenderHeroCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(
+        DonySpacing.lg, DonySpacing.sm, DonySpacing.lg, DonySpacing.xs,
+      ),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [DonyColors.terra500, DonyColors.terra700],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.base, DonySpacing.base, DonySpacing.xs, DonySpacing.base,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Envoyez vers l\'Afrique',
+                    style: DonyTypography.caveat(
+                      fontSize: 24,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: DonySpacing.xs),
+                  Text(
+                    'Voyageurs vérifiés · Paiement sécurisé',
+                    style: tt.bodySmall?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.85),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const DonyMascotteAnimated(
+            type: DonyMascotteType.tenantColis,
+            size: DonyMascotteSize.sm,
+          ),
+        ],
+      ),
+    )
+        .animate()
+        .fadeIn(duration: 350.ms)
+        .slideY(begin: 0.06, curve: Curves.easeOutCubic);
   }
 }

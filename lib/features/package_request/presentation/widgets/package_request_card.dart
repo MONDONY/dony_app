@@ -56,7 +56,7 @@ class PackageRequestCard extends StatelessWidget {
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [Colors.transparent, Color(0x88000000)],
+                      colors: [Colors.transparent, DonyColors.scrimDark],
                     ),
                   ),
                 ),
@@ -75,7 +75,7 @@ class PackageRequestCard extends StatelessWidget {
                             shadows: const [
                               Shadow(
                                 blurRadius: 4,
-                                color: Color(0x66000000),
+                                color: DonyColors.shadowDark,
                                 offset: Offset(0, 1),
                               ),
                             ],

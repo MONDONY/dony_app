@@ -4,7 +4,6 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_compact_card.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Carousel near-me pour les demandes (côté voyageur, tab "Demandes" + filtre
 /// "Près de moi" activé).
@@ -121,7 +120,7 @@ class _NearMePackageRequestCarouselState
             itemBuilder: (_, i) {
               final item = widget.items[i];
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: DonySpacing.sm),
                 child: PackageRequestCompactCard(
                   item: item,
                   distanceLabel: _formatDistance(item),
@@ -136,19 +135,19 @@ class _NearMePackageRequestCarouselState
             },
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: DonySpacing.sm),
         GestureDetector(
           onTap: widget.onSeeAll,
           child: Container(
             padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                const EdgeInsets.symmetric(horizontal: DonySpacing.base, vertical: DonySpacing.sm),
             decoration: BoxDecoration(
               color: cs.primaryContainer,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(DonyRadius.xl),
             ),
             child: Text(
               'Voir les ${widget.items.length} demandes',
-              style: GoogleFonts.plusJakartaSans(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: cs.primary,
@@ -156,7 +155,7 @@ class _NearMePackageRequestCarouselState
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: DonySpacing.sm),
       ],
     );
   }
@@ -180,18 +179,18 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: DonySpacing.sm),
             Text(
               'Aucune demande à proximité',
-              style: GoogleFonts.plusJakartaSans(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: cs.onSurface,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: DonySpacing.xs),
             GestureDetector(
               onTap: onSeeAll,
               child: Text(
                 'Élargir la zone',
-                style: GoogleFonts.plusJakartaSans(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: cs.primary,

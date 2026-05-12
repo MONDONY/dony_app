@@ -119,7 +119,7 @@ void main() {
       await tester.pumpWidget(wrap(
         const DonyEmptyState(
           title: 'Aucun envoi',
-          mascotte: DonyMascotteType.noData,
+          mascotte: DonyMascotteType.assis,
         ),
       ));
       await tester.pumpAndSettle();
@@ -140,7 +140,7 @@ void main() {
       await tester.pumpWidget(wrap(
         const DonyEmptyState(
           title: 'Aucun envoi',
-          mascotte: DonyMascotteType.noData,
+          mascotte: DonyMascotteType.assis,
         ),
       ));
       await tester.pumpAndSettle();

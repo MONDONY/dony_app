@@ -1,10 +1,10 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/package_request/presentation/widgets/make_offer_bottom_sheet.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class PackageRequestPreviewBottomSheet {
   const PackageRequestPreviewBottomSheet._();
@@ -38,23 +38,23 @@ class PackageRequestPreviewBottomSheet {
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: kGreenLight,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(DonyRadius.md),
               ),
               child: Row(
                 children: [
                   const Icon(Icons.payments_rounded,
                       color: kGreenPrimary, size: 22),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: DonySpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Budget cible',
-                            style: GoogleFonts.plusJakartaSans(
+                            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                 fontSize: 12, color: kGreenDark)),
                         Text(
                           '${item.targetPriceEur!.toStringAsFixed(0)} €',
-                          style: GoogleFonts.plusJakartaSans(
+                          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
                             color: kGreenPrimary,
@@ -66,31 +66,31 @@ class PackageRequestPreviewBottomSheet {
                 ],
               ),
             ),
-          const SizedBox(height: 16),
+          const SizedBox(height: DonySpacing.base),
           _row(Icons.calendar_today_rounded, 'Date souhaitée',
-              '${item.desiredDate.day}/${item.desiredDate.month}/${item.desiredDate.year}  (±${item.dateToleranceDays}j)'),
-          const SizedBox(height: 8),
-          _row(Icons.scale_rounded, 'Poids', '${item.weightKg} kg'),
-          const SizedBox(height: 8),
+              '${item.desiredDate.day}/${item.desiredDate.month}/${item.desiredDate.year}  (±${item.dateToleranceDays}j)', context),
+          const SizedBox(height: DonySpacing.sm),
+          _row(Icons.scale_rounded, 'Poids', '${item.weightKg} kg', context),
+          const SizedBox(height: DonySpacing.sm),
           _row(Icons.archive_rounded, 'Taille',
-              item.parcelSize.name.toUpperCase()),
-          const SizedBox(height: 8),
-          _row(Icons.label_rounded, 'Catégorie', item.contentCategory.label),
+              item.parcelSize.name.toUpperCase(), context),
+          const SizedBox(height: DonySpacing.sm),
+          _row(Icons.label_rounded, 'Catégorie', item.contentCategory.label, context),
           if (item.pickupNeighborhood != null) ...[
-            const SizedBox(height: 8),
-            _row(Icons.location_on_rounded, 'Pickup', item.pickupNeighborhood!),
+            const SizedBox(height: DonySpacing.sm),
+            _row(Icons.location_on_rounded, 'Pickup', item.pickupNeighborhood!, context),
           ],
           if (item.deliveryNeighborhood != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: DonySpacing.sm),
             _row(Icons.location_on_outlined, 'Livraison',
-                item.deliveryNeighborhood!),
+                item.deliveryNeighborhood!, context),
           ],
-          const SizedBox(height: 16),
+          const SizedBox(height: DonySpacing.base),
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(DonySpacing.md),
             decoration: BoxDecoration(
               color: kSurface,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(DonyRadius.md),
               border: Border.all(color: kBorder),
             ),
             child: Row(
@@ -101,7 +101,7 @@ class PackageRequestPreviewBottomSheet {
                   child: const Icon(Icons.person_rounded,
                       color: kGreenPrimary, size: 18),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: DonySpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,7 +110,7 @@ class PackageRequestPreviewBottomSheet {
                         children: [
                           Text(
                             item.sender.displayName,
-                            style: GoogleFonts.plusJakartaSans(
+                            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                 fontSize: 14, fontWeight: FontWeight.w700),
                           ),
                           if (item.sender.kycVerified) ...[
@@ -128,7 +128,7 @@ class PackageRequestPreviewBottomSheet {
                             const SizedBox(width: 2),
                             Text(
                               '${item.sender.averageRating.toStringAsFixed(1)} (${item.sender.totalRatings})',
-                              style: GoogleFonts.plusJakartaSans(
+                              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                   fontSize: 12, color: kTextSecondary),
                             ),
                           ],
@@ -144,22 +144,23 @@ class PackageRequestPreviewBottomSheet {
     );
   }
 
-  static Widget _row(IconData icon, String label, String value) {
+  static Widget _row(IconData icon, String label, String value, BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, size: 18, color: kTextSecondary),
-        const SizedBox(width: 12),
+        const SizedBox(width: DonySpacing.md),
         SizedBox(
           width: 110,
           child: Text(label,
-              style: GoogleFonts.plusJakartaSans(
+              style: tt.bodyMedium!.copyWith(
                   fontSize: 13, color: kTextSecondary)),
         ),
         Expanded(
           child: Text(
             value,
-            style: GoogleFonts.plusJakartaSans(
+            style: tt.bodyMedium!.copyWith(
                 fontSize: 14, fontWeight: FontWeight.w600),
           ),
         ),

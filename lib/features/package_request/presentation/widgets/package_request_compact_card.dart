@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 /// **C1 — Compact horizontal** : card de demande pour le carousel near-me.
@@ -38,15 +37,15 @@ class PackageRequestCompactCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Material(
       color: cs.surface,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(DonyRadius.xl),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(DonyRadius.xl),
         child: Container(
           decoration: BoxDecoration(
             border: Border.all(color: cs.outline),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(DonyRadius.xl),
           ),
           child: IntrinsicHeight(
             child: Row(
@@ -59,7 +58,7 @@ class PackageRequestCompactCard extends StatelessWidget {
                 ),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                    padding: const EdgeInsets.all(DonySpacing.md),
                     child: _CompactInfo(item: item, onMakeOffer: onMakeOffer),
                   ),
                 ),
@@ -134,6 +133,7 @@ class _CompactPhoto extends StatelessWidget {
 class _SmallUrgentBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
@@ -142,7 +142,7 @@ class _SmallUrgentBadge extends StatelessWidget {
       ),
       child: Text(
         '⚡',
-        style: GoogleFonts.plusJakartaSans(
+        style: tt.bodyMedium!.copyWith(
           fontSize: 10,
           color: Colors.white,
         ),
@@ -157,6 +157,7 @@ class _DistanceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
@@ -170,7 +171,7 @@ class _DistanceChip extends StatelessWidget {
           const SizedBox(width: 3),
           Text(
             label,
-            style: GoogleFonts.plusJakartaSans(
+            style: tt.bodyMedium!.copyWith(
               fontSize: 10,
               fontWeight: FontWeight.w700,
               color: Colors.white,
@@ -190,6 +191,7 @@ class _CompactInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     final dateStr = DateFormat('d MMM', 'fr').format(item.desiredDate);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,7 +199,7 @@ class _CompactInfo extends StatelessWidget {
       children: [
         Text(
           '${item.departureCity} → ${item.arrivalCity}',
-          style: GoogleFonts.plusJakartaSans(
+          style: tt.bodyMedium!.copyWith(
             fontSize: 14,
             fontWeight: FontWeight.w800,
             color: cs.onSurface,
@@ -209,7 +211,7 @@ class _CompactInfo extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           '$dateStr · ${item.weightKg.toStringAsFixed(0)} kg · ${item.contentCategory.label}',
-          style: GoogleFonts.plusJakartaSans(
+          style: tt.bodyMedium!.copyWith(
             fontSize: 11.5,
             fontWeight: FontWeight.w500,
             color: cs.onSurfaceVariant,
@@ -217,13 +219,13 @@ class _CompactInfo extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: DonySpacing.sm),
         Row(
           children: [
             Expanded(
               child: Text(
                 '${item.sender.displayName}${item.sender.totalRatings > 0 ? '  ★${item.sender.averageRating.toStringAsFixed(1)}' : ''}',
-                style: GoogleFonts.plusJakartaSans(
+                style: tt.bodyMedium!.copyWith(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: cs.onSurfaceVariant,
@@ -236,7 +238,7 @@ class _CompactInfo extends StatelessWidget {
             if (item.targetPriceEur != null)
               Text(
                 '${item.targetPriceEur!.toStringAsFixed(0)} €',
-                style: GoogleFonts.plusJakartaSans(
+                style: tt.bodyMedium!.copyWith(
                   fontSize: 14,
                   fontWeight: FontWeight.w800,
                   color: cs.primary,
@@ -260,7 +262,7 @@ class _CompactInfo extends StatelessWidget {
                 children: [
                   Text(
                     'Faire offre',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: tt.bodyMedium!.copyWith(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       color: cs.onPrimary,

@@ -459,7 +459,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     final cs = Theme.of(context).colorScheme;
     final isFinal = isFinalDeliveryStep(label);
     final mascotteType =
-        isFinal ? DonyMascotteType.colisLivre : DonyMascotteType.pouceLeve;
+        isFinal ? DonyMascotteType.securise : DonyMascotteType.confiant;
     final title = isFinal ? 'Colis livré !' : 'Scan enregistré !';
 
     showDialog<void>(
@@ -471,9 +471,10 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DonyMascotte(
+            DonyMascotteAnimated(
               type: mascotteType,
               size: DonyMascotteSize.lg,
+              withGlow: isFinal,
             ),
             const SizedBox(height: DonySpacing.base),
             Text(title,

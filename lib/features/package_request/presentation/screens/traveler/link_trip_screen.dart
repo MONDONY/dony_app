@@ -1,3 +1,4 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
@@ -12,7 +13,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 /// Screen shown to the traveler after sender accepted the offer.
@@ -141,7 +141,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
           ),
           title: Text(
             'Lier un trajet',
-            style: GoogleFonts.plusJakartaSans(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontWeight: FontWeight.w700, fontSize: 18),
           ),
           centerTitle: false,
@@ -158,25 +158,25 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
   Widget _buildBody() {
     final r = _request!;
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(DonySpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(DonySpacing.base),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [kGreenPrimary, kGreenDark],
               ),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(DonyRadius.card),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Demande acceptée à ${widget.thread.currentPriceEur.toStringAsFixed(0)} €',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 14,
                       color: Colors.white.withValues(alpha: 0.85),
                       fontWeight: FontWeight.w600,
@@ -184,7 +184,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                 const SizedBox(height: 6),
                 Text(
                   '${r.departureCity} → ${r.arrivalCity}',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
                     color: Colors.white,
@@ -192,7 +192,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                 ),
                 Text(
                   'Date souhaitée ${DateFormat('d MMM yyyy', 'fr').format(r.desiredDate)} (±${r.dateToleranceDays}j)',
-                  style: GoogleFonts.plusJakartaSans(
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontSize: 13,
                     color: Colors.white.withValues(alpha: 0.85),
                   ),
@@ -200,36 +200,36 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: DonySpacing.xl),
           Text(
             _matchingTrips.isEmpty
                 ? 'Aucun de tes trajets ne match'
                 : 'Tes trajets compatibles',
-            style: GoogleFonts.plusJakartaSans(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w700,
               color: kTextSecondary,
               letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: DonySpacing.md),
           if (_matchingTrips.isEmpty)
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(DonySpacing.lg),
               decoration: BoxDecoration(
                 color: kSurface,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(DonyRadius.md),
                 border: Border.all(color: kBorder),
               ),
               child: Column(
                 children: [
                   const Icon(Icons.flight_outlined,
                       size: 36, color: kTextHint),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: DonySpacing.sm),
                   Text(
                     'Crée un trajet correspondant à cette demande',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.plusJakartaSans(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 14,
                       color: kTextSecondary,
                     ),
@@ -246,7 +246,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                       index: e.key,
                       onTap: () => _selectTrip(e.value),
                     )),
-          const SizedBox(height: 16),
+          const SizedBox(height: DonySpacing.base),
           OutlinedButton.icon(
             onPressed: _createNewTrip,
             icon: const Icon(Icons.add_rounded),
@@ -279,14 +279,14 @@ class _TripTile extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 10),
       child: Material(
         color: kSurface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(DonyRadius.md),
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(DonyRadius.md),
           onTap: onTap,
           child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(DonyRadius.md),
               border: Border.all(color: kBorder),
             ),
             child: Row(
@@ -300,7 +300,7 @@ class _TripTile extends StatelessWidget {
                   child: const Icon(Icons.flight_takeoff_rounded,
                       color: kGreenPrimary, size: 20),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: DonySpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -308,14 +308,14 @@ class _TripTile extends StatelessWidget {
                       Text(
                         DateFormat('EEE d MMM', 'fr')
                             .format(announcement.departureDate),
-                        style: GoogleFonts.plusJakartaSans(
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                       Text(
                         '${announcement.availableKg} kg dispo · ${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
-                        style: GoogleFonts.plusJakartaSans(
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontSize: 12,
                           color: kTextSecondary,
                         ),
@@ -350,16 +350,16 @@ class _ErrorView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.error_outline_rounded, size: 48, color: kError),
-            const SizedBox(height: 16),
+            const SizedBox(height: DonySpacing.base),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontSize: 14,
                 color: kTextSecondary,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: DonySpacing.base),
             TextButton(onPressed: onRetry, child: const Text('Réessayer')),
           ],
         ),

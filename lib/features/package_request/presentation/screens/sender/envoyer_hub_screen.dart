@@ -13,7 +13,6 @@ import 'package:dony/features/package_request/presentation/screens/shared/my_neg
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Hub principal du parcours **sender** — tab 1 de la bottom nav quand
 /// `ActiveRole.sender`.
@@ -106,7 +105,12 @@ class _EnvoyerHubViewState extends State<_EnvoyerHubView>
         heroTag: 'envoyer-hub-fab',
         backgroundColor: kGreenPrimary,
         foregroundColor: Colors.white,
-        onPressed: () => PackageRequestCreateWizard.show(context),
+        onPressed: () async {
+          await PackageRequestCreateWizard.show(context);
+          if (context.mounted) {
+            context.read<PackageRequestBloc>().add(const RefreshMyRequests());
+          }
+        },
         tooltip: 'Publier une demande',
         child: const Icon(Icons.add_rounded, size: 28),
       ),
@@ -122,7 +126,7 @@ class _EnvoyerHubHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 16, 12),
+      padding: const EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.base, DonySpacing.base, DonySpacing.md),
       child: BlocBuilder<PackageRequestBloc, PackageRequestState>(
         builder: (context, state) {
           final count = state.requests.length;
@@ -168,7 +172,7 @@ class _HeaderRow extends StatelessWidget {
             children: [
               Text(
                 'Envoyer',
-                style: GoogleFonts.plusJakartaSans(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
                   color: kTextPrimary,
@@ -179,7 +183,7 @@ class _HeaderRow extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 subtitle,
-                style: GoogleFonts.plusJakartaSans(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   color: kTextSecondary,
@@ -206,7 +210,12 @@ class _HeaderAction extends StatelessWidget {
       label: 'Publier une demande',
       button: true,
       child: GestureDetector(
-        onTap: onTap,
+        onTap: () async {
+          await PackageRequestCreateWizard.show(context);
+          if (context.mounted) {
+            context.read<PackageRequestBloc>().add(const RefreshMyRequests());
+          }
+        },
         child: Container(
           width: 44,
           height: 44,
@@ -230,7 +239,7 @@ class _EnvoyerHubTabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+      padding: const EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.xs, DonySpacing.lg, 0),
       child: TabBar(
         controller: controller,
         indicatorColor: DonyColors.primary,
@@ -238,15 +247,15 @@ class _EnvoyerHubTabBar extends StatelessWidget {
         indicatorSize: TabBarIndicatorSize.label,
         labelColor: kTextPrimary,
         unselectedLabelColor: kTextSecondary,
-        labelStyle: GoogleFonts.plusJakartaSans(
+        labelStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
           fontSize: 15,
           fontWeight: FontWeight.w700,
         ),
-        unselectedLabelStyle: GoogleFonts.plusJakartaSans(
+        unselectedLabelStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
           fontSize: 15,
           fontWeight: FontWeight.w500,
         ),
-        labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+        labelPadding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
         tabAlignment: TabAlignment.start,
         isScrollable: true,
         dividerColor: Colors.transparent,
@@ -330,7 +339,7 @@ class _Counter extends StatelessWidget {
     if (value == 0) {
       return Text(
         '0',
-        style: GoogleFonts.plusJakartaSans(
+        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
           fontSize: 13,
           fontWeight: FontWeight.w600,
           color: kTextHint,
@@ -339,7 +348,7 @@ class _Counter extends StatelessWidget {
     }
     return Text(
       '$value',
-      style: GoogleFonts.plusJakartaSans(
+      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
         fontSize: 13,
         fontWeight: FontWeight.w700,
         color: DonyColors.primary,

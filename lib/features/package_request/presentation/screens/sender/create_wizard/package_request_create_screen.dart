@@ -122,7 +122,6 @@ class _WizardSheetState extends State<_WizardSheet> {
               ),
             ),
           );
-          context.go('/package-requests/me');
         } else if (state.submissionStatus == FormSubmissionStatus.error) {
           ErrorPresenter.show(
             context,

@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 /// **L2 — Airbnb 1-col éditorial** : card de demande pour le tab "Demandes"
@@ -37,31 +36,31 @@ class PackageRequestListCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Material(
       color: cs.surface,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(DonyRadius.xl),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(DonyRadius.xl),
         child: Container(
           decoration: BoxDecoration(
             border: Border.all(color: cs.outline),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(DonyRadius.xl),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _HeroPhoto(item: item),
               Padding(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                padding: const EdgeInsets.fromLTRB(14, DonySpacing.md, 14, DonySpacing.md),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _CorridorRow(item: item),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: DonySpacing.xs),
                     _SubInfoRow(item: item),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: DonySpacing.md),
                     Divider(color: cs.outline, height: 1),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: DonySpacing.md),
                     _SenderRow(item: item, onMakeOffer: onMakeOffer),
                   ],
                 ),
@@ -144,10 +143,10 @@ class _UrgentBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: DonyColors.error,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(DonyRadius.xl),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x33000000),
+            color: DonyColors.scrimLight,
             blurRadius: 6,
             offset: Offset(0, 2),
           ),
@@ -157,10 +156,10 @@ class _UrgentBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(Icons.bolt_rounded, color: Colors.white, size: 14),
-          const SizedBox(width: 4),
+          const SizedBox(width: DonySpacing.xs),
           Text(
             'URGENT',
-            style: GoogleFonts.plusJakartaSans(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontSize: 10,
               fontWeight: FontWeight.w800,
               color: Colors.white,
@@ -191,11 +190,11 @@ class _SizeBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(DonyRadius.xl),
       ),
       child: Text(
         '$_shortSize · ${weightKg.toStringAsFixed(weightKg == weightKg.truncateToDouble() ? 0 : 1)} kg',
-        style: GoogleFonts.plusJakartaSans(
+        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
           fontSize: 11,
           fontWeight: FontWeight.w700,
           color: Colors.white,
@@ -218,7 +217,7 @@ class _CorridorRow extends StatelessWidget {
         Expanded(
           child: Text(
             '${item.departureCity} → ${item.arrivalCity}',
-            style: GoogleFonts.plusJakartaSans(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontSize: 16,
               fontWeight: FontWeight.w800,
               color: cs.onSurface,
@@ -227,11 +226,11 @@ class _CorridorRow extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: DonySpacing.sm),
         if (item.targetPriceEur != null)
           Text(
             '${item.targetPriceEur!.toStringAsFixed(0)} €',
-            style: GoogleFonts.plusJakartaSans(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontSize: 18,
               fontWeight: FontWeight.w800,
               color: cs.primary,
@@ -241,7 +240,7 @@ class _CorridorRow extends StatelessWidget {
         else
           Text(
             'Libre',
-            style: GoogleFonts.plusJakartaSans(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w700,
               color: cs.onSurfaceVariant,
@@ -262,7 +261,7 @@ class _SubInfoRow extends StatelessWidget {
     final dateStr = DateFormat('EEE d MMM', 'fr').format(item.desiredDate);
     return Text(
       '$dateStr · ${item.contentCategory.label}',
-      style: GoogleFonts.plusJakartaSans(
+      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
         fontSize: 13,
         fontWeight: FontWeight.w500,
         color: cs.onSurfaceVariant,
@@ -287,7 +286,7 @@ class _SenderRow extends StatelessWidget {
           backgroundColor: cs.primaryContainer,
           child: Text(
             sender.displayName.isEmpty ? '?' : sender.displayName[0],
-            style: GoogleFonts.plusJakartaSans(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: cs.primary,
@@ -304,7 +303,7 @@ class _SenderRow extends StatelessWidget {
                   Flexible(
                     child: Text(
                       sender.displayName,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: cs.onSurface,
@@ -313,7 +312,7 @@ class _SenderRow extends StatelessWidget {
                     ),
                   ),
                   if (sender.kycVerified) ...[
-                    const SizedBox(width: 4),
+                    const SizedBox(width: DonySpacing.xs),
                     Icon(Icons.verified_rounded,
                         color: cs.primary, size: 14),
                   ],
@@ -327,7 +326,7 @@ class _SenderRow extends StatelessWidget {
                     const SizedBox(width: 2),
                     Text(
                       sender.averageRating.toStringAsFixed(1),
-                      style: GoogleFonts.plusJakartaSans(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: cs.onSurfaceVariant,
@@ -341,9 +340,9 @@ class _SenderRow extends StatelessWidget {
         if (onMakeOffer != null)
           Material(
             color: cs.primary,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(DonyRadius.md),
             child: InkWell(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(DonyRadius.md),
               onTap: onMakeOffer,
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -353,13 +352,13 @@ class _SenderRow extends StatelessWidget {
                   children: [
                     Text(
                       'Faire offre',
-                      style: GoogleFonts.plusJakartaSans(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: cs.onPrimary,
                       ),
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: DonySpacing.xs),
                     Icon(Icons.arrow_forward_rounded,
                         color: cs.onPrimary, size: 14),
                   ],

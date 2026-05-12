@@ -1,4 +1,4 @@
-import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
@@ -40,7 +40,7 @@ class ThreadStateCtaBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+        padding: const EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.sm, DonySpacing.lg, DonySpacing.base),
         child: _buildContent(context),
       ),
     );
@@ -163,6 +163,7 @@ class _SenderOpenActions extends StatelessWidget {
                           bloc: context.read<NegotiationBloc>(),
                           threadId: thread.id,
                           currentPriceEur: thread.currentPriceEur,
+                          roundsCount: thread.roundsCount,
                         ),
               ),
             ),
@@ -225,6 +226,7 @@ class _TravelerOpenActions extends StatelessWidget {
                       bloc: context.read<NegotiationBloc>(),
                       threadId: thread.id,
                       currentPriceEur: thread.currentPriceEur,
+                      roundsCount: thread.roundsCount,
                     ),
           ),
         ),

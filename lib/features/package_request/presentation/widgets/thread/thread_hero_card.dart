@@ -1,6 +1,6 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Variante visuelle du hero card selon le statut négociation.
 ///
@@ -30,11 +30,11 @@ enum ThreadStatusVariant {
       };
 
   Color get tint => switch (this) {
-        open => const Color(0xFF0E1B2E), // ink-900 navy
-        awaitingTrip => const Color(0xFFB5781E), // amber strong
-        awaitingPayment => const Color(0xFF5B21B6), // violet strong
-        accepted => const Color(0xFF15803D), // green strong
-        terminal => const Color(0xFF6B7280), // neutral grey
+        open => DonyColors.threadStatusOpen,
+        awaitingTrip => DonyColors.threadStatusAmber,
+        awaitingPayment => DonyColors.threadStatusViolet,
+        accepted => DonyColors.threadStatusGreen,
+        terminal => DonyColors.threadStatusNeutral,
       };
 
   String get badge => switch (this) {
@@ -80,11 +80,11 @@ class ThreadHeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tint = statusVariant.tint;
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.md, DonySpacing.lg, DonySpacing.md),
+      padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
         color: tint,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(DonyRadius.card),
         boxShadow: [
           BoxShadow(
             color: tint.withValues(alpha: 0.25),
@@ -99,21 +99,21 @@ class ThreadHeroCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(DonySpacing.sm),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(statusVariant.icon, color: Colors.white, size: 20),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: DonySpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       statusVariant.priceLabel,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: Colors.white.withValues(alpha: 0.75),
@@ -123,7 +123,7 @@ class ThreadHeroCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       '${thread.currentPriceEur.toStringAsFixed(0)} €',
-                      style: GoogleFonts.plusJakartaSans(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 26,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
@@ -155,11 +155,11 @@ class _StatusBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.22),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(DonyRadius.xl),
       ),
       child: Text(
         label,
-        style: GoogleFonts.plusJakartaSans(
+        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
           fontSize: 10,
           fontWeight: FontWeight.w800,
           color: Colors.white,
@@ -184,19 +184,19 @@ class _RoundProgress extends StatelessWidget {
       children: [
         Text(
           'Round $n/$max',
-          style: GoogleFonts.plusJakartaSans(
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
             fontSize: 12,
             fontWeight: FontWeight.w600,
             color: Colors.white.withValues(alpha: 0.85),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: DonySpacing.md),
         Expanded(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               for (int i = 0; i < max; i++) ...[
-                if (i > 0) const SizedBox(width: 4),
+                if (i > 0) const SizedBox(width: DonySpacing.xs),
                 Container(
                   width: 20,
                   height: 4,

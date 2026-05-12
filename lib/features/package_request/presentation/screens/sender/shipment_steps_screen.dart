@@ -5,7 +5,6 @@ import 'package:dony/features/package_request/data/package_request_repository.da
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 /// Post-payment orchestration screen for an ACCEPTED package request.
@@ -85,7 +84,7 @@ class _ShipmentStepsScreenState extends State<ShipmentStepsScreen> {
         ),
         title: Text(
           widget.travelerDisplayName ?? 'Suivi',
-          style: GoogleFonts.plusJakartaSans(
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontSize: 16, fontWeight: FontWeight.w700),
         ),
         centerTitle: false,
@@ -135,7 +134,7 @@ class _StepsBody extends StatelessWidget {
               const SizedBox(height: DonySpacing.lg),
               Text(
                 'Étapes suivantes',
-                style: GoogleFonts.plusJakartaSans(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: cs.onSurfaceVariant,
@@ -225,11 +224,11 @@ class _HeroHeader extends StatelessWidget {
       padding: const EdgeInsets.all(DonySpacing.lg),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF1A6B3C), Color(0xFF22A55C)],
+          colors: [DonyColors.referralGreen, DonyColors.referralGreenMid],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(DonyRadius.xl),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,10 +237,10 @@ class _HeroHeader extends StatelessWidget {
             children: [
               const Icon(Icons.check_circle_rounded,
                   color: Colors.white, size: 22),
-              const SizedBox(width: 8),
+              const SizedBox(width: DonySpacing.sm),
               Text(
                 'DEMANDE ACCEPTÉE',
-                style: GoogleFonts.plusJakartaSans(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
                   color: Colors.white.withValues(alpha: 0.92),
@@ -250,19 +249,19 @@ class _HeroHeader extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: DonySpacing.sm),
           Text(
             '$travelerName va livrer ton colis',
-            style: GoogleFonts.plusJakartaSans(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontSize: 22,
               fontWeight: FontWeight.w800,
               color: Colors.white,
               height: 1.15,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: DonySpacing.md),
           Container(height: 1, color: Colors.white.withValues(alpha: 0.18)),
-          const SizedBox(height: 12),
+          const SizedBox(height: DonySpacing.md),
           Wrap(
             spacing: 12,
             runSpacing: 6,
@@ -287,7 +286,7 @@ class _Meta extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       label,
-      style: GoogleFonts.plusJakartaSans(
+      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
         fontSize: 13,
         fontWeight: FontWeight.w600,
         color: Colors.white.withValues(alpha: 0.94),
@@ -329,16 +328,16 @@ class _StepCard extends StatelessWidget {
             : cs.outlineVariant;
     return Material(
       color: bgColor,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(DonyRadius.card),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(DonyRadius.card),
         child: Opacity(
           opacity: enabled ? 1.0 : 0.5,
           child: Container(
             padding: const EdgeInsets.all(DonySpacing.base),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(DonyRadius.card),
               border: Border.all(
                 color: borderColor,
                 width: active ? 1.5 : 1,
@@ -363,7 +362,7 @@ class _StepCard extends StatelessWidget {
                             color: cs.onPrimary, size: 18)
                         : Text(
                             '$index',
-                            style: GoogleFonts.plusJakartaSans(
+                            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
                               color: active ? cs.onPrimary : cs.onSurfaceVariant,
@@ -378,7 +377,7 @@ class _StepCard extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: GoogleFonts.plusJakartaSans(
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                           color: cs.onSurface,
@@ -387,7 +386,7 @@ class _StepCard extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         subtitle,
-                        style: GoogleFonts.plusJakartaSans(
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                           color: cs.onSurfaceVariant,
@@ -419,16 +418,16 @@ class _StickyCta extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Material(
       color: cs.primary,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(DonyRadius.card),
       child: InkWell(
         onTap: onPressed,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(DonyRadius.card),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: DonySpacing.base),
           alignment: Alignment.center,
           child: Text(
             label,
-            style: GoogleFonts.plusJakartaSans(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontSize: 15,
               fontWeight: FontWeight.w800,
               color: cs.onPrimary,
@@ -455,16 +454,16 @@ class _ErrorView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.error_outline_rounded, size: 48, color: cs.error),
-            const SizedBox(height: 12),
+            const SizedBox(height: DonySpacing.md),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontSize: 14,
                 color: cs.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: DonySpacing.base),
             TextButton(onPressed: onRetry, child: const Text('Réessayer')),
           ],
         ),

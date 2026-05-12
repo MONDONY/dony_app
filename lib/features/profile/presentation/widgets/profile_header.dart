@@ -138,8 +138,8 @@ class ProfileHeader extends StatelessWidget {
 
 // ── KYC Badge ─────────────────────────────────────────────────────────────────
 
-const Color _kKycBadgeBlue = Color(0xFF6FA8FF);
-const Color _kKycBadgeGold = Color(0xFFF0B829);
+const _kKycBadgeBlue = DonyColors.kycBadgeBlue;
+const _kKycBadgeGold = DonyColors.kycBadgeGold;
 
 class _KycBadge extends StatelessWidget {
   const _KycBadge({required this.isPro});

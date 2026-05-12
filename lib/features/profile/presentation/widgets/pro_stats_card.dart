@@ -62,11 +62,11 @@ class _CardShell extends StatelessWidget {
 
     // Couleurs du dégradé adaptées au mode
     final gradientStart = isDark
-        ? const Color(0xFF1A2744)   // bleu nuit profond
-        : const Color(0xFF0A2540);  // ink800
+        ? DonyColors.proBg1   // bleu nuit profond
+        : DonyColors.ink800;  // ink800
     final gradientEnd = isDark
-        ? const Color(0xFF0D1B35)   // presque noir bleu
-        : const Color(0xFF1A3A6B);  // bleu saphir
+        ? DonyColors.proBg2   // presque noir bleu
+        : DonyColors.proBg3;  // bleu saphir
 
     // Opacité du fond glass selon brightness
     final bgAlpha = isDark ? 0.75 : 0.88;

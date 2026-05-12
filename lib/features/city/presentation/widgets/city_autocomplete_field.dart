@@ -1,3 +1,4 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
@@ -5,7 +6,6 @@ import 'package:dony/features/city/data/city_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class CityAutocompleteField extends StatefulWidget {
   const CityAutocompleteField({
@@ -66,7 +66,7 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
         TextField(
           controller: _controller,
           focusNode: _focusNode,
-          style: GoogleFonts.plusJakartaSans(
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
             fontSize: 15,
             color: cs.onSurface,
           ),
@@ -101,7 +101,7 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
           builder: (ctx, state) {
             if (state is CitySearchLoading) {
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
                 child: LinearProgressIndicator(
                   color: cs.primary,
                 ),
@@ -131,10 +131,10 @@ class _ResultList extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Container(
-      margin: const EdgeInsets.only(top: 4),
+      margin: const EdgeInsets.only(top: DonySpacing.xs),
       decoration: BoxDecoration(
         color: cs.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(DonyRadius.md),
         border: Border.all(color: cs.outline),
         boxShadow: [
           BoxShadow(
@@ -161,7 +161,7 @@ class _ResultList extends StatelessWidget {
             ),
             title: Text(
               city.name,
-              style: GoogleFonts.plusJakartaSans(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: cs.onSurface,
@@ -169,7 +169,7 @@ class _ResultList extends StatelessWidget {
             ),
             subtitle: Text(
               city.countryName,
-              style: GoogleFonts.plusJakartaSans(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontSize: 12,
                 color: cs.onSurfaceVariant,
               ),

@@ -32,6 +32,15 @@ class NegotiationThread extends Equatable {
     required this.createdAt,
     required this.messages,
     this.paymentIntentClientSecret,
+    // Profil voyageur — inclus par le back-end dans certains endpoints
+    this.travelerName,
+    this.travelerRating,
+    this.travelerTripsCount,
+    this.travelerPhotoUrl,
+    // Infos demande embedées — pour affichage dans les listes de négos
+    this.departureCity,
+    this.arrivalCity,
+    this.weightKg,
   });
 
   final String id;
@@ -47,6 +56,15 @@ class NegotiationThread extends Equatable {
   final DateTime createdAt;
   final List<NegotiationMessage> messages;
   final String? paymentIntentClientSecret;
+
+  // Optionnels — présents quand le back-end les embed
+  final String? travelerName;
+  final double? travelerRating;
+  final int? travelerTripsCount;
+  final String? travelerPhotoUrl;
+  final String? departureCity;
+  final String? arrivalCity;
+  final double? weightKg;
 
   factory NegotiationThread.fromJson(Map<String, dynamic> json) => NegotiationThread(
         id: json['id'] as String,
@@ -65,6 +83,13 @@ class NegotiationThread extends Equatable {
                 .toList() ??
             const [],
         paymentIntentClientSecret: json['paymentIntentClientSecret'] as String?,
+        travelerName: json['travelerName'] as String?,
+        travelerRating: (json['travelerRating'] as num?)?.toDouble(),
+        travelerTripsCount: json['travelerTripsCount'] as int?,
+        travelerPhotoUrl: json['travelerPhotoUrl'] as String?,
+        departureCity: json['departureCity'] as String?,
+        arrivalCity: json['arrivalCity'] as String?,
+        weightKg: (json['weightKg'] as num?)?.toDouble(),
       );
 
   @override
@@ -73,5 +98,7 @@ class NegotiationThread extends Equatable {
         travelerTravelDate, travelerAvailableKg,
         status, currentPriceEur, roundsCount, lastActivityAt, createdAt,
         messages, paymentIntentClientSecret,
+        travelerName, travelerRating, travelerTripsCount, travelerPhotoUrl,
+        departureCity, arrivalCity, weightKg,
       ];
 }

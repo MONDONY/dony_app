@@ -149,16 +149,15 @@ void main() {
     expect(Hive.box('user_prefs').get('onboarding_done'), isTrue);
   });
 
-  testWidgets('OnboardingScreen affiche la mascotte salue au-dessus du logo',
+  testWidgets('OnboardingScreen affiche la mascotte joyeuse au-dessus du logo',
       (tester) async {
     await _pump(tester, mockAuthBloc);
 
-    final mascotteFinder = find.byType(DonyMascotte);
+    final mascotteFinder = find.byType(DonyMascotteAnimated);
     expect(mascotteFinder, findsOneWidget);
 
-    final mascotte = tester.widget<DonyMascotte>(mascotteFinder);
-    expect(mascotte.type, DonyMascotteType.salue);
+    final mascotte = tester.widget<DonyMascotteAnimated>(mascotteFinder);
+    expect(mascotte.type, DonyMascotteType.joyeux);
     expect(mascotte.size, DonyMascotteSize.lg);
-    expect(mascotte.borderRadius, isNotNull);
   });
 }

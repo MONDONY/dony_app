@@ -2,7 +2,6 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 /// Bulle d'un message du thread de négociation.
@@ -73,7 +72,7 @@ class ThreadMessageBubble extends StatelessWidget {
                 children: [
                   Text(
                     _kindLabel(message.kind),
-                    style: GoogleFonts.plusJakartaSans(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
                       color: labelColor,
@@ -84,7 +83,7 @@ class ThreadMessageBubble extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       '${message.proposedPriceEur!.toStringAsFixed(0)} €',
-                      style: GoogleFonts.plusJakartaSans(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                         color: priceColor,
@@ -93,10 +92,10 @@ class ThreadMessageBubble extends StatelessWidget {
                     ),
                   ],
                   if (message.body != null && message.body!.isNotEmpty) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: DonySpacing.xs),
                     Text(
                       message.body!,
-                      style: GoogleFonts.plusJakartaSans(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w500,
                         color: textColor,
@@ -104,10 +103,10 @@ class ThreadMessageBubble extends StatelessWidget {
                       ),
                     ),
                   ],
-                  const SizedBox(height: 4),
+                  const SizedBox(height: DonySpacing.xs),
                   Text(
                     DateFormat('HH:mm').format(message.createdAt),
-                    style: GoogleFonts.plusJakartaSans(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 10,
                       fontWeight: FontWeight.w500,
                       color: mine
@@ -124,14 +123,14 @@ class ThreadMessageBubble extends StatelessWidget {
                 top: -6,
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: 3),
                   decoration: BoxDecoration(
                     color: DonyColors.warning,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(DonyRadius.xl),
                   ),
                   child: Text(
                     'NOUVEAU',
-                    style: GoogleFonts.plusJakartaSans(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 9,
                       fontWeight: FontWeight.w800,
                       color: Colors.white,

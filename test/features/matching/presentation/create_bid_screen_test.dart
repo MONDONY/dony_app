@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -177,8 +178,10 @@ void main() {
       await _pumpScreen(tester, bidBloc, paymentBloc);
 
       final button =
-          tester.widget<FilledButton>(find.byType(FilledButton).last);
-      expect(button.onPressed, isNull);
+          tester.widget<InkWell>(
+            find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)).last,
+          );
+      expect(button.onTap, isNull);
     });
 
     testWidgets('affiche la section de prix (Total + Frais de service)',
@@ -294,8 +297,10 @@ void main() {
       await tester.pump();
 
       final button =
-          tester.widget<FilledButton>(find.byType(FilledButton).last);
-      expect(button.onPressed, isNull);
+          tester.widget<InkWell>(
+            find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)).last,
+          );
+      expect(button.onTap, isNull);
     });
 
     testWidgets('catégorie + disclaimer → bouton activé', (tester) async {
@@ -304,8 +309,10 @@ void main() {
       await _enableSubmit(tester);
 
       final button =
-          tester.widget<FilledButton>(find.byType(FilledButton).last);
-      expect(button.onPressed, isNotNull);
+          tester.widget<InkWell>(
+            find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)).last,
+          );
+      expect(button.onTap, isNotNull);
     });
 
     testWidgets('tap texte disclaimer → accepte via GestureDetector',
@@ -436,8 +443,10 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       // Button disabled
       final button =
-          tester.widget<FilledButton>(find.byType(FilledButton).last);
-      expect(button.onPressed, isNull);
+          tester.widget<InkWell>(
+            find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)).last,
+          );
+      expect(button.onTap, isNull);
     });
 
     testWidgets('BidCheckoutReady → triggers PaymentBloc', (tester) async {

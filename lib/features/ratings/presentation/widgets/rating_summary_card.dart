@@ -64,7 +64,7 @@ class RatingSummaryCard extends StatelessWidget {
                             ? Icons.star_rounded
                             : Icons.star_outline_rounded,
                         size: 14,
-                        color: const Color(0xFFF59E0B),
+                        color: DonyColors.starGold,
                       ),
                     ),
                   ),

@@ -230,7 +230,7 @@ class _StarSelector extends StatelessWidget {
                     key: ValueKey(filled),
                     size: 44,
                     color: filled
-                        ? const Color(0xFFF59E0B)
+                        ? DonyColors.starGold
                         : Theme.of(context).colorScheme.outlineVariant,
                   ),
                 ),

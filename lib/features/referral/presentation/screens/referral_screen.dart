@@ -152,7 +152,7 @@ class _HeroCard extends StatelessWidget {
       padding: const EdgeInsets.all(DonySpacing.xl),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF1A6B3C), Color(0xFF134F2D)],
+          colors: [DonyColors.referralGreen, DonyColors.referralGreenDark],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -196,10 +196,10 @@ class _CodeBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const green50 = Color(0xFFE8F5EE);
-    const greenAccent = Color(0xFF4CAF7D);
-    const greenDark = Color(0xFF134F2D);
-    const greenPrimary = Color(0xFF1A6B3C);
+    const green50 = DonyColors.referralGreen50;
+    const greenAccent = DonyColors.referralGreenAccent;
+    const greenDark = DonyColors.referralGreenDark;
+    const greenPrimary = DonyColors.referralGreen;
 
     return Container(
       padding: const EdgeInsets.all(DonySpacing.xl),
@@ -327,7 +327,7 @@ class _ShareButton extends StatelessWidget {
           icon: const Icon(Icons.share_rounded),
           label: const Text('Partager mon code'),
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF1A6B3C),
+            backgroundColor: DonyColors.referralGreen,
             minimumSize: const Size(double.infinity, 52),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(DonyRadius.lg),
@@ -378,7 +378,7 @@ class _ErrorView extends StatelessWidget {
               icon: const Icon(Icons.refresh_rounded),
               label: const Text('Réessayer'),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF1A6B3C),
+                backgroundColor: DonyColors.referralGreen,
               ),
               onPressed: () => context
                   .read<ReferralBloc>()

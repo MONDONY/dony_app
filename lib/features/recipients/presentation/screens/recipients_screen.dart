@@ -46,7 +46,7 @@ class RecipientsScreen extends StatelessWidget {
           }
           if (state.recipients.isEmpty) {
             return DonyEmptyState(
-              icon: Icons.contacts_outlined,
+              mascotte: DonyMascotteType.assis,
               title: 'Aucun destinataire enregistré',
               description:
                   'Ajoute tes proches en Afrique pour envoyer en 1 tap.',

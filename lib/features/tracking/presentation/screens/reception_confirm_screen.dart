@@ -113,6 +113,15 @@ class _ReceptionConfirmScreenState extends State<ReceptionConfirmScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+            // ── Mascotte ─────────────────────────────────────────────────
+            const Center(
+              child: DonyMascotteAnimated(
+                type: DonyMascotteType.confiant,
+                size: DonyMascotteSize.md,
+              ),
+            ),
+            const SizedBox(height: DonySpacing.base),
+
             // ── Caveat title ─────────────────────────────────────────────
             Text(
               'Confirmer la réception',

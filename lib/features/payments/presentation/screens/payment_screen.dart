@@ -294,11 +294,10 @@ class _EscrowConfirmedView extends StatelessWidget {
             Column(
               children: [
                 const SizedBox(height: DonySpacing.xxl),
-                DonyIconContainer(
-                  icon: Icons.check_circle_rounded,
-                  size: DonyIconContainerSize.xxl,
-                  backgroundColor: cs.success.withValues(alpha: 0.1),
-                  iconColor: cs.success,
+                const DonyMascotteAnimated(
+                  type: DonyMascotteType.securise,
+                  size: DonyMascotteSize.lg,
+                  withGlow: true,
                 ),
                 const SizedBox(height: DonySpacing.xl),
                 Text(

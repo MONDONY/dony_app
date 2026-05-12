@@ -46,7 +46,7 @@ class PickupAddressesScreen extends StatelessWidget {
           }
           if (state.addresses.isEmpty) {
             return DonyEmptyState(
-              icon: Icons.location_on_outlined,
+              mascotte: DonyMascotteType.assis,
               title: 'Aucune adresse enregistrée',
               description:
                   'Ajoute ta première adresse de pickup pour accélérer tes prochaines demandes.',

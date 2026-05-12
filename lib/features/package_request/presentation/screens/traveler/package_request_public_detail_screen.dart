@@ -1,3 +1,4 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
@@ -7,7 +8,6 @@ import 'package:dony/features/package_request/presentation/widgets/make_offer_bo
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class PackageRequestPublicDetailScreen extends StatefulWidget {
   const PackageRequestPublicDetailScreen({required this.requestId, super.key});
@@ -59,7 +59,7 @@ class _PackageRequestPublicDetailScreenState
         ),
         title: Text(
           'Demande',
-          style: GoogleFonts.plusJakartaSans(
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontWeight: FontWeight.w700, fontSize: 18),
         ),
         centerTitle: false,
@@ -72,7 +72,7 @@ class _PackageRequestPublicDetailScreenState
                     padding: const EdgeInsets.all(40),
                     child: Text(_error!,
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.plusJakartaSans(
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                             fontSize: 14, color: kError)),
                   ),
                 )
@@ -87,27 +87,27 @@ class _PackageRequestPublicDetailScreenState
       children: [
         SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(
-              20, 24, 20, MediaQuery.of(context).padding.bottom + 100),
+              DonySpacing.lg, DonySpacing.xl, DonySpacing.lg, MediaQuery.of(context).padding.bottom + 100),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(DonySpacing.lg),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [kGreenPrimary, kGreenDark],
                   ),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(DonyRadius.xl),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       '${r.departureCity}',
-                      style: GoogleFonts.plusJakartaSans(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
@@ -117,16 +117,16 @@ class _PackageRequestPublicDetailScreenState
                         color: Colors.white70, size: 28),
                     Text(
                       '${r.arrivalCity}',
-                      style: GoogleFonts.plusJakartaSans(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: DonySpacing.md),
                     Text(
                       'Souhaité le ${r.desiredDate.day}/${r.desiredDate.month}/${r.desiredDate.year} (±${r.dateToleranceDays}j)',
-                      style: GoogleFonts.plusJakartaSans(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 14,
                         color: Colors.white.withValues(alpha: 0.85),
                       ),
@@ -134,7 +134,7 @@ class _PackageRequestPublicDetailScreenState
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: DonySpacing.base),
               _detailCard('Colis', [
                 _kv(Icons.scale_rounded, 'Poids', '${r.weightKg} kg'),
                 _kv(Icons.archive_rounded, 'Taille',
@@ -144,7 +144,7 @@ class _PackageRequestPublicDetailScreenState
                   _kv(Icons.notes_rounded, 'Description', r.description!),
               ]),
               if (r.targetPriceEur != null) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: DonySpacing.md),
                 _detailCard('Budget', [
                   _kv(Icons.payments_rounded, 'Prix cible',
                       '${r.targetPriceEur!.toStringAsFixed(0)} €'),
@@ -152,7 +152,7 @@ class _PackageRequestPublicDetailScreenState
               ],
               if (r.pickupNeighborhood != null ||
                   r.deliveryNeighborhood != null) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: DonySpacing.md),
                 _detailCard('Zones', [
                   if (r.pickupNeighborhood != null)
                     _kv(Icons.location_on_rounded, 'Pickup',
@@ -187,10 +187,10 @@ class _PackageRequestPublicDetailScreenState
 
   Widget _detailCard(String title, List<Widget> children) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
         color: kSurface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(DonyRadius.card),
         border: Border.all(color: kBorder),
       ),
       child: Column(
@@ -198,14 +198,14 @@ class _PackageRequestPublicDetailScreenState
         children: [
           Text(
             title,
-            style: GoogleFonts.plusJakartaSans(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w700,
               color: kTextSecondary,
               letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: DonySpacing.md),
           ...children,
         ],
       ),
@@ -218,19 +218,19 @@ class _PackageRequestPublicDetailScreenState
       child: Row(
         children: [
           Icon(icon, size: 18, color: kTextSecondary),
-          const SizedBox(width: 12),
+          const SizedBox(width: DonySpacing.md),
           SizedBox(
             width: 90,
             child: Text(
               label,
-              style: GoogleFonts.plusJakartaSans(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontSize: 13, color: kTextSecondary),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: GoogleFonts.plusJakartaSans(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontSize: 14, fontWeight: FontWeight.w600),
             ),
           ),

@@ -190,15 +190,11 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 96,
-          height: 96,
-          decoration: BoxDecoration(
-            color: cs.primaryContainer,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(Icons.verified, color: cs.primary, size: 52),
-        ).animate().scale(duration: 500.ms, curve: Curves.easeOutBack),
+        const DonyMascotteAnimated(
+          type: DonyMascotteType.securise,
+          size: DonyMascotteSize.lg,
+          withGlow: true,
+        ),
         const SizedBox(height: DonySpacing.xxl),
         Text(
           'Identité vérifiée ✓',

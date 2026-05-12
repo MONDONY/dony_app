@@ -49,7 +49,7 @@ class _EmptyView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const DonyEmptyState(
-      icon: Icons.star_border_rounded,
+      mascotte: DonyMascotteType.assis,
       title: "Tu n'as pas encore reçu d'avis",
       description:
           'Les notes et commentaires laissés par les voyageurs apparaîtront ici.',

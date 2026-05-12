@@ -38,7 +38,7 @@ class RematchSearchScreen extends StatelessWidget {
             const SizedBox(height: DonySpacing.xl),
             if (suggestions.isEmpty)
               const DonyEmptyState(
-                icon: Icons.search_off_rounded,
+                mascotte: DonyMascotteType.assis,
                 title: 'Aucun voyageur disponible',
                 description:
                     'Aucun voyageur alternatif disponible dans les 72h sur ce corridor.',

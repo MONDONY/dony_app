@@ -72,6 +72,8 @@ void main() {
         buildScreen([const AuthOtpVerified(phoneNumber: '+33600000000')]),
       );
       await tester.pump();
+      // Drain mascotte animation timers (confiant shimmer = 900 ms)
+      await tester.pump(const Duration(seconds: 1));
       verify(() => mockBloc.add(const AuthRegisterRequested())).called(1);
     },
   );
