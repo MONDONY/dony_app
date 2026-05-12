@@ -1,5 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
+import 'package:dony/features/favorite_travelers/bloc/favorite_traveler_bloc.dart';
+import 'package:dony/features/favorite_travelers/data/datasources/favorite_traveler_datasource.dart';
+import 'package:dony/features/favorite_travelers/data/repositories/favorite_traveler_repository.dart';
+import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
+import 'package:dony/features/pickup_addresses/data/datasources/pickup_address_datasource.dart';
+import 'package:dony/features/pickup_addresses/data/repositories/pickup_address_repository.dart';
+import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
+import 'package:dony/features/recipients/data/datasources/recipient_datasource.dart';
+import 'package:dony/features/recipients/data/repositories/recipient_repository.dart';
 import 'package:dony/features/city/data/city_datasource.dart';
 import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/config/bloc/config_bloc.dart';
@@ -272,6 +281,39 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<CitySearchBloc>(
     () => CitySearchBloc(getIt<CityRepository>()),
+  );
+
+  // Address book — Pickup Addresses
+  getIt.registerLazySingleton<PickupAddressDatasource>(
+    () => PickupAddressDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<PickupAddressRepository>(
+    () => PickupAddressRepository(getIt<PickupAddressDatasource>()),
+  );
+  getIt.registerFactory<PickupAddressBloc>(
+    () => PickupAddressBloc(getIt<PickupAddressRepository>()),
+  );
+
+  // Address book — Recipients
+  getIt.registerLazySingleton<RecipientDatasource>(
+    () => RecipientDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<RecipientRepository>(
+    () => RecipientRepository(getIt<RecipientDatasource>()),
+  );
+  getIt.registerFactory<RecipientBloc>(
+    () => RecipientBloc(getIt<RecipientRepository>()),
+  );
+
+  // Address book — Favorite Travelers
+  getIt.registerLazySingleton<FavoriteTravelerDatasource>(
+    () => FavoriteTravelerDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<FavoriteTravelerRepository>(
+    () => FavoriteTravelerRepository(getIt<FavoriteTravelerDatasource>()),
+  );
+  getIt.registerFactory<FavoriteTravelerBloc>(
+    () => FavoriteTravelerBloc(getIt<FavoriteTravelerRepository>()),
   );
 
   // Package request marketplace

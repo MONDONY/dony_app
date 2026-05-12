@@ -44,8 +44,16 @@ import 'package:dony/features/package_request/presentation/screens/traveler/pack
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_search_screen.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/favorite_travelers/bloc/favorite_traveler_bloc.dart';
+import 'package:dony/features/favorite_travelers/presentation/screens/favorite_travelers_screen.dart';
+import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
+import 'package:dony/features/pickup_addresses/presentation/screens/pickup_address_edit_screen.dart';
+import 'package:dony/features/pickup_addresses/presentation/screens/pickup_addresses_screen.dart';
 import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
+import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
+import 'package:dony/features/recipients/presentation/screens/recipient_edit_screen.dart';
+import 'package:dony/features/recipients/presentation/screens/recipients_screen.dart';
 import 'package:dony/features/profile/presentation/screens/faq_screen.dart';
 import 'package:dony/features/profile/presentation/screens/shipments_history_screen.dart';
 import 'package:dony/features/profile/presentation/screens/support_contact_screen.dart';
@@ -317,6 +325,75 @@ final appRouter = GoRouter(
       builder: (context, state) => BlocProvider(
         create: (_) => getIt<BidBloc>()..add(BidMyListRequested()),
         child: const ShipmentsHistoryScreen(),
+      ),
+    ),
+
+    // ── Pickup addresses (hors shell) ────────────────────────────────────
+    GoRoute(
+      path: '/profile/addresses',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<PickupAddressBloc>()..add(const PickupAddressLoaded()),
+        child: const PickupAddressesScreen(),
+      ),
+      routes: [
+        GoRoute(
+          path: 'new',
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<PickupAddressBloc>()
+              ..add(const PickupAddressLoaded()),
+            child: const PickupAddressEditScreen(),
+          ),
+        ),
+        GoRoute(
+          path: ':id',
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<PickupAddressBloc>()
+              ..add(const PickupAddressLoaded()),
+            child: PickupAddressEditScreen(
+              addressId: state.pathParameters['id'],
+            ),
+          ),
+        ),
+      ],
+    ),
+
+    // ── Recipients (hors shell) ───────────────────────────────────────────
+    GoRoute(
+      path: '/profile/recipients',
+      builder: (context, state) => BlocProvider(
+        create: (_) =>
+            getIt<RecipientBloc>()..add(const RecipientLoaded()),
+        child: const RecipientsScreen(),
+      ),
+      routes: [
+        GoRoute(
+          path: 'new',
+          builder: (context, state) => BlocProvider(
+            create: (_) =>
+                getIt<RecipientBloc>()..add(const RecipientLoaded()),
+            child: const RecipientEditScreen(),
+          ),
+        ),
+        GoRoute(
+          path: ':id',
+          builder: (context, state) => BlocProvider(
+            create: (_) =>
+                getIt<RecipientBloc>()..add(const RecipientLoaded()),
+            child: RecipientEditScreen(
+              recipientId: state.pathParameters['id'],
+            ),
+          ),
+        ),
+      ],
+    ),
+
+    // ── Favorite travelers (hors shell) ──────────────────────────────────
+    GoRoute(
+      path: '/profile/favorites',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<FavoriteTravelerBloc>()
+          ..add(const FavoriteTravelerLoaded()),
+        child: const FavoriteTravelersScreen(),
       ),
     ),
 
