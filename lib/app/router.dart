@@ -49,8 +49,14 @@ import 'package:dony/features/favorite_travelers/presentation/screens/favorite_t
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/presentation/screens/pickup_address_edit_screen.dart';
 import 'package:dony/features/pickup_addresses/presentation/screens/pickup_addresses_screen.dart';
+import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
+import 'package:dony/features/profile/bloc/profile_public_event.dart';
 import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
+import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
+import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
+import 'package:dony/features/ratings/bloc/my_reviews_event.dart';
+import 'package:dony/features/ratings/presentation/screens/my_reviews_screen.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/presentation/screens/recipient_edit_screen.dart';
 import 'package:dony/features/recipients/presentation/screens/recipients_screen.dart';
@@ -401,6 +407,29 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/profile/upgrade-to-pro',
       builder: (context, state) => const UpgradeToProScreen(),
+    ),
+
+    // ── Mes avis reçus (hors shell) ──────────────────────────────────
+    GoRoute(
+      path: '/profile/reviews',
+      builder: (context, state) => BlocProvider(
+        create: (_) =>
+            getIt<MyReviewsBloc>()..add(const MyReviewsRequested()),
+        child: const MyReviewsScreen(),
+      ),
+    ),
+
+    // ── Mon profil public (hors shell) ───────────────────────────────
+    GoRoute(
+      path: '/profile/public',
+      builder: (context, state) {
+        final userId = state.extra as String?;
+        return BlocProvider(
+          create: (_) => getIt<ProfilePublicBloc>()
+            ..add(ProfilePublicRequested(userId ?? '')),
+          child: ProfilePublicScreen(userId: userId),
+        );
+      },
     ),
 
     // ── Settings (hors shell) ──────────────────────────────────────────

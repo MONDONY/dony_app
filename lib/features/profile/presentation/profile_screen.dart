@@ -464,12 +464,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               iconColor: cs.primary,
                                               iconBgColor: cs.primaryContainer,
                                               label: 'Mon profil public',
-                                              onTap: () => ComingSoonBottomSheet.show(
-                                                context,
-                                                title: 'Mon profil public',
-                                                description: 'Vois exactement ce que les voyageurs voient de toi (rating, KYC, envois réussis).',
-                                                icon: Icons.account_box_rounded,
-                                              ),
+                                              onTap: () => context.push('/profile/public'),
                                             ),
                                             DonyListTile(
                                               icon: Icons.star_border_rounded,
@@ -477,12 +472,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               iconBgColor: cs.tertiaryContainer,
                                               label: 'Mes avis reçus',
                                               showDivider: false,
-                                              onTap: () => ComingSoonBottomSheet.show(
-                                                context,
-                                                title: 'Mes avis reçus',
-                                                description: 'Les notes et commentaires laissés par les voyageurs après tes envois.',
-                                                icon: Icons.star_rounded,
-                                              ),
+                                              onTap: () => context.push('/profile/reviews'),
                                             ),
                                           ],
                                         ).animate().fadeIn(delay: 320.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),

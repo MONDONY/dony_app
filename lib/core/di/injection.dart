@@ -71,6 +71,8 @@ import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:dony/features/payments/data/datasources/payment_remote_datasource.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
+import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
+import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/data/rating_repository.dart';
 import 'package:get_it/get_it.dart';
@@ -258,6 +260,15 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<RatingBloc>(
     () => RatingBloc(getIt<RatingRepository>()),
+  );
+  getIt.registerFactory<MyReviewsBloc>(
+    () => MyReviewsBloc(getIt<RatingRepository>()),
+  );
+  getIt.registerFactory<ProfilePublicBloc>(
+    () => ProfilePublicBloc(
+      getIt<ProfileRepository>(),
+      getIt<RatingRepository>(),
+    ),
   );
 
   // Tracking
