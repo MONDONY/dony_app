@@ -2,27 +2,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/presentation/widgets/sender_public_profile_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 
-
-/// Card de demande d'envoi — Option B (thumbnail gauche).
-///
-/// Layout :
-/// ```
-/// ┌────────────────────────────────────────────┐
-/// │ ┌──────┐  Paris → Dakar           100 €   │
-/// │ │      │  [M] · 10 kg · Vêtements         │
-/// │ │ 📦  │  📅 15 juin ±2j                  │
-/// │ │photo │  👤 Aminata D.  ⭐4.8  ✓         │
-/// │ └──────┘                                   │
-/// │              [  →  Faire une offre  →  ]   │
-/// └────────────────────────────────────────────┘
-/// ```
-///
-/// Quand [isOwnRequest] est `true` (l'expéditeur consulte sa propre demande),
-/// le bouton "Faire une offre" est masqué et un chip "Ma demande" s'affiche.
 class PackageRequestListCard extends StatelessWidget {
   const PackageRequestListCard({
     super.key,
@@ -39,16 +23,11 @@ class PackageRequestListCard extends StatelessWidget {
   final bool isOwnRequest;
   final int index;
 
-  String get _sizeLabel {
-    switch (item.parcelSize) {
-      case ParcelSize.small:
-        return 'S';
-      case ParcelSize.medium:
-        return 'M';
-      case ParcelSize.large:
-        return 'L';
-    }
-  }
+  String get _sizeLabel => switch (item.parcelSize) {
+        ParcelSize.small => 'S',
+        ParcelSize.medium => 'M',
+        ParcelSize.large => 'L',
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +44,9 @@ class PackageRequestListCard extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             border: Border.all(
-              color: isOwnRequest ? cs.primary.withValues(alpha: 0.35) : cs.outlineVariant,
+              color: isOwnRequest
+                  ? cs.primary.withValues(alpha: 0.35)
+                  : cs.outlineVariant,
               width: isOwnRequest ? 1.5 : 1,
             ),
             borderRadius: BorderRadius.circular(DonyRadius.card),
@@ -78,34 +59,31 @@ class PackageRequestListCard extends StatelessWidget {
                 _OwnRequestChip(cs: cs, tt: tt),
                 const SizedBox(height: DonySpacing.sm),
               ],
-              // ── Ligne principale : thumbnail + infos ────────────────
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _Thumbnail(item: item, cs: cs),
-                  const SizedBox(width: DonySpacing.md),
-                  Expanded(
-                    child: _InfoColumn(
-                      item: item,
-                      sizeLabel: _sizeLabel,
-                      cs: cs,
-                      tt: tt,
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _Thumbnail(item: item, cs: cs),
+                    const SizedBox(width: DonySpacing.md),
+                    Expanded(
+                      child: _InfoColumn(
+                        item: item,
+                        sizeLabel: _sizeLabel,
+                        cs: cs,
+                        tt: tt,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              // ── CTA ─────────────────────────────────────────────────
-              if (!isOwnRequest && onMakeOffer != null) ...[
-                const SizedBox(height: DonySpacing.md),
-                _MakeOfferButton(onTap: onMakeOffer!, cs: cs, tt: tt),
-              ],
             ],
           ),
         ),
       ),
     )
         .animate()
-        .fadeIn(delay: Duration(milliseconds: 60 * index), duration: 280.ms)
+        .fadeIn(
+            delay: Duration(milliseconds: 60 * index), duration: 280.ms)
         .slideY(begin: 0.04, curve: Curves.easeOutCubic);
   }
 }
@@ -123,7 +101,6 @@ class _Thumbnail extends StatelessWidget {
       borderRadius: BorderRadius.circular(DonyRadius.md),
       child: SizedBox(
         width: 80,
-        height: 80,
         child: item.photoUrl != null && item.photoUrl!.isNotEmpty
             ? CachedNetworkImage(
                 imageUrl: item.photoUrl!,
@@ -173,14 +150,15 @@ class _InfoColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateStr = DateFormat('EEE d MMM', 'fr').format(item.desiredDate);
+    final dateStr =
+        DateFormat('d MMM', 'fr').format(item.desiredDate).toLowerCase();
     final toleranceStr =
         item.dateToleranceDays > 0 ? ' ±${item.dateToleranceDays}j' : '';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Corridor + prix
+        // ── Corridor + prix ───────────────────────────────────────────────
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -216,183 +194,204 @@ class _InfoColumn extends StatelessWidget {
               ),
           ],
         ),
-        const SizedBox(height: DonySpacing.xs),
-        // Taille · poids · catégorie (+ badge URGENT pour médicaments)
-        Wrap(
-          spacing: DonySpacing.xs,
-          runSpacing: DonySpacing.xxs,
-          children: [
-            _InfoChip(label: sizeLabel, cs: cs, tt: tt, isPrimary: true),
-            _InfoChip(
-              label: '${item.weightKg.toStringAsFixed(0)} kg',
-              cs: cs,
-              tt: tt,
-            ),
-            _InfoChip(label: item.contentCategory.label, cs: cs, tt: tt),
-            if (item.contentCategory.isUrgent)
-              _InfoChip(label: 'URGENT', cs: cs, tt: tt, isUrgent: true),
-          ],
-        ),
-        const SizedBox(height: DonySpacing.xs),
-        // Date
+        const SizedBox(height: DonySpacing.sm),
+
+        // ── Grille 2×2 ────────────────────────────────────────────────────
         Row(
           children: [
-            Icon(Icons.calendar_today_rounded,
-                size: 12, color: cs.onSurfaceVariant),
-            const SizedBox(width: 3),
-            Text(
-              '$dateStr$toleranceStr',
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ],
-        ),
-        const SizedBox(height: DonySpacing.sm),
-        Divider(height: 1, color: cs.outlineVariant),
-        const SizedBox(height: DonySpacing.sm),
-        // Expéditeur — style TravelerCard
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            DonyAvatar(
-              name: item.sender.displayName,
-              size: DonyAvatarSize.sm,
-              verified: item.sender.kycVerified,
-            ),
-            const SizedBox(width: DonySpacing.sm),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.sender.displayName,
-                    style: tt.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Wrap(
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: DonySpacing.xxs,
-                    children: [
-                      Icon(Icons.star_rounded, size: 13, color: cs.warning),
-                      Text(
-                        item.sender.averageRating.toStringAsFixed(1),
-                        style: tt.titleSmall,
-                      ),
-                      Text(
-                        '· ${item.sender.totalRatings} avis',
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+              child: _MiniInfoTile(
+                icon: Icons.scale_rounded,
+                label: 'Poids',
+                value: '${item.weightKg.toStringAsFixed(0)} kg',
+                cs: cs,
+                tt: tt,
+              ),
+            ),
+            const SizedBox(width: DonySpacing.xs),
+            Expanded(
+              child: _MiniInfoTile(
+                icon: Icons.open_in_full_rounded,
+                label: 'Taille',
+                value: sizeLabel,
+                cs: cs,
+                tt: tt,
               ),
             ),
           ],
+        ),
+        const SizedBox(height: DonySpacing.xs),
+        Row(
+          children: [
+            Expanded(
+              child: _MiniInfoTile(
+                icon: Icons.calendar_today_rounded,
+                label: 'Date',
+                value: '$dateStr$toleranceStr',
+                cs: cs,
+                tt: tt,
+              ),
+            ),
+            const SizedBox(width: DonySpacing.xs),
+            Expanded(
+              child: _MiniInfoTile(
+                icon: item.contentCategory.icon,
+                label: 'Catégorie',
+                value: item.contentCategory.label,
+                cs: cs,
+                tt: tt,
+                isUrgent: item.contentCategory.isUrgent,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: DonySpacing.sm),
+
+        // ── Expéditeur ────────────────────────────────────────────────────
+        Divider(height: 1, color: cs.outlineVariant),
+        const SizedBox(height: DonySpacing.xs),
+        InkWell(
+          onTap: () => showSenderPublicProfileSheet(context, item.sender),
+          borderRadius: BorderRadius.circular(DonyRadius.sm),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
+            child: Row(
+              children: [
+                DonyAvatar(
+                  name: item.sender.displayName,
+                  size: DonyAvatarSize.sm,
+                  verified: item.sender.kycVerified,
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.sender.displayName,
+                        style: tt.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Row(
+                        children: [
+                          Icon(Icons.star_rounded,
+                              size: 12, color: cs.warning),
+                          const SizedBox(width: 2),
+                          Text(
+                            item.sender.averageRating.toStringAsFixed(1),
+                            style: tt.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: cs.onSurface,
+                            ),
+                          ),
+                          Text(
+                            ' · ${item.sender.totalRatings} avis',
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 16,
+                  color: cs.onSurfaceVariant.withValues(alpha: 0.5),
+                ),
+              ],
+            ),
+          ),
         ),
       ],
     );
   }
 }
 
-// ── Chips utilitaires ────────────────────────────────────────────────────────
+// ── Mini info tile (grille 2×2) ──────────────────────────────────────────────
 
-class _InfoChip extends StatelessWidget {
-  const _InfoChip({
+class _MiniInfoTile extends StatelessWidget {
+  const _MiniInfoTile({
+    required this.icon,
     required this.label,
+    required this.value,
     required this.cs,
     required this.tt,
-    this.isPrimary = false,
     this.isUrgent = false,
   });
 
+  final IconData icon;
   final String label;
+  final String value;
   final ColorScheme cs;
   final TextTheme tt;
-  final bool isPrimary;
   final bool isUrgent;
 
   @override
   Widget build(BuildContext context) {
-    final bg = isUrgent
-        ? cs.error.withValues(alpha: 0.12)
-        : isPrimary
-            ? cs.primaryContainer
-            : cs.surfaceContainerHighest;
-    final fg = isUrgent
-        ? cs.error
-        : isPrimary
-            ? cs.primary
-            : cs.onSurfaceVariant;
+    final bgColor = isUrgent
+        ? cs.error.withValues(alpha: 0.07)
+        : cs.surfaceContainerHighest;
+    final iconColor = isUrgent ? cs.error : cs.onSurfaceVariant;
+    final labelColor = isUrgent
+        ? cs.error.withValues(alpha: 0.75)
+        : cs.onSurfaceVariant;
+    final valueColor = isUrgent ? cs.error : cs.onSurface;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xs + 2,
+      ),
       decoration: BoxDecoration(
-        color: bg,
+        color: bgColor,
         borderRadius: BorderRadius.circular(DonyRadius.sm),
+        border: isUrgent
+            ? Border.all(color: cs.error.withValues(alpha: 0.18))
+            : null,
       ),
-      child: Text(
-        label,
-        style: tt.labelSmall?.copyWith(
-          fontWeight: FontWeight.w700,
-          fontSize: 11,
-          color: fg,
-        ),
-      ),
-    );
-  }
-}
-
-// ── Bouton CTA ───────────────────────────────────────────────────────────────
-
-class _MakeOfferButton extends StatelessWidget {
-  const _MakeOfferButton({
-    required this.onTap,
-    required this.cs,
-    required this.tt,
-  });
-
-  final VoidCallback onTap;
-  final ColorScheme cs;
-  final TextTheme tt;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: cs.primary,
-      borderRadius: BorderRadius.circular(DonyRadius.md),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(DonyRadius.md),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 11),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.local_shipping_rounded,
-                  color: Colors.white, size: 16),
-              const SizedBox(width: DonySpacing.sm),
-              Text(
-                'Faire une offre',
-                style: tt.labelLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(icon, size: 13, color: iconColor),
+          const SizedBox(width: DonySpacing.xs),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: tt.labelSmall?.copyWith(
+                    fontSize: 9,
+                    color: labelColor,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.2,
+                  ),
                 ),
-              ),
-              const SizedBox(width: DonySpacing.sm),
-              const Icon(Icons.arrow_forward_rounded,
-                  color: Colors.white, size: 16),
-            ],
+                Text(
+                  value,
+                  style: tt.bodySmall?.copyWith(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: valueColor,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
-// ── Chip "Ma demande" ─────────────────────────────────────────────────────────
+// ── Chip "Ma demande" ────────────────────────────────────────────────────────
 
 class _OwnRequestChip extends StatelessWidget {
   const _OwnRequestChip({required this.cs, required this.tt});

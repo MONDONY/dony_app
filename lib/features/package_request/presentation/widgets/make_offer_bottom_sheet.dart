@@ -8,8 +8,10 @@ import 'package:dony/features/package_request/data/models/price_estimate.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 class MakeOfferBottomSheet {
   const MakeOfferBottomSheet._();
@@ -141,9 +143,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final estimate = widget.estimate;
-    final tt = Theme.of(context).textTheme;
     return BlocListener<NegotiationBloc, NegotiationState>(
       listener: (ctx, state) {
         if (state is NegotiationLoaded) {
@@ -153,8 +153,6 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
               backgroundColor: kSuccess,
             ),
           );
-          // Pop sheet first, then push using the captured root router so we
-          // don't dereference a disposed subtree context.
           Navigator.of(ctx, rootNavigator: true).pop();
           widget.rootRouter.push('/negotiations/${state.thread.id}');
         } else if (state is NegotiationError) {
@@ -166,118 +164,379 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (estimate != null && estimate.lowEur != null)
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: cs.primaryContainer,
-                  borderRadius: BorderRadius.circular(DonyRadius.md),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.trending_up_rounded,
-                        color: cs.primary, size: 20),
-                    const SizedBox(width: DonySpacing.md),
-                    Expanded(
-                      child: Text(
-                        'Estimation : ${estimate.lowEur!.toStringAsFixed(0)}–${estimate.highEur!.toStringAsFixed(0)} € (${estimate.confidence.wireName.toLowerCase()})',
-                        style: tt.bodyMedium!.copyWith(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: cs.onPrimaryContainer,
-                        ),
+            // ── Banner estimation ─────────────────────────────────────────
+            if (estimate != null && estimate.lowEur != null) ...[
+              _EstimationBanner(estimate: estimate),
+              const SizedBox(height: DonySpacing.base),
+            ],
+
+            // ── Prix + Capacité (2 colonnes) ──────────────────────────────
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _FieldTile(
+                      label: 'VOTRE PRIX',
+                      icon: Icons.payments_rounded,
+                      iconBgKey: _TileColor.blue,
+                      suffix: '€',
+                      child: TextFormField(
+                        controller: _priceCtrl,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'[\d,.]')),
+                        ],
+                        style: _fieldTextStyle(context),
+                        decoration: _fieldDecoration(context),
+                        validator: (v) {
+                          final d = double.tryParse(
+                              (v ?? '').replaceAll(',', '.'));
+                          if (d == null) return 'Invalide';
+                          if (d <= 0 || d > 500) return '0–500 €';
+                          return null;
+                        },
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: DonySpacing.sm),
+                  Expanded(
+                    child: _FieldTile(
+                      label: 'CAPACITÉ',
+                      icon: Icons.scale_rounded,
+                      iconBgKey: _TileColor.green,
+                      suffix: 'kg',
+                      child: TextFormField(
+                        controller: _kgCtrl,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'[\d,.]')),
+                        ],
+                        style: _fieldTextStyle(context),
+                        decoration: _fieldDecoration(context),
+                        validator: (v) {
+                          final d = double.tryParse(
+                              (v ?? '').replaceAll(',', '.'));
+                          if (d == null || d <= 0) return '> 0 kg';
+                          return null;
+                        },
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            const SizedBox(height: DonySpacing.base),
-            TextFormField(
-              controller: _priceCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: 'Votre prix',
-                suffixText: '€',
-              ),
-              validator: (v) {
-                final d = double.tryParse((v ?? '').replaceAll(',', '.'));
-                if (d == null) return 'Valeur invalide';
-                if (d <= 0 || d > 500) return 'Entre 0.01 et 500€';
-                return null;
-              },
             ),
             const SizedBox(height: DonySpacing.md),
-            TextFormField(
-              controller: _kgCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: 'Capacité disponible',
-                suffixText: 'kg',
-              ),
-              validator: (v) {
-                final d = double.tryParse((v ?? '').replaceAll(',', '.'));
-                if (d == null || d <= 0) return 'Doit être > 0';
-                return null;
-              },
-            ),
-            const SizedBox(height: DonySpacing.md),
+
+            // ── Date ──────────────────────────────────────────────────────
             ValueListenableBuilder<DateTime?>(
               valueListenable: _dateNotifier,
-              builder: (ctx, date, _) => InkWell(
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: ctx,
-                    initialDate: date ??
-                        DateTime.now().add(const Duration(days: 7)),
-                    firstDate: DateTime.now(),
-                    lastDate:
-                        DateTime.now().add(const Duration(days: 90)),
-                  );
-                  if (picked != null) _dateNotifier.value = picked;
-                },
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: DonySpacing.base, vertical: 18),
-                  decoration: BoxDecoration(
-                    color: cs.surface,
-                    borderRadius: BorderRadius.circular(DonyRadius.md),
-                    border: Border.all(color: cs.outline),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.calendar_today_rounded,
-                          size: 20, color: kTextSecondary),
-                      const SizedBox(width: DonySpacing.md),
-                      Text(
-                        date == null
-                            ? 'Date de voyage'
-                            : '${date.day}/${date.month}/${date.year}',
-                        style: tt.bodyMedium!.copyWith(
-                          fontSize: 15,
-                          color: date == null ? kTextHint : kTextPrimary,
+              builder: (ctx, date, _) => _FieldTile(
+                label: 'DATE DE VOYAGE',
+                icon: Icons.event_rounded,
+                iconBgKey: _TileColor.amber,
+                suffix: null,
+                child: InkWell(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: ctx,
+                      initialDate: date ??
+                          DateTime.now().add(const Duration(days: 7)),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now()
+                          .add(const Duration(days: 90)),
+                    );
+                    if (picked != null) _dateNotifier.value = picked;
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 18, horizontal: 2),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            date == null
+                                ? 'Sélectionner…'
+                                : DateFormat('EEE d MMM yyyy', 'fr')
+                                    .format(date),
+                            style: _fieldTextStyle(context).copyWith(
+                              color: date == null
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant
+                                  : null,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 18,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
             const SizedBox(height: DonySpacing.md),
-            TextFormField(
-              controller: _bodyCtrl,
-              maxLines: 2,
-              maxLength: 280,
-              decoration: const InputDecoration(
-                labelText: 'Message (optionnel)',
-                hintText: 'Je voyage exactement ce jour-là',
+
+            // ── Message ───────────────────────────────────────────────────
+            _FieldTile(
+              label: 'MESSAGE',
+              icon: Icons.chat_bubble_outline_rounded,
+              iconBgKey: _TileColor.violet,
+              suffix: null,
+              sublabel: 'optionnel',
+              alignIconTop: true,
+              child: TextFormField(
+                controller: _bodyCtrl,
+                maxLines: 3,
+                maxLength: 280,
+                style: _fieldTextStyle(context),
+                decoration: _fieldDecoration(context).copyWith(
+                  hintText: 'Je voyage exactement ce jour-là…',
+                  counterStyle: Theme.of(context)
+                      .textTheme
+                      .labelSmall
+                      ?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant),
+                ),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  static TextStyle _fieldTextStyle(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return tt.bodyLarge!.copyWith(
+      fontWeight: FontWeight.w600,
+      fontSize: 16,
+      color: Theme.of(context).colorScheme.onSurface,
+    );
+  }
+
+  static InputDecoration _fieldDecoration(BuildContext context) {
+    return const InputDecoration(
+      border: InputBorder.none,
+      isDense: true,
+      contentPadding: EdgeInsets.symmetric(vertical: 18, horizontal: 2),
+      errorStyle: TextStyle(fontSize: 11),
+    );
+  }
+}
+
+// ─── Estimation banner ────────────────────────────────────────────────────────
+
+class _EstimationBanner extends StatelessWidget {
+  const _EstimationBanner({required this.estimate});
+  final PriceEstimate estimate;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    final confidenceColor = switch (estimate.confidence.wireName.toLowerCase()) {
+      'high' => cs.success,
+      'medium' => cs.warning,
+      _ => cs.primary,
+    };
+    final confidenceBg = switch (estimate.confidence.wireName.toLowerCase()) {
+      'high' => cs.successLight,
+      'medium' => cs.warningLight,
+      _ => cs.primaryContainer,
+    };
+
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: cs.primaryContainer.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(
+            color: cs.primary.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: cs.primaryContainer,
+              borderRadius: BorderRadius.circular(DonyRadius.sm),
+            ),
+            child: Icon(Icons.trending_up_rounded,
+                color: cs.primary, size: 18),
+          ),
+          const SizedBox(width: DonySpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Prix du marché',
+                  style: tt.labelSmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${estimate.lowEur!.toStringAsFixed(0)} – ${estimate.highEur!.toStringAsFixed(0)} €',
+                  style: tt.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: cs.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(
+                horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
+            decoration: BoxDecoration(
+              color: confidenceBg,
+              borderRadius: BorderRadius.circular(DonyRadius.full),
+            ),
+            child: Text(
+              estimate.confidence.wireName.toLowerCase(),
+              style: tt.labelSmall?.copyWith(
+                color: confidenceColor,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Field tile ──────────────────────────────────────────────────────────────
+
+enum _TileColor { blue, green, amber, violet }
+
+class _FieldTile extends StatelessWidget {
+  const _FieldTile({
+    required this.label,
+    required this.icon,
+    required this.iconBgKey,
+    required this.child,
+    this.suffix,
+    this.sublabel,
+    this.alignIconTop = false,
+  });
+
+  final String label;
+  final IconData icon;
+  final _TileColor iconBgKey;
+  final Widget child;
+  final String? suffix;
+  final String? sublabel;
+  final bool alignIconTop;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    final (iconBg, iconColor) = switch (iconBgKey) {
+      _TileColor.blue => (cs.primaryContainer, cs.primary),
+      _TileColor.green => (cs.successLight, cs.success),
+      _TileColor.amber => (DonyColors.amberLight, DonyColors.amberDark),
+      _TileColor.violet => (DonyColors.violetLight, DonyColors.violet),
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── Label ──────────────────────────────────────────────────────────
+        Row(
+          children: [
+            Text(
+              label,
+              style: tt.labelSmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.8,
+              ),
+            ),
+            if (sublabel != null) ...[
+              const SizedBox(width: DonySpacing.xs),
+              Text(
+                '· $sublabel',
+                style: tt.labelSmall
+                    ?.copyWith(color: cs.onSurfaceVariant.withValues(alpha: 0.6)),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 6),
+
+        // ── Tile ──────────────────────────────────────────────────────────
+        Container(
+          decoration: BoxDecoration(
+            color: cs.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(DonyRadius.card),
+          ),
+          child: Row(
+            crossAxisAlignment: alignIconTop
+                ? CrossAxisAlignment.start
+                : CrossAxisAlignment.center,
+            children: [
+              // Icon square
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  DonySpacing.sm,
+                  alignIconTop ? DonySpacing.sm + 2 : DonySpacing.sm,
+                  0,
+                  DonySpacing.sm,
+                ),
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: iconBg,
+                    borderRadius: BorderRadius.circular(DonyRadius.sm),
+                  ),
+                  child: Icon(icon, size: 18, color: iconColor),
+                ),
+              ),
+              // Input
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.sm),
+                  child: child,
+                ),
+              ),
+              // Suffix
+              if (suffix != null)
+                Padding(
+                  padding: const EdgeInsets.only(right: DonySpacing.base),
+                  child: Text(
+                    suffix!,
+                    style: tt.bodyMedium?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/widgets/make_offer_bottom_sheet.dart';
+import 'package:dony/features/package_request/presentation/widgets/sender_public_profile_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
@@ -20,7 +21,6 @@ class PackageRequestPreviewBottomSheet {
           ? null
           : DonyButton(
               label: 'Faire une offre',
-              icon: Icons.local_shipping_rounded,
               onPressed: () {
                 Navigator.of(context, rootNavigator: true).pop();
                 MakeOfferBottomSheet.show(
@@ -451,7 +451,12 @@ class _SenderCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Container(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => showSenderPublicProfileSheet(context, sender),
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        child: Container(
       padding: const EdgeInsets.all(DonySpacing.md),
       decoration: BoxDecoration(
         color: cs.surface,
@@ -532,6 +537,8 @@ class _SenderCard extends StatelessWidget {
             size: 20,
           ),
         ],
+      ),
+        ),
       ),
     );
   }
