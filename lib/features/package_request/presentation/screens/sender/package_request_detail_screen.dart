@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
@@ -221,104 +220,140 @@ class _HeroCard extends StatelessWidget {
         DateFormat('HH:mm').format(request.createdAt);
 
     return Container(
-      padding: const EdgeInsets.all(DonySpacing.base + 4),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: DonyColors.ink700,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF0A2540), Color(0xFF1A3A6B)],
+        ),
         borderRadius: BorderRadius.circular(DonyRadius.card),
         boxShadow: [
           BoxShadow(
-            color: DonyColors.ink900.withValues(alpha: 0.18),
-            blurRadius: 20,
-            offset: const Offset(0, 6),
+            color: DonyColors.primary.withValues(alpha: 0.22),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          // Route
-          Text(
-            '${request.departureCity} → ${request.arrivalCity}',
-            style: Theme.of(context).textTheme.headlineMedium!.copyWith(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-              letterSpacing: -0.4,
-            ),
-          ),
-          const SizedBox(height: 6),
-          // Détails
-          Text(
-            _buildDetails(request),
-            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: Colors.white.withValues(alpha: 0.7),
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: DonySpacing.base),
-          // Bottom row : badge offres + heure publication
-          Row(
-            children: [
-              if (threadsCount > 0)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: DonyColors.terra500,
-                    borderRadius: BorderRadius.circular(DonyRadius.full),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        '$threadsCount OFFRE${threadsCount > 1 ? 'S' : ''}',
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              else
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(DonyRadius.full),
-                  ),
-                  child: Text(
-                    'En attente d\'offres…',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white.withValues(alpha: 0.8),
-                    ),
-                  ),
-                ),
-              const Spacer(),
-              Text(
-                'publié à $publishedAt',
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  fontSize: 11,
-                  color: Colors.white.withValues(alpha: 0.55),
-                ),
+          // Glow bleu top-right
+          Positioned(
+            top: -30,
+            right: -30,
+            child: Container(
+              width: 110,
+              height: 110,
+              decoration: BoxDecoration(
+                color: DonyColors.primary.withValues(alpha: 0.28),
+                shape: BoxShape.circle,
               ),
-            ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(DonySpacing.base + 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Route
+                Text(
+                  '${request.departureCity} → ${request.arrivalCity}',
+                  style: Theme.of(context).textTheme.headlineMedium!.copyWith(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -0.4,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                // Détails
+                Text(
+                  _buildDetails(request),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white.withValues(alpha: 0.7),
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: DonySpacing.base),
+                // Bottom row : badge offres + heure publication
+                Row(
+                  children: [
+                    if (threadsCount > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: DonyColors.primary.withValues(alpha: 0.35),
+                          borderRadius:
+                              BorderRadius.circular(DonyRadius.full),
+                          border: Border.all(
+                            color: DonyColors.primary.withValues(alpha: 0.5),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              '$threadsCount OFFRE${threadsCount > 1 ? 'S' : ''}',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                    letterSpacing: 0.3,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.12),
+                          borderRadius:
+                              BorderRadius.circular(DonyRadius.full),
+                        ),
+                        child: Text(
+                          'En attente d\'offres…',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white.withValues(alpha: 0.8),
+                              ),
+                        ),
+                      ),
+                    const Spacer(),
+                    Text(
+                      'publié à $publishedAt',
+                      style:
+                          Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                fontSize: 11,
+                                color: Colors.white.withValues(alpha: 0.55),
+                              ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -436,90 +471,82 @@ class _OfferTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final travelerDisplayName =
-        thread.travelerName ?? 'Voyageur';
+    final name = thread.travelerName ?? 'Voyageur';
     final rating = thread.travelerRating;
+    final date = DateFormat('d MMM', 'fr').format(thread.travelerTravelDate);
 
-    return Container(
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DonyAvatar(
-                name: travelerDisplayName,
-                imageUrl: thread.travelerPhotoUrl,
-                size: DonyAvatarSize.md,
-                verified: (thread.travelerTripsCount ?? 0) > 0,
-              ),
-              const SizedBox(width: DonySpacing.sm + 4),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
+    return InkWell(
+      borderRadius: BorderRadius.circular(DonyRadius.md),
+      onTap: () => context.push('/negotiations/${thread.id}'),
+      child: Container(
+        padding: const EdgeInsets.all(DonySpacing.base),
+        decoration: BoxDecoration(
+          color: isPrimary ? cs.primaryContainer : cs.surface,
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+          border: Border.all(
+            color: isPrimary
+                ? cs.primary.withValues(alpha: 0.25)
+                : DonyColors.neutral200,
+          ),
+        ),
+        child: Row(
+          children: [
+            DonyAvatar(
+              name: name,
+              imageUrl: thread.travelerPhotoUrl,
+              size: DonyAvatarSize.md,
+              verified: (thread.travelerTripsCount ?? 0) > 0,
+            ),
+            const SizedBox(width: DonySpacing.sm + 4),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        name,
+                        style: tt.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                      if (rating != null) ...[
+                        const SizedBox(width: 4),
+                        Icon(Icons.star_rounded,
+                            size: 13, color: DonyColors.warning500),
                         Text(
-                          travelerDisplayName,
-                          style: tt.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 15,
+                          rating.toStringAsFixed(1),
+                          style: tt.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
                           ),
                         ),
-                        if (rating != null) ...[
-                          const SizedBox(width: DonySpacing.xs),
-                          Icon(Icons.star_rounded,
-                              size: 14,
-                              color: DonyColors.warning500),
-                          Text(
-                            rating.toStringAsFixed(1),
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.onSurface,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
                       ],
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    date,
+                    style: tt.bodySmall?.copyWith(
+                      color: DonyColors.textMuted,
+                      fontSize: 11,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _timeAgo(thread.lastActivityAt),
-                      style: tt.bodySmall
-                          ?.copyWith(color: cs.onSurfaceVariant),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              // Prix
-              Text(
-                '${thread.currentPriceEur.toStringAsFixed(0)} €',
-                style: tt.headlineLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 22,
-                  color: cs.onSurface,
-                  letterSpacing: -0.3,
-                ),
+            ),
+            Text(
+              '${thread.currentPriceEur.toStringAsFixed(0)} €',
+              style: tt.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                fontSize: 20,
+                color: cs.primary,
+                letterSpacing: -0.3,
               ),
-            ],
-          ),
-          const SizedBox(height: DonySpacing.base),
-          // CTA
-          DonyButton(
-            label: 'Voir la négo →',
-            variant: isPrimary
-                ? DonyButtonVariant.primary
-                : DonyButtonVariant.ghost,
-            onPressed: () =>
-                context.push('/negotiations/${thread.id}'),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -565,14 +592,6 @@ class _ErrorView extends StatelessWidget {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-String _timeAgo(DateTime dt) {
-  final diff = DateTime.now().difference(dt);
-  if (diff.inSeconds < 60) return 'à l\'instant';
-  if (diff.inMinutes < 60) return 'il y a ${diff.inMinutes} min';
-  if (diff.inHours < 24) return 'il y a ${diff.inHours}h';
-  return 'il y a ${diff.inDays}j';
-}
-
 String _buildDetails(PackageRequest r) {
   final date = DateFormat('d MMM', 'fr').format(r.desiredDate);
   final parts = [
@@ -603,30 +622,125 @@ class _SheetBtnConfig {
 abstract final class PackageRequestDetailBottomSheet {
   static Future<void> show(BuildContext context, String requestId) {
     final btnNotifier = ValueNotifier<_SheetBtnConfig?>(null);
-    return DonyBottomSheet.show(
-      context,
-      title: 'Ma demande',
-      heightFraction: 0.92,
-      stickyBottom: ValueListenableBuilder<_SheetBtnConfig?>(
-        valueListenable: btnNotifier,
-        builder: (_, config, __) {
-          if (config == null) return const SizedBox.shrink();
-          return DonyButton(
-            label: config.label,
-            variant: config.isDestructive
-                ? DonyButtonVariant.destructive
-                : DonyButtonVariant.primary,
-            isLoading: config.isLoading,
-            onPressed: config.onPressed,
-          );
-        },
-      ),
-      child: _SheetBody(
-        requestId: requestId,
-        onBtnConfig: (cfg) => WidgetsBinding.instance
-            .addPostFrameCallback((_) => btnNotifier.value = cfg),
+    return showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _SheetFrame(
+        btnNotifier: btnNotifier,
+        child: _SheetBody(
+          requestId: requestId,
+          onBtnConfig: (cfg) => WidgetsBinding.instance
+              .addPostFrameCallback((_) => btnNotifier.value = cfg),
+        ),
       ),
     ).whenComplete(btnNotifier.dispose);
+  }
+}
+
+class _SheetFrame extends StatelessWidget {
+  const _SheetFrame({required this.btnNotifier, required this.child});
+  final ValueNotifier<_SheetBtnConfig?> btnNotifier;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    final bottomInset = mq.viewInsets.bottom + mq.viewPadding.bottom;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Container(
+      height: mq.size.height * 0.92,
+      decoration: const BoxDecoration(
+        color: DonyColors.sand100,
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(DonyRadius.sheet),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Handle
+          Center(
+            child: Container(
+              margin: const EdgeInsets.only(top: DonySpacing.md),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: DonyColors.neutral300,
+                borderRadius: BorderRadius.circular(DonyRadius.full),
+              ),
+            ),
+          ),
+          // Header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg, DonySpacing.sm, DonySpacing.base, 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Ma demande',
+                    style: tt.headlineSmall,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close_rounded, size: 20),
+                  style: IconButton.styleFrom(
+                    foregroundColor: cs.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(height: DonySpacing.base, color: DonyColors.neutral200),
+          // Contenu scrollable
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                0,
+                DonySpacing.lg,
+                DonySpacing.xl + bottomInset,
+              ),
+              child: child,
+            ),
+          ),
+          // Bouton sticky
+          ValueListenableBuilder<_SheetBtnConfig?>(
+            valueListenable: btnNotifier,
+            builder: (_, config, __) {
+              if (config == null) return SizedBox(height: bottomInset);
+              return Container(
+                decoration: BoxDecoration(
+                  color: DonyColors.sand100,
+                  border: const Border(
+                    top: BorderSide(color: DonyColors.neutral200),
+                  ),
+                ),
+                padding: EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.md,
+                  DonySpacing.lg,
+                  bottomInset + DonySpacing.base,
+                ),
+                child: DonyButton(
+                  label: config.label,
+                  variant: config.isDestructive
+                      ? DonyButtonVariant.destructive
+                      : DonyButtonVariant.primary,
+                  isLoading: config.isLoading,
+                  onPressed: config.onPressed,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -647,7 +761,6 @@ class _SheetBodyState extends State<_SheetBody> {
   List<NegotiationThread> _threads = const [];
   String? _error;
   bool _loading = true;
-  bool _cancelling = false;
 
   @override
   void initState() {
@@ -704,7 +817,6 @@ class _SheetBodyState extends State<_SheetBody> {
 
   Future<void> _cancel() async {
     if (_request == null) return;
-    setState(() => _cancelling = true);
     _syncBtn(_request!, true);
     try {
       await getIt<PackageRequestRepository>().cancel(widget.requestId);
@@ -717,7 +829,6 @@ class _SheetBodyState extends State<_SheetBody> {
             backgroundColor: DonyColors.danger500,
           ),
         );
-        setState(() => _cancelling = false);
         _syncBtn(_request!, false);
       }
     }
@@ -738,22 +849,14 @@ class _SheetBodyState extends State<_SheetBody> {
     final r = _request;
     if (r == null) return const SizedBox.shrink();
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(
-        DonySpacing.lg,
-        DonySpacing.sm,
-        DonySpacing.lg,
-        DonySpacing.xl,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _HeroCard(request: r, threadsCount: _threads.length),
-          const SizedBox(height: DonySpacing.xl),
-          _OffersSection(threads: _threads, request: r),
-        ],
-      ).animate().fadeIn(duration: 280.ms).slideY(
-          begin: 0.04, curve: Curves.easeOutCubic),
-    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _HeroCard(request: r, threadsCount: _threads.length),
+        const SizedBox(height: DonySpacing.lg),
+        _OffersSection(threads: _threads, request: r),
+      ],
+    ).animate().fadeIn(duration: 280.ms).slideY(
+        begin: 0.04, curve: Curves.easeOutCubic);
   }
 }

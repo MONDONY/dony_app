@@ -10,24 +10,58 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+enum _StatusFilter { all, open, accepted }
+
 class MyPackageRequestsScreen extends StatelessWidget {
   const MyPackageRequestsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: Colors.white,
         elevation: 0,
-        title: Text(
-          'Mes demandes',
-          style: Theme.of(context).textTheme.headlineLarge,
+        scrolledUnderElevation: 0,
+        automaticallyImplyLeading: false,
+        titleSpacing: 0,
+        title: Padding(
+          padding: const EdgeInsets.fromLTRB(
+              DonySpacing.base, 0, DonySpacing.base, 0),
+          child: Row(
+            children: [
+              // Bouton retour — carré bordé
+              GestureDetector(
+                onTap: () => Navigator.of(context).maybePop(),
+                child: Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(DonyRadius.sm),
+                    border: Border.all(color: DonyColors.neutral200),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.arrow_back_ios_rounded,
+                      size: 15,
+                      color: DonyColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: DonySpacing.sm + 4),
+              Text(
+                'Mes demandes',
+                style: tt.headlineLarge,
+              ),
+            ],
+          ),
         ),
-        centerTitle: false,
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1),
+          child: Divider(height: 1, color: DonyColors.neutral200),
         ),
       ),
       body: const MyPackageRequestsBody(showFab: true),
@@ -57,25 +91,50 @@ class MyPackageRequestsBody extends StatelessWidget {
   }
 }
 
-class _ListContent extends StatelessWidget {
+// ── List content ──────────────────────────────────────────────────────────────
+
+class _ListContent extends StatefulWidget {
   const _ListContent({required this.showFab});
   final bool showFab;
 
   @override
+  State<_ListContent> createState() => _ListContentState();
+}
+
+class _ListContentState extends State<_ListContent> {
+  _StatusFilter _filter = _StatusFilter.all;
+
+  List<PackageRequest> _applyFilter(List<PackageRequest> all) {
+    return switch (_filter) {
+      _StatusFilter.all => all,
+      _StatusFilter.open => all
+          .where((r) =>
+              r.status == PackageRequestStatus.open ||
+              r.status == PackageRequestStatus.negotiating)
+          .toList(),
+      _StatusFilter.accepted => all
+          .where((r) =>
+              r.status == PackageRequestStatus.accepted ||
+              r.status == PackageRequestStatus.completed)
+          .toList(),
+    };
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final list = BlocBuilder<PackageRequestBloc, PackageRequestState>(
+    final body = BlocBuilder<PackageRequestBloc, PackageRequestState>(
       builder: (context, state) {
         if (state.status == PackageRequestListStatus.loading) {
           return Center(
-              child: CircularProgressIndicator(
-                  color: Theme.of(context).colorScheme.primary));
+            child: CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.primary),
+          );
         }
         if (state.status == PackageRequestListStatus.error) {
           return _ErrorView(
             message: state.errorMessage ?? 'Erreur',
-            onRetry: () => context
-                .read<PackageRequestBloc>()
-                .add(const FetchMyRequests()),
+            onRetry: () =>
+                context.read<PackageRequestBloc>().add(const FetchMyRequests()),
           );
         }
         if (state.requests.isEmpty) {
@@ -95,37 +154,68 @@ class _ListContent extends StatelessWidget {
             },
           );
         }
-        return RefreshIndicator(
-          color: Theme.of(context).colorScheme.primary,
-          onRefresh: () async {
-            context
-                .read<PackageRequestBloc>()
-                .add(const RefreshMyRequests());
-          },
-          child: ListView.separated(
-            padding: EdgeInsets.fromLTRB(
-                DonySpacing.lg, DonySpacing.xl,
-                DonySpacing.lg,
-                MediaQuery.of(context).padding.bottom + 100),
-            itemCount: state.requests.length,
-            separatorBuilder: (_, __) => const SizedBox(height: DonySpacing.sm + 4),
-            itemBuilder: (context, i) {
-              final r = state.requests[i];
-              return _RequestCard(request: r)
-                  .animate()
-                  .fadeIn(duration: 220.ms, delay: (60 * i).ms)
-                  .slideY(begin: 0.04, curve: Curves.easeOutCubic);
-            },
-          ),
+
+        final openCount = state.requests
+            .where((r) =>
+                r.status == PackageRequestStatus.open ||
+                r.status == PackageRequestStatus.negotiating)
+            .length;
+        final acceptedCount = state.requests
+            .where((r) =>
+                r.status == PackageRequestStatus.accepted ||
+                r.status == PackageRequestStatus.completed)
+            .length;
+        final filtered = _applyFilter(state.requests);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _FilterRow(
+              current: _filter,
+              total: state.requests.length,
+              openCount: openCount,
+              acceptedCount: acceptedCount,
+              onChanged: (f) => setState(() => _filter = f),
+            ),
+            Expanded(
+              child: filtered.isEmpty
+                  ? _FilterEmptyState(filter: _filter)
+                  : RefreshIndicator(
+                      color: Theme.of(context).colorScheme.primary,
+                      onRefresh: () async {
+                        context
+                            .read<PackageRequestBloc>()
+                            .add(const RefreshMyRequests());
+                      },
+                      child: ListView.separated(
+                        padding: EdgeInsets.fromLTRB(
+                          DonySpacing.lg,
+                          DonySpacing.base,
+                          DonySpacing.lg,
+                          MediaQuery.of(context).padding.bottom + 100,
+                        ),
+                        itemCount: filtered.length,
+                        separatorBuilder: (_, __) =>
+                            const SizedBox(height: DonySpacing.sm),
+                        itemBuilder: (context, i) {
+                          return _RequestCard(request: filtered[i])
+                              .animate()
+                              .fadeIn(duration: 200.ms, delay: (50 * i).ms)
+                              .slideY(begin: 0.03, curve: Curves.easeOutCubic);
+                        },
+                      ),
+                    ),
+            ),
+          ],
         );
       },
     );
 
-    if (!showFab) return list;
+    if (!widget.showFab) return body;
 
     return Stack(
       children: [
-        Positioned.fill(child: list),
+        Positioned.fill(child: body),
         Positioned(
           right: DonySpacing.lg,
           bottom: DonySpacing.xl,
@@ -136,12 +226,12 @@ class _ListContent extends StatelessWidget {
             },
             backgroundColor: Theme.of(context).colorScheme.primary,
             icon: const Icon(Icons.add_rounded, color: Colors.white),
-            label: Builder(
-              builder: (context) => Text(
-                'Nouvelle demande',
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    fontWeight: FontWeight.w600, color: Colors.white),
-              ),
+            label: Text(
+              'Nouvelle demande',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium!
+                  .copyWith(fontWeight: FontWeight.w600, color: Colors.white),
             ),
           ),
         ),
@@ -150,10 +240,249 @@ class _ListContent extends StatelessWidget {
   }
 }
 
-// ── Request Card ──────────────────────────────────────────────────────────────
+// ── Filter chips ──────────────────────────────────────────────────────────────
+
+class _FilterRow extends StatelessWidget {
+  const _FilterRow({
+    required this.current,
+    required this.total,
+    required this.openCount,
+    required this.acceptedCount,
+    required this.onChanged,
+  });
+
+  final _StatusFilter current;
+  final int total, openCount, acceptedCount;
+  final ValueChanged<_StatusFilter> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+          DonySpacing.base, DonySpacing.sm, DonySpacing.base, DonySpacing.sm + 2),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(color: DonyColors.neutral200),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _FilterChip(
+              label: 'Toutes ($total)',
+              active: current == _StatusFilter.all,
+              onTap: () => onChanged(_StatusFilter.all),
+            ),
+          ),
+          const SizedBox(width: DonySpacing.xs + 2),
+          Expanded(
+            child: _FilterChip(
+              label: 'Ouvertes ($openCount)',
+              active: current == _StatusFilter.open,
+              onTap: () => onChanged(_StatusFilter.open),
+            ),
+          ),
+          const SizedBox(width: DonySpacing.xs + 2),
+          Expanded(
+            child: _FilterChip(
+              label: 'Acceptées ($acceptedCount)',
+              active: current == _StatusFilter.accepted,
+              onTap: () => onChanged(_StatusFilter.accepted),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs + 2),
+        decoration: BoxDecoration(
+          color: active ? cs.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(DonyRadius.full),
+          border: Border.all(
+            color: active ? cs.primary : DonyColors.neutral200,
+            width: 1.5,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: active ? Colors.white : DonyColors.textMuted,
+                ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterEmptyState extends StatelessWidget {
+  const _FilterEmptyState({required this.filter});
+  final _StatusFilter filter;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = filter == _StatusFilter.open
+        ? 'Aucune demande ouverte'
+        : 'Aucune demande acceptée';
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(DonySpacing.xl + 8),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inbox_outlined,
+                size: 40, color: DonyColors.neutral300),
+            const SizedBox(height: DonySpacing.base),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: DonyColors.textMuted,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Request Card — Proposition B "Corridor Bold" ──────────────────────────────
 
 class _RequestCard extends StatelessWidget {
   const _RequestCard({required this.request});
+  final PackageRequest request;
+
+  Color _accentColor(ColorScheme cs) => switch (request.status) {
+        PackageRequestStatus.open => cs.primary,
+        PackageRequestStatus.negotiating => DonyColors.warning500,
+        PackageRequestStatus.accepted => DonyColors.success500,
+        _ => DonyColors.neutral300,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final accent = _accentColor(cs);
+
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(DonyRadius.card),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        onTap: () => PackageRequestDetailBottomSheet.show(context, request.id),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(DonyRadius.card),
+            border: Border.all(color: DonyColors.neutral200),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              // Accent circle top-right
+              Positioned(
+                top: -24,
+                right: -24,
+                child: Container(
+                  width: 88,
+                  height: 88,
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.07),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(DonySpacing.base),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Row 1 : route + temps
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '${request.departureCity} → ${request.arrivalCity}',
+                            style: tt.titleLarge?.copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: DonyColors.textPrimary,
+                              letterSpacing: -0.3,
+                              height: 1.2,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: DonySpacing.sm),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            _timeAgo(request.createdAt),
+                            style: tt.bodySmall?.copyWith(
+                              color: DonyColors.textSubtle,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: DonySpacing.xs),
+                    // Row 2 : méta
+                    Text(
+                      _buildDetails(request),
+                      style: tt.bodySmall?.copyWith(
+                        color: DonyColors.textMuted,
+                        height: 1.4,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: DonySpacing.base),
+                    // Row 3 : badge statut + action
+                    Row(
+                      children: [
+                        _StatusBadge(status: request.status),
+                        const Spacer(),
+                        _CardAction(request: request),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CardAction extends StatelessWidget {
+  const _CardAction({required this.request});
   final PackageRequest request;
 
   @override
@@ -161,64 +490,43 @@ class _RequestCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Material(
-      color: cs.surface,
-      borderRadius: BorderRadius.circular(DonyRadius.card),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        onTap: () => PackageRequestDetailBottomSheet.show(context, request.id),
-        child: Container(
-          padding: const EdgeInsets.all(DonySpacing.base),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(DonyRadius.card),
-            border: Border.all(color: cs.outline),
+    return switch (request.status) {
+      PackageRequestStatus.open ||
+      PackageRequestStatus.negotiating =>
+        GestureDetector(
+          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Modification à venir'),
+              behavior: SnackBarBehavior.floating,
+            ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Row 1 : badge status + temps
-              Row(
-                children: [
-                  _StatusBadge(status: request.status),
-                  const Spacer(),
-                  Text(
-                    _timeAgo(request.createdAt),
-                    style: tt.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: DonySpacing.sm),
-              // Row 2 : route
-              Text(
-                '${request.departureCity} → ${request.arrivalCity}',
-                style: tt.titleLarge?.copyWith(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  color: cs.onSurface,
-                ),
-              ),
-              const SizedBox(height: DonySpacing.xs),
-              // Row 3 : détails
-              Text(
-                _buildDetails(request),
-                style: tt.bodySmall?.copyWith(
-                  color: cs.onSurfaceVariant,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: DonySpacing.sm),
-              Divider(height: 1, color: cs.outline),
-              const SizedBox(height: DonySpacing.sm),
-              // Row 4 : footer contextuel
-              _CardFooter(request: request),
-            ],
+          child: Text(
+            'Modifier →',
+            style: tt.labelSmall?.copyWith(
+              color: cs.primary,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
           ),
         ),
-      ),
-    );
+      PackageRequestStatus.accepted => Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.check_circle_rounded,
+                size: 13, color: DonyColors.success500),
+            const SizedBox(width: 4),
+            Text(
+              'Compléter →',
+              style: tt.labelSmall?.copyWith(
+                color: DonyColors.success500,
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      _ => const SizedBox.shrink(),
+    };
   }
 }
 
@@ -263,7 +571,8 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final cfg = _config;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
+      padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
       decoration: BoxDecoration(
         color: cfg.bg,
         borderRadius: BorderRadius.circular(DonyRadius.full),
@@ -274,116 +583,22 @@ class _StatusBadge extends StatelessWidget {
           Container(
             width: 6,
             height: 6,
-            decoration: BoxDecoration(
-              color: cfg.fg,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: cfg.fg, shape: BoxShape.circle),
           ),
           const SizedBox(width: 5),
           Text(
             cfg.label,
             style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: cfg.fg,
-              letterSpacing: 0.3,
-            ),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: cfg.fg,
+                  letterSpacing: 0.3,
+                ),
           ),
         ],
       ),
     );
   }
-}
-
-class _CardFooter extends StatelessWidget {
-  const _CardFooter({required this.request});
-  final PackageRequest request;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return switch (request.status) {
-      PackageRequestStatus.open => Row(
-          children: [
-            Icon(Icons.access_time_rounded,
-                size: 14, color: cs.onSurfaceVariant),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(
-                'En attente d\'offres…',
-                style: tt.bodySmall
-                    ?.copyWith(color: cs.onSurfaceVariant, height: 1),
-              ),
-            ),
-            GestureDetector(
-              onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text('Modification à venir'),
-                    behavior: SnackBarBehavior.floating),
-              ),
-              child: Text(
-                'Modifier',
-                style: tt.labelSmall?.copyWith(
-                  color: cs.primary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        ),
-      PackageRequestStatus.negotiating => Row(
-          children: [
-            Icon(Icons.chat_bubble_outline_rounded,
-                size: 14, color: DonyColors.warning500),
-            const SizedBox(width: 6),
-            Text(
-              'Négociation en cours',
-              style: tt.bodySmall?.copyWith(
-                  color: DonyColors.warning500,
-                  fontWeight: FontWeight.w600,
-                  height: 1),
-            ),
-          ],
-        ),
-      PackageRequestStatus.accepted => Row(
-          children: [
-            Icon(Icons.check_circle_rounded,
-                size: 14, color: DonyColors.success500),
-            const SizedBox(width: 6),
-            Text(
-              'Acceptée — compléter les détails',
-              style: tt.bodySmall?.copyWith(
-                  color: DonyColors.success500,
-                  fontWeight: FontWeight.w600,
-                  height: 1),
-            ),
-          ],
-        ),
-      _ => Row(
-          children: [
-            Icon(Icons.info_outline_rounded,
-                size: 14, color: cs.onSurfaceVariant),
-            const SizedBox(width: 6),
-            Text(
-              _statusLabel(request.status),
-              style: tt.bodySmall
-                  ?.copyWith(color: cs.onSurfaceVariant, height: 1),
-            ),
-          ],
-        ),
-    };
-  }
-
-  String _statusLabel(PackageRequestStatus s) => switch (s) {
-        PackageRequestStatus.open => 'Ouverte',
-        PackageRequestStatus.negotiating => 'Négociation',
-        PackageRequestStatus.accepted => 'Acceptée',
-        PackageRequestStatus.completed => 'Livrée',
-        PackageRequestStatus.expired => 'Expirée',
-        PackageRequestStatus.cancelled => 'Annulée',
-      };
 }
 
 // ── Error view ────────────────────────────────────────────────────────────────
@@ -395,9 +610,6 @@ class _ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(DonySpacing.xl + 16),
@@ -409,7 +621,8 @@ class _ErrorView extends StatelessWidget {
             const SizedBox(height: DonySpacing.base),
             Text(message,
                 textAlign: TextAlign.center,
-                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
             const SizedBox(height: DonySpacing.base),
             DonyButton(label: 'Réessayer', onPressed: onRetry),
           ],
@@ -435,8 +648,7 @@ String _buildDetails(PackageRequest r) {
     '$date ±${r.dateToleranceDays}j',
     '${r.weightKg.toStringAsFixed(0)} kg',
     _shortCat(r.contentCategory.label),
-    if (r.targetPriceEur != null)
-      '≈${r.targetPriceEur!.toStringAsFixed(0)} €',
+    if (r.targetPriceEur != null) '≈${r.targetPriceEur!.toStringAsFixed(0)} €',
   ];
   return parts.join(' · ');
 }

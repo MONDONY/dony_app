@@ -6,38 +6,95 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
+
+enum _StatusFilter { all, active, terminal }
 
 class MyNegotiationsScreen extends StatelessWidget {
   const MyNegotiationsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: DonyColors.sand100,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: DonyColors.sand100,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
-          color: Theme.of(context).colorScheme.primary,
-          onPressed: () => context.pop(),
+        scrolledUnderElevation: 0,
+        automaticallyImplyLeading: false,
+        titleSpacing: 0,
+        title: Padding(
+          padding: const EdgeInsets.fromLTRB(DonySpacing.base, 0, DonySpacing.base, 0),
+          child: Row(
+            children: [
+              GestureDetector(
+                onTap: () => context.pop(),
+                child: Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(DonyRadius.sm),
+                    border: Border.all(color: DonyColors.neutral200),
+                  ),
+                  child: const Center(
+                    child: Icon(Icons.arrow_back_ios_rounded, size: 15, color: DonyColors.textPrimary),
+                  ),
+                ),
+              ),
+              const SizedBox(width: DonySpacing.sm + 4),
+              Text(
+                'Négociations',
+                style: tt.headlineLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: DonyColors.textPrimary,
+                  letterSpacing: -0.4,
+                ),
+              ),
+            ],
+          ),
         ),
-        title: Text('Mes négociations',
-            style: Theme.of(context).textTheme.headlineLarge),
-        centerTitle: false,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, color: DonyColors.neutral200),
+        ),
       ),
       body: BlocProvider<NegotiationListBloc>(
-        create: (_) => getIt<NegotiationListBloc>()
-          ..add(const NegotiationListFetchRequested()),
+        create: (_) => getIt<NegotiationListBloc>()..add(const NegotiationListFetchRequested()),
         child: const MyNegotiationsBody(),
       ),
     );
   }
 }
 
-class MyNegotiationsBody extends StatelessWidget {
+// ── Body avec filtre ──────────────────────────────────────────────────────────
+
+class MyNegotiationsBody extends StatefulWidget {
   const MyNegotiationsBody({super.key});
+  @override
+  State<MyNegotiationsBody> createState() => _MyNegotiationsBodyState();
+}
+
+class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
+  _StatusFilter _filter = _StatusFilter.all;
+
+  List<NegotiationThread> _applyFilter(List<NegotiationThread> threads) =>
+      switch (_filter) {
+        _StatusFilter.all => threads,
+        _StatusFilter.active => threads
+            .where((t) =>
+                t.status == NegotiationThreadStatus.open ||
+                t.status == NegotiationThreadStatus.awaitingTrip ||
+                t.status == NegotiationThreadStatus.awaitingPayment)
+            .toList(),
+        _StatusFilter.terminal => threads
+            .where((t) =>
+                t.status == NegotiationThreadStatus.accepted ||
+                t.status == NegotiationThreadStatus.rejected ||
+                t.status == NegotiationThreadStatus.autoRejected ||
+                t.status == NegotiationThreadStatus.expired)
+            .toList(),
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -45,9 +102,8 @@ class MyNegotiationsBody extends StatelessWidget {
       builder: (context, state) {
         if (state.status == NegotiationListStatus.loading &&
             state.threads.isEmpty) {
-          return Center(
-              child: CircularProgressIndicator(
-                  color: Theme.of(context).colorScheme.primary));
+          return const Center(
+              child: CircularProgressIndicator(color: DonyColors.primary));
         }
         if (state.status == NegotiationListStatus.error) {
           return _ErrorState(
@@ -61,40 +117,167 @@ class MyNegotiationsBody extends StatelessWidget {
           return const DonyEmptyState(
             title: 'Aucune négociation',
             description:
-                'Tes négociations actives apparaîtront ici dès qu\'un voyageur fait une offre.',
+                "Tes négociations actives apparaîtront ici dès qu'un voyageur fait une offre.",
             mascotte: DonyMascotteType.assis,
           );
         }
 
-        return RefreshIndicator(
-          color: Theme.of(context).colorScheme.primary,
-          onRefresh: () async {
-            context
-                .read<NegotiationListBloc>()
-                .add(const NegotiationListRefreshRequested());
-          },
-          child: ListView.separated(
-            padding: EdgeInsets.fromLTRB(
-              DonySpacing.lg,
-              DonySpacing.xl,
-              DonySpacing.lg,
-              MediaQuery.of(context).padding.bottom + 100,
+        final all = state.threads;
+        final activeCount = all
+            .where((t) =>
+                t.status == NegotiationThreadStatus.open ||
+                t.status == NegotiationThreadStatus.awaitingTrip ||
+                t.status == NegotiationThreadStatus.awaitingPayment)
+            .length;
+        final terminalCount = all.length - activeCount;
+        final filtered = _applyFilter(all);
+
+        return Column(
+          children: [
+            // Filter chips
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                  DonySpacing.base, DonySpacing.md, DonySpacing.base, DonySpacing.xs),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _FilterChip(
+                      label: 'Toutes (${all.length})',
+                      active: _filter == _StatusFilter.all,
+                      onTap: () => setState(() => _filter = _StatusFilter.all),
+                    ),
+                  ),
+                  const SizedBox(width: DonySpacing.xs + 2),
+                  Expanded(
+                    child: _FilterChip(
+                      label: 'En cours ($activeCount)',
+                      active: _filter == _StatusFilter.active,
+                      onTap: () =>
+                          setState(() => _filter = _StatusFilter.active),
+                    ),
+                  ),
+                  const SizedBox(width: DonySpacing.xs + 2),
+                  Expanded(
+                    child: _FilterChip(
+                      label: 'Terminées ($terminalCount)',
+                      active: _filter == _StatusFilter.terminal,
+                      onTap: () =>
+                          setState(() => _filter = _StatusFilter.terminal),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            itemCount: state.threads.length,
-            separatorBuilder: (_, __) =>
-                const SizedBox(height: DonySpacing.sm + 4),
-            itemBuilder: (_, i) => _NegoCard(
-              thread: state.threads[i],
-              index: i,
+            // List
+            Expanded(
+              child: filtered.isEmpty
+                  ? _FilterEmptyState(filter: _filter)
+                  : RefreshIndicator(
+                      color: DonyColors.primary,
+                      onRefresh: () async => context
+                          .read<NegotiationListBloc>()
+                          .add(const NegotiationListRefreshRequested()),
+                      child: ListView.separated(
+                        padding: EdgeInsets.fromLTRB(
+                          DonySpacing.base,
+                          DonySpacing.sm,
+                          DonySpacing.base,
+                          MediaQuery.of(context).padding.bottom + 100,
+                        ),
+                        itemCount: filtered.length,
+                        separatorBuilder: (_, i) =>
+                            const SizedBox(height: DonySpacing.sm),
+                        itemBuilder: (_, i) =>
+                            _NegoCard(thread: filtered[i], index: i),
+                      ),
+                    ),
             ),
-          ),
+          ],
         );
       },
     );
   }
 }
 
-// ── Nego Card ─────────────────────────────────────────────────────────────────
+// ── Filter chip ───────────────────────────────────────────────────────────────
+
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(vertical: 9),
+        decoration: BoxDecoration(
+          color: active ? DonyColors.primary : Colors.white,
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+          border: Border.all(
+            color: active ? DonyColors.primary : DonyColors.neutral200,
+            width: 1.5,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: active ? Colors.white : DonyColors.textMuted,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Filter empty ──────────────────────────────────────────────────────────────
+
+class _FilterEmptyState extends StatelessWidget {
+  const _FilterEmptyState({required this.filter});
+  final _StatusFilter filter;
+
+  String get _msg => switch (filter) {
+        _StatusFilter.active => 'Aucune négociation en cours',
+        _StatusFilter.terminal => 'Aucune négociation terminée',
+        _StatusFilter.all => 'Aucune négociation',
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(DonySpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.inbox_rounded, size: 48, color: DonyColors.neutral300),
+            const SizedBox(height: DonySpacing.sm + 4),
+            Text(
+              _msg,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: DonyColors.textMuted,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Nego Card — Proposition A (Route First) ───────────────────────────────────
 
 class _NegoCard extends StatelessWidget {
   const _NegoCard({required this.thread, required this.index});
@@ -105,132 +288,205 @@ class _NegoCard extends StatelessWidget {
       thread.status == NegotiationThreadStatus.open &&
       thread.messages.isNotEmpty;
 
+  bool get _isTerminal =>
+      thread.status == NegotiationThreadStatus.rejected ||
+      thread.status == NegotiationThreadStatus.autoRejected ||
+      thread.status == NegotiationThreadStatus.expired;
+
+  Color get _stripColor => switch (thread.status) {
+        NegotiationThreadStatus.open => DonyColors.primary,
+        NegotiationThreadStatus.awaitingTrip => DonyColors.threadStatusAmber,
+        NegotiationThreadStatus.awaitingPayment =>
+          DonyColors.threadStatusViolet,
+        NegotiationThreadStatus.accepted => DonyColors.threadStatusGreen,
+        _ => DonyColors.neutral300,
+      };
+
+  String get _priceLabel => switch (thread.status) {
+        NegotiationThreadStatus.open => 'proposition',
+        NegotiationThreadStatus.awaitingTrip => 'accord',
+        NegotiationThreadStatus.awaitingPayment => 'à payer',
+        NegotiationThreadStatus.accepted => 'payé',
+        _ => 'terminé',
+      };
+
+  String _buildRoute() {
+    final dep = thread.departureCity;
+    final arr = thread.arrivalCity;
+    if (dep != null && arr != null) {
+      return '$dep → $arr';
+    }
+    return '${thread.travelerAvailableKg.toStringAsFixed(0)} kg dispo';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final travelerDisplayName =
-        thread.travelerName ?? 'Voyageur ${thread.travelerId.substring(0, 4)}';
+    final name = thread.travelerName ?? 'Voyageur ${thread.travelerId.substring(0, 4)}';
+    final rounds = thread.roundsCount.clamp(0, 5);
 
-    return Material(
-      color: cs.surface,
-      borderRadius: BorderRadius.circular(DonyRadius.card),
-      child: InkWell(
+    return Opacity(
+      opacity: _isTerminal ? 0.65 : 1.0,
+      child: Material(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        onTap: () => context.push('/negotiations/${thread.id}'),
-        child: Container(
-          padding: const EdgeInsets.all(DonySpacing.base),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(DonyRadius.card),
-            border: Border.all(
-              color: _isNew ? cs.primary.withValues(alpha: 0.3) : cs.outline,
-              width: _isNew ? 1.5 : 1,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(DonyRadius.card),
+          onTap: () => context.push('/negotiations/${thread.id}'),
+          child: Container(
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(DonyRadius.card),
+              border: Border.all(
+                color: _isNew
+                    ? DonyColors.primary.withValues(alpha: 0.30)
+                    : DonyColors.neutral200,
+                width: _isNew ? 1.5 : 1.0,
+              ),
             ),
-          ),
-          child: Stack(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Row 1 : avatar + nom + prix
-                  Row(
+            child: Stack(
+              children: [
+                // Bande colorée gauche via Positioned (hauteur automatique)
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: Container(width: 4, color: _stripColor),
+                ),
+                // Contenu — padding gauche 16 = 4 (strip) + 12 (espacement)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      DonyAvatar(
-                        name: travelerDisplayName,
-                        imageUrl: thread.travelerPhotoUrl,
-                        size: DonyAvatarSize.md,
-                        verified: (thread.travelerTripsCount ?? 0) > 0,
-                      ),
-                      const SizedBox(width: DonySpacing.sm + 4),
-                      Expanded(
-                        child: Column(
+                        // Ligne 1 : route + prix
+                        Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              travelerDisplayName,
-                              style: tt.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 15,
+                            Expanded(
+                              child: Text(
+                                _buildRoute(),
+                                style: tt.titleLarge?.copyWith(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: _isTerminal
+                                      ? DonyColors.textMuted
+                                      : DonyColors.textPrimary,
+                                  letterSpacing: -0.3,
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 2),
-                            Row(
+                            const SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
-                                  _timeAgo(thread.lastActivityAt),
-                                  style: tt.bodySmall?.copyWith(
-                                      color: cs.onSurfaceVariant),
+                                  '${thread.currentPriceEur.toStringAsFixed(0)} €',
+                                  style: tt.headlineMedium?.copyWith(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w800,
+                                    color: _isTerminal
+                                        ? DonyColors.textMuted
+                                        : DonyColors.textPrimary,
+                                    letterSpacing: -0.5,
+                                    height: 1.0,
+                                  ),
                                 ),
                                 Text(
-                                  ' · Round ${thread.roundsCount}/5',
+                                  _priceLabel,
                                   style: tt.bodySmall?.copyWith(
-                                      color: cs.onSurfaceVariant),
+                                    fontSize: 10,
+                                    color: DonyColors.textMuted,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ],
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(width: DonySpacing.sm),
-                      // Prix + label
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            '${thread.currentPriceEur.toStringAsFixed(0)} €',
-                            style: tt.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: cs.onSurface,
-                              fontSize: 20,
-                              letterSpacing: -0.3,
+                        const SizedBox(height: 6),
+                        // Ligne 2 : avatar + nom + badge statut
+                        Row(
+                          children: [
+                            DonyAvatar(
+                              name: name,
+                              imageUrl: thread.travelerPhotoUrl,
+                              size: DonyAvatarSize.sm,
+                              verified: (thread.travelerTripsCount ?? 0) > 0,
                             ),
-                          ),
-                          Text(
-                            _priceLabel(thread.status),
-                            style: tt.bodySmall?.copyWith(
-                                color: cs.onSurfaceVariant, fontSize: 11),
-                          ),
-                        ],
-                      ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                name,
+                                overflow: TextOverflow.ellipsis,
+                                style: tt.bodySmall?.copyWith(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: DonyColors.textMuted,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            _StatusPill(status: thread.status),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        // Ligne 3 : round dots + méta + badge NOUVEAU
+                        Row(
+                          children: [
+                            ...List.generate(5, (i) => Container(
+                                  width: 16,
+                                  height: 3,
+                                  margin: const EdgeInsets.only(right: 4),
+                                  decoration: BoxDecoration(
+                                    color: i < rounds
+                                        ? (_isTerminal
+                                            ? DonyColors.neutral300
+                                            : DonyColors.textPrimary)
+                                        : DonyColors.neutral200,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                )),
+                            const SizedBox(width: 2),
+                            Expanded(
+                              child: Text(
+                                'R.${thread.roundsCount}/5 · ${_timeAgo(thread.lastActivityAt)}',
+                                overflow: TextOverflow.ellipsis,
+                                style: tt.bodySmall?.copyWith(
+                                  fontSize: 11,
+                                  color: DonyColors.textSubtle,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            if (_isNew)
+                              Container(
+                                margin: const EdgeInsets.only(left: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: DonyColors.primary,
+                                  borderRadius:
+                                      BorderRadius.circular(DonyRadius.full),
+                                ),
+                                child: Text(
+                                  'NOUVEAU',
+                                  style: tt.bodySmall?.copyWith(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                     ],
                   ),
-                  // Row 2 : route + date
-                  if (_routeLine != null) ...[
-                    const SizedBox(height: DonySpacing.sm),
-                    Text(
-                      _routeLine!,
-                      style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant, height: 1.3),
-                    ),
-                  ],
-                ],
-              ),
-              // Badge NOUVEAU top-right
-              if (_isNew)
-                Positioned(
-                  top: -2,
-                  right: -2,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.sm, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: cs.primary,
-                      borderRadius:
-                          BorderRadius.circular(DonyRadius.full),
-                    ),
-                    child: Text(
-                      'NOUVEAU',
-                      style: tt.bodyMedium!.copyWith(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
                 ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -239,36 +495,63 @@ class _NegoCard extends StatelessWidget {
         .fadeIn(duration: 220.ms, delay: (50 * index).ms)
         .slideY(begin: 0.04, curve: Curves.easeOutCubic);
   }
+}
 
-  String _priceLabel(NegotiationThreadStatus s) => switch (s) {
-        NegotiationThreadStatus.open => 'proposition',
-        NegotiationThreadStatus.awaitingTrip => 'accord',
-        NegotiationThreadStatus.awaitingPayment => 'à payer',
-        NegotiationThreadStatus.accepted => 'payé',
-        _ => 'terminé',
-      };
+// ── Status pill ───────────────────────────────────────────────────────────────
 
-  String? get _routeLine {
-    final dep = thread.departureCity;
-    final arr = thread.arrivalCity;
-    final date =
-        DateFormat('d MMM', 'fr').format(thread.travelerTravelDate);
-    final kg = thread.weightKg;
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.status});
+  final NegotiationThreadStatus status;
 
-    if (dep != null && arr != null) {
-      return [
-        '$dep → $arr',
-        if (kg != null) '${kg.toStringAsFixed(0)} kg',
-        date,
-      ].join(' · ');
-    }
-    return ['${thread.travelerAvailableKg.toStringAsFixed(0)} kg dispo', date]
-        .join(' · ');
+  @override
+  Widget build(BuildContext context) {
+    final (label, fg, bg) = switch (status) {
+      NegotiationThreadStatus.open => (
+          'EN COURS',
+          DonyColors.primary,
+          const Color(0xFFEEF3FF),
+        ),
+      NegotiationThreadStatus.awaitingTrip => (
+          'ATT. TRAJET',
+          DonyColors.threadStatusAmber,
+          const Color(0xFFFEF3C7),
+        ),
+      NegotiationThreadStatus.awaitingPayment => (
+          'PAIEMENT',
+          DonyColors.threadStatusViolet,
+          const Color(0xFFF5F3FF),
+        ),
+      NegotiationThreadStatus.accepted => (
+          'ACCEPTÉE',
+          DonyColors.threadStatusGreen,
+          const Color(0xFFDCFCE7),
+        ),
+      _ => (
+          'TERMINÉ',
+          const Color(0xFF6B7280),
+          const Color(0xFFF3F4F6),
+        ),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          color: fg,
+          letterSpacing: 0.4,
+        ),
+      ),
+    );
   }
 }
 
-// ── Empty / Error ─────────────────────────────────────────────────────────────
-
+// ── Error state ───────────────────────────────────────────────────────────────
 
 class _ErrorState extends StatelessWidget {
   const _ErrorState({required this.message, required this.onRetry});
@@ -283,21 +566,17 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline_rounded,
+            const Icon(Icons.error_outline_rounded,
                 size: 48, color: DonyColors.danger500),
             const SizedBox(height: DonySpacing.sm + 4),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: DonySpacing.base),
-            TextButton(
-                onPressed: onRetry,
-                child: const Text('Réessayer')),
+            TextButton(onPressed: onRetry, child: const Text('Réessayer')),
           ],
         ),
       ),
@@ -309,8 +588,14 @@ class _ErrorState extends StatelessWidget {
 
 String _timeAgo(DateTime dt) {
   final diff = DateTime.now().difference(dt);
-  if (diff.inSeconds < 60) return 'à l\'instant';
-  if (diff.inMinutes < 60) return 'il y a ${diff.inMinutes} min';
-  if (diff.inHours < 24) return 'il y a ${diff.inHours}h';
+  if (diff.inSeconds < 60) {
+    return "à l'instant";
+  }
+  if (diff.inMinutes < 60) {
+    return 'il y a ${diff.inMinutes} min';
+  }
+  if (diff.inHours < 24) {
+    return 'il y a ${diff.inHours}h';
+  }
   return 'il y a ${diff.inDays}j';
 }

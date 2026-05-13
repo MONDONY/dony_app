@@ -11,13 +11,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 /// Barre de CTAs contextuels en bas du thread négociation.
-///
-/// Le contenu rendu dépend de la matrice (`status` × `isSender` × `lastFromMe`)
-/// — couvre 5 statuts (OPEN/AWAITING_TRIP/AWAITING_PAYMENT/ACCEPTED/terminal)
-/// + 2 rôles. Voir docs/spec-phases-1-4.md §3.1 pour la table de mapping.
-///
-/// Réutilise les bottom sheets existants (Accept / Counter / Reject) sans
-/// modification de la logique BLoC.
 class ThreadStateCtaBar extends StatelessWidget {
   const ThreadStateCtaBar({
     super.key,
@@ -37,11 +30,18 @@ class ThreadStateCtaBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.sm, DonySpacing.lg, DonySpacing.base),
-        child: _buildContent(context),
+    return Container(
+      decoration: BoxDecoration(
+        color: DonyColors.sand100,
+        border: Border(top: BorderSide(color: DonyColors.neutral200)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+              DonySpacing.lg, DonySpacing.md, DonySpacing.lg, DonySpacing.md),
+          child: _buildContent(context),
+        ),
       ),
     );
   }
@@ -73,7 +73,7 @@ class ThreadStateCtaBar extends StatelessWidget {
                 icon: Icons.hourglass_top_rounded,
                 tint: kWarning,
                 message: 'Le voyageur prépare son trajet',
-                subtitle: 'Tu seras notifié dès qu\'il l\'aura confirmé.',
+                subtitle: "Tu seras notifié dès qu'il l'aura confirmé.",
               )
             : DonyButton(
                 label: 'Lier un trajet à cette offre',
@@ -103,8 +103,8 @@ class ThreadStateCtaBar extends StatelessWidget {
             : const ThreadStateBanner(
                 icon: Icons.payments_outlined,
                 tint: kGreenPrimary,
-                message: 'En attente du paiement de l\'expéditeur',
-                subtitle: 'Tu seras notifié dès qu\'il aura réglé.',
+                message: "En attente du paiement de l'expéditeur",
+                subtitle: "Tu seras notifié dès qu'il aura réglé.",
               );
 
       case NegotiationThreadStatus.accepted:
@@ -118,13 +118,21 @@ class ThreadStateCtaBar extends StatelessWidget {
       case NegotiationThreadStatus.rejected:
       case NegotiationThreadStatus.autoRejected:
       case NegotiationThreadStatus.expired:
-        return const SizedBox.shrink();
+        return Center(
+          child: Text(
+            'Cette négociation est terminée',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: DonyColors.textSubtle,
+            ),
+          ),
+        );
     }
   }
 }
 
-/// Sender · status OPEN · pas le dernier message → 3 actions :
-/// Accept (prominent full-width) + Counter / Reject (row).
+/// Sender · status OPEN · pas le dernier message → Accepter + Contre-offre / Rejeter
 class _SenderOpenActions extends StatelessWidget {
   const _SenderOpenActions({
     required this.thread,
@@ -188,8 +196,7 @@ class _SenderOpenActions extends StatelessWidget {
   }
 }
 
-/// Traveler · status OPEN · pas le dernier message → 2 actions :
-/// Reject / Counter (row).
+/// Traveler · status OPEN · pas le dernier message → Rejeter / Contre-offre
 class _TravelerOpenActions extends StatelessWidget {
   const _TravelerOpenActions({
     required this.thread,

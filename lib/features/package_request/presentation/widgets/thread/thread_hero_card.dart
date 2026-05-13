@@ -3,13 +3,6 @@ import 'package:dony/features/package_request/data/models/negotiation_thread.dar
 import 'package:flutter/material.dart';
 
 /// Variante visuelle du hero card selon le statut négociation.
-///
-/// Match maquettes v3 :
-/// - `open`           → ink-900 (bleu nuit · maquette 20-44-27)
-/// - `awaitingTrip`   → amber  (ambre   · maquette 20-44-57)
-/// - `awaitingPayment`→ violet (critique· maquette 20-45-03)
-/// - `accepted`       → green  (success · maquette 20-45-14)
-/// - `terminal`       → grey   (rejected / expired / auto-rejected)
 enum ThreadStatusVariant {
   open,
   awaitingTrip,
@@ -29,12 +22,41 @@ enum ThreadStatusVariant {
           terminal,
       };
 
-  Color get tint => switch (this) {
-        open => DonyColors.threadStatusOpen,
+  /// Couleur du bas de la shadow et du glow
+  Color get shadowColor => switch (this) {
+        open => const Color(0xFF0B5FFF),
         awaitingTrip => DonyColors.threadStatusAmber,
         awaitingPayment => DonyColors.threadStatusViolet,
         accepted => DonyColors.threadStatusGreen,
-        terminal => DonyColors.threadStatusNeutral,
+        terminal => const Color(0xFF374151),
+      };
+
+  LinearGradient get gradient => switch (this) {
+        open => const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF0A2540), Color(0xFF1A3A6B)],
+          ),
+        awaitingTrip => const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF78350F), Color(0xFFB5781E)],
+          ),
+        awaitingPayment => const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF4C1D95), Color(0xFF5B21B6)],
+          ),
+        accepted => const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF14532D), Color(0xFF15803D)],
+          ),
+        terminal => const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF1F2937), Color(0xFF6B7280)],
+          ),
       };
 
   String get badge => switch (this) {
@@ -62,10 +84,7 @@ enum ThreadStatusVariant {
       };
 }
 
-/// Hero card du thread de négociation — prix actuel, status badge, progress
-/// du round (X/5 en dots colorés).
-///
-/// Couleur de fond selon `statusVariant.tint` (5 couleurs).
+/// Hero card du thread de négociation — gradient status, prix, badge, progress.
 class ThreadHeroCard extends StatelessWidget {
   const ThreadHeroCard({
     super.key,
@@ -78,67 +97,91 @@ class ThreadHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tint = statusVariant.tint;
     return Container(
-      margin: const EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.md, DonySpacing.lg, DonySpacing.md),
-      padding: const EdgeInsets.all(DonySpacing.base),
+      margin: const EdgeInsets.fromLTRB(
+          DonySpacing.base, DonySpacing.md, DonySpacing.base, DonySpacing.sm),
       decoration: BoxDecoration(
-        color: tint,
+        gradient: statusVariant.gradient,
         borderRadius: BorderRadius.circular(DonyRadius.card),
         boxShadow: [
           BoxShadow(
-            color: tint.withValues(alpha: 0.25),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            color: statusVariant.shadowColor.withValues(alpha: 0.30),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
+        clipBehavior: Clip.antiAlias,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(DonySpacing.sm),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(statusVariant.icon, color: Colors.white, size: 20),
+          // Glow circle décoration top-right
+          Positioned(
+            top: -24,
+            right: -24,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.07),
               ),
-              const SizedBox(width: DonySpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+          ),
+          // Contenu
+          Padding(
+            padding: const EdgeInsets.all(DonySpacing.base),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      statusVariant.priceLabel,
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white.withValues(alpha: 0.75),
-                        letterSpacing: 0.8,
+                    Container(
+                      padding: const EdgeInsets.all(DonySpacing.sm),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(statusVariant.icon,
+                          color: Colors.white, size: 20),
+                    ),
+                    const SizedBox(width: DonySpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            statusVariant.priceLabel,
+                            style:
+                                Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white.withValues(alpha: 0.70),
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${thread.currentPriceEur.toStringAsFixed(0)} €',
+                            style:
+                                Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              letterSpacing: -0.5,
+                              height: 1.1,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${thread.currentPriceEur.toStringAsFixed(0)} €',
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: -0.5,
-                        height: 1.1,
-                      ),
-                    ),
+                    _StatusBadge(label: statusVariant.badge),
                   ],
                 ),
-              ),
-              _StatusBadge(label: statusVariant.badge),
-            ],
+                const SizedBox(height: 14),
+                _RoundProgress(roundsCount: thread.roundsCount, max: 5),
+              ],
+            ),
           ),
-          const SizedBox(height: 14),
-          _RoundProgress(roundsCount: thread.roundsCount, max: 5),
         ],
       ),
     );
@@ -154,7 +197,7 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.22),
+        color: Colors.white.withValues(alpha: 0.20),
         borderRadius: BorderRadius.circular(DonyRadius.xl),
       ),
       child: Text(
@@ -170,8 +213,6 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
-/// Indicator visuel du round (X/5) — N dots remplis (active), (5-N) dots
-/// faibles. Le compteur "Round X/5" est affiché à gauche.
 class _RoundProgress extends StatelessWidget {
   const _RoundProgress({required this.roundsCount, required this.max});
   final int roundsCount;
@@ -196,15 +237,16 @@ class _RoundProgress extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               for (int i = 0; i < max; i++) ...[
-                if (i > 0) const SizedBox(width: DonySpacing.xs),
-                Container(
-                  width: 20,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: i < n
-                        ? Colors.white
-                        : Colors.white.withValues(alpha: 0.22),
-                    borderRadius: BorderRadius.circular(2),
+                if (i > 0) const SizedBox(width: 4),
+                Expanded(
+                  child: Container(
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: i < n
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.22),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
               ],
@@ -215,4 +257,3 @@ class _RoundProgress extends StatelessWidget {
     );
   }
 }
-
