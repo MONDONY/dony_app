@@ -118,94 +118,134 @@ class _ListContentState extends State<_ListContent> {
 
   @override
   Widget build(BuildContext context) {
-    final body = BlocBuilder<PackageRequestBloc, PackageRequestState>(
+    return BlocBuilder<PackageRequestBloc, PackageRequestState>(
       builder: (context, state) {
+        final counts = state.status == PackageRequestListStatus.loaded
+            ? _tabCounts(state.requests)
+            : (enCours: 0, aVenir: 0, passes: 0);
+
+        final header = _DarkHeader(
+          activeTab: _tab,
+          counts: counts,
+          onTabChanged: (t) => setState(() => _tab = t),
+        );
+
+        Widget body;
         if (state.status == PackageRequestListStatus.loading) {
-          return Center(
+          body = Center(
             child: CircularProgressIndicator(
                 color: Theme.of(context).colorScheme.primary),
           );
-        }
-        if (state.status == PackageRequestListStatus.error) {
-          return _ErrorView(
+        } else if (state.status == PackageRequestListStatus.error) {
+          body = _ErrorView(
             message: state.errorMessage ?? 'Erreur',
             onRetry: () =>
                 context.read<PackageRequestBloc>().add(const FetchMyRequests()),
           );
+        } else {
+          final filtered = _filteredRequests(_tab, state.requests);
+          body = filtered.isEmpty
+              ? _buildTabEmptyState(context)
+              : RefreshIndicator(
+                  color: Theme.of(context).colorScheme.primary,
+                  onRefresh: () async {
+                    context
+                        .read<PackageRequestBloc>()
+                        .add(const RefreshMyRequests());
+                  },
+                  child: ListView.separated(
+                    padding: EdgeInsets.fromLTRB(
+                      DonySpacing.lg,
+                      DonySpacing.base,
+                      DonySpacing.lg,
+                      MediaQuery.of(context).padding.bottom + 100,
+                    ),
+                    itemCount: filtered.length,
+                    separatorBuilder: (_, __) =>
+                        const SizedBox(height: DonySpacing.sm),
+                    itemBuilder: (context, i) {
+                      return _RequestCard(request: filtered[i])
+                          .animate()
+                          .fadeIn(duration: 200.ms, delay: (50 * i).ms)
+                          .slideY(begin: 0.03, curve: Curves.easeOutCubic);
+                    },
+                  ),
+                );
         }
 
-        final filtered = _filteredRequests(_tab, state.requests);
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        final content = Column(
           children: [
-            Expanded(
-              child: filtered.isEmpty
-                  ? DonyEmptyState(
-                      title: switch (_tab) {
-                        _Tab.enCours => 'Aucun envoi en cours',
-                        _Tab.aVenir => 'Aucune demande ouverte',
-                        _Tab.passes => 'Aucun historique',
-                      },
-                      mascotte: DonyMascotteType.assis,
-                    )
-                  : RefreshIndicator(
-                      color: Theme.of(context).colorScheme.primary,
-                      onRefresh: () async {
-                        context
-                            .read<PackageRequestBloc>()
-                            .add(const RefreshMyRequests());
-                      },
-                      child: ListView.separated(
-                        padding: EdgeInsets.fromLTRB(
-                          DonySpacing.lg,
-                          DonySpacing.base,
-                          DonySpacing.lg,
-                          MediaQuery.of(context).padding.bottom + 100,
-                        ),
-                        itemCount: filtered.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: DonySpacing.sm),
-                        itemBuilder: (context, i) {
-                          return _RequestCard(request: filtered[i])
-                              .animate()
-                              .fadeIn(duration: 200.ms, delay: (50 * i).ms)
-                              .slideY(begin: 0.03, curve: Curves.easeOutCubic);
-                        },
-                      ),
-                    ),
+            header,
+            Expanded(child: body),
+          ],
+        );
+
+        if (!widget.showFab) return content;
+
+        return Stack(
+          children: [
+            Positioned.fill(child: content),
+            Positioned(
+              right: DonySpacing.lg,
+              bottom: DonySpacing.xl,
+              child: FloatingActionButton.extended(
+                heroTag: 'my-package-requests-fab',
+                onPressed: () async {
+                  await PackageRequestCreateWizard.show(context);
+                  if (context.mounted) {
+                    context
+                        .read<PackageRequestBloc>()
+                        .add(const RefreshMyRequests());
+                  }
+                },
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                icon: const Icon(Icons.add_rounded, color: Colors.white),
+                label: Text(
+                  'Nouvelle demande',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(
+                          fontWeight: FontWeight.w600, color: Colors.white),
+                ),
+              ),
             ),
           ],
         );
       },
     );
+  }
 
-    if (!widget.showFab) return body;
-
-    return Stack(
-      children: [
-        Positioned.fill(child: body),
-        Positioned(
-          right: DonySpacing.lg,
-          bottom: DonySpacing.xl,
-          child: FloatingActionButton.extended(
-            heroTag: 'my-package-requests-fab',
-            onPressed: () async {
-              await PackageRequestCreateWizard.show(context);
-            },
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            icon: const Icon(Icons.add_rounded, color: Colors.white),
-            label: Text(
-              'Nouvelle demande',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium!
-                  .copyWith(fontWeight: FontWeight.w600, color: Colors.white),
-            ),
-          ),
+  Widget _buildTabEmptyState(BuildContext context) {
+    return switch (_tab) {
+      _Tab.enCours => DonyEmptyState(
+          title: 'Aucun envoi en cours',
+          description:
+              'Tes envois en négociation ou acceptés apparaîtront ici.',
+          mascotte: DonyMascotteType.assis,
+          actionLabel: '+ Publier une demande',
+          onAction: () async {
+            await PackageRequestCreateWizard.show(context);
+            if (context.mounted) {
+              context
+                  .read<PackageRequestBloc>()
+                  .add(const RefreshMyRequests());
+            }
+          },
         ),
-      ],
-    );
+      _Tab.aVenir => const DonyEmptyState(
+          title: 'Aucune demande ouverte',
+          description:
+              'Tes demandes en attente de voyageur apparaîtront ici.',
+          mascotte: DonyMascotteType.assis,
+        ),
+      _Tab.passes => const DonyEmptyState(
+          title: 'Aucun historique',
+          description:
+              'Tes envois complétés, expirés et annulés apparaîtront ici.',
+          mascotte: DonyMascotteType.assis,
+        ),
+    };
   }
 }
 
@@ -440,7 +480,12 @@ class _DarkHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final canGoBack = context.canPop();
+    bool canGoBack;
+    try {
+      canGoBack = context.canPop();
+    } catch (_) {
+      canGoBack = false;
+    }
 
     final activeCount = switch (activeTab) {
       _Tab.enCours => counts.enCours,
