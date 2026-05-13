@@ -101,50 +101,67 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
         builder: (context, state) {
           final h = DonyLayout.hPadding(context);
           final bottom = MediaQuery.paddingOf(context).bottom;
+
           return SafeArea(
-            child: DonyLayout.constrained(
-              context,
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: h),
-                child: Column(
-                  children: [
-                    const Spacer(),
-                    const DonyMascotteAnimated(
-                      type: DonyMascotteType.securise,
-                      size: DonyMascotteSize.sm,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // LayoutBuilder donne la hauteur RÉELLE après SafeArea — fiable.
+                final availH = constraints.maxHeight;
+                final isCompact = availH < 750;
+
+                final double lockSize = isCompact ? 60 : 80;
+                final double logoSize = isCompact ? 48 : 69;
+                final double vGapSm  = isCompact ? DonySpacing.xs : DonySpacing.xl;
+                final double vGapLg  = isCompact ? DonySpacing.sm : DonySpacing.xxl;
+                final double bottomH = isCompact ? DonySpacing.sm : DonySpacing.xxl;
+
+                return DonyLayout.constrained(
+                  context,
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: h),
+                    child: Column(
+                      children: [
+                        const Spacer(),
+                        if (!isCompact) ...[
+                          const DonyMascotteAnimated(
+                            type: DonyMascotteType.securise,
+                            size: DonyMascotteSize.sm,
+                          ),
+                          const SizedBox(height: DonySpacing.md),
+                        ],
+                        _buildLockIcon(state, cs, size: lockSize),
+                        SizedBox(height: vGapSm),
+                        _buildTitle(cs, logoSize: logoSize),
+                        SizedBox(height: vGapLg),
+                        _buildPinDots(state, cs),
+                        if (state is LocalAuthPinRequired &&
+                            state.attemptsLeft < 3)
+                          _buildAttemptsWarning(state.attemptsLeft, cs),
+                        if (state is LocalAuthLocked) _buildLockMessage(cs),
+                        const Spacer(flex: 3),
+                        if (state is LocalAuthPinRequired)
+                          DonyKeypad(
+                            onDigit: _onDigit,
+                            onDelete: _onDelete,
+                            onBiometric: state.biometricAvailable
+                                ? () => context
+                                    .read<LocalAuthBloc>()
+                                    .add(const LocalAuthBiometricRequested())
+                                : null,
+                          ),
+                        if (state is LocalAuthLocked)
+                          DonyKeypad(
+                              onDigit: _onDigit,
+                              onDelete: _onDelete,
+                              enabled: false),
+                        if (state is LocalAuthChecking)
+                          CircularProgressIndicator(color: cs.primary),
+                        SizedBox(height: bottomH + bottom),
+                      ],
                     ),
-                    const SizedBox(height: DonySpacing.md),
-                    _buildLockIcon(state, cs),
-                    const SizedBox(height: DonySpacing.xl),
-                    _buildTitle(cs),
-                    const SizedBox(height: DonySpacing.xxl),
-                    _buildPinDots(state, cs),
-                    if (state is LocalAuthPinRequired &&
-                        state.attemptsLeft < 3)
-                      _buildAttemptsWarning(state.attemptsLeft, cs),
-                    if (state is LocalAuthLocked) _buildLockMessage(cs),
-                    const Spacer(flex: 3),
-                    if (state is LocalAuthPinRequired)
-                      DonyKeypad(
-                        onDigit: _onDigit,
-                        onDelete: _onDelete,
-                        onBiometric: state.biometricAvailable
-                            ? () => context
-                                .read<LocalAuthBloc>()
-                                .add(const LocalAuthBiometricRequested())
-                            : null,
-                      ),
-                    if (state is LocalAuthLocked)
-                      DonyKeypad(
-                          onDigit: _onDigit,
-                          onDelete: _onDelete,
-                          enabled: false),
-                    if (state is LocalAuthChecking)
-                      CircularProgressIndicator(color: cs.primary),
-                    SizedBox(height: DonySpacing.xxl + bottom),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             ),
           );
         },
@@ -152,12 +169,12 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
     );
   }
 
-  Widget _buildLockIcon(LocalAuthState state, ColorScheme cs) {
+  Widget _buildLockIcon(LocalAuthState state, ColorScheme cs, {double size = 80}) {
     final isLocked = state is LocalAuthLocked;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
-      width: 80,
-      height: 80,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         color: isLocked ? cs.errorContainer : cs.primaryContainer,
         shape: BoxShape.circle,
@@ -165,21 +182,21 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
       child: Icon(
         isLocked ? Icons.lock : Icons.lock_open_outlined,
         color: isLocked ? cs.error : cs.primary,
-        size: 36,
+        size: size * 0.45,
       ),
     ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack);
   }
 
-  Widget _buildTitle(ColorScheme cs) {
+  Widget _buildTitle(ColorScheme cs, {double logoSize = 69}) {
     final tt = Theme.of(context).textTheme;
 
     return Column(
       children: [
-        const DonyLogo(fontSize: 69),
-        const SizedBox(height: 14),
+        DonyLogo(fontSize: logoSize),
+        const SizedBox(height: 10),
         Text(
           'Saisissez votre code PIN',
-          style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
+          style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
         ),
       ],
     ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04);

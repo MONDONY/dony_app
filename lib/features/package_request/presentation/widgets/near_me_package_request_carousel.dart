@@ -18,6 +18,7 @@ class NearMePackageRequestCarousel extends StatefulWidget {
     required this.items,
     required this.userPosition,
     required this.onSeeAll,
+    this.currentUserId,
     this.selectedRequestId,
     this.onCardChanged,
     this.onTapCard,
@@ -27,6 +28,7 @@ class NearMePackageRequestCarousel extends StatefulWidget {
   final List<PackageRequestSearchItem> items;
   final ({double lat, double lng})? userPosition;
   final VoidCallback onSeeAll;
+  final String? currentUserId;
   final String? selectedRequestId;
   final void Function(String id)? onCardChanged;
   final void Function(PackageRequestSearchItem)? onTapCard;
@@ -119,15 +121,20 @@ class _NearMePackageRequestCarouselState
             },
             itemBuilder: (_, i) {
               final item = widget.items[i];
+              final isOwn = widget.currentUserId != null &&
+                  item.sender.id == widget.currentUserId;
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: DonySpacing.sm),
                 child: PackageRequestCarouselCard(
                   item: item,
                   index: i,
                   distanceLabel: _formatDistance(item),
-                  onTap: widget.onTapCard != null
-                      ? () => widget.onTapCard!(item)
-                      : null,
+                  isOwnRequest: isOwn,
+                  onTap: isOwn
+                      ? null
+                      : widget.onTapCard != null
+                          ? () => widget.onTapCard!(item)
+                          : null,
                 ),
               );
             },

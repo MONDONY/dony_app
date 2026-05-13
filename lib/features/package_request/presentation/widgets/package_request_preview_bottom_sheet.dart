@@ -12,25 +12,28 @@ class PackageRequestPreviewBottomSheet {
   static Future<void> show(
     BuildContext context, {
     required PackageRequestSearchItem item,
+    bool isOwnRequest = false,
   }) async {
     final cs = Theme.of(context).colorScheme;
     await DonyBottomSheet.show<void>(
       context,
       title: '${item.departureCity} → ${item.arrivalCity}',
-      stickyBottom: DonyButton(
-        label: 'Faire une offre',
-        onPressed: () {
-          Navigator.of(context, rootNavigator: true).pop();
-          MakeOfferBottomSheet.show(
-            context,
-            packageRequestId: item.id,
-            targetPriceEur: item.targetPriceEur,
-            weightKg: item.weightKg,
-            departureCity: item.departureCity,
-            arrivalCity: item.arrivalCity,
-          );
-        },
-      ),
+      stickyBottom: isOwnRequest
+          ? null
+          : DonyButton(
+              label: 'Faire une offre',
+              onPressed: () {
+                Navigator.of(context, rootNavigator: true).pop();
+                MakeOfferBottomSheet.show(
+                  context,
+                  packageRequestId: item.id,
+                  targetPriceEur: item.targetPriceEur,
+                  weightKg: item.weightKg,
+                  departureCity: item.departureCity,
+                  arrivalCity: item.arrivalCity,
+                );
+              },
+            ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

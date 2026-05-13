@@ -1,5 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
@@ -127,6 +129,9 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
   }
 
   void _openPreview(BuildContext context, PackageRequestSearchItem item) {
+    final authState = context.read<AuthBloc>().state;
+    final currentUserId = authState is AuthAuthenticated ? authState.user.id : null;
+    if (currentUserId != null && item.sender.id == currentUserId) return;
     PackageRequestPreviewBottomSheet.show(context, item: item);
   }
 
@@ -320,10 +325,14 @@ class _TravelerSheet extends StatelessWidget {
                 separatorBuilder: (_, __) => const SizedBox(height: 16),
                 itemBuilder: (_, i) {
                   final item = state.results[i];
+                  final authState = context.read<AuthBloc>().state;
+                  final uid = authState is AuthAuthenticated ? authState.user.id : null;
+                  final isOwn = uid != null && item.sender.id == uid;
                   return PackageRequestListCard(
                     item: item,
-                    onTap: () => onTapItem(item),
-                    onMakeOffer: () => onTapItem(item),
+                    isOwnRequest: isOwn,
+                    onTap: isOwn ? null : () => onTapItem(item),
+                    onMakeOffer: isOwn ? null : () => onTapItem(item),
                   );
                 },
               ),

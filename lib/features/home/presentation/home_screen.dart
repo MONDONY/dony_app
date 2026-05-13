@@ -590,10 +590,12 @@ class _MapSenderViewState extends State<_MapSenderView> {
         markerId: MarkerId('pkg-${item.id}'),
         position: LatLng(item.departureLat!, item.departureLng!),
         icon: icon,
-        onTap: () => PackageRequestPreviewBottomSheet.show(
-          context,
-          item: item,
-        ),
+        onTap: () {
+          final authState = context.read<AuthBloc>().state;
+          final uid = authState is AuthAuthenticated ? authState.user.id : null;
+          if (uid != null && item.sender.id == uid) return;
+          PackageRequestPreviewBottomSheet.show(context, item: item);
+        },
       ));
     }
     if (mounted) {
@@ -604,6 +606,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
   @override
   Widget build(BuildContext context) {
     final activeRole = context.watch<ActiveRoleCubit>().state;
+    final authState = context.read<AuthBloc>().state;
+    final currentUserId =
+        authState is AuthAuthenticated ? authState.user.id : null;
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -822,6 +827,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                     announcements,
                     MediaQuery.of(context).padding.bottom,
                     activeRole,
+                    currentUserId: currentUserId,
                   ),
                 )
               else
@@ -842,16 +848,23 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                       lng: _userPosition!.longitude,
                                     )
                                   : null,
+                              currentUserId: currentUserId,
                               selectedRequestId: _selectedAnnouncementId,
                               onCardChanged: (id) =>
                                   setState(() => _selectedAnnouncementId = id),
                               onSeeAll: _exitNearMeAndShowList,
                               onTapCard: (it) =>
                                   PackageRequestPreviewBottomSheet.show(
-                                      context, item: it),
+                                      context,
+                                      item: it,
+                                      isOwnRequest: currentUserId != null &&
+                                          it.sender.id == currentUserId),
                               onMakeOffer: (it) =>
-                                  PackageRequestPreviewBottomSheet.show(
-                                      context, item: it),
+                                  currentUserId == null ||
+                                          it.sender.id != currentUserId
+                                      ? PackageRequestPreviewBottomSheet.show(
+                                          context, item: it)
+                                      : null,
                             ).animate()
                                 .fadeIn(duration: 250.ms)
                                 .slideY(begin: 0.1, curve: Curves.easeOutCubic)
@@ -970,8 +983,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
     ScrollController scrollCtrl,
     List<AnnouncementModel> announcements,
     double bottomPad,
-    ActiveRole activeRole,
-  ) {
+    ActiveRole activeRole, {
+    String? currentUserId,
+  }) {
     final tt = Theme.of(ctx).textTheme;
     final cs = Theme.of(ctx).colorScheme;
     final count = announcements.length;
@@ -1105,6 +1119,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                   height: 232,
                                   child: NearMePackageRequestCarousel(
                                     items: prState.results,
+                                    currentUserId: currentUserId,
                                     userPosition: (
                                       lat: _userPosition!.latitude,
                                       lng: _userPosition!.longitude,
@@ -1118,11 +1133,15 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                     onTapCard: (it) =>
                                         PackageRequestPreviewBottomSheet.show(
                                             context,
-                                            item: it),
+                                            item: it,
+                                            isOwnRequest: currentUserId != null &&
+                                                it.sender.id == currentUserId),
                                     onMakeOffer: (it) =>
-                                        PackageRequestPreviewBottomSheet.show(
-                                            context,
-                                            item: it),
+                                        currentUserId == null ||
+                                                it.sender.id != currentUserId
+                                            ? PackageRequestPreviewBottomSheet
+                                                .show(context, item: it)
+                                            : null,
                                   ),
                                 ),
                               ),
@@ -1138,17 +1157,27 @@ class _MapSenderViewState extends State<_MapSenderView> {
                               itemCount: prState.results.length,
                               separatorBuilder: (_, __) =>
                                   const SizedBox(height: DonySpacing.md),
-                              itemBuilder: (_, i) => PackageRequestListCard(
-                                item: prState.results[i],
-                                onTap: () =>
-                                    PackageRequestPreviewBottomSheet.show(
-                                        context,
-                                        item: prState.results[i]),
-                                onMakeOffer: () =>
-                                    PackageRequestPreviewBottomSheet.show(
-                                        context,
-                                        item: prState.results[i]),
-                              ),
+                              itemBuilder: (_, i) {
+                                final pr = prState.results[i];
+                                final isOwn = currentUserId != null &&
+                                    pr.sender.id == currentUserId;
+                                return PackageRequestListCard(
+                                  item: pr,
+                                  index: i,
+                                  isOwnRequest: isOwn,
+                                  onTap: isOwn
+                                      ? null
+                                      : () =>
+                                          PackageRequestPreviewBottomSheet.show(
+                                              ctx,
+                                              item: pr),
+                                  onMakeOffer: isOwn
+                                      ? null
+                                      : () =>
+                                          PackageRequestPreviewBottomSheet.show(
+                                              ctx, item: pr),
+                                );
+                              },
                             ),
                           ),
                         ],
