@@ -480,12 +480,7 @@ class _DarkHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    bool canGoBack;
-    try {
-      canGoBack = context.canPop();
-    } catch (_) {
-      canGoBack = false;
-    }
+    final canGoBack = context.canPop();
 
     final activeCount = switch (activeTab) {
       _Tab.enCours => counts.enCours,

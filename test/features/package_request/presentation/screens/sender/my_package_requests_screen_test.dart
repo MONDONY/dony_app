@@ -9,6 +9,7 @@ import 'package:dony/features/package_request/presentation/screens/sender/my_pac
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -51,13 +52,24 @@ void main() {
         .thenAnswer((_) => const Stream<PackageRequestState>.empty());
   });
 
-  Widget wrap() => MaterialApp(
-        theme: AppTheme.light,
-        home: BlocProvider<PackageRequestBloc>.value(
-          value: bloc,
-          child: const Scaffold(body: MyPackageRequestsBody()),
+  Widget wrap() {
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, __) => BlocProvider<PackageRequestBloc>.value(
+            value: bloc,
+            child: const Scaffold(body: MyPackageRequestsBody()),
+          ),
         ),
-      );
+      ],
+    );
+    return MaterialApp.router(
+      theme: AppTheme.light,
+      routerConfig: router,
+    );
+  }
 
   group('MyPackageRequestsBody', () {
     testWidgets('affiche CircularProgressIndicator en état loading',
