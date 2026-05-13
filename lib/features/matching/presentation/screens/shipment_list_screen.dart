@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
@@ -8,11 +6,8 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
-import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/data/services/saved_trips_service.dart';
 import 'package:dony/features/matching/presentation/widgets/search_form_bottom_sheet.dart';
-import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -23,12 +18,27 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+enum _Tab { enCours, aVenir, passes }
+
+int _activeStep(String status) => switch (status) {
+      'PENDING' => 0,
+      'AWAITING_PAYMENT' => 1,
+      'ACCEPTED' => 2,
+      'COMPLETED' => 4,
+      _ => -1,
+    };
+
+String _ctaLabel(String status) => switch (status) {
+      'AWAITING_PAYMENT' => 'Payer →',
+      'ACCEPTED' => 'Voir →',
+      _ => 'Détail →',
+    };
+
 class ShipmentListScreen extends StatefulWidget {
   const ShipmentListScreen({super.key, this.embedded = false});
 
-  /// Quand `true`, l'écran omet son aurora background et son header avec le
-  /// titre "Mes envois" — adapté pour servir de sous-onglet dans le hub
-  /// `EnvoyerHubScreen`. Le wrapper [ShipmentListBody] expose ce mode.
+  /// Quand `true`, l'écran omet son header sombre et utilise une tab bar légère —
+  /// adapté pour servir de sous-onglet dans le hub `EnvoyerHubScreen`.
   final bool embedded;
 
   @override
@@ -37,9 +47,7 @@ class ShipmentListScreen extends StatefulWidget {
 
 /// Body extrait pour usage en sous-onglet du hub `EnvoyerHubScreen`.
 ///
-/// Délègue à [ShipmentListScreen] en mode `embedded: true` — aucun
-/// changement comportemental, l'aurora et le header titre sont juste
-/// désactivés pour cohabiter avec le header du hub parent.
+/// Délègue à [ShipmentListScreen] en mode `embedded: true`.
 class ShipmentListBody extends StatelessWidget {
   const ShipmentListBody({super.key});
 
@@ -48,25 +56,22 @@ class ShipmentListBody extends StatelessWidget {
       const ShipmentListScreen(embedded: true);
 }
 
-class _ShipmentListScreenState extends State<ShipmentListScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _ShipmentListScreenState extends State<ShipmentListScreen> {
   late final EnvoisRefreshNotifier _refreshNotifier;
 
-  // Cache the last loaded lists so checkout's BidLoading doesn't wipe the UI.
+  _Tab _tab = _Tab.enCours;
+
   List<BidModel> _inProgress = [];
   List<BidModel> _upcoming = [];
   List<BidModel> _past = [];
   bool _hasData = false;
   bool _isRefreshing = false;
 
-  // ID of the bid currently going through checkout — drives button loading state.
   String? _payingBidId;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
     _refreshNotifier = getIt<EnvoisRefreshNotifier>();
     _refreshNotifier.addListener(_onTabRefreshRequested);
     context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
@@ -81,14 +86,11 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
   @override
   void dispose() {
     _refreshNotifier.removeListener(_onTabRefreshRequested);
-    _tabController.dispose();
     super.dispose();
   }
 
   void _startPayment(BidModel bid) {
     setState(() => _payingBidId = bid.id);
-    // The "Payer" CTA is shown only for AWAITING_PAYMENT bids from the
-    // classic flow — those always have declaredValue + description set.
     context.read<BidBloc>().add(BidCheckoutRequested(
       announcementId: bid.announcementId,
       weightKg: bid.weightKg,
@@ -133,6 +135,12 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
 
   @override
   Widget build(BuildContext context) {
+    final counts = (
+      enCours: _inProgress.length,
+      aVenir: _upcoming.length,
+      passes: _past.length,
+    );
+
     return MultiBlocListener(
       listeners: [
         BlocListener<BidBloc, BidState>(
@@ -166,7 +174,9 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
             } else if (state is BidDeleted) {
               DonySnackbar.show(context,
                   message: 'Envoi supprimé', type: DonySnackbarType.success);
-              context.read<BidBloc>().add(const BidMyListAutoRefreshRequested(force: true));
+              context
+                  .read<BidBloc>()
+                  .add(const BidMyListAutoRefreshRequested(force: true));
             } else if (state is BidError && _payingBidId != null) {
               setState(() => _payingBidId = null);
               ErrorPresenter.show(context, state.error);
@@ -181,549 +191,461 @@ class _ShipmentListScreenState extends State<ShipmentListScreen>
           },
         ),
       ],
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Stack(
-          children: [
-            if (!widget.embedded)
-              const Positioned.fill(child: _AuroraMeshBackground()),
-            BlocBuilder<BidBloc, BidState>(
-          builder: (context, state) {
-            if (!_hasData && (state is BidLoading || state is BidInitial)) {
-              return const _LoadingView();
-            }
-            if (!_hasData && state is BidError) {
-              return _ErrorView(
-                  message: ErrorPresenter.resolve(state.error).message);
-            }
+      child: BlocBuilder<BidBloc, BidState>(
+        builder: (context, state) {
+          Widget body;
+          if (!_hasData && (state is BidLoading || state is BidInitial)) {
+            body = const _LoadingView();
+          } else if (!_hasData && state is BidError) {
+            body = _ErrorView(
+                message: ErrorPresenter.resolve(state.error).message);
+          } else {
+            body = _buildTabBody(context);
+          }
 
-            return Stack(
+          if (_isRefreshing) {
+            body = Stack(
               children: [
-                NestedScrollView(
-                  headerSliverBuilder: (context, _) => [
-                    if (!widget.embedded)
-                      SliverToBoxAdapter(
-                        child: _EnvoisHeader(
-                          inProgressCount: _inProgress.length,
-                          upcomingCount: _upcoming.length,
-                          activeShipment:
-                              _inProgress.isNotEmpty ? _inProgress.first : null,
-                        ),
-                      ),
-                    SliverPersistentHeader(
-                      pinned: true,
-                      delegate: _TabBarDelegate(
-                        _SegmentedTabs(controller: _tabController),
-                      ),
-                    ),
-                  ],
-                  body: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _ShipmentListView(
-                        key: const PageStorageKey('tab_inprogress'),
-                        bids: _inProgress,
-                        emptyMessage: 'Aucun envoi en cours',
-                        emptySubtitle:
-                            'Vos colis acceptés par un voyageur apparaîtront ici.',
-                        emptyIcon: Icons.local_shipping_outlined,
-                        onRefresh: () async => context
-                            .read<BidBloc>()
-                            .add(const BidMyListAutoRefreshRequested(force: true)),
-                      ),
-                      _ShipmentListView(
-                        key: const PageStorageKey('tab_upcoming'),
-                        bids: _upcoming,
-                        emptyMessage: 'Aucune demande en attente',
-                        emptySubtitle:
-                            'Trouvez un voyageur et faites votre premier envoi.',
-                        emptyIcon: Icons.hourglass_empty_rounded,
-                        payingBidId: _payingBidId,
-                        onPayTap: _startPayment,
-                        onRefresh: () async => context
-                            .read<BidBloc>()
-                            .add(const BidMyListAutoRefreshRequested(force: true)),
-                      ),
-                      _ShipmentListView(
-                        key: const PageStorageKey('tab_past'),
-                        bids: _past,
-                        emptyMessage: 'Aucun historique',
-                        emptySubtitle:
-                            'Vos livraisons terminées apparaîtront ici.',
-                        emptyIcon: Icons.history_rounded,
-                        onRefresh: () async => context
-                            .read<BidBloc>()
-                            .add(const BidMyListAutoRefreshRequested(force: true)),
-                        onDelete: (bid) => context
-                            .read<BidBloc>()
-                            .add(BidDeleteRequested(bid.id)),
-                      ),
-                    ],
-                  ),
+                body,
+                LinearProgressIndicator(
+                  color: Theme.of(context).colorScheme.primary,
+                  minHeight: 2,
                 ),
-                if (_isRefreshing)
-                  LinearProgressIndicator(
-                    color: Theme.of(context).colorScheme.primary,
-                    minHeight: 2,
-                  ),
               ],
             );
-          },
-        ),
-          ],
-        ),
+          }
+
+          if (widget.embedded) {
+            return Column(
+              children: [
+                _EmbeddedTabBar(
+                  activeTab: _tab,
+                  onTabChanged: (t) => setState(() => _tab = t),
+                ),
+                Expanded(child: body),
+              ],
+            );
+          }
+
+          return Scaffold(
+            backgroundColor: const Color(0xFFF2F1EF),
+            body: Column(
+              children: [
+                _DarkHeader(
+                  activeTab: _tab,
+                  counts: counts,
+                  onTabChanged: (t) => setState(() => _tab = t),
+                ),
+                Expanded(child: body),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
+
+  Widget _buildTabBody(BuildContext context) {
+    final h = DonyLayout.hPadding(context);
+    switch (_tab) {
+      case _Tab.enCours:
+        return _ShipmentListView(
+          key: const PageStorageKey('tab_inprogress'),
+          bids: _inProgress,
+          emptyMessage: 'Aucun envoi en cours',
+          emptySubtitle: 'Vos colis acceptés par un voyageur apparaîtront ici.',
+          emptyIcon: Icons.local_shipping_outlined,
+          hPadding: h,
+          onRefresh: () async => context
+              .read<BidBloc>()
+              .add(const BidMyListAutoRefreshRequested(force: true)),
+        );
+      case _Tab.aVenir:
+        return _ShipmentListView(
+          key: const PageStorageKey('tab_upcoming'),
+          bids: _upcoming,
+          emptyMessage: 'Aucune demande en attente',
+          emptySubtitle: 'Trouvez un voyageur et faites votre premier envoi.',
+          emptyIcon: Icons.hourglass_empty_rounded,
+          hPadding: h,
+          payingBidId: _payingBidId,
+          onPayTap: _startPayment,
+          onRefresh: () async => context
+              .read<BidBloc>()
+              .add(const BidMyListAutoRefreshRequested(force: true)),
+        );
+      case _Tab.passes:
+        return _ShipmentListView(
+          key: const PageStorageKey('tab_past'),
+          bids: _past,
+          emptyMessage: 'Aucun historique',
+          emptySubtitle: 'Vos livraisons terminées apparaîtront ici.',
+          emptyIcon: Icons.history_rounded,
+          hPadding: h,
+          onRefresh: () async => context
+              .read<BidBloc>()
+              .add(const BidMyListAutoRefreshRequested(force: true)),
+          onDelete: (bid) =>
+              context.read<BidBloc>().add(BidDeleteRequested(bid.id)),
+        );
+    }
+  }
 }
 
-// ── Header ───────────────────────────────────────────────────────────────────
+// ── Dark Header ───────────────────────────────────────────────────────────────
 
-class _EnvoisHeader extends StatefulWidget {
-  final int inProgressCount;
-  final int upcomingCount;
-  final BidModel? activeShipment;
-
-  const _EnvoisHeader({
-    required this.inProgressCount,
-    required this.upcomingCount,
-    this.activeShipment,
+class _DarkHeader extends StatelessWidget {
+  const _DarkHeader({
+    required this.activeTab,
+    required this.counts,
+    required this.onTabChanged,
   });
 
-  @override
-  State<_EnvoisHeader> createState() => _EnvoisHeaderState();
-}
-
-class _EnvoisHeaderState extends State<_EnvoisHeader> {
-  final _savedService = getIt<SavedTripsService>();
-
-  void _openSavedTrips() {
-    DonyBottomSheet.show<void>(
-      context,
-      child: _SavedTripsSheet(
-        savedService: _savedService,
-        onChanged: () => setState(() {}),
-      ),
-    );
-  }
+  final _Tab activeTab;
+  final ({int enCours, int aVenir, int passes}) counts;
+  final ValueChanged<_Tab> onTabChanged;
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final isDark = cs.brightness == Brightness.dark;
-    final savedCount = _savedService.getSavedTrips().length;
-    final topPad = MediaQuery.of(context).padding.top;
+    final canGoBack = context.canPop();
+
+    final activeCount = switch (activeTab) {
+      _Tab.enCours => counts.enCours,
+      _Tab.aVenir => counts.aVenir,
+      _Tab.passes => counts.passes,
+    };
 
     return Container(
-      color: Colors.transparent,
+      color: const Color(0xFF0A2540),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(height: topPad + DonySpacing.sm),
+          SizedBox(height: MediaQuery.of(context).padding.top),
           Padding(
             padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg, DonySpacing.sm, DonySpacing.base, 0),
+                DonySpacing.xs, DonySpacing.sm, DonySpacing.base, DonySpacing.xs),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                if (canGoBack)
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
+                      ),
+                      child: const Icon(
+                        Icons.chevron_left_rounded,
+                        size: 20,
+                        color: Colors.white,
+                      ),
+                    ),
+                    onPressed: () => context.pop(),
+                  )
+                else
+                  const SizedBox(width: DonySpacing.base),
+                const SizedBox(width: DonySpacing.xs),
                 Expanded(
                   child: Text(
                     'Mes envois',
-                    style: tt.headlineLarge?.copyWith(
+                    style: tt.titleLarge?.copyWith(
+                      color: Colors.white,
+                      fontSize: 18,
                       fontWeight: FontWeight.w800,
-                      color: cs.onSurface,
-                      letterSpacing: -0.5,
                     ),
-                  ).animate().fadeIn(duration: 300.ms),
-                ),
-                // Icône trajets sauvegardés
-                GestureDetector(
-                  onTap: _openSavedTrips,
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(DonyRadius.md),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? cs.surface.withValues(alpha: 0.85)
-                                  : Colors.white.withValues(alpha: 0.62),
-                              borderRadius: BorderRadius.circular(DonyRadius.md),
-                              border: Border.all(
-                                  color: isDark
-                                      ? Colors.white.withValues(alpha: 0.07)
-                                      : Colors.white.withValues(alpha: 0.92)),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: cs.primary.withValues(alpha: 0.10),
-                                  blurRadius: 10,
-                                ),
-                              ],
-                            ),
-                            child: Icon(
-                              savedCount > 0
-                                  ? Icons.bookmark_rounded
-                                  : Icons.bookmark_border_rounded,
-                              color: savedCount > 0
-                                  ? cs.primary
-                                  : cs.onSurfaceVariant,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (savedCount > 0)
-                        Positioned(
-                          top: -4,
-                          right: -4,
-                          child: Container(
-                            width: 18,
-                            height: 18,
-                            decoration: BoxDecoration(
-                              color: cs.primary,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                '$savedCount',
-                                style: tt.labelSmall?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  color: cs.onPrimary,
-                                  fontSize: 10,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
                   ),
-                ).animate().fadeIn(delay: 60.ms),
+                ),
+                if (activeCount > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.sm,
+                        vertical: DonySpacing.xxs + 1),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(DonyRadius.full),
+                    ),
+                    child: Text(
+                      '$activeCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
-          const SizedBox(height: 14),
           Padding(
             padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg, 0, DonySpacing.lg, 0),
+                DonySpacing.base, 0, DonySpacing.base, DonySpacing.sm),
             child: Row(
               children: [
-                _StatChip(
-                  count: widget.inProgressCount,
-                  label: 'en cours',
-                  color: cs.success,
-                  bgColor: cs.successLight,
+                _DarkTab(
+                  label: 'En cours',
+                  active: activeTab == _Tab.enCours,
+                  onTap: () => onTabChanged(_Tab.enCours),
                 ),
-                const SizedBox(width: DonySpacing.sm),
-                _StatChip(
-                  count: widget.upcomingCount,
-                  label: 'en attente',
-                  color: cs.warning,
-                  bgColor: cs.warningLight,
+                const SizedBox(width: DonySpacing.xs),
+                _DarkTab(
+                  label: 'À venir',
+                  active: activeTab == _Tab.aVenir,
+                  onTap: () => onTabChanged(_Tab.aVenir),
+                ),
+                const SizedBox(width: DonySpacing.xs),
+                _DarkTab(
+                  label: 'Passés',
+                  active: activeTab == _Tab.passes,
+                  onTap: () => onTabChanged(_Tab.passes),
                 ),
               ],
-            ).animate().fadeIn(delay: 80.ms),
+            ),
           ),
-          if (widget.activeShipment != null) ...[
-            const SizedBox(height: DonySpacing.lg),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                  DonySpacing.lg, 0, DonySpacing.lg, 0),
-              child: _ActiveShipmentBanner(bid: widget.activeShipment!),
-            )
-                .animate()
-                .fadeIn(delay: 120.ms)
-                .slideY(begin: 0.05, curve: Curves.easeOutCubic),
-          ],
-          const SizedBox(height: DonySpacing.lg),
         ],
       ),
     );
   }
 }
 
-class _StatChip extends StatelessWidget {
-  final int count;
-  final String label;
-  final Color color;
-  final Color bgColor;
-
-  const _StatChip({
-    required this.count,
+class _DarkTab extends StatelessWidget {
+  const _DarkTab({
     required this.label,
-    required this.color,
-    required this.bgColor,
+    required this.active,
+    required this.onTap,
   });
+
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(DonyRadius.xl),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-              horizontal: DonySpacing.md, vertical: 7),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(DonyRadius.xl),
-            border: Border.all(color: color.withValues(alpha: 0.22)),
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.md, vertical: DonySpacing.xs + 2),
+        decoration: BoxDecoration(
+          color: active
+              ? Colors.white.withValues(alpha: 0.15)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(DonyRadius.sm),
+          border: active
+              ? Border.all(
+                  color: Colors.white.withValues(alpha: 0.4), width: 1)
+              : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: active
+                ? Colors.white
+                : Colors.white.withValues(alpha: 0.5),
+            fontSize: 12,
+            fontWeight: active ? FontWeight.w700 : FontWeight.w500,
           ),
-          child: Row(
+        ),
+      ),
+    );
+  }
+}
+
+// ── Embedded Tab Bar ──────────────────────────────────────────────────────────
+
+class _EmbeddedTabBar extends StatelessWidget {
+  const _EmbeddedTabBar({
+    required this.activeTab,
+    required this.onTabChanged,
+  });
+
+  final _Tab activeTab;
+  final ValueChanged<_Tab> onTabChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      color: cs.surface,
+      padding: const EdgeInsets.fromLTRB(
+          DonySpacing.base, DonySpacing.sm, DonySpacing.base, DonySpacing.sm),
+      child: Row(
+        children: [
+          _EmbeddedTab(
+            label: 'En cours',
+            active: activeTab == _Tab.enCours,
+            cs: cs,
+            onTap: () => onTabChanged(_Tab.enCours),
+          ),
+          const SizedBox(width: DonySpacing.xs),
+          _EmbeddedTab(
+            label: 'À venir',
+            active: activeTab == _Tab.aVenir,
+            cs: cs,
+            onTap: () => onTabChanged(_Tab.aVenir),
+          ),
+          const SizedBox(width: DonySpacing.xs),
+          _EmbeddedTab(
+            label: 'Passés',
+            active: activeTab == _Tab.passes,
+            cs: cs,
+            onTap: () => onTabChanged(_Tab.passes),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmbeddedTab extends StatelessWidget {
+  const _EmbeddedTab({
+    required this.label,
+    required this.active,
+    required this.cs,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool active;
+  final ColorScheme cs;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.md, vertical: DonySpacing.xs + 2),
+        decoration: BoxDecoration(
+          color: active ? cs.primaryContainer : Colors.transparent,
+          borderRadius: BorderRadius.circular(DonyRadius.sm),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: active ? cs.primary : cs.onSurfaceVariant,
+            fontSize: 12,
+            fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Progress Stepper ──────────────────────────────────────────────────────────
+
+class _ProgressStepper extends StatelessWidget {
+  const _ProgressStepper({required this.status});
+  final String status;
+
+  static const _labels = ['Proposé', 'À payer', 'En route', 'Livré'];
+
+  int get _active => switch (status) {
+        'PENDING' => 0,
+        'AWAITING_PAYMENT' => 1,
+        'ACCEPTED' => 2,
+        'COMPLETED' => 4,
+        _ => -1,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final active = _active;
+
+    Color dotColor(int i) {
+      if (active == 4) return cs.primary;
+      if (active == -1) return cs.outlineVariant;
+      if (i < active) return cs.primary;
+      if (i == active) return cs.success;
+      return cs.outlineVariant;
+    }
+
+    Color connectorColor(int i) {
+      if (active == 4) return cs.primary;
+      if (active == -1) return cs.outlineVariant;
+      if (i < active) return cs.primary;
+      return cs.outlineVariant;
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (int i = 0; i < 4; i++) ...[
+          Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                '$count',
-                style: tt.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: color,
+              if (i == active && active != 4 && active != -1)
+                Container(
+                  width: 11,
+                  height: 11,
+                  decoration: BoxDecoration(
+                    color: dotColor(i),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: cs.success.withValues(alpha: 0.4),
+                        blurRadius: 6,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Container(
+                  width: 9,
+                  height: 9,
+                  decoration: BoxDecoration(
+                    color: dotColor(i),
+                    shape: BoxShape.circle,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 5),
+              const SizedBox(height: 3),
               Text(
-                label,
-                style: tt.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                  color: color,
+                _labels[i],
+                style: TextStyle(
+                  fontSize: 7.5,
+                  fontWeight: (i == active && active != 4)
+                      ? FontWeight.w800
+                      : FontWeight.w600,
+                  color: (i == active && active != -1 && active != 4)
+                      ? dotColor(i)
+                      : cs.onSurfaceVariant,
                 ),
               ),
             ],
           ),
-        ),
-      ),
+          if (i < 3)
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: Container(
+                  height: 2,
+                  color: connectorColor(i),
+                ),
+              ),
+            ),
+        ],
+      ],
     );
   }
 }
 
-class _ActiveShipmentBanner extends StatelessWidget {
-  final BidModel bid;
-
-  const _ActiveShipmentBanner({required this.bid});
-
-  double get _progress => bid.voyageurConfirmed ? 0.72 : 0.35;
-  String get _progressLabel =>
-      bid.voyageurConfirmed ? 'En transit' : 'Remise à effectuer';
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final isDark = cs.brightness == Brightness.dark;
-    final desc = bid.description ?? bid.contentCategory ?? 'Demande';
-    final shortDesc = desc.length > 36 ? '${desc.substring(0, 36)}…' : desc;
-
-    return GestureDetector(
-      onTap: () async {
-        await context.push('/bids/${bid.id}', extra: bid);
-        if (context.mounted) {
-          context.read<BidBloc>().add(BidMyListRequested());
-        }
-      },
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(DonySpacing.lg),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? cs.surface.withValues(alpha: 0.85)
-                  : Colors.white.withValues(alpha: 0.58),
-              borderRadius: BorderRadius.circular(DonyRadius.card),
-              border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.07)
-                      : Colors.white.withValues(alpha: 0.88)),
-              boxShadow: [
-                BoxShadow(
-                  color: cs.primary.withValues(alpha: 0.09),
-                  blurRadius: 20,
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
-                  decoration: BoxDecoration(
-                    color: cs.primary.withValues(alpha: 0.08),
-                    border: Border.all(color: cs.primary.withValues(alpha: 0.18)),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    'COLIS EN TRANSIT',
-                    style: tt.labelSmall?.copyWith(
-                      color: cs.primary,
-                      letterSpacing: 0.8,
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  color: cs.onSurface,
-                  size: 14,
-                ),
-              ],
-            ),
-            const SizedBox(height: DonySpacing.md),
-            Text(
-              shortDesc,
-              style: tt.headlineMedium?.copyWith(
-                color: cs.onSurface,
-                height: 1.2,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Icon(Icons.flight_takeoff_rounded,
-                    color: cs.onSurfaceVariant, size: 13),
-                const SizedBox(width: 6),
-                Text(
-                  '${bid.departureCity ?? '—'} → ${bid.arrivalCity ?? '—'}',
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                ),
-                const Spacer(),
-                Text(
-                  '${bid.weightKg} kg',
-                  style: tt.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: cs.onSurface,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: DonySpacing.base),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(DonyRadius.xs),
-              child: LinearProgressIndicator(
-                value: _progress,
-                backgroundColor: cs.primary.withValues(alpha: 0.15),
-                valueColor: AlwaysStoppedAnimation<Color>(cs.primary),
-                minHeight: 4,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              _progressLabel,
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Segmented tab bar ────────────────────────────────────────────────────────
-
-class _SegmentedTabs extends StatelessWidget {
-  final TabController controller;
-  const _SegmentedTabs({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final isDark = cs.brightness == Brightness.dark;
-
-    return Container(
-      color: Colors.transparent,
-      padding: const EdgeInsets.fromLTRB(
-          DonySpacing.lg, 10, DonySpacing.lg, 10),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(DonyRadius.md),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-          child: Container(
-            height: 44,
-            decoration: BoxDecoration(
-              color: isDark
-                  ? cs.surface.withValues(alpha: 0.75)
-                  : Colors.white.withValues(alpha: 0.50),
-              borderRadius: BorderRadius.circular(DonyRadius.md),
-              border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.07)
-                      : Colors.white.withValues(alpha: 0.80)),
-            ),
-            child: TabBar(
-              controller: controller,
-              indicator: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [DonyColors.blue700, cs.primary],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(9),
-              ),
-              indicatorSize: TabBarIndicatorSize.tab,
-              dividerColor: Colors.transparent,
-              labelPadding: EdgeInsets.zero,
-              padding: const EdgeInsets.all(3),
-              labelColor: cs.onPrimary,
-              unselectedLabelColor: cs.onSurfaceVariant,
-              labelStyle: tt.labelMedium?.copyWith(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-              ),
-              unselectedLabelStyle: tt.labelMedium?.copyWith(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
-              tabs: const [
-                Tab(text: 'En cours'),
-                Tab(text: 'À venir'),
-                Tab(text: 'Passés'),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TabBarDelegate extends SliverPersistentHeaderDelegate {
-  final Widget child;
-  const _TabBarDelegate(this.child);
-
-  @override
-  double get minExtent => 64;
-  @override
-  double get maxExtent => 64;
-
-  @override
-  Widget build(
-          BuildContext context, double shrinkOffset, bool overlapsContent) =>
-      child;
-
-  @override
-  bool shouldRebuild(_TabBarDelegate old) => false;
-}
-
-// ── List view ────────────────────────────────────────────────────────────────
+// ── List view ─────────────────────────────────────────────────────────────────
 
 class _ShipmentListView extends StatelessWidget {
   final List<BidModel> bids;
   final String emptyMessage;
   final String emptySubtitle;
   final IconData emptyIcon;
+  final double hPadding;
   final String? payingBidId;
   final void Function(BidModel)? onPayTap;
   final Future<void> Function()? onRefresh;
@@ -735,6 +657,7 @@ class _ShipmentListView extends StatelessWidget {
     required this.emptyMessage,
     required this.emptySubtitle,
     required this.emptyIcon,
+    required this.hPadding,
     this.payingBidId,
     this.onPayTap,
     this.onRefresh,
@@ -743,12 +666,12 @@ class _ShipmentListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final h = DonyLayout.hPadding(context);
     final child = bids.isEmpty
-        ? _EmptyView(icon: emptyIcon, title: emptyMessage, subtitle: emptySubtitle)
+        ? _EmptyView(
+            icon: emptyIcon, title: emptyMessage, subtitle: emptySubtitle)
         : ListView.separated(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.fromLTRB(h, DonySpacing.base, h, 100),
+            padding: EdgeInsets.fromLTRB(hPadding, DonySpacing.base, hPadding, 100),
             itemCount: bids.length,
             separatorBuilder: (_, _) => const SizedBox(height: DonySpacing.md),
             itemBuilder: (_, i) {
@@ -784,7 +707,8 @@ Future<bool> _confirmDelete(BuildContext context) async {
   final confirmed = await DonyDialog.show(
     context,
     title: 'Supprimer cet envoi ?',
-    message: 'Il sera retiré de votre historique. Cette action est irréversible.',
+    message:
+        'Il sera retiré de votre historique. Cette action est irréversible.',
     confirmLabel: 'Supprimer',
     variant: DonyDialogVariant.destructive,
     icon: Icons.delete_outline_rounded,
@@ -820,14 +744,9 @@ class _DeleteBackground extends StatelessWidget {
   }
 }
 
-// ── Card ─────────────────────────────────────────────────────────────────────
+// ── Card ──────────────────────────────────────────────────────────────────────
 
 class _ShipmentCard extends StatelessWidget {
-  final BidModel bid;
-  final int index;
-  final bool isPaymentLoading;
-  final VoidCallback? onPayTap;
-
   const _ShipmentCard({
     required this.bid,
     required this.index,
@@ -835,251 +754,197 @@ class _ShipmentCard extends StatelessWidget {
     this.onPayTap,
   });
 
-  ({String label, DonyBadgeType type, Color barColor}) _statusInfo(
-      ColorScheme cs) =>
-      switch (bid.status) {
-        'AWAITING_PAYMENT' => (
-            label: 'Paiement requis',
-            type: DonyBadgeType.error,
-            barColor: cs.warning,
-          ),
-        'PENDING' => (
-            label: 'En attente',
-            type: DonyBadgeType.warning,
-            barColor: cs.warning,
-          ),
-        'ACCEPTED' => (
-            label: 'Accepté',
-            type: DonyBadgeType.success,
-            barColor: cs.success,
-          ),
-        'REJECTED' => (
-            label: 'Refusé',
-            type: DonyBadgeType.error,
-            barColor: cs.error,
-          ),
-        'CANCELLED' => (
-            label: 'Annulé',
-            type: DonyBadgeType.error,
-            barColor: cs.outline,
-          ),
-        'COMPLETED' => (
-            label: 'Livré',
-            type: DonyBadgeType.success,
-            barColor: cs.primary,
-          ),
-        'NO_SHOW' => (
-            label: 'Voyageur absent',
-            type: DonyBadgeType.error,
-            barColor: cs.outline,
-          ),
-        'EXPIRED' => (
-            label: 'Expiré',
-            type: DonyBadgeType.error,
-            barColor: cs.outline,
-          ),
-        'PARCEL_REFUSED' => (
-            label: 'Colis refusé',
-            type: DonyBadgeType.error,
-            barColor: cs.error,
-          ),
-        _ => (
-            label: bid.status,
-            type: DonyBadgeType.info,
-            barColor: cs.onSurfaceVariant,
-          ),
+  final BidModel bid;
+  final int index;
+  final bool isPaymentLoading;
+  final VoidCallback? onPayTap;
+
+  Color _statusColor(ColorScheme cs) => switch (bid.status) {
+        'PENDING' || 'AWAITING_PAYMENT' => cs.warning,
+        'ACCEPTED' || 'COMPLETED' => cs.success,
+        _ => cs.onSurfaceVariant,
+      };
+
+  String get _statusLabel => switch (bid.status) {
+        'PENDING' => 'EN ATTENTE',
+        'AWAITING_PAYMENT' => 'À PAYER',
+        'ACCEPTED' => 'EN TRANSIT',
+        'COMPLETED' => 'LIVRÉ',
+        'REJECTED' => 'REFUSÉ',
+        'CANCELLED' => 'ANNULÉ',
+        'NO_SHOW' => 'ABSENT',
+        'EXPIRED' => 'EXPIRÉ',
+        'PARCEL_REFUSED' => 'REFUSÉ',
+        _ => bid.status,
+      };
+
+  bool get _isDisabled => switch (bid.status) {
+        'REJECTED' ||
+        'CANCELLED' ||
+        'NO_SHOW' ||
+        'EXPIRED' ||
+        'PARCEL_REFUSED' =>
+          true,
+        _ => false,
       };
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final isDark = cs.brightness == Brightness.dark;
-    final info = _statusInfo(cs);
+    final statusColor = _statusColor(cs);
+    final label = _ctaLabel(bid.status);
 
-    return GestureDetector(
-      onTap: () async {
-        await context.push('/bids/${bid.id}', extra: bid);
-        if (context.mounted) {
-          context.read<BidBloc>().add(BidMyListRequested());
-        }
-      },
-      child: ClipRRect(
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(DonyRadius.card),
+      child: InkWell(
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-          child: Container(
-            decoration: BoxDecoration(
-              color: isDark
-                  ? cs.surface.withValues(alpha: 0.85)
-                  : Colors.white.withValues(alpha: 0.60),
-              borderRadius: BorderRadius.circular(DonyRadius.card),
-              border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.07)
-                      : Colors.white.withValues(alpha: 0.88)),
-              boxShadow: DonyShadow.sm,
-            ),
-        clipBehavior: Clip.antiAlias,
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        onTap: () async {
+          await context.push('/bids/${bid.id}', extra: bid);
+          if (context.mounted) {
+            context.read<BidBloc>().add(BidMyListRequested());
+          }
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(DonyRadius.card),
+            border: Border.all(color: DonyColors.neutral200),
+          ),
+          clipBehavior: Clip.antiAlias,
+          padding: const EdgeInsets.all(DonySpacing.base),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(width: 4, color: info.barColor),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(DonySpacing.base),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          DonyBadge(label: info.label, type: info.type),
-                          const Spacer(),
-                          Text(
-                            '#${bid.id.substring(0, 8).toUpperCase()}',
-                            style: tt.labelSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: cs.outline,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: DonySpacing.md),
-                      Builder(
-                        builder: (_) {
-                          final desc = bid.description ??
-                              bid.contentCategory ??
-                              'Demande';
-                          return Text(
-                            desc.length > 52
-                                ? '${desc.substring(0, 52)}…'
-                                : desc,
-                            style: tt.titleLarge?.copyWith(
-                              color: cs.onSurface,
-                              height: 1.3,
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      _RouteRow(
-                        departure: bid.departureCity ?? '—',
-                        arrival: bid.arrivalCity ?? '—',
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          _InfoChip(
-                            icon: Icons.scale_outlined,
-                            label: '${bid.weightKg} kg',
-                          ),
-                          if (bid.contentCategory != null) ...[
-                            const SizedBox(width: DonySpacing.sm),
-                            _InfoChip(
-                              icon: Icons.category_outlined,
-                              label: bid.contentCategory!,
-                            ),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          Icon(Icons.calendar_today_outlined,
-                              size: 12, color: cs.onSurfaceVariant),
-                          const SizedBox(width: 5),
-                          Text(
-                            DateFormat('dd MMM yyyy', 'fr')
-                                .format(bid.createdAt),
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                            ),
-                          ),
-                          const Spacer(),
-                          if (bid.status == 'AWAITING_PAYMENT' &&
-                              onPayTap != null)
-                            GestureDetector(
-                              onTap: isPaymentLoading ? null : onPayTap,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: DonySpacing.md, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: cs.warning,
-                                  borderRadius:
-                                      BorderRadius.circular(DonyRadius.sm),
-                                ),
-                                child: isPaymentLoading
-                                    ? SizedBox(
-                                        width: 14,
-                                        height: 14,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: DonyColors.white,
-                                        ),
-                                      )
-                                    : Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(Icons.payment_rounded,
-                                              size: 12,
-                                              color: DonyColors.white),
-                                          const SizedBox(width: DonySpacing.xs),
-                                          Text(
-                                            'Payer maintenant',
-                                            style: tt.bodySmall?.copyWith(
-                                              fontWeight: FontWeight.w700,
-                                              color: DonyColors.white,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                              ),
-                            )
-                          else
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: DonySpacing.md, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: cs.primaryContainer,
-                                borderRadius:
-                                    BorderRadius.circular(DonyRadius.sm),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    'Voir',
-                                    style: tt.bodySmall?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      color: cs.primary,
-                                    ),
-                                  ),
-                                  const SizedBox(width: DonySpacing.xs),
-                                  Icon(Icons.arrow_forward_rounded,
-                                      size: 12, color: cs.primary),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
-                    ],
+              Row(
+                children: [
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: statusColor,
+                      shape: BoxShape.circle,
+                    ),
                   ),
+                  const SizedBox(width: DonySpacing.xs),
+                  Text(
+                    _statusLabel,
+                    style: tt.bodySmall?.copyWith(
+                      color: statusColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '#${(bid.id.length >= 8 ? bid.id.substring(0, 8) : bid.id).toUpperCase()}',
+                    style: tt.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: DonySpacing.xs),
+              Text(
+                '${bid.departureCity ?? '—'} → ${bid.arrivalCity ?? '—'}',
+                style: tt.titleLarge?.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: DonyColors.textPrimary,
+                  letterSpacing: -0.3,
                 ),
+              ),
+              const SizedBox(height: DonySpacing.sm + 2),
+              _ProgressStepper(status: bid.status),
+              const SizedBox(height: DonySpacing.sm + 2),
+              Text(
+                _buildMeta(),
+                style: tt.bodySmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  fontSize: 11,
+                ),
+              ),
+              const SizedBox(height: DonySpacing.xs),
+              Row(
+                children: [
+                  Text(
+                    '📅 ${DateFormat('d MMM yyyy', 'fr').format(bid.createdAt)}',
+                    style: tt.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontSize: 11,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (bid.status == 'AWAITING_PAYMENT' && onPayTap != null)
+                    GestureDetector(
+                      onTap: isPaymentLoading ? null : onPayTap,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: DonySpacing.md, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: cs.warning,
+                          borderRadius: BorderRadius.circular(DonyRadius.sm),
+                        ),
+                        child: isPaymentLoading
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: DonyColors.white,
+                                ),
+                              )
+                            : const Text(
+                                'Payer →',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: DonyColors.white,
+                                ),
+                              ),
+                      ),
+                    )
+                  else
+                    GestureDetector(
+                      onTap: _isDisabled
+                          ? null
+                          : () async {
+                              await context.push('/bids/${bid.id}', extra: bid);
+                              if (context.mounted) {
+                                context
+                                    .read<BidBloc>()
+                                    .add(BidMyListRequested());
+                              }
+                            },
+                      child: Text(
+                        label,
+                        style: tt.labelSmall?.copyWith(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color:
+                              _isDisabled ? cs.onSurfaceVariant : cs.primary,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ],
           ),
         ),
-        ),
       ),
-    )
-        .animate()
-        .fadeIn(delay: Duration(milliseconds: 50 * index))
-        .slideY(begin: 0.05, curve: Curves.easeOutCubic),
     );
   }
+
+  String _buildMeta() {
+    final parts = <String>['${bid.weightKg.toStringAsFixed(0)} kg'];
+    if (bid.contentCategory != null) parts.add(bid.contentCategory!);
+    return parts.join(' · ');
+  }
 }
+
+// ── Route Row & Info Chip ─────────────────────────────────────────────────────
 
 class _RouteRow extends StatelessWidget {
   final String departure;
@@ -1119,8 +984,8 @@ class _RouteRow extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 6),
-          child: Icon(Icons.flight_takeoff_rounded,
-              size: 14, color: cs.primary),
+          child:
+              Icon(Icons.flight_takeoff_rounded, size: 14, color: cs.primary),
         ),
         Expanded(
           child: Container(height: 1, color: cs.outline),
@@ -1187,107 +1052,7 @@ class _InfoChip extends StatelessWidget {
   }
 }
 
-// ── Aurora Mesh Background ───────────────────────────────────────────────────
-
-class _AuroraMeshBackground extends StatelessWidget {
-  const _AuroraMeshBackground();
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Stack(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: isDark
-                  ? const [
-                      DonyColors.heroGradientDarkA,
-                      DonyColors.heroGradientDarkB,
-                      DonyColors.heroGradientDarkC,
-                    ]
-                  : const [
-                      DonyColors.blue50,
-                      DonyColors.heroGradientLightB,
-                      DonyColors.sand100,
-                    ],
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-              stops: const [0.0, 0.4, 1.0],
-            ),
-          ),
-        ),
-        // Orbe bleu nord-est
-        Positioned(
-          top: -80,
-          right: -60,
-          child: IgnorePointer(
-            child: Container(
-              width: 280,
-              height: 280,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    Color(isDark ? 0x420B5FFF : 0x240B5FFF),
-                    Color(isDark ? 0x2C6C63FF : 0x146C63FF),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.4, 0.7],
-                ),
-              ),
-            ),
-          ),
-        ),
-        // Orbe terracotta ouest
-        Positioned(
-          top: 120,
-          left: -80,
-          child: IgnorePointer(
-            child: Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    Color(isDark ? 0x2AD96A3A : 0x17D96A3A),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.65],
-                ),
-              ),
-            ),
-          ),
-        ),
-        // Orbe vert sud-est
-        Positioned(
-          bottom: 100,
-          right: -40,
-          child: IgnorePointer(
-            child: Container(
-              width: 180,
-              height: 180,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    Color(isDark ? 0x1E22C55E : 0x0F22C55E),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.65],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ── Empty / Loading / Error ──────────────────────────────────────────────────
+// ── Empty / Loading / Error ───────────────────────────────────────────────────
 
 class _EmptyView extends StatelessWidget {
   final IconData icon;
@@ -1312,78 +1077,80 @@ class _EmptyView extends StatelessWidget {
           height: constraints.maxHeight,
           child: Center(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xxl),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: DonySpacing.xxl),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-            Container(
-              width: 68,
-              height: 68,
-              decoration: BoxDecoration(
-                color: cs.primaryContainer,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 30, color: cs.primary),
-            ),
-            const SizedBox(height: DonySpacing.base),
-            Text(
-              title,
-              style: tt.titleLarge?.copyWith(color: cs.onSurface),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              subtitle,
-              style: tt.bodySmall?.copyWith(
-                color: cs.onSurfaceVariant,
-                height: 1.5,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: DonySpacing.xl),
-            GestureDetector(
-              onTap: () async {
-                final params = await SearchFormBottomSheet.show(context);
-                if (params != null && context.mounted) {
-                  getIt<PendingSearchNotifier>().setPending(params);
-                  context.go('/home');
-                }
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.xl, vertical: 13),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [DonyColors.blue700, cs.primary],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(DonyRadius.md),
-                  boxShadow: [
-                    BoxShadow(
-                      color: cs.primary.withValues(alpha: 0.28),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+                  Container(
+                    width: 68,
+                    height: 68,
+                    decoration: BoxDecoration(
+                      color: cs.primaryContainer,
+                      shape: BoxShape.circle,
                     ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.search_rounded,
-                        color: DonyColors.textOnBrand, size: 16),
-                    const SizedBox(width: DonySpacing.sm),
-                    Text(
-                      'Rechercher un trajet',
-                      style: tt.labelLarge?.copyWith(
-                        color: DonyColors.textOnBrand,
+                    child: Icon(icon, size: 30, color: cs.primary),
+                  ),
+                  const SizedBox(height: DonySpacing.base),
+                  Text(
+                    title,
+                    style: tt.titleLarge?.copyWith(color: cs.onSurface),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    subtitle,
+                    style: tt.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: DonySpacing.xl),
+                  GestureDetector(
+                    onTap: () async {
+                      final params =
+                          await SearchFormBottomSheet.show(context);
+                      if (params != null && context.mounted) {
+                        getIt<PendingSearchNotifier>().setPending(params);
+                        context.go('/home');
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: DonySpacing.xl, vertical: 13),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [DonyColors.blue700, cs.primary],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
+                        boxShadow: [
+                          BoxShadow(
+                            color: cs.primary.withValues(alpha: 0.28),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.search_rounded,
+                              color: DonyColors.textOnBrand, size: 16),
+                          const SizedBox(width: DonySpacing.sm),
+                          Text(
+                            'Rechercher un trajet',
+                            style: tt.labelLarge?.copyWith(
+                              color: DonyColors.textOnBrand,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
+                  ),
                 ],
               )
                   .animate()
@@ -1433,8 +1200,7 @@ class _ErrorView extends StatelessWidget {
                 color: cs.errorContainer,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.wifi_off_rounded,
-                  size: 32, color: cs.error),
+              child: Icon(Icons.wifi_off_rounded, size: 32, color: cs.error),
             ),
             const SizedBox(height: DonySpacing.lg),
             Text(
@@ -1469,213 +1235,6 @@ class _ErrorView extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-// ── Bottom sheet trajets sauvegardés ─────────────────────────────────────────
-
-class _SavedTripsSheet extends StatefulWidget {
-  final SavedTripsService savedService;
-  final VoidCallback onChanged;
-
-  const _SavedTripsSheet({
-    required this.savedService,
-    required this.onChanged,
-  });
-
-  @override
-  State<_SavedTripsSheet> createState() => _SavedTripsSheetState();
-}
-
-class _SavedTripsSheetState extends State<_SavedTripsSheet> {
-  late List<AnnouncementModel> _trips;
-
-  @override
-  void initState() {
-    super.initState();
-    _trips = widget.savedService.getSavedTrips();
-  }
-
-  Future<void> _remove(String id) async {
-    await widget.savedService.removeTrip(id);
-    setState(() => _trips = widget.savedService.getSavedTrips());
-    widget.onChanged();
-  }
-
-  String _initials(AnnouncementModel a) {
-    final name = a.traveler?.displayName;
-    if (name == null || name.isEmpty) return '?';
-    final parts = name.trim().split(' ');
-    if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    return name[0].toUpperCase();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-          // Titre
-          Row(
-            children: [
-              Icon(Icons.bookmark_rounded, color: cs.primary, size: 20),
-              const SizedBox(width: DonySpacing.sm),
-              Text(
-                'Trajets sauvegardés',
-                style: tt.headlineMedium?.copyWith(color: cs.onSurface),
-              ),
-              const Spacer(),
-              if (_trips.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: DonySpacing.sm, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: cs.primaryContainer,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    '${_trips.length}',
-                    style: tt.labelMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: cs.primary,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: DonySpacing.base),
-
-          if (_trips.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: DonySpacing.xxl),
-              child: Center(
-                child: Column(
-                  children: [
-                    Icon(Icons.bookmark_border_rounded,
-                        size: 48, color: cs.outline),
-                    const SizedBox(height: DonySpacing.md),
-                    Text(
-                      'Aucun trajet sauvegardé',
-                      style: tt.titleLarge?.copyWith(
-                          color: cs.onSurfaceVariant),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Appuie sur 🔖 dans le profil d\'un voyageur pour sauvegarder.',
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.outline,
-                        height: 1.4,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.55,
-              ),
-              child: ListView.separated(
-                shrinkWrap: true,
-                itemCount: _trips.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (_, i) {
-                  final a = _trips[i];
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).scaffoldBackgroundColor,
-                      borderRadius: BorderRadius.circular(DonyRadius.lg),
-                      border: Border.all(color: cs.outline),
-                    ),
-                    child: ListTile(
-                      contentPadding:
-                          const EdgeInsets.fromLTRB(14, DonySpacing.sm, DonySpacing.sm, DonySpacing.sm),
-                      leading: Container(
-                        width: 42,
-                        height: 42,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [DonyColors.blue700, DonyColors.blue300],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Text(
-                            _initials(a),
-                            style: tt.labelLarge?.copyWith(
-                              color: DonyColors.textOnBrand,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ),
-                      title: Text(
-                        '${a.departureCity} → ${a.arrivalCity}',
-                        style: tt.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: cs.onSurface,
-                        ),
-                      ),
-                      subtitle: Text(
-                        '${DateFormat('d MMM yyyy', 'fr').format(a.departureDate)} · '
-                        '${a.availableKg.toStringAsFixed(0)} kg · '
-                        '${a.pricePerKg.toStringAsFixed(0)} €/kg',
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Bouton voir
-                          GestureDetector(
-                            onTap: () {
-                              context.pop();
-                              showTravelerAnnouncementSheet(
-                                  context, announcement: a);
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: cs.primary,
-                                borderRadius:
-                                    BorderRadius.circular(DonyRadius.sm),
-                              ),
-                              child: Text(
-                                'Voir',
-                                style: tt.bodySmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: cs.onPrimary,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: DonySpacing.xs),
-                          // Bouton supprimer
-                          IconButton(
-                            icon: Icon(Icons.bookmark_remove_rounded,
-                                color: cs.outline, size: 20),
-                            onPressed: () => _remove(a.id),
-                            tooltip: 'Retirer',
-                          ),
-                        ],
-                      ),
-                    ),
-                  ).animate().fadeIn(delay: Duration(milliseconds: 40 * i));
-                },
-              ),
-            ),
-      ],
     );
   }
 }
