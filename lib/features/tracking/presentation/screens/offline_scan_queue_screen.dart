@@ -2,7 +2,6 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class OfflineScanQueueScreen extends StatelessWidget {
   const OfflineScanQueueScreen({super.key});
@@ -52,15 +51,8 @@ class OfflineScanQueueScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: cs.surface,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
-          color: cs.onSurface,
-          onPressed: () => context.pop(),
-        ),
+      appBar: DonyAppBar(
+        title: 'Scans hors-ligne',
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: DonySpacing.base),
@@ -94,10 +86,6 @@ class OfflineScanQueueScreen extends StatelessWidget {
             ),
           ),
         ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Divider(height: 1, color: cs.outlineVariant),
-        ),
       ),
       body: Builder(builder: (context) {
         final h = DonyLayout.hPadding(context);

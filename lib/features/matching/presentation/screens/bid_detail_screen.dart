@@ -120,7 +120,6 @@ class _BidDetailViewState extends State<_BidDetailView> {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
     return BlocListener<RatingBloc, RatingState>(
@@ -226,29 +225,17 @@ class _BidDetailViewState extends State<_BidDetailView> {
 
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: AppBar(
-            backgroundColor: cs.surface,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back_ios_rounded,
-                  size: 20, color: cs.primary),
-              onPressed: () {
-                if (widget.fromPayment) {
-                  context.go('/home');
-                } else if (context.canPop()) {
-                  context.pop();
-                } else {
-                  context.go('/home');
-                }
-              },
-              tooltip: 'Retour',
-            ),
-            title: Text(
-              'Mon colis #$bidCode',
-              style: tt.headlineLarge,
-            ),
-            centerTitle: false,
+          appBar: DonyAppBar(
+            title: 'Mon colis #$bidCode',
+            onBack: () {
+              if (widget.fromPayment) {
+                context.go('/home');
+              } else if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/home');
+              }
+            },
             actions: [
               IconButton(
                 icon: Icon(Icons.share_rounded,
@@ -263,10 +250,6 @@ class _BidDetailViewState extends State<_BidDetailView> {
                 tooltip: 'Partager',
               ),
             ],
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(1),
-              child: Divider(height: 1, color: cs.outline),
-            ),
           ),
           body: _skeletonLoading
               ? Center(

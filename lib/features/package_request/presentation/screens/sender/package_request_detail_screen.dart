@@ -79,17 +79,8 @@ class _PackageRequestDetailScreenState
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: cs.surface,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
-          color: cs.primary,
-          onPressed: () => context.pop(),
-        ),
-        title: Text('Ma demande',
-            style: Theme.of(context).textTheme.headlineLarge),
-        centerTitle: false,
+      appBar: DonyAppBar(
+        title: 'Ma demande',
         actions: [
           IconButton(
             icon:
@@ -97,10 +88,6 @@ class _PackageRequestDetailScreenState
             onPressed: () {},
           ),
         ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Divider(height: 1, color: cs.outline),
-        ),
       ),
       body: _loading
           ? Center(

@@ -79,31 +79,7 @@ class _ReceptionConfirmScreenState extends State<ReceptionConfirmScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        automaticallyImplyLeading: false,
-        titleSpacing: DonySpacing.base,
-        title: GestureDetector(
-          onTap: () => context.pop(),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.arrow_back_ios_rounded,
-                size: 16,
-                color: cs.onSurface,
-              ),
-              const SizedBox(width: DonySpacing.xs),
-              Text(
-                'Retour',
-                style: tt.bodyMedium?.copyWith(color: cs.onSurface),
-              ),
-            ],
-          ),
-        ),
-      ),
+      appBar: const DonyAppBar(title: 'Confirmation'),
       body: Builder(builder: (context) {
         final h = DonyLayout.hPadding(context);
         return SingleChildScrollView(

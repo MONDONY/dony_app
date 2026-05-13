@@ -7,7 +7,6 @@ import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/package_request/presentation/widgets/make_offer_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:go_router/go_router.dart';
 
 class PackageRequestPublicDetailScreen extends StatefulWidget {
   const PackageRequestPublicDetailScreen({required this.requestId, super.key});
@@ -50,21 +49,7 @@ class _PackageRequestPublicDetailScreenState
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: cs.surface,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded,
-              size: 20, color: cs.primary),
-          onPressed: () => context.pop(),
-        ),
-        title: Text(
-          'Demande',
-          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-              fontWeight: FontWeight.w700, fontSize: 18),
-        ),
-        centerTitle: false,
-      ),
+      appBar: const DonyAppBar(title: 'Demande'),
       body: _loading
           ? Center(child: CircularProgressIndicator(color: cs.primary))
           : _error != null

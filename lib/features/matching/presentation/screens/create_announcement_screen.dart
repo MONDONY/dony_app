@@ -361,9 +361,17 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
             elevation: 0,
             scrolledUnderElevation: 0,
             leading: IconButton(
-              icon: Icon(Icons.close_rounded,
-                  size: 22, color: cs.onSurface),
+              tooltip: 'Fermer',
               onPressed: () => context.pop(),
+              icon: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer,
+                  borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
+                ),
+                child: Icon(Icons.close_rounded, size: 20, color: cs.primary),
+              ),
             ),
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(0.5),

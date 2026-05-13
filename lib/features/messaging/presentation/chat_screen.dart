@@ -179,9 +179,17 @@ class _ChatScreenState extends State<ChatScreen> {
         scrolledUnderElevation: 0,
         centerTitle: false,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
-          color: cs.primary,
+          tooltip: 'Retour',
           onPressed: () => context.pop(),
+          icon: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: cs.primaryContainer,
+              borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
+            ),
+            child: Icon(Icons.chevron_left_rounded, size: 20, color: cs.primary),
+          ),
         ),
         title: Row(
           children: [

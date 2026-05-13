@@ -1451,19 +1451,14 @@ class _NearMeBackButton extends StatelessWidget {
                 ),
               ],
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.arrow_back_rounded, size: 18, color: cs.onSurface),
-                const SizedBox(width: DonySpacing.xs),
-                Text(
-                  'Retour',
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: cs.onSurface,
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-              ],
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: cs.primaryContainer,
+                borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
+              ),
+              child: Icon(Icons.chevron_left_rounded, size: 20, color: cs.primary),
             ),
           ),
         ),

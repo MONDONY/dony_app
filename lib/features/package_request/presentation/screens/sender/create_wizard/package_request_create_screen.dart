@@ -212,22 +212,30 @@ class _Header extends StatelessWidget {
             ),
             child: Row(
               children: [
-                IconButton(
-                  icon: const Icon(
-                    Icons.arrow_back_ios_rounded,
-                    size: 18,
-                    color: DonyColors.textPrimary,
-                  ),
-                  onPressed: () {
-                    if (currentStep > 0) {
-                      context
-                          .read<PackageRequestFormBloc>()
-                          .add(const FormStepBack());
-                    } else {
-                      Navigator.of(context, rootNavigator: true).maybePop();
-                    }
-                  },
-                ),
+                Builder(builder: (ctx) {
+                  final cs = Theme.of(ctx).colorScheme;
+                  return IconButton(
+                    tooltip: 'Retour',
+                    onPressed: () {
+                      if (currentStep > 0) {
+                        context
+                            .read<PackageRequestFormBloc>()
+                            .add(const FormStepBack());
+                      } else {
+                        Navigator.of(context, rootNavigator: true).maybePop();
+                      }
+                    },
+                    icon: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: cs.primaryContainer,
+                        borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
+                      ),
+                      child: Icon(Icons.chevron_left_rounded, size: 20, color: cs.primary),
+                    ),
+                  );
+                }),
                 Expanded(
                   child: Text(
                     _title,

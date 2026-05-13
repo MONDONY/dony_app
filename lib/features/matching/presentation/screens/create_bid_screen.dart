@@ -336,10 +336,17 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       scrolledUnderElevation: 0,
       centerTitle: false,
       leading: IconButton(
-        icon: Icon(Icons.close_rounded,
-            size: 22, color: cs.onSurface),
-        onPressed: () => context.pop(),
         tooltip: 'Fermer',
+        onPressed: () => context.pop(),
+        icon: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: cs.primaryContainer,
+            borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
+          ),
+          child: Icon(Icons.close_rounded, size: 20, color: cs.primary),
+        ),
       ),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

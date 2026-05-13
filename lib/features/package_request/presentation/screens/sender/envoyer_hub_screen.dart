@@ -146,10 +146,17 @@ class _SectionHeader extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
-            color: cs.primary,
+            tooltip: 'Retour',
             onPressed: onBack,
-            visualDensity: VisualDensity.compact,
+            icon: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: cs.primaryContainer,
+                borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
+              ),
+              child: Icon(Icons.chevron_left_rounded, size: 20, color: cs.primary),
+            ),
           ),
           Text(
             title,

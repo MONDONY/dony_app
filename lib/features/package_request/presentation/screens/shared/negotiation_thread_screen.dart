@@ -85,22 +85,22 @@ class _ThreadView extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(DonySpacing.base, 0, DonySpacing.sm, 0),
         child: Row(
           children: [
-            GestureDetector(
-              onTap: () => context.pop(),
-              child: Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(DonyRadius.sm),
-                  border: Border.all(color: DonyColors.neutral200),
+            Builder(builder: (ctx) {
+              final cs = Theme.of(ctx).colorScheme;
+              return IconButton(
+                tooltip: 'Retour',
+                onPressed: () => context.pop(),
+                icon: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer,
+                    borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
+                  ),
+                  child: Icon(Icons.chevron_left_rounded, size: 20, color: cs.primary),
                 ),
-                child: const Center(
-                  child: Icon(Icons.arrow_back_ios_rounded,
-                      size: 15, color: DonyColors.textPrimary),
-                ),
-              ),
-            ),
+              );
+            }),
             const SizedBox(width: DonySpacing.sm + 2),
             if (thread != null) ...[
               _TravelerTitle(thread: thread),

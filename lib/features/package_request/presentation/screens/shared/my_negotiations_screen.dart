@@ -14,51 +14,9 @@ class MyNegotiationsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
     return Scaffold(
       backgroundColor: DonyColors.sand100,
-      appBar: AppBar(
-        backgroundColor: DonyColors.sand100,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        automaticallyImplyLeading: false,
-        titleSpacing: 0,
-        title: Padding(
-          padding: const EdgeInsets.fromLTRB(DonySpacing.base, 0, DonySpacing.base, 0),
-          child: Row(
-            children: [
-              GestureDetector(
-                onTap: () => context.pop(),
-                child: Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(DonyRadius.sm),
-                    border: Border.all(color: DonyColors.neutral200),
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.arrow_back_ios_rounded, size: 15, color: DonyColors.textPrimary),
-                  ),
-                ),
-              ),
-              const SizedBox(width: DonySpacing.sm + 4),
-              Text(
-                'Négociations',
-                style: tt.headlineLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: DonyColors.textPrimary,
-                  letterSpacing: -0.4,
-                ),
-              ),
-            ],
-          ),
-        ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: DonyColors.neutral200),
-        ),
-      ),
+      appBar: const DonyAppBar(title: 'Négociations'),
       body: BlocProvider<NegotiationListBloc>(
         create: (_) => getIt<NegotiationListBloc>()..add(const NegotiationListFetchRequested()),
         child: const MyNegotiationsBody(),

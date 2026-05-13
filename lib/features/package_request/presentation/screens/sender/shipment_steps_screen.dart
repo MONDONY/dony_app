@@ -73,22 +73,7 @@ class _ShipmentStepsScreenState extends State<ShipmentStepsScreen> {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: cs.surface,
-      appBar: AppBar(
-        backgroundColor: cs.surface,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded,
-              size: 20, color: cs.onSurface),
-          onPressed: () => context.pop(),
-        ),
-        title: Text(
-          widget.travelerDisplayName ?? 'Suivi',
-          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-              fontSize: 16, fontWeight: FontWeight.w700),
-        ),
-        centerTitle: false,
-      ),
+      appBar: DonyAppBar(title: widget.travelerDisplayName ?? 'Suivi'),
       body: _loading
           ? Center(child: CircularProgressIndicator(color: cs.primary))
           : _error != null

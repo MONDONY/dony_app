@@ -190,13 +190,20 @@ class _BidListViewState extends State<_BidListView>
             scrolledUnderElevation: 0,
             centerTitle: false,
             leading: IconButton(
-              icon: Icon(Icons.arrow_back_ios_rounded,
-                  size: 20, color: cs.primary),
+              tooltip: 'Retour',
               onPressed: () {
                 if (context.canPop()) context.pop();
                 else context.go('/home');
               },
-              tooltip: 'Retour',
+              icon: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer,
+                  borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
+                ),
+                child: Icon(Icons.chevron_left_rounded, size: 20, color: cs.primary),
+              ),
             ),
             title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

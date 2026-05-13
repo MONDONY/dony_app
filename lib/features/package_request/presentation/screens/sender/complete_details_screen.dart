@@ -106,21 +106,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
       },
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        appBar: AppBar(
-          backgroundColor: cs.surface,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios_rounded,
-                size: 20, color: cs.primary),
-            onPressed: () => context.pop(),
-          ),
-          title: Text(
-            'Détails de livraison',
-            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                fontWeight: FontWeight.w700, fontSize: 18),
-          ),
-          centerTitle: false,
-        ),
+        appBar: const DonyAppBar(title: 'Détails de livraison'),
         body: Stack(
           children: [
             SingleChildScrollView(

@@ -132,21 +132,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
       },
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        appBar: AppBar(
-          backgroundColor: cs.surface,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios_rounded,
-                size: 20, color: cs.primary),
-            onPressed: () => context.pop(),
-          ),
-          title: Text(
-            'Lier un trajet',
-            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                fontWeight: FontWeight.w700, fontSize: 18),
-          ),
-          centerTitle: false,
-        ),
+        appBar: const DonyAppBar(title: 'Lier un trajet'),
         body: _loading
             ? Center(child: CircularProgressIndicator(color: cs.primary))
             : _error != null
