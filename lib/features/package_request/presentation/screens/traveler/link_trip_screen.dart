@@ -173,11 +173,11 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
     final cs = Theme.of(context).colorScheme;
     final r = _request!;
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
         DonySpacing.lg,
         DonySpacing.lg,
         DonySpacing.lg,
-        160, // room for DonySelectBar in bottomNavigationBar
+        MediaQuery.paddingOf(context).bottom + 100, // room for DonySelectBar + safe area
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
