@@ -117,11 +117,12 @@ flutter_launcher_icons:
     theme_color: "#0B5FFF"
 
 flutter_native_splash:
-  background_image: assets/splash_full_screen.png
+  color: "#FAFAF8"
+  image: assets/mascotte/joyeux.png
   android_12:
-    color: "#FFFFFF"
-    icon_background_color: "#FFFFFF"
-    image: assets/splash_icon_android12.png
+    color: "#FAFAF8"
+    icon_background_color: "#FAFAF8"
+    image: assets/mascotte/joyeux.png
   ios: true
   android: true
 
