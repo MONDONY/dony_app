@@ -122,7 +122,7 @@ flutter_native_splash:
   android_12:
     color: "#FAFAF8"
     icon_background_color: "#FAFAF8"
-    image: assets/mascotte/joyeux.png
+    image: assets/splash/joyeux_square.png
   ios: true
   android: true
 
