@@ -217,7 +217,7 @@ class _InfoColumn extends StatelessWidget {
           ],
         ),
         const SizedBox(height: DonySpacing.xs),
-        // Taille · poids · catégorie
+        // Taille · poids · catégorie (+ badge URGENT pour médicaments)
         Wrap(
           spacing: DonySpacing.xs,
           runSpacing: DonySpacing.xxs,
@@ -229,6 +229,8 @@ class _InfoColumn extends StatelessWidget {
               tt: tt,
             ),
             _InfoChip(label: item.contentCategory.label, cs: cs, tt: tt),
+            if (item.contentCategory.isUrgent)
+              _InfoChip(label: 'URGENT', cs: cs, tt: tt, isUrgent: true),
           ],
         ),
         const SizedBox(height: DonySpacing.xs),
@@ -303,21 +305,32 @@ class _InfoChip extends StatelessWidget {
     required this.cs,
     required this.tt,
     this.isPrimary = false,
+    this.isUrgent = false,
   });
 
   final String label;
   final ColorScheme cs;
   final TextTheme tt;
   final bool isPrimary;
+  final bool isUrgent;
 
   @override
   Widget build(BuildContext context) {
+    final bg = isUrgent
+        ? cs.error.withValues(alpha: 0.12)
+        : isPrimary
+            ? cs.primaryContainer
+            : cs.surfaceContainerHighest;
+    final fg = isUrgent
+        ? cs.error
+        : isPrimary
+            ? cs.primary
+            : cs.onSurfaceVariant;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
-        color: isPrimary
-            ? cs.primaryContainer
-            : cs.surfaceContainerHighest,
+        color: bg,
         borderRadius: BorderRadius.circular(DonyRadius.sm),
       ),
       child: Text(
@@ -325,7 +338,7 @@ class _InfoChip extends StatelessWidget {
         style: tt.labelSmall?.copyWith(
           fontWeight: FontWeight.w700,
           fontSize: 11,
-          color: isPrimary ? cs.primary : cs.onSurfaceVariant,
+          color: fg,
         ),
       ),
     );

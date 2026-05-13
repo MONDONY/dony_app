@@ -400,36 +400,16 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.all(28),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.inbox_outlined, color: cs.onSurfaceVariant, size: 40),
-          const SizedBox(height: 12),
-          Text(
-            isNearMe ? 'Aucune demande dans ce rayon' : 'Aucune demande pour le moment',
-            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: cs.onSurface,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            isNearMe
-                ? 'Élargis ta zone ou désactive “Près de moi”'
-                : 'Reviens dans un instant — de nouvelles demandes sont publiées chaque jour',
-            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: cs.onSurfaceVariant,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+      child: DonyEmptyState(
+        title: isNearMe
+            ? 'Aucune demande dans ce rayon'
+            : 'Aucune demande pour le moment',
+        description: isNearMe
+            ? 'Élargis ta zone ou désactive “Près de moi”'
+            : 'Reviens dans un instant — de nouvelles demandes sont publiées chaque jour',
+        mascotte: DonyMascotteType.assis,
       ),
     );
   }

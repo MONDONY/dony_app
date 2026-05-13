@@ -3,7 +3,7 @@ import 'package:dony/features/package_request/data/models/content_category.dart'
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/widgets/near_me_package_request_carousel.dart';
-import 'package:dony/features/package_request/presentation/widgets/package_request_compact_card.dart';
+import 'package:dony/features/package_request/presentation/widgets/package_request_carousel_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -66,7 +66,8 @@ void main() {
         userPosition: null,
         onSeeAll: () {},
       )));
-      expect(find.byType(PackageRequestCompactCard), findsWidgets);
+      await tester.pumpAndSettle();
+      expect(find.byType(PackageRequestCarouselCard), findsWidgets);
       expect(find.text('Voir les 3 demandes'), findsOneWidget);
     });
 
@@ -77,8 +78,9 @@ void main() {
         userPosition: null,
         onSeeAll: () => called = true,
       )));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Voir les 1 demandes'));
-      await tester.pump();
+      await tester.pumpAndSettle();
       expect(called, isTrue);
     });
   });

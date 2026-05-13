@@ -1087,6 +1087,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             title: 'Demandes bientôt disponibles',
                             description:
                                 'Tu pourras bientôt consulter les demandes d\'envoi postées par les expéditeurs.',
+                            mascotte: DonyMascotteType.assis,
                           ),
                         );
                       }
@@ -1134,6 +1135,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                 ),
                               ),
                             ),
+                          const SliverToBoxAdapter(child: _TrustBanner()),
                           SliverPadding(
                             padding: EdgeInsets.fromLTRB(
                               DonySpacing.base,
@@ -1175,77 +1177,82 @@ class _MapSenderViewState extends State<_MapSenderView> {
                 else if (count == 0)
                   SliverFillRemaining(
                     hasScrollBody: false,
-                    child: Center(
-                      child: Text(
-                        _isNearMeActive
-                            ? 'Aucun voyageur à proximité'
-                            : 'Aucun voyageur sur ce corridor',
-                        style: tt.bodyMedium
-                            ?.copyWith(color: cs.onSurfaceVariant),
-                      ),
+                    child: DonyEmptyState(
+                      title: _isNearMeActive
+                          ? 'Aucun voyageur à proximité'
+                          : 'Aucun voyageur sur ce corridor',
+                      description: _isNearMeActive
+                          ? 'Élargis ta zone ou désactive "Près de moi"'
+                          : 'De nouveaux trajets sont publiés chaque jour — reviens bientôt.',
+                      mascotte: DonyMascotteType.assis,
                     ),
                   )
                 else
-                  SliverPadding(
-                    padding: EdgeInsets.fromLTRB(
-                      DonySpacing.base,
-                      DonySpacing.sm,
-                      DonySpacing.base,
-                      bottomPad + DonySpacing.huge,
-                    ),
-                    sliver: BlocBuilder<BidBloc, BidState>(
-                      buildWhen: (prev, curr) =>
-                          curr is BidListLoaded || prev is BidListLoaded,
-                      builder: (context, bidState) {
-                        final myActiveBidsByAnnouncement =
-                            bidState.activeBidsByAnnouncement();
-                        return SliverList.separated(
-                          itemCount: count,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(height: DonySpacing.md),
-                          itemBuilder: (context, i) {
-                            final a = announcements[i];
-                            final authState = context.read<AuthBloc>().state;
-                            final currentUserId = authState is AuthAuthenticated
-                                ? authState.user.id
-                                : null;
-                            final isOwn = currentUserId != null &&
-                                a.travelerId == currentUserId;
-                            final badge = _isNearMeActive
-                                ? buildDistanceBadge(
-                                    a,
-                                    _userPosition != null
-                                        ? (
-                                            lat: _userPosition!.latitude,
-                                            lng: _userPosition!.longitude
-                                          )
-                                        : null,
-                                  )
-                                : null;
-                            final existingBid =
-                                myActiveBidsByAnnouncement[a.id];
-                            return TravelerCard(
-                              announcement: a,
-                              index: i,
-                              isOwnAnnouncement: isOwn,
-                              distanceBadge: badge,
-                              existingBidStatus: existingBid?.status,
-                              onTap: isOwn
-                                  ? null
-                                  : existingBid != null
-                                      ? () => context.push(
-                                            '/bids/${existingBid.id}',
-                                            extra: existingBid,
-                                          )
-                                      : () => showTravelerAnnouncementSheet(
-                                            context,
-                                            announcement: a,
-                                          ),
+                  SliverMainAxisGroup(
+                    slivers: [
+                      const SliverToBoxAdapter(child: _TrustBanner()),
+                      SliverPadding(
+                        padding: EdgeInsets.fromLTRB(
+                          DonySpacing.base,
+                          DonySpacing.sm,
+                          DonySpacing.base,
+                          bottomPad + DonySpacing.huge,
+                        ),
+                        sliver: BlocBuilder<BidBloc, BidState>(
+                          buildWhen: (prev, curr) =>
+                              curr is BidListLoaded || prev is BidListLoaded,
+                          builder: (context, bidState) {
+                            final myActiveBidsByAnnouncement =
+                                bidState.activeBidsByAnnouncement();
+                            return SliverList.separated(
+                              itemCount: count,
+                              separatorBuilder: (_, _) =>
+                                  const SizedBox(height: DonySpacing.md),
+                              itemBuilder: (context, i) {
+                                final a = announcements[i];
+                                final authState = context.read<AuthBloc>().state;
+                                final currentUserId = authState is AuthAuthenticated
+                                    ? authState.user.id
+                                    : null;
+                                final isOwn = currentUserId != null &&
+                                    a.travelerId == currentUserId;
+                                final badge = _isNearMeActive
+                                    ? buildDistanceBadge(
+                                        a,
+                                        _userPosition != null
+                                            ? (
+                                                lat: _userPosition!.latitude,
+                                                lng: _userPosition!.longitude
+                                              )
+                                            : null,
+                                      )
+                                    : null;
+                                final existingBid =
+                                    myActiveBidsByAnnouncement[a.id];
+                                return TravelerCard(
+                                  announcement: a,
+                                  index: i,
+                                  isOwnAnnouncement: isOwn,
+                                  distanceBadge: badge,
+                                  existingBidStatus: existingBid?.status,
+                                  onTap: isOwn
+                                      ? null
+                                      : existingBid != null
+                                          ? () => context.push(
+                                                '/bids/${existingBid.id}',
+                                                extra: existingBid,
+                                              )
+                                          : () => showTravelerAnnouncementSheet(
+                                                context,
+                                                announcement: a,
+                                              ),
+                                );
+                              },
                             );
                           },
-                        );
-                      },
-                    ),
+                        ),
+                      ),
+                    ],
                   ),
               ],
             ),
@@ -2521,6 +2528,86 @@ class _PackageRequestFilterChipsRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ── _TrustBanner ──────────────────────────────────────────────────────────────
+
+class _TrustBanner extends StatelessWidget {
+  const _TrustBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(
+        DonySpacing.base, DonySpacing.xs, DonySpacing.base, DonySpacing.xs,
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.md, vertical: DonySpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: cs.primaryContainer.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        border: Border.all(color: cs.primary.withValues(alpha: 0.15)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _TrustPill(
+            icon: Icons.verified_user_rounded,
+            label: 'Utilisateurs vérifiés',
+            cs: cs,
+            tt: tt,
+          ),
+          Container(
+            width: 1,
+            height: 18,
+            margin: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
+            color: cs.primary.withValues(alpha: 0.25),
+          ),
+          _TrustPill(
+            icon: Icons.lock_rounded,
+            label: 'Paiement sécurisé',
+            cs: cs,
+            tt: tt,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrustPill extends StatelessWidget {
+  const _TrustPill({
+    required this.icon,
+    required this.label,
+    required this.cs,
+    required this.tt,
+  });
+
+  final IconData icon;
+  final String label;
+  final ColorScheme cs;
+  final TextTheme tt;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: cs.primary),
+        const SizedBox(width: DonySpacing.xs),
+        Text(
+          label,
+          style: tt.labelSmall?.copyWith(
+            color: cs.primary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }

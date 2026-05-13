@@ -251,45 +251,66 @@ DonySnackbar.show(
 );
 ```
 
-### `DonyMascotte`
+### `DonyMascotteAnimated` (à utiliser pour tout nouvel usage)
+
+Widget animé avec presets flutter_animate par type. Chaque type a une animation d'entrée distincte (< 500 ms).
 
 ```dart
-DonyMascotte(
-  type: DonyMascotteType.salue,
-  size: DonyMascotteSize.lg,        // sm=64 | md=96 | lg=160 | xl=240
-  borderRadius: BorderRadius.circular(DonyRadius.card),  // optionnel
+// Entrée standard
+DonyMascotteAnimated(
+  type: DonyMascotteType.joyeux,
+  size: DonyMascotteSize.lg,   // sm=64 | md=96 | lg=160 | xl=240
+)
+
+// Succès avec halo ambient (écrans confirmation/KYC)
+DonyMascotteAnimated(
+  type: DonyMascotteType.securise,
+  withGlow: true,
 )
 ```
 
-**Mapping des mascottes disponibles :**
+**Mapping des mascottes (assets/mascotte/) :**
 
-| Type | Usage recommandé |
-|------|------------------|
-| `salue` | Splash natif, onboarding |
-| `tenantColis` | Tutoriel envoi (rôle expéditeur) |
-| `colisLivre` | Confirmation livraison finale |
-| `pouceLeve` | Confirmation étape intermédiaire (scan) |
-| `dansAvion` / `surAvion` | Étapes "embarqué" / "en vol" du tracking |
-| `aMoto` / `aVoiture` | Étapes "remise destinataire" / "transit" |
-| `courir` | Loadings longs (option) |
-| `noData` | `DonyEmptyState(type: empty, mascotte: DonyMascotteType.noData)` |
-| `perdu` | `DonyEmptyState(type: error, mascotte: DonyMascotteType.perdu)` |
+| Type | Animation | Usage recommandé |
+|------|-----------|------------------|
+| `joyeux` | scaleXY easeOutBack | Onboarding, auth, accueil |
+| `confiant` | slideY + shimmer | OTP / étapes de vérification |
+| `securise` | scaleXY easeOutBack | PIN setup, confirmation, KYC succès |
+| `tenantColis` | slideY | Tutoriel envoi (rôle expéditeur) |
+| `donneColis` | slideY (haut) | Remise du colis au voyageur |
+| `enCourse` | slideX | Tracking en transit |
+| `assis` | fadeIn + scaleXY | `DonyEmptyState` vide (aucun contenu) |
+| `scan` | pulse répété | QR scanner actif |
+
+### `DonyMascotte` (widget statique — usage restreint)
+
+À utiliser uniquement quand l'animation est indésirable (ex: liste dense).
+
+```dart
+DonyMascotte(
+  type: DonyMascotteType.assis,
+  size: DonyMascotteSize.lg,
+  borderRadius: BorderRadius.circular(DonyRadius.card),  // optionnel
+)
+```
 
 **Avec `DonyEmptyState` :**
 
 ```dart
 DonyEmptyState(
-  title: 'Aucune annonce',
-  description: 'Reviens plus tard !',
+  title: 'Aucune livraison',
+  description: 'Vos livraisons terminées apparaîtront ici.',
   type: DonyEmptyStateType.empty,
-  mascotte: DonyMascotteType.noData,
+  mascotte: DonyMascotteType.assis,  // DonyMascotteAnimated automatique
 )
 ```
 
 **Règles :**
-- **Jamais** `Image.asset('assets/mascottes/...')` — toujours `DonyMascotte(type:)`
-- Les JPG ont un fond non transparent — utiliser `borderRadius` pour adoucir l'intégration
+- **Jamais** `Image.asset('assets/mascotte/...')` — toujours `DonyMascotteAnimated(type:)` ou `DonyMascotte(type:)`
+- **Préférer** `DonyMascotteAnimated` pour tout nouvel usage
+- `DonyEmptyState(mascotte:)` utilise `DonyMascotteAnimated` automatiquement
 - Ne pas mettre `mascotte:` dans un `DonyEmptyState(type: loading)` (la branche loading l'ignore)
+- `withGlow: true` réservé aux écrans de succès / confirmation finale
 
 ---
 

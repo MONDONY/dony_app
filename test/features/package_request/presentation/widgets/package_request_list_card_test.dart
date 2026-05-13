@@ -53,6 +53,7 @@ void main() {
   group('PackageRequestListCard', () {
     testWidgets('rend le corridor + date + catégorie + prix', (tester) async {
       await tester.pumpWidget(wrap(PackageRequestListCard(item: _item())));
+      await tester.pumpAndSettle();
       expect(find.text('Paris → Dakar'), findsOneWidget);
       expect(find.text('35 €'), findsOneWidget);
       expect(find.textContaining('Vêtements'), findsOneWidget);
@@ -61,6 +62,7 @@ void main() {
     testWidgets('rend "Libre" quand pas de targetPriceEur', (tester) async {
       await tester
           .pumpWidget(wrap(PackageRequestListCard(item: _item(targetPrice: null))));
+      await tester.pumpAndSettle();
       expect(find.text('Libre'), findsOneWidget);
       expect(find.text('35 €'), findsNothing);
     });
@@ -70,7 +72,9 @@ void main() {
       await tester.pumpWidget(wrap(PackageRequestListCard(
         item: _item(category: ContentCategory.medicaments),
       )));
+      await tester.pumpAndSettle();
       expect(find.text('URGENT'), findsOneWidget);
+      expect(find.textContaining('Médicaments'), findsOneWidget);
     });
 
     testWidgets('pas de badge URGENT pour les autres catégories',
@@ -78,6 +82,7 @@ void main() {
       await tester.pumpWidget(wrap(PackageRequestListCard(
         item: _item(category: ContentCategory.vetements),
       )));
+      await tester.pumpAndSettle();
       expect(find.text('URGENT'), findsNothing);
     });
 
@@ -85,13 +90,17 @@ void main() {
       await tester.pumpWidget(wrap(PackageRequestListCard(
         item: _item(size: ParcelSize.small),
       )));
-      expect(find.text('S · 5 kg'), findsOneWidget);
+      await tester.pumpAndSettle();
+      expect(find.text('S'), findsOneWidget);
+      expect(find.text('5 kg'), findsOneWidget);
     });
 
     testWidgets('rend sender avec KYC verified', (tester) async {
       await tester.pumpWidget(wrap(PackageRequestListCard(item: _item())));
+      await tester.pumpAndSettle();
       expect(find.text('Marie Diop'), findsOneWidget);
-      expect(find.byIcon(Icons.verified_rounded), findsOneWidget);
+      // DonyAvatar superpose 2 icônes verified_rounded (blanc + couleur)
+      expect(find.byIcon(Icons.verified_rounded), findsWidgets);
       expect(find.text('4.9'), findsOneWidget);
     });
 
@@ -99,6 +108,7 @@ void main() {
       await tester.pumpWidget(wrap(PackageRequestListCard(
         item: _item(kycVerified: false),
       )));
+      await tester.pumpAndSettle();
       expect(find.byIcon(Icons.verified_rounded), findsNothing);
     });
 
@@ -108,23 +118,26 @@ void main() {
         item: _item(),
         onTap: () => tapped = true,
       )));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Paris → Dakar'));
       await tester.pump();
       expect(tapped, isTrue);
     });
 
-    testWidgets('CTA "Faire offre" visible quand onMakeOffer fourni',
+    testWidgets('CTA "Faire une offre" visible quand onMakeOffer fourni',
         (tester) async {
       await tester.pumpWidget(wrap(PackageRequestListCard(
         item: _item(),
         onMakeOffer: () {},
       )));
-      expect(find.text('Faire offre'), findsOneWidget);
+      await tester.pumpAndSettle();
+      expect(find.text('Faire une offre'), findsOneWidget);
     });
 
     testWidgets('pas de CTA quand onMakeOffer null', (tester) async {
       await tester.pumpWidget(wrap(PackageRequestListCard(item: _item())));
-      expect(find.text('Faire offre'), findsNothing);
+      await tester.pumpAndSettle();
+      expect(find.text('Faire une offre'), findsNothing);
     });
   });
 }
