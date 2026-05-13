@@ -1,10 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 
-/// Indicateur de progression du wizard 3 étapes.
-///
-/// Rendu sous l'AppBar — barre linéaire fine (3px) qui suit `currentStep / 3`.
-/// Compagnon du label "Étape X / 3" rendu dans le titre de l'AppBar.
+/// Indicateur 3 segments — un segment par étape, terracotta quand actif/passé.
 class WizardStepIndicator extends StatelessWidget
     implements PreferredSizeWidget {
   const WizardStepIndicator({
@@ -17,17 +14,34 @@ class WizardStepIndicator extends StatelessWidget
   final int totalSteps;
 
   @override
-  Size get preferredSize => const Size.fromHeight(3);
+  Size get preferredSize => const Size.fromHeight(20);
 
   @override
   Widget build(BuildContext context) {
-    final progress = ((currentStep + 1) / totalSteps).clamp(0.0, 1.0);
-    return LinearProgressIndicator(
-      value: progress,
-      backgroundColor: Colors.white.withValues(alpha: 0.4),
-      valueColor:
-          const AlwaysStoppedAnimation<Color>(DonyColors.primary),
-      minHeight: 3,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.lg, DonySpacing.sm, DonySpacing.lg, DonySpacing.md,
+      ),
+      child: Row(
+        children: [
+          for (int i = 0; i < totalSteps; i++) ...[
+            Expanded(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 320),
+                curve: Curves.easeOutCubic,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: i <= currentStep
+                      ? DonyColors.primary
+                      : DonyColors.neutral200,
+                  borderRadius: BorderRadius.circular(DonyRadius.full),
+                ),
+              ),
+            ),
+            if (i < totalSteps - 1) const SizedBox(width: 6),
+          ],
+        ],
+      ),
     );
   }
 }

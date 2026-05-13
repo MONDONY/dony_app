@@ -12,20 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-/// Wizard 3 étapes en bottom sheet glass pour publier une demande de colis.
-///
-/// API d'entrée :
-/// ```dart
-/// PackageRequestCreateWizard.show(context);
-/// ```
-///
-/// Layout :
-/// - Bottom sheet 92% hauteur écran, transparent (aurora visible derrière).
-/// - Handle bar + AppBar in-sheet "Étape X / 3" + step indicator.
-/// - Scrollable content (le step actuel) avec glass cards.
-/// - **Sticky CTA en bas** ("Continuer" / "Publier") via stickyBottom (jamais
-///   masqué par le scroll).
-/// - Aurora peach en fond, glass cards par-dessus.
+/// Wizard 3 étapes — bottom sheet crème/terracotta (Proposition B).
 abstract final class PackageRequestCreateWizard {
   static Future<void> show(BuildContext context) {
     return showModalBottomSheet<void>(
@@ -44,11 +31,7 @@ abstract final class PackageRequestCreateWizard {
   }
 }
 
-// ─── Internal · widget compatibility for the GoRouter route ────────────────
-//
-// `/package-requests/new` est encore référencée par d'anciens deep links et
-// par le router actuel. Ce widget thin ouvre la bottom sheet dès le premier
-// frame et se pop quand la sheet se ferme.
+// ─── Router compat ──────────────────────────────────────────────────────────
 class PackageRequestCreateScreen extends StatefulWidget {
   const PackageRequestCreateScreen({super.key});
 
@@ -104,7 +87,6 @@ class _WizardSheetState extends State<_WizardSheet> {
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
     final keyboardInset = mq.viewInsets.bottom;
-    // Shrink the sheet when keyboard is up so content stays accessible
     final sheetHeight = (mq.size.height * 0.92) - keyboardInset;
 
     return BlocConsumer<PackageRequestFormBloc, PackageRequestFormState>(
@@ -115,7 +97,7 @@ class _WizardSheetState extends State<_WizardSheet> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('Demande publiée — les voyageurs sont notifiés'),
-              backgroundColor: DonyColors.success,
+              backgroundColor: DonyColors.success500,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -130,7 +112,6 @@ class _WizardSheetState extends State<_WizardSheet> {
         }
       },
       builder: (context, state) {
-        final cs = Theme.of(context).colorScheme;
         return AnimatedPadding(
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOutCubic,
@@ -142,7 +123,8 @@ class _WizardSheetState extends State<_WizardSheet> {
                 top: Radius.circular(DonyRadius.sheet),
               ),
               child: ColoredBox(
-                color: cs.surface,
+                // Fond crème — identité Sahel Warmth
+                color: DonyColors.sand100,
                 child: Column(
                   mainAxisSize: MainAxisSize.max,
                   children: [
@@ -185,11 +167,13 @@ class _WizardSheetState extends State<_WizardSheet> {
   }
 }
 
+// ─── Header ─────────────────────────────────────────────────────────────────
+
 class _Header extends StatelessWidget {
   const _Header({required this.currentStep});
   final int currentStep;
 
-  String get _titleByStep => switch (currentStep) {
+  String get _title => switch (currentStep) {
         0 => 'Nouvelle demande',
         1 => 'Ton colis',
         _ => 'Dernière étape',
@@ -197,32 +181,34 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+
     return Container(
       decoration: BoxDecoration(
-        color: cs.surface,
-        border: Border(bottom: BorderSide(color: cs.outline)),
+        color: DonyColors.sand100,
+        border: Border(
+          bottom: BorderSide(color: DonyColors.neutral200),
+        ),
       ),
       child: Column(
         children: [
-          // Handle bar
+          // Handle
           Container(
             margin: const EdgeInsets.only(top: DonySpacing.md),
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: DonyColors.textPrimary.withValues(alpha: 0.25),
+              color: DonyColors.neutral300,
               borderRadius: BorderRadius.circular(DonyRadius.full),
             ),
           ),
-          // Title row : ← + title centered + "X/3" right
+          // Titre + badge étape
           Padding(
             padding: const EdgeInsets.fromLTRB(
               DonySpacing.sm,
               DonySpacing.sm,
               DonySpacing.base,
-              DonySpacing.md,
+              DonySpacing.sm,
             ),
             child: Row(
               children: [
@@ -244,23 +230,37 @@ class _Header extends StatelessWidget {
                 ),
                 Expanded(
                   child: Text(
-                    _titleByStep,
+                    _title,
                     style: tt.titleLarge?.copyWith(
                       color: DonyColors.textPrimary,
                       fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(right: DonySpacing.xs),
-                  child: Text(
-                    '${currentStep + 1}/3',
-                    style: tt.bodyMedium?.copyWith(
-                      color: DonyColors.textSubtle,
-                      fontWeight: FontWeight.w700,
+                // Badge étape
+                Builder(builder: (ctx) {
+                  final cs = Theme.of(ctx).colorScheme;
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.sm + 2,
+                      vertical: 4,
                     ),
-                  ),
-                ),
+                    decoration: BoxDecoration(
+                      color: cs.primaryContainer,
+                      borderRadius: BorderRadius.circular(DonyRadius.full),
+                      border: Border.all(color: cs.primary),
+                    ),
+                    child: Text(
+                      '${currentStep + 1} / 3',
+                      style: tt.labelSmall?.copyWith(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: cs.primary,
+                      ),
+                    ),
+                  );
+                }),
               ],
             ),
           ),
@@ -270,6 +270,8 @@ class _Header extends StatelessWidget {
     );
   }
 }
+
+// ─── Sticky CTA ─────────────────────────────────────────────────────────────
 
 class _StickyCta extends StatelessWidget {
   const _StickyCta({
@@ -286,14 +288,15 @@ class _StickyCta extends StatelessWidget {
   Widget build(BuildContext context) {
     final isFinalStep = currentStep == 2;
     final bottomInset = MediaQuery.of(context).viewPadding.bottom;
-    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return Container(
       decoration: BoxDecoration(
-        color: cs.surface,
-        border: Border(top: BorderSide(color: cs.outline)),
+        color: DonyColors.sand100,
+        border: Border(top: BorderSide(color: DonyColors.neutral200)),
         boxShadow: [
           BoxShadow(
-            color: DonyColors.ink800.withValues(alpha: 0.08),
+            color: DonyColors.sand400.withValues(alpha: 0.18),
             blurRadius: 16,
             offset: const Offset(0, -4),
           ),
@@ -311,10 +314,10 @@ class _StickyCta extends StatelessWidget {
           if (isFinalStep) ...[
             Text(
               'En publiant, tu acceptes les CGU',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: DonyColors.textMuted,
-                    fontSize: 12,
-                  ),
+              style: tt.bodySmall?.copyWith(
+                color: DonyColors.textMuted,
+                fontSize: 12,
+              ),
             ),
             const SizedBox(height: DonySpacing.sm),
           ],
@@ -324,10 +327,10 @@ class _StickyCta extends StatelessWidget {
                 : isFinalStep
                     ? 'Publier ma demande'
                     : 'Continuer',
-            onPressed: isSubmitting ? null : onPressed,
-            icon: isFinalStep
+            iconRight: isFinalStep
                 ? Icons.send_rounded
                 : Icons.arrow_forward_rounded,
+            onPressed: isSubmitting ? null : onPressed,
             isLoading: isSubmitting,
           ),
         ],
@@ -335,3 +338,4 @@ class _StickyCta extends StatelessWidget {
     );
   }
 }
+

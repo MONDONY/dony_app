@@ -1,9 +1,10 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-/// Carte récap à l'étape 3 — fond beige clair (style maquette).
+/// Carte récap à l'étape 3 — fond primaryContainer (bleu léger).
 class WizardSummaryCard extends StatelessWidget {
   const WizardSummaryCard({super.key, required this.state});
 
@@ -12,56 +13,65 @@ class WizardSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    // Fond chaud subtil — utilise DonyColors.surfaceWarm si dispo, sinon
-    // tombe sur primary à très faible alpha sur surface (theme-aware).
-    final bg = Color.lerp(cs.primary, cs.surface, 0.92)!;
     return Container(
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(DonyRadius.md),
+        color: cs.primaryContainer,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(
+          color: cs.primary.withValues(alpha: 0.2),
+        ),
       ),
       padding: const EdgeInsets.all(DonySpacing.base),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _line(context, 'Trajet', _corridorText(state)),
+          _divider(cs),
           _line(context, 'Date', _dateText(state)),
+          if (state.transportMode != null) ...[
+            _divider(cs),
+            _line(context, 'Transport', state.transportMode!.label),
+          ],
+          _divider(cs),
           _line(context, 'Colis', _packageText(state)),
         ],
       ),
     );
   }
 
+  Widget _divider(ColorScheme cs) => Divider(
+        height: 12,
+        thickness: 1,
+        color: cs.outlineVariant,
+      );
+
   Widget _line(BuildContext context, String label, String value) {
     final tt = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 70,
-            child: Text(
-              label,
-              style: tt.bodySmall?.copyWith(
-                color: DonyColors.textMuted,
-                fontSize: 13,
-              ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 76,
+          child: Text(
+            label,
+            style: tt.bodySmall?.copyWith(
+              color: DonyColors.textMuted,
+              fontSize: 13,
             ),
           ),
-          Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: tt.bodyMedium?.copyWith(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: DonyColors.textPrimary,
-              ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: tt.bodyMedium?.copyWith(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: DonyColors.textPrimary,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

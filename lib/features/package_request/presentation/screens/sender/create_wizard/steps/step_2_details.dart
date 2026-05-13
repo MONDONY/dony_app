@@ -154,7 +154,6 @@ class _WeightInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
     return TextFormField(
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -168,7 +167,7 @@ class _WeightInput extends StatelessWidget {
       ),
       decoration: InputDecoration(
         filled: true,
-        fillColor: cs.surface,
+        fillColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: DonySpacing.base,
           vertical: DonySpacing.md + 4,
@@ -180,7 +179,7 @@ class _WeightInput extends StatelessWidget {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide(color: cs.outline),
+          borderSide: const BorderSide(color: DonyColors.neutral200),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -221,8 +220,8 @@ class _SizeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final m = _meta;
     final cs = Theme.of(context).colorScheme;
+    final m = _meta;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -233,10 +232,10 @@ class _SizeCard extends StatelessWidget {
           horizontal: DonySpacing.xs,
         ),
         decoration: BoxDecoration(
-          color: cs.surface,
+          color: selected ? cs.primaryContainer : cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.md),
           border: Border.all(
-            color: selected ? DonyColors.primary : cs.outline,
+            color: selected ? cs.primary : cs.outline,
             width: selected ? 2 : 1,
           ),
         ),
@@ -249,7 +248,7 @@ class _SizeCard extends StatelessWidget {
               style: tt.titleMedium?.copyWith(
                 fontWeight: FontWeight.w800,
                 fontSize: 14,
-                color: DonyColors.textPrimary,
+                color: selected ? cs.primary : DonyColors.textPrimary,
               ),
             ),
             Text(

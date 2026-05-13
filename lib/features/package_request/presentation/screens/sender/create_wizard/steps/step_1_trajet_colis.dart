@@ -9,10 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-/// Étape 1 / 3 — Trajet & colis (match maquette `v3/expéditeur_publie`).
-///
-/// Layout : label section "TRAJET & COLIS" (accent) · titre "D'où vers où ?"
-/// · 2 inputs villes · Date + Tolérance row · Mode de transport en boutons.
+/// Étape 1 / 3 — Trajet & colis (Proposal B — Sahel Warmth).
 class Step1TrajetColis extends StatefulWidget {
   const Step1TrajetColis({super.key});
 
@@ -78,7 +75,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
             Text(
               'TRAJET & COLIS',
               style: tt.labelMedium?.copyWith(
-                color: DonyColors.accent,
+                color: DonyColors.primary,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.0,
               ),
@@ -94,32 +91,25 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
             ),
             const SizedBox(height: DonySpacing.lg),
 
-            // ── Départ ─────────────────────────────────────────────────────
-            _FieldLabel('Départ'),
-            const SizedBox(height: DonySpacing.xs),
-            BlocProvider(
-              create: (_) => getIt<CitySearchBloc>(),
-              child: CityAutocompleteField(
-                label: '',
-                initialValue: _departureCity,
-                prefixIcon: const Text('📍', style: TextStyle(fontSize: 16)),
-                onSelected: (city) =>
-                    setState(() => _departureCity = city.name),
+            // ── Route card (départ + arrivée) ──────────────────────────────
+            _RouteCard(
+              departureField: BlocProvider(
+                create: (_) => getIt<CitySearchBloc>(),
+                child: CityAutocompleteField(
+                  label: '',
+                  initialValue: _departureCity,
+                  onSelected: (city) =>
+                      setState(() => _departureCity = city.name),
+                ),
               ),
-            ),
-            const SizedBox(height: DonySpacing.base),
-
-            // ── Arrivée ────────────────────────────────────────────────────
-            _FieldLabel('Arrivée'),
-            const SizedBox(height: DonySpacing.xs),
-            BlocProvider(
-              create: (_) => getIt<CitySearchBloc>(),
-              child: CityAutocompleteField(
-                label: '',
-                initialValue: _arrivalCity,
-                prefixIcon: const Text('📍', style: TextStyle(fontSize: 16)),
-                onSelected: (city) =>
-                    setState(() => _arrivalCity = city.name),
+              arrivalField: BlocProvider(
+                create: (_) => getIt<CitySearchBloc>(),
+                child: CityAutocompleteField(
+                  label: '',
+                  initialValue: _arrivalCity,
+                  onSelected: (city) =>
+                      setState(() => _arrivalCity = city.name),
+                ),
               ),
             ),
             const SizedBox(height: DonySpacing.base),
@@ -177,6 +167,127 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ─── Route Card ──────────────────────────────────────────────────────────────
+
+class _RouteCard extends StatelessWidget {
+  const _RouteCard({
+    required this.departureField,
+    required this.arrivalField,
+  });
+
+  final Widget departureField;
+  final Widget arrivalField;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: DonyColors.neutral200),
+        boxShadow: [
+          BoxShadow(
+            color: DonyColors.sand400.withValues(alpha: 0.10),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      // Column simple — pas de Row+stretch, pas de hauteur infinie
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              border: Border(
+                left: BorderSide(color: DonyColors.primary, width: 4),
+              ),
+            ),
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.md, DonySpacing.md, DonySpacing.md, DonySpacing.sm,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _CityHeader(
+                  label: 'DÉPART',
+                  icon: Icons.my_location_rounded,
+                ),
+                const SizedBox(height: DonySpacing.xs),
+                departureField,
+              ],
+            ),
+          ),
+          const Divider(height: 1, thickness: 1, color: DonyColors.neutral200),
+          Container(
+            decoration: BoxDecoration(
+              border: Border(
+                left: BorderSide(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  width: 4,
+                ),
+              ),
+            ),
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.md, DonySpacing.sm, DonySpacing.md, DonySpacing.md,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _CityHeader(
+                  label: 'ARRIVÉE',
+                  icon: Icons.location_on_rounded,
+                ),
+                const SizedBox(height: DonySpacing.xs),
+                arrivalField,
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CityHeader extends StatelessWidget {
+  const _CityHeader({required this.label, required this.icon});
+
+  final String label;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: cs.primaryContainer,
+            borderRadius: BorderRadius.circular(DonyRadius.sm),
+          ),
+          child: Center(
+            child: Icon(icon, size: 14, color: cs.primary),
+          ),
+        ),
+        const SizedBox(width: DonySpacing.sm),
+        Text(
+          label,
+          style: tt.labelSmall?.copyWith(
+            color: DonyColors.textMuted,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.8,
+            fontSize: 10,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -257,8 +368,7 @@ class _DatePickerField extends StatelessWidget {
 }
 
 class _ToleranceField extends StatelessWidget {
-  const _ToleranceField(
-      {required this.tolerance, required this.onChanged});
+  const _ToleranceField({required this.tolerance, required this.onChanged});
   final int tolerance;
   final ValueChanged<int> onChanged;
 
@@ -321,8 +431,8 @@ class _ToleranceField extends StatelessWidget {
   }
 }
 
-/// Bouton sélectionnable rond rectangulaire — emoji/icône + label.
-/// Selected: bg primary blue + white text. Idle: surface + outline + textPrimary.
+/// Bouton sélectionnable pill — emoji/icône + label.
+/// Sélectionné : bg terracotta + texte blanc. Repos : blanc + bord neutral.
 class OptionButton extends StatelessWidget {
   const OptionButton({
     super.key,
@@ -341,9 +451,9 @@ class OptionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final fg = selected ? Colors.white : DonyColors.textPrimary;
+    final cs = Theme.of(context).colorScheme;
+    final fg = selected ? Colors.white : cs.onSurface;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(DonyRadius.lg),
@@ -354,10 +464,10 @@ class OptionButton extends StatelessWidget {
           vertical: DonySpacing.sm + 2,
         ),
         decoration: BoxDecoration(
-          color: selected ? DonyColors.primary : cs.surface,
+          color: selected ? cs.primary : cs.surface,
           borderRadius: BorderRadius.circular(DonyRadius.lg),
           border: Border.all(
-            color: selected ? DonyColors.primary : cs.outline,
+            color: selected ? cs.primary : cs.outline,
           ),
         ),
         child: Row(

@@ -129,7 +129,6 @@ class _BudgetInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
     return TextFormField(
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -143,7 +142,7 @@ class _BudgetInput extends StatelessWidget {
       ),
       decoration: InputDecoration(
         filled: true,
-        fillColor: cs.surface,
+        fillColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: DonySpacing.base,
           vertical: DonySpacing.md + 2,
@@ -157,7 +156,7 @@ class _BudgetInput extends StatelessWidget {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide(color: cs.outline),
+          borderSide: const BorderSide(color: DonyColors.neutral200),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DonyRadius.md),
