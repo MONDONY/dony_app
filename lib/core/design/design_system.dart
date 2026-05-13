@@ -33,6 +33,7 @@ export 'package:dony/core/design/widgets/dony_mascotte.dart';
 export 'package:dony/core/design/widgets/dony_page_scaffold.dart';
 export 'package:dony/core/design/widgets/dony_radio_group.dart';
 export 'package:dony/core/design/widgets/dony_search_field.dart';
+export 'package:dony/core/design/widgets/dony_select_bar.dart';
 // Structural
 export 'package:dony/core/design/widgets/dony_section_header.dart';
 export 'package:dony/core/design/widgets/dony_snackbar.dart';
