@@ -188,7 +188,12 @@ class _DashboardHeader extends StatelessWidget {
           builder: (context, negoState) {
             return BlocBuilder<BidBloc, BidState>(
               builder: (context, bidState) {
-                final demandesCount = reqState.requests.length;
+                final demandesCount = reqState.requests
+                    .where((r) =>
+                        r.status == PackageRequestStatus.open ||
+                        r.status == PackageRequestStatus.negotiating ||
+                        r.status == PackageRequestStatus.accepted)
+                    .length;
                 final envoisCount = bidState is BidListLoaded
                     ? bidState.bids
                         .where((b) =>
@@ -423,8 +428,13 @@ class _DemandesCard extends StatelessWidget {
 
     return BlocBuilder<PackageRequestBloc, PackageRequestState>(
       builder: (context, state) {
-        final requests = state.requests;
-        final preview = requests.take(2).toList();
+        final activeRequests = state.requests
+            .where((r) =>
+                r.status == PackageRequestStatus.open ||
+                r.status == PackageRequestStatus.negotiating ||
+                r.status == PackageRequestStatus.accepted)
+            .toList();
+        final preview = activeRequests.take(2).toList();
         final isLoading = state.status == PackageRequestListStatus.loading;
 
         return _ActivityHubCard(
@@ -438,17 +448,17 @@ class _DemandesCard extends StatelessWidget {
           bandIconColor: cs.primary,
           bandTitle: 'Demandes',
           bandTitleColor: const Color(0xFF0747C6),
-          bandCount: requests.length,
-          bandUnit: requests.length == 1 ? 'active' : 'actives',
+          bandCount: activeRequests.length,
+          bandUnit: activeRequests.length == 1 ? 'active' : 'actives',
           bandCountColor: cs.primary,
-          activityDots: _buildActivityDots(requests.length, cs.primary),
+          activityDots: _buildActivityDots(activeRequests.length, cs.primary),
           viewAllLabel: 'Toutes les demandes',
           viewAllColor: cs.primary,
           onViewAll: onViewAll,
           child: isLoading
               ? const _CardLoading()
-              : preview.isEmpty
-                  ? const _CardEmpty(label: 'Aucune demande pour l\'instant')
+              : activeRequests.isEmpty
+                  ? const _CardEmpty(label: 'Aucune demande active')
                   : Column(
                       children: preview
                           .asMap()
