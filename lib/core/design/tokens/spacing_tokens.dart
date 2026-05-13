@@ -16,9 +16,10 @@ abstract final class DonySpacing {
 }
 
 abstract final class DonyRadius {
-  static const double xs   = 4;
-  static const double sm   = 8;
-  static const double md   = 12;
+  static const double xs      = 4;
+  static const double sm      = 8;
+  static const double iconBtn = 10; // pill container for icon buttons (AppBar back/close)
+  static const double md      = 12;
   static const double lg   = 14;   // boutons ★
   static const double card = 16;   // cards ★
   static const double xl   = 20;

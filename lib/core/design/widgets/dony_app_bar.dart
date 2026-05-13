@@ -65,8 +65,8 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: cs.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(10),
+                  color: cs.primaryContainer,
+                  borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
                 ),
                 child: Icon(
                   leadingIcon ?? Icons.chevron_left_rounded,
@@ -131,8 +131,8 @@ class DonySliverAppBar extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: cs.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(10),
+                  color: cs.primaryContainer,
+                  borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
                 ),
                 child: Icon(
                   Icons.chevron_left_rounded,

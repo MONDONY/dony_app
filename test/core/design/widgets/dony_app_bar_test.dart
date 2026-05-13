@@ -1,4 +1,5 @@
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/tokens/spacing_tokens.dart';
 import 'package:dony/core/design/widgets/dony_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -65,7 +66,7 @@ Iterable<Container> styledContainers(WidgetTester tester) =>
     tester.widgetList<Container>(find.byType(Container)).where((c) {
       final decoration = c.decoration;
       if (decoration is BoxDecoration) {
-        return decoration.borderRadius == BorderRadius.circular(10);
+        return decoration.borderRadius == BorderRadius.circular(DonyRadius.iconBtn);
       }
       return false;
     });
