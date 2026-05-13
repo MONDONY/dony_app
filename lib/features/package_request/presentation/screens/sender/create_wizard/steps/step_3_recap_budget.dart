@@ -38,7 +38,7 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
         ? null
         : double.tryParse(_targetCtrl.text.replaceAll(',', '.'));
     context.read<PackageRequestFormBloc>().add(
-          FormStep3Submitted(targetPriceEur: target),
+          FormStep3Submitted(targetPriceEur: target, photoFile: _photo),
         );
   }
 

@@ -36,10 +36,20 @@ class PackageRequestFormBloc extends Bloc<PackageRequestFormEvent, PackageReques
   }
 
   Future<void> _onStep3(FormStep3Submitted e, Emitter<PackageRequestFormState> emit) async {
+    emit(state.copyWith(submissionStatus: FormSubmissionStatus.submitting));
+
+    String? photoUrl;
+    if (e.photoFile != null) {
+      try {
+        photoUrl = await _repository.uploadPhoto(e.photoFile!);
+      } catch (_) {
+        // Upload non-bloquant : on publie sans photo plutôt que d'échouer
+      }
+    }
+
     emit(state.copyWith(
-      submissionStatus: FormSubmissionStatus.submitting,
       targetPriceEur: e.targetPriceEur,
-      photoUrl: e.photoUrl,
+      photoUrl: photoUrl,
       pickupNeighborhood: e.pickupNeighborhood,
       deliveryNeighborhood: e.deliveryNeighborhood,
     ));
@@ -55,7 +65,7 @@ class PackageRequestFormBloc extends Bloc<PackageRequestFormEvent, PackageReques
         contentCategory: state.contentCategory!,
         description: state.description,
         targetPriceEur: e.targetPriceEur,
-        photoUrl: e.photoUrl,
+        photoUrl: photoUrl,
         pickupNeighborhood: e.pickupNeighborhood,
         deliveryNeighborhood: e.deliveryNeighborhood,
       );

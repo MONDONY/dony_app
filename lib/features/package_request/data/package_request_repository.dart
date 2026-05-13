@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/content_category.dart';
@@ -58,6 +61,23 @@ class PackageRequestRepository {
   const PackageRequestRepository(this._apiClient);
 
   final ApiClient _apiClient;
+
+  Future<String> uploadPhoto(File photo) async {
+    final bytes = await photo.readAsBytes();
+    final filename = '${DateTime.now().millisecondsSinceEpoch}_photo.jpg';
+    final formData = FormData.fromMap({
+      'file': MultipartFile.fromBytes(
+        bytes,
+        filename: filename,
+        contentType: DioMediaType('image', 'jpeg'),
+      ),
+    });
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/storage/upload/package-request',
+      data: formData,
+    );
+    return response.data!['url'] as String;
+  }
 
   Future<PackageRequest> create({
     required String departureCity,

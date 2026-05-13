@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:equatable/equatable.dart';
 import '../data/models/content_category.dart';
@@ -44,14 +46,19 @@ class FormStep2Submitted extends PackageRequestFormEvent {
 }
 
 class FormStep3Submitted extends PackageRequestFormEvent {
-  const FormStep3Submitted({this.targetPriceEur, this.photoUrl, this.pickupNeighborhood, this.deliveryNeighborhood});
+  const FormStep3Submitted({
+    this.targetPriceEur,
+    this.photoFile,
+    this.pickupNeighborhood,
+    this.deliveryNeighborhood,
+  });
   final double? targetPriceEur;
-  final String? photoUrl;
+  final File? photoFile;
   final String? pickupNeighborhood;
   final String? deliveryNeighborhood;
 
   @override
-  List<Object?> get props => [targetPriceEur, photoUrl, pickupNeighborhood, deliveryNeighborhood];
+  List<Object?> get props => [targetPriceEur, pickupNeighborhood, deliveryNeighborhood];
 }
 
 class FormStepBack extends PackageRequestFormEvent {
