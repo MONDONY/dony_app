@@ -215,18 +215,19 @@ class _RequestCard extends StatelessWidget {
   const _RequestCard({required this.request});
   final PackageRequest request;
 
-  Color _accentColor(ColorScheme cs) => switch (request.status) {
-        PackageRequestStatus.open => cs.primary,
-        PackageRequestStatus.negotiating => DonyColors.warning500,
-        PackageRequestStatus.accepted => DonyColors.success500,
-        _ => DonyColors.neutral300,
-      };
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final accent = _accentColor(cs);
+
+    final statusColor = switch (request.status) {
+      PackageRequestStatus.open => cs.primary,
+      PackageRequestStatus.negotiating => cs.warning,
+      PackageRequestStatus.accepted ||
+      PackageRequestStatus.completed =>
+        cs.success,
+      _ => cs.onSurfaceVariant,
+    };
 
     return Material(
       color: Colors.white,
@@ -240,76 +241,70 @@ class _RequestCard extends StatelessWidget {
             border: Border.all(color: DonyColors.neutral200),
           ),
           clipBehavior: Clip.antiAlias,
-          child: Stack(
+          padding: const EdgeInsets.all(DonySpacing.base),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Accent circle top-right
-              Positioned(
-                top: -24,
-                right: -24,
-                child: Container(
-                  width: 88,
-                  height: 88,
-                  decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.07),
-                    shape: BoxShape.circle,
+              // Ligne 1 : dot + badge statut + ref ID
+              Row(
+                children: [
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: statusColor,
+                      shape: BoxShape.circle,
+                    ),
                   ),
+                  const SizedBox(width: DonySpacing.xs),
+                  _StatusBadge(status: request.status),
+                  const Spacer(),
+                  Text(
+                    _shortId(request.id),
+                    style: tt.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: DonySpacing.xs),
+              // Ligne 2 : route
+              Text(
+                '${request.departureCity} → ${request.arrivalCity}',
+                style: tt.titleLarge?.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: DonyColors.textPrimary,
+                  letterSpacing: -0.3,
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(DonySpacing.base),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Row 1 : route + temps
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            '${request.departureCity} → ${request.arrivalCity}',
-                            style: tt.titleLarge?.copyWith(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: DonyColors.textPrimary,
-                              letterSpacing: -0.3,
-                              height: 1.2,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: DonySpacing.sm),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
-                            _timeAgo(request.createdAt),
-                            style: tt.bodySmall?.copyWith(
-                              color: DonyColors.textSubtle,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: DonySpacing.xs),
-                    // Row 2 : méta
-                    Text(
-                      _buildDetails(request),
-                      style: tt.bodySmall?.copyWith(
-                        color: DonyColors.textMuted,
-                        height: 1.4,
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: DonySpacing.base),
-                    // Row 3 : badge statut + action
-                    Row(
-                      children: [
-                        _StatusBadge(status: request.status),
-                        const Spacer(),
-                        _CardAction(request: request),
-                      ],
-                    ),
-                  ],
+              const SizedBox(height: DonySpacing.sm + 2),
+              // Ligne 3 : stepper
+              _ProgressStepper(status: request.status),
+              const SizedBox(height: DonySpacing.sm + 2),
+              // Ligne 4 : méta chips
+              Text(
+                _buildDetails(request),
+                style: tt.bodySmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  fontSize: 11,
                 ),
+              ),
+              const SizedBox(height: DonySpacing.xs),
+              // Ligne 5 : date + CTA
+              Row(
+                children: [
+                  Text(
+                    '📅 ${DateFormat('d MMM yyyy', 'fr').format(request.desiredDate)}',
+                    style: tt.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontSize: 11,
+                    ),
+                  ),
+                  const Spacer(),
+                  _CardAction(request: request),
+                ],
               ),
             ],
           ),
@@ -327,44 +322,34 @@ class _CardAction extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final label = _ctaLabel(request.status);
+    final isDisabled = request.status == PackageRequestStatus.expired ||
+        request.status == PackageRequestStatus.cancelled;
 
-    return switch (request.status) {
-      PackageRequestStatus.open ||
-      PackageRequestStatus.negotiating =>
-        GestureDetector(
-          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Modification à venir'),
-              behavior: SnackBarBehavior.floating,
-            ),
-          ),
-          child: Text(
-            'Modifier →',
-            style: tt.labelSmall?.copyWith(
-              color: cs.primary,
-              fontWeight: FontWeight.w700,
-              fontSize: 12,
-            ),
-          ),
+    return GestureDetector(
+      onTap: isDisabled
+          ? null
+          : () {
+              if (request.status == PackageRequestStatus.open) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Modification à venir'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              } else {
+                PackageRequestDetailBottomSheet.show(context, request.id);
+              }
+            },
+      child: Text(
+        label,
+        style: tt.labelSmall?.copyWith(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: isDisabled ? cs.onSurfaceVariant : cs.primary,
         ),
-      PackageRequestStatus.accepted => Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.check_circle_rounded,
-                size: 13, color: DonyColors.success500),
-            const SizedBox(width: 4),
-            Text(
-              'Compléter →',
-              style: tt.labelSmall?.copyWith(
-                color: DonyColors.success500,
-                fontWeight: FontWeight.w700,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-      _ => const SizedBox.shrink(),
-    };
+      ),
+    );
   }
 }
 
