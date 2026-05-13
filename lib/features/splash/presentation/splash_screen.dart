@@ -133,7 +133,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 children: [
                   const DonyMascotteAnimated(
                     type: DonyMascotteType.joyeux,
-                    size: DonyMascotteSize.sm,
+                    size: DonyMascotteSize.xl,
                   ),
                   const SizedBox(height: DonySpacing.xl),
                   const DonyLogo(variant: DonyLogoVariant.onLight, fontSize: 104),
