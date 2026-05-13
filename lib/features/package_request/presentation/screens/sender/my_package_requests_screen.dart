@@ -8,9 +8,66 @@ import 'package:dony/features/package_request/presentation/screens/sender/packag
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-enum _StatusFilter { all, open, accepted }
+enum _Tab { enCours, aVenir, passes }
+
+List<PackageRequest> _filteredRequests(
+    _Tab tab, List<PackageRequest> all) =>
+    switch (tab) {
+      _Tab.enCours => all
+          .where((r) =>
+              r.status == PackageRequestStatus.negotiating ||
+              r.status == PackageRequestStatus.accepted)
+          .toList(),
+      _Tab.aVenir =>
+          all.where((r) => r.status == PackageRequestStatus.open).toList(),
+      _Tab.passes => all
+          .where((r) =>
+              r.status == PackageRequestStatus.completed ||
+              r.status == PackageRequestStatus.expired ||
+              r.status == PackageRequestStatus.cancelled)
+          .toList(),
+    };
+
+({int enCours, int aVenir, int passes}) _tabCounts(
+        List<PackageRequest> all) =>
+    (
+      enCours: all
+          .where((r) =>
+              r.status == PackageRequestStatus.negotiating ||
+              r.status == PackageRequestStatus.accepted)
+          .length,
+      aVenir:
+          all.where((r) => r.status == PackageRequestStatus.open).length,
+      passes: all
+          .where((r) =>
+              r.status == PackageRequestStatus.completed ||
+              r.status == PackageRequestStatus.expired ||
+              r.status == PackageRequestStatus.cancelled)
+          .length,
+    );
+
+// 0=Publié actif, 1=Accepté, 2=En route, 4=toutes done, -1=terminal grisé
+int _activeStep(PackageRequestStatus status) => switch (status) {
+      PackageRequestStatus.open => 0,
+      PackageRequestStatus.negotiating => 1,
+      PackageRequestStatus.accepted => 2,
+      PackageRequestStatus.completed => 4,
+      _ => -1,
+    };
+
+String _ctaLabel(PackageRequestStatus status) => switch (status) {
+      PackageRequestStatus.open => 'Modifier →',
+      PackageRequestStatus.negotiating ||
+      PackageRequestStatus.accepted =>
+        'Voir →',
+      _ => 'Détail →',
+    };
+
+String _shortId(String id) =>
+    '#${(id.length >= 8 ? id.substring(0, 8) : id).toUpperCase()}';
 
 class MyPackageRequestsScreen extends StatelessWidget {
   const MyPackageRequestsScreen({super.key});
@@ -604,7 +661,6 @@ String _buildDetails(PackageRequest r) {
     '$date ±${r.dateToleranceDays}j',
     '${r.weightKg.toStringAsFixed(0)} kg',
     _shortCat(r.contentCategory.label),
-    if (r.targetPriceEur != null) '≈${r.targetPriceEur!.toStringAsFixed(0)} €',
   ];
   return parts.join(' · ');
 }
