@@ -439,6 +439,88 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
+// ── Progress Stepper ─────────────────────────────────────────────────────────
+
+class _ProgressStepper extends StatelessWidget {
+  const _ProgressStepper({required this.status});
+  final PackageRequestStatus status;
+
+  static const _labels = ['Publié', 'Accepté', 'En route', 'Livré'];
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final active = _activeStep(status);
+
+    Color dotColor(int i) {
+      if (active == 4) return cs.primary; // completed: toutes done (bleu)
+      if (active == -1) return cs.outlineVariant; // terminal: toutes grises
+      if (i < active) return cs.primary; // étape passée: bleu
+      if (i == active) return cs.success; // étape active: vert
+      return cs.outlineVariant; // étape future: gris
+    }
+
+    Color connectorColor(int i) {
+      if (active == 4) return cs.primary;
+      if (active == -1) return cs.outlineVariant;
+      return i < active ? cs.primary : cs.outlineVariant;
+    }
+
+    bool isActive(int i) => active >= 0 && active < 4 && i == active;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (int i = 0; i < 4; i++) ...[
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: isActive(i) ? 11 : 9,
+                height: isActive(i) ? 11 : 9,
+                decoration: BoxDecoration(
+                  color: dotColor(i),
+                  shape: BoxShape.circle,
+                  boxShadow: isActive(i)
+                      ? [
+                          BoxShadow(
+                            color: dotColor(i).withValues(alpha: 0.3),
+                            blurRadius: 6,
+                            spreadRadius: 2,
+                          ),
+                        ]
+                      : null,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                _labels[i],
+                style: TextStyle(
+                  fontSize: 7.5,
+                  fontWeight:
+                      isActive(i) ? FontWeight.w800 : FontWeight.w600,
+                  color: isActive(i) ? dotColor(i) : cs.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          if (i < 3)
+            Expanded(
+              child: Padding(
+                // aligner le connecteur sur le centre vertical du dot
+                padding: const EdgeInsets.only(bottom: 14),
+                child: Container(
+                  height: 2,
+                  color: connectorColor(i),
+                ),
+              ),
+            ),
+        ],
+      ],
+    );
+  }
+}
+
 // ── Error view ────────────────────────────────────────────────────────────────
 
 class _ErrorView extends StatelessWidget {
