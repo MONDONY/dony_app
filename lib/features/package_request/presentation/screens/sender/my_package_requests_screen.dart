@@ -74,10 +74,9 @@ class MyPackageRequestsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: const DonyAppBar(title: 'Mes demandes'),
-      body: const MyPackageRequestsBody(showFab: true),
+    return const Scaffold(
+      backgroundColor: Color(0xFFF2F1EF),
+      body: MyPackageRequestsBody(showFab: true),
     );
   }
 }
@@ -115,23 +114,7 @@ class _ListContent extends StatefulWidget {
 }
 
 class _ListContentState extends State<_ListContent> {
-  _StatusFilter _filter = _StatusFilter.all;
-
-  List<PackageRequest> _applyFilter(List<PackageRequest> all) {
-    return switch (_filter) {
-      _StatusFilter.all => all,
-      _StatusFilter.open => all
-          .where((r) =>
-              r.status == PackageRequestStatus.open ||
-              r.status == PackageRequestStatus.negotiating)
-          .toList(),
-      _StatusFilter.accepted => all
-          .where((r) =>
-              r.status == PackageRequestStatus.accepted ||
-              r.status == PackageRequestStatus.completed)
-          .toList(),
-    };
-  }
+  _Tab _tab = _Tab.enCours;
 
   @override
   Widget build(BuildContext context) {
@@ -150,49 +133,22 @@ class _ListContentState extends State<_ListContent> {
                 context.read<PackageRequestBloc>().add(const FetchMyRequests()),
           );
         }
-        if (state.requests.isEmpty) {
-          return DonyEmptyState(
-            title: 'Tu n\'as encore rien envoyé',
-            description:
-                'Publie ta première demande et reçois des offres de voyageurs en quelques heures.',
-            mascotte: DonyMascotteType.assis,
-            actionLabel: '+ Publier ma première demande',
-            onAction: () async {
-              await PackageRequestCreateWizard.show(context);
-              if (context.mounted) {
-                context
-                    .read<PackageRequestBloc>()
-                    .add(const RefreshMyRequests());
-              }
-            },
-          );
-        }
 
-        final openCount = state.requests
-            .where((r) =>
-                r.status == PackageRequestStatus.open ||
-                r.status == PackageRequestStatus.negotiating)
-            .length;
-        final acceptedCount = state.requests
-            .where((r) =>
-                r.status == PackageRequestStatus.accepted ||
-                r.status == PackageRequestStatus.completed)
-            .length;
-        final filtered = _applyFilter(state.requests);
+        final filtered = _filteredRequests(_tab, state.requests);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _FilterRow(
-              current: _filter,
-              total: state.requests.length,
-              openCount: openCount,
-              acceptedCount: acceptedCount,
-              onChanged: (f) => setState(() => _filter = f),
-            ),
             Expanded(
               child: filtered.isEmpty
-                  ? _FilterEmptyState(filter: _filter)
+                  ? DonyEmptyState(
+                      title: switch (_tab) {
+                        _Tab.enCours => 'Aucun envoi en cours',
+                        _Tab.aVenir => 'Aucune demande ouverte',
+                        _Tab.passes => 'Aucun historique',
+                      },
+                      mascotte: DonyMascotteType.assis,
+                    )
                   : RefreshIndicator(
                       color: Theme.of(context).colorScheme.primary,
                       onRefresh: () async {
@@ -249,137 +205,6 @@ class _ListContentState extends State<_ListContent> {
           ),
         ),
       ],
-    );
-  }
-}
-
-// ── Filter chips ──────────────────────────────────────────────────────────────
-
-class _FilterRow extends StatelessWidget {
-  const _FilterRow({
-    required this.current,
-    required this.total,
-    required this.openCount,
-    required this.acceptedCount,
-    required this.onChanged,
-  });
-
-  final _StatusFilter current;
-  final int total, openCount, acceptedCount;
-  final ValueChanged<_StatusFilter> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(
-          DonySpacing.base, DonySpacing.sm, DonySpacing.base, DonySpacing.sm + 2),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: DonyColors.neutral200),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _FilterChip(
-              label: 'Toutes ($total)',
-              active: current == _StatusFilter.all,
-              onTap: () => onChanged(_StatusFilter.all),
-            ),
-          ),
-          const SizedBox(width: DonySpacing.xs + 2),
-          Expanded(
-            child: _FilterChip(
-              label: 'Ouvertes ($openCount)',
-              active: current == _StatusFilter.open,
-              onTap: () => onChanged(_StatusFilter.open),
-            ),
-          ),
-          const SizedBox(width: DonySpacing.xs + 2),
-          Expanded(
-            child: _FilterChip(
-              label: 'Acceptées ($acceptedCount)',
-              active: current == _StatusFilter.accepted,
-              onTap: () => onChanged(_StatusFilter.accepted),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    required this.label,
-    required this.active,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs + 2),
-        decoration: BoxDecoration(
-          color: active ? cs.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(DonyRadius.full),
-          border: Border.all(
-            color: active ? cs.primary : DonyColors.neutral200,
-            width: 1.5,
-          ),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: active ? Colors.white : DonyColors.textMuted,
-                ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _FilterEmptyState extends StatelessWidget {
-  const _FilterEmptyState({required this.filter});
-  final _StatusFilter filter;
-
-  @override
-  Widget build(BuildContext context) {
-    final label = filter == _StatusFilter.open
-        ? 'Aucune demande ouverte'
-        : 'Aucune demande acceptée';
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(DonySpacing.xl + 8),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.inbox_outlined,
-                size: 40, color: DonyColors.neutral300),
-            const SizedBox(height: DonySpacing.base),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: DonyColors.textMuted,
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
