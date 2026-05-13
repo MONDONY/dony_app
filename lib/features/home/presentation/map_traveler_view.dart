@@ -3,7 +3,6 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
-import 'package:dony/features/matching/presentation/widgets/create_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
@@ -144,16 +143,6 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
         final isNearMe = _userPosition != null;
         return Scaffold(
           backgroundColor: cs.surface,
-          floatingActionButton: FloatingActionButton.extended(
-            heroTag: 'traveler-publish-trip',
-            backgroundColor: cs.primary,
-            foregroundColor: cs.onPrimary,
-            icon: const Icon(Icons.flight_takeoff_rounded, size: 20),
-            label: const Text('Publier un trajet'),
-            onPressed: () => CreateAnnouncementBottomSheet.show(context),
-          ),
-          floatingActionButtonLocation:
-              FloatingActionButtonLocation.endFloat,
           body: Stack(
             children: [
               AnnouncementMapView(

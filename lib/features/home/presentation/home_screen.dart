@@ -20,7 +20,6 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
 import 'package:dony/features/matching/data/models/search_params.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
-import 'package:dony/features/matching/presentation/widgets/create_announcement_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_carousel.dart';
 import 'package:dony/features/matching/presentation/widgets/search_form_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
@@ -612,17 +611,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      floatingActionButton: activeRole == ActiveRole.traveler
-          ? FloatingActionButton.extended(
-              heroTag: 'traveler-publish-trip',
-              backgroundColor: cs.primary,
-              foregroundColor: cs.onPrimary,
-              icon: const Icon(Icons.flight_takeoff_rounded, size: 20),
-              label: const Text('Publier un trajet'),
-              onPressed: () => CreateAnnouncementBottomSheet.show(context),
-            )
-          : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       body: BlocBuilder<AnnouncementBloc, AnnouncementState>(
         builder: (context, state) {
           final raw = state is AnnouncementSearchLoaded
