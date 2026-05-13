@@ -532,7 +532,7 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.arrow_back_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.chevron_left_rounded), findsOneWidget);
     });
 
     testWidgets('hides back button when showBackButton=false', (tester) async {
@@ -544,7 +544,7 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.arrow_back_rounded), findsNothing);
+      expect(find.byIcon(Icons.chevron_left_rounded), findsNothing);
     });
 
     testWidgets('renders appBarActions when provided', (tester) async {
@@ -618,7 +618,7 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+      await tester.tap(find.byIcon(Icons.chevron_left_rounded));
       await tester.pump();
       expect(backCalled, isTrue);
     });
@@ -843,7 +843,7 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.arrow_back_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.chevron_left_rounded), findsOneWidget);
     });
 
     testWidgets('hides back button when showBackButton=false', (tester) async {
@@ -854,7 +854,7 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.arrow_back_rounded), findsNothing);
+      expect(find.byIcon(Icons.chevron_left_rounded), findsNothing);
     });
 
     testWidgets('calls onBack callback when back button tapped', (tester) async {
@@ -869,7 +869,7 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+      await tester.tap(find.byIcon(Icons.chevron_left_rounded));
       await tester.pump();
       expect(pressed, isTrue);
     });
@@ -884,8 +884,8 @@ void main() {
       ));
       await tester.pumpAndSettle();
       // Just verify back icon exists and is tappable without crashing
-      expect(find.byIcon(Icons.arrow_back_rounded), findsOneWidget);
-      await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+      expect(find.byIcon(Icons.chevron_left_rounded), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.chevron_left_rounded));
       await tester.pumpAndSettle();
     });
 
@@ -1005,7 +1005,7 @@ void main() {
     testWidgets('does not show back button by default', (tester) async {
       await tester.pumpWidget(_sliverWrap(title: 'No back'));
       await tester.pump(const Duration(milliseconds: 600));
-      expect(find.byIcon(Icons.arrow_back_rounded), findsNothing);
+      expect(find.byIcon(Icons.chevron_left_rounded), findsNothing);
     });
 
     testWidgets('shows back button when showBackButton=true', (tester) async {
@@ -1038,7 +1038,7 @@ void main() {
       await tester.pumpWidget(
           MaterialApp.router(routerConfig: router, theme: AppTheme.light));
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.arrow_back_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.chevron_left_rounded), findsOneWidget);
     });
 
     testWidgets('renders actions when provided', (tester) async {
@@ -1113,7 +1113,7 @@ void main() {
       await tester.pumpWidget(
           MaterialApp.router(routerConfig: router, theme: AppTheme.light));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+      await tester.tap(find.byIcon(Icons.chevron_left_rounded));
       await tester.pump();
       expect(pressed, isTrue);
     });
@@ -1148,7 +1148,7 @@ void main() {
       await tester.pumpWidget(
           MaterialApp.router(routerConfig: router, theme: AppTheme.light));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+      await tester.tap(find.byIcon(Icons.chevron_left_rounded));
       await tester.pumpAndSettle();
       expect(find.text('root'), findsOneWidget);
     });
@@ -1181,7 +1181,7 @@ void main() {
       await tester.pumpWidget(
           MaterialApp.router(routerConfig: router, theme: AppTheme.light));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+      await tester.tap(find.byIcon(Icons.chevron_left_rounded));
       await tester.pumpAndSettle();
       expect(find.text('Home sliver'), findsOneWidget);
     });
@@ -1210,7 +1210,7 @@ void main() {
       await tester.pumpWidget(
           MaterialApp.router(routerConfig: router, theme: AppTheme.light));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+      await tester.tap(find.byIcon(Icons.chevron_left_rounded));
       await tester.pumpAndSettle();
       expect(find.text('Home fallback'), findsOneWidget);
     });
