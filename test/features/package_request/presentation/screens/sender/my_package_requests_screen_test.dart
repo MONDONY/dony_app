@@ -117,14 +117,6 @@ void main() {
   });
 
   group('_RequestCard', () {
-    Widget wrapCard(PackageRequest r) => MaterialApp(
-          theme: AppTheme.light,
-          home: BlocProvider<PackageRequestBloc>.value(
-            value: bloc,
-            child: const Scaffold(body: MyPackageRequestsBody()),
-          ),
-        );
-
     testWidgets('affiche le badge OUVERTE pour status=open', (tester) async {
       when(() => bloc.state).thenReturn(PackageRequestState(
         status: PackageRequestListStatus.loaded,
@@ -143,7 +135,7 @@ void main() {
         status: PackageRequestListStatus.loaded,
         requests: [_request(status: PackageRequestStatus.negotiating)],
       ));
-      await tester.pumpWidget(wrapCard(_request()));
+      await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
       expect(find.text('NÉGOCIATION'), findsOneWidget);
     });
@@ -153,7 +145,7 @@ void main() {
         status: PackageRequestListStatus.loaded,
         requests: [_request(status: PackageRequestStatus.accepted)],
       ));
-      await tester.pumpWidget(wrapCard(_request()));
+      await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
       expect(find.text('ACCEPTÉE'), findsOneWidget);
     });
