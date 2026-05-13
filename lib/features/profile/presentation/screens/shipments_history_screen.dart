@@ -24,6 +24,7 @@ class ShipmentsHistoryScreen extends StatelessWidget {
           if (state is BidError) {
             return DonyEmptyState(
               type: DonyEmptyStateType.error,
+              mascotte: DonyMascotteType.assis,
               icon: Icons.error_outline_rounded,
               title: 'Erreur de chargement',
               description: state.error.message,

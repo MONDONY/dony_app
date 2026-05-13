@@ -72,6 +72,7 @@ class _ErrorView extends StatelessWidget {
   Widget build(BuildContext context) {
     return DonyEmptyState(
       type: DonyEmptyStateType.error,
+      mascotte: DonyMascotteType.assis,
       icon: Icons.error_outline_rounded,
       title: 'Impossible de charger le profil',
       description: message,

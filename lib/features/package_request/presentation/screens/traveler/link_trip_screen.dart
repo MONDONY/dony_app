@@ -29,6 +29,7 @@ class LinkTripScreen extends StatefulWidget {
 class _LinkTripScreenState extends State<LinkTripScreen> {
   PackageRequest? _request;
   List<AnnouncementModel> _matchingTrips = const [];
+  AnnouncementModel? _selectedTrip;
   bool _loading = true;
   String? _error;
 
@@ -42,6 +43,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
     setState(() {
       _loading = true;
       _error = null;
+      _selectedTrip = null;
     });
     try {
       // Fetch the request to know its corridor + date window
@@ -84,7 +86,13 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
     }
   }
 
-  Future<void> _selectTrip(AnnouncementModel ann) async {
+  void _selectTrip(AnnouncementModel ann) {
+    setState(() => _selectedTrip = ann);
+  }
+
+  Future<void> _confirmTrip() async {
+    final ann = _selectedTrip;
+    if (ann == null) return;
     final bloc = context.read<NegotiationBloc>();
     bloc.add(NegotiationSubmitTripRequested(
       threadId: widget.thread.id,
@@ -138,6 +146,25 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
             : _error != null
                 ? _ErrorView(message: _error!, onRetry: _load)
                 : _buildBody(),
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              DonySpacing.lg,
+              DonySpacing.sm,
+              DonySpacing.lg,
+              DonySpacing.base,
+            ),
+            child: DonySelectBar(
+              defaultLabel: 'Sélectionner un trajet',
+              confirmedLabel: 'Confirmer ce trajet',
+              selectedSummary: _selectedTrip != null
+                  ? '${DateFormat('EEE d MMM', 'fr').format(_selectedTrip!.departureDate)} · ${_selectedTrip!.availableKg} kg dispo'
+                  : null,
+              selectedCount: _selectedTrip != null ? '1 trajet' : null,
+              onConfirm: _selectedTrip != null ? _confirmTrip : null,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -146,7 +173,12 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
     final cs = Theme.of(context).colorScheme;
     final r = _request!;
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(DonySpacing.lg),
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        DonySpacing.lg,
+        DonySpacing.lg,
+        160, // room for DonySelectBar in bottomNavigationBar
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -232,6 +264,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                 .map((e) => _TripTile(
                       announcement: e.value,
                       index: e.key,
+                      isSelected: _selectedTrip?.id == e.value.id,
                       onTap: () => _selectTrip(e.value),
                     )),
           const SizedBox(height: DonySpacing.base),
@@ -255,10 +288,12 @@ class _TripTile extends StatelessWidget {
   const _TripTile({
     required this.announcement,
     required this.index,
+    required this.isSelected,
     required this.onTap,
   });
   final AnnouncementModel announcement;
   final int index;
+  final bool isSelected;
   final VoidCallback onTap;
 
   @override
@@ -267,7 +302,7 @@ class _TripTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Material(
-        color: cs.surface,
+        color: isSelected ? cs.primaryContainer : cs.surface,
         borderRadius: BorderRadius.circular(DonyRadius.md),
         child: InkWell(
           borderRadius: BorderRadius.circular(DonyRadius.md),
@@ -276,18 +311,26 @@ class _TripTile extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(DonyRadius.md),
-              border: Border.all(color: cs.outline),
+              border: Border.all(
+                color: isSelected ? cs.primary : cs.outline,
+                width: isSelected ? 2 : 1,
+              ),
             ),
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: cs.primaryContainer,
+                    color: isSelected ? cs.primary : cs.primaryContainer,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.flight_takeoff_rounded,
-                      color: cs.primary, size: 20),
+                  child: Icon(
+                    isSelected
+                        ? Icons.check_rounded
+                        : Icons.flight_takeoff_rounded,
+                    color: isSelected ? cs.onPrimary : cs.primary,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: DonySpacing.md),
                 Expanded(
@@ -312,7 +355,12 @@ class _TripTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Icon(Icons.chevron_right_rounded, color: kTextHint),
+                Icon(
+                  isSelected
+                      ? Icons.radio_button_checked_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  color: isSelected ? cs.primary : kTextHint,
+                ),
               ],
             ),
           ),

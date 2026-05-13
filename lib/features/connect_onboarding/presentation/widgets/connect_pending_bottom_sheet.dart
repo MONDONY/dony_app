@@ -67,21 +67,12 @@ class ConnectPendingBottomSheet extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header icon
-          Center(
-            child: DonyIconContainer(
-              icon: Icons.hourglass_top_rounded,
-              size: DonyIconContainerSize.lg,
-              borderRadius: DonyRadius.xl,
-              backgroundColor: cs.warning.withValues(alpha: 0.1),
-              iconColor: cs.warning,
-            )
-                .animate()
-                .fadeIn(duration: 260.ms)
-                .scale(
-                  begin: const Offset(0.85, 0.85),
-                  curve: Curves.easeOutBack,
-                ),
+          // Header mascotte
+          const Center(
+            child: DonyMascotteAnimated(
+              type: DonyMascotteType.confiant,
+              size: DonyMascotteSize.md,
+            ),
           ),
           const SizedBox(height: DonySpacing.xl),
 

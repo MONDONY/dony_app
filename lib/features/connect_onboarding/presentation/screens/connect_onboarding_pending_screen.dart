@@ -133,12 +133,9 @@ class _ConnectOnboardingPendingScreenState
 class _AnimatedPendingIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return DonyIconContainer(
-      icon: Icons.hourglass_top_rounded,
-      size: DonyIconContainerSize.xxl,
-      backgroundColor: cs.warning.withValues(alpha: 0.1),
-      iconColor: cs.warning,
+    return const DonyMascotteAnimated(
+      type: DonyMascotteType.confiant,
+      size: DonyMascotteSize.lg,
     );
   }
 }

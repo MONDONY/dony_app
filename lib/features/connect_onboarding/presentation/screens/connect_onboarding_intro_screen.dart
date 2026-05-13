@@ -98,17 +98,11 @@ class _IntroView extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Hero icon
-                DonyIconContainer(
-                  icon: Icons.account_balance_wallet_rounded,
-                  size: DonyIconContainerSize.xl,
-                  borderRadius: DonyRadius.xl,
-                  backgroundColor: cs.primaryContainer,
-                  iconColor: cs.primary,
-                ).animate().fadeIn(duration: 260.ms).scale(
-                      begin: const Offset(0.85, 0.85),
-                      curve: Curves.easeOutBack,
-                    ),
+                // Hero mascotte
+                DonyMascotteAnimated(
+                  type: DonyMascotteType.securise,
+                  size: DonyMascotteSize.lg,
+                ),
                 const SizedBox(height: DonySpacing.xl),
 
                 // Title

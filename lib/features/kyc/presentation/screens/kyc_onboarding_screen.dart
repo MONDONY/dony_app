@@ -69,15 +69,10 @@ class KycOnboardingScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            color: cs.primaryContainer,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(Icons.verified_user_outlined, color: cs.primary, size: 32),
-        ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
+        DonyMascotteAnimated(
+          type: DonyMascotteType.confiant,
+          size: DonyMascotteSize.lg,
+        ),
         const SizedBox(height: DonySpacing.xl),
         Text(
           'Vérification d\'identité',

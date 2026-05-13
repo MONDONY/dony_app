@@ -112,13 +112,10 @@ class _UpgradeToProViewState extends State<_UpgradeToProView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Hero section
-                    DonyIconContainer(
-                      icon: Icons.business_center_rounded,
-                      size: DonyIconContainerSize.xl,
-                      borderRadius: DonyRadius.xl,
-                      backgroundColor: cs.warningLight,
-                      iconColor: cs.warning,
-                    ).animate().fadeIn(duration: 260.ms),
+                    const DonyMascotteAnimated(
+                      type: DonyMascotteType.securise,
+                      size: DonyMascotteSize.lg,
+                    ),
                     const SizedBox(height: DonySpacing.xl),
 
                     Text(

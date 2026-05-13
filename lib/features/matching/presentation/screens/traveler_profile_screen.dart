@@ -742,6 +742,7 @@ class TravelerProfileLoaderScreen extends StatelessWidget {
             body: DonyEmptyState(
               icon: Icons.error_outline_rounded,
               type: DonyEmptyStateType.error,
+              mascotte: DonyMascotteType.assis,
               title: 'Erreur de chargement',
               description: description,
               actionLabel: 'Réessayer',
