@@ -424,6 +424,167 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
+// ── Dark Header ───────────────────────────────────────────────────────────────
+
+class _DarkHeader extends StatelessWidget {
+  const _DarkHeader({
+    required this.activeTab,
+    required this.counts,
+    required this.onTabChanged,
+  });
+
+  final _Tab activeTab;
+  final ({int enCours, int aVenir, int passes}) counts;
+  final ValueChanged<_Tab> onTabChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final canGoBack = context.canPop();
+
+    final activeCount = switch (activeTab) {
+      _Tab.enCours => counts.enCours,
+      _Tab.aVenir => counts.aVenir,
+      _Tab.passes => counts.passes,
+    };
+
+    return Container(
+      color: const Color(0xFF0A2540),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(height: MediaQuery.of(context).padding.top),
+          // Ligne titre
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+                DonySpacing.xs, DonySpacing.sm, DonySpacing.base, DonySpacing.xs),
+            child: Row(
+              children: [
+                if (canGoBack)
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
+                      ),
+                      child: const Icon(
+                        Icons.chevron_left_rounded,
+                        size: 20,
+                        color: Colors.white,
+                      ),
+                    ),
+                    onPressed: () => context.pop(),
+                  )
+                else
+                  const SizedBox(width: DonySpacing.base),
+                const SizedBox(width: DonySpacing.xs),
+                Expanded(
+                  child: Text(
+                    'Mes envois',
+                    style: tt.titleLarge?.copyWith(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                if (activeCount > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.sm,
+                        vertical: DonySpacing.xxs + 1),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(DonyRadius.full),
+                    ),
+                    child: Text(
+                      '$activeCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          // Ligne tabs
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+                DonySpacing.base, 0, DonySpacing.base, DonySpacing.sm),
+            child: Row(
+              children: [
+                _DarkTab(
+                  label: 'En cours',
+                  active: activeTab == _Tab.enCours,
+                  onTap: () => onTabChanged(_Tab.enCours),
+                ),
+                const SizedBox(width: DonySpacing.xs),
+                _DarkTab(
+                  label: 'À venir',
+                  active: activeTab == _Tab.aVenir,
+                  onTap: () => onTabChanged(_Tab.aVenir),
+                ),
+                const SizedBox(width: DonySpacing.xs),
+                _DarkTab(
+                  label: 'Passés',
+                  active: activeTab == _Tab.passes,
+                  onTap: () => onTabChanged(_Tab.passes),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DarkTab extends StatelessWidget {
+  const _DarkTab({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.md, vertical: DonySpacing.xs + 2),
+        decoration: BoxDecoration(
+          color: active ? Colors.white.withValues(alpha: 0.15) : Colors.transparent,
+          borderRadius: BorderRadius.circular(DonyRadius.sm),
+          border: active
+              ? Border.all(
+                  color: Colors.white.withValues(alpha: 0.4), width: 1)
+              : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: active ? Colors.white : Colors.white.withValues(alpha: 0.5),
+            fontSize: 12,
+            fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // ── Progress Stepper ─────────────────────────────────────────────────────────
 
 class _ProgressStepper extends StatelessWidget {
