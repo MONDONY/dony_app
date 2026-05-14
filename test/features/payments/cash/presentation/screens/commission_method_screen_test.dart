@@ -90,4 +90,47 @@ void main() {
     await tester.tap(find.text('Ajouter une carte'));
     verify(() => bloc.add(any(that: isA<CommissionMethodSetupRequested>()))).called(1);
   });
+
+  testWidgets('replace card button dispatches SetupRequested', (tester) async {
+    whenListen(bloc, Stream.value(CommissionMethodLoaded(_fakeCard)),
+        initialState: CommissionMethodLoaded(_fakeCard));
+    await tester.pumpWidget(_wrap(const CommissionMethodScreen(), bloc));
+    await tester.pump();
+    await tester.tap(find.text('Remplacer la carte'));
+    verify(() => bloc.add(any(that: isA<CommissionMethodSetupRequested>()))).called(1);
+  });
+
+  testWidgets('delete button shows confirmation sheet', (tester) async {
+    whenListen(bloc, Stream.value(CommissionMethodLoaded(_fakeCard)),
+        initialState: CommissionMethodLoaded(_fakeCard));
+    await tester.pumpWidget(_wrap(const CommissionMethodScreen(), bloc));
+    await tester.pump();
+    await tester.tap(find.text('Supprimer la carte'));
+    await tester.pumpAndSettle();
+    expect(find.text('Supprimer'), findsWidgets);
+  });
+
+  testWidgets('confirm delete dispatches DeleteRequested', (tester) async {
+    whenListen(bloc, Stream.value(CommissionMethodLoaded(_fakeCard)),
+        initialState: CommissionMethodLoaded(_fakeCard));
+    await tester.pumpWidget(_wrap(const CommissionMethodScreen(), bloc));
+    await tester.pump();
+    await tester.tap(find.text('Supprimer la carte'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Supprimer').last);
+    verify(() => bloc.add(any(that: isA<CommissionMethodDeleteRequested>()))).called(1);
+  });
+
+  testWidgets('cancel delete closes sheet without dispatching event', (tester) async {
+    whenListen(bloc, Stream.value(CommissionMethodLoaded(_fakeCard)),
+        initialState: CommissionMethodLoaded(_fakeCard));
+    await tester.pumpWidget(_wrap(const CommissionMethodScreen(), bloc));
+    await tester.pump();
+    await tester.tap(find.text('Supprimer la carte'));
+    await tester.pumpAndSettle();
+    expect(find.text('Annuler'), findsOneWidget);
+    await tester.tap(find.text('Annuler'));
+    await tester.pumpAndSettle();
+    verifyNever(() => bloc.add(any(that: isA<CommissionMethodDeleteRequested>())));
+  });
 }

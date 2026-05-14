@@ -34,4 +34,16 @@ void main() {
     final r = AcceptanceResponse.fromJson({'status': 'UNKNOWN'});
     expect(r.status, AcceptanceStatus.failed);
   });
+
+  test('ConfirmResponse.fromJson parses accepted true', () {
+    final r = ConfirmResponse.fromJson({'accepted': true});
+    expect(r.accepted, isTrue);
+    expect(r.error, isNull);
+  });
+
+  test('ConfirmResponse.fromJson parses accepted false with error', () {
+    final r = ConfirmResponse.fromJson({'accepted': false, 'error': '3DS échoué'});
+    expect(r.accepted, isFalse);
+    expect(r.error, '3DS échoué');
+  });
 }
