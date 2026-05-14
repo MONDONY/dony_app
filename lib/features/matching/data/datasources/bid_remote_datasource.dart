@@ -41,6 +41,7 @@ class BidRemoteDatasource {
     required String contentCategory,
     required String recipientName,
     required String recipientPhone,
+    BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
   }) async {
     final response = await _apiClient.dio.post(
       '/announcements/$announcementId/bids',
@@ -52,6 +53,7 @@ class BidRemoteDatasource {
         'recipientName': recipientName,
         'recipientPhone': recipientPhone,
         'disclaimerSigned': true,
+        'paymentMethod': paymentMethod.name.toUpperCase(),
       },
     );
     return BidModel.fromJson(response.data as Map<String, dynamic>);

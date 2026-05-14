@@ -10,7 +10,7 @@ class CommissionMethodBloc
   CommissionMethodBloc(this._repo) : super(CommissionMethodInitial()) {
     on<CommissionMethodLoadRequested>(_load);
     on<CommissionMethodSetupRequested>(_setup);
-    on<CommissionMethodSetupCompleted>((_, __) => add(CommissionMethodLoadRequested()));
+    on<CommissionMethodSetupCompleted>(_saveAndReload);
     on<CommissionMethodSetupCancelled>((_, __) => add(CommissionMethodLoadRequested()));
     on<CommissionMethodDeleteRequested>(_delete);
   }
@@ -29,6 +29,18 @@ class CommissionMethodBloc
     try {
       final secret = await _repo.startSetup();
       emit(CommissionMethodSetupInProgress(secret));
+    } catch (e) {
+      emit(CommissionMethodError(e.toString()));
+    }
+  }
+
+  Future<void> _saveAndReload(
+      CommissionMethodSetupCompleted event, Emitter<CommissionMethodState> emit) async {
+    emit(CommissionMethodLoading());
+    try {
+      await _repo.savePaymentMethod(event.paymentMethodId);
+      final card = await _repo.load();
+      emit(card == null ? CommissionMethodNotConfigured() : CommissionMethodLoaded(card));
     } catch (e) {
       emit(CommissionMethodError(e.toString()));
     }

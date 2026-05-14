@@ -3,6 +3,7 @@ import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 
+
 class BidRepository {
   final BidRemoteDatasource _datasource;
 
@@ -35,6 +36,7 @@ class BidRepository {
     required String contentCategory,
     required String recipientName,
     required String recipientPhone,
+    BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
   }) =>
       _datasource.createBid(
         announcementId: announcementId,
@@ -44,6 +46,7 @@ class BidRepository {
         contentCategory: contentCategory,
         recipientName: recipientName,
         recipientPhone: recipientPhone,
+        paymentMethod: paymentMethod,
       );
 
   Future<List<BidModel>> getBidsForAnnouncement(String announcementId) =>

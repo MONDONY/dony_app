@@ -17,6 +17,10 @@ class RematchSuggestionsLoaded extends CancellationState {
   RematchSuggestionsLoaded(this.suggestions);
 }
 
+class NoShowReported extends CancellationState {}
+
+class NoShowContested extends CancellationState {}
+
 class CancellationError extends CancellationState {
   final AppException error;
   CancellationError(this.error);

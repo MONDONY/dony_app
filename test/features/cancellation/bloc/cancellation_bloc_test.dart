@@ -170,6 +170,70 @@ void main() {
     );
   });
 
+  // ── NoShowReportRequested ──────────────────────────────────────────────────
+
+  group('NoShowReportRequested', () {
+    blocTest<CancellationBloc, CancellationState>(
+      'emits [Loading, NoShowReported] on success',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.reportNoShow('bid-1'))
+            .thenAnswer((_) async {});
+      },
+      act: (b) => b.add(NoShowReportRequested('bid-1')),
+      expect: () => [
+        isA<CancellationLoading>(),
+        isA<NoShowReported>(),
+      ],
+    );
+
+    blocTest<CancellationBloc, CancellationState>(
+      'emits [Loading, Error] on exception',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.reportNoShow(any()))
+            .thenThrow(Exception('network error'));
+      },
+      act: (b) => b.add(NoShowReportRequested('bid-x')),
+      expect: () => [
+        isA<CancellationLoading>(),
+        isA<CancellationError>(),
+      ],
+    );
+  });
+
+  // ── NoShowContestRequested ─────────────────────────────────────────────────
+
+  group('NoShowContestRequested', () {
+    blocTest<CancellationBloc, CancellationState>(
+      'emits [Loading, NoShowContested] on success',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.contestNoShow('bid-2'))
+            .thenAnswer((_) async {});
+      },
+      act: (b) => b.add(NoShowContestRequested('bid-2')),
+      expect: () => [
+        isA<CancellationLoading>(),
+        isA<NoShowContested>(),
+      ],
+    );
+
+    blocTest<CancellationBloc, CancellationState>(
+      'emits [Loading, Error] on exception',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.contestNoShow(any()))
+            .thenThrow(DioException(requestOptions: RequestOptions()));
+      },
+      act: (b) => b.add(NoShowContestRequested('bid-x')),
+      expect: () => [
+        isA<CancellationLoading>(),
+        isA<CancellationError>(),
+      ],
+    );
+  });
+
   // ── Model tests ─────────────────────────────────────────────────────────────
 
   group('CancellationModel.fromJson', () {

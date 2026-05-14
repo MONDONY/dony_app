@@ -1,6 +1,9 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
+import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -42,9 +45,13 @@ class BidListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) =>
-          getIt<BidBloc>()..add(BidListRequested(announcementId)),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => getIt<BidBloc>()..add(BidListRequested(announcementId)),
+        ),
+        BlocProvider(create: (_) => getIt<BidAcceptanceBloc>()),
+      ],
       child: _BidListView(
         announcementId: announcementId,
         departureCityCode: departureCityCode,
@@ -153,6 +160,19 @@ class _BidListViewState extends State<_BidListView>
 
   // ── BLoC listener ──────────────────────────────────────────────────────────
 
+  void _onCashAcceptanceStateChange(BuildContext context, acs.BidAcceptanceState state) {
+    if (state is acs.BidAccepted) {
+      setState(() => _processingBidIds.clear());
+      DonySnackbar.show(context,
+          message: 'Demande acceptée !', type: DonySnackbarType.success);
+      context.read<BidBloc>().add(BidListRequested(widget.announcementId));
+    } else if (state is acs.BidFailed) {
+      setState(() => _processingBidIds.clear());
+      DonySnackbar.show(context,
+          message: state.message, type: DonySnackbarType.error);
+    }
+  }
+
   void _onStateChange(BuildContext context, BidState state) {
     if (state is BidAccepted) {
       _removeProcessing(state.bid.id);
@@ -194,7 +214,9 @@ class _BidListViewState extends State<_BidListView>
     final cs = Theme.of(context).colorScheme;
     final subtitle = _buildSubtitle();
 
-    return BlocConsumer<BidBloc, BidState>(
+    return BlocListener<BidAcceptanceBloc, acs.BidAcceptanceState>(
+      listener: _onCashAcceptanceStateChange,
+      child: BlocConsumer<BidBloc, BidState>(
       listener: _onStateChange,
       builder: (context, state) {
         // Compute per-tab counts for AppBar title
@@ -304,7 +326,8 @@ class _BidListViewState extends State<_BidListView>
           body: _buildBody(context, state, pendingBids, acceptedBids),
         );
       },
-    );
+    ),   // BlocConsumer<BidBloc>
+    );   // BlocListener<BidAcceptanceBloc>
   }
 
   // ── Body ───────────────────────────────────────────────────────────────────
@@ -342,7 +365,12 @@ class _BidListViewState extends State<_BidListView>
             processingBidIds: _processingBidIds,
             onAccept: (bidId) {
               _addProcessing(bidId);
-              context.read<BidBloc>().add(BidAcceptRequested(bidId));
+              final bid = pendingBids.firstWhere((b) => b.id == bidId);
+              if (bid.paymentMethod == BidPaymentMethod.cash) {
+                context.read<BidAcceptanceBloc>().add(ace.BidAcceptRequested(bidId));
+              } else {
+                context.read<BidBloc>().add(BidAcceptRequested(bidId));
+              }
             },
             onReject: (bidId) => _showRejectDialog(context, bidId),
             emptyTitle: 'Aucune demande en attente',

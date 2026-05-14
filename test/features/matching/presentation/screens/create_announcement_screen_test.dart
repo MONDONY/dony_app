@@ -13,6 +13,9 @@ import 'package:dony/features/matching/data/models/address_suggestion.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/screens/create_announcement_screen.dart';
+import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
+import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
+import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -25,6 +28,10 @@ import 'package:mocktail/mocktail.dart';
 class MockAnnouncementBloc
     extends MockBloc<AnnouncementEvent, AnnouncementState>
     implements AnnouncementBloc {}
+
+class MockCommissionMethodBloc
+    extends MockBloc<CommissionMethodEvent, CommissionMethodState>
+    implements CommissionMethodBloc {}
 
 class MockAddressAutocompleteService extends Mock
     implements AddressAutocompleteService {}
@@ -63,14 +70,19 @@ AnnouncementModel _editingAnnouncement({
 Widget _buildScreen(
   MockAnnouncementBloc bloc, {
   AnnouncementModel? announcement,
+  MockCommissionMethodBloc? commissionBloc,
 }) {
   final router = GoRouter(
     initialLocation: '/',
     routes: [
       GoRoute(
         path: '/',
-        builder: (ctx, state) => BlocProvider<AnnouncementBloc>.value(
-          value: bloc,
+        builder: (ctx, state) => MultiBlocProvider(
+          providers: [
+            BlocProvider<AnnouncementBloc>.value(value: bloc),
+            if (commissionBloc != null)
+              BlocProvider<CommissionMethodBloc>.value(value: commissionBloc),
+          ],
           child: CreateAnnouncementScreen(announcement: announcement),
         ),
       ),
@@ -78,6 +90,12 @@ Widget _buildScreen(
         path: '/announcements',
         builder: (_, __) =>
             const Scaffold(body: Center(child: Text('Announcements list'))),
+      ),
+      GoRoute(
+        path: '/payments/commission-method',
+        builder: (_, __) => const Scaffold(
+          body: Center(child: Text('Commission method screen')),
+        ),
       ),
     ],
   );
@@ -92,11 +110,16 @@ Future<void> _pumpScreen(
   WidgetTester tester,
   MockAnnouncementBloc bloc, {
   AnnouncementModel? announcement,
+  MockCommissionMethodBloc? commissionBloc,
 }) async {
   tester.view.physicalSize = const Size(800, 2400);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.reset);
-  await tester.pumpWidget(_buildScreen(bloc, announcement: announcement));
+  await tester.pumpWidget(_buildScreen(
+    bloc,
+    announcement: announcement,
+    commissionBloc: commissionBloc,
+  ));
   await tester.pump(_kSettle);
 }
 
@@ -104,11 +127,13 @@ Future<void> _pumpScreen(
 
 void main() {
   late MockAnnouncementBloc bloc;
+  late MockCommissionMethodBloc commissionBloc;
   late MockAddressAutocompleteService autocomplete;
 
   setUpAll(() async {
     await initializeDateFormatting('fr');
     registerFallbackValue(AnnouncementListRequested());
+    registerFallbackValue(CommissionMethodInitial());
     // CitySearchBloc needed: CreateAnnouncementScreen uses getIt<CitySearchBloc>()
     final mockCityRepo = MockCityRepository();
     when(() => mockCityRepo.searchCities(any())).thenAnswer((_) async => []);
@@ -124,6 +149,10 @@ void main() {
     bloc = MockAnnouncementBloc();
     when(() => bloc.state).thenReturn(AnnouncementInitial());
     when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+    commissionBloc = MockCommissionMethodBloc();
+    when(() => commissionBloc.state).thenReturn(CommissionMethodNotConfigured());
+    when(() => commissionBloc.stream).thenAnswer((_) => const Stream.empty());
 
     autocomplete = MockAddressAutocompleteService();
     when(() => autocomplete.search(any(), any()))
@@ -145,7 +174,7 @@ void main() {
 
   testWidgets('affiche les 6 chips de mode de transport avec leurs icônes',
       (tester) async {
-    await _pumpScreen(tester, bloc);
+    await _pumpScreen(tester, bloc, commissionBloc: commissionBloc);
 
     // Scroll the section into view
     final firstChip =
@@ -171,7 +200,7 @@ void main() {
   testWidgets(
       'bouton submit désactivé tant qu\'aucun mode de transport n\'est sélectionné',
       (tester) async {
-    await _pumpScreen(tester, bloc);
+    await _pumpScreen(tester, bloc, commissionBloc: commissionBloc);
 
     final submitFinder = find.byKey(const Key('create-announcement-submit'));
 
@@ -201,6 +230,7 @@ void main() {
       tester,
       bloc,
       announcement: _editingAnnouncement(mode: TransportMode.train),
+      commissionBloc: commissionBloc,
     );
 
     // Scroll the chip section into view

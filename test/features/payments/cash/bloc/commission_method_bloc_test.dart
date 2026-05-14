@@ -72,10 +72,11 @@ void main() {
   blocTest<CommissionMethodBloc, CommissionMethodState>(
     'SetupCompleted triggers reload',
     build: () {
+      when(() => repo.savePaymentMethod(any())).thenAnswer((_) async {});
       when(() => repo.load()).thenAnswer((_) async => _fakeCard);
       return CommissionMethodBloc(repo);
     },
-    act: (b) => b.add(CommissionMethodSetupCompleted()),
+    act: (b) => b.add(CommissionMethodSetupCompleted('pm_test_123')),
     expect: () => [isA<CommissionMethodLoading>(), isA<CommissionMethodLoaded>()],
   );
 

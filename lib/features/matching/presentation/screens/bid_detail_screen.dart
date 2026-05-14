@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:share_plus/share_plus.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
+import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -26,6 +29,9 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
+import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.dart';
 import 'package:dony/features/matching/presentation/widgets/handover_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/route_map_components.dart';
@@ -55,9 +61,11 @@ class BidDetailScreen extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => getIt<BidBloc>()),
+        BlocProvider(create: (_) => getIt<BidAcceptanceBloc>()),
         BlocProvider(create: (_) => getIt<TrackingBloc>()),
         BlocProvider(create: (_) => getIt<ConversationOpenBloc>()),
         BlocProvider(create: (_) => getIt<RatingBloc>()),
+        BlocProvider(create: (_) => getIt<CancellationBloc>()),
       ],
       child: _BidDetailView(initialBid: bid, fromPayment: fromPayment),
     );
@@ -122,7 +130,39 @@ class _BidDetailViewState extends State<_BidDetailView> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return BlocListener<RatingBloc, RatingState>(
+    return BlocListener<BidAcceptanceBloc, acs.BidAcceptanceState>(
+      listener: (context, state) {
+        if (state is acs.BidAccepted) {
+          DonySnackbar.show(context,
+              message: 'Demande acceptée ! Définissez maintenant la fenêtre de remise.',
+              type: DonySnackbarType.success);
+          context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+        } else if (state is acs.BidFailed) {
+          DonySnackbar.show(context,
+              message: state.message, type: DonySnackbarType.error);
+        }
+      },
+      child: BlocListener<CancellationBloc, CancellationState>(
+      listener: (context, state) {
+        if (state is NoShowReported) {
+          DonySnackbar.show(
+            context,
+            message: "Absence signalée. L'expéditeur a 48 h pour contester.",
+            type: DonySnackbarType.info,
+          );
+          context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+        } else if (state is NoShowContested) {
+          DonySnackbar.show(
+            context,
+            message: 'Contestation envoyée. Notre équipe va examiner votre demande.',
+            type: DonySnackbarType.success,
+          );
+          context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+        } else if (state is CancellationError) {
+          ErrorPresenter.show(context, state.error);
+        }
+      },
+      child: BlocListener<RatingBloc, RatingState>(
       listener: (context, state) {
         if (state is RatingSuccess) {
           context.read<BidBloc>().add(BidDetailRequested(_bid.id));
@@ -267,8 +307,16 @@ class _BidDetailViewState extends State<_BidDetailView> {
                     Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Status badge below title
-                      _StatusBadge(bid: _bid),
+                      // Status badge + CASH badge
+                      Row(
+                        children: [
+                          _StatusBadge(bid: _bid),
+                          if (_bid.paymentMethod == BidPaymentMethod.cash) ...[
+                            const SizedBox(width: DonySpacing.sm),
+                            _CashBadge(),
+                          ],
+                        ],
+                      ),
                       const SizedBox(height: DonySpacing.base),
 
                       // Route map card
@@ -408,6 +456,24 @@ class _BidDetailViewState extends State<_BidDetailView> {
                         const _RatingDoneCard(),
                       ],
 
+                      // No-show contestation banner (sender, CASH, PENDING_CONFIRMATION)
+                      if (isSender &&
+                          _bid.paymentMethod == BidPaymentMethod.cash &&
+                          _bid.cancellationNoShowStatus == 'PENDING_CONFIRMATION') ...[
+                        const SizedBox(height: DonySpacing.xl),
+                        _NoShowContestationBanner(bid: _bid),
+                      ],
+
+                      // No-show button (traveler, CASH bid, ACCEPTED, past handover window)
+                      if (!isSender &&
+                          _bid.paymentMethod == BidPaymentMethod.cash &&
+                          _bid.status == 'ACCEPTED' &&
+                          _bid.handoverWindowEnd != null &&
+                          DateTime.now().isAfter(_bid.handoverWindowEnd!)) ...[
+                        const SizedBox(height: DonySpacing.xl),
+                        _NoShowSection(bid: _bid),
+                      ],
+
                       // Cancel section (traveler only, ACCEPTED / HANDED_OVER / IN_TRANSIT)
                       if (!isSender &&
                           (_bid.status == 'ACCEPTED' ||
@@ -455,7 +521,9 @@ class _BidDetailViewState extends State<_BidDetailView> {
       },
     ), // BlocConsumer<BidBloc>
     ), // BlocListener<ConversationOpenBloc>
-    ); // BlocListener<RatingBloc>
+    ), // BlocListener<RatingBloc>
+    ), // BlocListener<CancellationBloc>
+    ); // BlocListener<BidAcceptanceBloc>
   }
 
 }
@@ -1369,9 +1437,13 @@ class _ActionBar extends StatelessWidget {
             child: FilledButton.icon(
               onPressed: isLoading
                   ? null
-                  : () => context
-                      .read<BidBloc>()
-                      .add(BidAcceptRequested(bid.id)),
+                  : () {
+                      if (bid.paymentMethod == BidPaymentMethod.cash) {
+                        context.read<BidAcceptanceBloc>().add(ace.BidAcceptRequested(bid.id));
+                      } else {
+                        context.read<BidBloc>().add(BidAcceptRequested(bid.id));
+                      }
+                    },
               icon: isLoading
                   ? const SizedBox(
                       width: 16,
@@ -2726,5 +2798,317 @@ class _TravelerCancelSection extends StatelessWidget {
     context.read<BidBloc>().add(
           BidCancelRequested(bid.id, reason: reason.isEmpty ? null : reason),
         );
+  }
+}
+
+// ── No-show contestation banner (sender) ─────────────────────────────────────
+
+class _NoShowContestationBanner extends StatefulWidget {
+  final BidModel bid;
+  const _NoShowContestationBanner({required this.bid});
+
+  @override
+  State<_NoShowContestationBanner> createState() =>
+      _NoShowContestationBannerState();
+}
+
+class _NoShowContestationBannerState
+    extends State<_NoShowContestationBanner> {
+  Timer? _tick;
+  String _timeLeft = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _updateCountdown();
+    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(_updateCountdown);
+    });
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  void _updateCountdown() {
+    final deadline = widget.bid.contestationDeadline;
+    if (deadline == null) {
+      _timeLeft = '';
+      return;
+    }
+    final remaining = deadline.difference(DateTime.now());
+    if (remaining.isNegative) {
+      _timeLeft = 'Délai expiré';
+      return;
+    }
+    final h = remaining.inHours;
+    final m = remaining.inMinutes % 60;
+    final s = remaining.inSeconds % 60;
+    _timeLeft = '${h}h ${m.toString().padLeft(2, '0')}m ${s.toString().padLeft(2, '0')}s';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return BlocBuilder<CancellationBloc, CancellationState>(
+      builder: (context, state) {
+        final isLoading = state is CancellationLoading;
+        return Container(
+          padding: const EdgeInsets.all(DonySpacing.base),
+          decoration: BoxDecoration(
+            color: cs.errorContainer.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(DonyRadius.card),
+            border: Border.all(color: cs.error.withValues(alpha: 0.4)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded,
+                      color: cs.error, size: 18),
+                  const SizedBox(width: DonySpacing.sm),
+                  Expanded(
+                    child: Text(
+                      'Absence signalée par le voyageur',
+                      style: tt.titleSmall?.copyWith(
+                        color: cs.error,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: DonySpacing.sm),
+              Text(
+                "Le voyageur indique que vous n'étiez pas présent au point de remise.",
+                style: tt.bodySmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                ),
+              ),
+              if (_timeLeft.isNotEmpty) ...[
+                const SizedBox(height: DonySpacing.sm),
+                Row(
+                  children: [
+                    Icon(Icons.timer_outlined,
+                        size: 14, color: cs.onSurfaceVariant),
+                    const SizedBox(width: DonySpacing.xs),
+                    Text(
+                      'Temps restant pour contester : $_timeLeft',
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              const SizedBox(height: DonySpacing.base),
+              Row(
+                children: [
+                  Expanded(
+                    child: DonyButton(
+                      label: 'Je conteste',
+                      icon: Icons.gavel_rounded,
+                      isLoading: isLoading,
+                      onPressed: isLoading
+                          ? null
+                          : () => _showContestSheet(context),
+                    ),
+                  ),
+                  const SizedBox(width: DonySpacing.sm),
+                  Expanded(
+                    child: DonyButton(
+                      label: 'Je confirme',
+                      icon: Icons.check_circle_outline_rounded,
+                      variant: DonyButtonVariant.ghost,
+                      isLoading: isLoading,
+                      onPressed: isLoading
+                          ? null
+                          : () => _showConfirmSheet(context),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showContestSheet(BuildContext context) async {
+    final confirmed = await DonyBottomSheet.show<bool>(
+      context,
+      title: 'Contester l\'absence',
+      stickyBottom: Builder(
+        builder: (ctx) => DonyButton(
+          label: 'Confirmer la contestation',
+          icon: Icons.gavel_rounded,
+          onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(true),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Vous contestez l\'absence signalée par le voyageur.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: DonySpacing.md),
+            Text(
+              'Notre équipe examinera votre demande et vous contactera sous 24 h.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) {
+      return;
+    }
+    context.read<CancellationBloc>().add(NoShowContestRequested(widget.bid.id));
+  }
+
+  Future<void> _showConfirmSheet(BuildContext context) async {
+    await DonyBottomSheet.show<void>(
+      context,
+      title: 'Confirmer votre absence',
+      stickyBottom: Builder(
+        builder: (ctx) => DonyButton(
+          label: 'Compris',
+          variant: DonyButtonVariant.ghost,
+          onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
+        child: Text(
+          "En confirmant votre absence, le bid sera annulé "
+          'et vous ne serez pas débité.',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Cash badge ────────────────────────────────────────────────────────────────
+
+class _CashBadge extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.md,
+        vertical: DonySpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: cs.tertiaryContainer,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.payments_rounded, size: 12, color: cs.onTertiaryContainer),
+          const SizedBox(width: DonySpacing.xs),
+          Text(
+            'CASH',
+            style: tt.labelSmall?.copyWith(
+              color: cs.onTertiaryContainer,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── No-show section (traveler, CASH, ACCEPTED, past window) ───────────────────
+
+class _NoShowSection extends StatelessWidget {
+  final BidModel bid;
+  const _NoShowSection({required this.bid});
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return BlocBuilder<CancellationBloc, CancellationState>(
+      builder: (context, state) {
+        final isLoading = state is CancellationLoading;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'ABSENCE EXPÉDITEUR',
+              style: tt.labelMedium?.copyWith(
+                color: cs.onSurfaceVariant,
+                letterSpacing: 0.8,
+              ),
+            ),
+            const SizedBox(height: DonySpacing.md),
+            DonyButton(
+              label: "L'expéditeur n'est pas venu",
+              icon: Icons.person_off_rounded,
+              variant: DonyButtonVariant.ghost,
+              isLoading: isLoading,
+              onPressed: isLoading ? null : () => _confirmNoShow(context),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _confirmNoShow(BuildContext context) async {
+    final confirmed = await DonyBottomSheet.show<bool>(
+      context,
+      title: 'Signaler une absence',
+      stickyBottom: Builder(
+        builder: (ctx) => DonyButton(
+          label: 'Confirmer l\'absence',
+          icon: Icons.person_off_rounded,
+          onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(true),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "L'expéditeur ne s'est pas présenté au point de remise.",
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: DonySpacing.md),
+            Text(
+              "L'expéditeur aura 48 h pour contester. "
+              'Sans réponse de sa part, le bid sera annulé.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) {
+      return;
+    }
+    context.read<CancellationBloc>().add(NoShowReportRequested(bid.id));
   }
 }

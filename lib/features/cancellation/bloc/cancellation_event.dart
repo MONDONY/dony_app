@@ -11,3 +11,13 @@ class RematchSuggestionsRequested extends CancellationEvent {
   final String cancellationId;
   RematchSuggestionsRequested(this.cancellationId);
 }
+
+class NoShowReportRequested extends CancellationEvent {
+  final String bidId;
+  NoShowReportRequested(this.bidId);
+}
+
+class NoShowContestRequested extends CancellationEvent {
+  final String bidId;
+  NoShowContestRequested(this.bidId);
+}

@@ -24,6 +24,7 @@ class AnnouncementRemoteDatasource {
     String? description,
     List<String> acceptedContentTypes = const [],
     List<String> refusedTypes = const [],
+    List<String> acceptedPaymentMethods = const ['STRIPE'],
   }) async {
     final response = await _apiClient.dio.post(
       '/announcements',
@@ -41,6 +42,7 @@ class AnnouncementRemoteDatasource {
         if (description != null && description.isNotEmpty) 'description': description,
         'acceptedContentTypes': acceptedContentTypes,
         'refusedTypes': refusedTypes,
+        'acceptedPaymentMethods': acceptedPaymentMethods,
       },
     );
 
@@ -137,6 +139,7 @@ class AnnouncementRemoteDatasource {
     String? description,
     List<String> acceptedContentTypes = const [],
     List<String> refusedTypes = const [],
+    List<String> acceptedPaymentMethods = const ['STRIPE'],
   }) async {
     final response = await _apiClient.dio.put(
       '/announcements/$id',
@@ -154,6 +157,7 @@ class AnnouncementRemoteDatasource {
         if (description != null && description.isNotEmpty) 'description': description,
         'acceptedContentTypes': acceptedContentTypes,
         'refusedTypes': refusedTypes,
+        'acceptedPaymentMethods': acceptedPaymentMethods,
       },
     );
 

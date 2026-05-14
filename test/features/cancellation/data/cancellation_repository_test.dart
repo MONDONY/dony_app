@@ -44,4 +44,20 @@ void main() {
     final result = await repo.getRematchSuggestions('canc-1');
     expect(result, isEmpty);
   });
+
+  test('reportNoShow delegates to datasource', () async {
+    when(() => mockDs.reportNoShow('bid-1')).thenAnswer((_) async {});
+
+    await repo.reportNoShow('bid-1');
+
+    verify(() => mockDs.reportNoShow('bid-1')).called(1);
+  });
+
+  test('contestNoShow delegates to datasource', () async {
+    when(() => mockDs.contestNoShow('bid-2')).thenAnswer((_) async {});
+
+    await repo.contestNoShow('bid-2');
+
+    verify(() => mockDs.contestNoShow('bid-2')).called(1);
+  });
 }

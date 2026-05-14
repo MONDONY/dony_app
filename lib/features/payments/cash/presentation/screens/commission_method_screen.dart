@@ -22,18 +22,9 @@ class CommissionMethodScreen extends StatelessWidget {
         scrolledUnderElevation: 0,
       ),
       body: BlocConsumer<CommissionMethodBloc, CommissionMethodState>(
-        listener: (ctx, state) async {
+        listener: (ctx, state) {
           if (state is CommissionMethodSetupInProgress) {
-            try {
-              await Stripe.instance.confirmSetupIntent(
-                paymentIntentClientSecret: state.clientSecret,
-                params: const PaymentMethodParams.card(
-                    paymentMethodData: PaymentMethodData()),
-              );
-              ctx.read<CommissionMethodBloc>().add(CommissionMethodSetupCompleted());
-            } on StripeException {
-              ctx.read<CommissionMethodBloc>().add(CommissionMethodSetupCancelled());
-            }
+            _runPaymentSheet(ctx, state.clientSecret);
           }
         },
         builder: (ctx, state) {
@@ -44,6 +35,30 @@ class CommissionMethodScreen extends StatelessWidget {
             return CommissionCardEmptyState(
               onAdd: () =>
                   ctx.read<CommissionMethodBloc>().add(CommissionMethodSetupRequested()),
+            );
+          }
+          if (state is CommissionMethodError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(DonySpacing.xl),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Une erreur est survenue. Veuillez réessayer.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(ctx).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: DonySpacing.lg),
+                    DonyButton(
+                      label: 'Réessayer',
+                      onPressed: () => ctx
+                          .read<CommissionMethodBloc>()
+                          .add(CommissionMethodLoadRequested()),
+                    ),
+                  ],
+                ),
+              ),
             );
           }
           if (state is CommissionMethodLoaded) {
@@ -80,6 +95,41 @@ class CommissionMethodScreen extends StatelessWidget {
         },
       ),
     );
+  }
+
+  Future<void> _runPaymentSheet(BuildContext context, String clientSecret) async {
+    try {
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          setupIntentClientSecret: clientSecret,
+          merchantDisplayName: 'Dony',
+          style: ThemeMode.system,
+        ),
+      );
+      await Stripe.instance.presentPaymentSheet();
+      if (context.mounted) {
+        // L'ID du SetupIntent est le préfixe du clientSecret avant "_secret_"
+        final siId = clientSecret.split('_secret_').first;
+        context.read<CommissionMethodBloc>().add(
+          CommissionMethodSetupCompleted(siId),
+        );
+      }
+    } on StripeException catch (e) {
+      if (!context.mounted) {
+        return;
+      }
+      if (e.error.code != FailureCode.Canceled) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.error.localizedMessage ??
+                  'Erreur lors de l\'ajout de la carte.',
+            ),
+          ),
+        );
+      }
+      context.read<CommissionMethodBloc>().add(CommissionMethodSetupCancelled());
+    }
   }
 
   void _confirmDelete(BuildContext context) {

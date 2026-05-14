@@ -60,6 +60,30 @@ void main() {
     });
   });
 
+  group('reportNoShow', () {
+    test('calls POST /cancellations/bids/{bidId}/report-noshow', () async {
+      when(() => mockDio.post(
+            '/cancellations/bids/bid-1/report-noshow',
+          )).thenAnswer((_) async => _ok(null, '/cancellations/bids/bid-1/report-noshow'));
+
+      await datasource.reportNoShow('bid-1');
+
+      verify(() => mockDio.post('/cancellations/bids/bid-1/report-noshow')).called(1);
+    });
+  });
+
+  group('contestNoShow', () {
+    test('calls POST /cancellations/bids/{bidId}/contest-noshow', () async {
+      when(() => mockDio.post(
+            '/cancellations/bids/bid-2/contest-noshow',
+          )).thenAnswer((_) async => _ok(null, '/cancellations/bids/bid-2/contest-noshow'));
+
+      await datasource.contestNoShow('bid-2');
+
+      verify(() => mockDio.post('/cancellations/bids/bid-2/contest-noshow')).called(1);
+    });
+  });
+
   group('getRematchSuggestions', () {
     test('returns list of suggestions', () async {
       when(() => mockDio.get('/cancellations/canc-1/rematch-suggestions'))
