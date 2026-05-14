@@ -46,6 +46,30 @@ class CommissionMethodScreen extends StatelessWidget {
                   ctx.read<CommissionMethodBloc>().add(CommissionMethodSetupRequested()),
             );
           }
+          if (state is CommissionMethodError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(DonySpacing.xl),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Une erreur est survenue. Veuillez réessayer.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(ctx).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: DonySpacing.lg),
+                    DonyButton(
+                      label: 'Réessayer',
+                      onPressed: () => ctx
+                          .read<CommissionMethodBloc>()
+                          .add(CommissionMethodLoadRequested()),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
           if (state is CommissionMethodLoaded) {
             return ListView(
               padding: const EdgeInsets.all(DonySpacing.lg),

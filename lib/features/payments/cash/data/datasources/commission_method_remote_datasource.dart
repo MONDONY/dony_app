@@ -15,9 +15,14 @@ class CommissionMethodRemoteDatasource {
   Future<CommissionMethod?> get() async {
     try {
       final r = await _client.dio.get('/traveler/commission-method');
+      if (r.statusCode == 204 || r.data == null) {
+        return null;
+      }
       return CommissionMethod.fromJson(r.data as Map<String, dynamic>);
     } on DioException catch (e) {
-      if (e.response?.statusCode == 404) return null;
+      if (e.response?.statusCode == 404 || e.response?.statusCode == 204) {
+        return null;
+      }
       rethrow;
     }
   }
