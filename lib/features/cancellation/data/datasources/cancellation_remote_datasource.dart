@@ -23,4 +23,12 @@ class CancellationRemoteDatasource {
         .map((s) => RematchSuggestionModel.fromJson(s as Map<String, dynamic>))
         .toList();
   }
+
+  Future<void> reportNoShow(String bidId) async {
+    await _apiClient.dio.post('/cancellations/bids/$bidId/report-noshow');
+  }
+
+  Future<void> contestNoShow(String bidId) async {
+    await _apiClient.dio.post('/cancellations/bids/$bidId/contest-noshow');
+  }
 }

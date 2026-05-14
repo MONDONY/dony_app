@@ -80,6 +80,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         contentCategory: event.contentCategory,
         recipientName: event.recipientName,
         recipientPhone: event.recipientPhone,
+        paymentMethod: event.paymentMethod,
       );
       emit(BidCreated(bid));
     } catch (e) {

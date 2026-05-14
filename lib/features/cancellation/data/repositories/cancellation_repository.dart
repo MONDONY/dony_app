@@ -14,4 +14,10 @@ class CancellationRepository {
 
   Future<List<RematchSuggestionModel>> getRematchSuggestions(String cancellationId) =>
       _datasource.getRematchSuggestions(cancellationId);
+
+  Future<void> reportNoShow(String bidId) =>
+      _datasource.reportNoShow(bidId);
+
+  Future<void> contestNoShow(String bidId) =>
+      _datasource.contestNoShow(bidId);
 }

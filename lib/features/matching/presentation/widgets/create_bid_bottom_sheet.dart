@@ -7,6 +7,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -40,12 +41,12 @@ class CreateBidBottomSheet {
           ? 5 * announcement.pricePerKg * 1.12
           : announcement.availableKg * announcement.pricePerKg * 1.12,
     );
-    // Création explicite des BLoCs ici pour qu'ils soient l'unique source
-    // de vérité partagée entre le child (qui dispatch les events) et le
-    // stickyBottom (qui observe le state pour le spinner). Sans ça, le
-    // scope du BlocProvider via wrapper a parfois des bugs subtils où
-    // BlocBuilder du stickyBottom et context.read du child ne pointent
-    // pas sur la même instance.
+    final paymentMethodNotifier =
+        ValueNotifier<BidPaymentMethod>(BidPaymentMethod.stripe);
+    final isCashAvailable =
+        announcement.acceptedPaymentMethods.contains(BidPaymentMethod.cash);
+
+    // BLoCs créés explicitement pour partage cohérent child ↔ stickyBottom.
     final bidBloc = getIt<BidBloc>();
     final paymentBloc = getIt<PaymentBloc>();
     return DonyBottomSheet.show(
@@ -60,20 +61,31 @@ class CreateBidBottomSheet {
       ),
       stickyBottom: ValueListenableBuilder<bool>(
         valueListenable: canSubmitNotifier,
-        builder: (ctx, canSubmit, _) => ValueListenableBuilder<double>(
-          valueListenable: totalPriceNotifier,
-          builder: (ctx, totalPrice, _) => BlocBuilder<BidBloc, BidState>(
-            bloc: bidBloc,
-            builder: (ctx, state) {
-              final isLoading = state is BidLoading;
-              return DonyButton(
-                label:
-                    'Bloquer ${NumberFormat.currency(locale: 'fr_FR', symbol: '€').format(totalPrice)} & envoyer',
-                isLoading: isLoading,
-                onPressed: (canSubmit && !isLoading) ? () => submit?.call() : null,
-                icon: Icons.lock_rounded,
-              );
-            },
+        builder: (ctx, canSubmit, _) =>
+            ValueListenableBuilder<BidPaymentMethod>(
+          valueListenable: paymentMethodNotifier,
+          builder: (ctx, method, _) =>
+              ValueListenableBuilder<double>(
+            valueListenable: totalPriceNotifier,
+            builder: (ctx, totalPrice, _) =>
+                BlocBuilder<BidBloc, BidState>(
+              bloc: bidBloc,
+              builder: (ctx, state) {
+                final isLoading = state is BidLoading;
+                final isCash = method == BidPaymentMethod.cash;
+                return DonyButton(
+                  label: isCash
+                      ? 'Envoyer (paiement en espèces)'
+                      : 'Bloquer ${NumberFormat.currency(locale: 'fr_FR', symbol: '€').format(totalPrice)} & envoyer',
+                  isLoading: isLoading,
+                  onPressed:
+                      (canSubmit && !isLoading) ? () => submit?.call() : null,
+                  icon: isCash
+                      ? Icons.payments_rounded
+                      : Icons.lock_rounded,
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -81,11 +93,14 @@ class CreateBidBottomSheet {
         announcement: announcement,
         canSubmitNotifier: canSubmitNotifier,
         totalPriceNotifier: totalPriceNotifier,
+        paymentMethodNotifier: paymentMethodNotifier,
+        isCashAvailable: isCashAvailable,
         onSubmitReady: (fn) => submit = fn,
       ),
     ).whenComplete(() {
       canSubmitNotifier.dispose();
       totalPriceNotifier.dispose();
+      paymentMethodNotifier.dispose();
       bidBloc.close();
       paymentBloc.close();
     });
@@ -99,12 +114,16 @@ class _CreateBidContent extends StatefulWidget {
     required this.announcement,
     this.canSubmitNotifier,
     this.totalPriceNotifier,
+    this.paymentMethodNotifier,
+    this.isCashAvailable = false,
     this.onSubmitReady,
   });
 
   final AnnouncementModel announcement;
   final ValueNotifier<bool>? canSubmitNotifier;
   final ValueNotifier<double>? totalPriceNotifier;
+  final ValueNotifier<BidPaymentMethod>? paymentMethodNotifier;
+  final bool isCashAvailable;
   final void Function(VoidCallback)? onSubmitReady;
 
   @override
@@ -121,6 +140,9 @@ class _CreateBidContentState extends State<_CreateBidContent> {
   late final ValueNotifier<double> _weightNotifier;
   final _categoriesNotifier = ValueNotifier<Set<String>>({});
   final _disclaimerNotifier = ValueNotifier<bool>(false);
+  // Local copy of payment method so the widget doesn't hold a reference to
+  // the external notifier that may be disposed during the sheet exit animation.
+  late final ValueNotifier<BidPaymentMethod> _methodNotifier;
 
   double get _maxKg => widget.announcement.availableKg;
   double get _pricePerKg => widget.announcement.pricePerKg;
@@ -131,11 +153,31 @@ class _CreateBidContentState extends State<_CreateBidContent> {
     _weightNotifier = ValueNotifier<double>(
       widget.announcement.availableKg >= 5 ? 5 : widget.announcement.availableKg,
     );
+    _methodNotifier = ValueNotifier<BidPaymentMethod>(
+      widget.paymentMethodNotifier?.value ?? BidPaymentMethod.stripe,
+    );
+    // Mirror external notifier changes into the local copy.
+    widget.paymentMethodNotifier?.addListener(_syncMethodFromExternal);
     widget.onSubmitReady?.call(_submit);
     _weightNotifier.addListener(_syncStickyState);
     _categoriesNotifier.addListener(_syncStickyState);
     _disclaimerNotifier.addListener(_syncStickyState);
+    _methodNotifier.addListener(_syncMethodToExternal);
     WidgetsBinding.instance.addPostFrameCallback((_) => _syncStickyState());
+  }
+
+  void _syncMethodFromExternal() {
+    final ext = widget.paymentMethodNotifier?.value;
+    if (ext != null && ext != _methodNotifier.value) {
+      _methodNotifier.value = ext;
+    }
+  }
+
+  void _syncMethodToExternal() {
+    final ext = widget.paymentMethodNotifier;
+    if (ext != null && ext.value != _methodNotifier.value) {
+      ext.value = _methodNotifier.value;
+    }
   }
 
   void _syncStickyState() {
@@ -154,12 +196,15 @@ class _CreateBidContentState extends State<_CreateBidContent> {
     _valueCtrl.dispose();
     _recipientNameCtrl.dispose();
     _recipientPhoneCtrl.dispose();
+    widget.paymentMethodNotifier?.removeListener(_syncMethodFromExternal);
     _weightNotifier.removeListener(_syncStickyState);
     _categoriesNotifier.removeListener(_syncStickyState);
     _disclaimerNotifier.removeListener(_syncStickyState);
+    _methodNotifier.removeListener(_syncMethodToExternal);
     _weightNotifier.dispose();
     _categoriesNotifier.dispose();
     _disclaimerNotifier.dispose();
+    _methodNotifier.dispose();
     super.dispose();
   }
 
@@ -185,15 +230,29 @@ class _CreateBidContentState extends State<_CreateBidContent> {
       _showError('Téléphone du destinataire obligatoire');
       return;
     }
-    context.read<BidBloc>().add(BidCheckoutRequested(
-      announcementId: widget.announcement.id,
-      weightKg: _weightNotifier.value,
-      declaredValueEur: val,
-      description: _descCtrl.text.trim(),
-      contentCategory: _categoriesNotifier.value.join(', '),
-      recipientName: _recipientNameCtrl.text.trim(),
-      recipientPhone: _recipientPhoneCtrl.text.trim(),
-    ));
+    final method = _methodNotifier.value;
+    if (method == BidPaymentMethod.cash) {
+      context.read<BidBloc>().add(BidCreateRequested(
+        announcementId: widget.announcement.id,
+        weightKg: _weightNotifier.value,
+        declaredValueEur: val,
+        description: _descCtrl.text.trim(),
+        contentCategory: _categoriesNotifier.value.join(', '),
+        recipientName: _recipientNameCtrl.text.trim(),
+        recipientPhone: _recipientPhoneCtrl.text.trim(),
+        paymentMethod: BidPaymentMethod.cash,
+      ));
+    } else {
+      context.read<BidBloc>().add(BidCheckoutRequested(
+        announcementId: widget.announcement.id,
+        weightKg: _weightNotifier.value,
+        declaredValueEur: val,
+        description: _descCtrl.text.trim(),
+        contentCategory: _categoriesNotifier.value.join(', '),
+        recipientName: _recipientNameCtrl.text.trim(),
+        recipientPhone: _recipientPhoneCtrl.text.trim(),
+      ));
+    }
   }
 
   void _showError(String message) {
@@ -206,7 +265,12 @@ class _CreateBidContentState extends State<_CreateBidContent> {
       listeners: [
         BlocListener<BidBloc, BidState>(
           listener: (context, state) {
-            if (state is BidCheckoutReady) {
+            if (state is BidCreated) {
+              Navigator.of(context, rootNavigator: true).pop();
+              if (context.mounted) {
+                unawaited(context.push('/bids/${state.bid.id}?from=payment'));
+              }
+            } else if (state is BidCheckoutReady) {
               context.read<PaymentBloc>().add(BidCheckoutPaymentRequested(
                 clientSecret: state.response.clientSecret,
                 publishableKey: state.response.publishableKey,
@@ -232,11 +296,13 @@ class _CreateBidContentState extends State<_CreateBidContent> {
               _weightNotifier,
               _categoriesNotifier,
               _disclaimerNotifier,
+              _methodNotifier,
             ]),
             builder: (context, _) {
               final weightKg = _weightNotifier.value;
               final categories = _categoriesNotifier.value;
               final disclaimerAccepted = _disclaimerNotifier.value;
+              final currentMethod = _methodNotifier.value;
               final serviceFee = weightKg * _pricePerKg * 0.12;
               final basePrice = weightKg * _pricePerKg;
               final totalPrice = basePrice + serviceFee;
@@ -332,6 +398,17 @@ class _CreateBidContentState extends State<_CreateBidContent> {
                     keyboardType: TextInputType.phone,
                   ).animate().fadeIn(delay: 180.ms),
                   const SizedBox(height: DonySpacing.xxl),
+
+                  // ── SECTION: Mode de paiement ────────────────────────────
+                  if (widget.isCashAvailable) ...[
+                    _SectionLabel(label: 'MODE DE PAIEMENT'),
+                    const SizedBox(height: DonySpacing.md),
+                    _PaymentMethodSelector(
+                      selectedMethod: currentMethod,
+                      onChanged: (m) => _methodNotifier.value = m,
+                    ).animate().fadeIn(delay: 190.ms),
+                    const SizedBox(height: DonySpacing.xxl),
+                  ],
 
                   // ── Disclaimer card ─────────────────────────────────────
                   _DisclaimerCard(
@@ -628,6 +705,110 @@ class _DisclaimerCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Payment method selector ───────────────────────────────────────────────────
+
+class _PaymentMethodSelector extends StatelessWidget {
+  const _PaymentMethodSelector({
+    required this.selectedMethod,
+    required this.onChanged,
+  });
+
+  final BidPaymentMethod selectedMethod;
+  final ValueChanged<BidPaymentMethod> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _MethodTile(
+            key: const Key('payment-method-stripe'),
+            icon: Icons.lock_rounded,
+            label: 'Paiement sécurisé',
+            sublabel: 'Via Stripe',
+            selected: selectedMethod == BidPaymentMethod.stripe,
+            onTap: () => onChanged(BidPaymentMethod.stripe),
+          ),
+        ),
+        const SizedBox(width: DonySpacing.sm),
+        Expanded(
+          child: _MethodTile(
+            key: const Key('payment-method-cash'),
+            icon: Icons.payments_rounded,
+            label: 'En espèces',
+            sublabel: 'Remise directe',
+            selected: selectedMethod == BidPaymentMethod.cash,
+            onTap: () => onChanged(BidPaymentMethod.cash),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MethodTile extends StatelessWidget {
+  const _MethodTile({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.sublabel,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final String sublabel;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: 150.ms,
+        padding: const EdgeInsets.all(DonySpacing.md),
+        decoration: BoxDecoration(
+          color: selected ? cs.primaryContainer : cs.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(DonyRadius.card),
+          border: Border.all(
+            color: selected ? cs.primary : cs.outline,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              icon,
+              color: selected ? cs.primary : cs.onSurfaceVariant,
+              size: 20,
+            ),
+            const SizedBox(height: DonySpacing.xs),
+            Text(
+              label,
+              style: tt.labelMedium?.copyWith(
+                color: selected ? cs.onPrimaryContainer : cs.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Text(
+              sublabel,
+              style: tt.bodySmall?.copyWith(
+                color:
+                    selected ? cs.onPrimaryContainer : cs.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

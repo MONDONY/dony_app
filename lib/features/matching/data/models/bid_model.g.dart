@@ -6,20 +6,6 @@ part of 'bid_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-BidPaymentMethod _$parseBidPaymentMethod(String? s) => switch (s) {
-  'CASH' => BidPaymentMethod.cash,
-  _ => BidPaymentMethod.stripe,
-};
-
-CommissionStatus? _$parseCommissionStatus(String? s) => switch (s) {
-  'PENDING' => CommissionStatus.pending,
-  'REQUIRES_3DS' => CommissionStatus.requires3ds,
-  'CHARGED' => CommissionStatus.charged,
-  'FAILED' => CommissionStatus.failed,
-  'REFUNDED' => CommissionStatus.refunded,
-  _ => null,
-};
-
 BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
   id: json['id'] as String,
   announcementId: json['announcementId'] as String,
@@ -78,8 +64,17 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
       json['confirmationCodeRefreshWindowStart'] == null
       ? null
       : DateTime.parse(json['confirmationCodeRefreshWindowStart'] as String),
-  paymentMethod: _$parseBidPaymentMethod(json['paymentMethod'] as String?),
-  commissionStatus: _$parseCommissionStatus(json['commissionStatus'] as String?),
+  paymentMethod:
+      $enumDecodeNullable(_$BidPaymentMethodEnumMap, json['paymentMethod']) ??
+      BidPaymentMethod.stripe,
+  commissionStatus: $enumDecodeNullable(
+    _$CommissionStatusEnumMap,
+    json['commissionStatus'],
+  ),
+  cancellationNoShowStatus: json['cancellationNoShowStatus'] as String?,
+  contestationDeadline: json['contestationDeadline'] == null
+      ? null
+      : DateTime.parse(json['contestationDeadline'] as String),
 );
 
 Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
@@ -130,6 +125,21 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'confirmationCodeRefreshWindowStart': instance
       .confirmationCodeRefreshWindowStart
       ?.toIso8601String(),
-  'paymentMethod': instance.paymentMethod.name.toUpperCase(),
-  'commissionStatus': instance.commissionStatus?.name.toUpperCase(),
+  'paymentMethod': _$BidPaymentMethodEnumMap[instance.paymentMethod]!,
+  'commissionStatus': _$CommissionStatusEnumMap[instance.commissionStatus],
+  'cancellationNoShowStatus': instance.cancellationNoShowStatus,
+  'contestationDeadline': instance.contestationDeadline?.toIso8601String(),
+};
+
+const _$BidPaymentMethodEnumMap = {
+  BidPaymentMethod.stripe: 'STRIPE',
+  BidPaymentMethod.cash: 'CASH',
+};
+
+const _$CommissionStatusEnumMap = {
+  CommissionStatus.pending: 'PENDING',
+  CommissionStatus.requires3ds: 'REQUIRES_3DS',
+  CommissionStatus.charged: 'CHARGED',
+  CommissionStatus.failed: 'FAILED',
+  CommissionStatus.refunded: 'REFUNDED',
 };

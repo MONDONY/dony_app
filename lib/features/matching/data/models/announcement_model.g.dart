@@ -30,14 +30,6 @@ Map<String, dynamic> _$TravelerProfileToJson(TravelerProfile instance) =>
       'kycVerified': instance.kycVerified,
     };
 
-Set<BidPaymentMethod> _$parseAcceptedPaymentMethods(List<dynamic>? raw) {
-  if (raw == null || raw.isEmpty) return const {BidPaymentMethod.stripe};
-  return raw.map((e) => switch (e as String) {
-    'CASH' => BidPaymentMethod.cash,
-    _ => BidPaymentMethod.stripe,
-  }).toSet();
-}
-
 AnnouncementModel _$AnnouncementModelFromJson(Map<String, dynamic> json) =>
     AnnouncementModel(
       id: json['id'] as String,
@@ -73,8 +65,11 @@ AnnouncementModel _$AnnouncementModelFromJson(Map<String, dynamic> json) =>
           .toList(),
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
-      acceptedPaymentMethods: _$parseAcceptedPaymentMethods(
-          json['acceptedPaymentMethods'] as List<dynamic>?),
+      acceptedPaymentMethods:
+          (json['acceptedPaymentMethods'] as List<dynamic>?)
+              ?.map((e) => $enumDecode(_$BidPaymentMethodEnumMap, e))
+              .toSet() ??
+          const {BidPaymentMethod.stripe},
     );
 
 Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
@@ -101,6 +96,11 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
       'acceptedPaymentMethods': instance.acceptedPaymentMethods
-          .map((e) => e.name.toUpperCase())
+          .map((e) => _$BidPaymentMethodEnumMap[e]!)
           .toList(),
     };
+
+const _$BidPaymentMethodEnumMap = {
+  BidPaymentMethod.stripe: 'STRIPE',
+  BidPaymentMethod.cash: 'CASH',
+};

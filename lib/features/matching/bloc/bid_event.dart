@@ -1,3 +1,5 @@
+import 'package:dony/features/matching/data/models/bid_model.dart';
+
 abstract class BidEvent {
   const BidEvent();
 }
@@ -30,6 +32,7 @@ class BidCreateRequested extends BidEvent {
   final String contentCategory;
   final String recipientName;
   final String recipientPhone;
+  final BidPaymentMethod paymentMethod;
 
   BidCreateRequested({
     required this.announcementId,
@@ -39,6 +42,7 @@ class BidCreateRequested extends BidEvent {
     required this.contentCategory,
     required this.recipientName,
     required this.recipientPhone,
+    this.paymentMethod = BidPaymentMethod.stripe,
   });
 }
 
