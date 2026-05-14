@@ -25,6 +25,9 @@ import 'package:dony/features/matching/presentation/screens/matching_management_
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
 import 'package:dony/features/notifications/presentation/inbox_screen.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
+import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
+import 'package:dony/features/payments/cash/presentation/screens/commission_method_screen.dart';
 import 'package:dony/features/payments/presentation/screens/payment_screen.dart';
 import 'package:dony/features/payments/presentation/screens/payout_onboarding_screen.dart';
 import 'package:dony/features/config/bloc/config_bloc.dart';
@@ -197,6 +200,15 @@ final appRouter = GoRouter(
           BlocProvider(create: (_) => getIt<RatingBloc>()),
         ],
         child: const QrScannerScreen(),
+      ),
+    ),
+    // ── Carte commission (hors shell) ────────────────────────────────────
+    GoRoute(
+      path: '/payments/commission-method',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<CommissionMethodBloc>()
+          ..add(CommissionMethodLoadRequested()),
+        child: const CommissionMethodScreen(),
       ),
     ),
     GoRoute(
