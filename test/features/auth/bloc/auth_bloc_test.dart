@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -175,7 +176,7 @@ void main() {
       expect: () => [
         isA<AuthLoading>(),
         predicate<AuthState>((s) =>
-            s is AuthError && s.message == 'Ce numéro est déjà associé à un compte'),
+            s is AuthError && s.error.message == 'Ce numéro est déjà associé à un compte'),
       ],
     );
 
@@ -413,7 +414,7 @@ void main() {
         isA<AuthLoading>(),
         predicate<AuthState>((s) =>
             s is AuthError &&
-            s.message.contains('Code de vérification incorrect')),
+            s.error.message.contains('Code de vérification incorrect')),
       ],
     );
   });
@@ -463,7 +464,7 @@ void main() {
       )),
       expect: () => [
         isA<AuthLoading>(),
-        predicate<AuthState>((s) => s is AuthError && s.message.contains('expiré')),
+        predicate<AuthState>((s) => s is AuthError && s.error.message.contains('expiré')),
       ],
     );
 
@@ -480,7 +481,7 @@ void main() {
       )),
       expect: () => [
         isA<AuthLoading>(),
-        predicate<AuthState>((s) => s is AuthError && s.message.contains('Trop')),
+        predicate<AuthState>((s) => s is AuthError && s.error.message.contains('Trop')),
       ],
     );
 
@@ -497,7 +498,7 @@ void main() {
       )),
       expect: () => [
         isA<AuthLoading>(),
-        predicate<AuthState>((s) => s is AuthError && s.message.contains('Session')),
+        predicate<AuthState>((s) => s is AuthError && s.error.message.contains('Session')),
       ],
     );
 
@@ -517,7 +518,7 @@ void main() {
       )),
       expect: () => [
         isA<AuthLoading>(),
-        predicate<AuthState>((s) => s is AuthError && s.message == 'Custom firebase error'),
+        predicate<AuthState>((s) => s is AuthError && s.error.message == 'Custom firebase error'),
       ],
     );
   });
@@ -598,7 +599,7 @@ void main() {
     blocTest<AuthBloc, AuthState>(
       'preserves dial code when emitted from error state',
       build: buildBloc,
-      seed: () => const AuthError('Erreur réseau'),
+      seed: () => AuthError(NetworkException('Erreur réseau')),
       act: (bloc) => bloc.add(
         const AuthDialCodeChanged(code: '+237', flag: '🇨🇲'),
       ),

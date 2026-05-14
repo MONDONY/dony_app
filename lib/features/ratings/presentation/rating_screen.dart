@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
@@ -59,11 +60,7 @@ class _RatingScreenState extends State<RatingScreen> {
           );
           context.pop();
         } else if (state is RatingError) {
-          DonySnackbar.show(
-            context,
-            message: state.message,
-            type: DonySnackbarType.error,
-          );
+          ErrorPresenter.show(context, state.error);
         }
       },
       builder: (context, state) {
@@ -71,31 +68,7 @@ class _RatingScreenState extends State<RatingScreen> {
 
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: AppBar(
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            automaticallyImplyLeading: false,
-            titleSpacing: DonySpacing.base,
-            title: GestureDetector(
-              onTap: () => context.pop(),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.arrow_back_ios_rounded,
-                    size: 16,
-                    color: cs.onSurface,
-                  ),
-                  const SizedBox(width: DonySpacing.xs),
-                  Text(
-                    'Retour',
-                    style: tt.bodyMedium?.copyWith(color: cs.onSurface),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          appBar: const DonyAppBar(title: 'Évaluation'),
           body: Builder(builder: (context) {
             final h = DonyLayout.hPadding(context);
             return SingleChildScrollView(
@@ -233,7 +206,7 @@ class _StarSelector extends StatelessWidget {
                     key: ValueKey(filled),
                     size: 44,
                     color: filled
-                        ? const Color(0xFFF59E0B)
+                        ? DonyColors.starGold
                         : Theme.of(context).colorScheme.outlineVariant,
                   ),
                 ),

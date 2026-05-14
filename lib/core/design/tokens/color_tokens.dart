@@ -95,6 +95,44 @@ abstract final class DonyColors {
   static const purple      = Color(0xFF6A1B9A);
   static const teal        = Color(0xFF00695C);
 
+  // Urgence départ (matching) — < 3j / 3–7j / 7–14j / 14j+
+  static const urgencyRed    = Color(0xFFEF4444);
+  static const urgencyOrange = Color(0xFFF97316);
+  static const urgencyAmber  = Color(0xFFFBBF24);
+  static const urgencyGreen  = Color(0xFF22C55E);
+
+  // Notation (ratings)
+  static const starGold = Color(0xFFF59E0B);
+
+  // Parrainage — palette legacy conservée pour l'écran referral
+  static const referralGreen       = Color(0xFF1A6B3C);
+  static const referralGreenDark   = Color(0xFF134F2D);
+  static const referralGreenMid    = Color(0xFF22A55C);
+  static const referralGreenAccent = Color(0xFF4CAF7D);
+  static const referralGreen50     = Color(0xFFE8F5EE);
+
+  // Pro stats — dégradé dark mode carte statistiques voyageur
+  static const proBg1 = Color(0xFF1A2744); // bleu nuit profond
+  static const proBg2 = Color(0xFF0D1B35); // quasi-noir bleu
+  static const proBg3 = Color(0xFF1A3A6B); // bleu saphir
+
+  // KYC badges — icônes de statut sur profil utilisateur
+  static const kycBadgeBlue = Color(0xFF6FA8FF);
+  static const kycBadgeGold = Color(0xFFF0B829);
+
+  // Thread status — couleurs de chips dans thread_hero_card
+  static const threadStatusOpen    = Color(0xFF0E1B2E);
+  static const threadStatusAmber   = Color(0xFFB5781E);
+  static const threadStatusViolet  = Color(0xFF5B21B6);
+  static const threadStatusGreen   = Color(0xFF15803D);
+  static const threadStatusNeutral = Color(0xFF6B7280);
+
+  // Dégradé hero (shipment_list) — fond bleu-sable/navy selon brightness
+  static const heroGradientDarkA  = Color(0xFF080D18);
+  static const heroGradientDarkB  = Color(0xFF0B0918);
+  static const heroGradientDarkC  = Color(0xFF0E0C09);
+  static const heroGradientLightB = Color(0xFFF2F0FF);
+
   // ═══════════════════════════════════════════════════════════════
   // RÔLES SÉMANTIQUES — Raccourcis à préférer dans les widgets
   // ═══════════════════════════════════════════════════════════════
@@ -158,7 +196,9 @@ abstract final class DonyColors {
   static const infoLight    = info50;
 
   // shadow
-  static const shadow = Color(0x1A0A2540); // ink800 @ 10%
+  static const shadow     = Color(0x1A0A2540); // ink800 @ 10%
+  static const scrimLight = Color(0x33000000); // black @ 20% — ombres subtiles
+  static const scrimDark  = Color(0x88000000); // black @ 53% — overlay image/hero
 
   // ═══════════════════════════════════════════════════════════════
   // DARK MODE — Palette dérivée

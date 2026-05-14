@@ -1,5 +1,6 @@
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
+import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -50,10 +51,10 @@ void main() {
     await tester.tap(find.text('Ouvrir'));
     await tester.pumpAndSettle();
 
-    final btn = tester.widget<FilledButton>(
-      find.ancestor(of: find.text('Envoyer l\'évaluation'), matching: find.byType(FilledButton)),
+    final btn = tester.widget<InkWell>(
+      find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)),
     );
-    expect(btn.onPressed, isNull);
+    expect(btn.onTap, isNull);
   });
 
   testWidgets('le bouton Envoyer est actif après sélection d\'une étoile', (tester) async {
@@ -74,8 +75,9 @@ void main() {
     await tester.pumpAndSettle();
 
     // Le bouton doit maintenant être actif
-    final filledBtn = find.byType(FilledButton);
-    final btn = tester.widget<FilledButton>(filledBtn.last);
-    expect(btn.onPressed, isNotNull);
+    final btn = tester.widget<InkWell>(
+      find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)),
+    );
+    expect(btn.onTap, isNotNull);
   });
 }

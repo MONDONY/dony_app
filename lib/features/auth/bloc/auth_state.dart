@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:equatable/equatable.dart';
 
@@ -60,12 +61,12 @@ class AuthAuthenticated extends AuthState {
 }
 
 class AuthError extends AuthState {
-  final String message;
+  final AppException error;
 
-  const AuthError(this.message);
+  const AuthError(this.error);
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [error];
 }
 
 class AuthAccountDeleted extends AuthState {

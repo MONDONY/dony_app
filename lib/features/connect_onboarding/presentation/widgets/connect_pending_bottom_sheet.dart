@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -60,31 +61,18 @@ class ConnectPendingBottomSheet extends StatelessWidget {
           );
           context.go('/home');
         } else if (state is ConnectOnboardingError) {
-          DonySnackbar.show(
-            context,
-            message: state.message,
-            type: DonySnackbarType.error,
-          );
+          ErrorPresenter.show(context, state.error);
         }
       },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header icon
-          Center(
-            child: DonyIconContainer(
-              icon: Icons.hourglass_top_rounded,
-              size: DonyIconContainerSize.lg,
-              borderRadius: DonyRadius.xl,
-              backgroundColor: cs.warning.withValues(alpha: 0.1),
-              iconColor: cs.warning,
-            )
-                .animate()
-                .fadeIn(duration: 260.ms)
-                .scale(
-                  begin: const Offset(0.85, 0.85),
-                  curve: Curves.easeOutBack,
-                ),
+          // Header mascotte
+          const Center(
+            child: DonyMascotteAnimated(
+              type: DonyMascotteType.confiant,
+              size: DonyMascotteSize.md,
+            ),
           ),
           const SizedBox(height: DonySpacing.xl),
 

@@ -36,11 +36,8 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     try {
       final bid = await _repository.confirmPayment(event.bidId);
       emit(BidPaymentConfirmed(bid));
-    } on DioException catch (e) {
-      final detail = e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
-      emit(BidError(detail));
     } catch (e) {
-      emit(BidError(e.toString()));
+      emit(BidError(unwrapDioError(e)));
     }
   }
 
@@ -62,11 +59,8 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         recipientPhone: event.recipientPhone,
       );
       emit(BidCheckoutReady(response));
-    } on DioException catch (e) {
-      final detail = e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
-      emit(BidError(detail));
     } catch (e) {
-      emit(BidError(e.toString()));
+      emit(BidError(unwrapDioError(e)));
     } finally {
       _checkoutInProgress = false;
     }
@@ -88,11 +82,8 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         recipientPhone: event.recipientPhone,
       );
       emit(BidCreated(bid));
-    } on DioException catch (e) {
-      final detail = e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
-      emit(BidError(detail));
     } catch (e) {
-      emit(BidError(e.toString()));
+      emit(BidError(unwrapDioError(e)));
     }
   }
 
@@ -104,15 +95,13 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     try {
       final bids = await _repository.getBidsForAnnouncement(event.announcementId);
       emit(BidListLoaded(bids));
-    } on DioException catch (e) {
-      if (e.error is NotFoundException) {
+    } catch (e) {
+      final wrapped = unwrapDioError(e);
+      if (wrapped is NotFoundException) {
         emit(BidNotFound());
       } else {
-        final detail = e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
-        emit(BidError(detail));
+        emit(BidError(wrapped));
       }
-    } catch (e) {
-      emit(BidError(e.toString()));
     }
   }
 
@@ -124,13 +113,12 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     try {
       final bid = await _repository.getBidById(event.bidId);
       emit(BidDetailLoaded(bid));
-    } on DioException catch (e) {
-      if (e.error is NotFoundException) {
+    } catch (e) {
+      final wrapped = unwrapDioError(e);
+      if (wrapped is NotFoundException) {
         emit(BidNotFound());
       }
       // Autres erreurs réseau : silence intentionnel
-    } catch (_) {
-      // silence
     }
   }
 
@@ -142,11 +130,8 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     try {
       final bid = await _repository.acceptBid(event.bidId);
       emit(BidAccepted(bid));
-    } on DioException catch (e) {
-      final detail = e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
-      emit(BidError(detail));
     } catch (e) {
-      emit(BidError(e.toString()));
+      emit(BidError(unwrapDioError(e)));
     }
   }
 
@@ -158,11 +143,8 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     try {
       final bid = await _repository.rejectBid(event.bidId, reason: event.reason);
       emit(BidRejected(bid));
-    } on DioException catch (e) {
-      final detail = e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
-      emit(BidError(detail));
     } catch (e) {
-      emit(BidError(e.toString()));
+      emit(BidError(unwrapDioError(e)));
     }
   }
 
@@ -179,11 +161,8 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         windowEnd: event.windowEnd,
       );
       emit(BidHandoverSet(bid));
-    } on DioException catch (e) {
-      final detail = e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
-      emit(BidError(detail));
     } catch (e) {
-      emit(BidError(e.toString()));
+      emit(BidError(unwrapDioError(e)));
     }
   }
 
@@ -195,11 +174,8 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     try {
       final bid = await _repository.confirmPresence(event.bidId);
       emit(BidPresenceConfirmed(bid));
-    } on DioException catch (e) {
-      final detail = e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
-      emit(BidError(detail));
     } catch (e) {
-      emit(BidError(e.toString()));
+      emit(BidError(unwrapDioError(e)));
     }
   }
 
@@ -211,12 +187,8 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     try {
       final bids = await _repository.getMyBids();
       emit(BidListLoaded(bids));
-    } on DioException catch (e) {
-      final detail =
-          e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
-      emit(BidError(detail));
     } catch (e) {
-      emit(BidError(e.toString()));
+      emit(BidError(unwrapDioError(e)));
     }
   }
 
@@ -251,12 +223,8 @@ class BidBloc extends Bloc<BidEvent, BidState> {
       try {
         final bids = await _repository.getMyBids();
         emit(BidListLoaded(bids));
-      } on DioException catch (e) {
-        final detail =
-            e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
-        emit(BidError(detail));
       } catch (e) {
-        emit(BidError(e.toString()));
+        emit(BidError(unwrapDioError(e)));
       }
     }
   }
@@ -269,12 +237,8 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     try {
       final bid = await _repository.cancelBid(event.bidId, reason: event.reason);
       emit(BidCancelled(bid));
-    } on DioException catch (e) {
-      final detail =
-          e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
-      emit(BidError(detail));
     } catch (e) {
-      emit(BidError(e.toString()));
+      emit(BidError(unwrapDioError(e)));
     }
   }
 
@@ -286,12 +250,8 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     try {
       await _repository.hideBid(event.bidId);
       emit(BidHidden());
-    } on DioException catch (e) {
-      final detail =
-          e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
-      emit(BidError(detail));
     } catch (e) {
-      emit(BidError(e.toString()));
+      emit(BidError(unwrapDioError(e)));
     }
   }
 
@@ -303,12 +263,8 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     try {
       await _repository.hideBid(event.bidId);
       emit(BidDeleted());
-    } on DioException catch (e) {
-      final detail =
-          e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
-      emit(BidError(detail));
     } catch (e) {
-      emit(BidError(e.toString()));
+      emit(BidError(unwrapDioError(e)));
     }
   }
 
@@ -320,12 +276,8 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     try {
       await _repository.dismissBidAsTraveler(event.bidId);
       emit(BidDeleted());
-    } on DioException catch (e) {
-      final detail =
-          e.response?.data?['detail'] ?? e.message ?? 'Erreur inconnue';
-      emit(BidError(detail));
     } catch (e) {
-      emit(BidError(e.toString()));
+      emit(BidError(unwrapDioError(e)));
     }
   }
 }

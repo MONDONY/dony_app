@@ -106,24 +106,35 @@ class _AuthInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) {
     final statusCode = err.response?.statusCode;
     final data = err.response?.data;
-    final detail = data?['detail'] as String?;
-    final errorCode = data?['errorCode'] as String?;
+    final detail = data is Map ? data['detail'] as String? : null;
+    // Back-end RFC 7807 ProblemDetail uses `code` (set via problem.setProperty("code", ...)).
+    // We keep `errorCode` as a legacy fallback for any older endpoint.
+    final apiCode = data is Map
+        ? (data['code'] as String?) ?? (data['errorCode'] as String?)
+        : null;
 
     final AppException appException;
     if (statusCode == 401) {
-      appException = UnauthorizedException(detail ?? 'Session expirée');
+      appException = UnauthorizedException(detail ?? 'Session expirée', apiCode);
     } else if (statusCode == 403) {
-      appException = ForbiddenException(detail ?? 'Accès refusé', errorCode);
+      appException = ForbiddenException(detail ?? 'Accès refusé', apiCode);
     } else if (statusCode == 404) {
-      appException = NotFoundException(message: detail ?? 'Ressource introuvable');
+      appException = NotFoundException(
+        message: detail ?? 'Ressource introuvable',
+        apiCode: apiCode,
+      );
+    } else if (statusCode == 409) {
+      appException = ConflictException(detail ?? 'Conflit', code: apiCode);
     } else if (statusCode == 422) {
-      appException = ValidationException(detail ?? 'Données invalides');
+      appException = ValidationException(detail ?? 'Données invalides', code: apiCode);
+    } else if (statusCode == 429) {
+      appException = RateLimitException(detail ?? 'Trop de tentatives');
     } else if (statusCode != null && statusCode >= 500) {
-      appException = ServerException(detail ?? 'Erreur serveur');
+      appException = ServerException(detail ?? 'Erreur serveur', apiCode);
     } else {
       appException = NetworkException(
-        err.message ?? 'Erreur réseau',
-        code: statusCode?.toString(),
+        detail ?? err.message ?? 'Erreur réseau',
+        code: apiCode ?? statusCode?.toString(),
       );
     }
 

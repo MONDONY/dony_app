@@ -65,7 +65,7 @@ void main() {
       expect: () => [
         isA<ProStatsLoading>(),
         predicate<ProStatsState>((s) =>
-            s is ProStatsError && s.message == 'Erreur réseau'),
+            s is ProStatsError && s.error.message == 'Erreur réseau'),
       ],
     );
 
@@ -79,9 +79,7 @@ void main() {
       act: (bloc) => bloc.add(ProStatsLoadRequested()),
       expect: () => [
         isA<ProStatsLoading>(),
-        predicate<ProStatsState>((s) =>
-            s is ProStatsError &&
-            s.message == 'Impossible de charger les statistiques.'),
+        predicate<ProStatsState>((s) => s is ProStatsError),
       ],
     );
 

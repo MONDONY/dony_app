@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -14,6 +15,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/profile/presentation/widgets/coming_soon_bottom_sheet.dart';
 import 'package:dony/features/profile/presentation/widgets/edit_profile_bottom_sheet.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
@@ -72,9 +74,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             if (state is AccountReactivated) {
               context.read<AuthBloc>().add(const AuthCheckRequested());
             } else if (state is AccountDeletionError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
-              );
+              ErrorPresenter.show(context, state.error);
             }
           },
         ),
@@ -240,9 +240,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       ],
 
                                       // Menu principal contextuel au rôle
-                                      DonyListSection(
-                                        tiles: [
-                                          if (activeRole == ActiveRole.traveler) ...[
+                                      if (activeRole == ActiveRole.traveler) ...[
+                                        // ─── TRAVELER ─────────────────────
+                                        DonyListSection(
+                                          tiles: [
                                             DonyListTile(
                                               icon: Icons.flight_takeoff_rounded,
                                               iconColor: Theme.of(context).colorScheme.primary,
@@ -278,105 +279,224 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                   ? () => UpgradeProBottomSheet.show(context, user: user!)
                                                   : null,
                                             ),
-                                          ] else
+                                            DonyListTile(
+                                              icon: Icons.search_rounded,
+                                              iconColor: cs.success,
+                                              iconBgColor: cs.successLight,
+                                              label: 'Demandes d\'envoi à transporter',
+                                              onTap: () => context.push('/package-requests/search'),
+                                            ),
+                                            DonyListTile(
+                                              icon: Icons.handshake_rounded,
+                                              iconColor: Theme.of(context).colorScheme.tertiary,
+                                              iconBgColor: Theme.of(context).colorScheme.tertiaryContainer,
+                                              label: 'Mes négociations',
+                                              onTap: () => context.push('/negotiations'),
+                                            ),
+                                            DonyListTile(
+                                              icon: Icons.credit_card_outlined,
+                                              iconColor: DonyColors.purple,
+                                              iconBgColor: DonyColors.violetLight,
+                                              label: 'Paiements & factures',
+                                              onTap: () => ComingSoonBottomSheet.show(
+                                                context,
+                                                title: 'Paiements & factures',
+                                                description: 'Retrouve ici tes paiements reçus et tes factures téléchargeables.',
+                                                icon: Icons.credit_card_rounded,
+                                              ),
+                                            ),
+                                            _kycTile(context, user),
+                                            DonyListTile(
+                                              icon: Icons.people_outline_rounded,
+                                              iconColor: cs.success,
+                                              iconBgColor: cs.successLight,
+                                              label: 'Parrainages',
+                                              trailing: Text(
+                                                '0 invité',
+                                                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                                ),
+                                              ),
+                                              showDivider: false,
+                                              onTap: () => context.push('/profile/referral'),
+                                            ),
+                                          ],
+                                        ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                                      ] else ...[
+                                        // ─── SENDER ───────────────────────
+                                        // 1. Mon activité — pilote des envois en cours
+                                        _SectionLabel(label: 'MON ACTIVITÉ', cs: cs),
+                                        DonyListSection(
+                                          tiles: [
                                             DonyListTile(
                                               icon: Icons.inventory_2_outlined,
-                                              iconColor: Theme.of(context).colorScheme.secondary,
-                                              iconBgColor: Theme.of(context).colorScheme.secondaryContainer,
-                                              label: 'Mes envois',
+                                              iconColor: cs.secondary,
+                                              iconBgColor: cs.secondaryContainer,
+                                              label: 'Mes envois en cours',
                                               trailing: activeBids > 0
                                                   ? Text(
                                                       '$activeBids en cours',
                                                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                                        color: Theme.of(context).colorScheme.secondary,
+                                                        color: cs.secondary,
                                                         fontWeight: FontWeight.w600,
                                                       ),
                                                     )
                                                   : null,
                                               onTap: () => context.push('/announcements'),
                                             ),
-                                          DonyListTile(
-                                            icon: Icons.credit_card_outlined,
-                                            iconColor: DonyColors.purple,
-                                            iconBgColor: DonyColors.violetLight,
-                                            label: 'Paiements & factures',
-                                            onTap: () {},
-                                          ),
-                                          DonyListTile(
-                                            icon: Icons.badge_outlined,
-                                            iconColor: Theme.of(context).colorScheme.primary,
-                                            iconBgColor: Theme.of(context).colorScheme.primaryContainer,
-                                            label: 'Documents KYC',
-                                            trailing: switch (user?.kycStatus) {
-                                              'VERIFIED' => Text(
-                                                  'Vérifié',
-                                                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                                    color: cs.success,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                              'REJECTED' => Row(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    Icon(Icons.warning_amber_rounded, color: cs.warning, size: 16),
-                                                    const SizedBox(width: DonySpacing.xs),
-                                                    Text(
-                                                      'Réessayer',
-                                                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                                        color: cs.warning,
-                                                        fontWeight: FontWeight.w600,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              'PENDING' => Row(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    SizedBox(
-                                                      width: 12,
-                                                      height: 12,
-                                                      child: CircularProgressIndicator(
-                                                        strokeWidth: 1.5,
-                                                        color: cs.warning,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: DonySpacing.xs),
-                                                    Text(
-                                                      'En cours',
-                                                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                                        color: cs.warning,
-                                                        fontWeight: FontWeight.w600,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              _ => Text(
-                                                  'Vérifier',
-                                                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                                  ),
-                                                ),
-                                            },
-                                            onTap: user?.kycStatus == 'VERIFIED'
-                                                ? () => KycStatusBottomSheet.show(context)
-                                                : () => KycOnboardingBottomSheet.show(context),
-                                          ),
-                                          DonyListTile(
-                                            icon: Icons.people_outline_rounded,
-                                            iconColor: cs.success,
-                                            iconBgColor: cs.successLight,
-                                            label: 'Parrainages',
-                                            trailing: Text(
-                                              '0 invité',
-                                              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                            DonyListTile(
+                                              icon: Icons.history_rounded,
+                                              iconColor: cs.tertiary,
+                                              iconBgColor: cs.tertiaryContainer,
+                                              label: 'Historique des livraisons',
+                                              showDivider: false,
+                                              onTap: () => context.push('/profile/shipments/history'),
+                                            ),
+                                          ],
+                                        ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                                        const SizedBox(height: DonySpacing.lg),
+
+                                        // 2. Mon carnet — accélère la prochaine demande
+                                        _SectionLabel(label: 'MON CARNET', cs: cs),
+                                        DonyListSection(
+                                          tiles: [
+                                            DonyListTile(
+                                              icon: Icons.location_on_outlined,
+                                              iconColor: cs.primary,
+                                              iconBgColor: cs.primaryContainer,
+                                              label: 'Mes adresses de pickup',
+                                              onTap: () => context.push('/profile/addresses'),
+                                            ),
+                                            DonyListTile(
+                                              icon: Icons.contacts_outlined,
+                                              iconColor: cs.primary,
+                                              iconBgColor: cs.primaryContainer,
+                                              label: 'Mes destinataires',
+                                              onTap: () => context.push('/profile/recipients'),
+                                            ),
+                                            DonyListTile(
+                                              icon: Icons.favorite_border_rounded,
+                                              iconColor: cs.error,
+                                              iconBgColor: cs.errorContainer.withValues(alpha: 0.5),
+                                              label: 'Voyageurs favoris',
+                                              showDivider: false,
+                                              onTap: () => context.push('/profile/favorites'),
+                                            ),
+                                          ],
+                                        ).animate().fadeIn(delay: 240.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                                        const SizedBox(height: DonySpacing.lg),
+
+                                        // 3. Paiements & factures
+                                        _SectionLabel(label: 'PAIEMENTS & FACTURES', cs: cs),
+                                        DonyListSection(
+                                          tiles: [
+                                            DonyListTile(
+                                              icon: Icons.credit_card_outlined,
+                                              iconColor: DonyColors.purple,
+                                              iconBgColor: DonyColors.violetLight,
+                                              label: 'Moyens de paiement',
+                                              onTap: () => ComingSoonBottomSheet.show(
+                                                context,
+                                                title: 'Moyens de paiement',
+                                                description: 'Gère tes cartes enregistrées, Apple Pay et Google Pay via Stripe.',
+                                                icon: Icons.credit_card_rounded,
                                               ),
                                             ),
-                                            showDivider: false,
-                                            onTap: () {},
-                                          ),
-                                        ],
-                                      ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                                            DonyListTile(
+                                              icon: Icons.receipt_long_outlined,
+                                              iconColor: DonyColors.purple,
+                                              iconBgColor: DonyColors.violetLight,
+                                              label: 'Factures',
+                                              onTap: () => ComingSoonBottomSheet.show(
+                                                context,
+                                                title: 'Factures',
+                                                description: 'Télécharge les factures PDF de tes envois (utiles pour la valeur déclarée).',
+                                                icon: Icons.receipt_long_rounded,
+                                              ),
+                                            ),
+                                            DonyListTile(
+                                              icon: Icons.local_offer_outlined,
+                                              iconColor: cs.success,
+                                              iconBgColor: cs.successLight,
+                                              label: 'Crédits & codes promo',
+                                              onTap: () => ComingSoonBottomSheet.show(
+                                                context,
+                                                title: 'Crédits & codes promo',
+                                                description: 'Entre un code de réduction et suis ton solde de crédits dony.',
+                                                icon: Icons.local_offer_rounded,
+                                              ),
+                                            ),
+                                            DonyListTile(
+                                              icon: Icons.people_outline_rounded,
+                                              iconColor: cs.success,
+                                              iconBgColor: cs.successLight,
+                                              label: 'Parrainage',
+                                              trailing: Text(
+                                                '0 invité',
+                                                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                                  color: cs.onSurfaceVariant,
+                                                ),
+                                              ),
+                                              showDivider: false,
+                                              onTap: () => context.push('/profile/referral'),
+                                            ),
+                                          ],
+                                        ).animate().fadeIn(delay: 280.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                                        const SizedBox(height: DonySpacing.lg),
+
+                                        // 4. Identité & confiance
+                                        _SectionLabel(label: 'IDENTITÉ & CONFIANCE', cs: cs),
+                                        DonyListSection(
+                                          tiles: [
+                                            _kycTile(context, user),
+                                            DonyListTile(
+                                              icon: Icons.account_box_outlined,
+                                              iconColor: cs.primary,
+                                              iconBgColor: cs.primaryContainer,
+                                              label: 'Mon profil public',
+                                              onTap: () => context.push('/profile/public'),
+                                            ),
+                                            DonyListTile(
+                                              icon: Icons.star_border_rounded,
+                                              iconColor: cs.tertiary,
+                                              iconBgColor: cs.tertiaryContainer,
+                                              label: 'Mes avis reçus',
+                                              showDivider: false,
+                                              onTap: () => context.push('/profile/reviews'),
+                                            ),
+                                          ],
+                                        ).animate().fadeIn(delay: 320.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                                        const SizedBox(height: DonySpacing.lg),
+
+                                        // 5. Support
+                                        _SectionLabel(label: 'SUPPORT', cs: cs),
+                                        DonyListSection(
+                                          tiles: [
+                                            DonyListTile(
+                                              icon: Icons.gavel_rounded,
+                                              iconColor: cs.error,
+                                              iconBgColor: cs.errorContainer.withValues(alpha: 0.5),
+                                              label: 'Mes litiges',
+                                              onTap: () => context.push('/disputes'),
+                                            ),
+                                            DonyListTile(
+                                              icon: Icons.support_agent_rounded,
+                                              iconColor: cs.primary,
+                                              iconBgColor: cs.primaryContainer,
+                                              label: 'Contacter le support',
+                                              onTap: () => context.push('/profile/help/contact'),
+                                            ),
+                                            DonyListTile(
+                                              icon: Icons.help_outline_rounded,
+                                              iconColor: cs.onSurfaceVariant,
+                                              iconBgColor: cs.outline.withValues(alpha: 0.3),
+                                              label: 'FAQ & aide',
+                                              showDivider: false,
+                                              onTap: () => context.push('/profile/help/faq'),
+                                            ),
+                                          ],
+                                        ).animate().fadeIn(delay: 360.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                                      ],
                                       const SizedBox(height: DonySpacing.base),
 
                                       // Menu settings
@@ -458,6 +578,101 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+}
+
+// ── Section label (UPPERCASE titre de groupe) ────────────────────────────────
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({required this.label, required this.cs});
+  final String label;
+  final ColorScheme cs;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.xs,
+        0,
+        DonySpacing.xs,
+        DonySpacing.sm,
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: cs.onSurfaceVariant,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+}
+
+// ── KYC tile partagée (sender + traveler) ────────────────────────────────────
+
+DonyListTile _kycTile(BuildContext context, UserModel? user) {
+  final cs = Theme.of(context).colorScheme;
+  final tt = Theme.of(context).textTheme;
+  return DonyListTile(
+    icon: Icons.badge_outlined,
+    iconColor: cs.primary,
+    iconBgColor: cs.primaryContainer,
+    label: 'Documents KYC',
+    trailing: switch (user?.kycStatus) {
+      'VERIFIED' => Text(
+          'Vérifié',
+          style: tt.labelMedium?.copyWith(
+            color: cs.success,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      'REJECTED' => Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.warning_amber_rounded, color: cs.warning, size: 16),
+            const SizedBox(width: DonySpacing.xs),
+            Text(
+              'Réessayer',
+              style: tt.labelMedium?.copyWith(
+                color: cs.warning,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      'PENDING' => Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 12,
+              height: 12,
+              child: CircularProgressIndicator(
+                strokeWidth: 1.5,
+                color: cs.warning,
+              ),
+            ),
+            const SizedBox(width: DonySpacing.xs),
+            Text(
+              'En cours',
+              style: tt.labelMedium?.copyWith(
+                color: cs.warning,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      _ => Text(
+          'Vérifier',
+          style: tt.labelMedium?.copyWith(
+            color: cs.onSurfaceVariant,
+          ),
+        ),
+    },
+    onTap: user?.kycStatus == 'VERIFIED'
+        ? () => KycStatusBottomSheet.show(context)
+        : () => KycOnboardingBottomSheet.show(context),
+  );
 }
 
 // ── Profile completion banner ─────────────────────────────────────────────────

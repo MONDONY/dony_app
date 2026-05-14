@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
@@ -18,11 +19,7 @@ class KycOnboardingScreen extends StatelessWidget {
           if (state is KycSessionCreated) {
             context.go('/kyc/verify', extra: state.stripeUrl);
           } else if (state is KycError) {
-            DonySnackbar.show(
-              context,
-              message: state.message,
-              type: DonySnackbarType.error,
-            );
+            ErrorPresenter.show(context, state.error);
           }
         },
         builder: (context, state) {
@@ -72,15 +69,10 @@ class KycOnboardingScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            color: cs.primaryContainer,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(Icons.verified_user_outlined, color: cs.primary, size: 32),
-        ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
+        DonyMascotteAnimated(
+          type: DonyMascotteType.confiant,
+          size: DonyMascotteSize.lg,
+        ),
         const SizedBox(height: DonySpacing.xl),
         Text(
           'Vérification d\'identité',

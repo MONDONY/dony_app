@@ -17,8 +17,8 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
   senderIsProAccount: json['senderIsProAccount'] as bool? ?? false,
   senderKiloPro: json['senderKiloPro'] as bool? ?? false,
   weightKg: (json['weightKg'] as num).toDouble(),
-  declaredValueEur: (json['declaredValueEur'] as num).toDouble(),
-  description: json['description'] as String,
+  declaredValueEur: (json['declaredValueEur'] as num?)?.toDouble(),
+  description: json['description'] as String?,
   contentCategory: json['contentCategory'] as String?,
   recipientName: json['recipientName'] as String?,
   recipientPhone: json['recipientPhone'] as String?,
@@ -62,8 +62,8 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
       (json['confirmationCodeRefreshCount'] as num?)?.toInt() ?? 0,
   confirmationCodeRefreshWindowStart:
       json['confirmationCodeRefreshWindowStart'] == null
-          ? null
-          : DateTime.parse(json['confirmationCodeRefreshWindowStart'] as String),
+      ? null
+      : DateTime.parse(json['confirmationCodeRefreshWindowStart'] as String),
 );
 
 Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
@@ -111,6 +111,7 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'senderHasRated': instance.senderHasRated,
   'travelerHasRated': instance.travelerHasRated,
   'confirmationCodeRefreshCount': instance.confirmationCodeRefreshCount,
-  'confirmationCodeRefreshWindowStart':
-      instance.confirmationCodeRefreshWindowStart?.toIso8601String(),
+  'confirmationCodeRefreshWindowStart': instance
+      .confirmationCodeRefreshWindowStart
+      ?.toIso8601String(),
 };

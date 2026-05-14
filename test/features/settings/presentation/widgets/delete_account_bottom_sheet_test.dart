@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/data/account_deletion_repository.dart';
 import 'package:dony/features/settings/data/firebase_phone_reauth.dart';
+import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/settings/presentation/widgets/delete_account_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -45,12 +46,15 @@ void main() {
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
 
-    // Le bouton de validation est un FilledButton (variant primary/destructive).
-    // Avec mode == null, onPressed est null → le bouton est désactivé.
-    final filledButtons =
-        tester.widgetList<FilledButton>(find.byType(FilledButton)).toList();
+    // Le bouton de validation (variant primary/destructive) utilise InkWell.
+    // Avec mode == null, onTap est null → le bouton est désactivé.
+    final inkWells = tester
+        .widgetList<InkWell>(
+          find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)),
+        )
+        .toList();
     expect(
-      filledButtons.where((b) => b.onPressed == null).isNotEmpty,
+      inkWells.where((w) => w.onTap == null).isNotEmpty,
       isTrue,
     );
   });

@@ -1,5 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
+import 'package:dony/features/favorite_travelers/bloc/favorite_traveler_bloc.dart';
+import 'package:dony/features/favorite_travelers/data/datasources/favorite_traveler_datasource.dart';
+import 'package:dony/features/favorite_travelers/data/repositories/favorite_traveler_repository.dart';
+import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
+import 'package:dony/features/pickup_addresses/data/datasources/pickup_address_datasource.dart';
+import 'package:dony/features/pickup_addresses/data/repositories/pickup_address_repository.dart';
+import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
+import 'package:dony/features/recipients/data/datasources/recipient_datasource.dart';
+import 'package:dony/features/recipients/data/repositories/recipient_repository.dart';
 import 'package:dony/features/city/data/city_datasource.dart';
 import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/config/bloc/config_bloc.dart';
@@ -9,6 +18,7 @@ import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.da
 import 'package:dony/features/connect_onboarding/data/connect_onboarding_datasource.dart';
 import 'package:dony/features/connect_onboarding/data/connect_onboarding_repository.dart';
 import 'package:dony/features/profile/bloc/pro_stats_bloc.dart';
+import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
 import 'package:dony/features/profile/data/pro_stats_repository.dart';
 import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
@@ -46,14 +56,28 @@ import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/data/notification_remote_datasource.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
+import 'package:dony/features/package_request/bloc/complete_details_bloc.dart';
+import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
+import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
+import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
+import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
+import 'package:dony/features/package_request/data/negotiation_repository.dart';
+import 'package:dony/features/package_request/data/package_request_repository.dart';
+import 'package:dony/features/package_request/data/price_estimation_repository.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:dony/features/payments/data/datasources/payment_remote_datasource.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
+import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
+import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/data/rating_repository.dart';
+import 'package:dony/features/referral/bloc/referral_bloc.dart';
+import 'package:dony/features/referral/data/referral_datasource.dart';
+import 'package:dony/features/referral/data/referral_repository.dart';
 import 'package:get_it/get_it.dart';
 
 final getIt = GetIt.instance;
@@ -215,6 +239,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerFactory<ProStatsBloc>(
     () => ProStatsBloc(getIt<ProStatsRepository>()),
   );
+  getIt.registerFactory<SupportContactBloc>(
+    () => SupportContactBloc(),
+  );
 
   // Settings — Account Deletion
   getIt.registerLazySingleton<AccountDeletionRepository>(
@@ -236,6 +263,15 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<RatingBloc>(
     () => RatingBloc(getIt<RatingRepository>()),
+  );
+  getIt.registerFactory<MyReviewsBloc>(
+    () => MyReviewsBloc(getIt<RatingRepository>()),
+  );
+  getIt.registerFactory<ProfilePublicBloc>(
+    () => ProfilePublicBloc(
+      getIt<ProfileRepository>(),
+      getIt<RatingRepository>(),
+    ),
   );
 
   // Tracking
@@ -259,5 +295,78 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<CitySearchBloc>(
     () => CitySearchBloc(getIt<CityRepository>()),
+  );
+
+  // Address book — Pickup Addresses
+  getIt.registerLazySingleton<PickupAddressDatasource>(
+    () => PickupAddressDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<PickupAddressRepository>(
+    () => PickupAddressRepository(getIt<PickupAddressDatasource>()),
+  );
+  getIt.registerFactory<PickupAddressBloc>(
+    () => PickupAddressBloc(getIt<PickupAddressRepository>()),
+  );
+
+  // Address book — Recipients
+  getIt.registerLazySingleton<RecipientDatasource>(
+    () => RecipientDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<RecipientRepository>(
+    () => RecipientRepository(getIt<RecipientDatasource>()),
+  );
+  getIt.registerFactory<RecipientBloc>(
+    () => RecipientBloc(getIt<RecipientRepository>()),
+  );
+
+  // Address book — Favorite Travelers
+  getIt.registerLazySingleton<FavoriteTravelerDatasource>(
+    () => FavoriteTravelerDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<FavoriteTravelerRepository>(
+    () => FavoriteTravelerRepository(getIt<FavoriteTravelerDatasource>()),
+  );
+  getIt.registerFactory<FavoriteTravelerBloc>(
+    () => FavoriteTravelerBloc(getIt<FavoriteTravelerRepository>()),
+  );
+
+  // Referral
+  getIt.registerLazySingleton<ReferralDatasource>(
+    () => ReferralDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<ReferralRepository>(
+    () => ReferralRepository(getIt<ReferralDatasource>()),
+  );
+  getIt.registerFactory<ReferralBloc>(
+    () => ReferralBloc(getIt<ReferralRepository>()),
+  );
+
+  // Package request marketplace
+  getIt.registerLazySingleton<PackageRequestRepository>(
+    () => PackageRequestRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<NegotiationRepository>(
+    () => NegotiationRepository(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<PriceEstimationRepository>(
+    () => PriceEstimationRepository(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<PackageRequestFormBloc>(
+    () => PackageRequestFormBloc(getIt<PackageRequestRepository>()),
+  );
+  getIt.registerFactory<PackageRequestSearchBloc>(
+    () => PackageRequestSearchBloc(getIt<PackageRequestRepository>()),
+  );
+  getIt.registerFactory<PackageRequestBloc>(
+    () => PackageRequestBloc(getIt<PackageRequestRepository>()),
+  );
+  getIt.registerFactory<NegotiationBloc>(
+    () => NegotiationBloc(getIt<NegotiationRepository>()),
+  );
+  getIt.registerFactory<NegotiationListBloc>(
+    () => NegotiationListBloc(getIt<NegotiationRepository>()),
+  );
+  getIt.registerFactory<CompleteDetailsBloc>(
+    () => CompleteDetailsBloc(getIt<PackageRequestRepository>()),
   );
 }

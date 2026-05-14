@@ -1,10 +1,11 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 
 enum UrgencyFilter {
-  veryUrgent(color: Color(0xFFEF4444), label: '< 3j', tooltip: 'Départ dans moins de 3 jours'),
-  urgent(color: Color(0xFFF97316), label: '3–7j', tooltip: 'Départ dans 3 à 7 jours'),
-  soon(color: Color(0xFFFBBF24), label: '7–14j', tooltip: 'Départ dans 7 à 14 jours'),
-  later(color: Color(0xFF22C55E), label: '14j+', tooltip: 'Départ dans plus de 14 jours');
+  veryUrgent(color: DonyColors.urgencyRed,    label: '< 3j', tooltip: 'Départ dans moins de 3 jours'),
+  urgent(color: DonyColors.urgencyOrange,      label: '3–7j', tooltip: 'Départ dans 3 à 7 jours'),
+  soon(color: DonyColors.urgencyAmber,         label: '7–14j', tooltip: 'Départ dans 7 à 14 jours'),
+  later(color: DonyColors.urgencyGreen,        label: '14j+', tooltip: 'Départ dans plus de 14 jours');
 
   const UrgencyFilter({
     required this.color,

@@ -1,0 +1,56 @@
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dony/features/referral/bloc/referral_event.dart';
+import 'package:dony/features/referral/bloc/referral_state.dart';
+import 'package:dony/features/referral/data/referral_repository.dart';
+import 'package:share_plus/share_plus.dart';
+
+export 'referral_event.dart';
+export 'referral_state.dart';
+
+class ReferralBloc extends Bloc<ReferralEvent, ReferralState> {
+  ReferralBloc(this._repository) : super(const ReferralInitial()) {
+    on<ReferralLoadRequested>(_onLoadRequested);
+    on<ReferralCodeCopied>(_onCodeCopied);
+    on<ReferralShared>(_onShared);
+  }
+
+  final ReferralRepository _repository;
+
+  Future<void> _onLoadRequested(
+    ReferralLoadRequested event,
+    Emitter<ReferralState> emit,
+  ) async {
+    emit(const ReferralLoading());
+    try {
+      final info = await _repository.getMyReferral();
+      emit(ReferralLoaded(info));
+    } catch (e) {
+      emit(ReferralError(e.toString()));
+    }
+  }
+
+  Future<void> _onCodeCopied(
+    ReferralCodeCopied event,
+    Emitter<ReferralState> emit,
+  ) async {
+    final current = state;
+    if (current is ReferralLoaded) {
+      await Clipboard.setData(ClipboardData(text: current.info.code));
+      // Re-emit the same loaded state so BlocListener can detect the copy action
+      emit(ReferralLoaded(current.info));
+    }
+  }
+
+  Future<void> _onShared(
+    ReferralShared event,
+    Emitter<ReferralState> emit,
+  ) async {
+    final current = state;
+    if (current is ReferralLoaded) {
+      await Share.share(
+        'Salut ! Utilise mon code dony : ${current.info.code} et reçois ton 1er envoi avec 5€ de réduction. ${current.info.shareUrl}',
+      );
+    }
+  }
+}

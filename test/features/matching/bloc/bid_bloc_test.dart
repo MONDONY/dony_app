@@ -85,6 +85,7 @@ void main() {
               recipientPhone: any(named: 'recipientPhone'),
             )).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids'),
+          error: const ValidationException('Valeur maximum : 500 €'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids'),
             statusCode: 422,
@@ -104,7 +105,7 @@ void main() {
       )),
       expect: () => [
         isA<BidLoading>(),
-        predicate<BidState>((s) => s is BidError && s.message == 'Valeur maximum : 500 €'),
+        predicate<BidState>((s) => s is BidError && s.error.message == 'Valeur maximum : 500 €'),
       ],
     );
 
@@ -157,6 +158,7 @@ void main() {
       build: () {
         when(() => mockRepo.getBidsForAnnouncement(any())).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids'),
+          error: const ForbiddenException('Accès refusé'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids'),
             statusCode: 403,
@@ -168,7 +170,7 @@ void main() {
       act: (bloc) => bloc.add(BidListRequested('ann-001')),
       expect: () => [
         isA<BidLoading>(),
-        predicate<BidState>((s) => s is BidError && s.message == 'Accès refusé'),
+        predicate<BidState>((s) => s is BidError && s.error.message == 'Accès refusé'),
       ],
     );
 
@@ -206,6 +208,7 @@ void main() {
       build: () {
         when(() => mockRepo.getMyBids()).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/me'),
+          error: const ServerException('Serveur indisponible'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids/me'),
             statusCode: 500,
@@ -217,7 +220,7 @@ void main() {
       act: (bloc) => bloc.add(BidMyListRequested()),
       expect: () => [
         isA<BidLoading>(),
-        predicate<BidState>((s) => s is BidError && s.message == 'Serveur indisponible'),
+        predicate<BidState>((s) => s is BidError && s.error.message == 'Serveur indisponible'),
       ],
     );
 
@@ -284,6 +287,7 @@ void main() {
       build: () {
         when(() => mockRepo.acceptBid(any())).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/bid-001/accept'),
+          error: const ConflictException('Capacité insuffisante'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids/bid-001/accept'),
             statusCode: 409,
@@ -295,7 +299,7 @@ void main() {
       act: (bloc) => bloc.add(BidAcceptRequested('bid-001')),
       expect: () => [
         isA<BidLoading>(),
-        predicate<BidState>((s) => s is BidError && s.message == 'Capacité insuffisante'),
+        predicate<BidState>((s) => s is BidError && s.error.message == 'Capacité insuffisante'),
       ],
     );
 
@@ -333,6 +337,7 @@ void main() {
         when(() => mockRepo.rejectBid(any(), reason: any(named: 'reason')))
             .thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/bid-001/reject'),
+          error: const ConflictException('Déjà rejeté'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids/bid-001/reject'),
             statusCode: 409,
@@ -344,7 +349,7 @@ void main() {
       act: (bloc) => bloc.add(BidRejectRequested('bid-001', reason: 'reason')),
       expect: () => [
         isA<BidLoading>(),
-        predicate<BidState>((s) => s is BidError && s.message == 'Déjà rejeté'),
+        predicate<BidState>((s) => s is BidError && s.error.message == 'Déjà rejeté'),
       ],
     );
 
@@ -407,6 +412,7 @@ void main() {
         when(() => mockRepo.cancelBid(any(), reason: any(named: 'reason')))
             .thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/bid-001/cancel'),
+          error: const ConflictException('Bid déjà terminé'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids/bid-001/cancel'),
             statusCode: 409,
@@ -419,7 +425,7 @@ void main() {
       expect: () => [
         isA<BidLoading>(),
         predicate<BidState>(
-            (s) => s is BidError && s.message == 'Bid déjà terminé'),
+            (s) => s is BidError && s.error.message == 'Bid déjà terminé'),
       ],
     );
 
@@ -453,6 +459,7 @@ void main() {
       build: () {
         when(() => mockRepo.hideBid(any())).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/bid-001/me'),
+          error: const NotFoundException(message: 'Bid introuvable'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids/bid-001/me'),
             statusCode: 404,
@@ -464,7 +471,7 @@ void main() {
       act: (bloc) => bloc.add(BidHideRequested('bid-001')),
       expect: () => [
         isA<BidLoading>(),
-        predicate<BidState>((s) => s is BidError && s.message == 'Bid introuvable'),
+        predicate<BidState>((s) => s is BidError && s.error.message == 'Bid introuvable'),
       ],
     );
 
@@ -498,6 +505,7 @@ void main() {
       build: () {
         when(() => mockRepo.dismissBidAsTraveler(any())).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/bid-001/traveler'),
+          error: const ForbiddenException('Action non autorisée'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids/bid-001/traveler'),
             statusCode: 403,
@@ -509,7 +517,7 @@ void main() {
       act: (bloc) => bloc.add(BidTravelerDismissRequested('bid-001')),
       expect: () => [
         isA<BidLoading>(),
-        predicate<BidState>((s) => s is BidError && s.message == 'Action non autorisée'),
+        predicate<BidState>((s) => s is BidError && s.error.message == 'Action non autorisée'),
       ],
     );
 
@@ -558,6 +566,7 @@ void main() {
               windowEnd: any(named: 'windowEnd'),
             )).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/bid-001/handover'),
+          error: const ValidationException('Fenêtre invalide'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids/bid-001/handover'),
             statusCode: 422,
@@ -574,7 +583,7 @@ void main() {
       )),
       expect: () => [
         isA<BidLoading>(),
-        predicate<BidState>((s) => s is BidError && s.message == 'Fenêtre invalide'),
+        predicate<BidState>((s) => s is BidError && s.error.message == 'Fenêtre invalide'),
       ],
     );
 
@@ -621,6 +630,7 @@ void main() {
       build: () {
         when(() => mockRepo.confirmPresence(any())).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/bid-001/presence'),
+          error: const ConflictException('Présence déjà confirmée'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids/bid-001/presence'),
             statusCode: 409,
@@ -633,7 +643,7 @@ void main() {
       expect: () => [
         isA<BidLoading>(),
         predicate<BidState>(
-            (s) => s is BidError && s.message == 'Présence déjà confirmée'),
+            (s) => s is BidError && s.error.message == 'Présence déjà confirmée'),
       ],
     );
 
@@ -668,6 +678,7 @@ void main() {
       build: () {
         when(() => mockRepo.confirmPayment(any())).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/bid-001/confirm-payment'),
+          error: const ServerException('Stripe indisponible'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids/bid-001/confirm-payment'),
             statusCode: 502,
@@ -679,7 +690,7 @@ void main() {
       act: (bloc) => bloc.add(BidConfirmPaymentRequested('bid-001')),
       expect: () => [
         predicate<BidState>(
-            (s) => s is BidError && s.message == 'Stripe indisponible'),
+            (s) => s is BidError && s.error.message == 'Stripe indisponible'),
       ],
     );
 
@@ -713,6 +724,7 @@ void main() {
       build: () {
         when(() => mockRepo.hideBid(any())).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/bids/bid-001'),
+          error: const NotFoundException(message: 'Bid introuvable'),
           response: Response(
             requestOptions: RequestOptions(path: '/bids/bid-001'),
             statusCode: 404,
@@ -725,7 +737,7 @@ void main() {
       expect: () => [
         isA<BidLoading>(),
         predicate<BidState>(
-            (s) => s is BidError && s.message == 'Bid introuvable'),
+            (s) => s is BidError && s.error.message == 'Bid introuvable'),
       ],
     );
 

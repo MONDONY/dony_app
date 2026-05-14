@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/notifications/data/notification_model.dart';
 
 abstract class NotificationState {
@@ -33,6 +34,6 @@ class NotificationLoaded extends NotificationState {
 }
 
 class NotificationError extends NotificationState {
-  final String message;
-  const NotificationError(this.message);
+  final AppException error;
+  const NotificationError(this.error);
 }

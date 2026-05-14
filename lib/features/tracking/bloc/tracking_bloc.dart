@@ -1,5 +1,4 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -32,7 +31,7 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
       final qrCode = await _repository.getQrCode(event.bidId);
       emit(TrackingQrLoaded(qrCode));
     } catch (e) {
-      emit(TrackingQrError('Impossible de charger le QR code'));
+      emit(TrackingQrError(unwrapDioError(e)));
     }
   }
 
@@ -45,8 +44,7 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
       final result = await _repository.searchByTrackingNumber(event.number);
       emit(TrackingSearchLoaded(result));
     } catch (e) {
-      emit(TrackingSearchError(
-          'Numéro de suivi introuvable. Vérifiez le numéro et réessayez.'));
+      emit(TrackingSearchError(unwrapDioError(e)));
     }
   }
 
@@ -60,16 +58,7 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
       emit(TrackingEventsLoaded(events));
     } catch (e) {
       if (kDebugMode) debugPrint('[TrackingBloc] getEvents error: $e');
-      final inner = e is DioException ? e.error : e;
-      String message = 'Impossible de charger les événements de tracking';
-      if (inner is NotFoundException) {
-        message = 'Ce suivi n\'existe plus ou a été archivé';
-      } else if (inner is ForbiddenException) {
-        message = 'Accès refusé — vous n\'êtes pas autorisé à voir ce suivi';
-      } else if (inner is UnauthorizedException) {
-        message = 'Session expirée — reconnectez-vous';
-      }
-      emit(TrackingEventsError(message));
+      emit(TrackingEventsError(unwrapDioError(e)));
     }
   }
 
@@ -96,7 +85,7 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
       emit(TrackingConfirmCodeLoaded(result.code, expiresAt: result.expiresAt));
     } catch (e) {
       if (kDebugMode) debugPrint('[TrackingBloc] refreshCode error: $e');
-      emit(TrackingRefreshCodeError('Impossible de régénérer le code. Réessayez.'));
+      emit(TrackingRefreshCodeError(unwrapDioError(e)));
     }
   }
 
@@ -136,8 +125,7 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
       );
       emit(QrScanSuccess(result));
     } catch (e) {
-      emit(QrScanError(
-          'Erreur lors de l\'enregistrement du scan. Réessayez.'));
+      emit(QrScanError(unwrapDioError(e)));
     }
   }
 
@@ -152,12 +140,7 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
       emit(DeliveryConfirmSuccess(result));
     } catch (e) {
       if (kDebugMode) debugPrint('[TrackingBloc] confirmDelivery error: $e');
-      final inner = e is DioException ? e.error : e;
-      String message = 'Erreur lors de la confirmation. Réessayez.';
-      if (inner is ValidationException || inner is AppException) {
-        message = (inner as AppException).message;
-      }
-      emit(DeliveryConfirmError(message));
+      emit(DeliveryConfirmError(unwrapDioError(e)));
     }
   }
 

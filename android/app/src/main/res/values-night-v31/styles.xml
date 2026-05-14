@@ -7,9 +7,9 @@
         <item name="android:windowFullscreen">false</item>
         <item name="android:windowDrawsSystemBarBackgrounds">false</item>
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
-        <item name="android:windowSplashScreenBackground">#FFFFFF</item>
+        <item name="android:windowSplashScreenBackground">#FAFAF8</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/android12splash</item>
-        <item name="android:windowSplashScreenIconBackgroundColor">#FFFFFF</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">#FAFAF8</item>
     </style>
     <!-- NormalTheme dark : fond bleu pour éviter l'écran noir entre splash et Flutter -->
     <style name="NormalTheme" parent="Theme.MaterialComponents.NoActionBar">

@@ -110,7 +110,7 @@ class MarkerBitmapFactory {
     const fontSize = 12.0;
     const paddingH = 8.0;
     const paddingV = 5.0;
-    const textColor = Color(0xFF061833);
+    const textColor = DonyColors.ink900;
     const dotR = 3.0;
     const halo1R = 4.5;
     const halo2R = 6.0;
@@ -157,13 +157,13 @@ class MarkerBitmapFactory {
     canvas.drawRRect(
       ghostRect,
       Paint()
-        ..color = const Color(0xFFD0CCC4)
+        ..color = DonyColors.neutral300
         ..style = PaintingStyle.fill,
     );
     canvas.drawRRect(
       ghostRect,
       Paint()
-        ..color = const Color(0xFFBBB7AF)
+        ..color = DonyColors.neutral400
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1,
     );
@@ -193,7 +193,7 @@ class MarkerBitmapFactory {
           Radius.circular((pillH + 5) / 2),
         ),
         Paint()
-          ..color = const Color(0xFF0B5FFF)
+          ..color = DonyColors.blue500
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2.5,
       );
@@ -211,7 +211,7 @@ class MarkerBitmapFactory {
     canvas.drawRRect(
       pillRect,
       Paint()
-        ..color = const Color(0xFFE8E5DF)
+        ..color = DonyColors.neutral200
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1,
     );
@@ -248,7 +248,7 @@ class MarkerBitmapFactory {
     canvas.drawCircle(
       Offset(badgeCx, badgeCy),
       badgeR,
-      Paint()..color = const Color(0xFF0B5FFF),
+      Paint()..color = DonyColors.blue500,
     );
     canvas.drawCircle(
       Offset(badgeCx, badgeCy),
@@ -294,7 +294,7 @@ class MarkerBitmapFactory {
     const fontSize = 12.0;
     const paddingH = 8.0;
     const paddingV = 5.0;
-    const textColor = Color(0xFF061833);
+    const textColor = DonyColors.ink900;
 
     // Urgency dot dimensions
     const dotR = 3.0;
@@ -352,7 +352,7 @@ class MarkerBitmapFactory {
           Radius.circular((pillH + 5) / 2),
         ),
         Paint()
-          ..color = const Color(0xFF0B5FFF) // DonyColors.primary
+          ..color = DonyColors.blue500
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2.5,
       );
@@ -370,7 +370,7 @@ class MarkerBitmapFactory {
     canvas.drawRRect(
       pillRect,
       Paint()
-        ..color = const Color(0xFFE8E5DF)
+        ..color = DonyColors.neutral200
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1,
     );

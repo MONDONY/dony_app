@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
@@ -63,7 +64,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(const AuthInitial());
       } else {
         // Erreur réseau/serveur → ne pas forcer la re-inscription
-        emit(AuthError('Impossible de récupérer votre profil. Vérifiez votre connexion.'));
+        emit(AuthError(unwrapDioError(e)));
       }
     } catch (_) {
       _pendingPhoneNumber = firebaseUser.phoneNumber;
@@ -153,7 +154,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           // Nouveau numéro → flux de création de compte
           emit(AuthOtpVerified(phoneNumber: _pendingPhoneNumber ?? ''));
         } else {
-          emit(AuthError('Erreur serveur. Réessayez.'));
+          emit(AuthError(unwrapDioError(e)));
         }
       } catch (_) {
         // En cas d'erreur inattendue → traiter comme nouveau compte
@@ -269,17 +270,30 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
-  String _friendlyFirebaseError(FirebaseAuthException e) => switch (e.code) {
-        'invalid-phone-number' => 'Numéro de téléphone invalide',
-        'invalid-verification-code' => 'Code de vérification incorrect',
-        'code-expired' => 'Le code a expiré. Demandez un nouveau code.',
-        'too-many-requests' => 'Trop de tentatives. Réessayez plus tard.',
-        'session-expired' => 'Session expirée. Recommencez.',
-        _ => e.message ?? 'Erreur d\'authentification',
-      };
+  AppException _friendlyFirebaseError(FirebaseAuthException e) {
+    final (message, code) = switch (e.code) {
+      'invalid-phone-number' => ('Numéro de téléphone invalide', 'invalid-phone-number'),
+      'invalid-verification-code' => ('Code de vérification incorrect', 'code-incorrect'),
+      'code-expired' => ('Le code a expiré. Demandez un nouveau code.', 'code-expired'),
+      'too-many-requests' => ('Trop de tentatives. Réessayez plus tard.', 'too-many-attempts'),
+      'session-expired' => ('Session expirée. Recommencez.', 'session-expired'),
+      _ => (e.message ?? 'Erreur d\'authentification', 'firebase-auth-error'),
+    };
+    return NetworkException(message, code: code);
+  }
 
-  String _friendlyError(Object e) =>
-      e.toString().contains('Ce numéro est déjà associé')
-          ? 'Ce numéro est déjà associé à un compte'
-          : 'Une erreur est survenue. Réessayez.';
+  AppException _friendlyError(Object e) {
+    if (e is AppException) return e;
+    if (e is DioException) return unwrapDioError(e);
+    if (e.toString().contains('Ce numéro est déjà associé')) {
+      return const NetworkException(
+        'Ce numéro est déjà associé à un compte',
+        code: 'phone-already-registered',
+      );
+    }
+    return const NetworkException(
+      'Une erreur est survenue. Réessayez.',
+      code: 'auth-generic-error',
+    );
+  }
 }

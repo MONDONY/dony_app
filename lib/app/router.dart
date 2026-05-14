@@ -1,5 +1,7 @@
 import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/presentation/screens/local_auth_screen.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
@@ -15,7 +17,6 @@ import 'package:dony/features/home/presentation/home_screen.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_status_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
@@ -29,12 +30,47 @@ import 'package:dony/features/payments/presentation/screens/payout_onboarding_sc
 import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/presentation/screens/connect_onboarding_intro_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/complete_details_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/shipment_steps_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/package_request_detail_screen.dart';
+import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/presentation/screens/shared/my_negotiations_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/shared/negotiation_thread_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/traveler/link_trip_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/traveler/package_request_public_detail_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/traveler/package_request_search_screen.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/favorite_travelers/bloc/favorite_traveler_bloc.dart';
+import 'package:dony/features/favorite_travelers/presentation/screens/favorite_travelers_screen.dart';
+import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
+import 'package:dony/features/pickup_addresses/presentation/screens/pickup_address_edit_screen.dart';
+import 'package:dony/features/pickup_addresses/presentation/screens/pickup_addresses_screen.dart';
+import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
+import 'package:dony/features/profile/bloc/profile_public_event.dart';
+import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
+import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
+import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
+import 'package:dony/features/ratings/bloc/my_reviews_event.dart';
+import 'package:dony/features/ratings/presentation/screens/my_reviews_screen.dart';
+import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
+import 'package:dony/features/recipients/presentation/screens/recipient_edit_screen.dart';
+import 'package:dony/features/recipients/presentation/screens/recipients_screen.dart';
+import 'package:dony/features/profile/presentation/screens/faq_screen.dart';
+import 'package:dony/features/profile/presentation/screens/shipments_history_screen.dart';
+import 'package:dony/features/profile/presentation/screens/support_contact_screen.dart';
 import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/presentation/settings_screen.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
+import 'package:dony/features/referral/bloc/referral_bloc.dart';
+import 'package:dony/features/referral/bloc/referral_event.dart';
+import 'package:dony/features/referral/presentation/screens/referral_screen.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/presentation/screens/offline_scan_queue_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/qr_scanner_screen.dart';
@@ -281,10 +317,131 @@ final appRouter = GoRouter(
       },
     ),
 
+    // ── Profile — quick wins (hors shell) ────────────────────────────
+    GoRoute(
+      path: '/profile/help/faq',
+      builder: (context, state) => const FaqScreen(),
+    ),
+    GoRoute(
+      path: '/profile/help/contact',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<SupportContactBloc>(),
+        child: const SupportContactScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/profile/shipments/history',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<BidBloc>()..add(BidMyListRequested()),
+        child: const ShipmentsHistoryScreen(),
+      ),
+    ),
+
+    // ── Pickup addresses (hors shell) ────────────────────────────────────
+    GoRoute(
+      path: '/profile/addresses',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<PickupAddressBloc>()..add(const PickupAddressLoaded()),
+        child: const PickupAddressesScreen(),
+      ),
+      routes: [
+        GoRoute(
+          path: 'new',
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<PickupAddressBloc>()
+              ..add(const PickupAddressLoaded()),
+            child: const PickupAddressEditScreen(),
+          ),
+        ),
+        GoRoute(
+          path: ':id',
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<PickupAddressBloc>()
+              ..add(const PickupAddressLoaded()),
+            child: PickupAddressEditScreen(
+              addressId: state.pathParameters['id'],
+            ),
+          ),
+        ),
+      ],
+    ),
+
+    // ── Recipients (hors shell) ───────────────────────────────────────────
+    GoRoute(
+      path: '/profile/recipients',
+      builder: (context, state) => BlocProvider(
+        create: (_) =>
+            getIt<RecipientBloc>()..add(const RecipientLoaded()),
+        child: const RecipientsScreen(),
+      ),
+      routes: [
+        GoRoute(
+          path: 'new',
+          builder: (context, state) => BlocProvider(
+            create: (_) =>
+                getIt<RecipientBloc>()..add(const RecipientLoaded()),
+            child: const RecipientEditScreen(),
+          ),
+        ),
+        GoRoute(
+          path: ':id',
+          builder: (context, state) => BlocProvider(
+            create: (_) =>
+                getIt<RecipientBloc>()..add(const RecipientLoaded()),
+            child: RecipientEditScreen(
+              recipientId: state.pathParameters['id'],
+            ),
+          ),
+        ),
+      ],
+    ),
+
+    // ── Favorite travelers (hors shell) ──────────────────────────────────
+    GoRoute(
+      path: '/profile/favorites',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<FavoriteTravelerBloc>()
+          ..add(const FavoriteTravelerLoaded()),
+        child: const FavoriteTravelersScreen(),
+      ),
+    ),
+
     // ── Upgrade PRO (hors shell) ──────────────────────────────────────
     GoRoute(
       path: '/profile/upgrade-to-pro',
       builder: (context, state) => const UpgradeToProScreen(),
+    ),
+
+    // ── Referral (hors shell) ─────────────────────────────────────────
+    GoRoute(
+      path: '/profile/referral',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<ReferralBloc>()..add(const ReferralLoadRequested()),
+        child: const ReferralScreen(),
+      ),
+    ),
+
+    // ── Mes avis reçus (hors shell) ──────────────────────────────────
+    GoRoute(
+      path: '/profile/reviews',
+      builder: (context, state) => BlocProvider(
+        create: (_) =>
+            getIt<MyReviewsBloc>()..add(const MyReviewsRequested()),
+        child: const MyReviewsScreen(),
+      ),
+    ),
+
+    // ── Mon profil public (hors shell) ───────────────────────────────
+    GoRoute(
+      path: '/profile/public',
+      builder: (context, state) {
+        final userId = state.extra as String?;
+        return BlocProvider(
+          create: (_) => getIt<ProfilePublicBloc>()
+            ..add(ProfilePublicRequested(userId ?? '')),
+          child: ProfilePublicScreen(userId: userId),
+        );
+      },
     ),
 
     // ── Settings (hors shell) ──────────────────────────────────────────
@@ -358,6 +515,74 @@ final appRouter = GoRouter(
           ],
         ),
       ],
+    ),
+    // ── Marketplace de demandes d'envoi (package requests) ─────────────────
+    GoRoute(
+      path: '/package-requests/new',
+      builder: (_, __) => const PackageRequestCreateScreen(),
+    ),
+    GoRoute(
+      path: '/package-requests/me',
+      builder: (_, __) => const MyPackageRequestsScreen(),
+    ),
+    GoRoute(
+      path: '/package-requests/search',
+      builder: (_, __) => const PackageRequestSearchScreen(),
+    ),
+    GoRoute(
+      path: '/package-requests/:id',
+      builder: (_, state) =>
+          PackageRequestDetailScreen(requestId: state.pathParameters['id']!),
+    ),
+    GoRoute(
+      path: '/package-requests/:id/public',
+      builder: (_, state) => PackageRequestPublicDetailScreen(
+          requestId: state.pathParameters['id']!),
+    ),
+    GoRoute(
+      path: '/package-requests/:id/complete-details',
+      builder: (_, state) =>
+          CompleteDetailsScreen(requestId: state.pathParameters['id']!),
+    ),
+    GoRoute(
+      path: '/package-requests/:id/shipment',
+      builder: (_, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        return ShipmentStepsScreen(
+          requestId: state.pathParameters['id']!,
+          travelerDisplayName: extra?['travelerDisplayName'] as String?,
+        );
+      },
+    ),
+    GoRoute(
+      path: '/negotiations',
+      builder: (_, __) => const MyNegotiationsScreen(),
+    ),
+    GoRoute(
+      path: '/negotiations/:id',
+      builder: (context, state) {
+        final authState = context.read<AuthBloc>().state;
+        final userId = authState is AuthAuthenticated
+            ? authState.user.id
+            : authState is AuthProfileUpdated
+                ? authState.user.id
+                : '';
+        return NegotiationThreadScreen(
+          threadId: state.pathParameters['id']!,
+          viewerUserId: userId,
+        );
+      },
+    ),
+    GoRoute(
+      path: '/negotiations/:id/link-trip',
+      builder: (context, state) {
+        final thread = state.extra as NegotiationThread;
+        return BlocProvider.value(
+          value: getIt<NegotiationBloc>()
+            ..add(NegotiationFetchRequested(thread.id)),
+          child: LinkTripScreen(thread: thread),
+        );
+      },
     ),
   ],
 );

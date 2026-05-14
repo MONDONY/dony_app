@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/data/models/connect_account_model.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
@@ -283,7 +284,7 @@ void main() {
       build: buildBloc,
       act: (b) => b.add(const PaymentFailed('Card declined')),
       expect: () => [
-        isA<PaymentError>().having((s) => s.message, 'message', 'Card declined'),
+        isA<PaymentError>().having((s) => s.error.message, 'message', 'Card declined'),
       ],
     );
   });
@@ -306,9 +307,10 @@ void main() {
       expect(s.props, [75.0]);
     });
 
-    test('PaymentError props include message', () {
-      const s = PaymentError('oops');
-      expect(s.props, ['oops']);
+    test('PaymentError props include error', () {
+      final ex = NetworkException('oops');
+      final s = PaymentError(ex);
+      expect(s.props, [ex]);
     });
   });
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_state.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
@@ -33,9 +34,8 @@ class ConversationListBloc
       final conversations = await _repository.getConversations();
       _loaded = conversations;
       emit(ConversationListLoaded(conversations));
-    } catch (_) {
-      emit(const ConversationListError(
-          'Impossible de charger les conversations'));
+    } catch (e) {
+      emit(ConversationListError(unwrapDioError(e)));
       return;
     }
 

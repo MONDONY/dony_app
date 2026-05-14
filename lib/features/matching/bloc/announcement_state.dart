@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 
 abstract class AnnouncementState {}
@@ -13,10 +14,10 @@ class AnnouncementCreated extends AnnouncementState {
 }
 
 class AnnouncementError extends AnnouncementState {
-  final String message;
+  final AppException error;
   final List<AnnouncementModel>? previousResults;
 
-  AnnouncementError(this.message, {this.previousResults});
+  AnnouncementError(this.error, {this.previousResults});
 }
 
 class AnnouncementListLoaded extends AnnouncementState {
@@ -36,6 +37,14 @@ class AnnouncementUpdated extends AnnouncementState {
 }
 
 class AnnouncementDeleted extends AnnouncementState {}
+
+/// Émis quand le back refuse la suppression du trajet parce qu'au moins un
+/// colis est déjà ACCEPTED. Le voyageur doit passer par le flux d'annulation
+/// (qui rembourse l'expéditeur) plutôt que par une suppression directe.
+class AnnouncementDeleteBlockedByAcceptedBid extends AnnouncementState {
+  final String announcementId;
+  AnnouncementDeleteBlockedByAcceptedBid(this.announcementId);
+}
 
 class AnnouncementSearchLoaded extends AnnouncementState {
   final List<AnnouncementModel> results;

@@ -1,0 +1,60 @@
+part of 'recipient_bloc.dart';
+
+abstract class RecipientEvent {
+  const RecipientEvent();
+}
+
+class RecipientLoaded extends RecipientEvent {
+  const RecipientLoaded();
+}
+
+class RecipientCreated extends RecipientEvent {
+  const RecipientCreated({
+    required this.fullName,
+    this.relationship,
+    required this.phoneE164,
+    this.whatsappE164,
+    this.street,
+    required this.city,
+    required this.country,
+    this.notes,
+  });
+
+  final String fullName;
+  final String? relationship;
+  final String phoneE164;
+  final String? whatsappE164;
+  final String? street;
+  final String city;
+  final String country;
+  final String? notes;
+}
+
+class RecipientUpdated extends RecipientEvent {
+  const RecipientUpdated({
+    required this.id,
+    required this.fullName,
+    this.relationship,
+    required this.phoneE164,
+    this.whatsappE164,
+    this.street,
+    required this.city,
+    required this.country,
+    this.notes,
+  });
+
+  final String id;
+  final String fullName;
+  final String? relationship;
+  final String phoneE164;
+  final String? whatsappE164;
+  final String? street;
+  final String city;
+  final String country;
+  final String? notes;
+}
+
+class RecipientDeleted extends RecipientEvent {
+  const RecipientDeleted(this.id);
+  final String id;
+}

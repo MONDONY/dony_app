@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 
 abstract class ConversationOpenState {
@@ -18,6 +19,6 @@ class ConversationOpenSuccess extends ConversationOpenState {
 }
 
 class ConversationOpenError extends ConversationOpenState {
-  final String message;
-  const ConversationOpenError(this.message);
+  final AppException error;
+  const ConversationOpenError(this.error);
 }

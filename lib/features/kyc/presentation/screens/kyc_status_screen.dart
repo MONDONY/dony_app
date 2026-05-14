@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
@@ -118,7 +119,8 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
                     else if (state is KycStatusLoaded)
                       _buildStatusContent(context, cs, tt, state)
                     else if (state is KycError)
-                      _buildErrorContent(cs, tt, state.message),
+                      _buildErrorContent(
+                          cs, tt, ErrorPresenter.resolve(state.error).message),
                   ],
                 ).animate().fadeIn(duration: 300.ms),
               ),
@@ -188,15 +190,11 @@ class _KycStatusScreenState extends State<KycStatusScreen> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 96,
-          height: 96,
-          decoration: BoxDecoration(
-            color: cs.primaryContainer,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(Icons.verified, color: cs.primary, size: 52),
-        ).animate().scale(duration: 500.ms, curve: Curves.easeOutBack),
+        const DonyMascotteAnimated(
+          type: DonyMascotteType.securise,
+          size: DonyMascotteSize.lg,
+          withGlow: true,
+        ),
         const SizedBox(height: DonySpacing.xxl),
         Text(
           'Identité vérifiée ✓',

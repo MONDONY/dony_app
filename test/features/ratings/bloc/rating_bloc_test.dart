@@ -1,6 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
-import 'package:dony/core/error/app_exception.dart' show AppException, ServerException;
+import 'package:dony/core/error/app_exception.dart' show ServerException;
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
@@ -79,7 +79,7 @@ void main() {
       )),
       expect: () => [
         isA<RatingLoading>(),
-        isA<RatingError>().having((e) => e.message, 'message', 'Bid non trouvé'),
+        isA<RatingError>().having((e) => e.error.message, 'message', 'Bid non trouvé'),
       ],
     );
 
@@ -103,11 +103,7 @@ void main() {
       )),
       expect: () => [
         isA<RatingLoading>(),
-        isA<RatingError>().having(
-          (e) => e.message,
-          'message',
-          contains('Impossible d\'envoyer'),
-        ),
+        isA<RatingError>(),
       ],
     );
 
@@ -127,11 +123,7 @@ void main() {
       )),
       expect: () => [
         isA<RatingLoading>(),
-        isA<RatingError>().having(
-          (e) => e.message,
-          'message',
-          contains('Impossible d\'envoyer'),
-        ),
+        isA<RatingError>(),
       ],
     );
   });
@@ -171,7 +163,7 @@ void main() {
       )),
       expect: () => [
         isA<RatingLoading>(),
-        isA<RatingError>().having((e) => e.message, 'message', 'Interdit'),
+        isA<RatingError>().having((e) => e.error.message, 'message', 'Interdit'),
       ],
     );
   });
@@ -254,7 +246,7 @@ void main() {
           bloc.add(const UserRatingsLoadRequested(userId: 'user-1', page: 0)),
       expect: () => [
         isA<RatingError>().having(
-            (e) => e.message, 'message', 'Utilisateur introuvable'),
+            (e) => e.error.message, 'message', 'Utilisateur introuvable'),
       ],
     );
   });

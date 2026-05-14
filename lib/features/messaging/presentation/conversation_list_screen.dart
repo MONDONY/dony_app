@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_state.dart';
@@ -39,9 +40,10 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
           if (state is ConversationListError) {
             return DonyEmptyState(
               type: DonyEmptyStateType.error,
+              mascotte: DonyMascotteType.assis,
               icon: Icons.wifi_off_rounded,
               title: 'Erreur de chargement',
-              description: state.message,
+              description: ErrorPresenter.resolve(state.error).message,
               actionLabel: 'Réessayer',
               onAction: () => context
                   .read<ConversationListBloc>()
@@ -52,7 +54,7 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
           if (state is ConversationListLoaded) {
             if (state.conversations.isEmpty) {
               return const DonyEmptyState(
-                icon: Icons.chat_bubble_outline_rounded,
+                mascotte: DonyMascotteType.assis,
                 title: 'Aucun message',
                 description: 'Vos conversations apparaîtront ici\naprès l\'acceptation d\'une offre.',
               );
@@ -273,7 +275,7 @@ class _TripLabel extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(Icons.flight_rounded, size: 11, color: cs.primary),
-        const SizedBox(width: 4),
+        const SizedBox(width: DonySpacing.xs),
         Flexible(
           child: Text(
             label,

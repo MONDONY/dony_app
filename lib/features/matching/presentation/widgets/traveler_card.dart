@@ -107,24 +107,19 @@ class TravelerCard extends StatelessWidget {
                     children: [
                       Text(_displayName, style: tt.titleLarge, overflow: TextOverflow.ellipsis),
                       const SizedBox(height: DonySpacing.xxs),
-                      Row(
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: DonySpacing.xxs,
+                        runSpacing: DonySpacing.xxs,
                         children: [
                           Icon(Icons.star_rounded, size: 13, color: cs.warning),
-                          const SizedBox(width: DonySpacing.xxs),
                           Text(rating != null ? rating.toStringAsFixed(1) : '—', style: tt.titleSmall),
-                          const SizedBox(width: DonySpacing.xxs),
                           Text(
                             '· ${totalTrips ?? 0} trajet${(totalTrips ?? 0) > 1 ? 's' : ''}',
                             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                           ),
-                          if (isKiloPro) ...[
-                            const SizedBox(width: DonySpacing.xs),
-                            const _KycBadge(),
-                          ],
-                          if (isProAccount) ...[
-                            const SizedBox(width: DonySpacing.xs),
-                            const _ProBadge(),
-                          ],
+                          if (isKiloPro) const _KycBadge(),
+                          if (isProAccount) const _ProBadge(),
                         ],
                       ),
                     ],

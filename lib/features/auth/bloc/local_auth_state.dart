@@ -1,3 +1,5 @@
+import 'package:dony/core/error/app_exception.dart';
+
 abstract class LocalAuthState {
   const LocalAuthState();
 }
@@ -29,8 +31,8 @@ class LocalAuthSuccess extends LocalAuthState {
 }
 
 class LocalAuthError extends LocalAuthState {
-  const LocalAuthError(this.message);
-  final String message;
+  const LocalAuthError(this.error);
+  final AppException error;
 }
 
 /// Aucun PIN configuré — l'utilisateur doit en créer un (premier login ou PIN effacé)

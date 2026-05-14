@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/profile/presentation/widgets/edit_profile_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -177,10 +179,10 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
-    final filledButton = tester.widget<FilledButton>(
-      find.byType(FilledButton).first,
+    final filledButton = tester.widget<InkWell>(
+      find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)).first,
     );
-    expect(filledButton.onPressed, isNull);
+    expect(filledButton.onTap, isNull);
   });
 
   // ── Test 5 : affiche snackbar erreur sur AuthError ────────────────────────
@@ -198,11 +200,12 @@ void main() {
     await _openSheet(tester);
 
     // Emit the error state
-    stateController.add(const AuthError('Connexion impossible'));
+    stateController.add(AuthError(NetworkException('Connexion impossible')));
     await tester.pump(); // let the listener fire
     await tester.pump(const Duration(milliseconds: 100)); // let SnackBar render
 
-    expect(find.text('Connexion impossible'), findsOneWidget);
+    // ErrorPresenter resolves NetworkException via ErrorCatalog → _networkGeneric.
+    expect(find.text('Erreur réseau'), findsOneWidget);
 
     await stateController.close();
   });

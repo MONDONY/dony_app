@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
@@ -178,9 +179,17 @@ class _ChatScreenState extends State<ChatScreen> {
         scrolledUnderElevation: 0,
         centerTitle: false,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
-          color: cs.primary,
+          tooltip: 'Retour',
           onPressed: () => context.pop(),
+          icon: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: cs.primaryContainer,
+              borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
+            ),
+            child: Icon(Icons.chevron_left_rounded, size: 20, color: cs.primary),
+          ),
         ),
         title: Row(
           children: [
@@ -246,11 +255,8 @@ class _ChatScreenState extends State<ChatScreen> {
               );
               if (context.canPop()) context.pop();
             });
-          } else if (state is ChatError &&
-              state.message == 'Impossible de supprimer la conversation') {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
+          } else if (state is ChatError) {
+            ErrorPresenter.show(context, state.error);
           }
         },
         builder: (context, state) {
@@ -284,9 +290,10 @@ class _ChatScreenState extends State<ChatScreen> {
               if (state is ChatError) {
                 return DonyEmptyState(
                   type: DonyEmptyStateType.error,
+                  mascotte: DonyMascotteType.assis,
                   icon: Icons.wifi_off_rounded,
                   title: 'Connexion interrompue',
-                  description: state.message,
+                  description: ErrorPresenter.resolve(state.error).message,
                   actionLabel: 'Réessayer',
                   onAction: () => context.read<ChatBloc>().add(
                         ChatSubscribeRequested(

@@ -15,6 +15,7 @@ import 'package:dony/features/tracking/presentation/widgets/qr_code_card.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -87,7 +88,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
     _skeletonLoading = _bid.isSkeleton;
     context.read<BidBloc>().add(BidDetailRequested(_bid.id));
     _loadPaymentStatus();
-    if (_bid.status == 'ACCEPTED' || _bid.status == 'IN_TRANSIT') {
+    if (_bid.status == 'ACCEPTED' || _bid.status == 'HANDED_OVER' || _bid.status == 'IN_TRANSIT') {
       _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
         if (mounted) context.read<BidBloc>().add(BidDetailRequested(_bid.id));
       });
@@ -119,7 +120,6 @@ class _BidDetailViewState extends State<_BidDetailView> {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
     return BlocListener<RatingBloc, RatingState>(
@@ -136,11 +136,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
             extra: state.conversation,
           );
         } else if (state is ConversationOpenError) {
-          DonySnackbar.show(
-            context,
-            message: state.message,
-            type: DonySnackbarType.error,
-          );
+          ErrorPresenter.show(context, state.error);
         }
       },
       child: BlocConsumer<BidBloc, BidState>(
@@ -194,13 +190,17 @@ class _BidDetailViewState extends State<_BidDetailView> {
               !_paymentLoadedNotifier.value) {
             _loadPaymentStatus();
           }
-          // Restart timer if bid transitioned to IN_TRANSIT
-          if ((state.bid.status == 'ACCEPTED' || state.bid.status == 'IN_TRANSIT')
-              && _refreshTimer == null) {
+          // Restart timer if bid transitioned to HANDED_OVER or IN_TRANSIT
+          if ((state.bid.status == 'ACCEPTED' ||
+                  state.bid.status == 'HANDED_OVER' ||
+                  state.bid.status == 'IN_TRANSIT') &&
+              _refreshTimer == null) {
             _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
               if (mounted) context.read<BidBloc>().add(BidDetailRequested(_bid.id));
             });
-          } else if (state.bid.status != 'ACCEPTED' && state.bid.status != 'IN_TRANSIT') {
+          } else if (state.bid.status != 'ACCEPTED' &&
+              state.bid.status != 'HANDED_OVER' &&
+              state.bid.status != 'IN_TRANSIT') {
             _refreshTimer?.cancel();
             _refreshTimer = null;
           }
@@ -209,7 +209,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
             _skeletonLoading = false;
             if (context.canPop()) context.pop(); else context.go('/home');
           }
-          DonySnackbar.show(context, message: state.message, type: DonySnackbarType.error);
+          ErrorPresenter.show(context, state.error);
         }
       },
       builder: (context, state) {
@@ -229,29 +229,17 @@ class _BidDetailViewState extends State<_BidDetailView> {
 
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: AppBar(
-            backgroundColor: cs.surface,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back_ios_rounded,
-                  size: 20, color: cs.primary),
-              onPressed: () {
-                if (widget.fromPayment) {
-                  context.go('/home');
-                } else if (context.canPop()) {
-                  context.pop();
-                } else {
-                  context.go('/home');
-                }
-              },
-              tooltip: 'Retour',
-            ),
-            title: Text(
-              'Mon colis #$bidCode',
-              style: tt.headlineLarge,
-            ),
-            centerTitle: false,
+          appBar: DonyAppBar(
+            title: 'Mon colis #$bidCode',
+            onBack: () {
+              if (widget.fromPayment) {
+                context.go('/home');
+              } else if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/home');
+              }
+            },
             actions: [
               IconButton(
                 icon: Icon(Icons.share_rounded,
@@ -266,10 +254,6 @@ class _BidDetailViewState extends State<_BidDetailView> {
                 tooltip: 'Partager',
               ),
             ],
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(1),
-              child: Divider(height: 1, color: cs.outline),
-            ),
           ),
           body: _skeletonLoading
               ? Center(
@@ -299,6 +283,8 @@ class _BidDetailViewState extends State<_BidDetailView> {
                       // Traveler card (visible to sender when accepted or completed)
                       if (isSender &&
                           (_bid.status == 'ACCEPTED' ||
+                              _bid.status == 'HANDED_OVER' ||
+                              _bid.status == 'IN_TRANSIT' ||
                               _bid.status == 'COMPLETED')) ...[
                         _TravelerCard(bid: _bid),
                         const SizedBox(height: DonySpacing.base),
@@ -351,15 +337,18 @@ class _BidDetailViewState extends State<_BidDetailView> {
                       ],
 
                       // Tracking link
-                      if (_bid.status == 'ACCEPTED' &&
+                      if ((_bid.status == 'ACCEPTED' ||
+                              _bid.status == 'HANDED_OVER' ||
+                              _bid.status == 'IN_TRANSIT') &&
                           _bid.trackingToken != null) ...[
                         const SizedBox(height: DonySpacing.base),
                         _TrackingLinkCard(bid: _bid),
                       ],
 
-                      // Confirmation code (sender) — affiché uniquement après le scan de départ
+                      // Confirmation code (sender) — généré lors du scan DEPART → HANDED_OVER
                       if (isSender &&
-                          _bid.status == 'ACCEPTED' &&
+                          (_bid.status == 'HANDED_OVER' ||
+                              _bid.status == 'IN_TRANSIT') &&
                           _bid.confirmationCode != null) ...[
                         const SizedBox(height: DonySpacing.base),
                         _ConfirmationCodeCard(
@@ -379,7 +368,9 @@ class _BidDetailViewState extends State<_BidDetailView> {
                       ],
 
                       // Timeline button
-                      if (_bid.status == 'ACCEPTED') ...[
+                      if (_bid.status == 'ACCEPTED' ||
+                          _bid.status == 'HANDED_OVER' ||
+                          _bid.status == 'IN_TRANSIT') ...[
                         const SizedBox(height: DonySpacing.base),
                         _TimelineButton(bid: _bid),
                       ],
@@ -417,9 +408,10 @@ class _BidDetailViewState extends State<_BidDetailView> {
                         const _RatingDoneCard(),
                       ],
 
-                      // Cancel section (traveler only, ACCEPTED or IN_TRANSIT)
+                      // Cancel section (traveler only, ACCEPTED / HANDED_OVER / IN_TRANSIT)
                       if (!isSender &&
                           (_bid.status == 'ACCEPTED' ||
+                              _bid.status == 'HANDED_OVER' ||
                               _bid.status == 'IN_TRANSIT')) ...[
                         const SizedBox(height: DonySpacing.xl),
                         _TravelerCancelSection(bid: _bid, isLoading: isLoading),
@@ -521,7 +513,11 @@ class _StatusBadge extends StatelessWidget {
     switch (bid.status) {
       case 'ACCEPTED':
         color = cs.success;
-        label = '● Accepté';
+        label = '● Confirmé';
+        break;
+      case 'HANDED_OVER':
+        color = cs.primary;
+        label = '● En route';
         break;
       case 'REJECTED':
         color = cs.error;
@@ -1115,13 +1111,15 @@ class _PackageCard extends StatelessWidget {
         children: [
           _InfoRow(label: 'Catégorie', value: bid.contentCategory ?? '—'),
           const SizedBox(height: DonySpacing.sm),
-          _InfoRow(label: 'Description', value: bid.description),
+          _InfoRow(label: 'Description', value: bid.description ?? '—'),
           const SizedBox(height: DonySpacing.sm),
           _InfoRow(label: 'Poids', value: '${bid.weightKg} kg'),
           const SizedBox(height: DonySpacing.sm),
           _InfoRow(
               label: 'Valeur déclarée',
-              value: '${bid.declaredValueEur.toStringAsFixed(2)} €'),
+              value: bid.declaredValueEur != null
+                  ? '${bid.declaredValueEur!.toStringAsFixed(2)} €'
+                  : '— (à compléter)'),
         ],
       ),
     );
@@ -2480,14 +2478,7 @@ class _ConfirmationCodeCardState extends State<_ConfirmationCodeCard> {
           c is TrackingConfirmCodeLoaded || c is TrackingRefreshCodeError,
       listener: (ctx, state) {
         if (state is TrackingRefreshCodeError) {
-          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-            content: Text(state.message,
-                style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
-            backgroundColor: cs.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.sm)),
-          ));
+          ErrorPresenter.show(ctx, state.error);
         } else if (state is TrackingConfirmCodeLoaded) {
           ctx.read<BidBloc>().add(BidDetailRequested(widget.bidId));
         }

@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:dony/features/city/data/city_repository.dart';
@@ -29,7 +30,7 @@ class CitySearchBloc extends Bloc<CitySearchEvent, CitySearchState> {
       final cities = await _repository.searchCities(event.query.trim());
       emit(CitySearchLoaded(cities));
     } catch (e) {
-      emit(CitySearchError(e.toString()));
+      emit(CitySearchError(unwrapDioError(e)));
     }
   }
 

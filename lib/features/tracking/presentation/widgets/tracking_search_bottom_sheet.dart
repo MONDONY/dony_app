@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -70,11 +71,7 @@ class _TrackingSearchBottomSheetState extends State<TrackingSearchBottomSheet> {
     return BlocConsumer<TrackingBloc, TrackingState>(
       listener: (context, state) {
         if (state is TrackingSearchError) {
-          DonySnackbar.show(
-            context,
-            message: state.message,
-            type: DonySnackbarType.error,
-          );
+          ErrorPresenter.show(context, state.error);
         }
       },
       builder: (context, state) {

@@ -55,7 +55,7 @@ void main() {
     );
 
     blocTest<UpgradeToProBloc, UpgradeToProState>(
-      'emits [Loading, Error] with generic message when repo throws AppException with code 409',
+      'emits [Loading, Error] preserving AppException with code 409',
       build: () {
         when(
           () => mockRepo.upgradeToPro(
@@ -69,15 +69,15 @@ void main() {
       expect: () => [
         isA<UpgradeToProLoading>(),
         isA<UpgradeToProError>().having(
-          (s) => s.message,
-          'message',
-          'Une erreur est survenue. Veuillez réessayer.',
+          (s) => s.error.code,
+          'error.code',
+          '409',
         ),
       ],
     );
 
     blocTest<UpgradeToProBloc, UpgradeToProState>(
-      'emits [Loading, Error] with generic message when AppException has non-409 code',
+      'emits [Loading, Error] preserving AppException without code',
       build: () {
         when(
           () => mockRepo.upgradeToPro(
@@ -91,15 +91,15 @@ void main() {
       expect: () => [
         isA<UpgradeToProLoading>(),
         isA<UpgradeToProError>().having(
-          (s) => s.message,
-          'message',
-          'Une erreur est survenue. Veuillez réessayer.',
+          (s) => s.error,
+          'error',
+          isA<NetworkException>(),
         ),
       ],
     );
 
     blocTest<UpgradeToProBloc, UpgradeToProState>(
-      'emits [Loading, Error] with generic message on non-AppException error',
+      'emits [Loading, Error] wrapping non-AppException via unwrapDioError',
       build: () {
         when(
           () => mockRepo.upgradeToPro(
@@ -113,9 +113,9 @@ void main() {
       expect: () => [
         isA<UpgradeToProLoading>(),
         isA<UpgradeToProError>().having(
-          (s) => s.message,
-          'message',
-          'Une erreur est survenue. Veuillez réessayer.',
+          (s) => s.error,
+          'error',
+          isA<AppException>(),
         ),
       ],
     );

@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/cancellation/presentation/widgets/cancellation_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
@@ -66,7 +67,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
               context.go('/home');
             }
           } else if (state is AnnouncementError) {
-            DonySnackbar.show(context, message: state.message, type: DonySnackbarType.error);
+            ErrorPresenter.show(context, state.error);
           }
         },
         builder: (context, state) {

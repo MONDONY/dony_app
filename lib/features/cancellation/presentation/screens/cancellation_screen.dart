@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
@@ -95,11 +96,7 @@ class _CancellationScreenState extends State<CancellationScreen> {
           );
           context.go('/announcements');
         } else if (state is CancellationError) {
-          DonySnackbar.show(
-            context,
-            message: state.message,
-            type: DonySnackbarType.error,
-          );
+          ErrorPresenter.show(context, state.error);
         }
       },
       child: Scaffold(

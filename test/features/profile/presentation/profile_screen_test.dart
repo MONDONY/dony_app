@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -242,12 +243,12 @@ void main() {
       initialState: AuthAuthenticated(_pendingDeletionUser),
     );
 
-    const errorMessage = 'La réactivation a échoué. Veuillez réessayer.';
-
     whenListen<AccountDeletionState>(
       deletionBloc,
       Stream.fromIterable([
-        const AccountDeletionError(message: errorMessage),
+        AccountDeletionError(
+          error: const NetworkException('La réactivation a échoué.'),
+        ),
       ]),
       initialState: const AccountDeletionInitial(),
     );
@@ -263,7 +264,8 @@ void main() {
     await tester.pump(); // let BlocListener react and SnackBar appear
 
     expect(find.byType(SnackBar), findsOneWidget);
-    expect(find.text(errorMessage), findsOneWidget);
+    // ErrorPresenter resolves NetworkException → "Erreur réseau" title from catalog.
+    expect(find.text('Erreur réseau'), findsOneWidget);
   });
 
   // ── Test 5: Paramètres tile navigates to /settings ──────────────────────

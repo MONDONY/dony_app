@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/presentation/widgets/connect_pending_bottom_sheet.dart';
 import 'package:flutter/material.dart';
@@ -78,7 +79,7 @@ class _IntroView extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final isLoading = state is ConnectOnboardingLoading;
     final error = state is ConnectOnboardingError
-        ? (state as ConnectOnboardingError).message
+        ? ErrorPresenter.resolve((state as ConnectOnboardingError).error).message
         : null;
 
     return Scaffold(
@@ -97,17 +98,11 @@ class _IntroView extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Hero icon
-                DonyIconContainer(
-                  icon: Icons.account_balance_wallet_rounded,
-                  size: DonyIconContainerSize.xl,
-                  borderRadius: DonyRadius.xl,
-                  backgroundColor: cs.primaryContainer,
-                  iconColor: cs.primary,
-                ).animate().fadeIn(duration: 260.ms).scale(
-                      begin: const Offset(0.85, 0.85),
-                      curve: Curves.easeOutBack,
-                    ),
+                // Hero mascotte
+                DonyMascotteAnimated(
+                  type: DonyMascotteType.securise,
+                  size: DonyMascotteSize.lg,
+                ),
                 const SizedBox(height: DonySpacing.xl),
 
                 // Title

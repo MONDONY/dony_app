@@ -1,11 +1,12 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
-import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/create_bid_screen.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:flutter/material.dart';
@@ -41,18 +42,6 @@ final _testAnnouncement = AnnouncementModel(
     id: 'trav-1',
     displayName: 'Ibrahima Diallo',
   ),
-);
-
-final _testBid = BidModel(
-  id: 'bid-1',
-  announcementId: 'ann-1',
-  senderId: 'sender-1',
-  weightKg: 5,
-  declaredValueEur: 150,
-  description: 'Vêtements famille',
-  status: 'PENDING',
-  createdAt: DateTime(2026, 1, 1),
-  updatedAt: DateTime(2026, 1, 1),
 );
 
 // ── Builder ───────────────────────────────────────────────────────────────────
@@ -189,8 +178,10 @@ void main() {
       await _pumpScreen(tester, bidBloc, paymentBloc);
 
       final button =
-          tester.widget<FilledButton>(find.byType(FilledButton).last);
-      expect(button.onPressed, isNull);
+          tester.widget<InkWell>(
+            find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)).last,
+          );
+      expect(button.onTap, isNull);
     });
 
     testWidgets('affiche la section de prix (Total + Frais de service)',
@@ -306,8 +297,10 @@ void main() {
       await tester.pump();
 
       final button =
-          tester.widget<FilledButton>(find.byType(FilledButton).last);
-      expect(button.onPressed, isNull);
+          tester.widget<InkWell>(
+            find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)).last,
+          );
+      expect(button.onTap, isNull);
     });
 
     testWidgets('catégorie + disclaimer → bouton activé', (tester) async {
@@ -316,8 +309,10 @@ void main() {
       await _enableSubmit(tester);
 
       final button =
-          tester.widget<FilledButton>(find.byType(FilledButton).last);
-      expect(button.onPressed, isNotNull);
+          tester.widget<InkWell>(
+            find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)).last,
+          );
+      expect(button.onTap, isNotNull);
     });
 
     testWidgets('tap texte disclaimer → accepte via GestureDetector',
@@ -448,8 +443,10 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       // Button disabled
       final button =
-          tester.widget<FilledButton>(find.byType(FilledButton).last);
-      expect(button.onPressed, isNull);
+          tester.widget<InkWell>(
+            find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)).last,
+          );
+      expect(button.onTap, isNull);
     });
 
     testWidgets('BidCheckoutReady → triggers PaymentBloc', (tester) async {
@@ -484,7 +481,7 @@ void main() {
       addTearDown(tester.view.reset);
       whenListen<BidState>(
         bidBloc,
-        Stream.fromIterable([BidError('Erreur réseau')]),
+        Stream.fromIterable([BidError(NetworkException('Erreur réseau'))]),
         initialState: BidInitial(),
       );
 

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
@@ -208,9 +209,9 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 child: Container(
                   color: DonyColors.ink900.withValues(alpha: 0.7),
                   padding: EdgeInsets.fromLTRB(
-                    DonySpacing.lg,
                     DonySpacing.base,
-                    DonySpacing.lg,
+                    DonySpacing.base,
+                    DonySpacing.base,
                     MediaQuery.of(context).padding.bottom + DonySpacing.xl,
                   ),
                   child: Column(
@@ -458,7 +459,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     final cs = Theme.of(context).colorScheme;
     final isFinal = isFinalDeliveryStep(label);
     final mascotteType =
-        isFinal ? DonyMascotteType.colisLivre : DonyMascotteType.pouceLeve;
+        isFinal ? DonyMascotteType.securise : DonyMascotteType.confiant;
     final title = isFinal ? 'Colis livré !' : 'Scan enregistré !';
 
     showDialog<void>(
@@ -470,9 +471,10 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DonyMascotte(
+            DonyMascotteAnimated(
               type: mascotteType,
               size: DonyMascotteSize.lg,
+              withGlow: isFinal,
             ),
             const SizedBox(height: DonySpacing.base),
             Text(title,
@@ -1066,8 +1068,10 @@ class _ScanConfirmSheetState extends State<_ScanConfirmSheet> {
                 const SizedBox(height: DonySpacing.md),
                 Text(
                   state is QrScanError
-                      ? state.message
-                      : (state as DeliveryConfirmError).message,
+                      ? ErrorPresenter.resolve(state.error).message
+                      : ErrorPresenter.resolve(
+                              (state as DeliveryConfirmError).error)
+                          .message,
                   style: tt.bodySmall?.copyWith(
                     color: cs.error,
                     fontWeight: FontWeight.w500,

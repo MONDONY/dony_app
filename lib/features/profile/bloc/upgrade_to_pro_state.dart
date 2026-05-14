@@ -14,21 +14,21 @@ class UpgradeToProLoading extends UpgradeToProState {}
 class UpgradeToProSuccess extends UpgradeToProState {}
 
 class UpgradeToProError extends UpgradeToProState {
-  final String message;
+  final AppException error;
 
-  const UpgradeToProError(this.message);
+  const UpgradeToProError(this.error);
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [error];
 }
 
 class DowngradeSuccess extends UpgradeToProState {}
 
 class DowngradeError extends UpgradeToProState {
-  final String message;
+  final AppException error;
 
-  const DowngradeError(this.message);
+  const DowngradeError(this.error);
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [error];
 }

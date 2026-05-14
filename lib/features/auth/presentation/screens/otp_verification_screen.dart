@@ -2,6 +2,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -67,8 +68,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           } else if (state is AuthAuthenticated) {
             context.go('/auth/local');
           } else if (state is AuthError) {
-            DonySnackbar.show(context,
-                message: state.message, type: DonySnackbarType.error);
+            ErrorPresenter.show(context, state.error);
           }
         },
         builder: (context, state) {
@@ -91,9 +91,17 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: IconButton(
-                      icon: Icon(Icons.arrow_back_ios_rounded,
-                          size: 20, color: cs.onSurface),
+                      tooltip: 'Retour',
                       onPressed: () => context.pop(),
+                      icon: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: cs.primaryContainer,
+                          borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
+                        ),
+                        child: Icon(Icons.chevron_left_rounded, size: 20, color: cs.primary),
+                      ),
                     ),
                   ),
                 ),
@@ -109,6 +117,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          const Center(
+                            child: DonyMascotteAnimated(
+                              type: DonyMascotteType.confiant,
+                              size: DonyMascotteSize.md,
+                            ),
+                          ),
+                          const SizedBox(height: DonySpacing.xl),
                           Text(
                             'Entrez le code',
                             style: tt.displayLarge?.copyWith(

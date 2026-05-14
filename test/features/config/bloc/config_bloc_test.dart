@@ -82,7 +82,7 @@ void main() {
         expect: () => [
           isA<ConfigLoading>(),
           isA<ConfigError>().having(
-            (s) => s.message,
+            (s) => s.error.message,
             'message',
             contains('Server down'),
           ),

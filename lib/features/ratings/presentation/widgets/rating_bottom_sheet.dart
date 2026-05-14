@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
@@ -111,7 +112,7 @@ class _RatingBottomSheetState extends State<RatingBottomSheet> {
           Navigator.of(context).pop();
           DonySnackbar.show(context, message: 'Merci pour votre évaluation !', type: DonySnackbarType.success);
         } else if (state is RatingError) {
-          DonySnackbar.show(context, message: state.message, type: DonySnackbarType.error);
+          ErrorPresenter.show(context, state.error);
         }
       },
       builder: (context, state) {
@@ -208,7 +209,7 @@ class _StarSelector extends StatelessWidget {
                       key: ValueKey(filled),
                       size: 44,
                       color: filled
-                          ? const Color(0xFFF59E0B)
+                          ? DonyColors.starGold
                           : Theme.of(context).colorScheme.outlineVariant,
                     ),
                   ),

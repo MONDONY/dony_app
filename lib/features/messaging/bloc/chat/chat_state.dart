@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
 
 abstract class ChatState {
@@ -18,8 +19,8 @@ class ChatLoaded extends ChatState {
 }
 
 class ChatError extends ChatState {
-  final String message;
-  const ChatError(this.message);
+  final AppException error;
+  const ChatError(this.error);
 }
 
 class ChatReadOnly extends ChatState {

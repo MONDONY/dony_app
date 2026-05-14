@@ -75,8 +75,8 @@ class PaymentEscrowPending extends PaymentState {
 }
 
 class PaymentError extends PaymentState {
-  final String message;
-  const PaymentError(this.message);
+  final AppException error;
+  const PaymentError(this.error);
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [error];
 }

@@ -1,5 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
+import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/connect_onboarding/presentation/screens/connect_onboarding_intro_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -75,25 +77,29 @@ void main() {
       await tester.pump(_kSettle);
 
       // Button should be disabled (no tap handler)
-      final button = tester.widget<FilledButton>(
-        find.byType(FilledButton),
+      final button = tester.widget<InkWell>(
+        find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)),
       );
-      expect(button.onPressed, isNull);
+      expect(button.onTap, isNull);
     });
 
     testWidgets('shows error banner when state is ConnectOnboardingError',
         (tester) async {
       whenListen<ConnectOnboardingState>(
         mockBloc,
-        Stream.value(const ConnectOnboardingError('Stripe indisponible')),
+        Stream.value(ConnectOnboardingError(NetworkException('Stripe indisponible'))),
         initialState:
-            const ConnectOnboardingError('Stripe indisponible'),
+            ConnectOnboardingError(NetworkException('Stripe indisponible')),
       );
 
       await tester.pumpWidget(_wrap(mockBloc));
       await tester.pump(_kSettle);
 
-      expect(find.text('Stripe indisponible'), findsOneWidget);
+      // L'écran affiche ErrorPresenter.resolve(error).message → texte du catalog.
+      expect(
+        find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('dispatches ConnectOnboardingLinkRequested on button tap',

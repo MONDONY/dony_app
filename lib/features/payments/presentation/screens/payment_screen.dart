@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -129,7 +130,9 @@ class _PaymentSummaryView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isLoading = state is PaymentLoading;
-    final error = state is PaymentError ? (state as PaymentError).message : null;
+    final error = state is PaymentError
+        ? ErrorPresenter.resolve((state as PaymentError).error).message
+        : null;
 
     return Scaffold(
       appBar: const DonyAppBar(title: 'Payer mon envoi'),
@@ -291,11 +294,10 @@ class _EscrowConfirmedView extends StatelessWidget {
             Column(
               children: [
                 const SizedBox(height: DonySpacing.xxl),
-                DonyIconContainer(
-                  icon: Icons.check_circle_rounded,
-                  size: DonyIconContainerSize.xxl,
-                  backgroundColor: cs.success.withValues(alpha: 0.1),
-                  iconColor: cs.success,
+                const DonyMascotteAnimated(
+                  type: DonyMascotteType.securise,
+                  size: DonyMascotteSize.lg,
+                  withGlow: true,
                 ),
                 const SizedBox(height: DonySpacing.xl),
                 Text(

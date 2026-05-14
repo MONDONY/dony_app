@@ -44,4 +44,12 @@ class RatingRepository {
     if (response.statusCode == 204 || response.data == null) return null;
     return PendingRating.fromJson(response.data as Map<String, dynamic>);
   }
+
+  Future<RatingSummary> findMineReceived({int page = 0}) async {
+    final response = await _apiClient.dio.get(
+      '/ratings/me/received',
+      queryParameters: {'page': page, 'size': 20},
+    );
+    return RatingSummary.fromJson(response.data as Map<String, dynamic>);
+  }
 }

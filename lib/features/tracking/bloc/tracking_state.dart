@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/tracking/data/models/qr_code_model.dart';
 import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/models/tracking_search_model.dart';
@@ -15,8 +16,8 @@ class TrackingQrLoaded extends TrackingState {
 }
 
 class TrackingQrError extends TrackingState {
-  final String message;
-  TrackingQrError(this.message);
+  final AppException error;
+  TrackingQrError(this.error);
 }
 
 // Tracking number search
@@ -28,8 +29,8 @@ class TrackingSearchLoaded extends TrackingState {
 }
 
 class TrackingSearchError extends TrackingState {
-  final String message;
-  TrackingSearchError(this.message);
+  final AppException error;
+  TrackingSearchError(this.error);
 }
 
 // Events timeline
@@ -41,8 +42,8 @@ class TrackingEventsLoaded extends TrackingState {
 }
 
 class TrackingEventsError extends TrackingState {
-  final String message;
-  TrackingEventsError(this.message);
+  final AppException error;
+  TrackingEventsError(this.error);
 }
 
 // Confirmation code (sender side)
@@ -59,8 +60,8 @@ class TrackingConfirmCodeError extends TrackingState {}
 class TrackingRefreshCodeLoading extends TrackingState {}
 
 class TrackingRefreshCodeError extends TrackingState {
-  final String message;
-  TrackingRefreshCodeError(this.message);
+  final AppException error;
+  TrackingRefreshCodeError(this.error);
 }
 
 // QR scan submission
@@ -74,8 +75,8 @@ class QrScanSuccess extends TrackingState {
 class QrScanQueued extends TrackingState {}
 
 class QrScanError extends TrackingState {
-  final String message;
-  QrScanError(this.message);
+  final AppException error;
+  QrScanError(this.error);
 }
 
 // Delivery confirmation (traveler side)
@@ -87,8 +88,8 @@ class DeliveryConfirmSuccess extends TrackingState {
 }
 
 class DeliveryConfirmError extends TrackingState {
-  final String message;
-  DeliveryConfirmError(this.message);
+  final AppException error;
+  DeliveryConfirmError(this.error);
 }
 
 // Offline sync

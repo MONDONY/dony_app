@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -65,7 +66,7 @@ class _QrCodeCardState extends State<QrCodeCard> {
                     children: [
                       Icon(Icons.error_outline_rounded, color: cs.error, size: 18),
                       const SizedBox(width: DonySpacing.sm),
-                      Text(state.message,
+                      Text(ErrorPresenter.resolve(state.error).message,
                           style: tt.bodySmall?.copyWith(color: cs.error)),
                     ],
                   ),

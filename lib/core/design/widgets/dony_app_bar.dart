@@ -42,6 +42,7 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
 
     return AppBar(
       title: Text(title, style: tt.headlineMedium),
@@ -50,7 +51,6 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
       leading: showBackButton
           ? IconButton(
               tooltip: leadingIcon != null ? 'Fermer' : 'Retour',
-              icon: Icon(leadingIcon ?? Icons.arrow_back_rounded, size: 22),
               onPressed: () {
                 HapticFeedback.lightImpact();
                 if (onBack != null) {
@@ -61,6 +61,19 @@ class DonyAppBar extends StatelessWidget implements PreferredSizeWidget {
                   context.go('/home');
                 }
               },
+              icon: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer,
+                  borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
+                ),
+                child: Icon(
+                  leadingIcon ?? Icons.chevron_left_rounded,
+                  size: 20,
+                  color: cs.primary,
+                ),
+              ),
             )
           : null,
       automaticallyImplyLeading: showBackButton,
@@ -96,6 +109,7 @@ class DonySliverAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
 
     return SliverAppBar(
       pinned: true,
@@ -105,14 +119,27 @@ class DonySliverAppBar extends StatelessWidget {
       leading: showBackButton
           ? IconButton(
               tooltip: 'Retour',
-              icon: const Icon(Icons.arrow_back_rounded, size: 22),
               onPressed: onBack ?? () {
+                HapticFeedback.lightImpact();
                 if (context.canPop()) {
                   context.pop();
                 } else {
                   context.go('/home');
                 }
               },
+              icon: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer,
+                  borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
+                ),
+                child: Icon(
+                  Icons.chevron_left_rounded,
+                  size: 20,
+                  color: cs.primary,
+                ),
+              ),
             )
           : null,
       automaticallyImplyLeading: showBackButton,

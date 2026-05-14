@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
@@ -152,17 +153,9 @@ class _UpgradeProBottomSheetState extends State<UpgradeProBottomSheet> {
             );
           }
         } else if (state is UpgradeToProError) {
-          DonySnackbar.show(
-            context,
-            message: state.message,
-            type: DonySnackbarType.error,
-          );
+          ErrorPresenter.show(context, state.error);
         } else if (state is DowngradeError) {
-          DonySnackbar.show(
-            context,
-            message: state.message,
-            type: DonySnackbarType.error,
-          );
+          ErrorPresenter.show(context, state.error);
         }
       },
       builder: (context, state) {
@@ -425,7 +418,9 @@ class _UpgradeFormView extends StatelessWidget {
         if (state is UpgradeToProError) ...[
           DonyStatusBanner(
             type: DonyStatusBannerType.error,
-            message: (state as UpgradeToProError).message,
+            message: ErrorPresenter.resolve(
+                    (state as UpgradeToProError).error)
+                .message,
           ),
           const SizedBox(height: DonySpacing.md),
         ],

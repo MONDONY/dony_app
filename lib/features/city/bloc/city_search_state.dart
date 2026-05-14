@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/city/data/city_model.dart';
 
 abstract class CitySearchState {
@@ -18,6 +19,6 @@ class CitySearchLoaded extends CitySearchState {
 }
 
 class CitySearchError extends CitySearchState {
-  const CitySearchError(this.message);
-  final String message;
+  const CitySearchError(this.error);
+  final AppException error;
 }

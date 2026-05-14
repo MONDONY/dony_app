@@ -136,11 +136,11 @@ class _GlassHeroCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final gradientStart = isDark
-        ? const Color(0xFF1A2744)
-        : const Color(0xFF0A2540);
+        ? DonyColors.proBg1
+        : DonyColors.ink800;
     final gradientEnd = isDark
-        ? const Color(0xFF0D1B35)
-        : const Color(0xFF1A3A6B);
+        ? DonyColors.proBg2
+        : DonyColors.proBg3;
     final bgAlpha = isDark ? 0.80 : 0.90;
     final borderAlpha = isDark ? 0.10 : 0.18;
 

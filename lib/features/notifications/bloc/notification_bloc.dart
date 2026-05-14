@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:dony/features/notifications/data/notification_model.dart';
@@ -23,8 +24,8 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
       final notifications = await _repository.getNotifications();
       final unread = await _repository.getUnreadCount();
       emit(NotificationLoaded(notifications: notifications, unreadCount: unread));
-    } catch (_) {
-      emit(const NotificationError('Impossible de charger les notifications'));
+    } catch (e) {
+      emit(NotificationError(unwrapDioError(e)));
     }
   }
 

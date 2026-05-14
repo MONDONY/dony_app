@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
@@ -76,6 +77,7 @@ void main() {
             )).thenThrow(
           DioException(
             requestOptions: RequestOptions(),
+            error: const NotFoundException(message: 'Announcement not found'),
             response: Response(
               data: {'detail': 'Announcement not found'},
               statusCode: 404,
@@ -91,8 +93,8 @@ void main() {
       expect: () => [
         isA<CancellationLoading>(),
         isA<CancellationError>().having(
-          (s) => s.message,
-          'message',
+          (s) => s.error.message,
+          'error.message',
           'Announcement not found',
         ),
       ],

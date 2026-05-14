@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_state.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
@@ -23,8 +24,8 @@ class ConversationOpenBloc
         conversation = await _repository.restoreConversation(conversation.id);
       }
       emit(ConversationOpenSuccess(conversation));
-    } catch (_) {
-      emit(const ConversationOpenError('Impossible d\'ouvrir la conversation'));
+    } catch (e) {
+      emit(ConversationOpenError(unwrapDioError(e)));
     }
   }
 }

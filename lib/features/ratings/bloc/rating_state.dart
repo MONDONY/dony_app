@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
 
 abstract class RatingState {
@@ -17,8 +18,8 @@ class RatingSuccess extends RatingState {
 }
 
 class RatingError extends RatingState {
-  const RatingError(this.message);
-  final String message;
+  const RatingError(this.error);
+  final AppException error;
 }
 
 class PendingRatingFound extends RatingState {

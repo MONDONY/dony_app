@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 
 abstract class CancellationState {}
@@ -17,6 +18,6 @@ class RematchSuggestionsLoaded extends CancellationState {
 }
 
 class CancellationError extends CancellationState {
-  final String message;
-  CancellationError(this.message);
+  final AppException error;
+  CancellationError(this.error);
 }

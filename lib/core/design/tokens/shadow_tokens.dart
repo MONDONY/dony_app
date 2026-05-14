@@ -20,14 +20,68 @@ abstract final class DonyShadow {
     BoxShadow(color: Color(0x290A2540), blurRadius: 48, offset: Offset(0, 24)),
   ];
 
-  // Branded shadows
+  // ─── Branded shadows — boutons gradient ────────────────────────────────────
+
+  // Primary blue (light)
   static const List<BoxShadow> brand = [
     BoxShadow(
       color: Color(0x3D0B5FFF), // blue500 @ 24%
       blurRadius: 24,
       offset: Offset(0, 8),
     ),
+    BoxShadow(
+      color: Color(0x1A0B5FFF), // blue500 @ 10%
+      blurRadius: 8,
+      offset: Offset(0, 2),
+    ),
   ];
+
+  // Primary blue (dark)
+  static const List<BoxShadow> brandDark = [
+    BoxShadow(
+      color: Color(0x4D4D8AFF), // blueDark500 @ 30%
+      blurRadius: 24,
+      offset: Offset(0, 8),
+    ),
+  ];
+
+  // Success green (light)
+  static const List<BoxShadow> success = [
+    BoxShadow(
+      color: Color(0x380E8A5F), // success500 @ 22%
+      blurRadius: 20,
+      offset: Offset(0, 8),
+    ),
+  ];
+
+  // Success green (dark)
+  static const List<BoxShadow> successDark = [
+    BoxShadow(
+      color: Color(0x3D2DA677), // successDark500 @ 24%
+      blurRadius: 20,
+      offset: Offset(0, 8),
+    ),
+  ];
+
+  // Danger red (light)
+  static const List<BoxShadow> danger = [
+    BoxShadow(
+      color: Color(0x38D9342B), // danger500 @ 22%
+      blurRadius: 20,
+      offset: Offset(0, 8),
+    ),
+  ];
+
+  // Danger red (dark)
+  static const List<BoxShadow> dangerDark = [
+    BoxShadow(
+      color: Color(0x3DEF5048), // dangerDark500 @ 24%
+      blurRadius: 20,
+      offset: Offset(0, 8),
+    ),
+  ];
+
+  // Terra accent
   static const List<BoxShadow> accent = [
     BoxShadow(
       color: Color(0x38D96A3A), // terra500 @ 22%

@@ -109,15 +109,11 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
   Widget _buildHeader(ColorScheme cs, TextTheme tt) {
     return Column(
       children: [
-        Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            color: cs.primaryContainer,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(Icons.lock_outline, color: cs.primary, size: 32),
-        ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
+        DonyMascotteAnimated(
+          type: DonyMascotteType.securise,
+          size: DonyMascotteSize.md,
+          withGlow: _isConfirming,
+        ),
         const SizedBox(height: DonySpacing.lg),
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 250),

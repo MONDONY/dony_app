@@ -3,6 +3,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -120,7 +121,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                 bidId: state.response.bidId,
               ));
             } else if (state is BidError) {
-              _showError(state.message);
+              ErrorPresenter.show(context, state.error);
             }
           },
         ),
@@ -335,10 +336,17 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       scrolledUnderElevation: 0,
       centerTitle: false,
       leading: IconButton(
-        icon: Icon(Icons.close_rounded,
-            size: 22, color: cs.onSurface),
-        onPressed: () => context.pop(),
         tooltip: 'Fermer',
+        onPressed: () => context.pop(),
+        icon: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: cs.primaryContainer,
+            borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
+          ),
+          child: Icon(Icons.close_rounded, size: 20, color: cs.primary),
+        ),
       ),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

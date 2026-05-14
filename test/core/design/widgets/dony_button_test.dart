@@ -8,14 +8,24 @@ Widget _wrap(Widget child) => MaterialApp(
       home: Scaffold(body: Center(child: child)),
     );
 
+Widget _wrapDark(Widget child) => MaterialApp(
+      theme: AppTheme.dark,
+      home: Scaffold(body: Center(child: child)),
+    );
+
+Finder _inkWellIn(Finder parent) =>
+    find.descendant(of: parent, matching: find.byType(InkWell));
+
 void main() {
   group('DonyButton', () {
-    testWidgets('primary variant renders FilledButton', (tester) async {
+    // ─── Variants rendering ─────────────────────────────────────────────────
+
+    testWidgets('primary variant renders InkWell (gradient button)', (tester) async {
       await tester.pumpWidget(_wrap(
         DonyButton(label: 'Test', onPressed: () {}),
       ));
-      expect(find.byType(FilledButton), findsOneWidget);
       expect(find.text('Test'), findsOneWidget);
+      expect(_inkWellIn(find.byType(DonyButton)), findsOneWidget);
     });
 
     testWidgets('secondary variant renders OutlinedButton', (tester) async {
@@ -40,7 +50,7 @@ void main() {
       expect(find.byType(TextButton), findsOneWidget);
     });
 
-    testWidgets('destructive variant renders FilledButton', (tester) async {
+    testWidgets('destructive variant renders InkWell (gradient button)', (tester) async {
       await tester.pumpWidget(_wrap(
         DonyButton(
           label: 'Test',
@@ -48,16 +58,57 @@ void main() {
           variant: DonyButtonVariant.destructive,
         ),
       ));
-      expect(find.byType(FilledButton), findsOneWidget);
+      expect(find.text('Test'), findsOneWidget);
+      expect(_inkWellIn(find.byType(DonyButton)), findsOneWidget);
     });
 
-    testWidgets('disabled when onPressed is null', (tester) async {
+    testWidgets('success variant renders InkWell (gradient button)', (tester) async {
+      await tester.pumpWidget(_wrap(
+        DonyButton(
+          label: 'Test',
+          onPressed: () {},
+          variant: DonyButtonVariant.success,
+        ),
+      ));
+      expect(find.text('Test'), findsOneWidget);
+      expect(_inkWellIn(find.byType(DonyButton)), findsOneWidget);
+    });
+
+    // ─── Dark mode ──────────────────────────────────────────────────────────
+
+    testWidgets('primary dark mode renders InkWell', (tester) async {
+      await tester.pumpWidget(_wrapDark(
+        DonyButton(label: 'Dark', onPressed: () {}),
+      ));
+      expect(find.text('Dark'), findsOneWidget);
+      expect(_inkWellIn(find.byType(DonyButton)), findsOneWidget);
+    });
+
+    // ─── Disabled state ─────────────────────────────────────────────────────
+
+    testWidgets('disabled primary: InkWell.onTap is null', (tester) async {
       await tester.pumpWidget(_wrap(
         const DonyButton(label: 'Test', onPressed: null),
       ));
-      final btn = tester.widget<FilledButton>(find.byType(FilledButton));
+      final inkWell = tester.widget<InkWell>(
+        _inkWellIn(find.byType(DonyButton)),
+      );
+      expect(inkWell.onTap, isNull);
+    });
+
+    testWidgets('disabled secondary: OutlinedButton.onPressed is null', (tester) async {
+      await tester.pumpWidget(_wrap(
+        const DonyButton(
+          label: 'Test',
+          onPressed: null,
+          variant: DonyButtonVariant.secondary,
+        ),
+      ));
+      final btn = tester.widget<OutlinedButton>(find.byType(OutlinedButton));
       expect(btn.onPressed, isNull);
     });
+
+    // ─── Icons ──────────────────────────────────────────────────────────────
 
     testWidgets('shows leading icon when provided', (tester) async {
       await tester.pumpWidget(_wrap(
@@ -81,11 +132,12 @@ void main() {
       expect(find.byIcon(Icons.arrow_forward), findsOneWidget);
     });
 
-    testWidgets('is full width by default (fullWidth true)', (tester) async {
+    // ─── Full width ─────────────────────────────────────────────────────────
+
+    testWidgets('is full width by default', (tester) async {
       await tester.pumpWidget(_wrap(
         DonyButton(label: 'Full', onPressed: () {}),
       ));
-      // fullWidth=true uses Size.fromHeight(52) which expands in a constrained parent
       final btn = tester.widget<DonyButton>(find.byType(DonyButton));
       expect(btn.fullWidth, isTrue);
     });
@@ -98,25 +150,44 @@ void main() {
       expect(btn.fullWidth, isFalse);
     });
 
+    // ─── Tap ────────────────────────────────────────────────────────────────
+
     testWidgets('tap triggers onPressed callback', (tester) async {
       var tapped = false;
       await tester.pumpWidget(_wrap(
         DonyButton(label: 'Tap', onPressed: () => tapped = true),
       ));
-      await tester.tap(find.byType(FilledButton));
+      await tester.tap(_inkWellIn(find.byType(DonyButton)));
       expect(tapped, isTrue);
     });
 
-    testWidgets('isLoading disables onPressed and shows progress indicator', (tester) async {
+    testWidgets('secondary tap triggers onPressed callback', (tester) async {
+      var tapped = false;
+      await tester.pumpWidget(_wrap(
+        DonyButton(
+          label: 'Tap',
+          onPressed: () => tapped = true,
+          variant: DonyButtonVariant.secondary,
+        ),
+      ));
+      await tester.tap(find.byType(OutlinedButton));
+      expect(tapped, isTrue);
+    });
+
+    // ─── Loading ────────────────────────────────────────────────────────────
+
+    testWidgets('isLoading shows CircularProgressIndicator (primary)', (tester) async {
       await tester.pumpWidget(_wrap(
         DonyButton(label: 'Loading', onPressed: () {}, isLoading: true),
       ));
-      final btn = tester.widget<FilledButton>(find.byType(FilledButton));
-      expect(btn.onPressed, isNull);
+      final inkWell = tester.widget<InkWell>(
+        _inkWellIn(find.byType(DonyButton)),
+      );
+      expect(inkWell.onTap, isNull);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('secondary loading state shows CircularProgressIndicator', (tester) async {
+    testWidgets('secondary loading disables button', (tester) async {
       await tester.pumpWidget(_wrap(
         DonyButton(
           label: 'Loading',
@@ -130,7 +201,7 @@ void main() {
       expect(btn.onPressed, isNull);
     });
 
-    testWidgets('ghost loading state shows CircularProgressIndicator', (tester) async {
+    testWidgets('ghost loading disables button', (tester) async {
       await tester.pumpWidget(_wrap(
         DonyButton(
           label: 'Loading',

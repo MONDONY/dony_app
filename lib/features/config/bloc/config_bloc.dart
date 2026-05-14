@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/config/data/config_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -20,7 +21,7 @@ class ConfigBloc extends Bloc<ConfigEvent, ConfigState> {
       final rate = await _repository.getCommissionRate();
       emit(ConfigLoaded(rate));
     } catch (e) {
-      emit(ConfigError(e.toString()));
+      emit(ConfigError(unwrapDioError(e)));
     }
   }
 }

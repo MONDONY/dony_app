@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/profile/bloc/pro_stats_bloc.dart';
 import 'package:dony/features/profile/data/models/pro_stats_model.dart';
 import 'package:dony/features/profile/presentation/widgets/pro_stats_card.dart';
@@ -65,7 +66,7 @@ void main() {
   });
 
   testWidgets('affiche le message d\'erreur en état Error', (tester) async {
-    when(() => bloc.state).thenReturn(ProStatsError('Erreur réseau'));
+    when(() => bloc.state).thenReturn(ProStatsError(NetworkException('Erreur réseau')));
 
     await tester.pumpWidget(_buildCard(bloc));
 
@@ -74,7 +75,7 @@ void main() {
   });
 
   testWidgets('envoie ProStatsLoadRequested au tap Réessayer', (tester) async {
-    when(() => bloc.state).thenReturn(ProStatsError('Erreur'));
+    when(() => bloc.state).thenReturn(ProStatsError(NetworkException('Erreur')));
 
     await tester.pumpWidget(_buildCard(bloc));
     await tester.tap(find.text('Réessayer'));

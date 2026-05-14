@@ -2,8 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
-import 'package:dony/features/matching/data/models/address_data.dart';
-import 'package:dony/features/matching/data/models/address_suggestion.dart';
 
 class MockDio extends Mock implements Dio {}
 

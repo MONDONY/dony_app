@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_event.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_state.dart';
@@ -127,7 +128,7 @@ void main() {
 
     testWidgets('shows error state with retry button', (tester) async {
       when(() => bloc.state)
-          .thenReturn(const ConversationListError('Erreur réseau'));
+          .thenReturn(ConversationListError(NetworkException('Erreur réseau')));
       await _pump(tester, bloc);
 
       expect(find.text('Erreur de chargement'), findsOneWidget);
@@ -136,7 +137,7 @@ void main() {
 
     testWidgets('retry button dispatches ConversationsLoadRequested', (tester) async {
       when(() => bloc.state)
-          .thenReturn(const ConversationListError('Erreur réseau'));
+          .thenReturn(ConversationListError(NetworkException('Erreur réseau')));
       await _pump(tester, bloc);
 
       await tester.tap(find.text('Réessayer'));

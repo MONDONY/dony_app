@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 
@@ -82,8 +83,8 @@ class BidHidden extends BidState {}
 class BidDeleted extends BidState {}
 
 class BidError extends BidState {
-  final String message;
-  BidError(this.message);
+  final AppException error;
+  BidError(this.error);
 }
 
 class BidNotFound extends BidState {}

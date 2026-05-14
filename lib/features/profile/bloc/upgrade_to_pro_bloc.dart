@@ -25,10 +25,8 @@ class UpgradeToProBloc extends Bloc<UpgradeToProEvent, UpgradeToProState> {
         siret: event.siret,
       );
       emit(UpgradeToProSuccess());
-    } on AppException catch (_) {
-      emit(const UpgradeToProError('Une erreur est survenue. Veuillez réessayer.'));
     } catch (e) {
-      emit(const UpgradeToProError('Une erreur est survenue. Veuillez réessayer.'));
+      emit(UpgradeToProError(unwrapDioError(e)));
     }
   }
 
@@ -41,7 +39,7 @@ class UpgradeToProBloc extends Bloc<UpgradeToProEvent, UpgradeToProState> {
       await _repository.downgradePro();
       emit(DowngradeSuccess());
     } catch (e) {
-      emit(const DowngradeError('Une erreur est survenue. Veuillez réessayer.'));
+      emit(DowngradeError(unwrapDioError(e)));
     }
   }
 }

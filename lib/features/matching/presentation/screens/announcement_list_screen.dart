@@ -5,6 +5,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_detail_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement_bottom_sheet.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -117,8 +118,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
           if (state is AnnouncementDeleted) {
             context.read<AnnouncementBloc>().add(AnnouncementListRequested());
           } else if (state is AnnouncementError && _lastList.isNotEmpty) {
-            DonySnackbar.show(context,
-                message: state.message, type: DonySnackbarType.error);
+            ErrorPresenter.show(context, state.error);
             context.read<AnnouncementBloc>().add(AnnouncementListRequested());
           }
         },
@@ -133,7 +133,8 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
           }
 
           if (state is AnnouncementError && _lastList.isEmpty) {
-            return _ErrorView(message: state.message);
+            return _ErrorView(
+                message: ErrorPresenter.resolve(state.error).message);
           }
 
           final inProgressList = _inProgress();
@@ -417,7 +418,7 @@ class _InProgressCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             ClipRRect(
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(DonyRadius.full),
               child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 5,
@@ -426,7 +427,7 @@ class _InProgressCard extends StatelessWidget {
                     AlwaysStoppedAnimation<Color>(cs.success),
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: DonySpacing.xs),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -450,7 +451,7 @@ class _InProgressCard extends StatelessWidget {
                       children: [
                         Icon(Icons.inventory_2_outlined,
                             size: 12, color: cs.success),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: DonySpacing.xs),
                         Text(
                           'Voir les colis',
                           style: tt.labelSmall?.copyWith(
@@ -506,7 +507,7 @@ class _TabBar extends StatelessWidget {
           color: cs.surfaceContainerHighest.withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(DonyRadius.xl),
         ),
-        padding: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(DonySpacing.xs),
         child: Row(
           children: [
             _TabSegment(
@@ -743,9 +744,9 @@ class _AnnouncementCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: DonySpacing.md),
               ClipRRect(
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(DonyRadius.full),
                 child: LinearProgressIndicator(
                   value: progress,
                   minHeight: 6,
@@ -777,7 +778,7 @@ class _AnnouncementCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: DonySpacing.md),
               Row(
                 children: [
                   if (bidsCount > 0)
@@ -793,7 +794,7 @@ class _AnnouncementCard extends StatelessWidget {
                         children: [
                           const Icon(Icons.inbox_rounded,
                               size: 12, color: DonyColors.violet),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: DonySpacing.xs),
                           Text(
                             '$bidsCount demande${bidsCount > 1 ? 's' : ''}',
                             style: tt.labelSmall?.copyWith(

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class MarkerUrgencyColor {
   MarkerUrgencyColor._();
 
-  static const _orange = Color(0xFFF97316);
+  static const _orange = DonyColors.urgencyOrange;
 
   static Color fromDeparture(DateTime departureDate,
       {Brightness brightness = Brightness.light}) {

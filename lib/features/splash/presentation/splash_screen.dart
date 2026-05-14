@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart' show Options;
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -95,7 +96,7 @@ class _SplashScreenState extends State<SplashScreen> {
         )
         .timeout(
           const Duration(seconds: 15),
-          onTimeout: () => const AuthError(''),
+          onTimeout: () => const AuthError(TimeoutException()),
         );
 
     if (!mounted) {
@@ -130,8 +131,13 @@ class _SplashScreenState extends State<SplashScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  const DonyMascotteAnimated(
+                    type: DonyMascotteType.joyeux,
+                    size: DonyMascotteSize.xl,
+                  ),
+                  const SizedBox(height: DonySpacing.xl),
                   const DonyLogo(variant: DonyLogoVariant.onLight, fontSize: 104),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: DonySpacing.xxl),
                   Text(
                     'Livrez en confiance',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -139,7 +145,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       letterSpacing: 0.4,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: DonySpacing.sm),
                   Text(
                     'v1.0.0',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -169,7 +175,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       children: [
                         Icon(Icons.wifi_off_rounded,
                             color: cs.onSurfaceVariant, size: 16),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: DonySpacing.sm),
                         Text(
                           'Impossible de se connecter',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -178,7 +184,7 @@ class _SplashScreenState extends State<SplashScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: DonySpacing.lg),
                     OutlinedButton.icon(
                       onPressed: _retry,
                       icon: Icon(Icons.refresh_rounded,

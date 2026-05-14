@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/matching/presentation/widgets/route_map_components.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
@@ -103,7 +104,7 @@ class _TrackingTimelineContent extends StatelessWidget {
         }
         if (state is TrackingEventsError) {
           return _ErrorView(
-            message: state.message,
+            message: ErrorPresenter.resolve(state.error).message,
             onRetry: () => context
                 .read<TrackingBloc>()
                 .add(TrackingEventsRequested(bidId)),
