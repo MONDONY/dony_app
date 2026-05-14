@@ -10,8 +10,13 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/address_picker_field.dart';
+import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
+import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
+import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
+import 'package:dony/features/payments/cash/data/models/commission_method.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -56,6 +61,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   );
   final _customAcceptedNotifier = ValueNotifier<Set<String>>({});
   final _refusedTypesNotifier = ValueNotifier<Set<String>>({});
+  final _cashEnabledNotifier = ValueNotifier<bool>(false);
   final _descriptionCtrl = TextEditingController();
   final _customAcceptedCtrl = TextEditingController();
   final _refusedCtrl = TextEditingController();
@@ -109,6 +115,9 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
         _refusedTypesNotifier.value = Set<String>.from(a.refusedTypes!);
       }
 
+      _cashEnabledNotifier.value =
+          a.acceptedPaymentMethods.contains(BidPaymentMethod.cash);
+
       final price = a.pricePerKg;
       int closest = 1;
       double minDiff = double.infinity;
@@ -125,6 +134,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
 
   @override
   void dispose() {
+    _cashEnabledNotifier.dispose();
     _descriptionCtrl.dispose();
     _customAcceptedCtrl.dispose();
     _refusedCtrl.dispose();
@@ -198,6 +208,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
         : _descriptionCtrl.text.trim();
 
     final transportMode = _transportModeNotifier.value!;
+    final paymentMethods = ['STRIPE', if (_cashEnabledNotifier.value) 'CASH'];
 
     if (_isEdit) {
       context.read<AnnouncementBloc>().add(AnnouncementUpdateRequested(
@@ -215,6 +226,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
             description: description,
             acceptedContentTypes: allAccepted,
             refusedTypes: refused,
+            acceptedPaymentMethods: paymentMethods,
           ));
     } else {
       context.read<AnnouncementBloc>().add(AnnouncementCreateRequested(
@@ -231,6 +243,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
             description: description,
             acceptedContentTypes: allAccepted,
             refusedTypes: refused,
+            acceptedPaymentMethods: paymentMethods,
           ));
     }
   }
@@ -321,7 +334,6 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-
     return BlocConsumer<AnnouncementBloc, AnnouncementState>(
       listener: (context, state) {
         if (state is AnnouncementCreated || state is AnnouncementUpdated) {
@@ -988,6 +1000,111 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                     );
                   },
                 ).animate().fadeIn(delay: 160.ms),
+                const SizedBox(height: DonySpacing.xxl),
+
+                // ── MODES DE PAIEMENT ACCEPTÉS ───────────────────────────────
+                const _SectionLabel(
+                  label: 'MODES DE PAIEMENT ACCEPTÉS',
+                  icon: Icons.payments_rounded,
+                ),
+                const SizedBox(height: DonySpacing.sm),
+                BlocBuilder<CommissionMethodBloc, CommissionMethodState>(
+                  builder: (context, cmState) {
+                    final isLoaded = cmState is CommissionMethodLoaded &&
+                        cmState.card.expirationStatus != ExpirationStatus.expired;
+                    return _SectionCard(
+                      child: Column(
+                        children: [
+                          // STRIPE — always enabled, always on
+                          SwitchListTile(
+                            key: const Key('payment-method-stripe'),
+                            value: true,
+                            onChanged: null,
+                            activeColor: cs.primary,
+                            title: Row(
+                              children: [
+                                const Icon(Icons.credit_card_rounded, size: 18),
+                                const SizedBox(width: DonySpacing.sm),
+                                Text(
+                                  'Carte bancaire (Stripe)',
+                                  style: tt.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: cs.onSurface,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            subtitle: Text(
+                              'Paiement sécurisé par défaut',
+                              style: tt.bodySmall
+                                  ?.copyWith(color: cs.onSurfaceVariant),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: DonySpacing.base,
+                              vertical: DonySpacing.xs,
+                            ),
+                          ),
+                          const _RowDivider(),
+                          // CASH — conditional on commission method state
+                          ValueListenableBuilder<bool>(
+                            valueListenable: _cashEnabledNotifier,
+                            builder: (context, cashEnabled, _) {
+                              return SwitchListTile(
+                                key: const Key('payment-method-cash'),
+                                value: isLoaded ? cashEnabled : false,
+                                onChanged: isLoaded
+                                    ? (val) =>
+                                        _cashEnabledNotifier.value = val
+                                    : null,
+                                activeColor: cs.primary,
+                                title: Row(
+                                  children: [
+                                    const Icon(Icons.payments_rounded,
+                                        size: 18),
+                                    const SizedBox(width: DonySpacing.sm),
+                                    Text(
+                                      'Espèces',
+                                      style: tt.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: isLoaded
+                                            ? cs.onSurface
+                                            : cs.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                subtitle: isLoaded
+                                    ? Text(
+                                        'Le voyageur perçoit la commission à la remise',
+                                        style: tt.bodySmall?.copyWith(
+                                            color: cs.onSurfaceVariant),
+                                      )
+                                    : GestureDetector(
+                                        onTap: () => context
+                                            .push('/payments/commission-method'),
+                                        child: Text(
+                                          'Ajouter une carte commission →',
+                                          key: const Key(
+                                              'add-commission-card-link'),
+                                          style: tt.bodySmall?.copyWith(
+                                            color: cs.primary,
+                                            decoration:
+                                                TextDecoration.underline,
+                                          ),
+                                        ),
+                                      ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: DonySpacing.base,
+                                  vertical: DonySpacing.xs,
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ).animate().fadeIn(delay: 180.ms),
               ],
             ),
           ),
