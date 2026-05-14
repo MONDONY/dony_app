@@ -6,6 +6,20 @@ part of 'bid_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+BidPaymentMethod _$parseBidPaymentMethod(String? s) => switch (s) {
+  'CASH' => BidPaymentMethod.cash,
+  _ => BidPaymentMethod.stripe,
+};
+
+CommissionStatus? _$parseCommissionStatus(String? s) => switch (s) {
+  'PENDING' => CommissionStatus.pending,
+  'REQUIRES_3DS' => CommissionStatus.requires3ds,
+  'CHARGED' => CommissionStatus.charged,
+  'FAILED' => CommissionStatus.failed,
+  'REFUNDED' => CommissionStatus.refunded,
+  _ => null,
+};
+
 BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
   id: json['id'] as String,
   announcementId: json['announcementId'] as String,
@@ -64,6 +78,8 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
       json['confirmationCodeRefreshWindowStart'] == null
       ? null
       : DateTime.parse(json['confirmationCodeRefreshWindowStart'] as String),
+  paymentMethod: _$parseBidPaymentMethod(json['paymentMethod'] as String?),
+  commissionStatus: _$parseCommissionStatus(json['commissionStatus'] as String?),
 );
 
 Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
@@ -114,4 +130,6 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'confirmationCodeRefreshWindowStart': instance
       .confirmationCodeRefreshWindowStart
       ?.toIso8601String(),
+  'paymentMethod': instance.paymentMethod.name.toUpperCase(),
+  'commissionStatus': instance.commissionStatus?.name.toUpperCase(),
 };
