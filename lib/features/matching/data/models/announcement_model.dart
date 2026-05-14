@@ -1,6 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 
 import 'address_data.dart';
+import 'bid_model.dart';
 import 'transport_mode.dart';
 
 part 'announcement_model.g.dart';
@@ -79,6 +80,7 @@ class AnnouncementModel {
   final List<String>? refusedTypes;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final Set<BidPaymentMethod> acceptedPaymentMethods;
 
   const AnnouncementModel({
     required this.id,
@@ -102,6 +104,7 @@ class AnnouncementModel {
     this.refusedTypes,
     required this.createdAt,
     required this.updatedAt,
+    this.acceptedPaymentMethods = const {BidPaymentMethod.stripe},
   });
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) =>

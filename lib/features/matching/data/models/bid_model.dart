@@ -2,6 +2,10 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'bid_model.g.dart';
 
+enum BidPaymentMethod { stripe, cash }
+
+enum CommissionStatus { pending, requires3ds, charged, failed, refunded }
+
 @JsonSerializable()
 class BidModel {
   final String id;
@@ -52,6 +56,8 @@ class BidModel {
   final bool travelerHasRated;
   final int confirmationCodeRefreshCount;
   final DateTime? confirmationCodeRefreshWindowStart;
+  final BidPaymentMethod paymentMethod;
+  final CommissionStatus? commissionStatus;
 
   const BidModel({
     required this.id,
@@ -99,6 +105,8 @@ class BidModel {
     this.travelerHasRated = false,
     this.confirmationCodeRefreshCount = 0,
     this.confirmationCodeRefreshWindowStart,
+    this.paymentMethod = BidPaymentMethod.stripe,
+    this.commissionStatus,
   });
 
   factory BidModel.fromJson(Map<String, dynamic> json) =>

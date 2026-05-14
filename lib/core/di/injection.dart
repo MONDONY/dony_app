@@ -65,8 +65,13 @@ import 'package:dony/features/package_request/bloc/package_request_search_bloc.d
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
+import 'package:dony/features/payments/cash/data/datasources/commission_method_remote_datasource.dart';
+import 'package:dony/features/payments/cash/data/repositories/commission_method_repository.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:dony/features/payments/data/datasources/payment_remote_datasource.dart';
@@ -159,6 +164,20 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<BidBloc>(
     () => BidBloc(getIt<BidRepository>()),
+  );
+
+  // Cash commission method
+  getIt.registerLazySingleton<CommissionMethodRemoteDatasource>(
+    () => CommissionMethodRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<CommissionMethodRepository>(
+    () => CommissionMethodRepository(getIt<CommissionMethodRemoteDatasource>()),
+  );
+  getIt.registerFactory<CommissionMethodBloc>(
+    () => CommissionMethodBloc(getIt<CommissionMethodRepository>()),
+  );
+  getIt.registerFactory<BidAcceptanceBloc>(
+    () => BidAcceptanceBloc(getIt<BidRepository>(), Stripe.instance),
   );
 
   // Payments

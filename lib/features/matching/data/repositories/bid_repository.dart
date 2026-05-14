@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/datasources/bid_remote_datasource.dart';
+import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 
@@ -87,4 +88,10 @@ class BidRepository {
 
   Future<BidModel> confirmPayment(String bidId) =>
       _datasource.confirmPayment(bidId);
+
+  Future<AcceptanceResponse> acceptBidWithCommission(String bidId) =>
+      _datasource.acceptBidWithCommission(bidId);
+
+  Future<ConfirmResponse> confirmCommissionAcceptance(String bidId) =>
+      _datasource.confirmCommissionAcceptance(bidId);
 }

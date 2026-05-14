@@ -268,6 +268,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               onTap: () => context.push('/payments/onboarding'),
                                             ),
                                             DonyListTile(
+                                              icon: Icons.credit_card_rounded,
+                                              iconColor: DonyColors.purple,
+                                              iconBgColor: DonyColors.violetLight,
+                                              label: 'Carte commission cash',
+                                              onTap: () => context.push('/payments/commission-method'),
+                                            ),
+                                            DonyListTile(
                                               icon: Icons.business_center_rounded,
                                               iconColor: isProAccount ? cs.success : cs.warning,
                                               iconBgColor: isProAccount ? cs.successLight : cs.warningLight,

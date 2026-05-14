@@ -1,4 +1,5 @@
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 
@@ -129,5 +130,15 @@ class BidRemoteDatasource {
   Future<BidModel> confirmPayment(String bidId) async {
     final response = await _apiClient.dio.post('/bids/$bidId/confirm-payment');
     return BidModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<AcceptanceResponse> acceptBidWithCommission(String bidId) async {
+    final response = await _apiClient.dio.post('/bids/$bidId/accept-with-commission');
+    return AcceptanceResponse.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<ConfirmResponse> confirmCommissionAcceptance(String bidId) async {
+    final response = await _apiClient.dio.post('/bids/$bidId/confirm-acceptance');
+    return ConfirmResponse.fromJson(response.data as Map<String, dynamic>);
   }
 }
