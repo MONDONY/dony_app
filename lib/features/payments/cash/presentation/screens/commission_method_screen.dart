@@ -25,14 +25,20 @@ class CommissionMethodScreen extends StatelessWidget {
         listener: (ctx, state) async {
           if (state is CommissionMethodSetupInProgress) {
             try {
-              await Stripe.instance.confirmSetupIntent(
+              final result = await Stripe.instance.confirmSetupIntent(
                 paymentIntentClientSecret: state.clientSecret,
                 params: const PaymentMethodParams.card(
                     paymentMethodData: PaymentMethodData()),
               );
-              ctx.read<CommissionMethodBloc>().add(CommissionMethodSetupCompleted());
+              if (ctx.mounted) {
+                ctx.read<CommissionMethodBloc>().add(
+                  CommissionMethodSetupCompleted(result.paymentMethodId),
+                );
+              }
             } on StripeException {
-              ctx.read<CommissionMethodBloc>().add(CommissionMethodSetupCancelled());
+              if (ctx.mounted) {
+                ctx.read<CommissionMethodBloc>().add(CommissionMethodSetupCancelled());
+              }
             }
           }
         },

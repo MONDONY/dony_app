@@ -27,6 +27,13 @@ class CommissionMethodRemoteDatasource {
     }
   }
 
+  Future<void> save(String paymentMethodId) async {
+    await _client.dio.post(
+      '/traveler/commission-method/save',
+      data: {'paymentMethodId': paymentMethodId},
+    );
+  }
+
   Future<void> delete() async {
     await _client.dio.delete('/traveler/commission-method');
   }
