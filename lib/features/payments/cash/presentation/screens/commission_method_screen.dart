@@ -22,24 +22,9 @@ class CommissionMethodScreen extends StatelessWidget {
         scrolledUnderElevation: 0,
       ),
       body: BlocConsumer<CommissionMethodBloc, CommissionMethodState>(
-        listener: (ctx, state) async {
+        listener: (ctx, state) {
           if (state is CommissionMethodSetupInProgress) {
-            try {
-              final result = await Stripe.instance.confirmSetupIntent(
-                paymentIntentClientSecret: state.clientSecret,
-                params: const PaymentMethodParams.card(
-                    paymentMethodData: PaymentMethodData()),
-              );
-              if (ctx.mounted) {
-                ctx.read<CommissionMethodBloc>().add(
-                  CommissionMethodSetupCompleted(result.paymentMethodId),
-                );
-              }
-            } on StripeException {
-              if (ctx.mounted) {
-                ctx.read<CommissionMethodBloc>().add(CommissionMethodSetupCancelled());
-              }
-            }
+            _runPaymentSheet(ctx, state.clientSecret);
           }
         },
         builder: (ctx, state) {
@@ -110,6 +95,41 @@ class CommissionMethodScreen extends StatelessWidget {
         },
       ),
     );
+  }
+
+  Future<void> _runPaymentSheet(BuildContext context, String clientSecret) async {
+    try {
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          setupIntentClientSecret: clientSecret,
+          merchantDisplayName: 'Dony',
+          style: ThemeMode.system,
+        ),
+      );
+      await Stripe.instance.presentPaymentSheet();
+      if (context.mounted) {
+        // L'ID du SetupIntent est le préfixe du clientSecret avant "_secret_"
+        final siId = clientSecret.split('_secret_').first;
+        context.read<CommissionMethodBloc>().add(
+          CommissionMethodSetupCompleted(siId),
+        );
+      }
+    } on StripeException catch (e) {
+      if (!context.mounted) {
+        return;
+      }
+      if (e.error.code != FailureCode.Canceled) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.error.localizedMessage ??
+                  'Erreur lors de l\'ajout de la carte.',
+            ),
+          ),
+        );
+      }
+      context.read<CommissionMethodBloc>().add(CommissionMethodSetupCancelled());
+    }
   }
 
   void _confirmDelete(BuildContext context) {

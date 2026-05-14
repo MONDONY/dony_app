@@ -10,6 +10,9 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_event.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -54,6 +57,10 @@ class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
 
 class _MockPaymentRepository extends Mock implements PaymentRepository {}
+
+class _MockBidAcceptanceBloc
+    extends MockBloc<BidAcceptanceEvent, acs.BidAcceptanceState>
+    implements BidAcceptanceBloc {}
 
 // ── Constants & fixtures ───────────────────────────────────────────────────────
 
@@ -134,6 +141,7 @@ Future<void> _pump(
 
 void main() {
   late _MockBidBloc bidBloc;
+  late _MockBidAcceptanceBloc acceptanceBloc;
   late _MockCancellationBloc cancellationBloc;
   late _MockTrackingBloc trackingBloc;
   late _MockConversationOpenBloc conversationOpenBloc;
@@ -142,6 +150,7 @@ void main() {
 
   setUp(() {
     bidBloc = _MockBidBloc();
+    acceptanceBloc = _MockBidAcceptanceBloc();
     cancellationBloc = _MockCancellationBloc();
     trackingBloc = _MockTrackingBloc();
     conversationOpenBloc = _MockConversationOpenBloc();
@@ -164,10 +173,16 @@ void main() {
     when(() => ratingBloc.state).thenReturn(const RatingInitial());
     when(() => ratingBloc.stream)
         .thenAnswer((_) => Stream<RatingState>.empty());
+    when(() => acceptanceBloc.state).thenReturn(acs.BidAcceptanceInitial());
+    when(() => acceptanceBloc.stream)
+        .thenAnswer((_) => Stream<acs.BidAcceptanceState>.empty());
     when(() => paymentRepository.getPaymentForBid(any()))
         .thenAnswer((_) async => null);
 
     if (getIt.isRegistered<BidBloc>()) getIt.unregister<BidBloc>();
+    if (getIt.isRegistered<BidAcceptanceBloc>()) {
+      getIt.unregister<BidAcceptanceBloc>();
+    }
     if (getIt.isRegistered<CancellationBloc>()) {
       getIt.unregister<CancellationBloc>();
     }
@@ -181,6 +196,7 @@ void main() {
     }
 
     getIt.registerFactory<BidBloc>(() => bidBloc);
+    getIt.registerFactory<BidAcceptanceBloc>(() => acceptanceBloc);
     getIt.registerFactory<CancellationBloc>(() => cancellationBloc);
     getIt.registerFactory<TrackingBloc>(() => trackingBloc);
     getIt.registerFactory<ConversationOpenBloc>(() => conversationOpenBloc);
@@ -190,6 +206,9 @@ void main() {
 
   tearDown(() {
     if (getIt.isRegistered<BidBloc>()) getIt.unregister<BidBloc>();
+    if (getIt.isRegistered<BidAcceptanceBloc>()) {
+      getIt.unregister<BidAcceptanceBloc>();
+    }
     if (getIt.isRegistered<CancellationBloc>()) {
       getIt.unregister<CancellationBloc>();
     }

@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:share_plus/share_plus.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
+import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -58,6 +61,7 @@ class BidDetailScreen extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => getIt<BidBloc>()),
+        BlocProvider(create: (_) => getIt<BidAcceptanceBloc>()),
         BlocProvider(create: (_) => getIt<TrackingBloc>()),
         BlocProvider(create: (_) => getIt<ConversationOpenBloc>()),
         BlocProvider(create: (_) => getIt<RatingBloc>()),
@@ -126,7 +130,19 @@ class _BidDetailViewState extends State<_BidDetailView> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return BlocListener<CancellationBloc, CancellationState>(
+    return BlocListener<BidAcceptanceBloc, acs.BidAcceptanceState>(
+      listener: (context, state) {
+        if (state is acs.BidAccepted) {
+          DonySnackbar.show(context,
+              message: 'Demande acceptée ! Définissez maintenant la fenêtre de remise.',
+              type: DonySnackbarType.success);
+          context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+        } else if (state is acs.BidFailed) {
+          DonySnackbar.show(context,
+              message: state.message, type: DonySnackbarType.error);
+        }
+      },
+      child: BlocListener<CancellationBloc, CancellationState>(
       listener: (context, state) {
         if (state is NoShowReported) {
           DonySnackbar.show(
@@ -506,7 +522,8 @@ class _BidDetailViewState extends State<_BidDetailView> {
     ), // BlocConsumer<BidBloc>
     ), // BlocListener<ConversationOpenBloc>
     ), // BlocListener<RatingBloc>
-    ); // BlocListener<CancellationBloc>
+    ), // BlocListener<CancellationBloc>
+    ); // BlocListener<BidAcceptanceBloc>
   }
 
 }
@@ -1420,9 +1437,13 @@ class _ActionBar extends StatelessWidget {
             child: FilledButton.icon(
               onPressed: isLoading
                   ? null
-                  : () => context
-                      .read<BidBloc>()
-                      .add(BidAcceptRequested(bid.id)),
+                  : () {
+                      if (bid.paymentMethod == BidPaymentMethod.cash) {
+                        context.read<BidAcceptanceBloc>().add(ace.BidAcceptRequested(bid.id));
+                      } else {
+                        context.read<BidBloc>().add(BidAcceptRequested(bid.id));
+                      }
+                    },
               icon: isLoading
                   ? const SizedBox(
                       width: 16,
