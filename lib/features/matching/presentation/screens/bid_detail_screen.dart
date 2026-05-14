@@ -88,7 +88,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
     _skeletonLoading = _bid.isSkeleton;
     context.read<BidBloc>().add(BidDetailRequested(_bid.id));
     _loadPaymentStatus();
-    if (_bid.status == 'ACCEPTED' || _bid.status == 'IN_TRANSIT') {
+    if (_bid.status == 'ACCEPTED' || _bid.status == 'HANDED_OVER' || _bid.status == 'IN_TRANSIT') {
       _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
         if (mounted) context.read<BidBloc>().add(BidDetailRequested(_bid.id));
       });
@@ -190,13 +190,17 @@ class _BidDetailViewState extends State<_BidDetailView> {
               !_paymentLoadedNotifier.value) {
             _loadPaymentStatus();
           }
-          // Restart timer if bid transitioned to IN_TRANSIT
-          if ((state.bid.status == 'ACCEPTED' || state.bid.status == 'IN_TRANSIT')
-              && _refreshTimer == null) {
+          // Restart timer if bid transitioned to HANDED_OVER or IN_TRANSIT
+          if ((state.bid.status == 'ACCEPTED' ||
+                  state.bid.status == 'HANDED_OVER' ||
+                  state.bid.status == 'IN_TRANSIT') &&
+              _refreshTimer == null) {
             _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
               if (mounted) context.read<BidBloc>().add(BidDetailRequested(_bid.id));
             });
-          } else if (state.bid.status != 'ACCEPTED' && state.bid.status != 'IN_TRANSIT') {
+          } else if (state.bid.status != 'ACCEPTED' &&
+              state.bid.status != 'HANDED_OVER' &&
+              state.bid.status != 'IN_TRANSIT') {
             _refreshTimer?.cancel();
             _refreshTimer = null;
           }
@@ -279,6 +283,8 @@ class _BidDetailViewState extends State<_BidDetailView> {
                       // Traveler card (visible to sender when accepted or completed)
                       if (isSender &&
                           (_bid.status == 'ACCEPTED' ||
+                              _bid.status == 'HANDED_OVER' ||
+                              _bid.status == 'IN_TRANSIT' ||
                               _bid.status == 'COMPLETED')) ...[
                         _TravelerCard(bid: _bid),
                         const SizedBox(height: DonySpacing.base),
@@ -331,15 +337,18 @@ class _BidDetailViewState extends State<_BidDetailView> {
                       ],
 
                       // Tracking link
-                      if (_bid.status == 'ACCEPTED' &&
+                      if ((_bid.status == 'ACCEPTED' ||
+                              _bid.status == 'HANDED_OVER' ||
+                              _bid.status == 'IN_TRANSIT') &&
                           _bid.trackingToken != null) ...[
                         const SizedBox(height: DonySpacing.base),
                         _TrackingLinkCard(bid: _bid),
                       ],
 
-                      // Confirmation code (sender) — affiché uniquement après le scan de départ
+                      // Confirmation code (sender) — généré lors du scan DEPART → HANDED_OVER
                       if (isSender &&
-                          _bid.status == 'ACCEPTED' &&
+                          (_bid.status == 'HANDED_OVER' ||
+                              _bid.status == 'IN_TRANSIT') &&
                           _bid.confirmationCode != null) ...[
                         const SizedBox(height: DonySpacing.base),
                         _ConfirmationCodeCard(
@@ -359,7 +368,9 @@ class _BidDetailViewState extends State<_BidDetailView> {
                       ],
 
                       // Timeline button
-                      if (_bid.status == 'ACCEPTED') ...[
+                      if (_bid.status == 'ACCEPTED' ||
+                          _bid.status == 'HANDED_OVER' ||
+                          _bid.status == 'IN_TRANSIT') ...[
                         const SizedBox(height: DonySpacing.base),
                         _TimelineButton(bid: _bid),
                       ],
@@ -397,9 +408,10 @@ class _BidDetailViewState extends State<_BidDetailView> {
                         const _RatingDoneCard(),
                       ],
 
-                      // Cancel section (traveler only, ACCEPTED or IN_TRANSIT)
+                      // Cancel section (traveler only, ACCEPTED / HANDED_OVER / IN_TRANSIT)
                       if (!isSender &&
                           (_bid.status == 'ACCEPTED' ||
+                              _bid.status == 'HANDED_OVER' ||
                               _bid.status == 'IN_TRANSIT')) ...[
                         const SizedBox(height: DonySpacing.xl),
                         _TravelerCancelSection(bid: _bid, isLoading: isLoading),
@@ -501,7 +513,11 @@ class _StatusBadge extends StatelessWidget {
     switch (bid.status) {
       case 'ACCEPTED':
         color = cs.success;
-        label = '● Accepté';
+        label = '● Confirmé';
+        break;
+      case 'HANDED_OVER':
+        color = cs.primary;
+        label = '● En route';
         break;
       case 'REJECTED':
         color = cs.error;

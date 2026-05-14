@@ -5,6 +5,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,11 +13,12 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 // ── Status constants ──────────────────────────────────────────────────────────
-const _kPending   = 'PENDING';
-const _kAccepted  = 'ACCEPTED';
-const _kInTransit = 'IN_TRANSIT';
-const _kCompleted = 'COMPLETED';
-const _kRejected  = 'REJECTED';
+const _kPending          = 'PENDING';
+const _kPaymentEscrowed  = 'PAYMENT_ESCROWED';
+const _kAccepted         = 'ACCEPTED';
+const _kInTransit        = 'IN_TRANSIT';
+const _kCompleted        = 'COMPLETED';
+const _kRejected         = 'REJECTED';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BidListScreen — root widget, provides the BloC
@@ -52,6 +54,35 @@ class BidListScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Variante de test : le BidBloc doit être fourni dans le contexte parent.
+/// Utilisé uniquement en tests (@visibleForTesting).
+@visibleForTesting
+class BidListScreenTesting extends StatelessWidget {
+  final String announcementId;
+  final String? departureCityCode;
+  final String? arrivalCityCode;
+  final DateTime? departureDate;
+  final int initialTabIndex;
+
+  const BidListScreenTesting({
+    super.key,
+    required this.announcementId,
+    this.departureCityCode,
+    this.arrivalCityCode,
+    this.departureDate,
+    this.initialTabIndex = 0,
+  });
+
+  @override
+  Widget build(BuildContext context) => _BidListView(
+        announcementId: announcementId,
+        departureCityCode: departureCityCode,
+        arrivalCityCode: arrivalCityCode,
+        departureDate: departureDate,
+        initialTabIndex: initialTabIndex,
+      );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -169,8 +200,11 @@ class _BidListViewState extends State<_BidListView>
         // Compute per-tab counts for AppBar title
         final allBids =
             state is BidListLoaded ? state.bids : <BidModel>[];
-        final pendingBids =
-            allBids.where((b) => b.status == _kPending).toList();
+        final pendingBids = allBids
+            .where((b) =>
+                b.status == _kPending ||
+                b.status == _kPaymentEscrowed)
+            .toList();
         final acceptedBids = allBids
             .where((b) =>
                 b.status == _kAccepted ||
@@ -459,8 +493,9 @@ class _BidCard extends StatelessWidget {
     this.onReject,
   });
 
-  bool get _isPending  => bid.status == _kPending;
-  bool get _isRejected => bid.status == _kRejected;
+  bool get _isPending         => bid.status == _kPending || bid.status == _kPaymentEscrowed;
+  bool get _isPaymentEscrowed => bid.status == _kPaymentEscrowed;
+  bool get _isRejected        => bid.status == _kRejected;
 
   @override
   Widget build(BuildContext context) {
@@ -551,12 +586,22 @@ class _BidCard extends StatelessWidget {
               const SizedBox(height: DonySpacing.md),
 
               // ── Bottom area: actions OR status badge ─────────────
-              if (_isPending && onAccept != null && onReject != null)
+              if (_isPending && onAccept != null && onReject != null) ...[
+                if (_isPaymentEscrowed) ...[
+                  _StatusBadge(
+                    label: '💳 Paiement reçu — en attente de votre réponse',
+                    icon: Icons.lock_rounded,
+                    color: cs.warning,
+                    bgColor: cs.warningLight,
+                  ),
+                  const SizedBox(height: DonySpacing.sm),
+                ],
                 _PendingActions(
                   isProcessing: isProcessing,
                   onAccept: onAccept!,
                   onReject: onReject!,
-                )
+                ),
+              ]
               else if (bid.status == _kAccepted)
                 _StatusBadge(
                   label: '✓ Accepté',
@@ -652,28 +697,29 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.md,
-          vertical: DonySpacing.xs,
-        ),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(DonyRadius.full),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: color),
-            const SizedBox(width: DonySpacing.xs),
-            Text(
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.md,
+        vertical: DonySpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(DonyRadius.sm),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: DonySpacing.xs),
+          Flexible(
+            child: Text(
               label,
               style: tt.labelMedium?.copyWith(color: color),
+              softWrap: true,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

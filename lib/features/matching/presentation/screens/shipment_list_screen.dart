@@ -1,8 +1,6 @@
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
-import 'package:dony/features/auth/bloc/auth_bloc.dart';
-import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -20,17 +18,9 @@ import 'package:intl/intl.dart';
 
 enum _Tab { enCours, aVenir, passes }
 
-int _activeStep(String status) => switch (status) {
-      'PENDING' => 0,
-      'AWAITING_PAYMENT' => 1,
-      'ACCEPTED' => 2,
-      'COMPLETED' => 4,
-      _ => -1,
-    };
-
 String _ctaLabel(String status) => switch (status) {
       'AWAITING_PAYMENT' => 'Payer →',
-      'ACCEPTED' => 'Voir →',
+      'ACCEPTED' || 'HANDED_OVER' || 'IN_TRANSIT' => 'Voir →',
       _ => 'Détail →',
     };
 
@@ -68,6 +58,29 @@ class _ShipmentListScreenState extends State<ShipmentListScreen> {
   bool _isRefreshing = false;
 
   String? _payingBidId;
+
+  // Priorité : statut le plus avancé en tête ; à égalité, départ le plus proche.
+  static const _statusPriority = {
+    'IN_TRANSIT': 6,
+    'HANDED_OVER': 5,
+    'ACCEPTED': 4,
+    'PAYMENT_ESCROWED': 3,
+    'AWAITING_PAYMENT': 2,
+    'PENDING': 1,
+    'COMPLETED': 0,
+  };
+
+  static List<BidModel> _sortBids(List<BidModel> bids) {
+    bids.sort((a, b) {
+      final pa = _statusPriority[a.status] ?? 0;
+      final pb = _statusPriority[b.status] ?? 0;
+      if (pa != pb) return pb.compareTo(pa);
+      final da = a.departureDate ?? DateTime(9999);
+      final db = b.departureDate ?? DateTime(9999);
+      return da.compareTo(db);
+    });
+    return bids;
+  }
 
   @override
   void initState() {
@@ -148,12 +161,19 @@ class _ShipmentListScreenState extends State<ShipmentListScreen> {
             if (state is BidListLoaded) {
               final bids = state.bids;
               setState(() {
-                _inProgress = bids.where((b) => b.status == 'ACCEPTED').toList();
-                _upcoming = bids
+                _inProgress = _sortBids(bids
                     .where((b) =>
-                        b.status == 'PENDING' || b.status == 'AWAITING_PAYMENT')
-                    .toList();
-                _past = bids
+                        b.status == 'ACCEPTED' ||
+                        b.status == 'HANDED_OVER' ||
+                        b.status == 'IN_TRANSIT')
+                    .toList());
+                _upcoming = _sortBids(bids
+                    .where((b) =>
+                        b.status == 'PENDING' ||
+                        b.status == 'AWAITING_PAYMENT' ||
+                        b.status == 'PAYMENT_ESCROWED')
+                    .toList());
+                _past = _sortBids(bids
                     .where((b) =>
                         b.status == 'COMPLETED' ||
                         b.status == 'REJECTED' ||
@@ -161,7 +181,7 @@ class _ShipmentListScreenState extends State<ShipmentListScreen> {
                         b.status == 'NO_SHOW' ||
                         b.status == 'EXPIRED' ||
                         b.status == 'PARCEL_REFUSED')
-                    .toList();
+                    .toList());
                 _hasData = true;
                 _isRefreshing = state.isRefreshing;
               });
@@ -545,13 +565,22 @@ class _ProgressStepper extends StatelessWidget {
   const _ProgressStepper({required this.status});
   final String status;
 
-  static const _labels = ['Proposé', 'À payer', 'En route', 'Livré'];
+  List<String> get _labels => [
+        'Proposé',
+        status == 'PAYMENT_ESCROWED' ? 'Payé' : 'À payer',
+        'Confirmé',
+        'En route',
+        'Livré',
+      ];
 
   int get _active => switch (status) {
         'PENDING' => 0,
         'AWAITING_PAYMENT' => 1,
+        'PAYMENT_ESCROWED' => 1,
         'ACCEPTED' => 2,
-        'COMPLETED' => 4,
+        'HANDED_OVER' => 3,
+        'IN_TRANSIT' => 3,
+        'COMPLETED' => 5,
         _ => -1,
       };
 
@@ -561,7 +590,7 @@ class _ProgressStepper extends StatelessWidget {
     final active = _active;
 
     Color dotColor(int i) {
-      if (active == 4) return cs.primary;
+      if (active == 5) return cs.primary;
       if (active == -1) return cs.outlineVariant;
       if (i < active) return cs.primary;
       if (i == active) return cs.success;
@@ -569,7 +598,7 @@ class _ProgressStepper extends StatelessWidget {
     }
 
     Color connectorColor(int i) {
-      if (active == 4) return cs.primary;
+      if (active == 5) return cs.primary;
       if (active == -1) return cs.outlineVariant;
       if (i < active) return cs.primary;
       return cs.outlineVariant;
@@ -578,11 +607,11 @@ class _ProgressStepper extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (int i = 0; i < 4; i++) ...[
+        for (int i = 0; i < 5; i++) ...[
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (i == active && active != 4 && active != -1)
+              if (i == active && active != 5 && active != -1)
                 Container(
                   width: 11,
                   height: 11,
@@ -612,17 +641,17 @@ class _ProgressStepper extends StatelessWidget {
                 _labels[i],
                 style: TextStyle(
                   fontSize: 7.5,
-                  fontWeight: (i == active && active != 4)
+                  fontWeight: (i == active && active != 5)
                       ? FontWeight.w800
                       : FontWeight.w600,
-                  color: (i == active && active != -1 && active != 4)
+                  color: (i == active && active != -1 && active != 5)
                       ? dotColor(i)
                       : cs.onSurfaceVariant,
                 ),
               ),
             ],
           ),
-          if (i < 3)
+          if (i < 4)
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 14),
@@ -760,15 +789,19 @@ class _ShipmentCard extends StatelessWidget {
   final VoidCallback? onPayTap;
 
   Color _statusColor(ColorScheme cs) => switch (bid.status) {
-        'PENDING' || 'AWAITING_PAYMENT' => cs.warning,
+        'PENDING' || 'AWAITING_PAYMENT' || 'PAYMENT_ESCROWED' => cs.warning,
         'ACCEPTED' || 'COMPLETED' => cs.success,
+        'HANDED_OVER' || 'IN_TRANSIT' => cs.primary,
         _ => cs.onSurfaceVariant,
       };
 
   String get _statusLabel => switch (bid.status) {
         'PENDING' => 'EN ATTENTE',
         'AWAITING_PAYMENT' => 'À PAYER',
-        'ACCEPTED' => 'EN TRANSIT',
+        'PAYMENT_ESCROWED' => 'EN ATTENTE',
+        'ACCEPTED' => 'CONFIRMÉ',
+        'HANDED_OVER' => 'EN ROUTE',
+        'IN_TRANSIT' => 'EN TRANSIT',
         'COMPLETED' => 'LIVRÉ',
         'REJECTED' => 'REFUSÉ',
         'CANCELLED' => 'ANNULÉ',
@@ -941,114 +974,6 @@ class _ShipmentCard extends StatelessWidget {
     final parts = <String>['${bid.weightKg.toStringAsFixed(0)} kg'];
     if (bid.contentCategory != null) parts.add(bid.contentCategory!);
     return parts.join(' · ');
-  }
-}
-
-// ── Route Row & Info Chip ─────────────────────────────────────────────────────
-
-class _RouteRow extends StatelessWidget {
-  final String departure;
-  final String arrival;
-
-  const _RouteRow({required this.departure, required this.arrival});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Row(
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: cs.primary,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: 6),
-        Flexible(
-          child: Text(
-            departure,
-            style: tt.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: cs.onSurface,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Container(height: 1, color: cs.outline),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          child:
-              Icon(Icons.flight_takeoff_rounded, size: 14, color: cs.primary),
-        ),
-        Expanded(
-          child: Container(height: 1, color: cs.outline),
-        ),
-        const SizedBox(width: 6),
-        Flexible(
-          child: Text(
-            arrival,
-            style: tt.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: cs.onSurface,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        const SizedBox(width: 6),
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: cs.primary, width: 2),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _InfoChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: cs.outline),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 11, color: cs.onSurfaceVariant),
-          const SizedBox(width: DonySpacing.xs),
-          Text(
-            label,
-            style: tt.labelSmall?.copyWith(
-              fontWeight: FontWeight.w500,
-              color: cs.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 
