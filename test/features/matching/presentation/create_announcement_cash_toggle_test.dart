@@ -167,6 +167,17 @@ void main() {
       pricePerKg: 0,
       transportMode: TransportMode.plane,
     ));
+    registerFallbackValue(AnnouncementUpdateRequested(
+      id: '',
+      departureCity: '',
+      arrivalCity: '',
+      departureDate: DateTime(2026),
+      pickupAddress: AddressData(label: '', lat: 0, lng: 0),
+      deliveryAddress: AddressData(label: '', lat: 0, lng: 0),
+      availableKg: 0,
+      pricePerKg: 0,
+      transportMode: TransportMode.plane,
+    ));
 
     // Register GetIt dependencies required by the screen widgets
     // (AddressPickerField and CityAutocompleteField call getIt internally)
@@ -304,46 +315,48 @@ void main() {
   // ── 4. cashToggle_includesCashInSubmit ───────────────────────────────────
 
   testWidgets(
-    'cashToggle_includesCashInSubmit: AnnouncementCreateRequested contains CASH when toggle is on',
+    'cashToggle_includesCashInSubmit: tapping submit dispatches AnnouncementUpdateRequested with CASH',
     (tester) async {
       when(() => commissionBloc.state)
           .thenReturn(CommissionMethodLoaded(_validCard));
       when(() => commissionBloc.stream).thenAnswer((_) => const Stream.empty());
+      // Capture all add() calls on the announcement bloc
+      when(() => announcementBloc.add(any())).thenReturn(null);
 
+      // Use edit mode: _testAnnouncementWithCash already has CASH enabled,
+      // all required fields set (cities, date, transport, addresses).
       await _pumpScreen(
         tester,
         announcementBloc: announcementBloc,
         commissionBloc: commissionBloc,
+        announcement: _testAnnouncementWithCash,
       );
 
-      // Enable CASH toggle
+      // Verify CASH switch starts ON (pre-populated from the announcement)
       final cashSwitch = find.byKey(const Key('payment-method-cash'));
       expect(cashSwitch, findsOneWidget);
-      await tester.tap(cashSwitch);
-      await tester.pump();
-
-      // Verify the switch is now ON
       final switchWidget = tester.widget<Switch>(
         find.descendant(of: cashSwitch, matching: find.byType(Switch)).last,
       );
       expect(switchWidget.value, isTrue,
-          reason: 'CASH switch must be ON after tap');
+          reason: 'CASH switch must start ON in edit mode with CASH announcement');
 
-      // Verify that the event built with acceptedPaymentMethods=['STRIPE','CASH']
-      // correctly carries both values (unit-tests the event contract).
-      final event = AnnouncementCreateRequested(
-        departureCity: 'Paris',
-        arrivalCity: 'Dakar',
-        departureDate: DateTime(2026, 8, 15),
-        pickupAddress: _testPickupAddress,
-        deliveryAddress: _testDeliveryAddress,
-        availableKg: 10,
-        pricePerKg: 7,
-        transportMode: TransportMode.plane,
-        acceptedPaymentMethods: ['STRIPE', 'CASH'],
-      );
-      expect(event.acceptedPaymentMethods, contains('CASH'));
-      expect(event.acceptedPaymentMethods, contains('STRIPE'));
+      // Tap the submit button
+      final submitBtn = find.byKey(const Key('create-announcement-submit'));
+      expect(submitBtn, findsOneWidget);
+      await tester.tap(submitBtn);
+      await tester.pump();
+
+      // Verify AnnouncementUpdateRequested was dispatched with CASH
+      verify(() => announcementBloc.add(any(
+            that: predicate<AnnouncementEvent>(
+              (e) =>
+                  e is AnnouncementUpdateRequested &&
+                  e.acceptedPaymentMethods.contains('CASH') &&
+                  e.acceptedPaymentMethods.contains('STRIPE'),
+              'AnnouncementUpdateRequested with CASH and STRIPE',
+            ),
+          ))).called(1);
     },
   );
 

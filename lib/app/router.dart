@@ -18,9 +18,11 @@ import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_status_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_list_screen.dart';
+import 'package:dony/features/matching/presentation/screens/create_announcement_screen.dart';
 import 'package:dony/features/matching/presentation/screens/matching_management_screen.dart';
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
 import 'package:dony/features/notifications/presentation/inbox_screen.dart';
@@ -202,6 +204,26 @@ final appRouter = GoRouter(
         child: const QrScannerScreen(),
       ),
     ),
+    // ── Créer / modifier une annonce (plein écran, hors shell) ──────────────
+    GoRoute(
+      path: '/announcements/create',
+      builder: (context, state) {
+        final announcement = state.extra is AnnouncementModel
+            ? state.extra as AnnouncementModel
+            : null;
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (_) => getIt<AnnouncementBloc>()),
+            BlocProvider(
+              create: (_) => getIt<CommissionMethodBloc>()
+                ..add(CommissionMethodLoadRequested()),
+            ),
+          ],
+          child: CreateAnnouncementScreen(announcement: announcement),
+        );
+      },
+    ),
+
     // ── Carte commission (hors shell) ────────────────────────────────────
     GoRoute(
       path: '/payments/commission-method',

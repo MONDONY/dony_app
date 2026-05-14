@@ -72,6 +72,11 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<CommissionMethodBloc>().add(CommissionMethodLoadRequested());
+      }
+    });
     if (_isEdit) {
       final a = widget.announcement!;
       _departureCityNotifier.value = a.departureCity;
