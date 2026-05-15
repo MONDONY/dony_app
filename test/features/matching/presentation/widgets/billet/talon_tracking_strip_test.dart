@@ -5,11 +5,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Future<void> _pump(WidgetTester tester) async {
-  await tester.pumpWidget(MaterialApp(
-    theme: AppTheme.light,
-    home: const Scaffold(
-        body: TalonTrackingStrip(trackingNumber: 'DON-3TSTR9VH')),
-  ));
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: AppTheme.light,
+      home: const Scaffold(
+        body: TalonTrackingStrip(trackingNumber: 'DON-3TSTR9VH'),
+      ),
+    ),
+  );
 }
 
 void main() {
@@ -18,8 +21,9 @@ void main() {
     expect(find.text('DON-3TSTR9VH'), findsOneWidget);
   });
 
-  testWidgets('le bouton Copier place le numéro dans le presse-papier',
-      (tester) async {
+  testWidgets('le bouton Copier place le numéro dans le presse-papier', (
+    tester,
+  ) async {
     String? copied;
     tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
       SystemChannels.platform,
@@ -34,5 +38,10 @@ void main() {
     await tester.tap(find.byKey(const Key('talon-copy-button')));
     await tester.pump();
     expect(copied, 'DON-3TSTR9VH');
+  });
+
+  testWidgets('le bouton Partager est présent', (tester) async {
+    await _pump(tester);
+    expect(find.byKey(const Key('talon-share-button')), findsOneWidget);
   });
 }

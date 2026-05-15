@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -30,6 +32,7 @@ class TalonTrackingStrip extends StatelessWidget {
                 Text(
                   'N° DE SUIVI',
                   style: tt.bodySmall?.copyWith(
+                    // bodySmall (12px) — plancher HIG ≥ 12px
                     color: cs.onSurfaceVariant,
                     letterSpacing: 0.6,
                   ),
@@ -59,11 +62,14 @@ class TalonTrackingStrip extends StatelessWidget {
           ),
           IconButton(
             key: const Key('talon-share-button'),
-            icon: Icon(Icons.ios_share_rounded, color: cs.primary, size: 20),
-            tooltip: 'Partager',
-            onPressed: () => Share.share(
-              'Suivez mon colis dony #$trackingNumber',
+            icon: Icon(
+              Platform.isIOS ? Icons.ios_share_rounded : Icons.share_rounded,
+              color: cs.primary,
+              size: 20,
             ),
+            tooltip: 'Partager',
+            onPressed: () =>
+                Share.share('Suivez mon colis dony #$trackingNumber'),
           ),
         ],
       ),
