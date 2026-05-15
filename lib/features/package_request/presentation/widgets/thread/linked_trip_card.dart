@@ -29,7 +29,7 @@ class LinkedTripCard extends StatelessWidget {
         ),
         padding: const EdgeInsets.symmetric(
           horizontal: DonySpacing.base,
-          vertical: 12,
+          vertical: DonySpacing.md,
         ),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
@@ -43,7 +43,7 @@ class LinkedTripCard extends StatelessWidget {
         child: Row(
           children: [
             Text(icon, style: const TextStyle(fontSize: 18)),
-            const SizedBox(width: 10),
+            const SizedBox(width: DonySpacing.sm),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,16 +54,15 @@ class LinkedTripCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleMedium!.copyWith(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                          color: DonyColors.neutral0,
                         ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     '$date · ${trip.availableKg} kg',
                     style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                          fontSize: 11,
                           fontWeight: FontWeight.w500,
-                          color: const Color(0xFF94A3B8),
+                          color: DonyColors.neutral400,
                           fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                   ),
