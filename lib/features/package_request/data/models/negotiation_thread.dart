@@ -1,3 +1,4 @@
+import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:equatable/equatable.dart';
 
@@ -47,6 +48,7 @@ class NegotiationThread extends Equatable {
     this.canAccept = false,
     this.canCounter = false,
     this.roundsRemaining = 0,
+    this.linkedTrip,
   });
 
   final String id;
@@ -79,6 +81,9 @@ class NegotiationThread extends Equatable {
   final bool canCounter;
   final int roundsRemaining;
 
+  // Trajet lié — inclus quand le back-end embed le résumé du trajet voyageur
+  final LinkedTripSummary? linkedTrip;
+
   factory NegotiationThread.fromJson(Map<String, dynamic> json) => NegotiationThread(
         id: json['id'] as String,
         packageRequestId: json['packageRequestId'] as String,
@@ -108,6 +113,9 @@ class NegotiationThread extends Equatable {
         canAccept: json['canAccept'] as bool? ?? false,
         canCounter: json['canCounter'] as bool? ?? false,
         roundsRemaining: json['roundsRemaining'] as int? ?? 0,
+        linkedTrip: json['linkedTrip'] != null
+            ? LinkedTripSummary.fromJson(json['linkedTrip'] as Map<String, dynamic>)
+            : null,
       );
 
   @override
@@ -119,5 +127,6 @@ class NegotiationThread extends Equatable {
         travelerName, travelerRating, travelerTripsCount, travelerPhotoUrl,
         departureCity, arrivalCity, weightKg, senderName,
         isMyTurn, canAccept, canCounter, roundsRemaining,
+        linkedTrip,
       ];
 }
