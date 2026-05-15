@@ -4,9 +4,11 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/presentation/widgets/thread/linked_trip_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_hero_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_message_bubble.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_state_cta_bar.dart';
+import 'package:dony/features/package_request/presentation/widgets/thread/trip_detail_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -312,6 +314,19 @@ class _LoadedViewState extends State<_LoadedView> {
             ),
           ),
         ),
+        if (thread.linkedTrip != null &&
+            thread.status == NegotiationThreadStatus.awaitingPayment)
+          LinkedTripCard(
+            trip: thread.linkedTrip!,
+            onTap: () => TripDetailBottomSheet.show(
+              context,
+              trip: thread.linkedTrip!,
+              isSender: viewerUserId != thread.travelerId,
+              onRefuse: () => context
+                  .read<NegotiationBloc>()
+                  .add(NegotiationRefuseTripRequested(threadId: thread.id)),
+            ),
+          ),
         ThreadStateCtaBar(
           thread: thread,
           viewerUserId: viewerUserId,
