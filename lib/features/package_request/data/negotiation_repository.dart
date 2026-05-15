@@ -137,4 +137,13 @@ class NegotiationRepository {
     );
     return NegotiationThread.fromJson(response.data!);
   }
+
+  /// Traveler refuses to carry the package on an AWAITING_TRIP thread.
+  /// Thread transitions back to allow the sender to find another traveler.
+  Future<NegotiationThread> refuseTrip(String id) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/negotiations/$id/refuse-trip',
+    );
+    return NegotiationThread.fromJson(response.data!);
+  }
 }
