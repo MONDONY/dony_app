@@ -21,6 +21,8 @@ NegotiationThread _thread({
   required NegotiationThreadStatus status,
   bool lastFromViewer = false,
   String viewer = _viewerSender,
+  bool canAccept = false,
+  bool canCounter = true,
 }) {
   final messages = <NegotiationMessage>[
     NegotiationMessage(
@@ -41,6 +43,8 @@ NegotiationThread _thread({
     status: status,
     currentPriceEur: 38,
     roundsCount: 1,
+    canAccept: canAccept,
+    canCounter: canCounter,
     lastActivityAt: DateTime(2026, 5, 11, 10),
     createdAt: DateTime(2026, 5, 11, 9),
     messages: messages,
@@ -76,7 +80,10 @@ void main() {
         'OPEN · sender · !lastFromMe → 3 boutons (Accepter / Contre / Rejeter)',
         (tester) async {
       await tester.pumpWidget(wrap(
-        _thread(status: NegotiationThreadStatus.open),
+        _thread(
+            status: NegotiationThreadStatus.open,
+            canAccept: true,
+            canCounter: true),
         _viewerSender,
       ));
       expect(find.text('Accepter 38 €'), findsOneWidget);
@@ -84,14 +91,48 @@ void main() {
       expect(find.text('Rejeter'), findsOneWidget);
     });
 
-    testWidgets('OPEN · traveler · !lastFromMe → 2 boutons (Rejeter / Contre)',
+    testWidgets(
+        'OPEN · traveler · !lastFromMe · canAccept=false → Rejeter + Contre uniquement',
         (tester) async {
       await tester.pumpWidget(wrap(
-        _thread(status: NegotiationThreadStatus.open),
+        _thread(
+            status: NegotiationThreadStatus.open,
+            canAccept: false,
+            canCounter: true),
         _viewerTraveler,
       ));
       expect(find.text('Accepter 38 €'), findsNothing);
       expect(find.text('Contre-offre'), findsOneWidget);
+      expect(find.text('Rejeter'), findsOneWidget);
+    });
+
+    testWidgets(
+        'OPEN · traveler · !lastFromMe · canAccept=true → Accepter + Rejeter + Contre',
+        (tester) async {
+      await tester.pumpWidget(wrap(
+        _thread(
+            status: NegotiationThreadStatus.open,
+            canAccept: true,
+            canCounter: true),
+        _viewerTraveler,
+      ));
+      expect(find.text('Accepter 38 €'), findsOneWidget);
+      expect(find.text('Contre-offre'), findsOneWidget);
+      expect(find.text('Rejeter'), findsOneWidget);
+    });
+
+    testWidgets(
+        'OPEN · traveler · !lastFromMe · canCounter=false → Rejeter uniquement (dernier round)',
+        (tester) async {
+      await tester.pumpWidget(wrap(
+        _thread(
+            status: NegotiationThreadStatus.open,
+            canAccept: true,
+            canCounter: false),
+        _viewerTraveler,
+      ));
+      expect(find.text('Accepter 38 €'), findsOneWidget);
+      expect(find.text('Contre-offre'), findsNothing);
       expect(find.text('Rejeter'), findsOneWidget);
     });
 
@@ -120,13 +161,15 @@ void main() {
       expect(find.text('Le voyageur prépare son trajet'), findsOneWidget);
     });
 
-    testWidgets('AWAITING_TRIP · traveler → bouton "Lier un trajet"',
+    testWidgets(
+        'AWAITING_TRIP · traveler → boutons "Lier un trajet" + "Créer un trajet dédié"',
         (tester) async {
       await tester.pumpWidget(wrap(
         _thread(status: NegotiationThreadStatus.awaitingTrip),
         _viewerTraveler,
       ));
       expect(find.text('Lier un trajet à cette offre'), findsOneWidget);
+      expect(find.text('Créer un trajet dédié'), findsOneWidget);
     });
 
     testWidgets('AWAITING_PAYMENT · sender → bouton "Payer X €"',

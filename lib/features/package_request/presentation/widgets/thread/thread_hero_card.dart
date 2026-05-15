@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 /// Variante visuelle du hero card selon le statut négociation.
 enum ThreadStatusVariant {
@@ -169,6 +170,9 @@ class ThreadHeroCard extends StatelessWidget {
                               color: Colors.white,
                               letterSpacing: -0.5,
                               height: 1.1,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures()
+                              ],
                             ),
                           ),
                         ],
@@ -179,6 +183,30 @@ class ThreadHeroCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
                 _RoundProgress(roundsCount: thread.roundsCount, max: 5),
+                if (thread.roundsRemaining == 0 &&
+                    thread.status == NegotiationThreadStatus.open) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.20),
+                      // Concentric with parent card (DonyRadius.card - padding)
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '⚠ Dernier round — Accepter ou Refuser uniquement',
+                      style:
+                          Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.amber.shade200,
+                        // Tabular numbers for any numeric context
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ).animate().fadeIn(duration: 200.ms),
+                ],
               ],
             ),
           ),

@@ -7,6 +7,9 @@ NegotiationThread _thread({
   required NegotiationThreadStatus status,
   double price = 42,
   int rounds = 1,
+  int roundsRemaining = 3,
+  bool canAccept = false,
+  bool canCounter = false,
 }) =>
     NegotiationThread(
       id: 't1',
@@ -17,6 +20,9 @@ NegotiationThread _thread({
       status: status,
       currentPriceEur: price,
       roundsCount: rounds,
+      roundsRemaining: roundsRemaining,
+      canAccept: canAccept,
+      canCounter: canCounter,
       lastActivityAt: DateTime(2026, 5, 11, 10),
       createdAt: DateTime(2026, 5, 11, 9),
       messages: const [],
@@ -62,13 +68,51 @@ void main() {
     testWidgets('affiche prix + label "EN COURS" + Round X/5 pour OPEN',
         (tester) async {
       await tester.pumpWidget(wrap(ThreadHeroCard(
-        thread: _thread(status: NegotiationThreadStatus.open, price: 42, rounds: 1),
+        thread: _thread(
+            status: NegotiationThreadStatus.open,
+            price: 42,
+            rounds: 1,
+            roundsRemaining: 3),
         statusVariant: ThreadStatusVariant.open,
       )));
+      // Pump to settle any pending animation timers (flutter_animate)
+      await tester.pumpAndSettle();
       expect(find.text('42 €'), findsOneWidget);
       expect(find.text('EN COURS'), findsOneWidget);
       expect(find.text('Round 1/5'), findsOneWidget);
       expect(find.text('PRIX ACTUEL'), findsOneWidget);
+      // No last-round warning when roundsRemaining > 0
+      expect(
+          find.text('⚠ Dernier round — Accepter ou Refuser uniquement'),
+          findsNothing);
+    });
+
+    testWidgets('affiche alerte dernier round quand roundsRemaining == 0',
+        (tester) async {
+      await tester.pumpWidget(wrap(ThreadHeroCard(
+        thread: _thread(
+            status: NegotiationThreadStatus.open,
+            rounds: 5,
+            roundsRemaining: 0),
+        statusVariant: ThreadStatusVariant.open,
+      )));
+      await tester.pumpAndSettle();
+      expect(
+          find.text('⚠ Dernier round — Accepter ou Refuser uniquement'),
+          findsOneWidget);
+    });
+
+    testWidgets('pas d\'alerte dernier round pour statut non-OPEN',
+        (tester) async {
+      await tester.pumpWidget(wrap(ThreadHeroCard(
+        thread: _thread(
+            status: NegotiationThreadStatus.awaitingTrip, roundsRemaining: 0),
+        statusVariant: ThreadStatusVariant.awaitingTrip,
+      )));
+      await tester.pumpAndSettle();
+      expect(
+          find.text('⚠ Dernier round — Accepter ou Refuser uniquement'),
+          findsNothing);
     });
 
     testWidgets('label "ATT. TRAJET" pour AWAITING_TRIP', (tester) async {
@@ -77,6 +121,7 @@ void main() {
             _thread(status: NegotiationThreadStatus.awaitingTrip, rounds: 3),
         statusVariant: ThreadStatusVariant.awaitingTrip,
       )));
+      await tester.pumpAndSettle();
       expect(find.text('ATT. TRAJET'), findsOneWidget);
       expect(find.text('ACCORD TROUVÉ'), findsOneWidget);
       expect(find.text('Round 3/5'), findsOneWidget);
@@ -87,6 +132,7 @@ void main() {
         thread: _thread(status: NegotiationThreadStatus.awaitingPayment),
         statusVariant: ThreadStatusVariant.awaitingPayment,
       )));
+      await tester.pumpAndSettle();
       expect(find.text('PAIEMENT'), findsOneWidget);
       expect(find.text('À RÉGLER'), findsOneWidget);
     });
@@ -96,6 +142,7 @@ void main() {
         thread: _thread(status: NegotiationThreadStatus.accepted),
         statusVariant: ThreadStatusVariant.accepted,
       )));
+      await tester.pumpAndSettle();
       expect(find.text('ACCEPTÉE'), findsOneWidget);
       expect(find.text('DEMANDE ACCEPTÉE'), findsOneWidget);
     });
@@ -105,6 +152,7 @@ void main() {
         thread: _thread(status: NegotiationThreadStatus.rejected),
         statusVariant: ThreadStatusVariant.terminal,
       )));
+      await tester.pumpAndSettle();
       expect(find.text('TERMINÉ'), findsOneWidget);
       expect(find.text('PRIX FINAL'), findsOneWidget);
     });
