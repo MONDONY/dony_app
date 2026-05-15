@@ -78,7 +78,10 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
     }
     _remaining = expiry.difference(now);
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!mounted) return;
+      // Fix #2: always_put_control_body_on_new_line
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _remaining = _remaining - const Duration(seconds: 1);
         if (_remaining <= Duration.zero) {
@@ -95,7 +98,10 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
     final h = _remaining.inHours;
     final m = _remaining.inMinutes.remainder(60).toString().padLeft(2, '0');
     final s = _remaining.inSeconds.remainder(60).toString().padLeft(2, '0');
-    if (h > 0) return '${h}h ${m}min ${s}s';
+    // Fix #2: always_put_control_body_on_new_line
+    if (h > 0) {
+      return '${h}h ${m}min ${s}s';
+    }
     return '${m}min ${s}s';
   }
 
@@ -144,76 +150,83 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
                 ),
               ),
               const SizedBox(height: DonySpacing.md),
-              // Digit-box display — one dark rounded box per character
-              Center(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: displayCode.split('').map((digit) {
-                    return Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.xs,
-                      ),
-                      width: 48,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: DonyColors.ink800,
-                        borderRadius: BorderRadius.circular(DonyRadius.md),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        digit,
-                        style: tt.headlineLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0,
+              // Fix #1: Responsive digit-box row using LayoutBuilder.
+              // Formula: boxWidth = (availableWidth / digitCount).clamp(36, 56)
+              // where availableWidth = constraints.maxWidth − (digitCount × 2 × DonySpacing.xs)
+              // boxHeight = boxWidth × (56/48) ≈ 1.167 (original aspect ratio), clamped [42, 65]
+              LayoutBuilder(
+                builder: (_, constraints) {
+                  final digits = displayCode.split('');
+                  final n = digits.length;
+                  // Total horizontal margin per box = 2 × DonySpacing.xs = 8px
+                  const marginPerBox = DonySpacing.xs * 2.0;
+                  final availableWidth =
+                      constraints.maxWidth - (n * marginPerBox);
+                  final boxWidth = (availableWidth / n).clamp(36.0, 56.0);
+                  // Preserve original aspect ratio 56/48 ≈ 1.1667
+                  final boxHeight = (boxWidth * 56.0 / 48.0).clamp(42.0, 65.0);
+
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: digits.map((digit) {
+                      return Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: DonySpacing.xs,
                         ),
-                      ),
-                    );
-                  }).toList(),
-                ),
+                        width: boxWidth,
+                        height: boxHeight,
+                        decoration: BoxDecoration(
+                          color: DonyColors.ink800,
+                          borderRadius: BorderRadius.circular(DonyRadius.md),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          digit,
+                          style: tt.headlineLarge?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  );
+                },
               ),
               const SizedBox(height: DonySpacing.md),
-              // Copy button
+              // Fix #3 + Fix #4: DonySnackbar + 44pt touch target for copy button
               GestureDetector(
                 onTap: () {
                   Clipboard.setData(ClipboardData(text: displayCode));
-                  ScaffoldMessenger.of(ctx).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Code copié',
-                        style: tt.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      backgroundColor: cs.success,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(DonyRadius.sm),
-                      ),
-                    ),
+                  DonySnackbar.show(
+                    ctx,
+                    message: 'Code copié',
+                    type: DonySnackbarType.success,
                   );
                 },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: cs.primary),
-                    borderRadius: BorderRadius.circular(DonyRadius.md),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.copy_rounded, size: 16, color: cs.primary),
-                      const SizedBox(width: DonySpacing.sm),
-                      Text(
-                        'Copier le code',
-                        style: tt.titleSmall?.copyWith(color: cs.primary),
-                      ),
-                    ],
+                child: SizedBox(
+                  height: 44,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: cs.primary),
+                      borderRadius: BorderRadius.circular(DonyRadius.md),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.copy_rounded, size: 16, color: cs.primary),
+                        const SizedBox(width: DonySpacing.sm),
+                        Text(
+                          'Copier le code',
+                          style: tt.titleSmall?.copyWith(color: cs.primary),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: DonySpacing.sm),
-              // Regenerate button — greyed out + countdown when rate-limited
+              // Fix #4: 44pt touch target for regenerate button
               Opacity(
                 opacity: isBlocked ? 0.45 : 1.0,
                 child: GestureDetector(
@@ -222,61 +235,61 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
                       : () => ctx.read<TrackingBloc>().add(
                           TrackingRefreshCodeRequested(widget.bidId),
                         ),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: DonySpacing.sm,
-                    ),
-                    decoration: BoxDecoration(
-                      color: cs.secondaryContainer,
-                      borderRadius: BorderRadius.circular(DonyRadius.md),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (isApiLoading)
-                          SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
+                  child: SizedBox(
+                    height: 44,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: cs.secondaryContainer,
+                        borderRadius: BorderRadius.circular(DonyRadius.md),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (isApiLoading)
+                            SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: cs.onSecondaryContainer,
+                              ),
+                            )
+                          else if (_isRateLimited)
+                            Icon(
+                              Icons.lock_clock_rounded,
+                              size: 16,
+                              color: cs.onSecondaryContainer,
+                            )
+                          else
+                            Icon(
+                              Icons.refresh_rounded,
+                              size: 16,
                               color: cs.onSecondaryContainer,
                             ),
-                          )
-                        else if (_isRateLimited)
-                          Icon(
-                            Icons.lock_clock_rounded,
-                            size: 16,
-                            color: cs.onSecondaryContainer,
-                          )
-                        else
-                          Icon(
-                            Icons.refresh_rounded,
-                            size: 16,
-                            color: cs.onSecondaryContainer,
-                          ),
-                        const SizedBox(width: DonySpacing.sm),
-                        if (isApiLoading)
-                          Text(
-                            'Régénération…',
-                            style: tt.titleSmall?.copyWith(
-                              color: cs.onSecondaryContainer,
+                          const SizedBox(width: DonySpacing.sm),
+                          if (isApiLoading)
+                            Text(
+                              'Régénération…',
+                              style: tt.titleSmall?.copyWith(
+                                color: cs.onSecondaryContainer,
+                              ),
+                            )
+                          else if (_isRateLimited)
+                            Text(
+                              'Disponible dans ${_formatRemaining()}',
+                              style: tt.titleSmall?.copyWith(
+                                color: cs.onSecondaryContainer,
+                              ),
+                            )
+                          else
+                            Text(
+                              'Régénérer le code',
+                              style: tt.titleSmall?.copyWith(
+                                color: cs.onSecondaryContainer,
+                              ),
                             ),
-                          )
-                        else if (_isRateLimited)
-                          Text(
-                            'Disponible dans ${_formatRemaining()}',
-                            style: tt.titleSmall?.copyWith(
-                              color: cs.onSecondaryContainer,
-                            ),
-                          )
-                        else
-                          Text(
-                            'Régénérer le code',
-                            style: tt.titleSmall?.copyWith(
-                              color: cs.onSecondaryContainer,
-                            ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
