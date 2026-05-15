@@ -23,7 +23,7 @@ class BilletStatusStamp extends StatelessWidget {
     };
 
     return Transform.rotate(
-      angle: -0.087,
+      angle: -0.087, // −5° en radians
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: DonySpacing.sm,
@@ -35,7 +35,7 @@ class BilletStatusStamp extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: tt.labelSmall?.copyWith(
+          style: tt.bodySmall?.copyWith(
             color: color,
             fontWeight: FontWeight.w800,
             letterSpacing: 0.5,
