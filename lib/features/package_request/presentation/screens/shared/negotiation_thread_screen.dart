@@ -55,8 +55,12 @@ class _ThreadView extends StatelessWidget {
       },
       builder: (context, state) {
         NegotiationThread? thread;
-        if (state is NegotiationLoaded) thread = state.thread;
-        if (state is NegotiationActionInProgress) thread = state.thread;
+        if (state is NegotiationLoaded) {
+          thread = state.thread;
+        }
+        if (state is NegotiationActionInProgress) {
+          thread = state.thread;
+        }
 
         return Scaffold(
           backgroundColor: DonyColors.sand100,
@@ -103,7 +107,7 @@ class _ThreadView extends StatelessWidget {
             }),
             const SizedBox(width: DonySpacing.sm + 2),
             if (thread != null) ...[
-              _TravelerTitle(thread: thread),
+              _PartnerTitle(thread: thread, viewerUserId: viewerUserId),
             ] else ...[
               Text(
                 'Négociation',
@@ -126,38 +130,47 @@ class _ThreadView extends StatelessWidget {
           ),
         ),
       ],
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(1),
+      bottom: const PreferredSize(
+        preferredSize: Size.fromHeight(1),
         child: Divider(height: 1, color: DonyColors.neutral200),
       ),
     );
   }
 }
 
-// ── Traveler title in AppBar ──────────────────────────────────────────────────
+// ── Partner title in AppBar ───────────────────────────────────────────────────
+// Shows the OTHER party's name: if viewer is the traveler, show the sender;
+// if viewer is the sender, show the traveler (with rating + trips count).
 
-class _TravelerTitle extends StatelessWidget {
-  const _TravelerTitle({required this.thread});
+class _PartnerTitle extends StatelessWidget {
+  const _PartnerTitle({required this.thread, required this.viewerUserId});
   final NegotiationThread thread;
+  final String viewerUserId;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final name = thread.travelerName ?? 'Voyageur';
-    final rating = thread.travelerRating;
-    final trips = thread.travelerTripsCount;
+    final bool iAmTraveler = viewerUserId == thread.travelerId;
+    final String name = iAmTraveler
+        ? (thread.senderName ?? 'Expéditeur')
+        : (thread.travelerName ?? 'Voyageur');
+    final double? rating = iAmTraveler ? null : thread.travelerRating;
+    final int? trips = iAmTraveler ? null : thread.travelerTripsCount;
+    final String? photoUrl = iAmTraveler ? null : thread.travelerPhotoUrl;
 
     String meta = '';
     if (rating != null) {
       meta = '★${rating.toStringAsFixed(1)}';
-      if (trips != null && trips > 0) meta += ' · $trips trajets';
+      if (trips != null && trips > 0) {
+        meta += ' · $trips trajets';
+      }
     }
 
     return Row(
       children: [
         DonyAvatar(
           name: name,
-          imageUrl: thread.travelerPhotoUrl,
+          imageUrl: photoUrl,
           size: DonyAvatarSize.sm,
           verified: (trips ?? 0) > 0,
         ),
@@ -181,6 +194,8 @@ class _TravelerTitle extends StatelessWidget {
                   color: DonyColors.textMuted,
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
+                  // Tabular figures: prevents layout shift as rating numbers update
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
           ],
@@ -192,7 +207,7 @@ class _TravelerTitle extends StatelessWidget {
 
 // ── Loaded view ───────────────────────────────────────────────────────────────
 
-class _LoadedView extends StatelessWidget {
+class _LoadedView extends StatefulWidget {
   const _LoadedView({
     required this.thread,
     required this.viewerUserId,
@@ -204,7 +219,51 @@ class _LoadedView extends StatelessWidget {
   final bool actionInProgress;
 
   @override
+  State<_LoadedView> createState() => _LoadedViewState();
+}
+
+class _LoadedViewState extends State<_LoadedView> {
+  final _scrollController = ScrollController();
+  int _lastMessageCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _lastMessageCount = widget.thread.messages.length;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+  }
+
+  @override
+  void didUpdateWidget(_LoadedView old) {
+    super.didUpdateWidget(old);
+    if (widget.thread.messages.length != _lastMessageCount) {
+      _lastMessageCount = widget.thread.messages.length;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    }
+  }
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final thread = widget.thread;
+    final viewerUserId = widget.viewerUserId;
+    final actionInProgress = widget.actionInProgress;
+
     final variant = ThreadStatusVariant.fromThread(thread.status);
     final isLastFromOther = thread.messages.isNotEmpty &&
         thread.messages.last.fromUserId != viewerUserId;
@@ -224,6 +283,7 @@ class _LoadedView extends StatelessWidget {
                   .add(NegotiationFetchRequested(thread.id));
             },
             child: ListView.builder(
+              controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
               padding: EdgeInsets.fromLTRB(
                 DonySpacing.base,
