@@ -35,7 +35,7 @@ class LinkedTripSummary extends Equatable {
         transportMode: json['transportMode'] as String?,
         pickupAddressLabel: json['pickupAddressLabel'] as String?,
         deliveryAddressLabel: json['deliveryAddressLabel'] as String?,
-        availableKg: json['availableKg'] as int? ?? 0,
+        availableKg: (json['availableKg'] as num?)?.toInt() ?? 0,
         description: json['description'] as String?,
       );
 
