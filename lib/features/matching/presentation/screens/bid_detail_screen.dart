@@ -12,8 +12,6 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
-import 'package:dony/features/tracking/bloc/tracking_event.dart';
-import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/presentation/widgets/qr_code_card.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:dony/core/constants/city_airport_codes.dart';
@@ -36,6 +34,7 @@ import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.
 import 'package:dony/features/matching/presentation/widgets/handover_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/route_map_components.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/widgets/billet/talon_retrait_code_view.dart';
 import 'package:dony/features/matching/presentation/widgets/sender_profile_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_profile_sheet.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
@@ -45,6 +44,7 @@ import 'package:intl/intl.dart';
 
 class BidDetailScreen extends StatelessWidget {
   final BidModel bid;
+
   /// When true, the back arrow goes to /home (the sender's "mes envois") instead
   /// of popping the navigation stack. Used after a fresh payment so the user
   /// doesn't go back to the create-bid form.
@@ -96,7 +96,9 @@ class _BidDetailViewState extends State<_BidDetailView> {
     _skeletonLoading = _bid.isSkeleton;
     context.read<BidBloc>().add(BidDetailRequested(_bid.id));
     _loadPaymentStatus();
-    if (_bid.status == 'ACCEPTED' || _bid.status == 'HANDED_OVER' || _bid.status == 'IN_TRANSIT') {
+    if (_bid.status == 'ACCEPTED' ||
+        _bid.status == 'HANDED_OVER' ||
+        _bid.status == 'IN_TRANSIT') {
       _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
         if (mounted) context.read<BidBloc>().add(BidDetailRequested(_bid.id));
       });
@@ -116,7 +118,9 @@ class _BidDetailViewState extends State<_BidDetailView> {
       return;
     }
     try {
-      final payment = await getIt<PaymentRepository>().getPaymentForBid(_bid.id);
+      final payment = await getIt<PaymentRepository>().getPaymentForBid(
+        _bid.id,
+      );
       if (mounted) {
         _existingPaymentNotifier.value = payment;
         _paymentLoadedNotifier.value = true;
@@ -133,399 +137,465 @@ class _BidDetailViewState extends State<_BidDetailView> {
     return BlocListener<BidAcceptanceBloc, acs.BidAcceptanceState>(
       listener: (context, state) {
         if (state is acs.BidAccepted) {
-          DonySnackbar.show(context,
-              message: 'Demande acceptée ! Définissez maintenant la fenêtre de remise.',
-              type: DonySnackbarType.success);
-          context.read<BidBloc>().add(BidDetailRequested(_bid.id));
-        } else if (state is acs.BidFailed) {
-          DonySnackbar.show(context,
-              message: state.message, type: DonySnackbarType.error);
-        }
-      },
-      child: BlocListener<CancellationBloc, CancellationState>(
-      listener: (context, state) {
-        if (state is NoShowReported) {
           DonySnackbar.show(
             context,
-            message: "Absence signalée. L'expéditeur a 48 h pour contester.",
-            type: DonySnackbarType.info,
-          );
-          context.read<BidBloc>().add(BidDetailRequested(_bid.id));
-        } else if (state is NoShowContested) {
-          DonySnackbar.show(
-            context,
-            message: 'Contestation envoyée. Notre équipe va examiner votre demande.',
+            message:
+                'Demande acceptée ! Définissez maintenant la fenêtre de remise.',
             type: DonySnackbarType.success,
           );
           context.read<BidBloc>().add(BidDetailRequested(_bid.id));
-        } else if (state is CancellationError) {
-          ErrorPresenter.show(context, state.error);
-        }
-      },
-      child: BlocListener<RatingBloc, RatingState>(
-      listener: (context, state) {
-        if (state is RatingSuccess) {
-          context.read<BidBloc>().add(BidDetailRequested(_bid.id));
-        }
-      },
-      child: BlocListener<ConversationOpenBloc, ConversationOpenState>(
-      listener: (context, state) {
-        if (state is ConversationOpenSuccess) {
-          context.push(
-            '/conversations/${state.conversation.id}',
-            extra: state.conversation,
-          );
-        } else if (state is ConversationOpenError) {
-          ErrorPresenter.show(context, state.error);
-        }
-      },
-      child: BlocConsumer<BidBloc, BidState>(
-      listener: (context, state) {
-        if (state is BidAccepted) {
-          _bid = state.bid;
-          DonySnackbar.show(context,
-              message: 'Demande acceptée ! Définissez maintenant la fenêtre de remise.',
-              type: DonySnackbarType.success);
-          HandoverBottomSheet.show(context, bid: _bid);
-        } else if (state is BidRejected) {
-          _bid = state.bid;
-          DonySnackbar.show(context, message: 'Demande refusée.');
-          if (context.canPop()) context.pop(); else context.go('/home');
-        } else if (state is BidPresenceConfirmed) {
-          _bid = state.bid;
-          DonySnackbar.show(context, message: 'Présence confirmée !', type: DonySnackbarType.success);
-        } else if (state is BidCancelled) {
-          _refreshTimer?.cancel();
-          _bid = state.bid;
+        } else if (state is acs.BidFailed) {
           DonySnackbar.show(
             context,
-            message: 'Demande annulée. L\'expéditeur sera remboursé.',
-            type: DonySnackbarType.info,
+            message: state.message,
+            type: DonySnackbarType.error,
           );
-          if (context.canPop()) context.pop(); else context.go('/home');
-        } else if (state is BidDeleted) {
-          DonySnackbar.show(context, message: 'Demande supprimée.');
-          if (context.canPop()) context.pop(); else context.go('/home');
-        } else if (state is BidNotFound) {
-          _refreshTimer?.cancel();
-          DonySnackbar.show(
-            context,
-            message: 'Ce colis n\'existe plus',
-            type: DonySnackbarType.warning,
-          );
-          if (context.canPop()) {
-            context.pop();
-          } else {
-            context.go('/home');
-          }
-        } else if (state is BidDetailLoaded) {
-          final previousBidId = _bid.id;
-          _bid = state.bid;
-          _skeletonLoading = false;
-          if (state.bid.id != previousBidId) {
-            _existingPaymentNotifier.value = null;
-            _paymentLoadedNotifier.value = false;
-          }
-          if ((state.bid.status == 'PENDING' || state.bid.status == 'ACCEPTED') &&
-              !_paymentLoadedNotifier.value) {
-            _loadPaymentStatus();
-          }
-          // Restart timer if bid transitioned to HANDED_OVER or IN_TRANSIT
-          if ((state.bid.status == 'ACCEPTED' ||
-                  state.bid.status == 'HANDED_OVER' ||
-                  state.bid.status == 'IN_TRANSIT') &&
-              _refreshTimer == null) {
-            _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-              if (mounted) context.read<BidBloc>().add(BidDetailRequested(_bid.id));
-            });
-          } else if (state.bid.status != 'ACCEPTED' &&
-              state.bid.status != 'HANDED_OVER' &&
-              state.bid.status != 'IN_TRANSIT') {
-            _refreshTimer?.cancel();
-            _refreshTimer = null;
-          }
-        } else if (state is BidError) {
-          if (_skeletonLoading) {
-            _skeletonLoading = false;
-            if (context.canPop()) context.pop(); else context.go('/home');
-          }
-          ErrorPresenter.show(context, state.error);
         }
       },
-      builder: (context, state) {
-        final isLoading = state is BidLoading;
-        final authState = context.read<AuthBloc>().state;
-        final isSender =
-            authState is AuthAuthenticated && authState.user.id == _bid.senderId;
-
-        // Derive bid code from tracking number or id
-        final bidCode = _bid.trackingNumber ?? _bid.id.substring(0, 6).toUpperCase();
-
-        // Compute corridor codes for display
-        final depCity = _bid.departureCity ?? 'Paris';
-        final arrCity = _bid.arrivalCity ?? 'Dakar';
-        final depCode = cityAirportCode(depCity, departure: true);
-        final arrCode = cityAirportCode(arrCity, departure: false);
-
-        return Scaffold(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: DonyAppBar(
-            title: 'Mon colis #$bidCode',
-            onBack: () {
-              if (widget.fromPayment) {
-                context.go('/home');
-              } else if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go('/home');
+      child: BlocListener<CancellationBloc, CancellationState>(
+        listener: (context, state) {
+          if (state is NoShowReported) {
+            DonySnackbar.show(
+              context,
+              message: "Absence signalée. L'expéditeur a 48 h pour contester.",
+              type: DonySnackbarType.info,
+            );
+            context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+          } else if (state is NoShowContested) {
+            DonySnackbar.show(
+              context,
+              message:
+                  'Contestation envoyée. Notre équipe va examiner votre demande.',
+              type: DonySnackbarType.success,
+            );
+            context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+          } else if (state is CancellationError) {
+            ErrorPresenter.show(context, state.error);
+          }
+        },
+        child: BlocListener<RatingBloc, RatingState>(
+          listener: (context, state) {
+            if (state is RatingSuccess) {
+              context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+            }
+          },
+          child: BlocListener<ConversationOpenBloc, ConversationOpenState>(
+            listener: (context, state) {
+              if (state is ConversationOpenSuccess) {
+                context.push(
+                  '/conversations/${state.conversation.id}',
+                  extra: state.conversation,
+                );
+              } else if (state is ConversationOpenError) {
+                ErrorPresenter.show(context, state.error);
               }
             },
-            actions: [
-              IconButton(
-                icon: Icon(Icons.share_rounded,
-                    color: cs.onSurface),
-                onPressed: () {
-                  if (_bid.trackingNumber != null) {
-                    Share.share(
-                      'Suivez mon colis dony #${_bid.trackingNumber}',
-                    );
-                  }
-                },
-                tooltip: 'Partager',
-              ),
-            ],
-          ),
-          body: _skeletonLoading
-              ? Center(
-                  child: CircularProgressIndicator(color: cs.primary))
-              : Builder(builder: (context) {
-                  final h = DonyLayout.hPadding(context);
-                  return SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(h, DonySpacing.lg, h, 100),
-                  child: DonyLayout.constrained(
+            child: BlocConsumer<BidBloc, BidState>(
+              listener: (context, state) {
+                if (state is BidAccepted) {
+                  _bid = state.bid;
+                  DonySnackbar.show(
                     context,
-                    Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Status badge + CASH badge
-                      Row(
-                        children: [
-                          _StatusBadge(bid: _bid),
-                          if (_bid.paymentMethod == BidPaymentMethod.cash) ...[
-                            const SizedBox(width: DonySpacing.sm),
-                            _CashBadge(),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: DonySpacing.base),
-
-                      // Route map card
-                      RouteMapCard(
-                        departureCode: depCode,
-                        arrivalCode: arrCode,
-                        departureCity: depCity,
-                        arrivalCity: arrCity,
-                      ),
-                      const SizedBox(height: DonySpacing.base),
-
-                      // Traveler card (visible to sender when accepted or completed)
-                      if (isSender &&
-                          (_bid.status == 'ACCEPTED' ||
-                              _bid.status == 'HANDED_OVER' ||
-                              _bid.status == 'IN_TRANSIT' ||
-                              _bid.status == 'COMPLETED')) ...[
-                        _TravelerCard(bid: _bid),
-                        const SizedBox(height: DonySpacing.base),
-                      ],
-
-                      // Tracking number card
-                      if (_bid.trackingNumber != null) ...[
-                        _TrackingNumberCard(trackingNumber: _bid.trackingNumber!),
-                        const SizedBox(height: DonySpacing.base),
-                      ],
-
-                      // Sender card (visible to traveler — tappable pour voir le profil)
-                      if (!isSender) ...[
-                        _SenderCard(
-                          bid: _bid,
-                          onTap: () => showSenderProfileSheet(context, _bid),
-                        ),
-                        const SizedBox(height: DonySpacing.base),
-                      ],
-
-                      // Trip details (visible to sender)
-                      if (isSender) ...[
-                        _TripDetailsCard(bid: _bid),
-                        const SizedBox(height: DonySpacing.base),
-                      ],
-
-                      // Package card
-                      _PackageCard(bid: _bid),
-                      const SizedBox(height: DonySpacing.base),
-
-                      // Recipient card
-                      _RecipientCard(bid: _bid),
-                      const SizedBox(height: DonySpacing.base),
-
-                      // Disclaimer
-                      _DisclaimerCard(bid: _bid),
-
-                      // Handover window
-                      if (_bid.handoverLocation != null) ...[
-                        const SizedBox(height: DonySpacing.base),
-                        _HandoverCard(bid: _bid),
-                      ],
-
-                      // QR code (sender, accepted)
-                      if (isSender &&
-                          _bid.status == 'ACCEPTED' &&
-                          _bid.trackingNumber != null) ...[
-                        const SizedBox(height: DonySpacing.base),
-                        QrCodeCard(bidId: _bid.id),
-                      ],
-
-                      // Tracking link
-                      if ((_bid.status == 'ACCEPTED' ||
-                              _bid.status == 'HANDED_OVER' ||
-                              _bid.status == 'IN_TRANSIT') &&
-                          _bid.trackingToken != null) ...[
-                        const SizedBox(height: DonySpacing.base),
-                        _TrackingLinkCard(bid: _bid),
-                      ],
-
-                      // Confirmation code (sender) — généré lors du scan DEPART → HANDED_OVER
-                      if (isSender &&
-                          (_bid.status == 'HANDED_OVER' ||
-                              _bid.status == 'IN_TRANSIT') &&
-                          _bid.confirmationCode != null) ...[
-                        const SizedBox(height: DonySpacing.base),
-                        _ConfirmationCodeCard(
-                          bidId: _bid.id,
-                          initialCode: _bid.confirmationCode!,
-                          refreshCount: _bid.confirmationCodeRefreshCount,
-                          refreshWindowStart:
-                              _bid.confirmationCodeRefreshWindowStart,
-                        ),
-                      ],
-
-                      // Timeline section ("ÉTAPES")
-                      if (_bid.status == 'COMPLETED' ||
-                          _bid.status == 'DELIVERED') ...[
-                        const SizedBox(height: DonySpacing.xl),
-                        _StepsSection(bid: _bid),
-                      ],
-
-                      // Timeline button
-                      if (_bid.status == 'ACCEPTED' ||
-                          _bid.status == 'HANDED_OVER' ||
-                          _bid.status == 'IN_TRANSIT') ...[
-                        const SizedBox(height: DonySpacing.base),
-                        _TimelineButton(bid: _bid),
-                      ],
-
-                      // Payment release row
-                      if (_bid.status == 'COMPLETED') ...[
-                        const SizedBox(height: DonySpacing.base),
-                        _PaymentReleaseCard(bid: _bid),
-                      ],
-
-                      // Rating CTA (sender only, bid completed)
-                      if (isSender && _bid.status == 'COMPLETED') ...[
-                        const SizedBox(height: DonySpacing.base),
-                        if (_bid.senderHasRated)
-                          const _RatingDoneCard()
-                        else
-                          DonyButton(
-                            label: 'Noter le voyageur',
-                            icon: Icons.star_rounded,
-                            variant: DonyButtonVariant.secondary,
-                            onPressed: () => RatingBottomSheet.show(
-                              context,
-                              bidId: _bid.id,
-                              travelerName: _bid.travelerName ?? 'le voyageur',
-                            ),
-                          ),
-                      ],
-
-                      // Rating CTA (traveler only, bid completed)
-                      // La notation s'affiche automatiquement après validation du code.
-                      if (!isSender &&
-                          _bid.status == 'COMPLETED' &&
-                          _bid.travelerHasRated) ...[
-                        const SizedBox(height: DonySpacing.base),
-                        const _RatingDoneCard(),
-                      ],
-
-                      // No-show contestation banner (sender, CASH, PENDING_CONFIRMATION)
-                      if (isSender &&
-                          _bid.paymentMethod == BidPaymentMethod.cash &&
-                          _bid.cancellationNoShowStatus == 'PENDING_CONFIRMATION') ...[
-                        const SizedBox(height: DonySpacing.xl),
-                        _NoShowContestationBanner(bid: _bid),
-                      ],
-
-                      // No-show button (traveler, CASH bid, ACCEPTED, past handover window)
-                      if (!isSender &&
-                          _bid.paymentMethod == BidPaymentMethod.cash &&
-                          _bid.status == 'ACCEPTED' &&
-                          _bid.handoverWindowEnd != null &&
-                          DateTime.now().isAfter(_bid.handoverWindowEnd!)) ...[
-                        const SizedBox(height: DonySpacing.xl),
-                        _NoShowSection(bid: _bid),
-                      ],
-
-                      // Cancel section (traveler only, ACCEPTED / HANDED_OVER / IN_TRANSIT)
-                      if (!isSender &&
-                          (_bid.status == 'ACCEPTED' ||
-                              _bid.status == 'HANDED_OVER' ||
-                              _bid.status == 'IN_TRANSIT')) ...[
-                        const SizedBox(height: DonySpacing.xl),
-                        _TravelerCancelSection(bid: _bid, isLoading: isLoading),
-                      ],
-                    ],
-                  ).animate().fadeIn(duration: 300.ms).slideY(
-                      begin: 0.04, curve: Curves.easeOutCubic),
-                  ),
+                    message:
+                        'Demande acceptée ! Définissez maintenant la fenêtre de remise.',
+                    type: DonySnackbarType.success,
                   );
-                }),
-          bottomNavigationBar: (isSender &&
-                  (_bid.status == 'PENDING' || _bid.status == 'ACCEPTED'))
-              ? ListenableBuilder(
-                  listenable: Listenable.merge([
-                    _existingPaymentNotifier,
-                    _paymentLoadedNotifier,
-                  ]),
-                  builder: (context, _) => _SenderActionBar(
-                    bid: _bid,
-                    isLoading: isLoading,
-                    existingPayment: _existingPaymentNotifier.value,
-                    paymentLoaded: _paymentLoadedNotifier.value,
+                  HandoverBottomSheet.show(context, bid: _bid);
+                } else if (state is BidRejected) {
+                  _bid = state.bid;
+                  DonySnackbar.show(context, message: 'Demande refusée.');
+                  if (context.canPop())
+                    context.pop();
+                  else
+                    context.go('/home');
+                } else if (state is BidPresenceConfirmed) {
+                  _bid = state.bid;
+                  DonySnackbar.show(
+                    context,
+                    message: 'Présence confirmée !',
+                    type: DonySnackbarType.success,
+                  );
+                } else if (state is BidCancelled) {
+                  _refreshTimer?.cancel();
+                  _bid = state.bid;
+                  DonySnackbar.show(
+                    context,
+                    message: 'Demande annulée. L\'expéditeur sera remboursé.',
+                    type: DonySnackbarType.info,
+                  );
+                  if (context.canPop())
+                    context.pop();
+                  else
+                    context.go('/home');
+                } else if (state is BidDeleted) {
+                  DonySnackbar.show(context, message: 'Demande supprimée.');
+                  if (context.canPop())
+                    context.pop();
+                  else
+                    context.go('/home');
+                } else if (state is BidNotFound) {
+                  _refreshTimer?.cancel();
+                  DonySnackbar.show(
+                    context,
+                    message: 'Ce colis n\'existe plus',
+                    type: DonySnackbarType.warning,
+                  );
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/home');
+                  }
+                } else if (state is BidDetailLoaded) {
+                  final previousBidId = _bid.id;
+                  _bid = state.bid;
+                  _skeletonLoading = false;
+                  if (state.bid.id != previousBidId) {
+                    _existingPaymentNotifier.value = null;
+                    _paymentLoadedNotifier.value = false;
+                  }
+                  if ((state.bid.status == 'PENDING' ||
+                          state.bid.status == 'ACCEPTED') &&
+                      !_paymentLoadedNotifier.value) {
+                    _loadPaymentStatus();
+                  }
+                  // Restart timer if bid transitioned to HANDED_OVER or IN_TRANSIT
+                  if ((state.bid.status == 'ACCEPTED' ||
+                          state.bid.status == 'HANDED_OVER' ||
+                          state.bid.status == 'IN_TRANSIT') &&
+                      _refreshTimer == null) {
+                    _refreshTimer = Timer.periodic(
+                      const Duration(seconds: 10),
+                      (_) {
+                        if (mounted)
+                          context.read<BidBloc>().add(
+                            BidDetailRequested(_bid.id),
+                          );
+                      },
+                    );
+                  } else if (state.bid.status != 'ACCEPTED' &&
+                      state.bid.status != 'HANDED_OVER' &&
+                      state.bid.status != 'IN_TRANSIT') {
+                    _refreshTimer?.cancel();
+                    _refreshTimer = null;
+                  }
+                } else if (state is BidError) {
+                  if (_skeletonLoading) {
+                    _skeletonLoading = false;
+                    if (context.canPop())
+                      context.pop();
+                    else
+                      context.go('/home');
+                  }
+                  ErrorPresenter.show(context, state.error);
+                }
+              },
+              builder: (context, state) {
+                final isLoading = state is BidLoading;
+                final authState = context.read<AuthBloc>().state;
+                final isSender =
+                    authState is AuthAuthenticated &&
+                    authState.user.id == _bid.senderId;
+
+                // Derive bid code from tracking number or id
+                final bidCode =
+                    _bid.trackingNumber ??
+                    _bid.id.substring(0, 6).toUpperCase();
+
+                // Compute corridor codes for display
+                final depCity = _bid.departureCity ?? 'Paris';
+                final arrCity = _bid.arrivalCity ?? 'Dakar';
+                final depCode = cityAirportCode(depCity, departure: true);
+                final arrCode = cityAirportCode(arrCity, departure: false);
+
+                return Scaffold(
+                  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                  appBar: DonyAppBar(
+                    title: 'Mon colis #$bidCode',
+                    onBack: () {
+                      if (widget.fromPayment) {
+                        context.go('/home');
+                      } else if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.go('/home');
+                      }
+                    },
+                    actions: [
+                      IconButton(
+                        icon: Icon(Icons.share_rounded, color: cs.onSurface),
+                        onPressed: () {
+                          if (_bid.trackingNumber != null) {
+                            Share.share(
+                              'Suivez mon colis dony #${_bid.trackingNumber}',
+                            );
+                          }
+                        },
+                        tooltip: 'Partager',
+                      ),
+                    ],
                   ),
-                )
-              : !isSender && _bid.status == 'PENDING'
-                  ? _ActionBar(bid: _bid, isLoading: isLoading)
-                  : !isSender && _bid.status == 'REJECTED'
+                  body: _skeletonLoading
+                      ? Center(
+                          child: CircularProgressIndicator(color: cs.primary),
+                        )
+                      : Builder(
+                          builder: (context) {
+                            final h = DonyLayout.hPadding(context);
+                            return SingleChildScrollView(
+                              padding: EdgeInsets.fromLTRB(
+                                h,
+                                DonySpacing.lg,
+                                h,
+                                100,
+                              ),
+                              child: DonyLayout.constrained(
+                                context,
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Status badge + CASH badge
+                                    Row(
+                                      children: [
+                                        _StatusBadge(bid: _bid),
+                                        if (_bid.paymentMethod ==
+                                            BidPaymentMethod.cash) ...[
+                                          const SizedBox(width: DonySpacing.sm),
+                                          _CashBadge(),
+                                        ],
+                                      ],
+                                    ),
+                                    const SizedBox(height: DonySpacing.base),
+
+                                    // Route map card
+                                    RouteMapCard(
+                                      departureCode: depCode,
+                                      arrivalCode: arrCode,
+                                      departureCity: depCity,
+                                      arrivalCity: arrCity,
+                                    ),
+                                    const SizedBox(height: DonySpacing.base),
+
+                                    // Traveler card (visible to sender when accepted or completed)
+                                    if (isSender &&
+                                        (_bid.status == 'ACCEPTED' ||
+                                            _bid.status == 'HANDED_OVER' ||
+                                            _bid.status == 'IN_TRANSIT' ||
+                                            _bid.status == 'COMPLETED')) ...[
+                                      _TravelerCard(bid: _bid),
+                                      const SizedBox(height: DonySpacing.base),
+                                    ],
+
+                                    // Tracking number card
+                                    if (_bid.trackingNumber != null) ...[
+                                      _TrackingNumberCard(
+                                        trackingNumber: _bid.trackingNumber!,
+                                      ),
+                                      const SizedBox(height: DonySpacing.base),
+                                    ],
+
+                                    // Sender card (visible to traveler — tappable pour voir le profil)
+                                    if (!isSender) ...[
+                                      _SenderCard(
+                                        bid: _bid,
+                                        onTap: () => showSenderProfileSheet(
+                                          context,
+                                          _bid,
+                                        ),
+                                      ),
+                                      const SizedBox(height: DonySpacing.base),
+                                    ],
+
+                                    // Trip details (visible to sender)
+                                    if (isSender) ...[
+                                      _TripDetailsCard(bid: _bid),
+                                      const SizedBox(height: DonySpacing.base),
+                                    ],
+
+                                    // Package card
+                                    _PackageCard(bid: _bid),
+                                    const SizedBox(height: DonySpacing.base),
+
+                                    // Recipient card
+                                    _RecipientCard(bid: _bid),
+                                    const SizedBox(height: DonySpacing.base),
+
+                                    // Disclaimer
+                                    _DisclaimerCard(bid: _bid),
+
+                                    // Handover window
+                                    if (_bid.handoverLocation != null) ...[
+                                      const SizedBox(height: DonySpacing.base),
+                                      _HandoverCard(bid: _bid),
+                                    ],
+
+                                    // QR code (sender, accepted)
+                                    if (isSender &&
+                                        _bid.status == 'ACCEPTED' &&
+                                        _bid.trackingNumber != null) ...[
+                                      const SizedBox(height: DonySpacing.base),
+                                      QrCodeCard(bidId: _bid.id),
+                                    ],
+
+                                    // Tracking link
+                                    if ((_bid.status == 'ACCEPTED' ||
+                                            _bid.status == 'HANDED_OVER' ||
+                                            _bid.status == 'IN_TRANSIT') &&
+                                        _bid.trackingToken != null) ...[
+                                      const SizedBox(height: DonySpacing.base),
+                                      _TrackingLinkCard(bid: _bid),
+                                    ],
+
+                                    // Confirmation code (sender) — généré lors du scan DEPART → HANDED_OVER
+                                    if (isSender &&
+                                        (_bid.status == 'HANDED_OVER' ||
+                                            _bid.status == 'IN_TRANSIT') &&
+                                        _bid.confirmationCode != null) ...[
+                                      const SizedBox(height: DonySpacing.base),
+                                      TalonRetraitCodeView(
+                                        bidId: _bid.id,
+                                        initialCode: _bid.confirmationCode!,
+                                        refreshCount:
+                                            _bid.confirmationCodeRefreshCount,
+                                        refreshWindowStart: _bid
+                                            .confirmationCodeRefreshWindowStart,
+                                      ),
+                                    ],
+
+                                    // Timeline section ("ÉTAPES")
+                                    if (_bid.status == 'COMPLETED' ||
+                                        _bid.status == 'DELIVERED') ...[
+                                      const SizedBox(height: DonySpacing.xl),
+                                      _StepsSection(bid: _bid),
+                                    ],
+
+                                    // Timeline button
+                                    if (_bid.status == 'ACCEPTED' ||
+                                        _bid.status == 'HANDED_OVER' ||
+                                        _bid.status == 'IN_TRANSIT') ...[
+                                      const SizedBox(height: DonySpacing.base),
+                                      _TimelineButton(bid: _bid),
+                                    ],
+
+                                    // Payment release row
+                                    if (_bid.status == 'COMPLETED') ...[
+                                      const SizedBox(height: DonySpacing.base),
+                                      _PaymentReleaseCard(bid: _bid),
+                                    ],
+
+                                    // Rating CTA (sender only, bid completed)
+                                    if (isSender &&
+                                        _bid.status == 'COMPLETED') ...[
+                                      const SizedBox(height: DonySpacing.base),
+                                      if (_bid.senderHasRated)
+                                        const _RatingDoneCard()
+                                      else
+                                        DonyButton(
+                                          label: 'Noter le voyageur',
+                                          icon: Icons.star_rounded,
+                                          variant: DonyButtonVariant.secondary,
+                                          onPressed: () =>
+                                              RatingBottomSheet.show(
+                                                context,
+                                                bidId: _bid.id,
+                                                travelerName:
+                                                    _bid.travelerName ??
+                                                    'le voyageur',
+                                              ),
+                                        ),
+                                    ],
+
+                                    // Rating CTA (traveler only, bid completed)
+                                    // La notation s'affiche automatiquement après validation du code.
+                                    if (!isSender &&
+                                        _bid.status == 'COMPLETED' &&
+                                        _bid.travelerHasRated) ...[
+                                      const SizedBox(height: DonySpacing.base),
+                                      const _RatingDoneCard(),
+                                    ],
+
+                                    // No-show contestation banner (sender, CASH, PENDING_CONFIRMATION)
+                                    if (isSender &&
+                                        _bid.paymentMethod ==
+                                            BidPaymentMethod.cash &&
+                                        _bid.cancellationNoShowStatus ==
+                                            'PENDING_CONFIRMATION') ...[
+                                      const SizedBox(height: DonySpacing.xl),
+                                      _NoShowContestationBanner(bid: _bid),
+                                    ],
+
+                                    // No-show button (traveler, CASH bid, ACCEPTED, past handover window)
+                                    if (!isSender &&
+                                        _bid.paymentMethod ==
+                                            BidPaymentMethod.cash &&
+                                        _bid.status == 'ACCEPTED' &&
+                                        _bid.handoverWindowEnd != null &&
+                                        DateTime.now().isAfter(
+                                          _bid.handoverWindowEnd!,
+                                        )) ...[
+                                      const SizedBox(height: DonySpacing.xl),
+                                      _NoShowSection(bid: _bid),
+                                    ],
+
+                                    // Cancel section (traveler only, ACCEPTED / HANDED_OVER / IN_TRANSIT)
+                                    if (!isSender &&
+                                        (_bid.status == 'ACCEPTED' ||
+                                            _bid.status == 'HANDED_OVER' ||
+                                            _bid.status == 'IN_TRANSIT')) ...[
+                                      const SizedBox(height: DonySpacing.xl),
+                                      _TravelerCancelSection(
+                                        bid: _bid,
+                                        isLoading: isLoading,
+                                      ),
+                                    ],
+                                  ],
+                                ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                              ),
+                            );
+                          },
+                        ),
+                  bottomNavigationBar:
+                      (isSender &&
+                          (_bid.status == 'PENDING' ||
+                              _bid.status == 'ACCEPTED'))
+                      ? ListenableBuilder(
+                          listenable: Listenable.merge([
+                            _existingPaymentNotifier,
+                            _paymentLoadedNotifier,
+                          ]),
+                          builder: (context, _) => _SenderActionBar(
+                            bid: _bid,
+                            isLoading: isLoading,
+                            existingPayment: _existingPaymentNotifier.value,
+                            paymentLoaded: _paymentLoadedNotifier.value,
+                          ),
+                        )
+                      : !isSender && _bid.status == 'PENDING'
+                      ? _ActionBar(bid: _bid, isLoading: isLoading)
+                      : !isSender && _bid.status == 'REJECTED'
                       ? _TravelerRejectedBar(bid: _bid, isLoading: isLoading)
                       : _bid.status == 'ACCEPTED' &&
-                              !_bid.voyageurConfirmed &&
-                              !isSender &&
-                              _bid.handoverWindowStart != null &&
-                              DateTime.now().isAfter(_bid.handoverWindowStart!
-                                  .subtract(const Duration(hours: 4))) &&
-                              DateTime.now().isBefore(_bid.handoverWindowEnd ??
-                                  DateTime.now()
-                                      .add(const Duration(hours: 1)))
-                          ? _ConfirmPresenceBar(bid: _bid, isLoading: isLoading)
-                          : null,
-        );
-      },
-    ), // BlocConsumer<BidBloc>
-    ), // BlocListener<ConversationOpenBloc>
-    ), // BlocListener<RatingBloc>
-    ), // BlocListener<CancellationBloc>
+                            !_bid.voyageurConfirmed &&
+                            !isSender &&
+                            _bid.handoverWindowStart != null &&
+                            DateTime.now().isAfter(
+                              _bid.handoverWindowStart!.subtract(
+                                const Duration(hours: 4),
+                              ),
+                            ) &&
+                            DateTime.now().isBefore(
+                              _bid.handoverWindowEnd ??
+                                  DateTime.now().add(const Duration(hours: 1)),
+                            )
+                      ? _ConfirmPresenceBar(bid: _bid, isLoading: isLoading)
+                      : null,
+                );
+              },
+            ), // BlocConsumer<BidBloc>
+          ), // BlocListener<ConversationOpenBloc>
+        ), // BlocListener<RatingBloc>
+      ), // BlocListener<CancellationBloc>
     ); // BlocListener<BidAcceptanceBloc>
   }
-
 }
 
 // ── Rating done card ──────────────────────────────────────────────────────────
@@ -635,15 +705,15 @@ class _TravelerCard extends StatelessWidget {
   const _TravelerCard({required this.bid});
 
   TravelerProfile _buildTravelerProfile() => TravelerProfile(
-        id: bid.travelerId ?? '',
-        displayName: bid.travelerName,
-        phoneNumber: bid.travelerPhone,
-        averageRating: bid.travelerAverageRating,
-        totalTrips: bid.travelerTotalTrips,
-        kycVerified: bid.travelerKycVerified,
-        isProAccount: bid.travelerIsProAccount,
-        kiloPro: bid.travelerKiloPro,
-      );
+    id: bid.travelerId ?? '',
+    displayName: bid.travelerName,
+    phoneNumber: bid.travelerPhone,
+    averageRating: bid.travelerAverageRating,
+    totalTrips: bid.travelerTotalTrips,
+    kycVerified: bid.travelerKycVerified,
+    isProAccount: bid.travelerIsProAccount,
+    kiloPro: bid.travelerKiloPro,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -736,10 +806,7 @@ class _TravelerCard extends StatelessWidget {
                   ),
                 ),
                 // Actions
-                _IconActionButton(
-                  icon: Icons.phone_rounded,
-                  onTap: () {},
-                ),
+                _IconActionButton(icon: Icons.phone_rounded, onTap: () {}),
                 const SizedBox(width: DonySpacing.sm),
                 BlocBuilder<ConversationOpenBloc, ConversationOpenState>(
                   builder: (context, openState) {
@@ -750,15 +817,18 @@ class _TravelerCard extends StatelessWidget {
                       onTap: isOpening
                           ? null
                           : () => context.read<ConversationOpenBloc>().add(
-                                ConversationOpenRequested(bid.id),
-                              ),
+                              ConversationOpenRequested(bid.id),
+                            ),
                     );
                   },
                 ),
                 if (canOpenProfile) ...[
                   const SizedBox(width: DonySpacing.xs),
-                  Icon(Icons.chevron_right_rounded,
-                      color: cs.onSurfaceVariant, size: 18),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: cs.onSurfaceVariant,
+                    size: 18,
+                  ),
                 ],
               ],
             ),
@@ -791,9 +861,9 @@ class _MiniChip extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w700,
-            ),
+          color: color,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
@@ -916,8 +986,11 @@ class _StepItem extends StatelessWidget {
   final bool isLast;
   final int index;
 
-  const _StepItem(
-      {required this.step, required this.isLast, required this.index});
+  const _StepItem({
+    required this.step,
+    required this.isLast,
+    required this.index,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -941,7 +1014,9 @@ class _StepItem extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    step.completed ? Icons.check_rounded : Icons.circle_outlined,
+                    step.completed
+                        ? Icons.check_rounded
+                        : Icons.circle_outlined,
                     color: DonyColors.white,
                     size: 16,
                   ),
@@ -952,7 +1027,8 @@ class _StepItem extends StatelessWidget {
                       width: 2,
                       color: cs.outline,
                       margin: const EdgeInsets.symmetric(
-                          vertical: DonySpacing.xs),
+                        vertical: DonySpacing.xs,
+                      ),
                     ),
                   ),
               ],
@@ -961,8 +1037,7 @@ class _StepItem extends StatelessWidget {
           const SizedBox(width: DonySpacing.md),
           Expanded(
             child: Padding(
-              padding: EdgeInsets.only(
-                  bottom: isLast ? 0 : DonySpacing.md),
+              padding: EdgeInsets.only(bottom: isLast ? 0 : DonySpacing.md),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1125,26 +1200,34 @@ class _SenderCard extends StatelessWidget {
                   if (bid.senderPhone != null)
                     Row(
                       children: [
-                        Icon(Icons.phone_rounded,
-                            size: 12, color: cs.onSurfaceVariant),
+                        Icon(
+                          Icons.phone_rounded,
+                          size: 12,
+                          color: cs.onSurfaceVariant,
+                        ),
                         const SizedBox(width: DonySpacing.xs),
                         Text(
                           bid.senderPhone!,
                           style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant),
+                            color: cs.onSurfaceVariant,
+                          ),
                         ),
                       ],
                     ),
                   if (bid.senderTotalShipments != null)
                     Row(
                       children: [
-                        Icon(Icons.local_shipping_rounded,
-                            size: 12, color: cs.onSurfaceVariant),
+                        Icon(
+                          Icons.local_shipping_rounded,
+                          size: 12,
+                          color: cs.onSurfaceVariant,
+                        ),
                         const SizedBox(width: DonySpacing.xs),
                         Text(
                           '${bid.senderTotalShipments} envoi${(bid.senderTotalShipments ?? 0) > 1 ? 's' : ''}',
                           style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant),
+                            color: cs.onSurfaceVariant,
+                          ),
                         ),
                       ],
                     ),
@@ -1157,8 +1240,11 @@ class _SenderCard extends StatelessWidget {
             ),
             if (onTap != null) ...[
               const SizedBox(width: DonySpacing.xs),
-              Icon(Icons.chevron_right_rounded,
-                  color: cs.onSurfaceVariant, size: 20),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: cs.onSurfaceVariant,
+                size: 20,
+              ),
             ],
           ],
         ),
@@ -1184,10 +1270,11 @@ class _PackageCard extends StatelessWidget {
           _InfoRow(label: 'Poids', value: '${bid.weightKg} kg'),
           const SizedBox(height: DonySpacing.sm),
           _InfoRow(
-              label: 'Valeur déclarée',
-              value: bid.declaredValueEur != null
-                  ? '${bid.declaredValueEur!.toStringAsFixed(2)} €'
-                  : '— (à compléter)'),
+            label: 'Valeur déclarée',
+            value: bid.declaredValueEur != null
+                ? '${bid.declaredValueEur!.toStringAsFixed(2)} €'
+                : '— (à compléter)',
+          ),
         ],
       ),
     );
@@ -1256,16 +1343,18 @@ class _HandoverCard extends StatelessWidget {
             const SizedBox(height: DonySpacing.sm),
             _InfoRow(
               label: 'Début',
-              value: DateFormat('dd/MM/yyyy HH:mm')
-                  .format(bid.handoverWindowStart!.toLocal()),
+              value: DateFormat(
+                'dd/MM/yyyy HH:mm',
+              ).format(bid.handoverWindowStart!.toLocal()),
             ),
           ],
           if (bid.handoverWindowEnd != null) ...[
             const SizedBox(height: DonySpacing.sm),
             _InfoRow(
               label: 'Fin',
-              value: DateFormat('dd/MM/yyyy HH:mm')
-                  .format(bid.handoverWindowEnd!.toLocal()),
+              value: DateFormat(
+                'dd/MM/yyyy HH:mm',
+              ).format(bid.handoverWindowEnd!.toLocal()),
             ),
           ],
           const SizedBox(height: DonySpacing.sm),
@@ -1428,7 +1517,8 @@ class _ActionBar extends StatelessWidget {
                 side: BorderSide(color: cs.error),
                 padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(DonyRadius.lg)),
+                  borderRadius: BorderRadius.circular(DonyRadius.lg),
+                ),
               ),
             ),
           ),
@@ -1439,7 +1529,9 @@ class _ActionBar extends StatelessWidget {
                   ? null
                   : () {
                       if (bid.paymentMethod == BidPaymentMethod.cash) {
-                        context.read<BidAcceptanceBloc>().add(ace.BidAcceptRequested(bid.id));
+                        context.read<BidAcceptanceBloc>().add(
+                          ace.BidAcceptRequested(bid.id),
+                        );
                       } else {
                         context.read<BidBloc>().add(BidAcceptRequested(bid.id));
                       }
@@ -1449,7 +1541,9 @@ class _ActionBar extends StatelessWidget {
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: DonyColors.white),
+                        strokeWidth: 2,
+                        color: DonyColors.white,
+                      ),
                     )
                   : const Icon(Icons.check_rounded),
               label: const Text('Accepter'),
@@ -1459,7 +1553,8 @@ class _ActionBar extends StatelessWidget {
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(DonyRadius.lg)),
+                  borderRadius: BorderRadius.circular(DonyRadius.lg),
+                ),
               ),
             ),
           ),
@@ -1477,9 +1572,7 @@ class _ActionBar extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.viewInsetsOf(ctx).bottom,
-        ),
+        padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
         child: Container(
           decoration: BoxDecoration(
             color: Theme.of(ctx).colorScheme.surface,
@@ -1525,8 +1618,7 @@ class _ActionBar extends StatelessWidget {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(DonyRadius.md),
                   ),
-                  hintStyle:
-                      tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  hintStyle: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ),
               const SizedBox(height: DonySpacing.base),
@@ -1546,10 +1638,14 @@ class _ActionBar extends StatelessWidget {
                   FilledButton(
                     onPressed: () {
                       ctx.pop();
-                      context.read<BidBloc>().add(BidRejectRequested(bid.id,
+                      context.read<BidBloc>().add(
+                        BidRejectRequested(
+                          bid.id,
                           reason: reasonCtrl.text.trim().isEmpty
                               ? null
-                              : reasonCtrl.text.trim()));
+                              : reasonCtrl.text.trim(),
+                        ),
+                      );
                     },
                     style: FilledButton.styleFrom(
                       backgroundColor: cs.error,
@@ -1593,9 +1689,9 @@ class _ConfirmPresenceBar extends StatelessWidget {
         icon: Icons.location_on_rounded,
         onPressed: isLoading
             ? null
-            : () => context
-                .read<BidBloc>()
-                .add(BidConfirmPresenceRequested(bid.id)),
+            : () => context.read<BidBloc>().add(
+                BidConfirmPresenceRequested(bid.id),
+              ),
         isLoading: isLoading,
       ),
     );
@@ -1641,35 +1737,27 @@ class _EscrowBadge extends StatelessWidget {
     final amount = payment.amount.toStringAsFixed(2);
     return switch (payment.status) {
       'RELEASED' => (
-          Icons.check_circle_rounded,
-          cs.success,
-          'Voyageur payé — $amount €',
-        ),
+        Icons.check_circle_rounded,
+        cs.success,
+        'Voyageur payé — $amount €',
+      ),
       'REFUNDED' => (
-          Icons.replay_rounded,
-          cs.onSurfaceVariant,
-          'Remboursé — $amount €',
-        ),
-      'FAILED' => (
-          Icons.error_outline_rounded,
-          cs.error,
-          'Paiement échoué',
-        ),
+        Icons.replay_rounded,
+        cs.onSurfaceVariant,
+        'Remboursé — $amount €',
+      ),
+      'FAILED' => (Icons.error_outline_rounded, cs.error, 'Paiement échoué'),
       _ when bidStatus == 'PENDING' => (
-          Icons.lock_clock_rounded,
-          cs.warning,
-          'Paiement sécurisé · En attente du voyageur',
-        ),
+        Icons.lock_clock_rounded,
+        cs.warning,
+        'Paiement sécurisé · En attente du voyageur',
+      ),
       _ when bidStatus == 'ACCEPTED' => (
-          Icons.lock_rounded,
-          cs.success,
-          'Paiement sécurisé — $amount €',
-        ),
-      _ => (
-          Icons.lock_rounded,
-          cs.success,
-          'Paiement sécurisé — $amount €',
-        ),
+        Icons.lock_rounded,
+        cs.success,
+        'Paiement sécurisé — $amount €',
+      ),
+      _ => (Icons.lock_rounded, cs.success, 'Paiement sécurisé — $amount €'),
     };
   }
 }
@@ -1720,7 +1808,8 @@ class _SenderActionBar extends StatelessWidget {
                 padding: EdgeInsets.zero,
                 minimumSize: Size.zero,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(DonyRadius.lg)),
+                  borderRadius: BorderRadius.circular(DonyRadius.lg),
+                ),
               ),
               child: const Icon(Icons.more_horiz_rounded, size: 22),
             ),
@@ -1740,29 +1829,34 @@ class _SenderActionBar extends StatelessWidget {
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2, color: cs.onSurfaceVariant),
+                            strokeWidth: 2,
+                            color: cs.onSurfaceVariant,
+                          ),
                         ),
                       ),
                     )
                   : existingPayment != null
-                      ? _EscrowBadge(
-                          payment: existingPayment!, bidStatus: bid.status)
-                      : FilledButton.icon(
-                          onPressed: () =>
-                              context.push('/payments/pay', extra: bid),
-                          icon: const Icon(Icons.lock_rounded, size: 18),
-                          label: const Text('Payer mon envoi'),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: cs.primary,
-                            foregroundColor: DonyColors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: DonySpacing.md),
-                            shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(DonyRadius.lg)),
-                          ),
+                  ? _EscrowBadge(
+                      payment: existingPayment!,
+                      bidStatus: bid.status,
+                    )
+                  : FilledButton.icon(
+                      onPressed: () =>
+                          context.push('/payments/pay', extra: bid),
+                      icon: const Icon(Icons.lock_rounded, size: 18),
+                      label: const Text('Payer mon envoi'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: cs.primary,
+                        foregroundColor: DonyColors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: DonySpacing.md,
                         ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(DonyRadius.lg),
+                        ),
+                      ),
+                    ),
             ),
           ],
         ],
@@ -1793,12 +1887,7 @@ class _SenderOptionsSheet extends StatelessWidget {
           top: Radius.circular(DonyRadius.sheet),
         ),
       ),
-      padding: EdgeInsets.fromLTRB(
-        h,
-        0,
-        h,
-        bottomPad + DonySpacing.xl,
-      ),
+      padding: EdgeInsets.fromLTRB(h, 0, h, bottomPad + DonySpacing.xl),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1809,8 +1898,9 @@ class _SenderOptionsSheet extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                  color: cs.outline,
-                  borderRadius: BorderRadius.circular(2)),
+                color: cs.outline,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
           ),
           Text('Options', style: tt.headlineMedium),
@@ -1836,8 +1926,8 @@ class _SenderOptionsSheet extends StatelessWidget {
             onTap: () {
               context.pop();
               outerContext.read<ConversationOpenBloc>().add(
-                    ConversationOpenRequested(bid.id),
-                  );
+                ConversationOpenRequested(bid.id),
+              );
             },
           ),
           const SizedBox(height: DonySpacing.sm),
@@ -1928,15 +2018,17 @@ class _SenderOptionsSheet extends StatelessWidget {
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
               const SizedBox(height: DonySpacing.base),
-              ...reasons.map((r) => RadioListTile<String>(
-                    value: r,
-                    groupValue: selected,
-                    onChanged: (v) => setSheetState(() => selected = v),
-                    title: Text(r, style: tt.bodyMedium),
-                    activeColor: cs.primary,
-                    contentPadding: EdgeInsets.zero,
-                    dense: true,
-                  )),
+              ...reasons.map(
+                (r) => RadioListTile<String>(
+                  value: r,
+                  groupValue: selected,
+                  onChanged: (v) => setSheetState(() => selected = v),
+                  title: Text(r, style: tt.bodyMedium),
+                  activeColor: cs.primary,
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                ),
+              ),
               const SizedBox(height: DonySpacing.base),
               DonyButton(
                 label: 'Envoyer le signalement',
@@ -1947,14 +2039,19 @@ class _SenderOptionsSheet extends StatelessWidget {
                         ctx.pop();
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Signalement envoyé. Merci !',
-                                style: tt.bodyMedium
-                                    ?.copyWith(fontWeight: FontWeight.w500)),
+                            content: Text(
+                              'Signalement envoyé. Merci !',
+                              style: tt.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                             backgroundColor: cs.success,
                             behavior: SnackBarBehavior.floating,
                             shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(DonyRadius.sm)),
+                              borderRadius: BorderRadius.circular(
+                                DonyRadius.sm,
+                              ),
+                            ),
                           ),
                         );
                       },
@@ -1973,7 +2070,8 @@ class _SenderOptionsSheet extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(DonyRadius.sheet)),
+          borderRadius: BorderRadius.circular(DonyRadius.sheet),
+        ),
         title: Text('Annuler la demande', style: tt.headlineMedium),
         content: Text(
           'Voulez-vous vraiment annuler votre demande d\'envoi ? Cette action est définitive.',
@@ -1982,8 +2080,10 @@ class _SenderOptionsSheet extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => ctx.pop(),
-            child: Text('Non',
-                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+            child: Text(
+              'Non',
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
           ),
           FilledButton(
             onPressed: () {
@@ -2009,7 +2109,8 @@ class _SenderOptionsSheet extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(DonyRadius.sheet)),
+          borderRadius: BorderRadius.circular(DonyRadius.sheet),
+        ),
         title: Text('Supprimer cette demande', style: tt.headlineMedium),
         content: Text(
           'Cette demande sera définitivement supprimée de votre historique.',
@@ -2018,8 +2119,10 @@ class _SenderOptionsSheet extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => ctx.pop(),
-            child: Text('Annuler',
-                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+            child: Text(
+              'Annuler',
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
           ),
           FilledButton(
             onPressed: () {
@@ -2075,7 +2178,8 @@ class _TravelerRejectedBar extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(DonyRadius.sheet)),
+          borderRadius: BorderRadius.circular(DonyRadius.sheet),
+        ),
         title: Text('Supprimer cette demande', style: tt.headlineMedium),
         content: Text(
           'Cette demande refusée sera retirée définitivement de votre liste.',
@@ -2084,8 +2188,10 @@ class _TravelerRejectedBar extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => ctx.pop(),
-            child: Text('Annuler',
-                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+            child: Text(
+              'Annuler',
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
           ),
           FilledButton(
             onPressed: () {
@@ -2141,8 +2247,11 @@ class _TrackingNumberCard extends StatelessWidget {
                   color: cs.primaryContainer,
                   borderRadius: BorderRadius.circular(DonyRadius.sm),
                 ),
-                child: Icon(Icons.local_shipping_outlined,
-                    color: cs.primary, size: 20),
+                child: Icon(
+                  Icons.local_shipping_outlined,
+                  color: cs.primary,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: DonySpacing.md),
               Expanded(
@@ -2155,18 +2264,21 @@ class _TrackingNumberCard extends StatelessWidget {
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.copy_rounded,
-                    color: cs.primary, size: 20),
+                icon: Icon(Icons.copy_rounded, color: cs.primary, size: 20),
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: trackingNumber));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Numéro copié !',
-                          style: tt.bodyMedium
-                              ?.copyWith(fontWeight: FontWeight.w500)),
+                      content: Text(
+                        'Numéro copié !',
+                        style: tt.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(DonyRadius.sm)),
+                        borderRadius: BorderRadius.circular(DonyRadius.sm),
+                      ),
                       duration: const Duration(seconds: 2),
                     ),
                   );
@@ -2178,7 +2290,10 @@ class _TrackingNumberCard extends StatelessWidget {
           const SizedBox(height: DonySpacing.sm),
           Text(
             'Partagez ce numéro avec votre destinataire pour qu\'il puisse suivre le colis.',
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, height: 1.4),
+            style: tt.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              height: 1.4,
+            ),
           ),
         ],
       ),
@@ -2203,7 +2318,11 @@ class _TimelineButton extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     return GestureDetector(
-      onTap: () => showTrackingTimelineSheet(context, bidId: bid.id, corridor: _corridor),
+      onTap: () => showTrackingTimelineSheet(
+        context,
+        bidId: bid.id,
+        corridor: _corridor,
+      ),
       child: Container(
         padding: const EdgeInsets.all(DonySpacing.base),
         decoration: BoxDecoration(
@@ -2219,8 +2338,7 @@ class _TimelineButton extends StatelessWidget {
                 color: cs.primary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(DonyRadius.sm),
               ),
-              child: Icon(Icons.timeline_rounded,
-                  color: cs.primary, size: 20),
+              child: Icon(Icons.timeline_rounded, color: cs.primary, size: 20),
             ),
             const SizedBox(width: DonySpacing.md),
             Expanded(
@@ -2238,8 +2356,7 @@ class _TimelineButton extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded,
-                color: cs.primary, size: 20),
+            Icon(Icons.chevron_right_rounded, color: cs.primary, size: 20),
           ],
         ),
       ),
@@ -2288,8 +2405,9 @@ class _OptionTile extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(DonySpacing.sm),
                 decoration: BoxDecoration(
-                    color: iconBg,
-                    borderRadius: BorderRadius.circular(DonyRadius.sm)),
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(DonyRadius.sm),
+                ),
                 child: Icon(icon, color: iconColor, size: 18),
               ),
               const SizedBox(width: DonySpacing.md),
@@ -2309,8 +2427,11 @@ class _OptionTile extends StatelessWidget {
                 ),
               ),
               if (!disabled)
-                Icon(Icons.chevron_right_rounded,
-                    color: cs.onSurfaceVariant, size: 18),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: cs.onSurfaceVariant,
+                  size: 18,
+                ),
               if (disabled)
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -2379,8 +2500,7 @@ class _TrackingLinkCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.link_rounded,
-                    color: cs.primary, size: 16),
+                Icon(Icons.link_rounded, color: cs.primary, size: 16),
                 const SizedBox(width: DonySpacing.sm),
                 Expanded(
                   child: Text(
@@ -2402,28 +2522,34 @@ class _TrackingLinkCard extends StatelessWidget {
                     Clipboard.setData(ClipboardData(text: _trackingUrl));
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Lien copié',
-                            style: tt.bodyMedium
-                                ?.copyWith(fontWeight: FontWeight.w500)),
+                        content: Text(
+                          'Lien copié',
+                          style: tt.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                         backgroundColor: cs.success,
                         behavior: SnackBarBehavior.floating,
                         shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(DonyRadius.sm)),
+                          borderRadius: BorderRadius.circular(DonyRadius.sm),
+                        ),
                       ),
                     );
                   },
                   icon: const Icon(Icons.copy_rounded, size: 16),
-                  label: Text('Copier',
-                      style:
-                          tt.titleSmall?.copyWith(color: cs.primary)),
+                  label: Text(
+                    'Copier',
+                    style: tt.titleSmall?.copyWith(color: cs.primary),
+                  ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: cs.primary,
                     side: BorderSide(color: cs.primary),
                     padding: const EdgeInsets.symmetric(
-                        vertical: DonySpacing.md),
+                      vertical: DonySpacing.md,
+                    ),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(DonyRadius.md)),
+                      borderRadius: BorderRadius.circular(DonyRadius.md),
+                    ),
                   ),
                 ),
               ),
@@ -2436,17 +2562,20 @@ class _TrackingLinkCard extends StatelessWidget {
                         'Suivi de colis dony — ${bid.trackingNumber ?? ""}',
                   ),
                   icon: const Icon(Icons.share_rounded, size: 16),
-                  label: Text('Partager',
-                      style:
-                          tt.titleSmall?.copyWith(color: DonyColors.white)),
+                  label: Text(
+                    'Partager',
+                    style: tt.titleSmall?.copyWith(color: DonyColors.white),
+                  ),
                   style: FilledButton.styleFrom(
                     backgroundColor: cs.primary,
                     foregroundColor: DonyColors.white,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(
-                        vertical: DonySpacing.md),
+                      vertical: DonySpacing.md,
+                    ),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(DonyRadius.md)),
+                      borderRadius: BorderRadius.circular(DonyRadius.md),
+                    ),
                   ),
                 ),
               ),
@@ -2455,298 +2584,6 @@ class _TrackingLinkCard extends StatelessWidget {
         ],
       ),
     ).animate().fadeIn(duration: 300.ms);
-  }
-}
-
-// ── Confirmation code card ────────────────────────────────────────────────────
-
-class _ConfirmationCodeCard extends StatefulWidget {
-  final String bidId;
-  final String initialCode;
-  final int refreshCount;
-  final DateTime? refreshWindowStart;
-
-  const _ConfirmationCodeCard({
-    required this.bidId,
-    required this.initialCode,
-    required this.refreshCount,
-    this.refreshWindowStart,
-  });
-
-  @override
-  State<_ConfirmationCodeCard> createState() => _ConfirmationCodeCardState();
-}
-
-class _ConfirmationCodeCardState extends State<_ConfirmationCodeCard> {
-  static const int _maxRefreshes = 5;
-  static const Duration _window = Duration(hours: 24);
-
-  Timer? _timer;
-  Duration _remaining = Duration.zero;
-
-  @override
-  void initState() {
-    super.initState();
-    _initCountdown(widget.refreshCount, widget.refreshWindowStart);
-  }
-
-  @override
-  void didUpdateWidget(_ConfirmationCodeCard old) {
-    super.didUpdateWidget(old);
-    if (old.refreshCount != widget.refreshCount ||
-        old.refreshWindowStart != widget.refreshWindowStart) {
-      _timer?.cancel();
-      _initCountdown(widget.refreshCount, widget.refreshWindowStart);
-    }
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  void _initCountdown(int count, DateTime? windowStart) {
-    if (count < _maxRefreshes || windowStart == null) {
-      _remaining = Duration.zero;
-      return;
-    }
-    final expiry = windowStart.toUtc().add(_window);
-    final now = DateTime.now().toUtc();
-    if (!now.isBefore(expiry)) {
-      _remaining = Duration.zero;
-      return;
-    }
-    _remaining = expiry.difference(now);
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!mounted) return;
-      setState(() {
-        _remaining = _remaining - const Duration(seconds: 1);
-        if (_remaining <= Duration.zero) {
-          _remaining = Duration.zero;
-          _timer?.cancel();
-        }
-      });
-    });
-  }
-
-  bool get _isRateLimited => _remaining > Duration.zero;
-
-  String _formatRemaining() {
-    final h = _remaining.inHours;
-    final m = _remaining.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final s = _remaining.inSeconds.remainder(60).toString().padLeft(2, '0');
-    if (h > 0) return '${h}h ${m}min ${s}s';
-    return '${m}min ${s}s';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
-    return BlocConsumer<TrackingBloc, TrackingState>(
-      listenWhen: (_, c) =>
-          c is TrackingConfirmCodeLoaded || c is TrackingRefreshCodeError,
-      listener: (ctx, state) {
-        if (state is TrackingRefreshCodeError) {
-          ErrorPresenter.show(ctx, state.error);
-        } else if (state is TrackingConfirmCodeLoaded) {
-          ctx.read<BidBloc>().add(BidDetailRequested(widget.bidId));
-        }
-      },
-      buildWhen: (_, c) =>
-          c is TrackingRefreshCodeLoading ||
-          c is TrackingConfirmCodeLoaded ||
-          c is TrackingRefreshCodeError,
-      builder: (ctx, state) {
-        final isApiLoading = state is TrackingRefreshCodeLoading;
-        final isBlocked = _isRateLimited || isApiLoading;
-        final displayCode = state is TrackingConfirmCodeLoaded
-            ? state.code ?? widget.initialCode
-            : widget.initialCode;
-
-        return Container(
-          padding: const EdgeInsets.all(DonySpacing.base),
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: BorderRadius.circular(DonyRadius.card),
-            border: Border.all(color: cs.outline),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'CODE DE CONFIRMATION',
-                style: tt.labelMedium?.copyWith(
-                  color: cs.onSurfaceVariant,
-                  letterSpacing: 0.8,
-                ),
-              ),
-              const SizedBox(height: DonySpacing.md),
-              // Code display
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: DonySpacing.lg),
-                decoration: BoxDecoration(
-                  color: cs.primaryContainer,
-                  borderRadius: BorderRadius.circular(DonyRadius.md),
-                ),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    displayCode,
-                    textAlign: TextAlign.center,
-                    style: tt.displayLarge?.copyWith(
-                      color: DonyColors.blue700,
-                      letterSpacing: 10,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: DonySpacing.md),
-              // Copy button
-              GestureDetector(
-                onTap: () {
-                  Clipboard.setData(ClipboardData(text: displayCode));
-                  ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-                    content: Text('Code copié',
-                        style: tt.bodyMedium
-                            ?.copyWith(fontWeight: FontWeight.w500)),
-                    backgroundColor: cs.success,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(DonyRadius.sm)),
-                  ));
-                },
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: DonySpacing.sm),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: cs.primary),
-                    borderRadius: BorderRadius.circular(DonyRadius.md),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.copy_rounded, size: 16, color: cs.primary),
-                      const SizedBox(width: DonySpacing.sm),
-                      Text('Copier le code',
-                          style: tt.titleSmall?.copyWith(color: cs.primary)),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: DonySpacing.sm),
-              // Regenerate button — grisé + countdown si limite atteinte
-              Opacity(
-                opacity: isBlocked ? 0.45 : 1.0,
-                child: GestureDetector(
-                  onTap: isBlocked
-                      ? null
-                      : () => ctx
-                          .read<TrackingBloc>()
-                          .add(TrackingRefreshCodeRequested(widget.bidId)),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: DonySpacing.sm),
-                    decoration: BoxDecoration(
-                      color: cs.secondaryContainer,
-                      borderRadius: BorderRadius.circular(DonyRadius.md),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (isApiLoading)
-                          SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: cs.onSecondaryContainer),
-                          )
-                        else if (_isRateLimited)
-                          Icon(Icons.lock_clock_rounded,
-                              size: 16, color: cs.onSecondaryContainer)
-                        else
-                          Icon(Icons.refresh_rounded,
-                              size: 16, color: cs.onSecondaryContainer),
-                        const SizedBox(width: DonySpacing.sm),
-                        if (isApiLoading)
-                          Text('Régénération…',
-                              style: tt.titleSmall?.copyWith(
-                                  color: cs.onSecondaryContainer))
-                        else if (_isRateLimited)
-                          Text('Disponible dans ${_formatRemaining()}',
-                              style: tt.titleSmall?.copyWith(
-                                  color: cs.onSecondaryContainer))
-                        else
-                          Text('Régénérer le code',
-                              style: tt.titleSmall?.copyWith(
-                                  color: cs.onSecondaryContainer)),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              if (_isRateLimited) ...[
-                const SizedBox(height: DonySpacing.sm),
-                Container(
-                  padding: const EdgeInsets.all(DonySpacing.sm),
-                  decoration: BoxDecoration(
-                    color: cs.errorContainer.withValues(alpha: 0.25),
-                    borderRadius: BorderRadius.circular(DonyRadius.sm),
-                    border: Border.all(
-                        color: cs.error.withValues(alpha: 0.25)),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.block_rounded,
-                          size: 14, color: cs.error),
-                      const SizedBox(width: DonySpacing.sm),
-                      Expanded(
-                        child: Text(
-                          'Limite de 5 régénérations atteinte. Le bouton se réactivera automatiquement dans ${_formatRemaining()}.',
-                          style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant, height: 1.4),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ] else ...[
-                const SizedBox(height: DonySpacing.sm),
-                Container(
-                  padding: const EdgeInsets.all(DonySpacing.sm),
-                  decoration: BoxDecoration(
-                    color: cs.warningLight,
-                    borderRadius: BorderRadius.circular(DonyRadius.sm),
-                    border:
-                        Border.all(color: cs.warning.withValues(alpha: 0.3)),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.info_outline_rounded,
-                          size: 14, color: cs.warning),
-                      const SizedBox(width: DonySpacing.sm),
-                      Expanded(
-                        child: Text(
-                          'Transmettez ce code au voyageur par vos propres moyens (SMS, WhatsApp…). Il devra le saisir à la livraison.',
-                          style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant, height: 1.4),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ).animate().fadeIn(duration: 300.ms);
-      },
-    );
   }
 }
 
@@ -2785,8 +2622,10 @@ class _TravelerCancelSection extends StatelessWidget {
 
   Future<void> _showCancellationDialog(BuildContext context) async {
     final isInTransit = bid.status == 'IN_TRANSIT';
-    final reason =
-        await CancellationDialog.show(context, isInTransit: isInTransit);
+    final reason = await CancellationDialog.show(
+      context,
+      isInTransit: isInTransit,
+    );
     if (reason == null) {
       return;
     }
@@ -2796,8 +2635,8 @@ class _TravelerCancelSection extends StatelessWidget {
     // reason == "" means no reason given (ACCEPTED case)
     // reason.isNotEmpty means reason was provided
     context.read<BidBloc>().add(
-          BidCancelRequested(bid.id, reason: reason.isEmpty ? null : reason),
-        );
+      BidCancelRequested(bid.id, reason: reason.isEmpty ? null : reason),
+    );
   }
 }
 
@@ -2812,8 +2651,7 @@ class _NoShowContestationBanner extends StatefulWidget {
       _NoShowContestationBannerState();
 }
 
-class _NoShowContestationBannerState
-    extends State<_NoShowContestationBanner> {
+class _NoShowContestationBannerState extends State<_NoShowContestationBanner> {
   Timer? _tick;
   String _timeLeft = '';
 
@@ -2846,7 +2684,8 @@ class _NoShowContestationBannerState
     final h = remaining.inHours;
     final m = remaining.inMinutes % 60;
     final s = remaining.inSeconds % 60;
-    _timeLeft = '${h}h ${m.toString().padLeft(2, '0')}m ${s.toString().padLeft(2, '0')}s';
+    _timeLeft =
+        '${h}h ${m.toString().padLeft(2, '0')}m ${s.toString().padLeft(2, '0')}s';
   }
 
   @override
@@ -2868,8 +2707,7 @@ class _NoShowContestationBannerState
             children: [
               Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded,
-                      color: cs.error, size: 18),
+                  Icon(Icons.warning_amber_rounded, color: cs.error, size: 18),
                   const SizedBox(width: DonySpacing.sm),
                   Expanded(
                     child: Text(
@@ -2885,16 +2723,17 @@ class _NoShowContestationBannerState
               const SizedBox(height: DonySpacing.sm),
               Text(
                 "Le voyageur indique que vous n'étiez pas présent au point de remise.",
-                style: tt.bodySmall?.copyWith(
-                  color: cs.onSurfaceVariant,
-                ),
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
               if (_timeLeft.isNotEmpty) ...[
                 const SizedBox(height: DonySpacing.sm),
                 Row(
                   children: [
-                    Icon(Icons.timer_outlined,
-                        size: 14, color: cs.onSurfaceVariant),
+                    Icon(
+                      Icons.timer_outlined,
+                      size: 14,
+                      color: cs.onSurfaceVariant,
+                    ),
                     const SizedBox(width: DonySpacing.xs),
                     Text(
                       'Temps restant pour contester : $_timeLeft',
@@ -2964,8 +2803,8 @@ class _NoShowContestationBannerState
             Text(
               'Notre équipe examinera votre demande et vous contactera sous 24 h.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -3098,8 +2937,8 @@ class _NoShowSection extends StatelessWidget {
               "L'expéditeur aura 48 h pour contester. "
               'Sans réponse de sa part, le bid sera annulé.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
