@@ -41,6 +41,12 @@ class NegotiationThread extends Equatable {
     this.departureCity,
     this.arrivalCity,
     this.weightKg,
+    // Champs calculés côté serveur (NegotiationThreadResponse v2)
+    this.senderName,
+    this.isMyTurn = false,
+    this.canAccept = false,
+    this.canCounter = false,
+    this.roundsRemaining = 0,
   });
 
   final String id;
@@ -66,6 +72,13 @@ class NegotiationThread extends Equatable {
   final String? arrivalCity;
   final double? weightKg;
 
+  // Champs calculés côté serveur (NegotiationThreadResponse v2)
+  final String? senderName;
+  final bool isMyTurn;
+  final bool canAccept;
+  final bool canCounter;
+  final int roundsRemaining;
+
   factory NegotiationThread.fromJson(Map<String, dynamic> json) => NegotiationThread(
         id: json['id'] as String,
         packageRequestId: json['packageRequestId'] as String,
@@ -90,6 +103,11 @@ class NegotiationThread extends Equatable {
         departureCity: json['departureCity'] as String?,
         arrivalCity: json['arrivalCity'] as String?,
         weightKg: (json['weightKg'] as num?)?.toDouble(),
+        senderName: json['senderName'] as String?,
+        isMyTurn: json['isMyTurn'] as bool? ?? false,
+        canAccept: json['canAccept'] as bool? ?? false,
+        canCounter: json['canCounter'] as bool? ?? false,
+        roundsRemaining: json['roundsRemaining'] as int? ?? 0,
       );
 
   @override
@@ -99,6 +117,7 @@ class NegotiationThread extends Equatable {
         status, currentPriceEur, roundsCount, lastActivityAt, createdAt,
         messages, paymentIntentClientSecret,
         travelerName, travelerRating, travelerTripsCount, travelerPhotoUrl,
-        departureCity, arrivalCity, weightKg,
+        departureCity, arrivalCity, weightKg, senderName,
+        isMyTurn, canAccept, canCounter, roundsRemaining,
       ];
 }
