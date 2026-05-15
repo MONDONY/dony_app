@@ -172,6 +172,7 @@ class NotificationService {
     final type = data['type'] as String?;
     final bidId = data['bidId'] as String?;
     final announcementId = data['announcementId'] as String?;
+    final threadId = data['threadId'] as String?;
 
     return switch (type) {
       // Voyageur → liste des offres sur son annonce
@@ -183,6 +184,13 @@ class NotificationService {
       'DELIVERY_CONFIRMED' when bidId != null  => '/bids/$bidId',
       'PAYMENT_RELEASED' when bidId != null    => '/bids/$bidId',
       'DISPUTE_OPENED' when bidId != null      => '/bids/$bidId',
+      // Négociation — les deux parties naviguent vers le thread
+      'negotiation_started' when threadId != null      => '/negotiations/$threadId',
+      'negotiation_counter' when threadId != null      => '/negotiations/$threadId',
+      'negotiation_awaiting_trip' when threadId != null => '/negotiations/$threadId',
+      'negotiation_awaiting_payment' when threadId != null => '/negotiations/$threadId',
+      'negotiation_expired' when threadId != null      => '/negotiations/$threadId',
+      'request_accepted' when threadId != null         => '/negotiations/$threadId',
       // Nouveau message → liste des conversations
       'NEW_MESSAGE'                            => '/messages',
       // Trajet annulé → pas de navigation (le trajet n'existe plus)

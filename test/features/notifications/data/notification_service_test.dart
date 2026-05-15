@@ -138,5 +138,44 @@ void main() {
     test('NEW_MESSAGE routes to /messages', () {
       expect(service.testRouteForMessage({'type': 'NEW_MESSAGE'}), '/messages');
     });
+
+    test('negotiation_started routes to thread page', () {
+      expect(
+        service.testRouteForMessage({'type': 'negotiation_started', 'threadId': 'th-1'}),
+        '/negotiations/th-1',
+      );
+    });
+
+    test('negotiation_counter routes to thread page', () {
+      expect(
+        service.testRouteForMessage({'type': 'negotiation_counter', 'threadId': 'th-1'}),
+        '/negotiations/th-1',
+      );
+    });
+
+    test('negotiation_awaiting_trip routes to thread page', () {
+      expect(
+        service.testRouteForMessage({'type': 'negotiation_awaiting_trip', 'threadId': 'th-1'}),
+        '/negotiations/th-1',
+      );
+    });
+
+    test('negotiation_awaiting_payment routes to thread page', () {
+      expect(
+        service.testRouteForMessage({'type': 'negotiation_awaiting_payment', 'threadId': 'th-1'}),
+        '/negotiations/th-1',
+      );
+    });
+
+    test('negotiation_started without threadId returns null', () {
+      expect(service.testRouteForMessage({'type': 'negotiation_started'}), isNull);
+    });
+
+    test('request_accepted routes to thread page', () {
+      expect(
+        service.testRouteForMessage({'type': 'request_accepted', 'threadId': 'th-1'}),
+        '/negotiations/th-1',
+      );
+    });
   });
 }
