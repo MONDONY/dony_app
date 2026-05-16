@@ -146,7 +146,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
         } else if (state is NegotiationError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.error),
+              content: Text(state.error.message),
               behavior: SnackBarBehavior.floating,
             ),
           );
