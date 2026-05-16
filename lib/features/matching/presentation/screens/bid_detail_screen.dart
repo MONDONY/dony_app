@@ -12,7 +12,6 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
-import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:flutter/material.dart';
@@ -33,6 +32,7 @@ import 'package:dony/features/matching/presentation/widgets/handover_bottom_shee
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:dony/features/matching/presentation/widgets/sender_profile_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/suivi_button.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_profile_sheet.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
@@ -412,19 +412,14 @@ class _BidDetailViewState extends State<_BidDetailView> {
                                       _TrackingLinkCard(bid: _bid),
                                     ],
 
-                                    // Timeline section ("ÉTAPES")
-                                    if (_bid.status == 'COMPLETED' ||
-                                        _bid.status == 'DELIVERED') ...[
-                                      const SizedBox(height: DonySpacing.xl),
-                                      _StepsSection(bid: _bid),
-                                    ],
-
-                                    // Timeline button
+                                    // Suivi du colis
                                     if (_bid.status == 'ACCEPTED' ||
                                         _bid.status == 'HANDED_OVER' ||
-                                        _bid.status == 'IN_TRANSIT') ...[
+                                        _bid.status == 'IN_TRANSIT' ||
+                                        _bid.status == 'COMPLETED' ||
+                                        _bid.status == 'DELIVERED') ...[
                                       const SizedBox(height: DonySpacing.base),
-                                      _TimelineButton(bid: _bid),
+                                      SuiviButton(bid: _bid),
                                     ],
 
                                     // Payment release row
@@ -788,164 +783,6 @@ class _IconActionButton extends StatelessWidget {
                 ),
               )
             : Icon(icon, color: cs.primary, size: 18),
-      ),
-    );
-  }
-}
-
-// ── Steps section ─────────────────────────────────────────────────────────────
-
-class _StepsSection extends StatelessWidget {
-  final BidModel bid;
-  const _StepsSection({required this.bid});
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-
-    // Static example steps matching maquette for COMPLETED bids
-    final steps = [
-      _StepData(
-        label: 'Colis remis',
-        detail: 'Aujourd\'hui · 14:32',
-        completed: true,
-        isDelivery: false,
-      ),
-      _StepData(
-        label: 'Embarquement CDG',
-        detail: 'Auj. · 09:18 · SAS B 38, Charles-de-Gaulle',
-        completed: true,
-        isDelivery: false,
-      ),
-      _StepData(
-        label: 'Arrivé Dakar',
-        detail: 'Auj. · 14:08 · DSS',
-        completed: true,
-        isDelivery: false,
-      ),
-      _StepData(
-        label: 'Livraison confirmée',
-        detail: 'Auj. · 14:32 · Code ✓',
-        completed: true,
-        isDelivery: true,
-      ),
-    ];
-
-    final cs = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'ÉTAPES',
-          style: tt.labelMedium?.copyWith(
-            color: cs.onSurfaceVariant,
-            letterSpacing: 0.8,
-          ),
-        ),
-        const SizedBox(height: DonySpacing.md),
-        ...steps.asMap().entries.map((entry) {
-          final i = entry.key;
-          final step = entry.value;
-          final isLast = i == steps.length - 1;
-          return _StepItem(step: step, isLast: isLast, index: i);
-        }),
-      ],
-    );
-  }
-}
-
-class _StepData {
-  final String label;
-  final String detail;
-  final bool completed;
-  final bool isDelivery;
-
-  const _StepData({
-    required this.label,
-    required this.detail,
-    required this.completed,
-    required this.isDelivery,
-  });
-}
-
-class _StepItem extends StatelessWidget {
-  final _StepData step;
-  final bool isLast;
-  final int index;
-
-  const _StepItem({
-    required this.step,
-    required this.isLast,
-    required this.index,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final color = step.isDelivery ? cs.success : cs.primary;
-
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 36,
-            child: Column(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: step.completed ? color : cs.outline,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    step.completed
-                        ? Icons.check_rounded
-                        : Icons.circle_outlined,
-                    color: DonyColors.white,
-                    size: 16,
-                  ),
-                ),
-                if (!isLast)
-                  Expanded(
-                    child: Container(
-                      width: 2,
-                      color: cs.outline,
-                      margin: const EdgeInsets.symmetric(
-                        vertical: DonySpacing.xs,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(width: DonySpacing.md),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: isLast ? 0 : DonySpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    step.label,
-                    style: tt.titleSmall?.copyWith(
-                      color: step.completed
-                          ? cs.onSurface
-                          : cs.onSurfaceVariant,
-                    ),
-                  ),
-                  Text(
-                    step.detail,
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: DonySpacing.sm),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -2093,69 +1930,6 @@ class _TravelerRejectedBar extends StatelessWidget {
             child: Text('Supprimer', style: tt.labelLarge),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ── Timeline button ───────────────────────────────────────────────────────────
-
-class _TimelineButton extends StatelessWidget {
-  final BidModel bid;
-  const _TimelineButton({required this.bid});
-
-  String get _corridor {
-    final dep = bid.departureCity ?? '';
-    final arr = bid.arrivalCity ?? '';
-    return dep.isNotEmpty && arr.isNotEmpty ? '$dep → $arr' : 'Suivi du colis';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return GestureDetector(
-      onTap: () => showTrackingTimelineSheet(
-        context,
-        bidId: bid.id,
-        corridor: _corridor,
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(DonySpacing.base),
-        decoration: BoxDecoration(
-          color: cs.primaryContainer,
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: cs.primary.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(DonySpacing.sm),
-              decoration: BoxDecoration(
-                color: cs.primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(DonyRadius.sm),
-              ),
-              child: Icon(Icons.timeline_rounded, color: cs.primary, size: 20),
-            ),
-            const SizedBox(width: DonySpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Suivi en temps réel',
-                    style: tt.titleSmall?.copyWith(color: cs.onSurface),
-                  ),
-                  Text(
-                    'Consulter l\'historique des scans',
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded, color: cs.primary, size: 20),
-          ],
-        ),
       ),
     );
   }
