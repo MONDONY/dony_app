@@ -2660,6 +2660,7 @@ class _NotificationBell extends StatelessWidget {
                   top: -4,
                   right: -4,
                   child: Container(
+                    key: const Key('notification-badge'),
                     constraints:
                         const BoxConstraints(minWidth: 16, minHeight: 16),
                     padding: const EdgeInsets.symmetric(horizontal: 3),

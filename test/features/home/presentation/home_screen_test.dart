@@ -293,7 +293,7 @@ void main() {
           unreadCount: 0,
         ),
       ));
-      await tester.pump(const Duration(milliseconds: 1000));
+      await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);
       expect(find.byIcon(Icons.notifications_rounded), findsNothing);
@@ -307,11 +307,17 @@ void main() {
           unreadCount: 3,
         ),
       ));
-      await tester.pump(const Duration(milliseconds: 1000));
+      await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.notifications_rounded), findsOneWidget);
       expect(find.byIcon(Icons.notifications_outlined), findsNothing);
-      expect(find.text('3'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('notification-badge')),
+          matching: find.text('3'),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('shows 99+ badge when unread count exceeds 99',
@@ -322,9 +328,20 @@ void main() {
           unreadCount: 150,
         ),
       ));
-      await tester.pump(const Duration(milliseconds: 1000));
+      await tester.pumpAndSettle();
 
       expect(find.text('99+'), findsOneWidget);
+    });
+
+    testWidgets('shows outlined bell icon when notification state is initial',
+        (tester) async {
+      await tester.pumpWidget(_buildHome(
+        // notificationState non fourni → NotificationInitial par défaut
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.notifications_rounded), findsNothing);
     });
   });
 }
