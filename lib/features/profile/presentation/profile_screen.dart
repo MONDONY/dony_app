@@ -125,11 +125,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           cs.surface,
                           progress,
                         )!;
-                        final iconColor = Color.lerp(
-                          cs.onPrimary,
-                          cs.onSurface,
-                          progress,
-                        )!;
                         final titleColor = Color.lerp(
                           cs.onPrimary.withValues(alpha: 0.0),
                           cs.onSurface,
@@ -166,16 +161,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                actions: [
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.notifications_outlined,
-                                      color: iconColor,
-                                    ),
-                                    onPressed: () {},
-                                    tooltip: 'Notifications',
-                                  ),
-                                ],
+                                actions: const [],
                                 flexibleSpace: FlexibleSpaceBar(
                                   collapseMode: CollapseMode.parallax,
                                   background: ProfileHeader(
