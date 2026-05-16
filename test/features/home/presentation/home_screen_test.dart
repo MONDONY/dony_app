@@ -125,6 +125,7 @@ Widget _buildHome({
   ActiveRole role = ActiveRole.sender,
   UserModel? user,
   BidState? bidState,
+  NotificationState? notificationState,
 }) {
   final announcementBloc = MockAnnouncementBloc();
   final authBloc = MockAuthBloc();
@@ -139,7 +140,8 @@ Widget _buildHome({
   when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
   when(() => roleCubit.state).thenReturn(role);
   when(() => roleCubit.stream).thenAnswer((_) => const Stream.empty());
-  when(() => notifBloc.state).thenReturn(const NotificationInitial());
+  when(() => notifBloc.state)
+      .thenReturn(notificationState ?? const NotificationInitial());
   when(() => notifBloc.stream).thenAnswer((_) => const Stream.empty());
   when(() => bidBloc.state).thenReturn(bidState ?? BidInitial());
   when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
@@ -280,5 +282,49 @@ void main() {
     // NOTE: skipped — GoogleMap requires platform channel mock. Covered by
     // manual device testing per CLAUDE.md UI rule. Re-enable when a stub for
     // GoogleMapsFlutterPlatform.instance is added to test infra.
+  });
+
+  group('HomeScreen — _NotificationBell', () {
+    testWidgets('shows outlined bell icon when no unread notifications',
+        (tester) async {
+      await tester.pumpWidget(_buildHome(
+        notificationState: const NotificationLoaded(
+          notifications: [],
+          unreadCount: 0,
+        ),
+      ));
+      await tester.pump(const Duration(milliseconds: 1000));
+
+      expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.notifications_rounded), findsNothing);
+    });
+
+    testWidgets('shows filled bell icon and badge count when unread > 0',
+        (tester) async {
+      await tester.pumpWidget(_buildHome(
+        notificationState: const NotificationLoaded(
+          notifications: [],
+          unreadCount: 3,
+        ),
+      ));
+      await tester.pump(const Duration(milliseconds: 1000));
+
+      expect(find.byIcon(Icons.notifications_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.notifications_outlined), findsNothing);
+      expect(find.text('3'), findsOneWidget);
+    });
+
+    testWidgets('shows 99+ badge when unread count exceeds 99',
+        (tester) async {
+      await tester.pumpWidget(_buildHome(
+        notificationState: const NotificationLoaded(
+          notifications: [],
+          unreadCount: 150,
+        ),
+      ));
+      await tester.pump(const Duration(milliseconds: 1000));
+
+      expect(find.text('99+'), findsOneWidget);
+    });
   });
 }
