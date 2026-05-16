@@ -152,4 +152,50 @@ void main() {
       isA<NegotiationLoaded>(),
     ],
   );
+
+  blocTest<NegotiationBloc, NegotiationState>(
+    'refuseTrip depuis Loaded émet ActionInProgress puis Loaded',
+    build: () {
+      when(() => repo.refuseTrip(any(), reason: any(named: 'reason')))
+          .thenAnswer((_) async =>
+              _fakeThread(status: NegotiationThreadStatus.awaitingTrip));
+      return NegotiationBloc(repo);
+    },
+    seed: () => NegotiationLoaded(_fakeThread(
+        status: NegotiationThreadStatus.awaitingPayment)),
+    act: (bloc) => bloc.add(const NegotiationRefuseTripRequested(
+      threadId: 't-1',
+      reason: 'Date trop tard',
+    )),
+    expect: () => [
+      isA<NegotiationActionInProgress>(),
+      isA<NegotiationLoaded>().having(
+        (s) => s.thread.status,
+        'thread.status',
+        NegotiationThreadStatus.awaitingTrip,
+      ),
+    ],
+    verify: (_) {
+      verify(() => repo.refuseTrip('t-1', reason: 'Date trop tard')).called(1);
+    },
+  );
+
+  blocTest<NegotiationBloc, NegotiationState>(
+    'refuseTrip émet Error quand le repository échoue',
+    build: () {
+      when(() => repo.refuseTrip(any(), reason: any(named: 'reason')))
+          .thenThrow(Exception('boom'));
+      return NegotiationBloc(repo);
+    },
+    seed: () => NegotiationLoaded(_fakeThread(
+        status: NegotiationThreadStatus.awaitingPayment)),
+    act: (bloc) => bloc.add(const NegotiationRefuseTripRequested(
+      threadId: 't-1',
+      reason: 'x',
+    )),
+    expect: () => [
+      isA<NegotiationActionInProgress>(),
+      isA<NegotiationError>(),
+    ],
+  );
 }

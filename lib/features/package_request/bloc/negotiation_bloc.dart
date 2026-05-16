@@ -122,6 +122,19 @@ class NegotiationCreateDedicatedTripRequested extends NegotiationEvent {
       ];
 }
 
+/// Sender refuses the trip linked to an AWAITING_PAYMENT thread, with a reason.
+class NegotiationRefuseTripRequested extends NegotiationEvent {
+  const NegotiationRefuseTripRequested({
+    required this.threadId,
+    this.reason,
+  });
+  final String threadId;
+  final String? reason;
+
+  @override
+  List<Object?> get props => [threadId, reason];
+}
+
 /// Sender confirms payment on an AWAITING_PAYMENT thread → finalize as ACCEPTED.
 class NegotiationCheckoutRequested extends NegotiationEvent {
   const NegotiationCheckoutRequested({
@@ -186,6 +199,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     on<NegotiationRejectRequested>(_onReject);
     on<NegotiationSubmitTripRequested>(_onSubmitTrip);
     on<NegotiationCreateDedicatedTripRequested>(_onCreateDedicatedTrip);
+    on<NegotiationRefuseTripRequested>(_onRefuseTrip);
     on<NegotiationCheckoutRequested>(_onCheckout);
   }
 
@@ -297,6 +311,25 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         e.threadId,
         travelerAnnouncementId: e.travelerAnnouncementId,
       );
+      emit(NegotiationLoaded(thread));
+    } catch (err) {
+      emit(NegotiationError(unwrapDioError(err)));
+    }
+  }
+
+  Future<void> _onRefuseTrip(
+    NegotiationRefuseTripRequested e,
+    Emitter<NegotiationState> emit,
+  ) async {
+    final current = state;
+    if (current is NegotiationLoaded) {
+      emit(NegotiationActionInProgress(current.thread));
+    } else {
+      emit(const NegotiationLoading());
+    }
+    try {
+      final thread =
+          await _repository.refuseTrip(e.threadId, reason: e.reason);
       emit(NegotiationLoaded(thread));
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
