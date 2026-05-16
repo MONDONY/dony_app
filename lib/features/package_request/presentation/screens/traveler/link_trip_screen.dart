@@ -54,25 +54,30 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
       final myTrips =
           await getIt<AnnouncementRepository>().getMyAnnouncements();
 
-      // Filter by corridor + agreed travel date.
-      // We use travelerTravelDate (the date the traveler proposed and the sender
-      // accepted) rather than request.desiredDate, which may differ from the
-      // traveler's actual planned departure date.
+      // Filter by corridor + date window.
       //
       // City comparison normalizes both sides to just the city name before the
       // first comma: "Paris, France" and "Paris" both normalize to "paris".
-      // This handles legacy announcements stored with country suffix
-      // ("Paris, France") versus package requests stored without ("Paris").
+      // This handles legacy announcements stored with country suffix.
+      //
+      // Date window: we use desiredDate ± dateToleranceDays, which is exactly
+      // the range the backend accepts in submitTrip. This ensures every trip
+      // shown here will be accepted by the server (no silent 422s).
       String cityKey(String city) => city.split(',').first.toLowerCase().trim();
 
-      final agreedDate = widget.thread.travelerTravelDate;
+      final dateFrom = request.desiredDate
+          .subtract(Duration(days: request.dateToleranceDays));
+      final dateTo = request.desiredDate
+          .add(Duration(days: request.dateToleranceDays));
       final matching = myTrips.announcements.where((ann) {
         final corridorMatch =
             cityKey(ann.departureCity) == cityKey(request.departureCity) &&
             cityKey(ann.arrivalCity) == cityKey(request.arrivalCity);
-        final dateMatch = ann.departureDate.year == agreedDate.year &&
-            ann.departureDate.month == agreedDate.month &&
-            ann.departureDate.day == agreedDate.day;
+        final d = ann.departureDate;
+        final dateMatch = !DateTime(d.year, d.month, d.day)
+                .isBefore(DateTime(dateFrom.year, dateFrom.month, dateFrom.day)) &&
+            !DateTime(d.year, d.month, d.day)
+                .isAfter(DateTime(dateTo.year, dateTo.month, dateTo.day));
         return corridorMatch && dateMatch;
       }).toList();
 
