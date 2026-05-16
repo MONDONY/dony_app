@@ -28,12 +28,12 @@ import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.dart';
+import 'package:dony/features/matching/presentation/widgets/expediteur_card.dart';
 import 'package:dony/features/matching/presentation/widgets/handover_bottom_sheet.dart';
-import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:dony/features/matching/presentation/widgets/sender_profile_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/suivi_button.dart';
-import 'package:dony/features/matching/presentation/widgets/traveler_profile_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/voyageur_card.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
@@ -364,13 +364,13 @@ class _BidDetailViewState extends State<_BidDetailView> {
                                             _bid.status == 'HANDED_OVER' ||
                                             _bid.status == 'IN_TRANSIT' ||
                                             _bid.status == 'COMPLETED')) ...[
-                                      _TravelerCard(bid: _bid),
+                                      VoyageurCard(bid: _bid),
                                       const SizedBox(height: DonySpacing.base),
                                     ],
 
                                     // Sender card (visible to traveler — tappable pour voir le profil)
                                     if (!isSender) ...[
-                                      _SenderCard(
+                                      ExpediteurCard(
                                         bid: _bid,
                                         onTap: () => showSenderProfileSheet(
                                           context,
@@ -580,214 +580,6 @@ class _RatingDoneCard extends StatelessWidget {
   }
 }
 
-// ── Traveler card ─────────────────────────────────────────────────────────────
-
-class _TravelerCard extends StatelessWidget {
-  final BidModel bid;
-  const _TravelerCard({required this.bid});
-
-  TravelerProfile _buildTravelerProfile() => TravelerProfile(
-    id: bid.travelerId ?? '',
-    displayName: bid.travelerName,
-    phoneNumber: bid.travelerPhone,
-    averageRating: bid.travelerAverageRating,
-    totalTrips: bid.travelerTotalTrips,
-    kycVerified: bid.travelerKycVerified,
-    isProAccount: bid.travelerIsProAccount,
-    kiloPro: bid.travelerKiloPro,
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final name = bid.travelerName ?? 'Voyageur';
-    final canOpenProfile = bid.travelerId != null;
-
-    final ratingLabel = bid.travelerAverageRating != null
-        ? '★ ${bid.travelerAverageRating!.toStringAsFixed(1)}'
-        : '★ —';
-    final tripsLabel = bid.travelerTotalTrips != null
-        ? '· ${bid.travelerTotalTrips} trajet${bid.travelerTotalTrips! > 1 ? 's' : ''}'
-        : '';
-
-    return InkWell(
-      onTap: canOpenProfile
-          ? () => showTravelerProfileSheet(context, _buildTravelerProfile())
-          : null,
-      borderRadius: BorderRadius.circular(DonyRadius.card),
-      child: Container(
-        padding: const EdgeInsets.all(DonySpacing.base),
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(color: cs.outline),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'VOYAGEUR',
-              style: tt.labelSmall?.copyWith(
-                color: cs.onSurfaceVariant,
-                letterSpacing: 0.8,
-              ),
-            ),
-            const SizedBox(height: DonySpacing.md),
-            Row(
-              children: [
-                DonyAvatar(
-                  name: name,
-                  size: DonyAvatarSize.md,
-                  verified: bid.travelerKycVerified,
-                  pro: bid.travelerIsProAccount,
-                ),
-                const SizedBox(width: DonySpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Nom + badges
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              name,
-                              overflow: TextOverflow.ellipsis,
-                              style: tt.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                          if (bid.travelerKycVerified) ...[
-                            const SizedBox(width: DonySpacing.xs),
-                            _MiniChip(
-                              label: 'KYC',
-                              color: cs.primary,
-                              bg: cs.primaryContainer,
-                            ),
-                          ],
-                          if (bid.travelerKiloPro) ...[
-                            const SizedBox(width: DonySpacing.xs),
-                            const _MiniChip(
-                              label: 'Kilo Pro',
-                              color: DonyColors.amberDark,
-                              bg: DonyColors.amberLight,
-                            ),
-                          ],
-                        ],
-                      ),
-                      // Note + trajets
-                      Text(
-                        '$ratingLabel $tripsLabel'.trim(),
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Actions
-                _IconActionButton(icon: Icons.phone_rounded, onTap: () {}),
-                const SizedBox(width: DonySpacing.sm),
-                BlocBuilder<ConversationOpenBloc, ConversationOpenState>(
-                  builder: (context, openState) {
-                    final isOpening = openState is ConversationOpenLoading;
-                    return _IconActionButton(
-                      icon: Icons.chat_bubble_outline_rounded,
-                      isLoading: isOpening,
-                      onTap: isOpening
-                          ? null
-                          : () => context.read<ConversationOpenBloc>().add(
-                              ConversationOpenRequested(bid.id),
-                            ),
-                    );
-                  },
-                ),
-                if (canOpenProfile) ...[
-                  const SizedBox(width: DonySpacing.xs),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: cs.onSurfaceVariant,
-                    size: 18,
-                  ),
-                ],
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Mini chip (badge compact dans les cards) ───────────────────────────────────
-
-class _MiniChip extends StatelessWidget {
-  final String label;
-  final Color color;
-  final Color bg;
-  const _MiniChip({required this.label, required this.color, required this.bg});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.sm,
-        vertical: DonySpacing.xxs,
-      ),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(DonyRadius.full),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}
-
-class _IconActionButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback? onTap;
-  final bool isLoading;
-
-  const _IconActionButton({
-    required this.icon,
-    required this.onTap,
-    this.isLoading = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(DonyRadius.full),
-          border: Border.all(color: cs.primary),
-        ),
-        child: isLoading
-            ? Padding(
-                padding: const EdgeInsets.all(10),
-                child: CircularProgressIndicator(
-                  color: cs.primary,
-                  strokeWidth: 2,
-                ),
-              )
-            : Icon(icon, color: cs.primary, size: 18),
-      ),
-    );
-  }
-}
-
 // ── Payment release row ───────────────────────────────────────────────────────
 
 class _PaymentReleaseCard extends StatelessWidget {
@@ -856,122 +648,6 @@ class _PaymentReleaseCard extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ── Existing cards (preserved, design-token-ified) ───────────────────────────
-
-class _SenderCard extends StatelessWidget {
-  final BidModel bid;
-  final VoidCallback? onTap;
-  const _SenderCard({required this.bid, this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(DonyRadius.card),
-      child: _Card(
-        title: 'Expéditeur',
-        child: Row(
-          children: [
-            DonyAvatar(
-              name: bid.resolvedSenderName,
-              size: DonyAvatarSize.md,
-              verified: bid.senderKycVerified,
-              pro: bid.senderIsProAccount,
-            ),
-            const SizedBox(width: DonySpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Nom + badges
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          bid.resolvedSenderName,
-                          overflow: TextOverflow.ellipsis,
-                          style: tt.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: cs.onSurface,
-                          ),
-                        ),
-                      ),
-                      if (bid.senderKycVerified) ...[
-                        const SizedBox(width: DonySpacing.xs),
-                        _MiniChip(
-                          label: 'KYC',
-                          color: cs.primary,
-                          bg: cs.primaryContainer,
-                        ),
-                      ],
-                      if (bid.senderKiloPro) ...[
-                        const SizedBox(width: DonySpacing.xs),
-                        const _MiniChip(
-                          label: 'Kilo Pro',
-                          color: DonyColors.amberDark,
-                          bg: DonyColors.amberLight,
-                        ),
-                      ],
-                    ],
-                  ),
-                  if (bid.senderPhone != null)
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.phone_rounded,
-                          size: 12,
-                          color: cs.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: DonySpacing.xs),
-                        Text(
-                          bid.senderPhone!,
-                          style: tt.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  if (bid.senderTotalShipments != null)
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.local_shipping_rounded,
-                          size: 12,
-                          color: cs.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: DonySpacing.xs),
-                        Text(
-                          '${bid.senderTotalShipments} envoi${(bid.senderTotalShipments ?? 0) > 1 ? 's' : ''}',
-                          style: tt.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  Text(
-                    'Soumis le ${DateFormat('dd/MM/yyyy').format(bid.createdAt.toLocal())}',
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                ],
-              ),
-            ),
-            if (onTap != null) ...[
-              const SizedBox(width: DonySpacing.xs),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: cs.onSurfaceVariant,
-                size: 20,
-              ),
-            ],
-          ],
-        ),
       ),
     );
   }
