@@ -332,5 +332,61 @@ void main() {
 
       verify(() => bloc.add(const NegotiationFetchRequested('t-1'))).called(1);
     });
+
+    testWidgets(
+        'message REJECT dans un thread expiré → bulle REJETÉE, pas bandeau',
+        (tester) async {
+      final thread = NegotiationThread(
+        id: 't-1',
+        packageRequestId: 'pr-1',
+        travelerId: 'tr-1',
+        travelerTravelDate: DateTime(2026, 6, 15),
+        travelerAvailableKg: 10,
+        status: NegotiationThreadStatus.expired,
+        currentPriceEur: 40,
+        roundsCount: 2,
+        lastActivityAt: DateTime(2026, 5, 10),
+        createdAt: DateTime(2026, 5, 10),
+        messages: [
+          NegotiationMessage(
+            id: 'm-1',
+            threadId: 't-1',
+            fromUserId: 'sender-1',
+            kind: NegotiationMessageKind.reject,
+            body: 'Trop tard',
+            createdAt: DateTime(2026, 5, 10, 10),
+          ),
+        ],
+      );
+      when(() => bloc.state).thenReturn(NegotiationLoaded(thread));
+      await tester.pumpWidget(wrap(viewerUserId: 'tr-1'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('REJETÉE'), findsOneWidget);
+      expect(find.text('Trajet refusé par l\'expéditeur'), findsNothing);
+    });
+
+    testWidgets(
+        'hero card non cliquable si linkedTrip absent au statut '
+        'AWAITING_PAYMENT', (tester) async {
+      final thread = NegotiationThread(
+        id: 't-1',
+        packageRequestId: 'pr-1',
+        travelerId: 'tr-1',
+        travelerTravelDate: DateTime(2026, 6, 15),
+        travelerAvailableKg: 10,
+        status: NegotiationThreadStatus.awaitingPayment,
+        currentPriceEur: 68,
+        roundsCount: 3,
+        lastActivityAt: DateTime(2026, 5, 10),
+        createdAt: DateTime(2026, 5, 10),
+        messages: const [],
+      );
+      when(() => bloc.state).thenReturn(NegotiationLoaded(thread));
+      await tester.pumpWidget(wrap(viewerUserId: 'sender-1'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Voir le trajet lié'), findsNothing);
+    });
   });
 }

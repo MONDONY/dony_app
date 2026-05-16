@@ -263,7 +263,8 @@ class _LoadedView extends StatelessWidget {
                     m.kind == NegotiationMessageKind.reject &&
                         thread.status != NegotiationThreadStatus.rejected &&
                         thread.status !=
-                            NegotiationThreadStatus.autoRejected;
+                            NegotiationThreadStatus.autoRejected &&
+                        thread.status != NegotiationThreadStatus.expired;
                 return ThreadMessageBubble(
                   message: m,
                   mine: mine,
