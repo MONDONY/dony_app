@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
+import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -64,7 +65,7 @@ class _RefuseTripConfirmSheetState extends State<_RefuseTripConfirmSheet> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.warning_amber_rounded, color: kError, size: 20),
+              Icon(Icons.warning_amber_rounded, color: kError, size: 20),
               const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: Text(
@@ -103,11 +104,11 @@ class _RefuseTripConfirmSheetState extends State<_RefuseTripConfirmSheet> {
             filled: true,
             fillColor: cs.surfaceContainerHighest,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(DonyRadius.input),
+              borderRadius: BorderRadius.circular(DonyRadius.md),
               borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(DonyRadius.input),
+              borderRadius: BorderRadius.circular(DonyRadius.md),
               borderSide: BorderSide(color: cs.primary, width: 1.5),
             ),
             contentPadding: const EdgeInsets.all(DonySpacing.md),

@@ -169,7 +169,7 @@ void main() {
     blocTest<NegotiationBloc, NegotiationState>(
       'emits [ActionInProgress, Loaded] on success when state is Loaded',
       build: () {
-        when(() => repo.refuseTrip('t-1')).thenAnswer(
+        when(() => repo.refuseTrip('t-1', reason: any(named: 'reason'))).thenAnswer(
           (_) async => _fakeThread(status: NegotiationThreadStatus.awaitingTrip),
         );
         return NegotiationBloc(repo);
@@ -197,7 +197,7 @@ void main() {
     blocTest<NegotiationBloc, NegotiationState>(
       'emits [Loading, Loaded] on success when initial state is not Loaded',
       build: () {
-        when(() => repo.refuseTrip('t-1')).thenAnswer(
+        when(() => repo.refuseTrip('t-1', reason: any(named: 'reason'))).thenAnswer(
           (_) async => _fakeThread(status: NegotiationThreadStatus.awaitingTrip),
         );
         return NegotiationBloc(repo);
@@ -217,7 +217,7 @@ void main() {
     blocTest<NegotiationBloc, NegotiationState>(
       'emits [ActionInProgress, Error] when refuseTrip throws',
       build: () {
-        when(() => repo.refuseTrip(any()))
+        when(() => repo.refuseTrip(any(), reason: any(named: 'reason')))
             .thenThrow(Exception('server error'));
         return NegotiationBloc(repo);
       },
