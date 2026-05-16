@@ -1,3 +1,4 @@
+import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:equatable/equatable.dart';
 
@@ -41,6 +42,7 @@ class NegotiationThread extends Equatable {
     this.departureCity,
     this.arrivalCity,
     this.weightKg,
+    this.linkedTrip,
   });
 
   final String id;
@@ -66,6 +68,10 @@ class NegotiationThread extends Equatable {
   final String? arrivalCity;
   final double? weightKg;
 
+  /// Détails du trajet lié — non null uniquement quand le voyageur a lié un
+  /// trajet (statuts AWAITING_PAYMENT / ACCEPTED).
+  final LinkedTripSummary? linkedTrip;
+
   factory NegotiationThread.fromJson(Map<String, dynamic> json) => NegotiationThread(
         id: json['id'] as String,
         packageRequestId: json['packageRequestId'] as String,
@@ -90,6 +96,10 @@ class NegotiationThread extends Equatable {
         departureCity: json['departureCity'] as String?,
         arrivalCity: json['arrivalCity'] as String?,
         weightKg: (json['weightKg'] as num?)?.toDouble(),
+        linkedTrip: json['linkedTrip'] == null
+            ? null
+            : LinkedTripSummary.fromJson(
+                json['linkedTrip'] as Map<String, dynamic>),
       );
 
   @override
@@ -99,6 +109,6 @@ class NegotiationThread extends Equatable {
         status, currentPriceEur, roundsCount, lastActivityAt, createdAt,
         messages, paymentIntentClientSecret,
         travelerName, travelerRating, travelerTripsCount, travelerPhotoUrl,
-        departureCity, arrivalCity, weightKg,
+        departureCity, arrivalCity, weightKg, linkedTrip,
       ];
 }

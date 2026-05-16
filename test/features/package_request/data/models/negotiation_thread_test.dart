@@ -100,4 +100,27 @@ void main() {
     );
     expect(t.status, NegotiationThreadStatus.rejected);
   });
+
+  test('NegotiationThread.fromJson parse linkedTrip quand présent', () {
+    final t = NegotiationThread.fromJson(_baseJson(overrides: {
+      'linkedTrip': {
+        'announcementId': 'ann-1',
+        'departureCity': 'Paris',
+        'arrivalCity': 'Dakar',
+        'departureDate': '2026-06-12',
+        'transportMode': 'PLANE',
+        'availableKg': 18,
+      },
+    }));
+
+    expect(t.linkedTrip, isNotNull);
+    expect(t.linkedTrip!.announcementId, 'ann-1');
+    expect(t.linkedTrip!.departureCity, 'Paris');
+    expect(t.linkedTrip!.transportMode, 'PLANE');
+  });
+
+  test('NegotiationThread.fromJson retourne linkedTrip null si absent', () {
+    final t = NegotiationThread.fromJson(_baseJson());
+    expect(t.linkedTrip, isNull);
+  });
 }
