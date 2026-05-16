@@ -4,21 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
-Future<GoRouter> _pump(
-  WidgetTester tester,
-  TalonTravelerAction action, {
-  String? travelerName,
-}) async {
+Future<GoRouter> _pump(WidgetTester tester, TalonTravelerAction action) async {
   final router = GoRouter(
     routes: [
       GoRoute(
         path: '/',
         builder: (context, state) => Scaffold(
-          body: TalonTravelerActionView(
-            bidId: 'bid-1',
-            action: action,
-            travelerName: travelerName,
-          ),
+          body: TalonTravelerActionView(bidId: 'bid-1', action: action),
         ),
       ),
       GoRoute(
@@ -46,11 +38,7 @@ void main() {
   testWidgets('mode confirmDelivery → bouton "Confirmer la livraison"', (
     tester,
   ) async {
-    await _pump(
-      tester,
-      TalonTravelerAction.confirmDelivery,
-      travelerName: 'Abou D.',
-    );
+    await _pump(tester, TalonTravelerAction.confirmDelivery);
     expect(find.text('Confirmer la livraison'), findsOneWidget);
   });
 
@@ -64,11 +52,7 @@ void main() {
   testWidgets('tap confirmDelivery → navigue vers /tracking/confirm', (
     tester,
   ) async {
-    await _pump(
-      tester,
-      TalonTravelerAction.confirmDelivery,
-      travelerName: 'Abou D.',
-    );
+    await _pump(tester, TalonTravelerAction.confirmDelivery);
     await tester.tap(find.text('Confirmer la livraison'));
     await tester.pumpAndSettle();
     expect(find.text('RECEPTION'), findsOneWidget);

@@ -258,13 +258,10 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/tracking/confirm',
-      builder: (context, state) {
-        final extra = state.extra as Map<String, String>;
-        return ReceptionConfirmScreen(
-          bidId: extra['bidId']!,
-          travelerName: extra['travelerName']!,
-        );
-      },
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<TrackingBloc>(),
+        child: ReceptionConfirmScreen(bidId: state.extra! as String),
+      ),
     ),
     GoRoute(
       path: '/payment/confirm',

@@ -7,19 +7,16 @@ enum TalonTravelerAction { scan, confirmDelivery }
 /// Talon voyageur actionnable : scan de prise en charge / confirmation
 /// de livraison.
 /// - [TalonTravelerAction.scan] → `/tracking/scan` (scanner QR)
-/// - [TalonTravelerAction.confirmDelivery] → `/tracking/confirm` (saisie code 6 chiffres)
+/// - [TalonTravelerAction.confirmDelivery] → `/tracking/confirm` (saisie du
+///   code de retrait à 6 chiffres)
 class TalonTravelerActionView extends StatelessWidget {
   final String bidId;
   final TalonTravelerAction action;
-
-  /// Nom du voyageur, requis uniquement pour le mode [TalonTravelerAction.confirmDelivery].
-  final String? travelerName;
 
   const TalonTravelerActionView({
     super.key,
     required this.bidId,
     required this.action,
-    this.travelerName,
   });
 
   @override
@@ -64,10 +61,7 @@ class TalonTravelerActionView extends StatelessWidget {
             TalonTravelerAction.scan => () => context.push('/tracking/scan'),
             TalonTravelerAction.confirmDelivery => () => context.push(
               '/tracking/confirm',
-              extra: <String, String>{
-                'bidId': bidId,
-                'travelerName': travelerName ?? 'Voyageur',
-              },
+              extra: bidId,
             ),
           },
         ),

@@ -1,117 +1,89 @@
+import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
-import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
+import 'package:dony/features/tracking/bloc/tracking_event.dart';
+import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/presentation/screens/reception_confirm_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:pinput/pinput.dart';
 
-GoRouter _buildRouter({String bidId = 'bid-001', String travelerName = 'Ibrahima'}) {
-  return GoRouter(
-    routes: [
-      GoRoute(
-        path: '/',
-        builder: (_, __) => ReceptionConfirmScreen(
-          bidId: bidId,
-          travelerName: travelerName,
-        ),
-      ),
-      GoRoute(
-        path: '/bids/:bidId',
-        builder: (_, __) => const Scaffold(body: Text('bid detail')),
-      ),
-    ],
-  );
-}
-
-Future<void> _pump(WidgetTester tester, {String travelerName = 'Ibrahima'}) async {
-  await tester.pumpWidget(MaterialApp.router(
-    theme: AppTheme.light,
-    routerConfig: _buildRouter(travelerName: travelerName),
-  ));
-  await tester.pump(const Duration(milliseconds: 900)); // drain mascotte confiant animation
-}
+class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
+    implements TrackingBloc {}
 
 void main() {
+  setUpAll(() {
+    registerFallbackValue(
+      ConfirmDeliveryRequested(bidId: 'fallback', code: '000000'),
+    );
+  });
+
+  late _MockTrackingBloc bloc;
+
+  setUp(() {
+    bloc = _MockTrackingBloc();
+    when(() => bloc.state).thenReturn(TrackingInitial());
+    when(
+      () => bloc.stream,
+    ).thenAnswer((_) => const Stream<TrackingState>.empty());
+  });
+
+  Future<void> pump(WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: BlocProvider<TrackingBloc>.value(
+          value: bloc,
+          child: const ReceptionConfirmScreen(bidId: 'bid-1'),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 900)); // anim mascotte
+  }
+
   group('ReceptionConfirmScreen', () {
-    testWidgets('shows Confirmer la réception title', (tester) async {
-      await _pump(tester);
-      // Both the Caveat title and the CTA button share this text
-      expect(find.text('Confirmer la réception'), findsWidgets);
-    });
-
-    testWidgets('shows traveler name in subtitle', (tester) async {
-      await _pump(tester, travelerName: 'Fatou');
-      expect(find.textContaining('Fatou'), findsWidgets);
-    });
-
-    testWidgets('shows both tab options', (tester) async {
-      await _pump(tester);
-      expect(find.text('Scanner le QR'), findsOneWidget);
-      expect(find.text('Taper le code'), findsOneWidget);
-    });
-
-    testWidgets('defaults to code tab showing OPTION 2 · CODE', (tester) async {
-      await _pump(tester);
-      expect(find.text('OPTION 2 · CODE'), findsOneWidget);
-    });
-
-    testWidgets('CTA is disabled when code is empty', (tester) async {
-      await _pump(tester);
-      final filledBtn = tester.widget<InkWell>(
-        find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)),
+    testWidgets('affiche le bouton de confirmation', (tester) async {
+      await pump(tester);
+      expect(
+        find.widgetWithText(DonyButton, 'Confirmer la livraison'),
+        findsOneWidget,
       );
-      expect(filledBtn.onTap, isNull);
     });
 
-    testWidgets('CTA is enabled after entering 6-digit code', (tester) async {
-      await _pump(tester);
-
-      final pinput = find.byType(Pinput);
-      await tester.enterText(pinput, '472135');
-      await tester.pump();
-
-      final filledBtn = tester.widget<InkWell>(
-        find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)),
-      );
-      expect(filledBtn.onTap, isNotNull);
-    });
-
-    testWidgets('CTA remains disabled with fewer than 6 digits', (tester) async {
-      await _pump(tester);
-
+    testWidgets('moins de 6 chiffres → aucune confirmation dispatchée', (
+      tester,
+    ) async {
+      await pump(tester);
       await tester.enterText(find.byType(Pinput), '4721');
       await tester.pump();
-
-      final filledBtn = tester.widget<InkWell>(
-        find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)),
+      await tester.tap(
+        find.widgetWithText(DonyButton, 'Confirmer la livraison'),
       );
-      expect(filledBtn.onTap, isNull);
-    });
-
-    testWidgets('timer shows initial countdown', (tester) async {
-      await _pump(tester);
-      // "15:00" is the initial display matching _kInitialSeconds = 900 (15 min)
-      expect(find.textContaining('15:00'), findsOneWidget);
-    });
-
-    testWidgets('timer decrements after 1 second', (tester) async {
-      await _pump(tester);
-      await tester.pump(const Duration(seconds: 1));
-      expect(find.textContaining('14:59'), findsOneWidget);
-    });
-
-    testWidgets('switching to QR tab hides code input', (tester) async {
-      await _pump(tester);
-      await tester.tap(find.text('Scanner le QR'));
       await tester.pump();
-      expect(find.text('OPTION 2 · CODE'), findsNothing);
-      expect(find.text('Scanner le QR code'), findsOneWidget);
+      verifyNever(() => bloc.add(any()));
     });
 
-    testWidgets('legal note mentions traveler name', (tester) async {
-      await _pump(tester, travelerName: 'Ibrahima');
-      expect(find.textContaining('Ibrahima'), findsWidgets);
-    });
+    testWidgets(
+      'code à 6 chiffres + confirmation → dispatche ConfirmDeliveryRequested',
+      (tester) async {
+        await pump(tester);
+        await tester.enterText(find.byType(Pinput), '472913');
+        await tester.pump();
+        await tester.tap(
+          find.widgetWithText(DonyButton, 'Confirmer la livraison'),
+        );
+        await tester.pump();
+
+        final events = verify(
+          () => bloc.add(captureAny()),
+        ).captured.whereType<ConfirmDeliveryRequested>().toList();
+        expect(events, isNotEmpty);
+        expect(events.first.bidId, 'bid-1');
+        expect(events.first.code, '472913');
+      },
+    );
   });
 }
