@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -320,5 +321,121 @@ void main() {
     final sw = tester
         .widget<Switch>(find.byKey(const Key('modify-trip-cash-switch')));
     expect(sw.value, isFalse);
+  });
+
+  testWidgets(
+      'retour du détour avec carte valide active le toggle liquide',
+      (tester) async {
+    final controller = StreamController<CommissionMethodState>.broadcast();
+    addTearDown(controller.close);
+    whenListen(commissionBloc, controller.stream,
+        initialState: CommissionMethodNotConfigured());
+    await _open(tester, _trip());
+
+    // Ouvrir le détour (pas de carte → navigue vers la config).
+    await tester
+        .ensureVisible(find.byKey(const Key('modify-trip-cash-switch')));
+    await tester.tap(find.byKey(const Key('modify-trip-cash-switch')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('retour-stub')), findsOneWidget);
+
+    // Retour du détour — AVEC une carte valide configurée.
+    await tester.tap(find.byKey(const Key('retour-stub')));
+    await tester.pumpAndSettle();
+    controller.add(CommissionMethodLoaded(_validCard));
+    await tester.pumpAndSettle();
+
+    await tester
+        .ensureVisible(find.byKey(const Key('modify-trip-cash-switch')));
+    final sw = tester
+        .widget<Switch>(find.byKey(const Key('modify-trip-cash-switch')));
+    expect(sw.value, isTrue);
+  });
+
+  testWidgets(
+      'Enregistrer dispatche AnnouncementUpdateRequested avec capacité et '
+      'méthodes de paiement', (tester) async {
+    when(() => commissionBloc.state)
+        .thenReturn(CommissionMethodLoaded(_validCard));
+    when(() => announcementBloc.add(any())).thenReturn(null);
+    await _open(tester, _trip(availableKg: 10));
+
+    // Capacité 10 → 12
+    await tester
+        .ensureVisible(find.byKey(const Key('capacity-increment')));
+    await tester.tap(find.byKey(const Key('capacity-increment')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('capacity-increment')));
+    await tester.pump();
+    // Activer le liquide
+    await tester
+        .ensureVisible(find.byKey(const Key('modify-trip-cash-switch')));
+    await tester.tap(find.byKey(const Key('modify-trip-cash-switch')));
+    await tester.pump();
+
+    await tester.tap(find.byKey(const Key('modify-trip-submit')));
+    await tester.pump();
+
+    verify(() => announcementBloc.add(any(
+          that: predicate<AnnouncementEvent>(
+            (e) =>
+                e is AnnouncementUpdateRequested &&
+                e.id == 'ann-1' &&
+                e.availableKg == 12 &&
+                e.acceptedPaymentMethods.contains('STRIPE') &&
+                e.acceptedPaymentMethods.contains('CASH'),
+            'AnnouncementUpdateRequested capacité=12 STRIPE+CASH',
+          ),
+        ))).called(1);
+  });
+
+  testWidgets('AnnouncementUpdated ferme le sheet', (tester) async {
+    final controller = StreamController<AnnouncementState>.broadcast();
+    addTearDown(controller.close);
+    whenListen(
+      announcementBloc,
+      controller.stream,
+      initialState: AnnouncementInitial(),
+    );
+    when(() => announcementBloc.add(any())).thenReturn(null);
+    await _open(tester, _trip());
+    expect(find.text('Modifier le trajet'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('modify-trip-submit')));
+    await tester.pump();
+
+    // Simuler la séquence de réponse du BLoC après le dispatch.
+    controller.add(AnnouncementLoading());
+    await tester.pump();
+    controller.add(AnnouncementUpdated(_trip()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Modifier le trajet'), findsNothing);
+  });
+
+  testWidgets('AnnouncementError garde le sheet ouvert', (tester) async {
+    final controller = StreamController<AnnouncementState>.broadcast();
+    addTearDown(controller.close);
+    whenListen(
+      announcementBloc,
+      controller.stream,
+      initialState: AnnouncementInitial(),
+    );
+    when(() => announcementBloc.add(any())).thenReturn(null);
+    await _open(tester, _trip());
+
+    await tester.tap(find.byKey(const Key('modify-trip-submit')));
+    await tester.pump();
+
+    // Simuler la séquence de réponse du BLoC après le dispatch.
+    controller.add(AnnouncementLoading());
+    await tester.pump();
+    controller.add(AnnouncementError(const ConflictException(
+      'Modification impossible : des colis sont déjà acceptés',
+      code: 'announcement-update-blocked',
+    )));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Modifier le trajet'), findsOneWidget);
   });
 }

@@ -1,6 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -105,8 +107,28 @@ class _ModifyTripContentState extends State<_ModifyTripContent> {
     super.dispose();
   }
 
-  // Implémenté en Task 2.
-  void _submit() {}
+  void _submit() {
+    final a = _a;
+    final paymentMethods = ['STRIPE', if (_cashEnabled.value) 'CASH'];
+    context.read<AnnouncementBloc>().add(AnnouncementUpdateRequested(
+          id: a.id,
+          departureCity: a.departureCity,
+          arrivalCity: a.arrivalCity,
+          departureDate: a.departureDate,
+          departureTime: a.departureTime,
+          arrivalTime: a.arrivalTime,
+          // Précondition garantie par le point d'entrée : adresses non-null.
+          pickupAddress: a.pickupAddress!,
+          deliveryAddress: a.deliveryAddress!,
+          availableKg: _capacity.value,
+          pricePerKg: a.pricePerKg,
+          transportMode: a.transportMode ?? TransportMode.plane,
+          description: a.description,
+          acceptedContentTypes: a.acceptedContentTypes ?? const [],
+          refusedTypes: a.refusedTypes ?? const [],
+          acceptedPaymentMethods: paymentMethods,
+        ));
+  }
 
   bool _hasValidCard(CommissionMethodState st) =>
       st is CommissionMethodLoaded &&
@@ -134,36 +156,45 @@ class _ModifyTripContentState extends State<_ModifyTripContent> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<CommissionMethodBloc, CommissionMethodState>(
-      listener: (ctx, st) {
-        // Retour du détour carte commission. On ignore l'état transitoire de
-        // chargement ; dès qu'un état réglé arrive, on consomme l'intention —
-        // qu'une carte valide ait été configurée ou non. Sans ce reset, un
-        // détour annulé laisserait le flag actif et activerait le liquide à
-        // tort sur un état ultérieur.
-        if (!_awaitingCardSetup || st is CommissionMethodLoading) {
-          return;
-        }
-        _awaitingCardSetup = false;
-        if (_hasValidCard(st)) {
-          _cashEnabled.value = true;
+    return BlocListener<AnnouncementBloc, AnnouncementState>(
+      listener: (ctx, state) {
+        if (state is AnnouncementUpdated) {
+          Navigator.of(ctx, rootNavigator: true).pop(true);
+        } else if (state is AnnouncementError) {
+          ErrorPresenter.show(ctx, state.error);
         }
       },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _LockedInfoBlock(announcement: _a),
-          const SizedBox(height: DonySpacing.lg),
-          if ((_a.bidsCount ?? 0) > 0) ...[
-            const _OffersWarningBanner(),
+      child: BlocListener<CommissionMethodBloc, CommissionMethodState>(
+        listener: (ctx, st) {
+          // Retour du détour carte commission. On ignore l'état transitoire de
+          // chargement ; dès qu'un état réglé arrive, on consomme l'intention —
+          // qu'une carte valide ait été configurée ou non. Sans ce reset, un
+          // détour annulé laisserait le flag actif et activerait le liquide à
+          // tort sur un état ultérieur.
+          if (!_awaitingCardSetup || st is CommissionMethodLoading) {
+            return;
+          }
+          _awaitingCardSetup = false;
+          if (_hasValidCard(st)) {
+            _cashEnabled.value = true;
+          }
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _LockedInfoBlock(announcement: _a),
             const SizedBox(height: DonySpacing.lg),
+            if ((_a.bidsCount ?? 0) > 0) ...[
+              const _OffersWarningBanner(),
+              const SizedBox(height: DonySpacing.lg),
+            ],
+            _ModifiableBlock(
+              capacity: _capacity,
+              cashEnabled: _cashEnabled,
+              onCashToggled: _onCashToggled,
+            ),
           ],
-          _ModifiableBlock(
-            capacity: _capacity,
-            cashEnabled: _cashEnabled,
-            onCashToggled: _onCashToggled,
-          ),
-        ],
+        ),
       ),
     );
   }
