@@ -150,7 +150,7 @@ class _RecipientEditScreenState extends State<RecipientEditScreen> {
                 : 'Destinataire ajouté',
             type: DonySnackbarType.success,
           );
-          context.pop();
+          context.pop(true);
         }
         if (state.status == RecipientStatus.error && state.error != null) {
           DonySnackbar.show(

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/models/recipient.dart';
@@ -20,7 +18,12 @@ class RecipientsScreen extends StatelessWidget {
         IconButton(
           icon: const Icon(Icons.add_rounded),
           tooltip: 'Ajouter un destinataire',
-          onPressed: () => context.push('/profile/recipients/new'),
+          onPressed: () async {
+            final changed = await context.push<bool>('/profile/recipients/new');
+            if ((changed ?? false) && context.mounted) {
+              context.read<RecipientBloc>().add(const RecipientLoaded());
+            }
+          },
         ),
       ],
       body: BlocBuilder<RecipientBloc, RecipientState>(
@@ -51,7 +54,12 @@ class RecipientsScreen extends StatelessWidget {
               description:
                   'Ajoute tes proches en Afrique pour envoyer en 1 tap.',
               actionLabel: 'Ajouter mon premier destinataire',
-              onAction: () => context.push('/profile/recipients/new'),
+              onAction: () async {
+                final changed = await context.push<bool>('/profile/recipients/new');
+                if ((changed ?? false) && context.mounted) {
+                  context.read<RecipientBloc>().add(const RecipientLoaded());
+                }
+              },
             );
           }
           return ListView.separated(
@@ -100,7 +108,12 @@ class _RecipientCard extends StatelessWidget {
         border: Border.all(color: cs.outline),
       ),
       child: InkWell(
-        onTap: () => context.push('/profile/recipients/${recipient.id}'),
+        onTap: () async {
+          final changed = await context.push<bool>('/profile/recipients/${recipient.id}');
+          if ((changed ?? false) && context.mounted) {
+            context.read<RecipientBloc>().add(const RecipientLoaded());
+          }
+        },
         borderRadius: BorderRadius.circular(DonyRadius.card),
         child: Padding(
           padding: const EdgeInsets.all(DonySpacing.base),
@@ -194,7 +207,10 @@ class _KebabMenu extends StatelessWidget {
       onSelected: (action) async {
         switch (action) {
           case _RecipientAction.edit:
-            unawaited(context.push('/profile/recipients/${recipient.id}'));
+            final changed = await context.push<bool>('/profile/recipients/${recipient.id}');
+            if ((changed ?? false) && context.mounted) {
+              context.read<RecipientBloc>().add(const RecipientLoaded());
+            }
           case _RecipientAction.delete:
             final confirmed = await DonyDialog.show(
               context,

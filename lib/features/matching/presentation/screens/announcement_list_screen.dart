@@ -110,7 +110,12 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
         heroTag: null,
         backgroundColor: cs.primary,
         elevation: 2,
-        onPressed: () => CreateAnnouncementBottomSheet.show(context),
+        onPressed: () async {
+          await CreateAnnouncementBottomSheet.show(context);
+          if (context.mounted) {
+            context.read<AnnouncementBloc>().add(AnnouncementListRequested());
+          }
+        },
         child: Icon(Icons.add_rounded, color: cs.onPrimary),
       ),
       body: BlocConsumer<AnnouncementBloc, AnnouncementState>(
