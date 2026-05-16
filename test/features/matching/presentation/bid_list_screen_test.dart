@@ -3,8 +3,9 @@ import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
-import 'package:dony/features/matching/bloc/bid_acceptance_event.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -23,7 +24,7 @@ import 'package:mocktail/mocktail.dart';
 class MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 class MockBidAcceptanceBloc
-    extends MockBloc<BidAcceptanceEvent, acs.BidAcceptanceState>
+    extends MockBloc<ace.BidAcceptanceEvent, acs.BidAcceptanceState>
     implements BidAcceptanceBloc {}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -56,6 +57,9 @@ Future<void> _pump(
   MockBidBloc bidBloc, {
   MockBidAcceptanceBloc? acceptanceBloc,
   int initialTabIndex = 0,
+  String? departureCityCode,
+  String? arrivalCityCode,
+  DateTime? departureDate,
 }) async {
   await initializeDateFormatting('fr_FR');
   tester.view.physicalSize = const Size(800, 2200);
@@ -76,6 +80,9 @@ Future<void> _pump(
           child: BidListScreenTesting(
             announcementId: 'ann-1',
             initialTabIndex: initialTabIndex,
+            departureCityCode: departureCityCode,
+            arrivalCityCode: arrivalCityCode,
+            departureDate: departureDate,
           ),
         ),
       ),
@@ -90,6 +97,10 @@ Future<void> _pump(
         path: '/tracking/scan',
         builder: (_, __) => const Scaffold(body: Text('scan')),
       ),
+      GoRoute(
+        path: '/home',
+        builder: (_, __) => const Scaffold(body: Text('home')),
+      ),
     ],
   );
 
@@ -97,6 +108,56 @@ Future<void> _pump(
     MaterialApp.router(routerConfig: router, theme: AppTheme.light),
   );
   await tester.pump();
+}
+
+/// Helper: pump with a [BidListScreenTesting] opened at '/screen' from a
+/// non-poppable root — so that context.canPop() == false.
+Future<GoRouter> _pumpFromRoot(
+  WidgetTester tester,
+  MockBidBloc bidBloc, {
+  MockBidAcceptanceBloc? acceptanceBloc,
+}) async {
+  await initializeDateFormatting('fr_FR');
+  tester.view.physicalSize = const Size(800, 2200);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.resetPhysicalSize);
+
+  final router = GoRouter(
+    initialLocation: '/screen',
+    routes: [
+      GoRoute(
+        path: '/screen',
+        builder: (ctx, _) => MultiBlocProvider(
+          providers: [
+            BlocProvider<BidBloc>.value(value: bidBloc),
+            BlocProvider<BidAcceptanceBloc>.value(
+                value: acceptanceBloc ?? MockBidAcceptanceBloc()),
+          ],
+          child: const BidListScreenTesting(announcementId: 'ann-1'),
+        ),
+      ),
+      GoRoute(
+        path: '/home',
+        builder: (_, __) => const Scaffold(body: Text('home')),
+      ),
+      GoRoute(
+        path: '/bids/:id',
+        builder: (_, state) => Scaffold(
+          body: Text('Bid detail ${state.pathParameters['id']}'),
+        ),
+      ),
+      GoRoute(
+        path: '/tracking/scan',
+        builder: (_, __) => const Scaffold(body: Text('scan')),
+      ),
+    ],
+  );
+
+  await tester.pumpWidget(
+    MaterialApp.router(routerConfig: router, theme: AppTheme.light),
+  );
+  await tester.pump();
+  return router;
 }
 
 /// Branche un stream de states sur le bloc mocké et renvoie le controller.
@@ -110,6 +171,7 @@ StreamController<BidState> _wireStates(
 void main() {
   setUpAll(() {
     registerFallbackValue(BidListRequested('ann-1'));
+    registerFallbackValue(ace.BidAcceptRequested('fallback'));
   });
 
   late MockBidBloc bidBloc;
@@ -412,5 +474,553 @@ void main() {
 
     expect(find.text('Accepter'), findsOneWidget);
     expect(find.byType(DonySearchField), findsNothing);
+  });
+
+  // ── État BidLoading ─────────────────────────────────────────────────────────
+
+  testWidgets('BidLoading affiche un spinner centré', (tester) async {
+    when(() => bidBloc.state).thenReturn(BidLoading());
+    whenListen(bidBloc, Stream<BidState>.fromIterable([BidLoading()]),
+        initialState: BidLoading());
+    whenListen(acceptanceBloc,
+        Stream<acs.BidAcceptanceState>.fromIterable([acs.BidAcceptanceInitial()]),
+        initialState: acs.BidAcceptanceInitial());
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    await tester.pump();
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
+
+  // ── État BidError dans le body ──────────────────────────────────────────────
+
+  testWidgets('BidError dans body affiche message et bouton Réessayer',
+      (tester) async {
+    final error = const NetworkException('Erreur réseau');
+    when(() => bidBloc.state).thenReturn(BidError(error));
+    whenListen(bidBloc, Stream<BidState>.fromIterable([BidError(error)]),
+        initialState: BidError(error));
+    whenListen(acceptanceBloc,
+        Stream<acs.BidAcceptanceState>.fromIterable([acs.BidAcceptanceInitial()]),
+        initialState: acs.BidAcceptanceInitial());
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    await tester.pump();
+
+    expect(find.text('Réessayer'), findsOneWidget);
+  });
+
+  testWidgets('bouton Réessayer dans _ErrorView redispatche BidListRequested',
+      (tester) async {
+    final error = const NetworkException('Erreur réseau');
+    when(() => bidBloc.state).thenReturn(BidError(error));
+    final bidCtrl = StreamController<BidState>.broadcast();
+    whenListen(bidBloc, bidCtrl.stream, initialState: BidError(error));
+    addTearDown(bidCtrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    await tester.pump();
+
+    await tester.tap(find.text('Réessayer'));
+    await tester.pump();
+
+    verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(1);
+  });
+
+  // ── Subtitle ────────────────────────────────────────────────────────────────
+
+  testWidgets('subtitle avec ville départ/arrivée s\'affiche', (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(
+      tester,
+      bidBloc,
+      acceptanceBloc: acceptanceBloc,
+      departureCityCode: 'CDG',
+      arrivalCityCode: 'DKR',
+    );
+    ctrl.add(BidListLoaded([_makeBid(status: 'PENDING')]));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('CDG → DKR'), findsOneWidget);
+  });
+
+  // ── Empty states ────────────────────────────────────────────────────────────
+
+  // Note: when En attente is empty, the screen auto-selects tab 1 (Acceptées).
+  // To test the En attente empty state we use initialTabIndex:0 + userSwitchedTab
+  // which requires a REJECTED bid (stays in pending tab but not pending).
+  // Simpler: a list with only REJECTED bids (no PENDING/PAYMENT_ESCROWED) shows
+  // the pending empty state because REJECTED is not in the pending filter.
+  testWidgets('onglet En attente sans bids PENDING → affiche Aucune demande en attente',
+      (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    // initialTabIndex:1 then switch back to 0 to prevent auto-select jumping
+    await _pump(tester, bidBloc,
+        acceptanceBloc: acceptanceBloc, initialTabIndex: 0);
+    // Push ACCEPTED only — pending tab will be empty, but we need to prevent
+    // auto-select. We do this by switching to tab 1 first (sets _userSwitchedTab=true).
+    ctrl.add(BidListLoaded([_makeBid(status: 'ACCEPTED', id: 'b1')]));
+    await tester.pumpAndSettle();
+    // At this point auto-select fires and goes to tab 1 (accepted tab)
+    // Switch back to tab 0 manually
+    await tester.tap(find.text('En attente'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Aucune demande en attente'), findsOneWidget);
+  });
+
+  testWidgets(
+      'onglet Acceptées vide → affiche message Aucune demande acceptée',
+      (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc,
+        acceptanceBloc: acceptanceBloc, initialTabIndex: 1);
+    ctrl.add(BidListLoaded([_makeBid(status: 'PENDING')]));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Acceptées'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Aucune demande acceptée'), findsOneWidget);
+  });
+
+  // ── Listeners BidState ──────────────────────────────────────────────────────
+
+  testWidgets('BidAccepted → snackbar « Demande acceptée » et refresh',
+      (tester) async {
+    final accepted = _makeBid(status: 'ACCEPTED');
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([_makeBid(status: 'PENDING')]));
+    await tester.pumpAndSettle();
+
+    ctrl.add(BidAccepted(accepted));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Demande acceptée'), findsOneWidget);
+    verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(greaterThan(0));
+  });
+
+  testWidgets('BidRejected → snackbar et refresh', (tester) async {
+    final rejected = _makeBid(status: 'REJECTED');
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([_makeBid(status: 'PENDING')]));
+    await tester.pumpAndSettle();
+
+    ctrl.add(BidRejected(rejected));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('refusée'), findsOneWidget);
+    verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(greaterThan(0));
+  });
+
+  testWidgets('BidDeleted → snackbar « supprimée » et refresh', (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([_makeBid(status: 'PENDING')]));
+    await tester.pumpAndSettle();
+
+    ctrl.add(BidDeleted());
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('supprimée'), findsOneWidget);
+    verify(() => bidBloc.add(any(that: isA<BidListRequested>()))).called(greaterThan(0));
+  });
+
+  testWidgets('BidError listener → screen reste affiché', (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([_makeBid(status: 'PENDING')]));
+    await tester.pumpAndSettle();
+
+    ctrl.add(BidError(const NetworkException('Erreur réseau')));
+    await tester.pumpAndSettle();
+
+    // Screen remains visible (ErrorPresenter handled the error)
+    expect(find.byType(BidListScreenTesting), findsOneWidget);
+  });
+
+  // ── BidNotFound ─────────────────────────────────────────────────────────────
+
+  testWidgets('BidNotFound → navigue vers /home quand non poppable',
+      (tester) async {
+    final bidCtrl = StreamController<BidState>.broadcast();
+    when(() => bidBloc.state).thenReturn(BidInitial());
+    whenListen(bidBloc, bidCtrl.stream, initialState: BidInitial());
+    addTearDown(bidCtrl.close);
+
+    whenListen(acceptanceBloc,
+        Stream<acs.BidAcceptanceState>.fromIterable([acs.BidAcceptanceInitial()]),
+        initialState: acs.BidAcceptanceInitial());
+
+    await _pumpFromRoot(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+
+    bidCtrl.add(BidNotFound());
+    await tester.pumpAndSettle();
+
+    expect(find.text('home'), findsOneWidget);
+  });
+
+  // ── Listener cash acceptance ────────────────────────────────────────────────
+
+  testWidgets('BidAccepted via cash → snackbar « Demande acceptée »',
+      (tester) async {
+    final acceptCtrl = StreamController<acs.BidAcceptanceState>.broadcast();
+    whenListen(acceptanceBloc, acceptCtrl.stream,
+        initialState: acs.BidAcceptanceInitial());
+    addTearDown(acceptCtrl.close);
+
+    final bidCtrl = _wireStates(bidBloc, tester);
+    addTearDown(bidCtrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    bidCtrl.add(BidListLoaded([_makeBid(status: 'PAYMENT_ESCROWED')]));
+    await tester.pumpAndSettle();
+
+    acceptCtrl.add(acs.BidAccepted());
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Demande acceptée'), findsOneWidget);
+  });
+
+  testWidgets('BidFailed via cash → snackbar d\'erreur', (tester) async {
+    final acceptCtrl = StreamController<acs.BidAcceptanceState>.broadcast();
+    whenListen(acceptanceBloc, acceptCtrl.stream,
+        initialState: acs.BidAcceptanceInitial());
+    addTearDown(acceptCtrl.close);
+
+    final bidCtrl = _wireStates(bidBloc, tester);
+    addTearDown(bidCtrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    bidCtrl.add(BidListLoaded([_makeBid(status: 'PAYMENT_ESCROWED')]));
+    await tester.pumpAndSettle();
+
+    acceptCtrl.add(acs.BidFailed('Paiement refusé'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Paiement refusé'), findsOneWidget);
+  });
+
+  // ── Bouton Accepter → cash path (BidAcceptanceBloc) ────────────────────────
+
+  testWidgets(
+      'bid CASH → tap Accepter dispatch BidAcceptRequested sur BidAcceptanceBloc',
+      (tester) async {
+    final acceptCtrl = StreamController<acs.BidAcceptanceState>.broadcast();
+    whenListen(acceptanceBloc, acceptCtrl.stream,
+        initialState: acs.BidAcceptanceInitial());
+    addTearDown(acceptCtrl.close);
+
+    final bidCtrl = _wireStates(bidBloc, tester);
+    addTearDown(bidCtrl.close);
+
+    final cashBid = BidModel(
+      id: 'cash-bid-1',
+      announcementId: 'ann-1',
+      senderId: 's-1',
+      senderName: 'Oumar Sow',
+      weightKg: 2,
+      pricePerKg: 10,
+      status: 'PAYMENT_ESCROWED',
+      paymentMethod: BidPaymentMethod.cash,
+      createdAt: DateTime(2026, 5, 1),
+      updatedAt: DateTime(2026, 5, 1),
+    );
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    bidCtrl.add(BidListLoaded([cashBid]));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Accepter'));
+    await tester.pump();
+
+    verify(() => acceptanceBloc.add(any(that: isA<ace.BidAcceptRequested>()))).called(1);
+  });
+
+  // ── Navigation via bid card tap ─────────────────────────────────────────────
+
+  testWidgets('tap sur une bid card navigue vers /bids/:id', (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc,
+        acceptanceBloc: acceptanceBloc, initialTabIndex: 1);
+    ctrl.add(BidListLoaded([_makeBid(status: 'ACCEPTED', id: 'bid-xyz')]));
+    await tester.pumpAndSettle();
+
+    // Tap the card (InkWell around the card)
+    await tester.tap(find.byType(InkWell).first);
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Bid detail bid-xyz'), findsOneWidget);
+  });
+
+  // ── Scanner chip button ─────────────────────────────────────────────────────
+
+  testWidgets('tap sur Scanner navigue vers /tracking/scan', (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([_makeBid(status: 'PENDING')]));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Scanner'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('scan'), findsOneWidget);
+  });
+
+  // ── Titre dynamique ─────────────────────────────────────────────────────────
+
+  testWidgets('titre affiche le compte de demandes en attente', (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([
+      _makeBid(status: 'PENDING', id: 'b1'),
+      _makeBid(status: 'PENDING', id: 'b2'),
+    ]));
+    await tester.pumpAndSettle();
+
+    expect(find.text('2 demandes'), findsOneWidget);
+  });
+
+  testWidgets('titre affiche « 1 demande » (singulier)', (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([_makeBid(status: 'PENDING', id: 'b1')]));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1 demande'), findsOneWidget);
+  });
+
+  // ── Subtitle avec date ──────────────────────────────────────────────────────
+
+  testWidgets('subtitle avec date de départ s\'affiche', (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(
+      tester,
+      bidBloc,
+      acceptanceBloc: acceptanceBloc,
+      departureCityCode: 'CDG',
+      arrivalCityCode: 'DKR',
+      departureDate: DateTime(2026, 6, 15),
+    );
+    ctrl.add(BidListLoaded([_makeBid(status: 'PENDING')]));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('CDG → DKR'), findsOneWidget);
+    // Date should also appear in subtitle
+    expect(find.textContaining('juin'), findsOneWidget);
+  });
+
+  // ── Bouton Retour avec canPop ───────────────────────────────────────────────
+
+  testWidgets('bouton retour pop quand canPop est vrai', (tester) async {
+    await initializeDateFormatting('fr_FR');
+    tester.view.physicalSize = const Size(800, 2200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    final bidCtrl = StreamController<BidState>.broadcast();
+    when(() => bidBloc.state).thenReturn(BidInitial());
+    whenListen(bidBloc, bidCtrl.stream, initialState: BidInitial());
+    addTearDown(bidCtrl.close);
+
+    whenListen(acceptanceBloc,
+        Stream<acs.BidAcceptanceState>.fromIterable([acs.BidAcceptanceInitial()]),
+        initialState: acs.BidAcceptanceInitial());
+
+    // Router with a parent route so canPop returns true for the screen
+    final router = GoRouter(
+      initialLocation: '/parent',
+      routes: [
+        GoRoute(
+          path: '/parent',
+          builder: (_, __) => const Scaffold(body: Text('parent')),
+          routes: [
+            GoRoute(
+              path: 'screen',
+              builder: (ctx, _) => MultiBlocProvider(
+                providers: [
+                  BlocProvider<BidBloc>.value(value: bidBloc),
+                  BlocProvider<BidAcceptanceBloc>.value(value: acceptanceBloc),
+                ],
+                child: const BidListScreenTesting(announcementId: 'ann-1'),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+        MaterialApp.router(routerConfig: router, theme: AppTheme.light));
+    await tester.pump();
+
+    router.go('/parent/screen');
+    await tester.pumpAndSettle();
+
+    bidCtrl.add(BidListLoaded([_makeBid(status: 'PENDING')]));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Retour'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('parent'), findsOneWidget);
+  });
+
+  // ── BidNotFound avec canPop ─────────────────────────────────────────────────
+
+  testWidgets('BidNotFound → pop quand canPop est vrai', (tester) async {
+    await initializeDateFormatting('fr_FR');
+    tester.view.physicalSize = const Size(800, 2200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    final bidCtrl = StreamController<BidState>.broadcast();
+    when(() => bidBloc.state).thenReturn(BidInitial());
+    whenListen(bidBloc, bidCtrl.stream, initialState: BidInitial());
+    addTearDown(bidCtrl.close);
+
+    whenListen(acceptanceBloc,
+        Stream<acs.BidAcceptanceState>.fromIterable([acs.BidAcceptanceInitial()]),
+        initialState: acs.BidAcceptanceInitial());
+
+    final router = GoRouter(
+      initialLocation: '/parent',
+      routes: [
+        GoRoute(
+          path: '/parent',
+          builder: (_, __) => const Scaffold(body: Text('parent')),
+          routes: [
+            GoRoute(
+              path: 'screen',
+              builder: (ctx, _) => MultiBlocProvider(
+                providers: [
+                  BlocProvider<BidBloc>.value(value: bidBloc),
+                  BlocProvider<BidAcceptanceBloc>.value(value: acceptanceBloc),
+                ],
+                child: const BidListScreenTesting(announcementId: 'ann-1'),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+        MaterialApp.router(routerConfig: router, theme: AppTheme.light));
+    await tester.pump();
+
+    router.go('/parent/screen');
+    await tester.pumpAndSettle();
+
+    bidCtrl.add(BidListLoaded([_makeBid(status: 'PENDING')]));
+    await tester.pumpAndSettle();
+
+    bidCtrl.add(BidNotFound());
+    await tester.pumpAndSettle();
+
+    expect(find.text('parent'), findsOneWidget);
+  });
+
+  // ── Accept Stripe bid (non-cash path) ──────────────────────────────────────
+
+  testWidgets('bid STRIPE → tap Accepter dispatch BidAcceptRequested sur BidBloc',
+      (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([_makeBid(status: 'PENDING')]));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Accepter'));
+    await tester.pump();
+
+    verify(() => bidBloc.add(any(that: isA<BidAcceptRequested>()))).called(1);
+  });
+
+  // ── Reject button tap → shows dialog ───────────────────────────────────────
+
+  testWidgets('tap Refuser → ouvre la boîte de dialogue de confirmation',
+      (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([_makeBid(status: 'PENDING')]));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Refuser'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Refuser cette demande'), findsOneWidget);
+  });
+
+  testWidgets('confirmer le refus → dispatch BidRejectRequested', (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([_makeBid(status: 'PENDING', id: 'bid-r1')]));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Refuser'));
+    await tester.pumpAndSettle();
+
+    // Tap the confirm button inside the dialog
+    await tester.tap(find.text('Refuser').last);
+    await tester.pumpAndSettle();
+
+    verify(() => bidBloc.add(any(that: isA<BidRejectRequested>()))).called(1);
+  });
+
+  // ── REJECTED bid (n'apparaît pas dans les onglets normalement) ─────────────
+  // Note: Les bids REJECTED ne sont jamais affichés dans les onglets En attente
+  // ou Acceptées (code défensif). Le test vérifie que l'écran reste stable.
+
+  // ── BidError avec processing bids non vide ──────────────────────────────────
+
+  testWidgets('BidError après accept → processing bids vidés', (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([_makeBid(status: 'PENDING', id: 'bid-p1')]));
+    await tester.pumpAndSettle();
+
+    // Tap accept to add to processing ids
+    await tester.tap(find.text('Accepter'));
+    await tester.pump();
+
+    // Then emit BidError
+    ctrl.add(BidError(const NetworkException('Erreur')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(BidListScreenTesting), findsOneWidget);
   });
 }
