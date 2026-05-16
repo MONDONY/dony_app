@@ -765,7 +765,6 @@ class _OptionTile extends StatelessWidget {
   final String label;
   final String subtitle;
   final VoidCallback? onTap;
-  final bool disabled;
 
   const _OptionTile({
     required this.icon,
@@ -774,73 +773,53 @@ class _OptionTile extends StatelessWidget {
     required this.label,
     required this.subtitle,
     required this.onTap,
-    this.disabled = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    return Opacity(
-      opacity: disabled ? 0.45 : 1.0,
-      child: GestureDetector(
-        onTap: disabled ? null : onTap,
-        child: Container(
-          padding: const EdgeInsets.all(DonySpacing.md),
-          decoration: BoxDecoration(
-            color: cs.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(DonyRadius.lg),
-            border: Border.all(color: cs.outline),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(DonySpacing.sm),
-                decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(DonyRadius.sm),
-                ),
-                child: Icon(icon, color: iconColor, size: 18),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(DonySpacing.md),
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(DonyRadius.lg),
+          border: Border.all(color: cs.outline),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(DonySpacing.sm),
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(DonyRadius.sm),
               ),
-              const SizedBox(width: DonySpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: tt.titleSmall?.copyWith(color: cs.onSurface),
-                    ),
-                    Text(
-                      subtitle,
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                    ),
-                  ],
-                ),
+              child: Icon(icon, color: iconColor, size: 18),
+            ),
+            const SizedBox(width: DonySpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: tt.titleSmall?.copyWith(color: cs.onSurface),
+                  ),
+                  Text(
+                    subtitle,
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                ],
               ),
-              if (!disabled)
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: cs.onSurfaceVariant,
-                  size: 18,
-                ),
-              if (disabled)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.sm,
-                    vertical: DonySpacing.xxs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: cs.outline,
-                    borderRadius: BorderRadius.circular(DonyRadius.sm),
-                  ),
-                  child: Text(
-                    'Bientôt',
-                    style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                ),
-            ],
-          ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: cs.onSurfaceVariant,
+              size: 18,
+            ),
+          ],
         ),
       ),
     );

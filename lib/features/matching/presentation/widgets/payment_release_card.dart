@@ -2,6 +2,9 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:flutter/material.dart';
 
+// 1 − 12% de commission dony
+const _kTravelerShareRate = 0.88;
+
 /// Carte affichant la libération des fonds au voyageur (statut COMPLETED).
 ///
 /// Correspond à l'ancienne classe privée `_PaymentReleaseCard` de
@@ -30,11 +33,11 @@ class PaymentReleaseCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Fonds libérés à ${bid.travelerName ?? 'Ibrahima'}',
+                  'Fonds libérés à ${bid.travelerName ?? 'le voyageur'}',
                   style: tt.bodyMedium?.copyWith(color: cs.onSurface),
                 ),
                 Text(
-                  'Reçu disponible · ${bid.pricePerKg != null ? (bid.pricePerKg! * bid.weightKg * 0.88).toStringAsFixed(2) : '—'} €',
+                  'Reçu disponible · ${bid.pricePerKg != null ? (bid.pricePerKg! * bid.weightKg * _kTravelerShareRate).toStringAsFixed(2) : '—'} €',
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],

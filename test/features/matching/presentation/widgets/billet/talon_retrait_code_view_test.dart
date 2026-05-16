@@ -22,6 +22,8 @@ Future<void> _pump(
   _MockTrackingBloc t,
   _MockBidBloc b, {
   String initialCode = '4729',
+  int refreshCount = 0,
+  DateTime? refreshWindowStart,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
@@ -35,7 +37,8 @@ Future<void> _pump(
           child: TalonRetraitCodeView(
             bidId: 'bid-1',
             initialCode: initialCode,
-            refreshCount: 0,
+            refreshCount: refreshCount,
+            refreshWindowStart: refreshWindowStart,
           ),
         ),
       ),
@@ -85,6 +88,93 @@ void main() {
       for (final d in '472913'.split('')) {
         expect(find.text(d), findsWidgets);
       }
+    },
+  );
+
+  testWidgets(
+    'TrackingRefreshCodeLoading → indicateur de chargement et texte "Régénération…"',
+    (tester) async {
+      final t = _MockTrackingBloc();
+      final b = _MockBidBloc();
+      when(() => t.state).thenReturn(TrackingRefreshCodeLoading());
+      when(
+        () => t.stream,
+      ).thenAnswer((_) => Stream.value(TrackingRefreshCodeLoading()));
+      when(() => b.state).thenReturn(BidInitial());
+      when(() => b.stream).thenAnswer((_) => Stream<BidState>.empty());
+      await _pump(tester, t, b);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text('Régénération…'), findsOneWidget);
+    },
+  );
+
+  testWidgets('TrackingConfirmCodeLoaded → affiche le nouveau code', (
+    tester,
+  ) async {
+    final t = _MockTrackingBloc();
+    final b = _MockBidBloc();
+    // Start with a new code loaded
+    when(() => t.state).thenReturn(TrackingConfirmCodeLoaded('9999'));
+    when(
+      () => t.stream,
+    ).thenAnswer((_) => Stream.value(TrackingConfirmCodeLoaded('9999')));
+    when(() => b.state).thenReturn(BidInitial());
+    when(() => b.stream).thenAnswer((_) => Stream<BidState>.empty());
+    await _pump(tester, t, b, initialCode: '1111');
+    // The displayed code should be the new one from state, not initialCode
+    for (final d in '9999'.split('')) {
+      expect(find.text(d), findsWidgets);
+    }
+  });
+
+  testWidgets(
+    'rate-limit actif (refreshCount=5, windowStart récent) → affiche countdown et message bloqué',
+    (tester) async {
+      final t = _MockTrackingBloc();
+      final b = _MockBidBloc();
+      when(() => t.state).thenReturn(TrackingInitial());
+      when(() => b.state).thenReturn(BidInitial());
+      // refreshCount = 5 (max) with a recent window start = rate limited
+      final recentWindow = DateTime.now().toUtc().subtract(
+        const Duration(hours: 1),
+      );
+      await _pump(
+        tester,
+        t,
+        b,
+        refreshCount: 5,
+        refreshWindowStart: recentWindow,
+      );
+      // Should show the lock icon (rate limited) and the limit message
+      expect(find.textContaining('Limite de 5 régénérations'), findsOneWidget);
+      // The regenerate button label should not say "Régénérer le code"
+      expect(find.text('Régénérer le code'), findsNothing);
+      // Should show a countdown like "Disponible dans"
+      expect(find.textContaining('Disponible dans'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'rate-limit inactif (refreshCount=5, windowStart expiré) → bouton actif',
+    (tester) async {
+      final t = _MockTrackingBloc();
+      final b = _MockBidBloc();
+      when(() => t.state).thenReturn(TrackingInitial());
+      when(() => b.state).thenReturn(BidInitial());
+      // windowStart 25h ago → window expired, not rate limited
+      final expiredWindow = DateTime.now().toUtc().subtract(
+        const Duration(hours: 25),
+      );
+      await _pump(
+        tester,
+        t,
+        b,
+        refreshCount: 5,
+        refreshWindowStart: expiredWindow,
+      );
+      // Button should be available again
+      expect(find.text('Régénérer le code'), findsOneWidget);
+      expect(find.textContaining('Limite de 5 régénérations'), findsNothing);
     },
   );
 }

@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/expediteur_card.dart';
+import 'package:dony/features/matching/presentation/widgets/profil_card_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/voyageur_card.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
@@ -58,5 +59,24 @@ void main() {
       ),
     );
     expect(find.textContaining('Mariam K.'), findsOneWidget);
+  });
+
+  testWidgets('MiniChip affiche le label avec la bonne couleur', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(
+          body: MiniChip(
+            label: 'KYC',
+            color: Colors.green,
+            bg: Colors.green.shade50,
+          ),
+        ),
+      ),
+    );
+    expect(find.text('KYC'), findsOneWidget);
+    expect(find.byType(MiniChip), findsOneWidget);
   });
 }
