@@ -28,6 +28,9 @@ import 'package:dony/features/cancellation/bloc/cancellation_bloc.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.dart';
+import 'package:dony/features/matching/presentation/widgets/colis_card.dart';
+import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
+import 'package:dony/features/matching/presentation/widgets/destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/expediteur_card.dart';
 import 'package:dony/features/matching/presentation/widgets/handover_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
@@ -387,11 +390,11 @@ class _BidDetailViewState extends State<_BidDetailView> {
                                     ],
 
                                     // Package card
-                                    _PackageCard(bid: _bid),
+                                    ColisCard(bid: _bid),
                                     const SizedBox(height: DonySpacing.base),
 
                                     // Recipient card
-                                    _RecipientCard(bid: _bid),
+                                    DestinataireCard(bid: _bid),
                                     const SizedBox(height: DonySpacing.base),
 
                                     // Disclaimer
@@ -653,53 +656,6 @@ class _PaymentReleaseCard extends StatelessWidget {
   }
 }
 
-class _PackageCard extends StatelessWidget {
-  final BidModel bid;
-  const _PackageCard({required this.bid});
-
-  @override
-  Widget build(BuildContext context) {
-    return _Card(
-      title: 'Colis',
-      child: Column(
-        children: [
-          _InfoRow(label: 'Catégorie', value: bid.contentCategory ?? '—'),
-          const SizedBox(height: DonySpacing.sm),
-          _InfoRow(label: 'Description', value: bid.description ?? '—'),
-          const SizedBox(height: DonySpacing.sm),
-          _InfoRow(label: 'Poids', value: '${bid.weightKg} kg'),
-          const SizedBox(height: DonySpacing.sm),
-          _InfoRow(
-            label: 'Valeur déclarée',
-            value: bid.declaredValueEur != null
-                ? '${bid.declaredValueEur!.toStringAsFixed(2)} €'
-                : '— (à compléter)',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RecipientCard extends StatelessWidget {
-  final BidModel bid;
-  const _RecipientCard({required this.bid});
-
-  @override
-  Widget build(BuildContext context) {
-    return _Card(
-      title: 'Destinataire',
-      child: Column(
-        children: [
-          _InfoRow(label: 'Nom', value: bid.recipientName ?? '—'),
-          const SizedBox(height: DonySpacing.sm),
-          _InfoRow(label: 'Téléphone', value: bid.recipientPhone ?? '—'),
-        ],
-      ),
-    );
-  }
-}
-
 class _DisclaimerCard extends StatelessWidget {
   final BidModel bid;
   const _DisclaimerCard({required this.bid});
@@ -708,7 +664,7 @@ class _DisclaimerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    return _Card(
+    return DetailCard(
       title: 'Responsabilité légale',
       child: Row(
         children: [
@@ -734,14 +690,14 @@ class _HandoverCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _Card(
+    return DetailCard(
       title: 'Fenêtre de remise',
       child: Column(
         children: [
-          _InfoRow(label: 'Lieu', value: bid.handoverLocation ?? '—'),
+          InfoRow(label: 'Lieu', value: bid.handoverLocation ?? '—'),
           if (bid.handoverWindowStart != null) ...[
             const SizedBox(height: DonySpacing.sm),
-            _InfoRow(
+            InfoRow(
               label: 'Début',
               value: DateFormat(
                 'dd/MM/yyyy HH:mm',
@@ -750,7 +706,7 @@ class _HandoverCard extends StatelessWidget {
           ],
           if (bid.handoverWindowEnd != null) ...[
             const SizedBox(height: DonySpacing.sm),
-            _InfoRow(
+            InfoRow(
               label: 'Fin',
               value: DateFormat(
                 'dd/MM/yyyy HH:mm',
@@ -758,7 +714,7 @@ class _HandoverCard extends StatelessWidget {
             ),
           ],
           const SizedBox(height: DonySpacing.sm),
-          _InfoRow(
+          InfoRow(
             label: 'Présence confirmée',
             value: bid.voyageurConfirmed ? 'Oui ✓' : 'Non encore',
           ),
@@ -784,104 +740,37 @@ class _TripDetailsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _Card(
+    return DetailCard(
       title: 'Détails du trajet',
       child: Column(
         children: [
-          _InfoRow(
+          InfoRow(
             label: 'Date de départ',
             value: _formatDate(bid.departureDate),
           ),
           if (bid.departureTime != null) ...[
             const SizedBox(height: DonySpacing.sm),
-            _InfoRow(
+            InfoRow(
               label: 'Heure de départ',
               value: _formatTime(bid.departureTime),
             ),
           ],
           if (bid.arrivalTime != null) ...[
             const SizedBox(height: DonySpacing.sm),
-            _InfoRow(
+            InfoRow(
               label: 'Heure d\'arrivée',
               value: _formatTime(bid.arrivalTime),
             ),
           ],
           if (bid.pricePerKg != null) ...[
             const SizedBox(height: DonySpacing.sm),
-            _InfoRow(
+            InfoRow(
               label: 'Tarif par kg',
               value: '${bid.pricePerKg!.toStringAsFixed(2)} €',
             ),
           ],
         ],
       ),
-    );
-  }
-}
-
-class _Card extends StatelessWidget {
-  final String title;
-  final Widget child;
-  const _Card({required this.title, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
-      padding: const EdgeInsets.all(DonySpacing.base),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: tt.labelMedium?.copyWith(
-              color: cs.onSurfaceVariant,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: DonySpacing.md),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final String label;
-  final String value;
-  const _InfoRow({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 120,
-          child: Text(
-            label,
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: tt.bodySmall?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: cs.onSurface,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
