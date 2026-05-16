@@ -322,9 +322,10 @@ class _LoadedViewState extends State<_LoadedView> {
               context,
               trip: thread.linkedTrip!,
               isSender: viewerUserId != thread.travelerId,
-              onRefuse: () => context
+              onRefuse: (reason) => context
                   .read<NegotiationBloc>()
-                  .add(NegotiationRefuseTripRequested(threadId: thread.id)),
+                  .add(NegotiationRefuseTripRequested(
+                      threadId: thread.id, reason: reason)),
             ),
           ),
         ThreadStateCtaBar(

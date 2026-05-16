@@ -1,11 +1,131 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+/// Opens a confirmation bottom sheet asking the sender for a refusal reason.
+/// Calls [onConfirm] with the (optional) reason when confirmed.
+class _RefuseTripConfirmSheet extends StatefulWidget {
+  const _RefuseTripConfirmSheet({required this.onConfirm});
+  final void Function(String? reason) onConfirm;
+
+  static Future<void> show(
+    BuildContext context, {
+    required void Function(String? reason) onConfirm,
+  }) {
+    final reasonNotifier = ValueNotifier<String>('');
+    return DonyBottomSheet.show(
+      context,
+      title: 'Refuser ce trajet',
+      stickyBottom: ValueListenableBuilder<String>(
+        valueListenable: reasonNotifier,
+        builder: (_, reason, __) => DonyButton(
+          label: 'Confirmer le refus',
+          variant: DonyButtonVariant.destructive,
+          onPressed: () {
+            Navigator.of(context, rootNavigator: true).pop();
+            onConfirm(reason.trim().isEmpty ? null : reason.trim());
+          },
+        ),
+      ),
+      child: _RefuseTripConfirmSheet(onConfirm: onConfirm),
+    ).whenComplete(reasonNotifier.dispose);
+  }
+
+  @override
+  State<_RefuseTripConfirmSheet> createState() =>
+      _RefuseTripConfirmSheetState();
+}
+
+class _RefuseTripConfirmSheetState extends State<_RefuseTripConfirmSheet> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Warning banner
+        Container(
+          padding: const EdgeInsets.all(DonySpacing.md),
+          decoration: BoxDecoration(
+            color: kError.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(DonyRadius.sm),
+            border: Border.all(color: kError.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: kError, size: 20),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: Text(
+                  'Le voyageur devra proposer un autre trajet. Cette action est irréversible.',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    color: kError,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: DonySpacing.lg),
+        Text(
+          'Raison du refus (optionnel)',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: kTextSecondary,
+          ),
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        TextField(
+          controller: _controller,
+          onChanged: (_) => setState(() {}),
+          maxLength: 280,
+          maxLines: 3,
+          decoration: InputDecoration(
+            hintText: 'Ex : date incorrecte, trajet annulé…',
+            hintStyle: GoogleFonts.plusJakartaSans(
+              fontSize: 14,
+              color: kTextHint,
+            ),
+            filled: true,
+            fillColor: cs.surfaceContainerHighest,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(DonyRadius.input),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(DonyRadius.input),
+              borderSide: BorderSide(color: cs.primary, width: 1.5),
+            ),
+            contentPadding: const EdgeInsets.all(DonySpacing.md),
+            counterStyle: GoogleFonts.plusJakartaSans(
+              fontSize: 11,
+              color: kTextHint,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 /// Bottom sheet affichant les détails complets du trajet lié à une négociation.
 ///
 /// - Si [isSender] est `true`, un bouton destructif "Refuser ce trajet" est
-///   affiché en [stickyBottom] et [onRefuse] est appelé après fermeture.
+///   affiché en [stickyBottom] ; il ouvre une confirmation avant d'appeler [onRefuse].
 /// - Sinon, la sheet est en lecture seule (voyageur consulte ses propres infos).
 class TripDetailBottomSheet extends StatelessWidget {
   const TripDetailBottomSheet({
@@ -17,13 +137,13 @@ class TripDetailBottomSheet extends StatelessWidget {
 
   final LinkedTripSummary trip;
   final bool isSender;
-  final VoidCallback? onRefuse;
+  final void Function(String? reason)? onRefuse;
 
   static void show(
     BuildContext context, {
     required LinkedTripSummary trip,
     required bool isSender,
-    VoidCallback? onRefuse,
+    void Function(String? reason)? onRefuse,
   }) {
     DonyBottomSheet.show(
       context,
@@ -33,8 +153,12 @@ class TripDetailBottomSheet extends StatelessWidget {
               label: 'Refuser ce trajet',
               variant: DonyButtonVariant.destructive,
               onPressed: () {
+                // Close details sheet first, then open confirmation.
                 Navigator.of(context, rootNavigator: true).pop();
-                onRefuse?.call();
+                _RefuseTripConfirmSheet.show(
+                  context,
+                  onConfirm: (reason) => onRefuse?.call(reason),
+                );
               },
             )
           : null,

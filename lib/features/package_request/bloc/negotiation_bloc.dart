@@ -135,12 +135,13 @@ class NegotiationCheckoutRequested extends NegotiationEvent {
   List<Object?> get props => [threadId, paymentIntentId];
 }
 
-/// Traveler refuses to carry the package on an AWAITING_TRIP thread.
+/// Sender refuses the linked trip on an AWAITING_PAYMENT thread.
 class NegotiationRefuseTripRequested extends NegotiationEvent {
-  const NegotiationRefuseTripRequested({required this.threadId});
+  const NegotiationRefuseTripRequested({required this.threadId, this.reason});
   final String threadId;
+  final String? reason;
   @override
-  List<Object?> get props => [threadId];
+  List<Object?> get props => [threadId, reason];
 }
 
 sealed class NegotiationState extends Equatable {
@@ -372,7 +373,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       emit(const NegotiationLoading());
     }
     try {
-      final thread = await _repository.refuseTrip(e.threadId);
+      final thread = await _repository.refuseTrip(e.threadId, reason: e.reason);
       emit(NegotiationLoaded(thread));
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
