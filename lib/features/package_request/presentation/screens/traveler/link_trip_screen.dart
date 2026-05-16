@@ -9,8 +9,9 @@ import 'package:dony/features/package_request/data/models/negotiation_thread.dar
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
+import 'package:dony/features/package_request/presentation/widgets/thread/modify_trip_sheet.dart';
+import 'package:dony/features/package_request/presentation/widgets/traveler/trip_tile.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -135,6 +136,18 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
     // listener below will pop us back. If the user cancelled, we still
     // refresh the matching list.
     if (mounted) await _load();
+  }
+
+  /// Un trajet n'est modifiable que si ses adresses sont complètes
+  /// (requises par AnnouncementUpdateRequested, remplacement complet).
+  bool _canModify(AnnouncementModel ann) =>
+      ann.pickupAddress != null && ann.deliveryAddress != null;
+
+  Future<void> _openModifySheet(AnnouncementModel ann) async {
+    final changed = await ModifyTripSheet.show(context, announcement: ann);
+    if (changed == true && mounted) {
+      await _load();
+    }
   }
 
   @override
@@ -280,11 +293,14 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
             ..._matchingTrips
                 .asMap()
                 .entries
-                .map((e) => _TripTile(
+                .map((e) => TripTile(
                       announcement: e.value,
                       index: e.key,
                       isSelected: _selectedTrip?.id == e.value.id,
                       onTap: () => _selectTrip(e.value),
+                      onModify: _canModify(e.value)
+                          ? () => _openModifySheet(e.value)
+                          : null,
                     )),
           const SizedBox(height: DonySpacing.base),
           OutlinedButton.icon(
@@ -300,95 +316,6 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
         ],
       ),
     );
-  }
-}
-
-class _TripTile extends StatelessWidget {
-  const _TripTile({
-    required this.announcement,
-    required this.index,
-    required this.isSelected,
-    required this.onTap,
-  });
-  final AnnouncementModel announcement;
-  final int index;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Material(
-        color: isSelected ? cs.primaryContainer : cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.md),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(DonyRadius.md),
-              border: Border.all(
-                color: isSelected ? cs.primary : cs.outline,
-                width: isSelected ? 2 : 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: isSelected ? cs.primary : cs.primaryContainer,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isSelected
-                        ? Icons.check_rounded
-                        : Icons.flight_takeoff_rounded,
-                    color: isSelected ? cs.onPrimary : cs.primary,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: DonySpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        DateFormat('EEE d MMM', 'fr')
-                            .format(announcement.departureDate),
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      Text(
-                        '${announcement.availableKg} kg dispo · ${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 12,
-                          color: kTextSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  isSelected
-                      ? Icons.radio_button_checked_rounded
-                      : Icons.radio_button_unchecked_rounded,
-                  color: isSelected ? cs.primary : kTextHint,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    )
-        .animate()
-        .fadeIn(duration: 220.ms, delay: (40 * index).ms)
-        .slideY(begin: 0.04);
   }
 }
 
