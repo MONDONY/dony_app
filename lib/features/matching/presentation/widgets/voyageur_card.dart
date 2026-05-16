@@ -70,7 +70,6 @@ class VoyageurCard extends StatelessWidget {
               children: [
                 DonyAvatar(
                   name: name,
-                  size: DonyAvatarSize.md,
                   verified: bid.travelerKycVerified,
                   pro: bid.travelerIsProAccount,
                 ),
