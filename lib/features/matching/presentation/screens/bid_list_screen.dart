@@ -19,9 +19,29 @@ import 'package:intl/intl.dart';
 const _kPending          = 'PENDING';
 const _kPaymentEscrowed  = 'PAYMENT_ESCROWED';
 const _kAccepted         = 'ACCEPTED';
+const _kHandedOver       = 'HANDED_OVER';
 const _kInTransit        = 'IN_TRANSIT';
 const _kCompleted        = 'COMPLETED';
+const _kDelivered        = 'DELIVERED';
 const _kRejected         = 'REJECTED';
+
+/// Demandes affichées dans l'onglet « En attente ».
+@visibleForTesting
+List<BidModel> pendingBidsFrom(List<BidModel> bids) => bids
+    .where((b) => b.status == _kPending || b.status == _kPaymentEscrowed)
+    .toList();
+
+/// Demandes affichées dans l'onglet « Acceptées » : tout le cycle de vie
+/// post-acceptation (remise, transit, livraison).
+@visibleForTesting
+List<BidModel> acceptedBidsFrom(List<BidModel> bids) => bids
+    .where((b) =>
+        b.status == _kAccepted ||
+        b.status == _kHandedOver ||
+        b.status == _kInTransit ||
+        b.status == _kCompleted ||
+        b.status == _kDelivered)
+    .toList();
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BidListScreen — root widget, provides the BloC
@@ -222,17 +242,8 @@ class _BidListViewState extends State<_BidListView>
         // Compute per-tab counts for AppBar title
         final allBids =
             state is BidListLoaded ? state.bids : <BidModel>[];
-        final pendingBids = allBids
-            .where((b) =>
-                b.status == _kPending ||
-                b.status == _kPaymentEscrowed)
-            .toList();
-        final acceptedBids = allBids
-            .where((b) =>
-                b.status == _kAccepted ||
-                b.status == _kInTransit ||
-                b.status == _kCompleted)
-            .toList();
+        final pendingBids = pendingBidsFrom(allBids);
+        final acceptedBids = acceptedBidsFrom(allBids);
 
         final isOnPendingTab = _tabController.index == 0;
         final titleCount =
