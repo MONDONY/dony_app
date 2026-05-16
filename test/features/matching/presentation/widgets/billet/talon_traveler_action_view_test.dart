@@ -4,18 +4,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
-Future<GoRouter> _pump(WidgetTester tester, TalonTravelerAction action) async {
+Future<GoRouter> _pump(
+  WidgetTester tester,
+  TalonTravelerAction action, {
+  String? travelerName,
+}) async {
   final router = GoRouter(
     routes: [
       GoRoute(
         path: '/',
-        builder: (_, __) => Scaffold(
-          body: TalonTravelerActionView(bidId: 'bid-1', action: action),
+        builder: (context, state) => Scaffold(
+          body: TalonTravelerActionView(
+            bidId: 'bid-1',
+            action: action,
+            travelerName: travelerName,
+          ),
         ),
       ),
       GoRoute(
         path: '/tracking/scan',
-        builder: (_, __) => const Scaffold(body: Text('SCANNER')),
+        builder: (context, state) => const Scaffold(body: Text('SCANNER')),
+      ),
+      GoRoute(
+        path: '/tracking/confirm',
+        builder: (context, state) => const Scaffold(body: Text('RECEPTION')),
       ),
     ],
   );
@@ -34,14 +46,31 @@ void main() {
   testWidgets('mode confirmDelivery → bouton "Confirmer la livraison"', (
     tester,
   ) async {
-    await _pump(tester, TalonTravelerAction.confirmDelivery);
+    await _pump(
+      tester,
+      TalonTravelerAction.confirmDelivery,
+      travelerName: 'Abou D.',
+    );
     expect(find.text('Confirmer la livraison'), findsOneWidget);
   });
 
-  testWidgets('tap → navigue vers /tracking/scan', (tester) async {
+  testWidgets('tap scan → navigue vers /tracking/scan', (tester) async {
     await _pump(tester, TalonTravelerAction.scan);
     await tester.tap(find.text('Scanner le colis'));
     await tester.pumpAndSettle();
     expect(find.text('SCANNER'), findsOneWidget);
+  });
+
+  testWidgets('tap confirmDelivery → navigue vers /tracking/confirm', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      TalonTravelerAction.confirmDelivery,
+      travelerName: 'Abou D.',
+    );
+    await tester.tap(find.text('Confirmer la livraison'));
+    await tester.pumpAndSettle();
+    expect(find.text('RECEPTION'), findsOneWidget);
   });
 }
