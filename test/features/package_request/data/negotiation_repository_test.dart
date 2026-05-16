@@ -148,6 +148,183 @@ void main() {
     });
   });
 
+  group('getById', () {
+    test('GETs /negotiations/:id and returns NegotiationThread', () async {
+      when(
+        () => mockDio.get<Map<String, dynamic>>('/negotiations/th-1'),
+      ).thenAnswer((_) async => _ok(_threadJson, '/negotiations/th-1'));
+
+      final thread = await repo.getById('th-1');
+
+      expect(thread.id, 'th-1');
+      expect(thread.status, NegotiationThreadStatus.open);
+    });
+  });
+
+  group('counter with body', () {
+    test('inclut body dans la requête quand fourni', () async {
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/counter',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+          (_) async => _ok(_threadJson, '/negotiations/th-1/counter'));
+
+      await repo.counter('th-1', proposedPriceEur: 28.0, body: 'Je baisse');
+
+      verify(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/counter',
+          data: {'proposedPriceEur': 28.0, 'body': 'Je baisse'},
+        ),
+      ).called(1);
+    });
+  });
+
+  group('submitTrip', () {
+    test('POSTs to /negotiations/:id/submit-trip and returns thread', () async {
+      final awaitingPaymentJson = {
+        ..._threadJson,
+        'status': 'AWAITING_PAYMENT',
+      };
+
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/submit-trip',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+          (_) async => _ok(awaitingPaymentJson, '/negotiations/th-1/submit-trip'));
+
+      final thread =
+          await repo.submitTrip('th-1', travelerAnnouncementId: 'ann-1');
+
+      expect(thread.status, NegotiationThreadStatus.awaitingPayment);
+      verify(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/submit-trip',
+          data: {'travelerAnnouncementId': 'ann-1'},
+        ),
+      ).called(1);
+    });
+  });
+
+  group('createDedicatedTrip', () {
+    test('POSTs to /negotiations/:id/create-dedicated-trip', () async {
+      final awaitingPaymentJson = {
+        ..._threadJson,
+        'status': 'AWAITING_PAYMENT',
+      };
+
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/create-dedicated-trip',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((_) async =>
+          _ok(awaitingPaymentJson, '/negotiations/th-1/create-dedicated-trip'));
+
+      final thread = await repo.createDedicatedTrip(
+        'th-1',
+        departureDate: DateTime(2026, 6, 15),
+        pickupAddress: const {'label': 'Paris'},
+        deliveryAddress: const {'label': 'Dakar'},
+      );
+
+      expect(thread.status, NegotiationThreadStatus.awaitingPayment);
+    });
+
+    test('inclut les champs optionnels quand fournis', () async {
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/create-dedicated-trip',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((_) async =>
+          _ok(_threadJson, '/negotiations/th-1/create-dedicated-trip'));
+
+      await repo.createDedicatedTrip(
+        'th-1',
+        departureDate: DateTime(2026, 6, 15),
+        departureTime: '10:00',
+        arrivalTime: '20:00',
+        pickupAddress: const {'label': 'Paris'},
+        deliveryAddress: const {'label': 'Dakar'},
+        description: 'note',
+        acceptedContentTypes: const ['electronics'],
+        refusedTypes: const ['food'],
+      );
+
+      verify(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/create-dedicated-trip',
+          data: {
+            'departureDate': '2026-06-15',
+            'departureTime': '10:00',
+            'arrivalTime': '20:00',
+            'pickupAddress': {'label': 'Paris'},
+            'deliveryAddress': {'label': 'Dakar'},
+            'description': 'note',
+            'acceptedContentTypes': ['electronics'],
+            'refusedTypes': ['food'],
+          },
+        ),
+      ).called(1);
+    });
+  });
+
+  group('initiatePayment', () {
+    test('POSTs to /negotiations/:id/initiate-payment et retourne clientSecret',
+        () async {
+      final paymentJson = {
+        'clientSecret': 'pi_test_secret',
+        'stripePaymentIntentId': 'pi_123',
+      };
+
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/initiate-payment',
+        ),
+      ).thenAnswer(
+          (_) async => _ok(paymentJson, '/negotiations/th-1/initiate-payment'));
+
+      final result = await repo.initiatePayment('th-1');
+
+      expect(result.clientSecret, 'pi_test_secret');
+      expect(result.paymentIntentId, 'pi_123');
+    });
+  });
+
+  group('checkout', () {
+    test('POSTs to /negotiations/:id/checkout and returns accepted thread',
+        () async {
+      final acceptedJson = {
+        ..._threadJson,
+        'status': 'ACCEPTED',
+      };
+
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/checkout',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+          (_) async => _ok(acceptedJson, '/negotiations/th-1/checkout'));
+
+      final thread =
+          await repo.checkout('th-1', paymentIntentId: 'pi_xxx');
+
+      expect(thread.status, NegotiationThreadStatus.accepted);
+      verify(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/checkout',
+          data: {'paymentIntentId': 'pi_xxx'},
+        ),
+      ).called(1);
+    });
+  });
+
   group('refuseTrip', () {
     test('POSTs to /negotiations/:id/refuse-trip avec la raison', () async {
       when(

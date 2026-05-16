@@ -113,5 +113,49 @@ void main() {
       );
       expect(find.text('Trajet lié'), findsOneWidget);
     });
+
+    testWidgets('affiche l\'icône bus pour le mode BUS', (tester) async {
+      await openSheet(
+        tester,
+        isSender: false,
+        trip: const LinkedTripSummary(
+            announcementId: 'ann-bus', transportMode: 'BUS'),
+      );
+      expect(find.textContaining('🚌'), findsOneWidget);
+    });
+
+    testWidgets('affiche l\'icône bateau pour le mode BOAT', (tester) async {
+      await openSheet(
+        tester,
+        isSender: false,
+        trip: const LinkedTripSummary(
+            announcementId: 'ann-boat', transportMode: 'BOAT'),
+      );
+      expect(find.textContaining('🚢'), findsOneWidget);
+    });
+
+    testWidgets('affiche l\'icône par défaut pour un mode inconnu',
+        (tester) async {
+      await openSheet(
+        tester,
+        isSender: false,
+        trip: const LinkedTripSummary(
+            announcementId: 'ann-unknown', transportMode: 'UNKNOWN_MODE'),
+      );
+      expect(find.textContaining('📦'), findsOneWidget);
+    });
+
+    testWidgets('_formatDate retourne la date brute pour une chaîne invalide',
+        (tester) async {
+      // Provide an invalid ISO date — the catch branch returns isoDate itself
+      await openSheet(
+        tester,
+        isSender: false,
+        trip: const LinkedTripSummary(
+            announcementId: 'ann-bad', departureDate: 'not-a-date'),
+      );
+      // Should not crash; the chip displays the raw string
+      expect(find.textContaining('not-a-date'), findsOneWidget);
+    });
   });
 }
