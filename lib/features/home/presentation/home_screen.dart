@@ -2616,9 +2616,14 @@ class _NotificationBell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return BlocBuilder<NotificationBloc, NotificationState>(
+      buildWhen: (prev, next) {
+        final prevCount = prev is NotificationLoaded ? prev.unreadCount : 0;
+        final nextCount = next is NotificationLoaded ? next.unreadCount : 0;
+        return prevCount != nextCount;
+      },
       builder: (context, state) {
+        final cs = Theme.of(context).colorScheme;
         final unreadCount =
             state is NotificationLoaded ? state.unreadCount : 0;
         return GestureDetector(
@@ -2652,15 +2657,15 @@ class _NotificationBell extends StatelessWidget {
               ),
               if (unreadCount > 0)
                 Positioned(
-                  top: -2,
-                  right: -2,
+                  top: -4,
+                  right: -4,
                   child: Container(
                     constraints:
                         const BoxConstraints(minWidth: 16, minHeight: 16),
                     padding: const EdgeInsets.symmetric(horizontal: 3),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: DonyColors.error,
-                      shape: BoxShape.circle,
+                      borderRadius: BorderRadius.circular(DonyRadius.full),
                     ),
                     child: Text(
                       unreadCount > 99 ? '99+' : '$unreadCount',
