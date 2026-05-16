@@ -6,6 +6,7 @@ import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:flutter/foundation.dart';
@@ -15,17 +16,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-// ── Status constants ──────────────────────────────────────────────────────────
-const _kPending          = 'PENDING';
-const _kPaymentEscrowed  = 'PAYMENT_ESCROWED';
-const _kAccepted         = 'ACCEPTED';
-const _kHandedOver       = 'HANDED_OVER';
-const _kInTransit        = 'IN_TRANSIT';
-const _kCompleted        = 'COMPLETED';
-const _kRejected         = 'REJECTED';
+// ── Status constants (onglet « En attente ») ──────────────────────────────────
+const _kPending         = 'PENDING';
+const _kPaymentEscrowed = 'PAYMENT_ESCROWED';
+const _kRejected        = 'REJECTED';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// BidListScreen — root widget, provides the BloC
+// BidListScreen — root widget, fournit les BloCs
 // ─────────────────────────────────────────────────────────────────────────────
 
 class BidListScreen extends StatelessWidget {
@@ -52,6 +49,7 @@ class BidListScreen extends StatelessWidget {
           create: (_) => getIt<BidBloc>()..add(BidListRequested(announcementId)),
         ),
         BlocProvider(create: (_) => getIt<BidAcceptanceBloc>()),
+        BlocProvider(create: (_) => getIt<BidListFilterCubit>()),
       ],
       child: _BidListView(
         announcementId: announcementId,
@@ -64,8 +62,9 @@ class BidListScreen extends StatelessWidget {
   }
 }
 
-/// Variante de test : le BidBloc doit être fourni dans le contexte parent.
-/// Utilisé uniquement en tests (@visibleForTesting).
+/// Variante de test : `BidBloc` et `BidAcceptanceBloc` doivent être fournis par
+/// le contexte parent. `BidListFilterCubit` est créé ici (Cubit déterministe,
+/// aucun mock nécessaire). Utilisé uniquement en tests.
 @visibleForTesting
 class BidListScreenTesting extends StatelessWidget {
   final String announcementId;
@@ -84,17 +83,20 @@ class BidListScreenTesting extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => _BidListView(
-        announcementId: announcementId,
-        departureCityCode: departureCityCode,
-        arrivalCityCode: arrivalCityCode,
-        departureDate: departureDate,
-        initialTabIndex: initialTabIndex,
+  Widget build(BuildContext context) => BlocProvider(
+        create: (_) => BidListFilterCubit(),
+        child: _BidListView(
+          announcementId: announcementId,
+          departureCityCode: departureCityCode,
+          arrivalCityCode: arrivalCityCode,
+          departureDate: departureDate,
+          initialTabIndex: initialTabIndex,
+        ),
       );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _BidListView — StatefulWidget with TabController
+// _BidListView — StatefulWidget avec TabController
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _BidListView extends StatefulWidget {
@@ -120,15 +122,24 @@ class _BidListViewState extends State<_BidListView>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
 
-  /// Bids currently being processed (accept in flight) — prevents double-tap.
+  /// Bids en cours d'acceptation (requête en vol) — anti double-tap.
   final _processingBidIds = <String>{};
+
+  /// L'auto-sélection d'onglet ne se fait qu'une fois, au premier chargement.
+  bool _didAutoSelectTab = false;
+
+  /// Passe à `true` dès que l'utilisateur change d'onglet.
+  bool _userSwitchedTab = false;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this, initialIndex: widget.initialTabIndex);
+    _tabController = TabController(
+        length: 2, vsync: this, initialIndex: widget.initialTabIndex);
     _tabController.addListener(() {
-      if (!_tabController.indexIsChanging) {
+      if (_tabController.indexIsChanging) {
+        _userSwitchedTab = true;
+      } else {
         setState(() {});
       }
     });
@@ -159,9 +170,10 @@ class _BidListViewState extends State<_BidListView>
   void _removeProcessing(String bidId) =>
       setState(() => _processingBidIds.remove(bidId));
 
-  // ── BLoC listener ──────────────────────────────────────────────────────────
+  // ── BLoC listeners ─────────────────────────────────────────────────────────
 
-  void _onCashAcceptanceStateChange(BuildContext context, acs.BidAcceptanceState state) {
+  void _onCashAcceptanceStateChange(
+      BuildContext context, acs.BidAcceptanceState state) {
     if (state is acs.BidAccepted) {
       setState(() => _processingBidIds.clear());
       DonySnackbar.show(context,
@@ -199,11 +211,26 @@ class _BidListViewState extends State<_BidListView>
         context.go('/home');
       }
     } else if (state is BidError) {
-      // Clear all processing bids so user can retry
       if (_processingBidIds.isNotEmpty) {
         setState(() => _processingBidIds.clear());
       }
       ErrorPresenter.show(context, state.error);
+    }
+  }
+
+  /// Bascule sur l'onglet « Acceptées » au premier chargement si « En attente »
+  /// est vide et que l'utilisateur n'a pas demandé/choisi un onglet précis.
+  void _maybeAutoSelectTab(List<BidModel> pendingBids) {
+    if (_didAutoSelectTab) return;
+    _didAutoSelectTab = true;
+    if (pendingBids.isEmpty &&
+        widget.initialTabIndex == 0 &&
+        !_userSwitchedTab) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _tabController.index == 0) {
+          _tabController.animateTo(1);
+        }
+      });
     }
   }
 
@@ -218,118 +245,116 @@ class _BidListViewState extends State<_BidListView>
     return BlocListener<BidAcceptanceBloc, acs.BidAcceptanceState>(
       listener: _onCashAcceptanceStateChange,
       child: BlocConsumer<BidBloc, BidState>(
-      listener: _onStateChange,
-      builder: (context, state) {
-        // Compute per-tab counts for AppBar title
-        final allBids =
-            state is BidListLoaded ? state.bids : <BidModel>[];
-        final pendingBids = allBids
-            .where((b) =>
-                b.status == _kPending ||
-                b.status == _kPaymentEscrowed)
-            .toList();
-        final acceptedBids = allBids
-            .where((b) =>
-                b.status == _kAccepted ||
-                b.status == _kHandedOver ||
-                b.status == _kInTransit ||
-                b.status == _kCompleted)
-            .toList();
+        listener: _onStateChange,
+        builder: (context, state) {
+          final allBids = state is BidListLoaded ? state.bids : <BidModel>[];
+          final pendingBids = allBids
+              .where((b) =>
+                  b.status == _kPending || b.status == _kPaymentEscrowed)
+              .toList();
+          final acceptedBids = allBids.where(isAcceptedTabBid).toList();
 
-        final isOnPendingTab = _tabController.index == 0;
-        final titleCount =
-            isOnPendingTab ? pendingBids.length : acceptedBids.length;
+          if (state is BidListLoaded) {
+            _maybeAutoSelectTab(pendingBids);
+          }
 
-        return Scaffold(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: AppBar(
-            backgroundColor: cs.surface,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            centerTitle: false,
-            leading: IconButton(
-              tooltip: 'Retour',
-              onPressed: () {
-                if (context.canPop()) context.pop();
-                else context.go('/home');
-              },
-              icon: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: cs.primaryContainer,
-                  borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
-                ),
-                child: Icon(Icons.chevron_left_rounded, size: 20, color: cs.primary),
-              ),
-            ),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AnimatedSwitcher(
-                  duration: 200.ms,
-                  child: Text(
-                    titleCount > 0
-                        ? '$titleCount demande${titleCount > 1 ? 's' : ''}'
-                        : 'Demandes',
-                    key: ValueKey('${_tabController.index}_$titleCount'),
-                    style: tt.headlineLarge,
+          final isOnPendingTab = _tabController.index == 0;
+          final titleCount =
+              isOnPendingTab ? pendingBids.length : acceptedBids.length;
+
+          return Scaffold(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            appBar: AppBar(
+              backgroundColor: cs.surface,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              centerTitle: false,
+              leading: IconButton(
+                tooltip: 'Retour',
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/home');
+                  }
+                },
+                icon: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer,
+                    borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
                   ),
-                ),
-                if (subtitle.isNotEmpty)
-                  Text(
-                    subtitle,
-                    style:
-                        tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-              ],
-            ),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: DonySpacing.md),
-                child: _ScannerChipButton(
-                  onTap: () => context.push('/tracking/scan'),
+                  child: Icon(Icons.chevron_left_rounded,
+                      size: 20, color: cs.primary),
                 ),
               ),
-            ],
-            bottom: PreferredSize(
-              preferredSize:
-                  const Size.fromHeight(1 + kTextTabBarHeight),
-              child: Column(
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  TabBar(
-                    controller: _tabController,
-                    labelColor: cs.primary,
-                    unselectedLabelColor: cs.onSurfaceVariant,
-                    indicatorColor: cs.primary,
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    labelStyle: tt.labelLarge,
-                    unselectedLabelStyle: tt.labelLarge,
-                    tabs: [
-                      Tab(
-                        text: pendingBids.isNotEmpty
-                            ? 'En attente (${pendingBids.length})'
-                            : 'En attente',
-                      ),
-                      Tab(
-                        text: acceptedBids.isNotEmpty
-                            ? 'Acceptées (${acceptedBids.length})'
-                            : 'Acceptées',
-                      ),
-                    ],
+                  AnimatedSwitcher(
+                    duration: 200.ms,
+                    child: Text(
+                      titleCount > 0
+                          ? '$titleCount demande${titleCount > 1 ? 's' : ''}'
+                          : 'Demandes',
+                      key: ValueKey('${_tabController.index}_$titleCount'),
+                      style: tt.headlineLarge,
+                    ),
                   ),
-                  Divider(height: 1, color: cs.outline),
+                  if (subtitle.isNotEmpty)
+                    Text(
+                      subtitle,
+                      style:
+                          tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    ),
                 ],
               ),
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.only(right: DonySpacing.md),
+                  child: _ScannerChipButton(
+                    onTap: () => context.push('/tracking/scan'),
+                  ),
+                ),
+              ],
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(1 + kTextTabBarHeight),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TabBar(
+                      controller: _tabController,
+                      labelColor: cs.primary,
+                      unselectedLabelColor: cs.onSurfaceVariant,
+                      indicatorColor: cs.primary,
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      labelStyle: tt.labelLarge,
+                      unselectedLabelStyle: tt.labelLarge,
+                      tabs: [
+                        Tab(
+                          text: pendingBids.isNotEmpty
+                              ? 'En attente (${pendingBids.length})'
+                              : 'En attente',
+                        ),
+                        Tab(
+                          text: acceptedBids.isNotEmpty
+                              ? 'Acceptées (${acceptedBids.length})'
+                              : 'Acceptées',
+                        ),
+                      ],
+                    ),
+                    Divider(height: 1, color: cs.outline),
+                  ],
+                ),
+              ),
             ),
-          ),
-          body: _buildBody(context, state, pendingBids, acceptedBids),
-        );
-      },
-    ),   // BlocConsumer<BidBloc>
-    );   // BlocListener<BidAcceptanceBloc>
+            body: _buildBody(context, state, pendingBids, acceptedBids),
+          );
+        },
+      ),
+    );
   }
 
   // ── Body ───────────────────────────────────────────────────────────────────
@@ -342,12 +367,12 @@ class _BidListViewState extends State<_BidListView>
   ) {
     if (state is BidLoading) {
       return Center(
-        child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
+        child: CircularProgressIndicator(
+            color: Theme.of(context).colorScheme.primary),
       );
     }
 
     if (state is BidError) {
-      // Only show full-page error if there's no data loaded yet.
       return _ErrorView(
         message: ErrorPresenter.resolve(state.error).message,
         onRetry: () => context
@@ -360,37 +385,25 @@ class _BidListViewState extends State<_BidListView>
       return TabBarView(
         controller: _tabController,
         children: [
-          // Tab 0 — Pending
-          _BidTabContent(
+          // Tab 0 — En attente
+          _PendingTab(
             bids: pendingBids,
-            announcementId: widget.announcementId,
             processingBidIds: _processingBidIds,
             onAccept: (bidId) {
               _addProcessing(bidId);
               final bid = pendingBids.firstWhere((b) => b.id == bidId);
               if (bid.paymentMethod == BidPaymentMethod.cash) {
-                context.read<BidAcceptanceBloc>().add(ace.BidAcceptRequested(bidId));
+                context
+                    .read<BidAcceptanceBloc>()
+                    .add(ace.BidAcceptRequested(bidId));
               } else {
                 context.read<BidBloc>().add(BidAcceptRequested(bidId));
               }
             },
             onReject: (bidId) => _showRejectDialog(context, bidId),
-            emptyTitle: 'Aucune demande en attente',
-            emptyDescription:
-                'Partagez votre annonce pour recevoir des demandes.',
-            emptyIcon: Icons.inbox_outlined,
           ),
-          // Tab 1 — Accepted / In transit / Completed
-          _BidTabContent(
-            bids: acceptedBids,
-            announcementId: widget.announcementId,
-            processingBidIds: const {},
-            onAccept: null,
-            onReject: null,
-            emptyTitle: 'Aucune demande acceptée',
-            emptyDescription: "Vous n'avez accepté aucune demande pour l'instant.",
-            emptyIcon: Icons.check_circle_outline_rounded,
-          ),
+          // Tab 1 — Acceptées
+          _AcceptedTab(acceptedBids: acceptedBids),
         ],
       );
     }
@@ -414,30 +427,21 @@ class _BidListViewState extends State<_BidListView>
     }
   }
 }
-
 // ─────────────────────────────────────────────────────────────────────────────
-// _BidTabContent — list view for one tab
+// _PendingTab — onglet « En attente »
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _BidTabContent extends StatelessWidget {
+class _PendingTab extends StatelessWidget {
   final List<BidModel> bids;
-  final String announcementId;
   final Set<String> processingBidIds;
-  final void Function(String bidId)? onAccept;
-  final void Function(String bidId)? onReject;
-  final String emptyTitle;
-  final String emptyDescription;
-  final IconData emptyIcon;
+  final void Function(String bidId) onAccept;
+  final void Function(String bidId) onReject;
 
-  const _BidTabContent({
+  const _PendingTab({
     required this.bids,
-    required this.announcementId,
     required this.processingBidIds,
     required this.onAccept,
     required this.onReject,
-    required this.emptyTitle,
-    required this.emptyDescription,
-    required this.emptyIcon,
   });
 
   @override
@@ -445,36 +449,30 @@ class _BidTabContent extends StatelessWidget {
     if (bids.isEmpty) {
       return DonyEmptyState(
         mascotte: DonyMascotteType.assis,
-        title: emptyTitle,
-        description: emptyDescription,
+        title: 'Aucune demande en attente',
+        description: 'Partagez votre annonce pour recevoir des demandes.',
       ).animate().fadeIn(duration: 300.ms);
     }
 
+    final hp = DonyLayout.hPadding(context);
     return ListView.separated(
-      padding: EdgeInsets.fromLTRB(
-        DonyLayout.hPadding(context),
-        DonySpacing.xl,
-        DonyLayout.hPadding(context),
-        DonySpacing.huge,
-      ),
+      padding: EdgeInsets.fromLTRB(hp, DonySpacing.xl, hp, DonySpacing.huge),
       itemCount: bids.length,
-      separatorBuilder: (_, _) => const SizedBox(height: DonySpacing.md),
+      separatorBuilder: (_, __) => const SizedBox(height: DonySpacing.md),
       itemBuilder: (context, i) {
         final bid = bids[i];
-        final isProcessing = processingBidIds.contains(bid.id);
-
         final card = _BidCard(
           bid: bid,
-          isProcessing: isProcessing,
-          onAccept: onAccept != null ? () => onAccept!(bid.id) : null,
-          onReject: onReject != null ? () => onReject!(bid.id) : null,
+          isProcessing: processingBidIds.contains(bid.id),
+          onAccept: () => onAccept(bid.id),
+          onReject: () => onReject(bid.id),
         )
             .animate(delay: Duration(milliseconds: i * 60))
             .fadeIn(duration: 300.ms)
             .slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic);
 
-        // Swipe-to-delete only for REJECTED bids (defensive — they normally
-        // don't appear in these filtered tabs, but handled gracefully)
+        // Swipe-to-delete défensif pour les bids REJECTED (n'apparaissent
+        // normalement pas dans cet onglet).
         if (bid.status == _kRejected) {
           return Dismissible(
             key: ValueKey('dismiss_${bid.id}'),
@@ -487,7 +485,6 @@ class _BidTabContent extends StatelessWidget {
             child: card,
           );
         }
-
         return card;
       },
     );
@@ -497,7 +494,8 @@ class _BidTabContent extends StatelessWidget {
     final confirmed = await DonyDialog.show(
       context,
       title: 'Supprimer cette demande ?',
-      message: 'Cette demande refusée sera retirée définitivement de votre liste.',
+      message:
+          'Cette demande refusée sera retirée définitivement de votre liste.',
       confirmLabel: 'Supprimer',
       variant: DonyDialogVariant.destructive,
       icon: Icons.delete_outline_rounded,
@@ -507,7 +505,212 @@ class _BidTabContent extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _BidCard — status-aware card
+// _AcceptedTab — onglet « Acceptées » : recherche + filtre + liste
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _AcceptedTab extends StatefulWidget {
+  final List<BidModel> acceptedBids;
+  const _AcceptedTab({required this.acceptedBids});
+
+  @override
+  State<_AcceptedTab> createState() => _AcceptedTabState();
+}
+
+class _AcceptedTabState extends State<_AcceptedTab> {
+  /// L'animation en cascade ne se joue qu'au premier affichage de la liste,
+  /// jamais à chaque frappe de recherche (sinon scintillement).
+  bool _hasAnimatedOnce = false;
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.acceptedBids.isEmpty) {
+      return DonyEmptyState(
+        mascotte: DonyMascotteType.assis,
+        title: 'Aucune demande acceptée',
+        description: "Vous n'avez accepté aucune demande pour l'instant.",
+      ).animate().fadeIn(duration: 300.ms);
+    }
+
+    return BlocBuilder<BidListFilterCubit, BidListFilterState>(
+      builder: (context, filter) {
+        final queryFiltered = widget.acceptedBids
+            .where((b) => bidMatchesQuery(b, filter.query))
+            .toList();
+        final allCount = queryFiltered.length;
+        final activeCount = queryFiltered.where(isActiveBid).length;
+        final closedCount = queryFiltered.where(isClosedBid).length;
+
+        List<BidModel> displayed;
+        switch (filter.filter) {
+          case AcceptedStatusFilter.all:
+            displayed = queryFiltered;
+          case AcceptedStatusFilter.active:
+            displayed = queryFiltered.where(isActiveBid).toList();
+          case AcceptedStatusFilter.closed:
+            displayed = queryFiltered.where(isClosedBid).toList();
+        }
+        displayed.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+        final animate = !_hasAnimatedOnce;
+        if (animate) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _hasAnimatedOnce = true;
+          });
+        }
+
+        final hp = DonyLayout.hPadding(context);
+        return ListView(
+          padding: EdgeInsets.fromLTRB(
+              hp, DonySpacing.base, hp, DonySpacing.huge),
+          children: [
+            const _BidSearchField(),
+            const SizedBox(height: DonySpacing.md),
+            _StatusFilterChips(
+              active: filter.filter,
+              allCount: allCount,
+              activeCount: activeCount,
+              closedCount: closedCount,
+            ),
+            const SizedBox(height: DonySpacing.base),
+            if (displayed.isEmpty)
+              _SearchEmptyState(query: filter.query)
+            else
+              for (var i = 0; i < displayed.length; i++)
+                Padding(
+                  padding: EdgeInsets.only(
+                    bottom:
+                        i == displayed.length - 1 ? 0 : DonySpacing.md,
+                  ),
+                  child: _maybeAnimate(
+                    animate,
+                    i,
+                    _BidCard(
+                      bid: displayed[i],
+                      isProcessing: false,
+                      query: filter.query,
+                    ),
+                  ),
+                ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _maybeAnimate(bool animate, int index, Widget card) {
+    if (!animate) return card;
+    return card
+        .animate(delay: Duration(milliseconds: index * 60))
+        .fadeIn(duration: 300.ms)
+        .slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _BidSearchField — barre de recherche (nom / n° de suivi)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _BidSearchField extends StatelessWidget {
+  const _BidSearchField();
+
+  @override
+  Widget build(BuildContext context) {
+    final cubit = context.read<BidListFilterCubit>();
+    return DonySearchField(
+      hint: 'Nom ou n° de suivi…',
+      onChanged: cubit.setQuery,
+      onClear: () => cubit.setQuery(''),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _StatusFilterChips — chips Tous / Actifs / Clôturés
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _StatusFilterChips extends StatelessWidget {
+  final AcceptedStatusFilter active;
+  final int allCount;
+  final int activeCount;
+  final int closedCount;
+
+  const _StatusFilterChips({
+    required this.active,
+    required this.allCount,
+    required this.activeCount,
+    required this.closedCount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cubit = context.read<BidListFilterCubit>();
+    return Wrap(
+      spacing: DonySpacing.sm,
+      runSpacing: DonySpacing.sm,
+      children: [
+        DonyChip(
+          label: 'Tous ($allCount)',
+          selected: active == AcceptedStatusFilter.all,
+          onTap: () => cubit.setFilter(AcceptedStatusFilter.all),
+        ),
+        DonyChip(
+          label: 'Actifs ($activeCount)',
+          selected: active == AcceptedStatusFilter.active,
+          onTap: () => cubit.setFilter(AcceptedStatusFilter.active),
+        ),
+        DonyChip(
+          label: 'Clôturés ($closedCount)',
+          selected: active == AcceptedStatusFilter.closed,
+          onTap: () => cubit.setFilter(AcceptedStatusFilter.closed),
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _SearchEmptyState — état vide quand recherche/filtre sans résultat
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _SearchEmptyState extends StatelessWidget {
+  final String query;
+  const _SearchEmptyState({required this.query});
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final hasQuery = query.trim().isNotEmpty;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: DonySpacing.xxl),
+      child: Column(
+        children: [
+          Icon(
+            hasQuery ? Icons.search_off_rounded : Icons.inbox_outlined,
+            size: 44,
+            color: cs.outlineVariant,
+          ),
+          const SizedBox(height: DonySpacing.md),
+          Text(
+            hasQuery ? 'Aucun résultat' : 'Aucun envoi',
+            style: tt.titleLarge,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: DonySpacing.xs),
+          Text(
+            hasQuery
+                ? 'Essayez un autre terme de recherche.'
+                : 'Aucun envoi dans cette catégorie.',
+            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+// _BidCard — carte de bid (Option B)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _BidCard extends StatelessWidget {
@@ -516,28 +719,38 @@ class _BidCard extends StatelessWidget {
   final VoidCallback? onAccept;
   final VoidCallback? onReject;
 
+  /// Requête de recherche courante — pour le surlignage. Vide hors recherche.
+  final String query;
+
   const _BidCard({
     required this.bid,
     required this.isProcessing,
     this.onAccept,
     this.onReject,
+    this.query = '',
   });
 
-  bool get _isPending         => bid.status == _kPending || bid.status == _kPaymentEscrowed;
+  bool get _isPending =>
+      bid.status == _kPending || bid.status == _kPaymentEscrowed;
   bool get _isPaymentEscrowed => bid.status == _kPaymentEscrowed;
-  bool get _isRejected        => bid.status == _kRejected;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
+    final amount = bid.pricePerKg != null
+        ? '${(bid.weightKg * bid.pricePerKg!).toStringAsFixed(0)} €'
+        : '—';
+    final content = bid.contentCategory ?? bid.description;
+    final hasTracking =
+        bid.trackingNumber != null && bid.trackingNumber!.isNotEmpty;
+
     return Material(
       color: cs.surface,
       borderRadius: BorderRadius.circular(DonyRadius.card),
       child: InkWell(
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        // Always navigates to detail — no exceptions
         onTap: () => context.push('/bids/${bid.id}', extra: bid),
         child: Container(
           decoration: BoxDecoration(
@@ -548,82 +761,78 @@ class _BidCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Row 1: avatar + sender info + amount ──────────────
+              // ── Ligne 1 : avatar + identité + montant ──────────────
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  DonyAvatar(
-                    name: bid.resolvedSenderName,
-                  ),
+                  DonyAvatar(name: bid.resolvedSenderName),
                   const SizedBox(width: DonySpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          bid.resolvedSenderName,
+                        _HighlightedText(
+                          text: bid.resolvedSenderName,
+                          query: query,
                           style: tt.titleLarge,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: DonySpacing.xxs),
-                        Row(
-                          children: [
-                            Icon(Icons.star_rounded,
-                                size: 13, color: cs.warning),
-                            const SizedBox(width: DonySpacing.xxs),
-                            Text(
-                              '—',
-                              style: tt.bodySmall
-                                  ?.copyWith(color: cs.onSurfaceVariant),
-                            ),
-                            const SizedBox(width: DonySpacing.xs),
-                            Text(
-                              '· ${bid.weightKg.toStringAsFixed(0)} kg',
-                              style: tt.bodySmall
-                                  ?.copyWith(color: cs.onSurfaceVariant),
-                            ),
-                          ],
-                        ),
+                        if (hasTracking) ...[
+                          const SizedBox(height: DonySpacing.xxs),
+                          _HighlightedText(
+                            text: 'N° ${bid.trackingNumber}',
+                            query: query,
+                            style: tt.labelSmall
+                                ?.copyWith(color: cs.outlineVariant),
+                          ),
+                        ],
                       ],
                     ),
                   ),
-                  // Amount
-                  Text(
-                    bid.pricePerKg != null
-                        ? '${(bid.weightKg * bid.pricePerKg!).toStringAsFixed(0)} €'
-                        : '—',
-                    style: tt.titleLarge
-                        ?.copyWith(color: cs.primary),
+                  const SizedBox(width: DonySpacing.sm),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'MONTANT',
+                        style: tt.labelSmall
+                            ?.copyWith(color: cs.outlineVariant),
+                      ),
+                      const SizedBox(height: DonySpacing.xxs),
+                      Text(
+                        amount,
+                        style: tt.titleLarge?.copyWith(color: cs.primary),
+                      ),
+                    ],
                   ),
                 ],
               ),
               const SizedBox(height: DonySpacing.md),
 
-              // ── Content label ────────────────────────────────────
-              Text(
-                'CONTENU DÉCLARÉ',
-                style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
-              ),
-              const SizedBox(height: DonySpacing.xxs),
-              Text(
-                bid.contentCategory ?? bid.description ?? '—',
-                style: tt.bodySmall?.copyWith(color: cs.onSurface),
+              // ── Ligne 2 : pastilles méta ───────────────────────────
+              Wrap(
+                spacing: DonySpacing.sm,
+                runSpacing: DonySpacing.sm,
+                children: [
+                  _MetaPill(
+                    icon: Icons.scale_outlined,
+                    label: '${bid.weightKg.toStringAsFixed(0)} kg',
+                  ),
+                  if (content != null && content.isNotEmpty)
+                    _MetaPill(
+                      icon: Icons.inventory_2_outlined,
+                      label: content,
+                    ),
+                ],
               ),
               const SizedBox(height: DonySpacing.md),
 
-              // ── Divider ──────────────────────────────────────────
               Divider(color: cs.outline, height: 1),
               const SizedBox(height: DonySpacing.md),
 
-              // ── Bottom area: actions OR status badge ─────────────
+              // ── Bas : actions OU badge de statut ───────────────────
               if (_isPending && onAccept != null && onReject != null) ...[
                 if (_isPaymentEscrowed) ...[
-                  _StatusBadge(
-                    label: '💳 Paiement reçu — en attente de votre réponse',
-                    icon: Icons.lock_rounded,
-                    color: cs.warning,
-                    bgColor: cs.warningLight,
-                  ),
+                  _EscrowedHint(),
                   const SizedBox(height: DonySpacing.sm),
                 ],
                 _PendingActions(
@@ -631,41 +840,10 @@ class _BidCard extends StatelessWidget {
                   onAccept: onAccept!,
                   onReject: onReject!,
                 ),
-              ]
-              else if (bid.status == _kAccepted)
-                _StatusBadge(
-                  label: '✓ Accepté',
-                  icon: Icons.check_circle_rounded,
-                  color: cs.success,
-                  bgColor: cs.successLight,
-                )
-              else if (bid.status == _kHandedOver)
-                _StatusBadge(
-                  label: '↗ En route',
-                  icon: Icons.local_shipping_outlined,
-                  color: cs.primary,
-                  bgColor: cs.primaryContainer,
-                )
-              else if (bid.status == _kInTransit)
-                _StatusBadge(
-                  label: '↗ En transit',
-                  icon: Icons.local_shipping_outlined,
-                  color: cs.info,
-                  bgColor: cs.infoLight,
-                )
-              else if (bid.status == _kCompleted)
-                _StatusBadge(
-                  label: '✓ Livré',
-                  icon: Icons.verified_rounded,
-                  color: DonyColors.success700,
-                  bgColor: cs.successLight,
-                )
-              else if (_isRejected)
-                _StatusBadge(
-                  label: 'Refusé',
-                  icon: Icons.cancel_rounded,
-                  color: cs.error,
-                  bgColor: cs.errorLight,
+              ] else
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: _StatusDot(status: bid.status),
                 ),
             ],
           ),
@@ -676,7 +854,92 @@ class _BidCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _PendingActions — Refuser + Accepter buttons with debounce
+// _HighlightedText — texte avec terme de recherche surligné
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _HighlightedText extends StatelessWidget {
+  final String text;
+  final String query;
+  final TextStyle? style;
+
+  const _HighlightedText({
+    required this.text,
+    required this.query,
+    this.style,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final q = normalizeSearch(query.trim());
+    if (q.isEmpty) {
+      return Text(text, style: style, overflow: TextOverflow.ellipsis);
+    }
+    // normalizeSearch préserve la longueur → les index sont valides sur `text`.
+    final idx = normalizeSearch(text).indexOf(q);
+    if (idx < 0) {
+      return Text(text, style: style, overflow: TextOverflow.ellipsis);
+    }
+    final cs = Theme.of(context).colorScheme;
+    final highlight = (style ?? const TextStyle()).copyWith(
+      backgroundColor: cs.warningLight,
+      color: cs.onSurface,
+      fontWeight: FontWeight.w800,
+    );
+    return Text.rich(
+      TextSpan(
+        style: style,
+        children: [
+          TextSpan(text: text.substring(0, idx)),
+          TextSpan(
+              text: text.substring(idx, idx + q.length), style: highlight),
+          TextSpan(text: text.substring(idx + q.length)),
+        ],
+      ),
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _MetaPill — pastille discrète (poids, contenu)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _MetaPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _MetaPill({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: BorderRadius.circular(DonyRadius.sm),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: cs.onSurfaceVariant),
+          const SizedBox(width: DonySpacing.xs),
+          Text(
+            label,
+            style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _PendingActions — Refuser + Accepter
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _PendingActions extends StatelessWidget {
@@ -715,25 +978,14 @@ class _PendingActions extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _StatusBadge — small chip shown on non-pending cards
+// _EscrowedHint — bandeau « Paiement reçu » (bids PAYMENT_ESCROWED)
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _StatusBadge extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color color;
-  final Color bgColor;
-
-  const _StatusBadge({
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.bgColor,
-  });
-
+class _EscrowedHint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(
@@ -741,18 +993,17 @@ class _StatusBadge extends StatelessWidget {
         vertical: DonySpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: bgColor,
+        color: cs.warningLight,
         borderRadius: BorderRadius.circular(DonyRadius.sm),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(icon, size: 14, color: color),
+          Icon(Icons.lock_rounded, size: 14, color: cs.warning),
           const SizedBox(width: DonySpacing.xs),
           Flexible(
             child: Text(
-              label,
-              style: tt.labelMedium?.copyWith(color: color),
+              '💳 Paiement reçu — en attente de votre réponse',
+              style: tt.labelMedium?.copyWith(color: cs.warning),
               softWrap: true,
             ),
           ),
@@ -763,7 +1014,61 @@ class _StatusBadge extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _DismissBackground — red delete background for swipe
+// _StatusDot — badge « point coloré » (statuts post-acceptation)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _StatusDot extends StatelessWidget {
+  final String status;
+  const _StatusDot({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    final (Color color, Color bg, String label) = switch (status) {
+      'ACCEPTED' => (cs.success, cs.successLight, 'Accepté'),
+      'HANDED_OVER' => (cs.primary, cs.primaryContainer, 'En route'),
+      'IN_TRANSIT' => (cs.info, cs.infoLight, 'En transit'),
+      'COMPLETED' => (cs.success, cs.successLight, 'Livré'),
+      'NO_SHOW' => (cs.warning, cs.warningLight, 'Absent'),
+      'PARCEL_REFUSED' => (cs.error, cs.errorLight, 'Colis refusé'),
+      'CANCELLED' => (
+          cs.onSurfaceVariant,
+          cs.surfaceContainerHighest,
+          'Annulé'
+        ),
+      'REJECTED' => (cs.error, cs.errorLight, 'Refusé'),
+      _ => (cs.onSurfaceVariant, cs.surfaceContainerHighest, status),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.md,
+        vertical: DonySpacing.xs + 1,
+      ),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: DonySpacing.xs + 2),
+          Text(label, style: tt.labelMedium?.copyWith(color: color)),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _DismissBackground — fond rouge du swipe-to-delete
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _DismissBackground extends StatelessWidget {
@@ -781,14 +1086,14 @@ class _DismissBackground extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(Icons.delete_outline_rounded,
-              color: DonyColors.white, size: 28),
+              color: DonyColors.neutral0, size: 28),
           const SizedBox(height: DonySpacing.xs),
           Text(
             'Supprimer',
             style: Theme.of(context)
                 .textTheme
                 .labelSmall
-                ?.copyWith(color: DonyColors.white),
+                ?.copyWith(color: DonyColors.neutral0),
           ),
         ],
       ),
@@ -797,7 +1102,7 @@ class _DismissBackground extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _ScannerChipButton — QR scanner action chip in AppBar
+// _ScannerChipButton — chip QR scanner dans l'AppBar
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ScannerChipButton extends StatelessWidget {
@@ -824,8 +1129,7 @@ class _ScannerChipButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.qr_code_scanner_rounded,
-                size: 16, color: cs.onSurface),
+            Icon(Icons.qr_code_scanner_rounded, size: 16, color: cs.onSurface),
             const SizedBox(width: DonySpacing.xs),
             Text(
               'Scanner',
@@ -839,7 +1143,7 @@ class _ScannerChipButton extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _ErrorView — error state with retry
+// _ErrorView — état d'erreur avec « Réessayer »
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ErrorView extends StatelessWidget {
