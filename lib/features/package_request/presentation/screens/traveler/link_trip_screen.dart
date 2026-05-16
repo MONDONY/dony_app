@@ -58,13 +58,18 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
       // We use travelerTravelDate (the date the traveler proposed and the sender
       // accepted) rather than request.desiredDate, which may differ from the
       // traveler's actual planned departure date.
+      //
+      // City comparison normalizes both sides to just the city name before the
+      // first comma: "Paris, France" and "Paris" both normalize to "paris".
+      // This handles legacy announcements stored with country suffix
+      // ("Paris, France") versus package requests stored without ("Paris").
+      String cityKey(String city) => city.split(',').first.toLowerCase().trim();
+
       final agreedDate = widget.thread.travelerTravelDate;
       final matching = myTrips.announcements.where((ann) {
         final corridorMatch =
-            ann.departureCity.toLowerCase().trim() ==
-                request.departureCity.toLowerCase().trim() &&
-            ann.arrivalCity.toLowerCase().trim() ==
-                request.arrivalCity.toLowerCase().trim();
+            cityKey(ann.departureCity) == cityKey(request.departureCity) &&
+            cityKey(ann.arrivalCity) == cityKey(request.arrivalCity);
         final dateMatch = ann.departureDate.year == agreedDate.year &&
             ann.departureDate.month == agreedDate.month &&
             ann.departureDate.day == agreedDate.day;
