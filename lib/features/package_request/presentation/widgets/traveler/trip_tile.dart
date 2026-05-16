@@ -152,10 +152,10 @@ class _ModifyButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(DonyRadius.sm),
         onTap: onTap,
         child: Padding(
-          // vertical 12 → cible tactile ≥ 44 (HIG).
+          // vertical 16 : hauteur rendue ~50pt → cible tactile ≥ 44 (HIG).
           padding: const EdgeInsets.symmetric(
             horizontal: DonySpacing.md,
-            vertical: DonySpacing.md,
+            vertical: DonySpacing.base,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
