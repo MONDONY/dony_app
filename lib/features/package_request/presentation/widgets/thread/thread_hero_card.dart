@@ -90,14 +90,19 @@ class ThreadHeroCard extends StatelessWidget {
     super.key,
     required this.thread,
     required this.statusVariant,
+    this.onTap,
   });
 
   final NegotiationThread thread;
   final ThreadStatusVariant statusVariant;
 
+  /// Si non null, le card devient cliquable et affiche une affordance
+  /// « Voir le trajet lié » en bas.
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final card = Container(
       margin: const EdgeInsets.fromLTRB(
           DonySpacing.base, DonySpacing.md, DonySpacing.base, DonySpacing.sm),
       decoration: BoxDecoration(
@@ -179,12 +184,21 @@ class ThreadHeroCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
                 _RoundProgress(roundsCount: thread.roundsCount, max: 5),
+                if (onTap != null) ...[
+                  const SizedBox(height: 12),
+                  const _ViewTripHint(),
+                ],
               ],
             ),
           ),
         ],
       ),
     );
+
+    if (onTap == null) {
+      return card;
+    }
+    return GestureDetector(onTap: onTap, child: card);
   }
 }
 
@@ -254,6 +268,40 @@ class _RoundProgress extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ViewTripHint extends StatelessWidget {
+  const _ViewTripHint();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.only(top: 10),
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.local_shipping_outlined,
+              size: 15, color: Colors.white.withValues(alpha: 0.85)),
+          const SizedBox(width: 6),
+          Text(
+            'Voir le trajet lié',
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white.withValues(alpha: 0.85),
+                ),
+          ),
+          const Spacer(),
+          Icon(Icons.chevron_right_rounded,
+              size: 18, color: Colors.white.withValues(alpha: 0.85)),
+        ],
+      ),
     );
   }
 }

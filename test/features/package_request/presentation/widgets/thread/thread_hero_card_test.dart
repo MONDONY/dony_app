@@ -109,4 +109,30 @@ void main() {
       expect(find.text('PRIX FINAL'), findsOneWidget);
     });
   });
+
+  group('ThreadHeroCard onTap', () {
+    testWidgets('sans onTap → pas d\'affordance "Voir le trajet lié"',
+        (tester) async {
+      await tester.pumpWidget(wrap(ThreadHeroCard(
+        thread: _thread(status: NegotiationThreadStatus.awaitingPayment),
+        statusVariant: ThreadStatusVariant.awaitingPayment,
+      )));
+      expect(find.text('Voir le trajet lié'), findsNothing);
+    });
+
+    testWidgets('avec onTap → affordance affichée et tap déclenché',
+        (tester) async {
+      var tapped = false;
+      await tester.pumpWidget(wrap(ThreadHeroCard(
+        thread: _thread(status: NegotiationThreadStatus.awaitingPayment),
+        statusVariant: ThreadStatusVariant.awaitingPayment,
+        onTap: () => tapped = true,
+      )));
+      expect(find.text('Voir le trajet lié'), findsOneWidget);
+
+      await tester.tap(find.text('Voir le trajet lié'));
+      await tester.pump();
+      expect(tapped, isTrue);
+    });
+  });
 }
