@@ -68,7 +68,9 @@ class PackageRequestBloc extends Bloc<PackageRequestEvent, PackageRequestState> 
   final PackageRequestRepository _repository;
 
   Future<void> _onFetch(FetchMyRequests e, Emitter<PackageRequestState> emit) async {
-    emit(state.copyWith(status: PackageRequestListStatus.loading));
+    if (state.requests.isEmpty) {
+      emit(state.copyWith(status: PackageRequestListStatus.loading));
+    }
     try {
       final page = await _repository.findMine();
       emit(state.copyWith(

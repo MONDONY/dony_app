@@ -29,6 +29,7 @@ class _EnvoyerHubScreenState extends State<EnvoyerHubScreen> {
   @override
   void initState() {
     super.initState();
+    getIt<PackageRequestBloc>().add(const FetchMyRequests());
     getIt<NegotiationListBloc>().add(const NegotiationListFetchRequested());
   }
 
@@ -36,10 +37,7 @@ class _EnvoyerHubScreenState extends State<EnvoyerHubScreen> {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(
-          create: (_) =>
-              getIt<PackageRequestBloc>()..add(const FetchMyRequests()),
-        ),
+        BlocProvider.value(value: getIt<PackageRequestBloc>()),
         BlocProvider(
           create: (_) =>
               getIt<BidBloc>()..add(const BidMyListAutoRefreshRequested()),

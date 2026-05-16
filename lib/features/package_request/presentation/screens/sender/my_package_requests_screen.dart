@@ -12,8 +12,19 @@ import 'package:intl/intl.dart';
 
 enum _StatusFilter { all, open, accepted }
 
-class MyPackageRequestsScreen extends StatelessWidget {
+class MyPackageRequestsScreen extends StatefulWidget {
   const MyPackageRequestsScreen({super.key});
+
+  @override
+  State<MyPackageRequestsScreen> createState() => _MyPackageRequestsScreenState();
+}
+
+class _MyPackageRequestsScreenState extends State<MyPackageRequestsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    getIt<PackageRequestBloc>().add(const FetchMyRequests());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,17 +42,8 @@ class MyPackageRequestsBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool hasParent;
-    try {
-      BlocProvider.of<PackageRequestBloc>(context, listen: false);
-      hasParent = true;
-    } catch (_) {
-      hasParent = false;
-    }
-    if (hasParent) return _ListContent(showFab: showFab);
-    return BlocProvider(
-      create: (_) =>
-          getIt<PackageRequestBloc>()..add(const FetchMyRequests()),
+    return BlocProvider.value(
+      value: getIt<PackageRequestBloc>(),
       child: _ListContent(showFab: showFab),
     );
   }

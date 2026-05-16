@@ -287,8 +287,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerFactory<RatingBloc>(
     () => RatingBloc(getIt<RatingRepository>()),
   );
-  getIt.registerFactory<MyReviewsBloc>(
+  getIt.registerLazySingleton<MyReviewsBloc>(
     () => MyReviewsBloc(getIt<RatingRepository>()),
+    dispose: (b) => b.close(),
   );
   getIt.registerFactory<ProfilePublicBloc>(
     () => ProfilePublicBloc(
@@ -349,8 +350,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<FavoriteTravelerRepository>(
     () => FavoriteTravelerRepository(getIt<FavoriteTravelerDatasource>()),
   );
-  getIt.registerFactory<FavoriteTravelerBloc>(
+  getIt.registerLazySingleton<FavoriteTravelerBloc>(
     () => FavoriteTravelerBloc(getIt<FavoriteTravelerRepository>()),
+    dispose: (b) => b.close(),
   );
 
   // Referral
@@ -360,8 +362,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<ReferralRepository>(
     () => ReferralRepository(getIt<ReferralDatasource>()),
   );
-  getIt.registerFactory<ReferralBloc>(
+  getIt.registerLazySingleton<ReferralBloc>(
     () => ReferralBloc(getIt<ReferralRepository>()),
+    dispose: (b) => b.close(),
   );
 
   // Package request marketplace
@@ -380,8 +383,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerFactory<PackageRequestSearchBloc>(
     () => PackageRequestSearchBloc(getIt<PackageRequestRepository>()),
   );
-  getIt.registerFactory<PackageRequestBloc>(
+  getIt.registerLazySingleton<PackageRequestBloc>(
     () => PackageRequestBloc(getIt<PackageRequestRepository>()),
+    dispose: (b) => b.close(),
   );
   getIt.registerFactory<NegotiationBloc>(
     () => NegotiationBloc(getIt<NegotiationRepository>()),

@@ -15,7 +15,7 @@ class MyReviewsBloc extends Bloc<MyReviewsEvent, MyReviewsState> {
     MyReviewsRequested event,
     Emitter<MyReviewsState> emit,
   ) async {
-    emit(const MyReviewsLoading());
+    if (state is! MyReviewsLoaded) emit(const MyReviewsLoading());
     try {
       final summary = await _repository.findMineReceived();
       emit(MyReviewsLoaded(summary: summary));
