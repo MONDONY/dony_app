@@ -9,6 +9,7 @@ import 'package:dony/features/package_request/data/models/negotiation_thread.dar
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
+import 'package:dony/features/package_request/presentation/widgets/thread/modify_trip_sheet.dart';
 import 'package:dony/features/package_request/presentation/widgets/traveler/trip_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -135,6 +136,18 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
     // listener below will pop us back. If the user cancelled, we still
     // refresh the matching list.
     if (mounted) await _load();
+  }
+
+  /// Un trajet n'est modifiable que si ses adresses sont complètes
+  /// (requises par AnnouncementUpdateRequested, remplacement complet).
+  bool _canModify(AnnouncementModel ann) =>
+      ann.pickupAddress != null && ann.deliveryAddress != null;
+
+  Future<void> _openModifySheet(AnnouncementModel ann) async {
+    final changed = await ModifyTripSheet.show(context, announcement: ann);
+    if (changed == true && mounted) {
+      await _load();
+    }
   }
 
   @override
@@ -285,6 +298,9 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                       index: e.key,
                       isSelected: _selectedTrip?.id == e.value.id,
                       onTap: () => _selectTrip(e.value),
+                      onModify: _canModify(e.value)
+                          ? () => _openModifySheet(e.value)
+                          : null,
                     )),
           const SizedBox(height: DonySpacing.base),
           OutlinedButton.icon(
