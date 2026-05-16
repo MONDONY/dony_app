@@ -12,9 +12,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
-import 'package:dony/features/tracking/presentation/widgets/qr_code_card.dart';
 import 'package:dony/features/tracking/presentation/widgets/tracking_timeline_bottom_sheet.dart';
-import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:flutter/material.dart';
@@ -32,9 +30,8 @@ import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.dart';
 import 'package:dony/features/matching/presentation/widgets/handover_bottom_sheet.dart';
-import 'package:dony/features/matching/presentation/widgets/route_map_components.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
-import 'package:dony/features/matching/presentation/widgets/billet/talon_retrait_code_view.dart';
+import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:dony/features/matching/presentation/widgets/sender_profile_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_profile_sheet.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
@@ -301,12 +298,6 @@ class _BidDetailViewState extends State<_BidDetailView> {
                     _bid.trackingNumber ??
                     _bid.id.substring(0, 6).toUpperCase();
 
-                // Compute corridor codes for display
-                final depCity = _bid.departureCity ?? 'Paris';
-                final arrCity = _bid.arrivalCity ?? 'Dakar';
-                final depCode = cityAirportCode(depCity, departure: true);
-                final arrCode = cityAirportCode(arrCity, departure: false);
-
                 return Scaffold(
                   backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                   appBar: DonyAppBar(
@@ -353,27 +344,19 @@ class _BidDetailViewState extends State<_BidDetailView> {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    // Status badge + CASH badge
-                                    Row(
-                                      children: [
-                                        _StatusBadge(bid: _bid),
-                                        if (_bid.paymentMethod ==
-                                            BidPaymentMethod.cash) ...[
-                                          const SizedBox(width: DonySpacing.sm),
-                                          _CashBadge(),
-                                        ],
-                                      ],
-                                    ),
+                                    // Billet de colis (status, corridor, dates, talon)
+                                    ColisBillet(bid: _bid, isSender: isSender),
                                     const SizedBox(height: DonySpacing.base),
 
-                                    // Route map card
-                                    RouteMapCard(
-                                      departureCode: depCode,
-                                      arrivalCode: arrCode,
-                                      departureCity: depCity,
-                                      arrivalCity: arrCity,
-                                    ),
-                                    const SizedBox(height: DonySpacing.base),
+                                    // Badge CASH (affiché sous le billet si paiement en espèces)
+                                    if (_bid.paymentMethod ==
+                                        BidPaymentMethod.cash) ...[
+                                      Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: _CashBadge(),
+                                      ),
+                                      const SizedBox(height: DonySpacing.base),
+                                    ],
 
                                     // Traveler card (visible to sender when accepted or completed)
                                     if (isSender &&
@@ -382,14 +365,6 @@ class _BidDetailViewState extends State<_BidDetailView> {
                                             _bid.status == 'IN_TRANSIT' ||
                                             _bid.status == 'COMPLETED')) ...[
                                       _TravelerCard(bid: _bid),
-                                      const SizedBox(height: DonySpacing.base),
-                                    ],
-
-                                    // Tracking number card
-                                    if (_bid.trackingNumber != null) ...[
-                                      _TrackingNumberCard(
-                                        trackingNumber: _bid.trackingNumber!,
-                                      ),
                                       const SizedBox(height: DonySpacing.base),
                                     ],
 
@@ -428,14 +403,6 @@ class _BidDetailViewState extends State<_BidDetailView> {
                                       _HandoverCard(bid: _bid),
                                     ],
 
-                                    // QR code (sender, accepted)
-                                    if (isSender &&
-                                        _bid.status == 'ACCEPTED' &&
-                                        _bid.trackingNumber != null) ...[
-                                      const SizedBox(height: DonySpacing.base),
-                                      QrCodeCard(bidId: _bid.id),
-                                    ],
-
                                     // Tracking link
                                     if ((_bid.status == 'ACCEPTED' ||
                                             _bid.status == 'HANDED_OVER' ||
@@ -443,22 +410,6 @@ class _BidDetailViewState extends State<_BidDetailView> {
                                         _bid.trackingToken != null) ...[
                                       const SizedBox(height: DonySpacing.base),
                                       _TrackingLinkCard(bid: _bid),
-                                    ],
-
-                                    // Confirmation code (sender) — généré lors du scan DEPART → HANDED_OVER
-                                    if (isSender &&
-                                        (_bid.status == 'HANDED_OVER' ||
-                                            _bid.status == 'IN_TRANSIT') &&
-                                        _bid.confirmationCode != null) ...[
-                                      const SizedBox(height: DonySpacing.base),
-                                      TalonRetraitCodeView(
-                                        bidId: _bid.id,
-                                        initialCode: _bid.confirmationCode!,
-                                        refreshCount:
-                                            _bid.confirmationCodeRefreshCount,
-                                        refreshWindowStart: _bid
-                                            .confirmationCodeRefreshWindowStart,
-                                      ),
                                     ],
 
                                     // Timeline section ("ÉTAPES")
@@ -629,70 +580,6 @@ class _RatingDoneCard extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ── Status badge ──────────────────────────────────────────────────────────────
-
-class _StatusBadge extends StatelessWidget {
-  final BidModel bid;
-  const _StatusBadge({required this.bid});
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
-    Color color;
-    String label;
-
-    switch (bid.status) {
-      case 'ACCEPTED':
-        color = cs.success;
-        label = '● Confirmé';
-        break;
-      case 'HANDED_OVER':
-        color = cs.primary;
-        label = '● En route';
-        break;
-      case 'REJECTED':
-        color = cs.error;
-        label = '● Refusé';
-        break;
-      case 'COMPLETED':
-        color = cs.success;
-        label = '● Livré';
-        break;
-      case 'CANCELLED':
-        color = cs.onSurfaceVariant;
-        label = '● Annulé';
-        break;
-      case 'IN_TRANSIT':
-        color = cs.primary;
-        label = '● En transit';
-        break;
-      default:
-        color = cs.warning;
-        label = '● En attente';
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.md,
-        vertical: DonySpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(DonyRadius.full),
-      ),
-      child: Text(
-        label,
-        style: tt.labelMedium?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w700,
-        ),
       ),
     );
   }
@@ -2204,96 +2091,6 @@ class _TravelerRejectedBar extends StatelessWidget {
               elevation: 0,
             ),
             child: Text('Supprimer', style: tt.labelLarge),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Tracking number card ──────────────────────────────────────────────────────
-
-class _TrackingNumberCard extends StatelessWidget {
-  final String trackingNumber;
-  const _TrackingNumberCard({required this.trackingNumber});
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'NUMÉRO DE SUIVI',
-            style: tt.labelMedium?.copyWith(
-              color: cs.onSurfaceVariant,
-              letterSpacing: 0.8,
-            ),
-          ),
-          const SizedBox(height: DonySpacing.sm),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(DonySpacing.sm),
-                decoration: BoxDecoration(
-                  color: cs.primaryContainer,
-                  borderRadius: BorderRadius.circular(DonyRadius.sm),
-                ),
-                child: Icon(
-                  Icons.local_shipping_outlined,
-                  color: cs.primary,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: DonySpacing.md),
-              Expanded(
-                child: Text(
-                  trackingNumber,
-                  style: tt.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 2,
-                  ),
-                ),
-              ),
-              IconButton(
-                icon: Icon(Icons.copy_rounded, color: cs.primary, size: 20),
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: trackingNumber));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Numéro copié !',
-                        style: tt.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(DonyRadius.sm),
-                      ),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                },
-                tooltip: 'Copier',
-              ),
-            ],
-          ),
-          const SizedBox(height: DonySpacing.sm),
-          Text(
-            'Partagez ce numéro avec votre destinataire pour qu\'il puisse suivre le colis.',
-            style: tt.bodySmall?.copyWith(
-              color: cs.onSurfaceVariant,
-              height: 1.4,
-            ),
           ),
         ],
       ),
