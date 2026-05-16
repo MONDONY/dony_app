@@ -149,8 +149,9 @@ De haut en bas :
   (`titleLarge`, w800) puis numéro de suivi en dessous (`N° DNY-XXXX`, petit, `kTextHint`) ·
   à droite montant avec micro-label « MONTANT » au-dessus (`pricePerKg * weightKg`).
 - **Ligne 2** : deux pastilles méta discrètes — `⚖ {poids} kg` et
-  `📦 {catégorie de contenu}` (fond `kBackground`, texte `kTextSecondary`).
-  Si la catégorie est nulle → repli sur la description, sinon pastille omise.
+  `📦 {contenu}` (fond `kBackground`, texte `kTextSecondary`). La pastille contenu
+  affiche `contentCategory` ; si nul, repli sur `description` ; si les deux sont nuls,
+  la pastille contenu est omise (la pastille poids reste toujours affichée).
 - **Séparateur** fin.
 - **Badge de statut** `_StatusDot` (§6.2).
 - La note expéditeur « ★ — » (jamais renseignée) est **supprimée**.
@@ -171,7 +172,7 @@ Pastille à fond teinté doux, contenant un **point de couleur** (≈ 7-8 px) su
 | `COMPLETED` | Livré | `cs.success` | `cs.successLight` |
 | `NO_SHOW` | Absent | `cs.warning` | `cs.warningLight` |
 | `PARCEL_REFUSED` | Colis refusé | `cs.error` | `cs.errorLight` |
-| `CANCELLED` | Annulé | `cs.onSurfaceVariant` | fond neutre clair |
+| `CANCELLED` | Annulé | `cs.onSurfaceVariant` | `cs.surfaceContainerHighest` |
 
 Libellés alignés sur `shipment_list_screen.dart` / `billet_status_stamp.dart`.
 Accessibilité : l'information passe par le **point + le texte**, jamais par la couleur seule.
