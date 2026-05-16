@@ -82,6 +82,17 @@ class NegotiationRepository {
     return NegotiationThread.fromJson(response.data!);
   }
 
+  /// Sender refuses the trip the traveler linked to an AWAITING_PAYMENT thread.
+  /// The backend clears the linked trip, moves the thread back to AWAITING_TRIP
+  /// and records [reason] as a REJECT message visible to the traveler.
+  Future<NegotiationThread> refuseTrip(String id, {String? reason}) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/negotiations/$id/refuse-trip',
+      data: {if (reason != null) 'reason': reason},
+    );
+    return NegotiationThread.fromJson(response.data!);
+  }
+
   /// Traveler creates a brand-new "dedicated" trip linked exclusively to this
   /// thread's package_request. Locked fields (corridor, weight, transport mode,
   /// agreed price) are derived server-side from the request — only the editable

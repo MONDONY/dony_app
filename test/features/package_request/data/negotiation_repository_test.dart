@@ -147,4 +147,43 @@ void main() {
       await expectLater(repo.reject('th-1', reason: 'Not convenient'), completes);
     });
   });
+
+  group('refuseTrip', () {
+    test('POSTs to /negotiations/:id/refuse-trip avec la raison', () async {
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/refuse-trip',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((_) async => _ok(_threadJson, '/negotiations/th-1/refuse-trip'));
+
+      final thread = await repo.refuseTrip('th-1', reason: 'Date trop tard');
+
+      expect(thread.id, 'th-1');
+      verify(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/refuse-trip',
+          data: {'reason': 'Date trop tard'},
+        ),
+      ).called(1);
+    });
+
+    test('POSTs sans data quand reason est null', () async {
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/refuse-trip',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((_) async => _ok(_threadJson, '/negotiations/th-1/refuse-trip'));
+
+      await repo.refuseTrip('th-1');
+
+      verify(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/refuse-trip',
+          data: <String, dynamic>{},
+        ),
+      ).called(1);
+    });
+  });
 }
