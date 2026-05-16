@@ -78,10 +78,12 @@ class BilletTalon extends StatelessWidget {
       'ACCEPTED' => TalonTravelerActionView(
         bidId: bid.id,
         action: TalonTravelerAction.scan,
+        travelerName: bid.travelerName,
       ),
       'HANDED_OVER' || 'IN_TRANSIT' => TalonTravelerActionView(
         bidId: bid.id,
         action: TalonTravelerAction.confirmDelivery,
+        travelerName: bid.travelerName,
       ),
       'COMPLETED' || 'DELIVERED' => const _DoneBlock(),
       'REJECTED' || 'CANCELLED' => const _TerminalBlock(),
