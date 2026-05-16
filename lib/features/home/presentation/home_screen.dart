@@ -694,6 +694,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                     : _showFilterSheet(context),
                               ),
                             ),
+                            const SizedBox(width: DonySpacing.sm),
+                            const _NotificationBell(),
                           ],
                         ),
                         const SizedBox(height: DonySpacing.xs),
@@ -2603,6 +2605,79 @@ class _TrustPill extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ── _NotificationBell ─────────────────────────────────────────────────────────
+
+class _NotificationBell extends StatelessWidget {
+  const _NotificationBell();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return BlocBuilder<NotificationBloc, NotificationState>(
+      builder: (context, state) {
+        final unreadCount =
+            state is NotificationLoaded ? state.unreadCount : 0;
+        return GestureDetector(
+          onTap: () => showNotificationBottomSheet(context),
+          behavior: HitTestBehavior.opaque,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: cs.surface,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.10),
+                      blurRadius: 12,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  unreadCount > 0
+                      ? Icons.notifications_rounded
+                      : Icons.notifications_outlined,
+                  size: 22,
+                  color:
+                      unreadCount > 0 ? cs.primary : cs.onSurfaceVariant,
+                ),
+              ),
+              if (unreadCount > 0)
+                Positioned(
+                  top: -2,
+                  right: -2,
+                  child: Container(
+                    constraints:
+                        const BoxConstraints(minWidth: 16, minHeight: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                    decoration: const BoxDecoration(
+                      color: DonyColors.error,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      unreadCount > 99 ? '99+' : '$unreadCount',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: DonyColors.white,
+                        height: 1.6,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
