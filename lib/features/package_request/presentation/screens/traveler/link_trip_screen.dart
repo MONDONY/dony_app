@@ -100,12 +100,11 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
   Future<void> _confirmTrip() async {
     final ann = _selectedTrip;
     if (ann == null) return;
-    final bloc = context.read<NegotiationBloc>();
-    bloc.add(NegotiationSubmitTripRequested(
+    context.read<NegotiationBloc>().add(NegotiationSubmitTripRequested(
       threadId: widget.thread.id,
       travelerAnnouncementId: ann.id,
     ));
-    if (mounted) context.pop();
+    // Navigation handled by BlocListener on NegotiationLoaded(awaitingPayment).
   }
 
   Future<void> _createNewTrip() async {
@@ -137,12 +136,20 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return BlocListener<NegotiationBloc, NegotiationState>(
-      listenWhen: (prev, curr) => curr is NegotiationLoaded,
+      listenWhen: (prev, curr) =>
+          curr is NegotiationLoaded || curr is NegotiationError,
       listener: (context, state) {
-        if (state is NegotiationLoaded
-            && state.thread.status == NegotiationThreadStatus.awaitingPayment) {
-          // Trip linked (existing or freshly created): leave this screen.
+        if (state is NegotiationLoaded &&
+            state.thread.status == NegotiationThreadStatus.awaitingPayment) {
+          // Trip linked successfully: leave this screen.
           if (context.canPop()) context.pop();
+        } else if (state is NegotiationError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.error),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
         }
       },
       child: Scaffold(
