@@ -202,6 +202,72 @@ Si l'appareil ne supporte pas la biométrie → afficher `DonyKeypad` pour le PI
 
 ---
 
+## Règle — Rafraîchissement des données après navigation (OBLIGATOIRE)
+
+> **Contexte :** Chaque route crée une nouvelle instance BLoC (`registerFactory`). L'écran parent et l'écran fils ont donc des BLoCs distincts. Sans signal explicite, le parent ne sait jamais qu'une donnée a changé.
+
+### Pattern selon le type de navigation
+
+**A — `context.push()` vers un écran d'édition/création :**
+
+```dart
+// ✅ CORRECT — écran liste
+onTap: () async {
+  final changed = await context.push<bool>('/profile/addresses/${address.id}');
+  if ((changed ?? false) && context.mounted) {
+    context.read<XxxBloc>().add(const XxxListRequested());
+  }
+},
+
+// ✅ CORRECT — écran d'édition (dans le BlocListener après succès)
+if (state.status == XxxStatus.success) {
+  context.pop(true);  // true = signale un changement réel
+}
+
+// ❌ INTERDIT
+onTap: () => context.push('/profile/addresses/${address.id}'),  // non awaité
+context.pop();  // sans valeur après une sauvegarde
+```
+
+**B — BottomSheet de création/édition :**
+
+```dart
+// ✅ CORRECT — toujours awaiter les bottom sheets qui modifient des données
+onPressed: () async {
+  await CreateXxxBottomSheet.show(context);
+  if (context.mounted) {
+    context.read<XxxBloc>().add(const XxxListRequested());
+  }
+},
+
+// ❌ INTERDIT
+onPressed: () => CreateXxxBottomSheet.show(context),  // non awaité
+```
+
+**C — Exception : BLoC partagé (pas de refresh nécessaire)**
+
+Si le bottom sheet utilise `context.read<XxxBloc>()` depuis le provider du parent (même instance), le parent se reconstruit automatiquement. Pas besoin du pattern await/refresh.
+
+Cas typiques en shared BLoC : `HandoverBottomSheet` (BidBloc), bottom sheets de négociation (NegotiationBloc), `EditProfileBottomSheet` (AuthBloc).
+
+### Règles de diagnostic
+
+Avant de naviguer vers un écran fils, se poser ces questions :
+1. **Est-ce que cet écran peut modifier des données ?** Si non → pas de refresh nécessaire.
+2. **Le BLoC parent et le BLoC fils sont-ils la même instance ?** Si oui → pas de refresh (shared BLoC).
+3. **C'est `context.push()` ?** → `await context.push<bool>()` + `if (result == true) reload`.
+4. **C'est un bottom sheet qui modifie des données ?** → `await Sheet.show()` + reload.
+5. **L'écran fils appelle `context.pop()` après save ?** → `context.pop(true)` si le caller conditionne le reload sur le résultat.
+
+### Checklist à appliquer à chaque nouvel écran/bottom sheet
+
+- [ ] Tout `context.push()` vers écran qui crée/modifie → `await context.push<bool>()` + reload conditionnel
+- [ ] Tout `BottomSheet.show()` qui modifie des données → `await Sheet.show()` + reload
+- [ ] Tout `context.pop()` dans un BlocListener après succès → `context.pop(true)`
+- [ ] Pas de `unawaited(context.push(...))` vers un écran d'édition
+
+---
+
 ## Feature Implementation Checklist
 
 **Avant de commencer :**

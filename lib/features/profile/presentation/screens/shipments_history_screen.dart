@@ -103,7 +103,7 @@ class _DeliveryCard extends StatelessWidget {
         : null;
 
     return GestureDetector(
-      onTap: () => context.push('/bids/${bid.id}/detail'),
+      onTap: () => context.push('/bids/${bid.id}', extra: bid),
       child: Container(
         padding: const EdgeInsets.all(DonySpacing.base),
         decoration: BoxDecoration(
@@ -183,7 +183,7 @@ class _DeliveryCard extends StatelessWidget {
                   label: 'Voir détails',
                   variant: DonyButtonVariant.ghost,
                   fullWidth: false,
-                  onPressed: () => context.push('/bids/${bid.id}/detail'),
+                  onPressed: () => context.push('/bids/${bid.id}', extra: bid),
                 ),
               ],
             ),

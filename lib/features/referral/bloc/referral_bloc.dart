@@ -21,7 +21,7 @@ class ReferralBloc extends Bloc<ReferralEvent, ReferralState> {
     ReferralLoadRequested event,
     Emitter<ReferralState> emit,
   ) async {
-    emit(const ReferralLoading());
+    if (state is! ReferralLoaded) emit(const ReferralLoading());
     try {
       final info = await _repository.getMyReferral();
       emit(ReferralLoaded(info));

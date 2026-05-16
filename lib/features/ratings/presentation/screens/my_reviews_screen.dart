@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_event.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_state.dart';
@@ -8,8 +9,19 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-class MyReviewsScreen extends StatelessWidget {
+class MyReviewsScreen extends StatefulWidget {
   const MyReviewsScreen({super.key});
+
+  @override
+  State<MyReviewsScreen> createState() => _MyReviewsScreenState();
+}
+
+class _MyReviewsScreenState extends State<MyReviewsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    getIt<MyReviewsBloc>().add(const MyReviewsRequested());
+  }
 
   @override
   Widget build(BuildContext context) {

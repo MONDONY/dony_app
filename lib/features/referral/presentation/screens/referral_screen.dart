@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/bloc/referral_event.dart';
 import 'package:dony/features/referral/bloc/referral_state.dart';
@@ -9,8 +10,19 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:share_plus/share_plus.dart';
 
-class ReferralScreen extends StatelessWidget {
+class ReferralScreen extends StatefulWidget {
   const ReferralScreen({super.key});
+
+  @override
+  State<ReferralScreen> createState() => _ReferralScreenState();
+}
+
+class _ReferralScreenState extends State<ReferralScreen> {
+  @override
+  void initState() {
+    super.initState();
+    getIt<ReferralBloc>().add(const ReferralLoadRequested());
+  }
 
   Widget _buildBody(ReferralState state) {
     if (state is ReferralLoading || state is ReferralInitial) {

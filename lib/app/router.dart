@@ -60,7 +60,6 @@ import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
 import 'package:dony/features/profile/presentation/screens/profile_public_screen.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
-import 'package:dony/features/ratings/bloc/my_reviews_event.dart';
 import 'package:dony/features/ratings/presentation/screens/my_reviews_screen.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/presentation/screens/recipient_edit_screen.dart';
@@ -74,7 +73,6 @@ import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/presentation/settings_screen.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
-import 'package:dony/features/referral/bloc/referral_event.dart';
 import 'package:dony/features/referral/presentation/screens/referral_screen.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/presentation/screens/offline_scan_queue_screen.dart';
@@ -433,9 +431,8 @@ final appRouter = GoRouter(
     // ── Favorite travelers (hors shell) ──────────────────────────────────
     GoRoute(
       path: '/profile/favorites',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<FavoriteTravelerBloc>()
-          ..add(const FavoriteTravelerLoaded()),
+      builder: (context, state) => BlocProvider.value(
+        value: getIt<FavoriteTravelerBloc>(),
         child: const FavoriteTravelersScreen(),
       ),
     ),
@@ -449,8 +446,8 @@ final appRouter = GoRouter(
     // ── Referral (hors shell) ─────────────────────────────────────────
     GoRoute(
       path: '/profile/referral',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<ReferralBloc>()..add(const ReferralLoadRequested()),
+      builder: (context, state) => BlocProvider.value(
+        value: getIt<ReferralBloc>(),
         child: const ReferralScreen(),
       ),
     ),
@@ -458,9 +455,8 @@ final appRouter = GoRouter(
     // ── Mes avis reçus (hors shell) ──────────────────────────────────
     GoRoute(
       path: '/profile/reviews',
-      builder: (context, state) => BlocProvider(
-        create: (_) =>
-            getIt<MyReviewsBloc>()..add(const MyReviewsRequested()),
+      builder: (context, state) => BlocProvider.value(
+        value: getIt<MyReviewsBloc>(),
         child: const MyReviewsScreen(),
       ),
     ),

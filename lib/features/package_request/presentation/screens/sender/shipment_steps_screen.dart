@@ -81,16 +81,22 @@ class _ShipmentStepsScreenState extends State<ShipmentStepsScreen> {
               : _StepsBody(
                   request: _request!,
                   travelerDisplayName: widget.travelerDisplayName,
+                  onRefresh: _load,
                 ),
     );
   }
 }
 
 class _StepsBody extends StatelessWidget {
-  const _StepsBody({required this.request, this.travelerDisplayName});
+  const _StepsBody({
+    required this.request,
+    required this.onRefresh,
+    this.travelerDisplayName,
+  });
 
   final PackageRequest request;
   final String? travelerDisplayName;
+  final VoidCallback onRefresh;
 
   bool get _step1Done => request.pickupNeighborhood != null &&
       request.deliveryNeighborhood != null;
@@ -133,9 +139,12 @@ class _StepsBody extends StatelessWidget {
                 subtitle: 'Adresses · destinataire · valeur',
                 done: _step1Done,
                 active: !_step1Done,
-                onTap: () => context.push(
-                  '/package-requests/${request.id}/complete-details',
-                ),
+                onTap: () async {
+                  await context.push<bool>(
+                    '/package-requests/${request.id}/complete-details',
+                  );
+                  if (context.mounted) onRefresh();
+                },
               ),
               const SizedBox(height: DonySpacing.sm),
               _StepCard(
@@ -170,9 +179,12 @@ class _StepsBody extends StatelessWidget {
                 : 'Compléter les détails →',
             onPressed: _step1Done
                 ? () => _showQrPlaceholder(context)
-                : () => context.push(
-                    '/package-requests/${request.id}/complete-details',
-                  ),
+                : () async {
+                    await context.push<bool>(
+                      '/package-requests/${request.id}/complete-details',
+                    );
+                    if (context.mounted) onRefresh();
+                  },
           ),
         ),
       ],

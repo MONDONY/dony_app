@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/favorite_travelers/bloc/favorite_traveler_bloc.dart';
 import 'package:dony/features/favorite_travelers/data/models/favorite_traveler.dart';
 import 'package:flutter/material.dart';
@@ -6,8 +7,19 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-class FavoriteTravelersScreen extends StatelessWidget {
+class FavoriteTravelersScreen extends StatefulWidget {
   const FavoriteTravelersScreen({super.key});
+
+  @override
+  State<FavoriteTravelersScreen> createState() => _FavoriteTravelersScreenState();
+}
+
+class _FavoriteTravelersScreenState extends State<FavoriteTravelersScreen> {
+  @override
+  void initState() {
+    super.initState();
+    getIt<FavoriteTravelerBloc>().add(const FavoriteTravelerLoaded());
+  }
 
   @override
   Widget build(BuildContext context) {

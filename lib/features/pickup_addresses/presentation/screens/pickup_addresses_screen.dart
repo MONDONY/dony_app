@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/data/models/pickup_address.dart';
@@ -20,7 +18,12 @@ class PickupAddressesScreen extends StatelessWidget {
         IconButton(
           icon: const Icon(Icons.add_rounded),
           tooltip: 'Ajouter une adresse',
-          onPressed: () => context.push('/profile/addresses/new'),
+          onPressed: () async {
+            final changed = await context.push<bool>('/profile/addresses/new');
+            if ((changed ?? false) && context.mounted) {
+              context.read<PickupAddressBloc>().add(const PickupAddressLoaded());
+            }
+          },
         ),
       ],
       body: BlocBuilder<PickupAddressBloc, PickupAddressState>(
@@ -51,7 +54,12 @@ class PickupAddressesScreen extends StatelessWidget {
               description:
                   'Ajoute ta première adresse de pickup pour accélérer tes prochaines demandes.',
               actionLabel: 'Ajouter ma première adresse',
-              onAction: () => context.push('/profile/addresses/new'),
+              onAction: () async {
+                final changed = await context.push<bool>('/profile/addresses/new');
+                if ((changed ?? false) && context.mounted) {
+                  context.read<PickupAddressBloc>().add(const PickupAddressLoaded());
+                }
+              },
             );
           }
           return ListView.separated(
@@ -98,7 +106,12 @@ class _PickupAddressCard extends StatelessWidget {
         ),
       ),
       child: InkWell(
-        onTap: () => context.push('/profile/addresses/${address.id}'),
+        onTap: () async {
+          final changed = await context.push<bool>('/profile/addresses/${address.id}');
+          if ((changed ?? false) && context.mounted) {
+            context.read<PickupAddressBloc>().add(const PickupAddressLoaded());
+          }
+        },
         borderRadius: BorderRadius.circular(DonyRadius.card),
         child: Padding(
           padding: const EdgeInsets.all(DonySpacing.base),
@@ -206,7 +219,10 @@ class _KebabMenu extends StatelessWidget {
                 .read<PickupAddressBloc>()
                 .add(PickupAddressSetDefault(address.id));
           case _AddressAction.edit:
-            unawaited(context.push('/profile/addresses/${address.id}'));
+            final changed = await context.push<bool>('/profile/addresses/${address.id}');
+            if ((changed ?? false) && context.mounted) {
+              context.read<PickupAddressBloc>().add(const PickupAddressLoaded());
+            }
           case _AddressAction.delete:
             final confirmed = await DonyDialog.show(
               context,

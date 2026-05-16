@@ -116,7 +116,7 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
             message: _isEditing ? 'Adresse mise à jour' : 'Adresse ajoutée',
             type: DonySnackbarType.success,
           );
-          context.pop();
+          context.pop(true);
         }
         if (state.status == PickupAddressStatus.error && state.error != null) {
           DonySnackbar.show(

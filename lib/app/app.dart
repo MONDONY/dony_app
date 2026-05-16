@@ -33,11 +33,30 @@ class _DonyAppState extends State<DonyApp> {
   StreamSubscription<Uri>? _deepLinkSub;
   final _appLinks = AppLinks();
 
+  // Onglets du shell principal : go() est nécessaire pour activer le bon onglet.
+  // Toutes les autres routes utilisent push() pour empiler par-dessus l'état
+  // courant et permettre au bouton retour de revenir à l'écran précédent.
+  static const _shellTabs = {
+    '/home',
+    '/announcements',
+    '/tracking',
+    '/messages',
+    '/profile',
+  };
+
+  void _navigateToRoute(String route) {
+    if (_shellTabs.contains(route)) {
+      appRouter.go(route);
+    } else {
+      appRouter.push(route);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _navSub = getIt<NotificationService>().navigationStream.listen((route) {
-      appRouter.go(route);
+      _navigateToRoute(route);
     });
     _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
       if (user != null) {
@@ -71,7 +90,7 @@ class _DonyAppState extends State<DonyApp> {
     // dony://stripe/onboarding/complete  →  /stripe/onboarding/complete
     final routePath = '/${uri.host}${uri.path}';
     try {
-      appRouter.go(routePath);
+      _navigateToRoute(routePath);
     } catch (_) {
       // Unknown deep link path — no-op
     }
