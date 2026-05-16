@@ -438,6 +438,25 @@ void main() {
     },
   );
 
+  // ── Task 12 : Barres d'action voyageur ────────────────────────────────────────
+
+  group("Barre d'action voyageur", () {
+    testWidgets('voyageur + PENDING → Accepter / Refuser', (tester) async {
+      final authBloc = _MockAuthBloc();
+      when(
+        () => authBloc.state,
+      ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
+      when(() => authBloc.stream).thenAnswer((_) => Stream<AuthState>.empty());
+      await _pump(
+        tester,
+        bid: _makeBid(status: 'PENDING'),
+        authBloc: authBloc,
+      );
+      expect(find.text('Accepter'), findsOneWidget);
+      expect(find.text('Refuser'), findsOneWidget);
+    });
+  });
+
   // ── Task 7 : Intégration du billet de colis ───────────────────────────────────
 
   group('Billet de colis', () {
