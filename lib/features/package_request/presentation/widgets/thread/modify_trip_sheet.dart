@@ -42,6 +42,9 @@ abstract final class ModifyTripSheet {
         ],
         child: child,
       ),
+      // DonyBottomSheet applique le `wrapper` autour de l'ensemble child +
+      // stickyBottom : ce BlocBuilder résout donc le AnnouncementBloc fourni
+      // par le MultiBlocProvider du wrapper ci-dessus.
       stickyBottom: BlocBuilder<AnnouncementBloc, AnnouncementState>(
         builder: (ctx, state) {
           final isLoading = state is AnnouncementLoading;

@@ -383,8 +383,13 @@ void main() {
                 e.id == 'ann-1' &&
                 e.availableKg == 12 &&
                 e.acceptedPaymentMethods.contains('STRIPE') &&
-                e.acceptedPaymentMethods.contains('CASH'),
-            'AnnouncementUpdateRequested capacité=12 STRIPE+CASH',
+                e.acceptedPaymentMethods.contains('CASH') &&
+                e.departureCity == 'Paris' &&
+                e.arrivalCity == 'Dakar' &&
+                e.pricePerKg == 7 &&
+                e.transportMode == TransportMode.plane,
+            'AnnouncementUpdateRequested capacité=12 STRIPE+CASH '
+            'corridor=Paris→Dakar pricePerKg=7 mode=plane',
           ),
         ))).called(1);
   });
