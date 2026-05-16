@@ -477,7 +477,7 @@ class _PendingTab extends StatelessWidget {
           return Dismissible(
             key: ValueKey('dismiss_${bid.id}'),
             direction: DismissDirection.endToStart,
-            background: _DismissBackground(),
+            background: const _DismissBackground(),
             confirmDismiss: (_) => _confirmDelete(context),
             onDismissed: (_) => context
                 .read<BidBloc>()
@@ -832,7 +832,7 @@ class _BidCard extends StatelessWidget {
               // ── Bas : actions OU badge de statut ───────────────────
               if (_isPending && onAccept != null && onReject != null) ...[
                 if (_isPaymentEscrowed) ...[
-                  _EscrowedHint(),
+                  const _EscrowedHint(),
                   const SizedBox(height: DonySpacing.sm),
                 ],
                 _PendingActions(
@@ -876,7 +876,7 @@ class _HighlightedText extends StatelessWidget {
     }
     // normalizeSearch préserve la longueur → les index sont valides sur `text`.
     final idx = normalizeSearch(text).indexOf(q);
-    if (idx < 0) {
+    if (idx < 0 || idx + q.length > text.length) {
       return Text(text, style: style, overflow: TextOverflow.ellipsis);
     }
     final cs = Theme.of(context).colorScheme;
@@ -982,6 +982,8 @@ class _PendingActions extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _EscrowedHint extends StatelessWidget {
+  const _EscrowedHint();
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
@@ -1071,6 +1073,8 @@ class _StatusDot extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _DismissBackground extends StatelessWidget {
+  const _DismissBackground();
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;

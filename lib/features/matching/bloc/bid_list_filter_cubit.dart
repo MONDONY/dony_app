@@ -111,6 +111,4 @@ class BidListFilterCubit extends Cubit<BidListFilterState> {
 
   void setFilter(AcceptedStatusFilter filter) =>
       emit(state.copyWith(filter: filter));
-
-  void reset() => emit(const BidListFilterState());
 }

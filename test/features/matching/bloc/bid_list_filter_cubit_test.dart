@@ -47,14 +47,6 @@ void main() {
           const [BidListFilterState(filter: AcceptedStatusFilter.closed)],
     );
 
-    blocTest<BidListFilterCubit, BidListFilterState>(
-      "reset revient à l'état initial",
-      build: BidListFilterCubit.new,
-      seed: () => const BidListFilterState(
-          query: 'x', filter: AcceptedStatusFilter.active),
-      act: (c) => c.reset(),
-      expect: () => const [BidListFilterState()],
-    );
   });
 
   group('isAcceptedTabBid', () {
