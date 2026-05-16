@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
@@ -269,5 +271,54 @@ void main() {
     await tester.tap(find.byKey(const Key('modify-trip-cash-switch')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('retour-stub')), findsOneWidget);
+  });
+
+  testWidgets('désactiver le liquide repasse le toggle OFF', (tester) async {
+    when(() => commissionBloc.state)
+        .thenReturn(CommissionMethodLoaded(_validCard));
+    await _open(tester, _trip(
+      payments: const {BidPaymentMethod.stripe, BidPaymentMethod.cash},
+    ));
+    var sw = tester
+        .widget<Switch>(find.byKey(const Key('modify-trip-cash-switch')));
+    expect(sw.value, isTrue);
+    await tester
+        .ensureVisible(find.byKey(const Key('modify-trip-cash-switch')));
+    await tester.tap(find.byKey(const Key('modify-trip-cash-switch')));
+    await tester.pump();
+    sw = tester
+        .widget<Switch>(find.byKey(const Key('modify-trip-cash-switch')));
+    expect(sw.value, isFalse);
+  });
+
+  testWidgets(
+      'annuler le détour ne réactive pas le liquide sur un état ultérieur',
+      (tester) async {
+    final controller =
+        StreamController<CommissionMethodState>.broadcast();
+    addTearDown(controller.close);
+    whenListen(commissionBloc, controller.stream,
+        initialState: CommissionMethodNotConfigured());
+    await _open(tester, _trip());
+
+    await tester
+        .ensureVisible(find.byKey(const Key('modify-trip-cash-switch')));
+    await tester.tap(find.byKey(const Key('modify-trip-cash-switch')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('retour-stub')), findsOneWidget);
+
+    // Retour du détour SANS configurer de carte.
+    await tester.tap(find.byKey(const Key('retour-stub')));
+    await tester.pumpAndSettle();
+    controller.add(CommissionMethodNotConfigured());
+    await tester.pumpAndSettle();
+
+    // Un état carte-valide arrive plus tard (source non liée).
+    controller.add(CommissionMethodLoaded(_validCard));
+    await tester.pumpAndSettle();
+
+    final sw = tester
+        .widget<Switch>(find.byKey(const Key('modify-trip-cash-switch')));
+    expect(sw.value, isFalse);
   });
 }

@@ -136,10 +136,16 @@ class _ModifyTripContentState extends State<_ModifyTripContent> {
   Widget build(BuildContext context) {
     return BlocListener<CommissionMethodBloc, CommissionMethodState>(
       listener: (ctx, st) {
-        // Retour du détour : si une carte valide est désormais configurée,
-        // on honore l'intention d'activer le liquide.
-        if (_awaitingCardSetup && _hasValidCard(st)) {
-          _awaitingCardSetup = false;
+        // Retour du détour carte commission. On ignore l'état transitoire de
+        // chargement ; dès qu'un état réglé arrive, on consomme l'intention —
+        // qu'une carte valide ait été configurée ou non. Sans ce reset, un
+        // détour annulé laisserait le flag actif et activerait le liquide à
+        // tort sur un état ultérieur.
+        if (!_awaitingCardSetup || st is CommissionMethodLoading) {
+          return;
+        }
+        _awaitingCardSetup = false;
+        if (_hasValidCard(st)) {
           _cashEnabled.value = true;
         }
       },
