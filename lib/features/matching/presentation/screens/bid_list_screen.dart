@@ -19,6 +19,7 @@ import 'package:intl/intl.dart';
 const _kPending          = 'PENDING';
 const _kPaymentEscrowed  = 'PAYMENT_ESCROWED';
 const _kAccepted         = 'ACCEPTED';
+const _kHandedOver       = 'HANDED_OVER';
 const _kInTransit        = 'IN_TRANSIT';
 const _kCompleted        = 'COMPLETED';
 const _kRejected         = 'REJECTED';
@@ -230,6 +231,7 @@ class _BidListViewState extends State<_BidListView>
         final acceptedBids = allBids
             .where((b) =>
                 b.status == _kAccepted ||
+                b.status == _kHandedOver ||
                 b.status == _kInTransit ||
                 b.status == _kCompleted)
             .toList();
@@ -636,6 +638,13 @@ class _BidCard extends StatelessWidget {
                   icon: Icons.check_circle_rounded,
                   color: cs.success,
                   bgColor: cs.successLight,
+                )
+              else if (bid.status == _kHandedOver)
+                _StatusBadge(
+                  label: '↗ En route',
+                  icon: Icons.local_shipping_outlined,
+                  color: cs.primary,
+                  bgColor: cs.primaryContainer,
                 )
               else if (bid.status == _kInTransit)
                 _StatusBadge(
