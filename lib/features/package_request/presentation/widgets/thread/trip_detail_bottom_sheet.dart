@@ -7,8 +7,12 @@ import 'package:google_fonts/google_fonts.dart';
 /// Opens a confirmation bottom sheet asking the sender for a refusal reason.
 /// Calls [onConfirm] with the (optional) reason when confirmed.
 class _RefuseTripConfirmSheet extends StatefulWidget {
-  const _RefuseTripConfirmSheet({required this.onConfirm});
+  const _RefuseTripConfirmSheet({
+    required this.onConfirm,
+    required this.reasonNotifier,
+  });
   final void Function(String? reason) onConfirm;
+  final ValueNotifier<String> reasonNotifier;
 
   static Future<void> show(
     BuildContext context, {
@@ -20,7 +24,7 @@ class _RefuseTripConfirmSheet extends StatefulWidget {
       title: 'Refuser ce trajet',
       stickyBottom: ValueListenableBuilder<String>(
         valueListenable: reasonNotifier,
-        builder: (_, reason, __) => DonyButton(
+        builder: (_, reason, _) => DonyButton(
           label: 'Confirmer le refus',
           variant: DonyButtonVariant.destructive,
           onPressed: () {
@@ -29,7 +33,10 @@ class _RefuseTripConfirmSheet extends StatefulWidget {
           },
         ),
       ),
-      child: _RefuseTripConfirmSheet(onConfirm: onConfirm),
+      child: _RefuseTripConfirmSheet(
+        onConfirm: onConfirm,
+        reasonNotifier: reasonNotifier,
+      ),
     ).whenComplete(reasonNotifier.dispose);
   }
 
@@ -65,7 +72,7 @@ class _RefuseTripConfirmSheetState extends State<_RefuseTripConfirmSheet> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.warning_amber_rounded, color: kError, size: 20),
+              const Icon(Icons.warning_amber_rounded, color: kError, size: 20),
               const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: Text(
@@ -92,7 +99,7 @@ class _RefuseTripConfirmSheetState extends State<_RefuseTripConfirmSheet> {
         const SizedBox(height: DonySpacing.sm),
         TextField(
           controller: _controller,
-          onChanged: (_) => setState(() {}),
+          onChanged: (v) => widget.reasonNotifier.value = v,
           maxLength: 280,
           maxLines: 3,
           decoration: InputDecoration(
