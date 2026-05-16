@@ -87,6 +87,39 @@ void main() {
     });
   });
 
+  group('isActiveBid', () {
+    test('vrai pour chaque statut actif', () {
+      for (final s in kActiveBidStatuses) {
+        expect(isActiveBid(_bid(status: s)), isTrue, reason: s);
+      }
+    });
+    test('faux pour les statuts clôturés', () {
+      for (final s in kClosedBidStatuses) {
+        expect(isActiveBid(_bid(status: s)), isFalse, reason: s);
+      }
+    });
+  });
+
+  group('isClosedBid', () {
+    test('vrai pour chaque statut clôturé', () {
+      for (final s in kClosedBidStatuses) {
+        expect(isClosedBid(_bid(status: s)), isTrue, reason: s);
+      }
+    });
+    test('faux pour les statuts actifs', () {
+      for (final s in kActiveBidStatuses) {
+        expect(isClosedBid(_bid(status: s)), isFalse, reason: s);
+      }
+    });
+    test('faux pour un CANCELLED auto-annulé (TRAVELER_NO_RESPONSE)', () {
+      expect(
+        isClosedBid(_bid(
+            status: 'CANCELLED', rejectionReason: 'TRAVELER_NO_RESPONSE')),
+        isFalse,
+      );
+    });
+  });
+
   group('normalizeSearch', () {
     test('minuscule + suppression des accents', () {
       expect(normalizeSearch('Moussa TRAORÉ'), 'moussa traore');

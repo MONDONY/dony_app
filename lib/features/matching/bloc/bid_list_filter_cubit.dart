@@ -19,22 +19,26 @@ const kClosedBidStatuses = <String>{
   'CANCELLED',
 };
 
+/// `true` si le bid est un `CANCELLED` auto-annulé (PENDING jamais traité par
+/// le voyageur — `rejectionReason == TRAVELER_NO_RESPONSE`), jamais accepté.
+bool _isAutoCancelled(BidModel bid) =>
+    bid.status == 'CANCELLED' &&
+    bid.rejectionReason == 'TRAVELER_NO_RESPONSE';
+
 /// `true` si le bid doit figurer dans l'onglet « Acceptées ».
-///
-/// Exclut les `CANCELLED` auto-annulés (`rejectionReason == TRAVELER_NO_RESPONSE`) :
-/// ce sont des bids PENDING jamais traités par le voyageur — jamais acceptés.
+/// Exclut les `CANCELLED` auto-annulés (jamais acceptés).
 bool isAcceptedTabBid(BidModel bid) {
-  if (bid.status == 'CANCELLED' &&
-      bid.rejectionReason == 'TRAVELER_NO_RESPONSE') {
-    return false;
-  }
+  if (_isAutoCancelled(bid)) return false;
   return kActiveBidStatuses.contains(bid.status) ||
       kClosedBidStatuses.contains(bid.status);
 }
 
 bool isActiveBid(BidModel bid) => kActiveBidStatuses.contains(bid.status);
 
-bool isClosedBid(BidModel bid) => kClosedBidStatuses.contains(bid.status);
+/// `true` si le bid est clôturé. Cohérent avec [isAcceptedTabBid] : un
+/// `CANCELLED` auto-annulé n'est pas considéré comme clôturé.
+bool isClosedBid(BidModel bid) =>
+    kClosedBidStatuses.contains(bid.status) && !_isAutoCancelled(bid);
 
 // ── Normalisation de recherche ────────────────────────────────────────────────
 
