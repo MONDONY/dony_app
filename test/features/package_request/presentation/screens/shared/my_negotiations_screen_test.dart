@@ -152,14 +152,14 @@ void main() {
       expect(find.text('45 €'), findsOneWidget);
     });
 
-    testWidgets('affiche "Round 2/5"', (tester) async {
+    testWidgets('affiche "R.2/5"', (tester) async {
       when(() => bloc.state).thenReturn(NegotiationListState(
         status: NegotiationListStatus.loaded,
         threads: [_thread()],
       ));
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
-      expect(find.textContaining('Round 2/5'), findsOneWidget);
+      expect(find.textContaining('R.2/5'), findsOneWidget);
     });
 
     testWidgets('affiche le badge NOUVEAU pour les threads open avec messages',

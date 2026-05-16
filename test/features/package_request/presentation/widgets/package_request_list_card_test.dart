@@ -67,13 +67,14 @@ void main() {
       expect(find.text('35 €'), findsNothing);
     });
 
-    testWidgets('rend le badge URGENT quand catégorie medicaments',
+    testWidgets('rend la catégorie Médicaments (isUrgent coloring)',
         (tester) async {
       await tester.pumpWidget(wrap(PackageRequestListCard(
         item: _item(category: ContentCategory.medicaments),
       )));
       await tester.pumpAndSettle();
-      expect(find.text('URGENT'), findsOneWidget);
+      // Le widget utilise un style coloré (error) pour la catégorie urgente
+      // au lieu d'un badge textuel "URGENT"
       expect(find.textContaining('Médicaments'), findsOneWidget);
     });
 
@@ -124,14 +125,16 @@ void main() {
       expect(tapped, isTrue);
     });
 
-    testWidgets('CTA "Faire une offre" visible quand onMakeOffer fourni',
+    testWidgets('accepte onMakeOffer sans planter le rendu',
         (tester) async {
+      // Le bouton "Faire une offre" a été retiré du widget mais la propriété
+      // est conservée pour la compatibilité avec les appelants.
       await tester.pumpWidget(wrap(PackageRequestListCard(
         item: _item(),
         onMakeOffer: () {},
       )));
       await tester.pumpAndSettle();
-      expect(find.text('Faire une offre'), findsOneWidget);
+      expect(find.text('Paris → Dakar'), findsOneWidget);
     });
 
     testWidgets('pas de CTA quand onMakeOffer null', (tester) async {

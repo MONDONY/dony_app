@@ -54,8 +54,8 @@ void main() {
     testWidgets('rend les labels de section Départ / Arrivée / Date',
         (tester) async {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
-      expect(find.text('Départ'), findsOneWidget);
-      expect(find.text('Arrivée'), findsOneWidget);
+      expect(find.text('DÉPART'), findsOneWidget);
+      expect(find.text('ARRIVÉE'), findsOneWidget);
       // 'Date' apparaît 2 fois : label + placeholder du DatePickerField (date == null).
       expect(find.text('Date'), findsNWidgets(2));
       expect(find.text('Tolérance'), findsOneWidget);

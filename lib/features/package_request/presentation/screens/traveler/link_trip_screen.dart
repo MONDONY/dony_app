@@ -54,18 +54,20 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
       final myTrips =
           await getIt<AnnouncementRepository>().getMyAnnouncements();
 
-      // Filter by corridor + date window
-      final dateFrom =
-          request.desiredDate.subtract(Duration(days: request.dateToleranceDays));
-      final dateTo =
-          request.desiredDate.add(Duration(days: request.dateToleranceDays));
+      // Filter by corridor + agreed travel date.
+      // We use travelerTravelDate (the date the traveler proposed and the sender
+      // accepted) rather than request.desiredDate, which may differ from the
+      // traveler's actual planned departure date.
+      final agreedDate = widget.thread.travelerTravelDate;
       final matching = myTrips.announcements.where((ann) {
-        final corridorMatch = ann.departureCity.toLowerCase() ==
-                request.departureCity.toLowerCase() &&
-            ann.arrivalCity.toLowerCase() ==
-                request.arrivalCity.toLowerCase();
-        final dateMatch = !ann.departureDate.isBefore(dateFrom) &&
-            !ann.departureDate.isAfter(dateTo);
+        final corridorMatch =
+            ann.departureCity.toLowerCase().trim() ==
+                request.departureCity.toLowerCase().trim() &&
+            ann.arrivalCity.toLowerCase().trim() ==
+                request.arrivalCity.toLowerCase().trim();
+        final dateMatch = ann.departureDate.year == agreedDate.year &&
+            ann.departureDate.month == agreedDate.month &&
+            ann.departureDate.day == agreedDate.day;
         return corridorMatch && dateMatch;
       }).toList();
 
@@ -211,7 +213,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                   ),
                 ),
                 Text(
-                  'Date souhaitée ${DateFormat('d MMM yyyy', 'fr').format(r.desiredDate)} (±${r.dateToleranceDays}j)',
+                  'Date de voyage : ${DateFormat('d MMM yyyy', 'fr').format(widget.thread.travelerTravelDate)}',
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontSize: 13,
                     color: Colors.white.withValues(alpha: 0.85),

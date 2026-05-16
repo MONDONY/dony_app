@@ -92,6 +92,10 @@ void main() {
     expect: () => [
       isA<PackageRequestFormState>()
           .having((s) => s.submissionStatus, 'submissionStatus', FormSubmissionStatus.submitting),
+      // Intermediate state: targetPriceEur/photo/neighborhoods saved before repo.create
+      isA<PackageRequestFormState>()
+          .having((s) => s.submissionStatus, 'submissionStatus', FormSubmissionStatus.submitting)
+          .having((s) => s.targetPriceEur, 'targetPriceEur', 25.0),
       isA<PackageRequestFormState>()
           .having((s) => s.submissionStatus, 'submissionStatus', FormSubmissionStatus.success)
           .having((s) => s.createdRequest, 'createdRequest', fakeRequest),
