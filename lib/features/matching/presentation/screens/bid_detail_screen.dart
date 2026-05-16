@@ -29,7 +29,6 @@ import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.dart';
 import 'package:dony/features/matching/presentation/widgets/colis_card.dart';
-import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:dony/features/matching/presentation/widgets/destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/expediteur_card.dart';
 import 'package:dony/features/matching/presentation/widgets/handover_bottom_sheet.dart';
@@ -40,7 +39,10 @@ import 'package:dony/features/matching/presentation/widgets/voyageur_card.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
-import 'package:intl/intl.dart';
+import 'package:dony/features/matching/presentation/widgets/disclaimer_card.dart';
+import 'package:dony/features/matching/presentation/widgets/handover_card.dart';
+import 'package:dony/features/matching/presentation/widgets/payment_release_card.dart';
+import 'package:dony/features/matching/presentation/widgets/trajet_card.dart';
 
 class BidDetailScreen extends StatelessWidget {
   final BidModel bid;
@@ -385,7 +387,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
 
                                     // Trip details (visible to sender)
                                     if (isSender) ...[
-                                      _TripDetailsCard(bid: _bid),
+                                      TrajetCard(bid: _bid),
                                       const SizedBox(height: DonySpacing.base),
                                     ],
 
@@ -398,12 +400,12 @@ class _BidDetailViewState extends State<_BidDetailView> {
                                     const SizedBox(height: DonySpacing.base),
 
                                     // Disclaimer
-                                    _DisclaimerCard(bid: _bid),
+                                    DisclaimerCard(bid: _bid),
 
                                     // Handover window
                                     if (_bid.handoverLocation != null) ...[
                                       const SizedBox(height: DonySpacing.base),
-                                      _HandoverCard(bid: _bid),
+                                      HandoverCard(bid: _bid),
                                     ],
 
                                     // Tracking link
@@ -428,7 +430,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
                                     // Payment release row
                                     if (_bid.status == 'COMPLETED') ...[
                                       const SizedBox(height: DonySpacing.base),
-                                      _PaymentReleaseCard(bid: _bid),
+                                      PaymentReleaseCard(bid: _bid),
                                     ],
 
                                     // Rating CTA (sender only, bid completed)
@@ -577,198 +579,6 @@ class _RatingDoneCard extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Payment release row ───────────────────────────────────────────────────────
-
-class _PaymentReleaseCard extends StatelessWidget {
-  final BidModel bid;
-  const _PaymentReleaseCard({required this.bid});
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Fonds libérés à ${bid.travelerName ?? 'Ibrahima'}',
-                  style: tt.bodyMedium?.copyWith(color: cs.onSurface),
-                ),
-                Text(
-                  'Reçu disponible · ${bid.pricePerKg != null ? (bid.pricePerKg! * bid.weightKg * 0.88).toStringAsFixed(2) : '—'} €',
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                ),
-              ],
-            ),
-          ),
-          // "Reçu" chip
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: DonySpacing.md,
-              vertical: DonySpacing.xs,
-            ),
-            decoration: BoxDecoration(
-              color: cs.primaryContainer,
-              borderRadius: BorderRadius.circular(DonyRadius.full),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: cs.success,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: DonySpacing.xs),
-                Text(
-                  'Reçu',
-                  style: tt.labelSmall?.copyWith(
-                    color: cs.success,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DisclaimerCard extends StatelessWidget {
-  final BidModel bid;
-  const _DisclaimerCard({required this.bid});
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return DetailCard(
-      title: 'Responsabilité légale',
-      child: Row(
-        children: [
-          Icon(Icons.verified_outlined, color: cs.success, size: 20),
-          const SizedBox(width: DonySpacing.sm),
-          Expanded(
-            child: Text(
-              bid.disclaimerSignedAt != null
-                  ? 'Disclaimer signé le ${DateFormat('dd/MM/yyyy à HH:mm').format(bid.disclaimerSignedAt!.toLocal())}'
-                  : 'Disclaimer signé',
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HandoverCard extends StatelessWidget {
-  final BidModel bid;
-  const _HandoverCard({required this.bid});
-
-  @override
-  Widget build(BuildContext context) {
-    return DetailCard(
-      title: 'Fenêtre de remise',
-      child: Column(
-        children: [
-          InfoRow(label: 'Lieu', value: bid.handoverLocation ?? '—'),
-          if (bid.handoverWindowStart != null) ...[
-            const SizedBox(height: DonySpacing.sm),
-            InfoRow(
-              label: 'Début',
-              value: DateFormat(
-                'dd/MM/yyyy HH:mm',
-              ).format(bid.handoverWindowStart!.toLocal()),
-            ),
-          ],
-          if (bid.handoverWindowEnd != null) ...[
-            const SizedBox(height: DonySpacing.sm),
-            InfoRow(
-              label: 'Fin',
-              value: DateFormat(
-                'dd/MM/yyyy HH:mm',
-              ).format(bid.handoverWindowEnd!.toLocal()),
-            ),
-          ],
-          const SizedBox(height: DonySpacing.sm),
-          InfoRow(
-            label: 'Présence confirmée',
-            value: bid.voyageurConfirmed ? 'Oui ✓' : 'Non encore',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TripDetailsCard extends StatelessWidget {
-  final BidModel bid;
-  const _TripDetailsCard({required this.bid});
-
-  String _formatDate(DateTime? d) {
-    if (d == null) return '—';
-    return DateFormat('EEE dd MMM yyyy', 'fr').format(d);
-  }
-
-  String _formatTime(String? t) {
-    if (t == null || t.isEmpty) return '—';
-    return t.length >= 5 ? t.substring(0, 5) : t;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return DetailCard(
-      title: 'Détails du trajet',
-      child: Column(
-        children: [
-          InfoRow(
-            label: 'Date de départ',
-            value: _formatDate(bid.departureDate),
-          ),
-          if (bid.departureTime != null) ...[
-            const SizedBox(height: DonySpacing.sm),
-            InfoRow(
-              label: 'Heure de départ',
-              value: _formatTime(bid.departureTime),
-            ),
-          ],
-          if (bid.arrivalTime != null) ...[
-            const SizedBox(height: DonySpacing.sm),
-            InfoRow(
-              label: 'Heure d\'arrivée',
-              value: _formatTime(bid.arrivalTime),
-            ),
-          ],
-          if (bid.pricePerKg != null) ...[
-            const SizedBox(height: DonySpacing.sm),
-            InfoRow(
-              label: 'Tarif par kg',
-              value: '${bid.pricePerKg!.toStringAsFixed(2)} €',
-            ),
-          ],
         ],
       ),
     );
