@@ -1,3 +1,841 @@
+# Refonte onglet « Acceptées » — Recherche + filtre statut — Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Doter l'onglet « Acceptées » de l'écran Demandes d'une recherche (nom / n° de suivi) et d'un filtre statut, et y rendre visibles tous les statuts post-acceptation.
+
+**Architecture:** Filtrage 100 % côté client (les bids sont déjà chargés par `BidBloc`). Un `BidListFilterCubit` porte l'état de vue (requête + catégorie). L'écran combine `BidBloc` (données) et `BidListFilterCubit` (vue). Carte de bid et badge de statut retravaillés.
+
+**Tech Stack:** Flutter · flutter_bloc · equatable · go_router · widgets design system dony (`DonySearchField`, `DonyChip`, `DonyAvatar`).
+
+**Spec de référence :** `docs/superpowers/specs/2026-05-16-demandes-acceptees-recherche-design.md`
+
+---
+
+## Structure des fichiers
+
+| Fichier | Responsabilité |
+|---------|----------------|
+| `lib/features/matching/bloc/bid_list_filter_cubit.dart` | **Créer** — état de vue (requête + filtre) + helpers purs de filtrage (statuts, normalisation, correspondance recherche) |
+| `lib/core/di/injection.dart` | **Modifier** — enregistrer `BidListFilterCubit` |
+| `lib/features/matching/presentation/screens/bid_list_screen.dart` | **Modifier** — refonte de l'onglet Acceptées |
+| `test/features/matching/bloc/bid_list_filter_cubit_test.dart` | **Créer** — tests unitaires Cubit + helpers |
+| `test/features/matching/presentation/bid_list_screen_test.dart` | **Modifier** — tests widget de l'écran refondu |
+
+---
+
+## Task 1 : Baseline — commit du correctif HANDED_OVER existant
+
+L'arbre de travail de la branche `feat/demandes-acceptees-recherche` contient déjà un correctif partiel non commité (`HANDED_OVER` ajouté au filtre `acceptedBids` + badge, et 2 tests dans `bid_list_screen_test.dart`). On le commite pour partir d'un arbre propre. Les tâches suivantes réécrivent ces deux fichiers.
+
+**Files:**
+- Modify: `lib/features/matching/presentation/screens/bid_list_screen.dart`
+- Test: `test/features/matching/presentation/bid_list_screen_test.dart`
+
+- [ ] **Step 1: Vérifier l'état de la branche**
+
+Run: `git branch --show-current`
+Expected: `feat/demandes-acceptees-recherche`
+
+- [ ] **Step 2: Lancer les tests existants de l'écran**
+
+Run: `flutter test test/features/matching/presentation/bid_list_screen_test.dart`
+Expected: PASS (6 tests)
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add lib/features/matching/presentation/screens/bid_list_screen.dart test/features/matching/presentation/bid_list_screen_test.dart
+git commit -m "fix(matching): HANDED_OVER visible dans l'onglet Acceptées
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
+```
+
+---
+
+## Task 2 : `BidListFilterCubit` + helpers de filtrage (TDD)
+
+**Files:**
+- Create: `lib/features/matching/bloc/bid_list_filter_cubit.dart`
+- Test: `test/features/matching/bloc/bid_list_filter_cubit_test.dart`
+
+- [ ] **Step 1: Écrire le test**
+
+Créer `test/features/matching/bloc/bid_list_filter_cubit_test.dart` :
+
+```dart
+import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+BidModel _bid({
+  required String status,
+  String? senderName,
+  String? trackingNumber,
+  String? rejectionReason,
+}) =>
+    BidModel(
+      id: 'b1',
+      announcementId: 'a1',
+      senderId: 's1',
+      senderName: senderName,
+      trackingNumber: trackingNumber,
+      rejectionReason: rejectionReason,
+      weightKg: 1,
+      status: status,
+      createdAt: DateTime(2026, 1, 1),
+      updatedAt: DateTime(2026, 1, 1),
+    );
+
+void main() {
+  group('BidListFilterCubit', () {
+    test('état initial : query vide, filtre all', () {
+      final cubit = BidListFilterCubit();
+      expect(cubit.state, const BidListFilterState());
+      expect(cubit.state.query, '');
+      expect(cubit.state.filter, AcceptedStatusFilter.all);
+      cubit.close();
+    });
+
+    blocTest<BidListFilterCubit, BidListFilterState>(
+      'setQuery émet le nouvel état',
+      build: BidListFilterCubit.new,
+      act: (c) => c.setQuery('tra'),
+      expect: () => const [BidListFilterState(query: 'tra')],
+    );
+
+    blocTest<BidListFilterCubit, BidListFilterState>(
+      'setFilter émet le nouvel état',
+      build: BidListFilterCubit.new,
+      act: (c) => c.setFilter(AcceptedStatusFilter.closed),
+      expect: () =>
+          const [BidListFilterState(filter: AcceptedStatusFilter.closed)],
+    );
+
+    blocTest<BidListFilterCubit, BidListFilterState>(
+      "reset revient à l'état initial",
+      build: BidListFilterCubit.new,
+      seed: () => const BidListFilterState(
+          query: 'x', filter: AcceptedStatusFilter.active),
+      act: (c) => c.reset(),
+      expect: () => const [BidListFilterState()],
+    );
+  });
+
+  group('isAcceptedTabBid', () {
+    test('inclut les statuts actifs et clôturés', () {
+      for (final s in [...kActiveBidStatuses, ...kClosedBidStatuses]) {
+        expect(isAcceptedTabBid(_bid(status: s)), isTrue, reason: s);
+      }
+    });
+
+    test('exclut PENDING / REJECTED', () {
+      expect(isAcceptedTabBid(_bid(status: 'PENDING')), isFalse);
+      expect(isAcceptedTabBid(_bid(status: 'REJECTED')), isFalse);
+    });
+
+    test('exclut CANCELLED auto-annulé (TRAVELER_NO_RESPONSE)', () {
+      expect(
+        isAcceptedTabBid(_bid(
+            status: 'CANCELLED', rejectionReason: 'TRAVELER_NO_RESPONSE')),
+        isFalse,
+      );
+    });
+
+    test('inclut CANCELLED post-acceptation (autre motif ou nul)', () {
+      expect(
+        isAcceptedTabBid(
+            _bid(status: 'CANCELLED', rejectionReason: 'TRIP_CANCELLED')),
+        isTrue,
+      );
+      expect(isAcceptedTabBid(_bid(status: 'CANCELLED')), isTrue);
+    });
+  });
+
+  group('normalizeSearch', () {
+    test('minuscule + suppression des accents', () {
+      expect(normalizeSearch('Moussa TRAORÉ'), 'moussa traore');
+      expect(normalizeSearch('Aïcha Côté'), 'aicha cote');
+    });
+
+    test('préserve la longueur (1 char → 1 char)', () {
+      const s = 'Éàçùî';
+      expect(normalizeSearch(s).length, s.length);
+    });
+  });
+
+  group('bidMatchesQuery', () {
+    test('requête vide ou espaces → match', () {
+      expect(bidMatchesQuery(_bid(status: 'ACCEPTED'), ''), isTrue);
+      expect(bidMatchesQuery(_bid(status: 'ACCEPTED'), '   '), isTrue);
+    });
+
+    test('match par nom, insensible casse/accents', () {
+      final b = _bid(status: 'ACCEPTED', senderName: 'Moussa Traoré');
+      expect(bidMatchesQuery(b, 'TRAORE'), isTrue);
+      expect(bidMatchesQuery(b, 'mou'), isTrue);
+      expect(bidMatchesQuery(b, 'diallo'), isFalse);
+    });
+
+    test('match par numéro de suivi', () {
+      final b = _bid(
+          status: 'ACCEPTED', senderName: 'X', trackingNumber: 'DNY-4815');
+      expect(bidMatchesQuery(b, 'dny-48'), isTrue);
+      expect(bidMatchesQuery(b, '4815'), isTrue);
+      expect(bidMatchesQuery(b, '9999'), isFalse);
+    });
+
+    test('trackingNumber nul → pas de crash, pas de match numéro', () {
+      final b = _bid(status: 'ACCEPTED', senderName: 'X', trackingNumber: null);
+      expect(bidMatchesQuery(b, 'dny'), isFalse);
+    });
+  });
+}
+```
+
+- [ ] **Step 2: Lancer le test — il échoue**
+
+Run: `flutter test test/features/matching/bloc/bid_list_filter_cubit_test.dart`
+Expected: FAIL — `Target of URI doesn't exist: 'bid_list_filter_cubit.dart'`
+
+- [ ] **Step 3: Créer le Cubit + helpers**
+
+Créer `lib/features/matching/bloc/bid_list_filter_cubit.dart` :
+
+```dart
+import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:equatable/equatable.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+// ── Groupes de statuts ────────────────────────────────────────────────────────
+
+/// Statuts d'un bid « actif » dans l'onglet Acceptées.
+const kActiveBidStatuses = <String>{
+  'ACCEPTED',
+  'HANDED_OVER',
+  'IN_TRANSIT',
+  'COMPLETED',
+};
+
+/// Statuts d'un bid « clôturé » dans l'onglet Acceptées.
+const kClosedBidStatuses = <String>{
+  'NO_SHOW',
+  'PARCEL_REFUSED',
+  'CANCELLED',
+};
+
+/// `true` si le bid doit figurer dans l'onglet « Acceptées ».
+///
+/// Exclut les `CANCELLED` auto-annulés (`rejectionReason == TRAVELER_NO_RESPONSE`) :
+/// ce sont des bids PENDING jamais traités par le voyageur — jamais acceptés.
+bool isAcceptedTabBid(BidModel bid) {
+  if (bid.status == 'CANCELLED' &&
+      bid.rejectionReason == 'TRAVELER_NO_RESPONSE') {
+    return false;
+  }
+  return kActiveBidStatuses.contains(bid.status) ||
+      kClosedBidStatuses.contains(bid.status);
+}
+
+bool isActiveBid(BidModel bid) => kActiveBidStatuses.contains(bid.status);
+
+bool isClosedBid(BidModel bid) => kClosedBidStatuses.contains(bid.status);
+
+// ── Normalisation de recherche ────────────────────────────────────────────────
+
+const _diacriticsMap = {
+  'à': 'a', 'â': 'a', 'ä': 'a', 'á': 'a', 'ã': 'a', 'å': 'a',
+  'ç': 'c',
+  'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+  'î': 'i', 'ï': 'i', 'í': 'i', 'ì': 'i',
+  'ô': 'o', 'ö': 'o', 'ó': 'o', 'ò': 'o', 'õ': 'o',
+  'ù': 'u', 'û': 'u', 'ü': 'u', 'ú': 'u',
+  'ñ': 'n',
+  'ÿ': 'y',
+};
+
+/// Minuscule + suppression des diacritiques. Préserve la longueur (1 char → 1 char),
+/// ce qui garantit que les index de correspondance restent valides sur la chaîne
+/// d'origine (utilisé pour le surlignage).
+String normalizeSearch(String input) {
+  final lower = input.toLowerCase();
+  final buffer = StringBuffer();
+  for (final ch in lower.split('')) {
+    buffer.write(_diacriticsMap[ch] ?? ch);
+  }
+  return buffer.toString();
+}
+
+/// `true` si le bid correspond à la requête (nom de l'expéditeur ou n° de suivi).
+bool bidMatchesQuery(BidModel bid, String query) {
+  final q = normalizeSearch(query.trim());
+  if (q.isEmpty) return true;
+  final name = normalizeSearch(bid.resolvedSenderName);
+  final track = normalizeSearch(bid.trackingNumber ?? '');
+  return name.contains(q) || track.contains(q);
+}
+
+// ── État de filtre ────────────────────────────────────────────────────────────
+
+enum AcceptedStatusFilter { all, active, closed }
+
+class BidListFilterState extends Equatable {
+  final String query;
+  final AcceptedStatusFilter filter;
+
+  const BidListFilterState({
+    this.query = '',
+    this.filter = AcceptedStatusFilter.all,
+  });
+
+  BidListFilterState copyWith({
+    String? query,
+    AcceptedStatusFilter? filter,
+  }) =>
+      BidListFilterState(
+        query: query ?? this.query,
+        filter: filter ?? this.filter,
+      );
+
+  @override
+  List<Object?> get props => [query, filter];
+}
+
+// ── Cubit ─────────────────────────────────────────────────────────────────────
+
+/// Porte l'état de vue de l'onglet « Acceptées » : requête de recherche et
+/// catégorie de filtre. Aucune donnée métier, aucun appel réseau.
+class BidListFilterCubit extends Cubit<BidListFilterState> {
+  BidListFilterCubit() : super(const BidListFilterState());
+
+  void setQuery(String query) => emit(state.copyWith(query: query));
+
+  void setFilter(AcceptedStatusFilter filter) =>
+      emit(state.copyWith(filter: filter));
+
+  void reset() => emit(const BidListFilterState());
+}
+```
+
+- [ ] **Step 4: Lancer le test — il passe**
+
+Run: `flutter test test/features/matching/bloc/bid_list_filter_cubit_test.dart`
+Expected: PASS (tous les tests)
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add lib/features/matching/bloc/bid_list_filter_cubit.dart test/features/matching/bloc/bid_list_filter_cubit_test.dart
+git commit -m "feat(matching): BidListFilterCubit + helpers de filtrage des bids
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
+```
+
+---
+
+## Task 3 : Enregistrement DI du `BidListFilterCubit`
+
+**Files:**
+- Modify: `lib/core/di/injection.dart`
+
+- [ ] **Step 1: Ajouter l'import**
+
+En haut de `lib/core/di/injection.dart`, dans le bloc d'imports `features/matching`, ajouter :
+
+```dart
+import 'package:dony/features/matching/bloc/bid_list_filter_cubit.dart';
+```
+
+- [ ] **Step 2: Enregistrer le Cubit**
+
+Dans `injection.dart`, juste après l'enregistrement de `BidAcceptanceBloc` (`getIt.registerFactory<BidAcceptanceBloc>(...)`), ajouter :
+
+```dart
+  getIt.registerFactory<BidListFilterCubit>(
+    () => BidListFilterCubit(),
+  );
+```
+
+- [ ] **Step 3: Vérifier la compilation**
+
+Run: `flutter analyze lib/core/di/injection.dart`
+Expected: `No issues found` (ou uniquement des `info` préexistants)
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add lib/core/di/injection.dart
+git commit -m "chore(di): enregistrer BidListFilterCubit
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
+```
+
+---
+
+## Task 4 : Tests widget de l'écran refondu (écrire — ils échouent)
+
+On remplace **intégralement** `bid_list_screen_test.dart` par la suite complète. Les tests référencent l'API cible (`BidListScreenTesting` fournit lui-même le `BidListFilterCubit`, recherche, chips, badges `_StatusDot`). Ils échouent jusqu'à la Task 5.
+
+**Files:**
+- Test: `test/features/matching/presentation/bid_list_screen_test.dart` (remplacer tout le contenu)
+
+- [ ] **Step 1: Remplacer le contenu du fichier de test**
+
+Remplacer **tout** le contenu de `test/features/matching/presentation/bid_list_screen_test.dart` par :
+
+```dart
+import 'dart:async';
+
+import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_event.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/screens/bid_list_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:mocktail/mocktail.dart';
+
+// ── Mocks ─────────────────────────────────────────────────────────────────────
+
+class MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
+
+class MockBidAcceptanceBloc
+    extends MockBloc<BidAcceptanceEvent, acs.BidAcceptanceState>
+    implements BidAcceptanceBloc {}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+BidModel _makeBid({
+  required String status,
+  String id = 'bid-00000001',
+  String senderName = 'Moussa Traoré',
+  String? trackingNumber,
+  String? rejectionReason,
+  DateTime? updatedAt,
+}) =>
+    BidModel(
+      id: id,
+      announcementId: 'ann-1',
+      senderId: 'sender-1',
+      senderName: senderName,
+      weightKg: 3,
+      pricePerKg: 15,
+      contentCategory: 'Vêtements',
+      trackingNumber: trackingNumber,
+      rejectionReason: rejectionReason,
+      status: status,
+      createdAt: DateTime(2026, 5, 1),
+      updatedAt: updatedAt ?? DateTime(2026, 5, 1),
+    );
+
+Future<void> _pump(
+  WidgetTester tester,
+  MockBidBloc bidBloc, {
+  MockBidAcceptanceBloc? acceptanceBloc,
+  int initialTabIndex = 0,
+}) async {
+  await initializeDateFormatting('fr_FR');
+  tester.view.physicalSize = const Size(800, 2200);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.resetPhysicalSize);
+
+  final router = GoRouter(
+    initialLocation: '/',
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (ctx, _) => MultiBlocProvider(
+          providers: [
+            BlocProvider<BidBloc>.value(value: bidBloc),
+            BlocProvider<BidAcceptanceBloc>.value(
+                value: acceptanceBloc ?? MockBidAcceptanceBloc()),
+          ],
+          child: BidListScreenTesting(
+            announcementId: 'ann-1',
+            initialTabIndex: initialTabIndex,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/bids/:id',
+        builder: (_, state) => Scaffold(
+          appBar: AppBar(),
+          body: Text('Bid detail ${state.pathParameters['id']}'),
+        ),
+      ),
+      GoRoute(
+        path: '/tracking/scan',
+        builder: (_, __) => const Scaffold(body: Text('scan')),
+      ),
+    ],
+  );
+
+  await tester.pumpWidget(
+    MaterialApp.router(routerConfig: router, theme: AppTheme.light),
+  );
+  await tester.pump();
+}
+
+/// Branche un stream de states sur le bloc mocké et renvoie le controller.
+StreamController<BidState> _wireStates(
+    MockBidBloc bidBloc, WidgetTester tester) {
+  final ctrl = StreamController<BidState>.broadcast();
+  whenListen(bidBloc, ctrl.stream, initialState: BidInitial());
+  return ctrl;
+}
+
+void main() {
+  setUpAll(() {
+    registerFallbackValue(BidListRequested('ann-1'));
+  });
+
+  late MockBidBloc bidBloc;
+  late MockBidAcceptanceBloc acceptanceBloc;
+
+  setUp(() {
+    bidBloc = MockBidBloc();
+    acceptanceBloc = MockBidAcceptanceBloc();
+    when(() => bidBloc.state).thenReturn(BidInitial());
+    when(() => acceptanceBloc.state).thenReturn(acs.BidAcceptanceInitial());
+  });
+
+  tearDown(() {
+    bidBloc.close();
+    acceptanceBloc.close();
+  });
+
+  // ── Onglet « En attente » ───────────────────────────────────────────────────
+
+  testWidgets('PAYMENT_ESCROWED apparaît dans « En attente » avec badge et boutons',
+      (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([_makeBid(status: 'PAYMENT_ESCROWED')]));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Paiement reçu'), findsOneWidget);
+    expect(find.text('Refuser'), findsOneWidget);
+    expect(find.text('Accepter'), findsOneWidget);
+  });
+
+  testWidgets('PENDING apparaît dans « En attente » sans badge Paiement reçu',
+      (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([_makeBid(status: 'PENDING')]));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Refuser'), findsOneWidget);
+    expect(find.text('Accepter'), findsOneWidget);
+    expect(find.textContaining('Paiement reçu'), findsNothing);
+  });
+
+  testWidgets(
+      'PENDING + PAYMENT_ESCROWED comptent dans le compteur « En attente »',
+      (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([
+      _makeBid(status: 'PENDING', id: 'bid-1'),
+      _makeBid(status: 'PAYMENT_ESCROWED', id: 'bid-2'),
+      _makeBid(status: 'ACCEPTED', id: 'bid-3'),
+    ]));
+    await tester.pumpAndSettle();
+
+    // 2 bids en attente → 2 boutons « Accepter » visibles sur l'onglet par défaut.
+    expect(find.text('Accepter'), findsNWidgets(2));
+  });
+
+  // ── Onglet « Acceptées » — statuts ──────────────────────────────────────────
+
+  testWidgets('les 7 statuts post-acceptation s\'affichent avec le bon libellé',
+      (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([
+      _makeBid(status: 'ACCEPTED', id: 'b1'),
+      _makeBid(status: 'HANDED_OVER', id: 'b2'),
+      _makeBid(status: 'IN_TRANSIT', id: 'b3'),
+      _makeBid(status: 'COMPLETED', id: 'b4'),
+      _makeBid(status: 'NO_SHOW', id: 'b5'),
+      _makeBid(status: 'PARCEL_REFUSED', id: 'b6'),
+      _makeBid(status: 'CANCELLED', id: 'b7'),
+    ]));
+    await tester.pumpAndSettle();
+
+    // « En attente » vide → onglet « Acceptées » auto-sélectionné.
+    expect(find.text('Acceptées (7)'), findsOneWidget);
+    expect(find.text('Accepté'), findsOneWidget);
+    expect(find.text('En route'), findsOneWidget);
+    expect(find.text('En transit'), findsOneWidget);
+    expect(find.text('Livré'), findsOneWidget);
+    expect(find.text('Absent'), findsOneWidget);
+    expect(find.text('Colis refusé'), findsOneWidget);
+    expect(find.text('Annulé'), findsOneWidget);
+  });
+
+  testWidgets('CANCELLED auto (TRAVELER_NO_RESPONSE) est exclu de la liste',
+      (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([
+      _makeBid(status: 'ACCEPTED', id: 'b1'),
+      _makeBid(
+          status: 'CANCELLED',
+          id: 'b2',
+          rejectionReason: 'TRAVELER_NO_RESPONSE'),
+    ]));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Acceptées (1)'), findsOneWidget);
+    expect(find.text('Annulé'), findsNothing);
+    expect(find.byType(DonyAvatar), findsOneWidget);
+  });
+
+  // ── Recherche ───────────────────────────────────────────────────────────────
+
+  testWidgets('la recherche par nom filtre la liste', (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([
+      _makeBid(status: 'ACCEPTED', id: 'b1', senderName: 'Moussa Traoré'),
+      _makeBid(status: 'IN_TRANSIT', id: 'b2', senderName: 'Awa Diop'),
+    ]));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DonyAvatar), findsNWidgets(2));
+
+    await tester.enterText(find.byType(TextField), 'awa');
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DonyAvatar), findsOneWidget);
+    expect(find.text('En transit'), findsOneWidget);
+    expect(find.text('Accepté'), findsNothing);
+  });
+
+  testWidgets('la recherche par numéro de suivi filtre la liste',
+      (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([
+      _makeBid(
+          status: 'ACCEPTED',
+          id: 'b1',
+          senderName: 'Moussa Traoré',
+          trackingNumber: 'DNY-4815'),
+      _makeBid(
+          status: 'IN_TRANSIT',
+          id: 'b2',
+          senderName: 'Awa Diop',
+          trackingNumber: 'DNY-9999'),
+    ]));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'DNY-48');
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DonyAvatar), findsOneWidget);
+    expect(find.text('Accepté'), findsOneWidget);
+    expect(find.text('En transit'), findsNothing);
+  });
+
+  testWidgets('recherche infructueuse → état vide « Aucun résultat »',
+      (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([
+      _makeBid(status: 'ACCEPTED', id: 'b1', senderName: 'Moussa Traoré'),
+    ]));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'zzz');
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DonyAvatar), findsNothing);
+    expect(find.text('Aucun résultat'), findsOneWidget);
+    expect(find.textContaining('zzz'), findsOneWidget);
+  });
+
+  // ── Filtre statut ───────────────────────────────────────────────────────────
+
+  testWidgets('le filtre « Clôturés » n\'affiche que les bids clôturés',
+      (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([
+      _makeBid(status: 'ACCEPTED', id: 'b1'),
+      _makeBid(status: 'IN_TRANSIT', id: 'b2'),
+      _makeBid(status: 'NO_SHOW', id: 'b3'),
+      _makeBid(status: 'CANCELLED', id: 'b4'),
+    ]));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Clôturés (2)'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DonyAvatar), findsNWidgets(2));
+    expect(find.text('Absent'), findsOneWidget);
+    expect(find.text('Annulé'), findsOneWidget);
+    expect(find.text('Accepté'), findsNothing);
+    expect(find.text('En transit'), findsNothing);
+  });
+
+  testWidgets('le filtre « Actifs » n\'affiche que les bids actifs',
+      (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([
+      _makeBid(status: 'ACCEPTED', id: 'b1'),
+      _makeBid(status: 'NO_SHOW', id: 'b2'),
+      _makeBid(status: 'CANCELLED', id: 'b3'),
+    ]));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Actifs (1)'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DonyAvatar), findsOneWidget);
+    expect(find.text('Accepté'), findsOneWidget);
+    expect(find.text('Absent'), findsNothing);
+  });
+
+  testWidgets('recherche et filtre se cumulent', (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([
+      _makeBid(status: 'ACCEPTED', id: 'b1', senderName: 'Moussa Traoré'),
+      _makeBid(status: 'CANCELLED', id: 'b2', senderName: 'Moussa Diop'),
+      _makeBid(status: 'CANCELLED', id: 'b3', senderName: 'Awa Sow'),
+    ]));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'moussa');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Clôturés (1)'));
+    await tester.pumpAndSettle();
+
+    // « moussa » → 2 bids ; ∩ « Clôturés » → 1 (Moussa Diop CANCELLED).
+    expect(find.byType(DonyAvatar), findsOneWidget);
+    expect(find.text('Annulé'), findsOneWidget);
+  });
+
+  testWidgets('les compteurs des chips sont recalculés sur la recherche',
+      (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([
+      _makeBid(status: 'ACCEPTED', id: 'b1', senderName: 'Moussa Traoré'),
+      _makeBid(status: 'ACCEPTED', id: 'b2', senderName: 'Moussa Diop'),
+      _makeBid(status: 'NO_SHOW', id: 'b3', senderName: 'Awa Sow'),
+    ]));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tous (3)'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'moussa');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tous (2)'), findsOneWidget);
+    expect(find.text('Actifs (2)'), findsOneWidget);
+    expect(find.text('Clôturés (0)'), findsOneWidget);
+  });
+
+  // ── Onglet ouvert par défaut ────────────────────────────────────────────────
+
+  testWidgets('auto-sélection de « Acceptées » quand « En attente » est vide',
+      (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([_makeBid(status: 'ACCEPTED')]));
+    await tester.pumpAndSettle();
+
+    // La barre de recherche n'existe que dans l'onglet « Acceptées ».
+    expect(find.byType(DonySearchField), findsOneWidget);
+  });
+
+  testWidgets('pas d\'auto-sélection quand « En attente » n\'est pas vide',
+      (tester) async {
+    final ctrl = _wireStates(bidBloc, tester);
+    addTearDown(ctrl.close);
+
+    await _pump(tester, bidBloc, acceptanceBloc: acceptanceBloc);
+    ctrl.add(BidListLoaded([
+      _makeBid(status: 'PENDING', id: 'b1'),
+      _makeBid(status: 'ACCEPTED', id: 'b2'),
+    ]));
+    await tester.pumpAndSettle();
+
+    // Reste sur l'onglet « En attente » : boutons visibles, pas de recherche.
+    expect(find.text('Accepter'), findsOneWidget);
+    expect(find.byType(DonySearchField), findsNothing);
+  });
+}
+```
+
+- [ ] **Step 2: Lancer les tests — ils échouent**
+
+Run: `flutter test test/features/matching/presentation/bid_list_screen_test.dart`
+Expected: FAIL — `BidListScreenTesting` ne fournit pas `BidListFilterCubit`, `DonySearchField` absent, libellés de badge incorrects, etc.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add test/features/matching/presentation/bid_list_screen_test.dart
+git commit -m "test(matching): suite widget de l'onglet Acceptées refondu (échoue)
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
+```
+
+---
+
+## Task 5 : Refonte de `bid_list_screen.dart`
+
+On remplace **intégralement** le fichier. La structure : `BidListScreen` fournit les 3 blocs ; `_BidListView` gère les onglets et l'auto-sélection ; `_AcceptedTab` (nouveau) porte recherche + chips + liste filtrée ; `_BidCard` retravaillée (Option B) ; `_StatusDot` (nouveau) pour les badges.
+
+**Files:**
+- Modify: `lib/features/matching/presentation/screens/bid_list_screen.dart` (remplacer tout le contenu)
+
+- [ ] **Step 1: Remplacer le contenu du fichier**
+
+Remplacer **tout** le contenu de `lib/features/matching/presentation/screens/bid_list_screen.dart` par :
+
+```dart
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
@@ -427,6 +1265,15 @@ class _BidListViewState extends State<_BidListView>
     }
   }
 }
+```
+
+(Le fichier continue à l'étape suivante — coller la suite à la fin du même fichier.)
+
+- [ ] **Step 2: Compléter le fichier — onglets et widgets**
+
+Coller la suite, **à la fin du même fichier** `bid_list_screen.dart` :
+
+```dart
 // ─────────────────────────────────────────────────────────────────────────────
 // _PendingTab — onglet « En attente »
 // ─────────────────────────────────────────────────────────────────────────────
@@ -477,7 +1324,7 @@ class _PendingTab extends StatelessWidget {
           return Dismissible(
             key: ValueKey('dismiss_${bid.id}'),
             direction: DismissDirection.endToStart,
-            background: const _DismissBackground(),
+            background: _DismissBackground(),
             confirmDismiss: (_) => _confirmDelete(context),
             onDismissed: (_) => context
                 .read<BidBloc>()
@@ -709,6 +1556,15 @@ class _SearchEmptyState extends StatelessWidget {
     );
   }
 }
+```
+
+(Le fichier continue à l'étape suivante.)
+
+- [ ] **Step 3: Compléter le fichier — carte et badges**
+
+Coller la suite, **à la fin du même fichier** `bid_list_screen.dart` :
+
+```dart
 // ─────────────────────────────────────────────────────────────────────────────
 // _BidCard — carte de bid (Option B)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -832,7 +1688,7 @@ class _BidCard extends StatelessWidget {
               // ── Bas : actions OU badge de statut ───────────────────
               if (_isPending && onAccept != null && onReject != null) ...[
                 if (_isPaymentEscrowed) ...[
-                  const _EscrowedHint(),
+                  _EscrowedHint(),
                   const SizedBox(height: DonySpacing.sm),
                 ],
                 _PendingActions(
@@ -876,7 +1732,7 @@ class _HighlightedText extends StatelessWidget {
     }
     // normalizeSearch préserve la longueur → les index sont valides sur `text`.
     final idx = normalizeSearch(text).indexOf(q);
-    if (idx < 0 || idx + q.length > text.length) {
+    if (idx < 0) {
       return Text(text, style: style, overflow: TextOverflow.ellipsis);
     }
     final cs = Theme.of(context).colorScheme;
@@ -982,8 +1838,6 @@ class _PendingActions extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _EscrowedHint extends StatelessWidget {
-  const _EscrowedHint();
-
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
@@ -1040,6 +1894,7 @@ class _StatusDot extends StatelessWidget {
           cs.surfaceContainerHighest,
           'Annulé'
         ),
+      'REJECTED' => (cs.error, cs.errorLight, 'Refusé'),
       _ => (cs.onSurfaceVariant, cs.surfaceContainerHighest, status),
     };
 
@@ -1050,7 +1905,7 @@ class _StatusDot extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(DonyRadius.sm),
+        borderRadius: BorderRadius.circular(DonyRadius.md),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1073,8 +1928,6 @@ class _StatusDot extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _DismissBackground extends StatelessWidget {
-  const _DismissBackground();
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -1186,3 +2039,101 @@ class _ErrorView extends StatelessWidget {
     );
   }
 }
+```
+
+- [ ] **Step 4: Vérifier l'analyse statique**
+
+Run: `flutter analyze lib/features/matching/presentation/screens/bid_list_screen.dart`
+Expected: `No issues found` (ou uniquement des `info` préexistants, ex. `unnecessary_import`). Corriger toute **erreur** (rouge) avant de continuer.
+
+- [ ] **Step 5: Lancer les tests de l'écran**
+
+Run: `flutter test test/features/matching/presentation/bid_list_screen_test.dart`
+Expected: PASS (15 tests)
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add lib/features/matching/presentation/screens/bid_list_screen.dart
+git commit -m "feat(matching): recherche + filtre statut dans l'onglet Acceptées
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
+```
+
+---
+
+## Task 6 : Vérification finale (analyse, tests, couverture)
+
+**Files:** aucun fichier modifié — étape de validation.
+
+- [ ] **Step 1: Analyse statique du périmètre**
+
+Run: `flutter analyze lib/features/matching/ test/features/matching/`
+Expected: aucune **erreur**. Corriger toute erreur introduite. Les `info` préexistants sont tolérés.
+
+- [ ] **Step 2: Lancer toute la suite de tests matching**
+
+Run: `flutter test test/features/matching/`
+Expected: PASS — tous les tests, dont les 2 nouveaux fichiers de cette feature.
+
+- [ ] **Step 3: Lancer la suite complète avec couverture**
+
+Run: `flutter test --coverage`
+Expected: PASS. En cas d'échec hors périmètre matching, vérifier qu'il préexistait (`git stash` + run sur `main` si doute) ; sinon corriger.
+
+- [ ] **Step 4: Vérifier la couverture des fichiers de la feature**
+
+Run: `genhtml coverage/lcov.info -o coverage/html` puis ouvrir `coverage/html/index.html`
+Expected: `bid_list_filter_cubit.dart` et `bid_list_screen.dart` ≥ 90 %. Si en dessous, ajouter des tests ciblés (cas non couverts : branche `_EscrowedHint`, état d'erreur `_ErrorView`, navigation `onTap` de carte) et recommencer aux Steps 2-3.
+
+- [ ] **Step 5: Commit final éventuel**
+
+Si des tests ont été ajoutés au Step 4 :
+
+```bash
+git add test/features/matching/
+git commit -m "test(matching): compléter la couverture de l'onglet Acceptées
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
+```
+
+---
+
+## Self-Review (auteur du plan)
+
+**1. Couverture du spec**
+
+| Exigence du spec | Tâche |
+|------------------|-------|
+| §4.1 Barre de recherche (nom + n° suivi, défile, insensible casse/accents, surlignage, clear) | Task 2 (`bidMatchesQuery`, `normalizeSearch`), Task 5 (`_BidSearchField`, `_HighlightedText`) |
+| §4.2 Chips Tous/Actifs/Clôturés + compteurs | Task 5 (`_StatusFilterChips`, `_AcceptedTab`) |
+| §4.3 Recherche ∩ filtre | Task 5 (`_AcceptedTab`), test « recherche et filtre se cumulent » |
+| §4.4 Onglet par défaut | Task 5 (`_maybeAutoSelectTab`), tests auto-sélection |
+| §4.5 Tri `updatedAt` desc | Task 5 (`_AcceptedTab` — `displayed.sort`) |
+| §4.6 États vides | Task 5 (`_PendingTab`/`_AcceptedTab` `DonyEmptyState`, `_SearchEmptyState`) |
+| §5.1 `BidListFilterCubit` | Task 2 |
+| §5.2 Modifs écran + DI | Task 3, Task 5 |
+| §5.3 Logique de filtrage | Task 2 (helpers), Task 5 (`_AcceptedTab`) |
+| §6.1 Carte Option B | Task 5 (`_BidCard`, `_MetaPill`) |
+| §6.2 Badge `_StatusDot` 7 statuts | Task 5 (`_StatusDot`) |
+| §6.3 Animation premier affichage uniquement | Task 5 (`_AcceptedTabState._hasAnimatedOnce`) |
+| §7.1 Exclusion CANCELLED auto | Task 2 (`isAcceptedTabBid`), test dédié |
+| §7.2 Champs nuls | Task 2 (`bidMatchesQuery`), Task 5 (`_BidCard` — `hasTracking`, `content`) |
+| §8 Tests ≥ 90 % | Task 2, Task 4, Task 6 |
+
+Aucune exigence sans tâche.
+
+**2. Scan des placeholders** — aucun `TBD`/`TODO` ; tout le code est fourni intégralement.
+
+**3. Cohérence des types** — `BidListFilterState`, `AcceptedStatusFilter`, `isAcceptedTabBid`, `isActiveBid`, `isClosedBid`, `bidMatchesQuery`, `normalizeSearch`, `kActiveBidStatuses`, `kClosedBidStatuses` définis en Task 2 et utilisés tels quels en Task 5. `BidListFilterCubit.setQuery/setFilter` cohérents entre Task 2, 4 et 5. `BidListScreenTesting(announcementId:, initialTabIndex:)` cohérent entre Task 4 (test) et Task 5 (déclaration).
+
+**4. Ambiguïtés** — l'animation en cascade est explicitement bornée au premier affichage via `_hasAnimatedOnce` ; les statuts « actifs/clôturés » sont des `Set` constants uniques (Task 2) référencés partout.
+
+---
+
+## Notes d'exécution
+
+- **Dépôt** : tout se passe dans le dépôt `dony_app/` (imbriqué), branche `feat/demandes-acceptees-recherche`. Ne jamais commiter sur `main`.
+- **`find.text` et surlignage** : `_HighlightedText` rend un `Text.rich` quand le terme correspond ; les tests comptent donc les cartes via `find.byType(DonyAvatar)` et identifient les statuts via les libellés de `_StatusDot` (texte simple), jamais via le nom surligné.
+- **Hauteur de viewport en test** : `_pump` fixe `physicalSize` à `800×2200` pour que la `ListView` eager construise toutes les cartes (jusqu'à 7) et les rende trouvables.
+
