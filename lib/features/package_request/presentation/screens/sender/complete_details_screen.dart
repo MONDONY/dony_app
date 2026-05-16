@@ -94,7 +94,7 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
               backgroundColor: kSuccess,
             ),
           );
-          context.pop();
+          context.pop(true);
         } else if (state.status == CompleteDetailsStatus.error) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

@@ -351,7 +351,12 @@ class _RequestCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(DonyRadius.card),
       child: InkWell(
         borderRadius: BorderRadius.circular(DonyRadius.card),
-        onTap: () => PackageRequestDetailBottomSheet.show(context, request.id),
+        onTap: () async {
+          await PackageRequestDetailBottomSheet.show(context, request.id);
+          if (context.mounted) {
+            context.read<PackageRequestBloc>().add(const FetchMyRequests());
+          }
+        },
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(DonyRadius.card),
