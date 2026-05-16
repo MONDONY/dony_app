@@ -386,8 +386,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerFactory<NegotiationBloc>(
     () => NegotiationBloc(getIt<NegotiationRepository>()),
   );
-  getIt.registerFactory<NegotiationListBloc>(
+  getIt.registerLazySingleton<NegotiationListBloc>(
     () => NegotiationListBloc(getIt<NegotiationRepository>()),
+    dispose: (b) => b.close(),
   );
   getIt.registerFactory<CompleteDetailsBloc>(
     () => CompleteDetailsBloc(getIt<PackageRequestRepository>()),

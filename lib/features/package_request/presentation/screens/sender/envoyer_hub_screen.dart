@@ -18,8 +18,19 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-class EnvoyerHubScreen extends StatelessWidget {
+class EnvoyerHubScreen extends StatefulWidget {
   const EnvoyerHubScreen({super.key});
+
+  @override
+  State<EnvoyerHubScreen> createState() => _EnvoyerHubScreenState();
+}
+
+class _EnvoyerHubScreenState extends State<EnvoyerHubScreen> {
+  @override
+  void initState() {
+    super.initState();
+    getIt<NegotiationListBloc>().add(const NegotiationListFetchRequested());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,10 +44,7 @@ class EnvoyerHubScreen extends StatelessWidget {
           create: (_) =>
               getIt<BidBloc>()..add(const BidMyListAutoRefreshRequested()),
         ),
-        BlocProvider(
-          create: (_) => getIt<NegotiationListBloc>()
-            ..add(const NegotiationListFetchRequested()),
-        ),
+        BlocProvider.value(value: getIt<NegotiationListBloc>()),
       ],
       child: const _EnvoyerHubView(),
     );

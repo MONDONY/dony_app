@@ -9,16 +9,27 @@ import 'package:go_router/go_router.dart';
 
 enum _StatusFilter { all, active, terminal }
 
-class MyNegotiationsScreen extends StatelessWidget {
+class MyNegotiationsScreen extends StatefulWidget {
   const MyNegotiationsScreen({super.key});
+
+  @override
+  State<MyNegotiationsScreen> createState() => _MyNegotiationsScreenState();
+}
+
+class _MyNegotiationsScreenState extends State<MyNegotiationsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    getIt<NegotiationListBloc>().add(const NegotiationListFetchRequested());
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: DonyColors.sand100,
       appBar: const DonyAppBar(title: 'Négociations'),
-      body: BlocProvider<NegotiationListBloc>(
-        create: (_) => getIt<NegotiationListBloc>()..add(const NegotiationListFetchRequested()),
+      body: BlocProvider<NegotiationListBloc>.value(
+        value: getIt<NegotiationListBloc>(),
         child: const MyNegotiationsBody(),
       ),
     );
