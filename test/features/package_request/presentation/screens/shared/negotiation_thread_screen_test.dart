@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/presentation/screens/shared/negotiation_thread_screen.dart';
 import 'package:flutter/material.dart';
@@ -135,6 +136,62 @@ void main() {
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
       expect(find.byType(DonyAvatar), findsOneWidget);
+    });
+
+    testWidgets(
+        'hero card cliquable au statut AWAITING_PAYMENT côté expéditeur '
+        'avec trajet lié', (tester) async {
+      final thread = NegotiationThread(
+        id: 't-1',
+        packageRequestId: 'pr-1',
+        travelerId: 'tr-1',
+        travelerTravelDate: DateTime(2026, 6, 15),
+        travelerAvailableKg: 10,
+        status: NegotiationThreadStatus.awaitingPayment,
+        currentPriceEur: 68,
+        roundsCount: 3,
+        lastActivityAt: DateTime(2026, 5, 10),
+        createdAt: DateTime(2026, 5, 10),
+        messages: const [],
+        linkedTrip: const LinkedTripSummary(
+          announcementId: 'ann-1',
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+        ),
+      );
+      when(() => bloc.state).thenReturn(NegotiationLoaded(thread));
+      await tester.pumpWidget(wrap(viewerUserId: 'sender-1'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Voir le trajet lié'), findsOneWidget);
+
+      await tester.tap(find.text('Voir le trajet lié'));
+      await tester.pumpAndSettle();
+      expect(find.text('Trajet lié'), findsOneWidget);
+    });
+
+    testWidgets(
+        'hero card non cliquable côté voyageur même avec trajet lié',
+        (tester) async {
+      final thread = NegotiationThread(
+        id: 't-1',
+        packageRequestId: 'pr-1',
+        travelerId: 'tr-1',
+        travelerTravelDate: DateTime(2026, 6, 15),
+        travelerAvailableKg: 10,
+        status: NegotiationThreadStatus.awaitingPayment,
+        currentPriceEur: 68,
+        roundsCount: 3,
+        lastActivityAt: DateTime(2026, 5, 10),
+        createdAt: DateTime(2026, 5, 10),
+        messages: const [],
+        linkedTrip: const LinkedTripSummary(announcementId: 'ann-1'),
+      );
+      when(() => bloc.state).thenReturn(NegotiationLoaded(thread));
+      await tester.pumpWidget(wrap(viewerUserId: 'tr-1'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Voir le trajet lié'), findsNothing);
     });
   });
 }

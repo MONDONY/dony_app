@@ -7,6 +7,7 @@ import 'package:dony/features/package_request/data/models/negotiation_thread.dar
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_hero_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_message_bubble.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_state_cta_bar.dart';
+import 'package:dony/features/package_request/presentation/widgets/thread/trip_detail_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -209,9 +210,27 @@ class _LoadedView extends StatelessWidget {
     final isLastFromOther = thread.messages.isNotEmpty &&
         thread.messages.last.fromUserId != viewerUserId;
 
+    final isSender = thread.travelerId != viewerUserId;
+    final canViewTrip =
+        thread.status == NegotiationThreadStatus.awaitingPayment &&
+            isSender &&
+            thread.linkedTrip != null;
+
     return Column(
       children: [
-        ThreadHeroCard(thread: thread, statusVariant: variant)
+        ThreadHeroCard(
+          thread: thread,
+          statusVariant: variant,
+          onTap: canViewTrip
+              ? () => TripDetailBottomSheet.show(
+                    context,
+                    trip: thread.linkedTrip!,
+                    isSender: true,
+                    bloc: context.read<NegotiationBloc>(),
+                    threadId: thread.id,
+                  )
+              : null,
+        )
             .animate()
             .fadeIn(duration: 220.ms)
             .slideY(begin: -0.04, curve: Curves.easeOutCubic),
@@ -240,10 +259,16 @@ class _LoadedView extends StatelessWidget {
                     isLastFromOther &&
                     thread.status == NegotiationThreadStatus.open &&
                     _isProposalOrCounter(m.kind);
+                final isTripRefusal =
+                    m.kind == NegotiationMessageKind.reject &&
+                        thread.status != NegotiationThreadStatus.rejected &&
+                        thread.status !=
+                            NegotiationThreadStatus.autoRejected;
                 return ThreadMessageBubble(
                   message: m,
                   mine: mine,
                   highlight: shouldHighlight,
+                  isTripRefusal: isTripRefusal,
                 )
                     .animate()
                     .fadeIn(duration: 200.ms, delay: (40 * i).ms)
