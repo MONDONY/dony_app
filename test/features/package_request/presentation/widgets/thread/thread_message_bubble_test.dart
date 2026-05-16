@@ -103,4 +103,38 @@ void main() {
       expect(find.text('REJETÉE'), findsOneWidget);
     });
   });
+
+  group('ThreadMessageBubble isTripRefusal', () {
+    testWidgets('isTripRefusal=true → bandeau "Trajet refusé" + raison',
+        (tester) async {
+      await tester.pumpWidget(wrap(ThreadMessageBubble(
+        message: _msg(
+          kind: NegotiationMessageKind.reject,
+          price: null,
+          body: 'Date trop tardive',
+        ),
+        mine: false,
+        isTripRefusal: true,
+      )));
+      expect(
+          find.text('Trajet refusé par l\'expéditeur'), findsOneWidget);
+      expect(find.textContaining('Date trop tardive'), findsOneWidget);
+      expect(find.text('REJETÉE'), findsNothing);
+    });
+
+    testWidgets('isTripRefusal=false → bulle "REJETÉE" classique',
+        (tester) async {
+      await tester.pumpWidget(wrap(ThreadMessageBubble(
+        message: _msg(
+          kind: NegotiationMessageKind.reject,
+          price: null,
+          body: 'Date trop tardive',
+        ),
+        mine: false,
+      )));
+      expect(find.text('REJETÉE'), findsOneWidget);
+      expect(
+          find.text('Trajet refusé par l\'expéditeur'), findsNothing);
+    });
+  });
 }

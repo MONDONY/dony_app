@@ -20,6 +20,7 @@ class ThreadMessageBubble extends StatelessWidget {
     required this.message,
     required this.mine,
     this.highlight = false,
+    this.isTripRefusal = false,
   });
 
   final NegotiationMessage message;
@@ -29,8 +30,16 @@ class ThreadMessageBubble extends StatelessWidget {
   /// proposition reçue côté sender quand pas encore lue).
   final bool highlight;
 
+  /// Si `true`, le message (kind REJECT) est rendu comme un bandeau
+  /// « Trajet refusé par l'expéditeur » au lieu de la bulle « REJETÉE ».
+  final bool isTripRefusal;
+
   @override
   Widget build(BuildContext context) {
+    if (isTripRefusal) {
+      return _buildTripRefusalBanner(context);
+    }
+
     final radius = BorderRadius.only(
       topLeft: const Radius.circular(18),
       topRight: const Radius.circular(18),
@@ -141,6 +150,60 @@ class ThreadMessageBubble extends StatelessWidget {
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTripRefusalBanner(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(DonySpacing.md),
+      decoration: BoxDecoration(
+        color: DonyColors.error.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        border: Border.all(color: DonyColors.error.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.error_outline_rounded,
+                  size: 16, color: DonyColors.error),
+              const SizedBox(width: 6),
+              Text(
+                'Trajet refusé par l\'expéditeur',
+                style: tt.bodyMedium!.copyWith(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: DonyColors.error,
+                ),
+              ),
+            ],
+          ),
+          if (message.body != null && message.body!.isNotEmpty) ...[
+            const SizedBox(height: DonySpacing.xs),
+            Text(
+              '« ${message.body!} »',
+              style: tt.bodyMedium!.copyWith(
+                fontSize: 13.5,
+                color: kTextPrimary,
+                height: 1.35,
+              ),
+            ),
+          ],
+          const SizedBox(height: DonySpacing.xs),
+          Text(
+            DateFormat('HH:mm').format(message.createdAt),
+            style: tt.bodyMedium!.copyWith(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              color: kTextHint,
+            ),
+          ),
+        ],
       ),
     );
   }
