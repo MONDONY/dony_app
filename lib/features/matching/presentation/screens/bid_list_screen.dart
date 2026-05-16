@@ -699,7 +699,7 @@ class _SearchEmptyState extends StatelessWidget {
           const SizedBox(height: DonySpacing.xs),
           Text(
             hasQuery
-                ? 'Essayez un autre terme de recherche.'
+                ? 'Aucun envoi ne correspond à « ${query.trim()} ».'
                 : 'Aucun envoi dans cette catégorie.',
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
@@ -1038,7 +1038,6 @@ class _StatusDot extends StatelessWidget {
           cs.surfaceContainerHighest,
           'Annulé'
         ),
-      'REJECTED' => (cs.error, cs.errorLight, 'Refusé'),
       _ => (cs.onSurfaceVariant, cs.surfaceContainerHighest, status),
     };
 
@@ -1049,7 +1048,7 @@ class _StatusDot extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(DonyRadius.md),
+        borderRadius: BorderRadius.circular(DonyRadius.sm),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

@@ -290,7 +290,7 @@ void main() {
 
     expect(find.byType(DonyAvatar), findsNothing);
     expect(find.text('Aucun résultat'), findsOneWidget);
-    expect(find.textContaining('zzz'), findsOneWidget);
+    expect(find.textContaining('« zzz »'), findsOneWidget);
   });
 
   // ── Filtre statut ───────────────────────────────────────────────────────────
