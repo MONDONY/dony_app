@@ -5,7 +5,11 @@ import 'package:dony/features/matching/presentation/widgets/billet/talon_travele
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-BidModel _bid({required String status, String? trackingNumber}) => BidModel(
+BidModel _bid({
+  required String status,
+  String? trackingNumber,
+  String? confirmationCode,
+}) => BidModel(
   id: 'bid-1',
   announcementId: 'a-1',
   senderId: 's-1',
@@ -14,6 +18,7 @@ BidModel _bid({required String status, String? trackingNumber}) => BidModel(
   createdAt: DateTime(2026, 5),
   updatedAt: DateTime(2026, 5),
   trackingNumber: trackingNumber,
+  confirmationCode: confirmationCode,
 );
 
 Future<void> _pump(WidgetTester tester, BidModel bid, bool isSender) async {
@@ -58,4 +63,12 @@ void main() {
     expect(find.text('N° DE SUIVI'), findsOneWidget);
     expect(find.text('DON-1'), findsOneWidget);
   });
+
+  testWidgets(
+    'sender + HANDED_OVER sans confirmationCode → placeholder en transit',
+    (tester) async {
+      await _pump(tester, _bid(status: 'HANDED_OVER'), true);
+      expect(find.text('Colis en route'), findsOneWidget);
+    },
+  );
 }
