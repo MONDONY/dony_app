@@ -61,21 +61,13 @@ class _QrCodeCardState extends State<QrCodeCard> {
               }
               if (state is TrackingQrError) {
                 return Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: DonySpacing.base,
-                  ),
+                  padding: const EdgeInsets.symmetric(vertical: DonySpacing.base),
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.error_outline_rounded,
-                        color: cs.error,
-                        size: 18,
-                      ),
+                      Icon(Icons.error_outline_rounded, color: cs.error, size: 18),
                       const SizedBox(width: DonySpacing.sm),
-                      Text(
-                        ErrorPresenter.resolve(state.error).message,
-                        style: tt.bodySmall?.copyWith(color: cs.error),
-                      ),
+                      Text(ErrorPresenter.resolve(state.error).message,
+                          style: tt.bodySmall?.copyWith(color: cs.error)),
                     ],
                   ),
                 );
@@ -84,10 +76,7 @@ class _QrCodeCardState extends State<QrCodeCard> {
                 return _QrCodeContent(qrCode: state.qrCode)
                     .animate()
                     .fadeIn(duration: 300.ms)
-                    .scale(
-                      begin: const Offset(0.96, 0.96),
-                      curve: Curves.easeOutCubic,
-                    );
+                    .scale(begin: const Offset(0.96, 0.96), curve: Curves.easeOutCubic);
               }
               return const SizedBox.shrink();
             },
@@ -164,46 +153,27 @@ class _QrCodeContentState extends State<_QrCodeContent> {
 
         const SizedBox(height: DonySpacing.md),
 
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final saveButton = DonyButton(
-              label: 'Enregistrer',
-              onPressed: _saving || _sharing
-                  ? null
-                  : () => _saveToGallery(imageBytes),
-              isLoading: _saving,
-              icon: Icons.download_rounded,
-            );
-            final shareButton = DonyButton(
-              label: 'Partager',
-              onPressed: _saving || _sharing
-                  ? null
-                  : () => _shareQrCode(imageBytes),
-              isLoading: _sharing,
-              variant: DonyButtonVariant.secondary,
-              icon: Icons.share_rounded,
-            );
-            // Côte à côte si la largeur le permet, sinon empilés —
-            // garantit l'absence de débordement sur tout écran (le talon
-            // du billet réduit la largeur disponible).
-            if (constraints.maxWidth >= 380) {
-              return Row(
-                children: [
-                  Expanded(child: saveButton),
-                  const SizedBox(width: DonySpacing.md),
-                  Expanded(child: shareButton),
-                ],
-              );
-            }
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                saveButton,
-                const SizedBox(height: DonySpacing.sm),
-                shareButton,
-              ],
-            );
-          },
+        Row(
+          children: [
+            Expanded(
+              child: DonyButton(
+                label: 'Enregistrer',
+                onPressed: _saving || _sharing ? null : () => _saveToGallery(imageBytes),
+                isLoading: _saving,
+                icon: Icons.download_rounded,
+              ),
+            ),
+            const SizedBox(width: DonySpacing.md),
+            Expanded(
+              child: DonyButton(
+                label: 'Partager',
+                onPressed: _saving || _sharing ? null : () => _shareQrCode(imageBytes),
+                isLoading: _sharing,
+                variant: DonyButtonVariant.secondary,
+                icon: Icons.share_rounded,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -243,9 +213,7 @@ class _QrCodeContentState extends State<_QrCodeContent> {
     });
     try {
       final dir = await getTemporaryDirectory();
-      final file = File(
-        '${dir.path}/qr_dony_${DateTime.now().millisecondsSinceEpoch}.png',
-      );
+      final file = File('${dir.path}/qr_dony_${DateTime.now().millisecondsSinceEpoch}.png');
       await file.writeAsBytes(imageBytes);
       final result = await Share.shareXFiles(
         [XFile(file.path, mimeType: 'image/png')],
