@@ -82,9 +82,41 @@ class _ShipmentListScreenState extends State<ShipmentListScreen> {
     return bids;
   }
 
+  void _populateLists(List<BidModel> bids) {
+    _inProgress = _sortBids(bids
+        .where((b) =>
+            b.status == 'ACCEPTED' ||
+            b.status == 'HANDED_OVER' ||
+            b.status == 'IN_TRANSIT')
+        .toList());
+    _upcoming = _sortBids(bids
+        .where((b) =>
+            b.status == 'PENDING' ||
+            b.status == 'AWAITING_PAYMENT' ||
+            b.status == 'PAYMENT_ESCROWED')
+        .toList());
+    _past = _sortBids(bids
+        .where((b) =>
+            b.status == 'COMPLETED' ||
+            b.status == 'REJECTED' ||
+            b.status == 'CANCELLED' ||
+            b.status == 'NO_SHOW' ||
+            b.status == 'EXPIRED' ||
+            b.status == 'PARCEL_REFUSED')
+        .toList());
+    _hasData = true;
+  }
+
   @override
   void initState() {
     super.initState();
+    // Peupler immédiatement si le BLoC a déjà des données (évite l'écran vide
+    // quand BlocListener ne se déclenche pas car aucun changement d'état).
+    final existing = context.read<BidBloc>().state;
+    if (existing is BidListLoaded) {
+      _populateLists(existing.bids);
+      _isRefreshing = existing.isRefreshing;
+    }
     _refreshNotifier = getIt<EnvoisRefreshNotifier>();
     _refreshNotifier.addListener(_onTabRefreshRequested);
     context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
@@ -159,30 +191,8 @@ class _ShipmentListScreenState extends State<ShipmentListScreen> {
         BlocListener<BidBloc, BidState>(
           listener: (context, state) {
             if (state is BidListLoaded) {
-              final bids = state.bids;
               setState(() {
-                _inProgress = _sortBids(bids
-                    .where((b) =>
-                        b.status == 'ACCEPTED' ||
-                        b.status == 'HANDED_OVER' ||
-                        b.status == 'IN_TRANSIT')
-                    .toList());
-                _upcoming = _sortBids(bids
-                    .where((b) =>
-                        b.status == 'PENDING' ||
-                        b.status == 'AWAITING_PAYMENT' ||
-                        b.status == 'PAYMENT_ESCROWED')
-                    .toList());
-                _past = _sortBids(bids
-                    .where((b) =>
-                        b.status == 'COMPLETED' ||
-                        b.status == 'REJECTED' ||
-                        b.status == 'CANCELLED' ||
-                        b.status == 'NO_SHOW' ||
-                        b.status == 'EXPIRED' ||
-                        b.status == 'PARCEL_REFUSED')
-                    .toList());
-                _hasData = true;
+                _populateLists(state.bids);
                 _isRefreshing = state.isRefreshing;
               });
             } else if (state is BidCheckoutReady) {
