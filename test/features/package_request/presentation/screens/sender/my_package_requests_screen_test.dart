@@ -153,7 +153,7 @@ void main() {
       expect(find.text('EXPIRÉE'), findsOneWidget);
     });
 
-    testWidgets('affiche "En attente d\'offres…" dans le footer pour open',
+    testWidgets('affiche "Modifier →" dans le footer pour open',
         (tester) async {
       when(() => bloc.state).thenReturn(PackageRequestState(
         status: PackageRequestListStatus.loaded,
@@ -161,10 +161,10 @@ void main() {
       ));
       await tester.pumpWidget(wrapCard(_request()));
       await tester.pumpAndSettle();
-      expect(find.textContaining('En attente d\'offres'), findsOneWidget);
+      expect(find.textContaining('Modifier'), findsOneWidget);
     });
 
-    testWidgets('affiche "Négociation en cours" dans le footer pour negotiating',
+    testWidgets('affiche "Modifier →" dans le footer pour negotiating',
         (tester) async {
       when(() => bloc.state).thenReturn(PackageRequestState(
         status: PackageRequestListStatus.loaded,
@@ -172,7 +172,7 @@ void main() {
       ));
       await tester.pumpWidget(wrapCard(_request()));
       await tester.pumpAndSettle();
-      expect(find.text('Négociation en cours'), findsOneWidget);
+      expect(find.textContaining('Modifier'), findsOneWidget);
     });
   });
 }

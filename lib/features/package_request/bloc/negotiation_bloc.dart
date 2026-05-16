@@ -135,6 +135,15 @@ class NegotiationCheckoutRequested extends NegotiationEvent {
   List<Object?> get props => [threadId, paymentIntentId];
 }
 
+/// Sender refuses the linked trip on an AWAITING_PAYMENT thread.
+class NegotiationRefuseTripRequested extends NegotiationEvent {
+  const NegotiationRefuseTripRequested({required this.threadId, this.reason});
+  final String threadId;
+  final String? reason;
+  @override
+  List<Object?> get props => [threadId, reason];
+}
+
 sealed class NegotiationState extends Equatable {
   const NegotiationState();
   @override
@@ -187,6 +196,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     on<NegotiationSubmitTripRequested>(_onSubmitTrip);
     on<NegotiationCreateDedicatedTripRequested>(_onCreateDedicatedTrip);
     on<NegotiationCheckoutRequested>(_onCheckout);
+    on<NegotiationRefuseTripRequested>(_onRefuseTrip);
   }
 
   final NegotiationRepository _repository;
@@ -346,6 +356,24 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         e.threadId,
         paymentIntentId: e.paymentIntentId,
       );
+      emit(NegotiationLoaded(thread));
+    } catch (err) {
+      emit(NegotiationError(unwrapDioError(err)));
+    }
+  }
+
+  Future<void> _onRefuseTrip(
+    NegotiationRefuseTripRequested e,
+    Emitter<NegotiationState> emit,
+  ) async {
+    final current = state;
+    if (current is NegotiationLoaded) {
+      emit(NegotiationActionInProgress(current.thread));
+    } else {
+      emit(const NegotiationLoading());
+    }
+    try {
+      final thread = await _repository.refuseTrip(e.threadId, reason: e.reason);
       emit(NegotiationLoaded(thread));
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));

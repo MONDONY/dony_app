@@ -68,22 +68,39 @@ class ThreadStateCtaBar extends StatelessWidget {
               );
 
       case NegotiationThreadStatus.awaitingTrip:
-        return _isSender
-            ? const ThreadStateBanner(
-                icon: Icons.hourglass_top_rounded,
-                tint: kWarning,
-                message: 'Le voyageur prépare son trajet',
-                subtitle: "Tu seras notifié dès qu'il l'aura confirmé.",
-              )
-            : DonyButton(
-                label: 'Lier un trajet à cette offre',
-                onPressed: actionInProgress
-                    ? null
-                    : () => context.push(
-                          '/negotiations/${thread.id}/link-trip',
-                          extra: thread,
-                        ),
-              );
+        if (_isSender) {
+          return const ThreadStateBanner(
+            icon: Icons.hourglass_top_rounded,
+            tint: kWarning,
+            message: 'Le voyageur prépare son trajet',
+            subtitle: "Tu seras notifié dès qu'il l'aura confirmé.",
+          );
+        }
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DonyButton(
+              label: 'Lier un trajet à cette offre',
+              onPressed: actionInProgress
+                  ? null
+                  : () => context.push(
+                        '/negotiations/${thread.id}/link-trip',
+                        extra: thread,
+                      ),
+            ),
+            const SizedBox(height: 10),
+            DonyButton(
+              label: 'Créer un trajet dédié',
+              variant: DonyButtonVariant.secondary,
+              onPressed: actionInProgress
+                  ? null
+                  : () => context.push(
+                        '/negotiations/${thread.id}/create-dedicated-trip',
+                        extra: thread,
+                      ),
+            ),
+          ],
+        );
 
       case NegotiationThreadStatus.awaitingPayment:
         return _isSender
@@ -196,7 +213,7 @@ class _SenderOpenActions extends StatelessWidget {
   }
 }
 
-/// Traveler · status OPEN · pas le dernier message → Rejeter / Contre-offre
+/// Traveler · status OPEN · pas le dernier message → Accepter (si canAccept) + Rejeter / Contre-offre
 class _TravelerOpenActions extends StatelessWidget {
   const _TravelerOpenActions({
     required this.thread,
@@ -207,35 +224,57 @@ class _TravelerOpenActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Expanded(
-          child: DonyButton(
-            label: 'Rejeter',
-            variant: DonyButtonVariant.ghost,
+        // Accept button — visible only when backend says canAccept
+        if (thread.canAccept) ...[
+          DonyButton(
+            label: 'Accepter ${thread.currentPriceEur.toStringAsFixed(0)} €',
             onPressed: actionInProgress
                 ? null
-                : () => RejectBottomSheet.show(
+                : () => AcceptOfferBottomSheet.show(
                       context,
                       bloc: context.read<NegotiationBloc>(),
                       threadId: thread.id,
+                      priceEur: thread.currentPriceEur,
                     ),
           ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: DonyButton(
-            label: 'Contre-offre',
-            onPressed: actionInProgress
-                ? null
-                : () => CounterOfferBottomSheet.show(
-                      context,
-                      bloc: context.read<NegotiationBloc>(),
-                      threadId: thread.id,
-                      currentPriceEur: thread.currentPriceEur,
-                      roundsCount: thread.roundsCount,
-                    ),
-          ),
+          const SizedBox(height: 10),
+        ],
+        Row(
+          children: [
+            Expanded(
+              child: DonyButton(
+                label: 'Rejeter',
+                variant: DonyButtonVariant.ghost,
+                onPressed: actionInProgress
+                    ? null
+                    : () => RejectBottomSheet.show(
+                          context,
+                          bloc: context.read<NegotiationBloc>(),
+                          threadId: thread.id,
+                        ),
+              ),
+            ),
+            if (thread.canCounter) ...[
+              const SizedBox(width: 10),
+              Expanded(
+                child: DonyButton(
+                  label: 'Contre-offre',
+                  onPressed: actionInProgress
+                      ? null
+                      : () => CounterOfferBottomSheet.show(
+                            context,
+                            bloc: context.read<NegotiationBloc>(),
+                            threadId: thread.id,
+                            currentPriceEur: thread.currentPriceEur,
+                            roundsCount: thread.roundsCount,
+                          ),
+                ),
+              ),
+            ],
+          ],
         ),
       ],
     );

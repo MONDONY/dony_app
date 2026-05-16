@@ -95,23 +95,23 @@ void main() {
       // Drain animations + async (flutter_animate + findMine future).
       await tester.pumpAndSettle(const Duration(seconds: 2));
       expect(find.text('Envoyer'), findsOneWidget);
-      expect(find.text('Aucune demande en cours'), findsOneWidget);
+      expect(find.text('Aucune demande active'), findsOneWidget);
     });
 
     testWidgets('rend les 3 onglets Demandes / Envois / Négos',
         (tester) async {
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle(const Duration(seconds: 2));
-      expect(find.text('Demandes'), findsOneWidget);
-      expect(find.text('Envois'), findsOneWidget);
-      expect(find.text('Négos'), findsOneWidget);
+      // Les labels incluent un compteur, ex. "Demandes 0"
+      expect(find.textContaining('Demandes'), findsWidgets);
+      expect(find.textContaining('Envois'), findsWidgets);
+      expect(find.textContaining('Négos'), findsWidgets);
     });
 
-    testWidgets('rend le FAB Publier', (tester) async {
+    testWidgets('rend le bouton Publier (icône +)', (tester) async {
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle(const Duration(seconds: 2));
-      expect(find.byType(FloatingActionButton), findsOneWidget);
-      // Au moins une icône "+" (FAB + header action)
+      // Le "+" est intégré dans le header (pas un FAB)
       expect(find.byIcon(Icons.add_rounded), findsWidgets);
     });
   });

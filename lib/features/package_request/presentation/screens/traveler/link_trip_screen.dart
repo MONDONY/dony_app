@@ -54,18 +54,30 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
       final myTrips =
           await getIt<AnnouncementRepository>().getMyAnnouncements();
 
-      // Filter by corridor + date window
-      final dateFrom =
-          request.desiredDate.subtract(Duration(days: request.dateToleranceDays));
-      final dateTo =
-          request.desiredDate.add(Duration(days: request.dateToleranceDays));
+      // Filter by corridor + date window.
+      //
+      // City comparison normalizes both sides to just the city name before the
+      // first comma: "Paris, France" and "Paris" both normalize to "paris".
+      // This handles legacy announcements stored with country suffix.
+      //
+      // Date window: we use desiredDate ± dateToleranceDays, which is exactly
+      // the range the backend accepts in submitTrip. This ensures every trip
+      // shown here will be accepted by the server (no silent 422s).
+      String cityKey(String city) => city.split(',').first.toLowerCase().trim();
+
+      final dateFrom = request.desiredDate
+          .subtract(Duration(days: request.dateToleranceDays));
+      final dateTo = request.desiredDate
+          .add(Duration(days: request.dateToleranceDays));
       final matching = myTrips.announcements.where((ann) {
-        final corridorMatch = ann.departureCity.toLowerCase() ==
-                request.departureCity.toLowerCase() &&
-            ann.arrivalCity.toLowerCase() ==
-                request.arrivalCity.toLowerCase();
-        final dateMatch = !ann.departureDate.isBefore(dateFrom) &&
-            !ann.departureDate.isAfter(dateTo);
+        final corridorMatch =
+            cityKey(ann.departureCity) == cityKey(request.departureCity) &&
+            cityKey(ann.arrivalCity) == cityKey(request.arrivalCity);
+        final d = ann.departureDate;
+        final dateMatch = !DateTime(d.year, d.month, d.day)
+                .isBefore(DateTime(dateFrom.year, dateFrom.month, dateFrom.day)) &&
+            !DateTime(d.year, d.month, d.day)
+                .isAfter(DateTime(dateTo.year, dateTo.month, dateTo.day));
         return corridorMatch && dateMatch;
       }).toList();
 
@@ -93,12 +105,11 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
   Future<void> _confirmTrip() async {
     final ann = _selectedTrip;
     if (ann == null) return;
-    final bloc = context.read<NegotiationBloc>();
-    bloc.add(NegotiationSubmitTripRequested(
+    context.read<NegotiationBloc>().add(NegotiationSubmitTripRequested(
       threadId: widget.thread.id,
       travelerAnnouncementId: ann.id,
     ));
-    if (mounted) context.pop();
+    // Navigation handled by BlocListener on NegotiationLoaded(awaitingPayment).
   }
 
   Future<void> _createNewTrip() async {
@@ -130,12 +141,20 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return BlocListener<NegotiationBloc, NegotiationState>(
-      listenWhen: (prev, curr) => curr is NegotiationLoaded,
+      listenWhen: (prev, curr) =>
+          curr is NegotiationLoaded || curr is NegotiationError,
       listener: (context, state) {
-        if (state is NegotiationLoaded
-            && state.thread.status == NegotiationThreadStatus.awaitingPayment) {
-          // Trip linked (existing or freshly created): leave this screen.
+        if (state is NegotiationLoaded &&
+            state.thread.status == NegotiationThreadStatus.awaitingPayment) {
+          // Trip linked successfully: leave this screen.
           if (context.canPop()) context.pop();
+        } else if (state is NegotiationError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.error.message),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
         }
       },
       child: Scaffold(
@@ -211,7 +230,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                   ),
                 ),
                 Text(
-                  'Date souhaitée ${DateFormat('d MMM yyyy', 'fr').format(r.desiredDate)} (±${r.dateToleranceDays}j)',
+                  'Date de voyage : ${DateFormat('d MMM yyyy', 'fr').format(widget.thread.travelerTravelDate)}',
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontSize: 13,
                     color: Colors.white.withValues(alpha: 0.85),

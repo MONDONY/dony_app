@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
@@ -13,6 +14,7 @@ NegotiationThread _fakeThread({
   NegotiationThreadStatus status = NegotiationThreadStatus.open,
   String? clientSecret,
   List<NegotiationMessage> messages = const [],
+  LinkedTripSummary? linkedTrip,
 }) =>
     NegotiationThread(
       id: id,
@@ -27,6 +29,7 @@ NegotiationThread _fakeThread({
       createdAt: DateTime(2026, 5, 10),
       messages: messages,
       paymentIntentClientSecret: clientSecret,
+      linkedTrip: linkedTrip,
     );
 
 void main() {
@@ -152,4 +155,82 @@ void main() {
       isA<NegotiationLoaded>(),
     ],
   );
+
+  // ── NegotiationRefuseTripRequested ──────────────────────────────────────────
+
+  group('NegotiationRefuseTripRequested', () {
+    const _linkedTrip = LinkedTripSummary(
+      announcementId: 'ann-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      availableKg: 8,
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'emits [ActionInProgress, Loaded] on success when state is Loaded',
+      build: () {
+        when(() => repo.refuseTrip('t-1', reason: any(named: 'reason'))).thenAnswer(
+          (_) async => _fakeThread(status: NegotiationThreadStatus.awaitingTrip),
+        );
+        return NegotiationBloc(repo);
+      },
+      seed: () => NegotiationLoaded(_fakeThread(
+        status: NegotiationThreadStatus.awaitingPayment,
+        linkedTrip: _linkedTrip,
+      )),
+      act: (bloc) =>
+          bloc.add(const NegotiationRefuseTripRequested(threadId: 't-1')),
+      expect: () => [
+        isA<NegotiationActionInProgress>().having(
+          (s) => s.thread.status,
+          'thread.status',
+          NegotiationThreadStatus.awaitingPayment,
+        ),
+        isA<NegotiationLoaded>().having(
+          (s) => s.thread.status,
+          'status',
+          NegotiationThreadStatus.awaitingTrip,
+        ),
+      ],
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'emits [Loading, Loaded] on success when initial state is not Loaded',
+      build: () {
+        when(() => repo.refuseTrip('t-1', reason: any(named: 'reason'))).thenAnswer(
+          (_) async => _fakeThread(status: NegotiationThreadStatus.awaitingTrip),
+        );
+        return NegotiationBloc(repo);
+      },
+      act: (bloc) =>
+          bloc.add(const NegotiationRefuseTripRequested(threadId: 't-1')),
+      expect: () => [
+        isA<NegotiationLoading>(),
+        isA<NegotiationLoaded>().having(
+          (s) => s.thread.status,
+          'status',
+          NegotiationThreadStatus.awaitingTrip,
+        ),
+      ],
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'emits [ActionInProgress, Error] when refuseTrip throws',
+      build: () {
+        when(() => repo.refuseTrip(any(), reason: any(named: 'reason')))
+            .thenThrow(Exception('server error'));
+        return NegotiationBloc(repo);
+      },
+      seed: () => NegotiationLoaded(_fakeThread(
+        status: NegotiationThreadStatus.awaitingPayment,
+        linkedTrip: _linkedTrip,
+      )),
+      act: (bloc) =>
+          bloc.add(const NegotiationRefuseTripRequested(threadId: 't-1')),
+      expect: () => [
+        isA<NegotiationActionInProgress>(),
+        isA<NegotiationError>(),
+      ],
+    );
+  });
 }

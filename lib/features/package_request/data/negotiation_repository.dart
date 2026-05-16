@@ -137,4 +137,14 @@ class NegotiationRepository {
     );
     return NegotiationThread.fromJson(response.data!);
   }
+
+  /// Sender refuses the linked trip on an AWAITING_PAYMENT thread.
+  /// Thread transitions back to AWAITING_TRIP so the traveler can link another.
+  Future<NegotiationThread> refuseTrip(String id, {String? reason}) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/negotiations/$id/refuse-trip',
+      data: reason != null && reason.isNotEmpty ? {'reason': reason} : null,
+    );
+    return NegotiationThread.fromJson(response.data!);
+  }
 }
