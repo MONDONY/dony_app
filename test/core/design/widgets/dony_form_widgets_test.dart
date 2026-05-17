@@ -31,6 +31,68 @@ void main() {
     });
   });
 
+  group('DonyTextField.tappable', () {
+    testWidgets('DonyTextField.tappable affiche la valeur et déclenche onTap',
+        (tester) async {
+      var tapped = false;
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: DonyTextField.tappable(
+            label: 'Date de départ',
+            value: 'jeu. 21 mai 2026',
+            prefixIcon: Icons.calendar_today,
+            onTap: () => tapped = true,
+          ),
+        ),
+      ));
+      expect(find.text('jeu. 21 mai 2026'), findsOneWidget);
+      await tester.tap(find.text('jeu. 21 mai 2026'));
+      expect(tapped, isTrue);
+    });
+
+    testWidgets('affiche le label en placeholder quand value est null',
+        (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: DonyTextField.tappable(
+            label: 'Heure de départ',
+            prefixIcon: Icons.access_time,
+            onTap: () {},
+          ),
+        ),
+      ));
+      // Le label sans valeur est rendu comme hint — au moins un widget texte visible.
+      expect(find.text('Heure de départ'), findsWidgets);
+    });
+
+    testWidgets('affiche le trailing widget quand fourni', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: DonyTextField.tappable(
+            label: 'Date',
+            value: '21 mai 2026',
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {},
+          ),
+        ),
+      ));
+      expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+    });
+
+    testWidgets('affiche le prefixIcon quand fourni', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: DonyTextField.tappable(
+            label: 'Date',
+            prefixIcon: Icons.calendar_today,
+            onTap: () {},
+          ),
+        ),
+      ));
+      expect(find.byIcon(Icons.calendar_today), findsOneWidget);
+    });
+  });
+
   group('DonyCard', () {
     testWidgets('renders child', (tester) async {
       await tester.pumpWidget(_wrap(const DonyCard(child: Text('Card content'))));
