@@ -6,6 +6,8 @@ import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
@@ -71,7 +73,6 @@ class CreateAnnouncementBottomSheet {
         final providers = <BlocProvider>[
           BlocProvider<AnnouncementBloc>(create: (_) => getIt<AnnouncementBloc>()),
           BlocProvider<CommissionMethodBloc>(create: (_) => getIt<CommissionMethodBloc>()),
-          BlocProvider<ConnectOnboardingBloc>(create: (_) => getIt<ConnectOnboardingBloc>()),
           BlocProvider<AnnouncementFormBloc>(create: (_) => AnnouncementFormBloc()),
           if (negotiationBloc != null)
             BlocProvider<NegotiationBloc>.value(value: negotiationBloc),
@@ -155,16 +156,19 @@ class CreateAnnouncementBottomSheet {
                 }
 
                 return BlocBuilder<AnnouncementBloc, AnnouncementState>(
-                  builder: (ctx, state) {
-                    final isLoading = state is AnnouncementLoading;
-                    return BlocBuilder<ConnectOnboardingBloc, ConnectOnboardingState>(
-                      builder: (ctx3, connectState) {
-                        final isStripeConfigured = connectState is ConnectOnboardingComplete ||
-                            connectState is ConnectOnboardingPending;
-                        final isConnectLoading = connectState is ConnectOnboardingInitial ||
-                            connectState is ConnectOnboardingLoading;
+                  builder: (ctx, annState) {
+                    final isLoading = annState is AnnouncementLoading;
+                    return BlocBuilder<AuthBloc, AuthState>(
+                      builder: (ctx3, authState) {
+                        final authUser = authState is AuthAuthenticated
+                            ? authState.user
+                            : authState is AuthProfileUpdated
+                                ? authState.user
+                                : null;
+                        final isStripeConfigured =
+                            authUser?.stripeAccountStatus == 'ONBOARDING_COMPLETE';
 
-                        if (!isStripeConfigured && !isConnectLoading) {
+                        if (!isStripeConfigured) {
                           return Row(
                             children: [
                               Expanded(
@@ -202,8 +206,8 @@ class CreateAnnouncementBottomSheet {
                                   child: DonyButton(
                                     key: const Key('create-announcement-preview'),
                                     label: 'Aperçu →',
-                                    isLoading: isLoading || isConnectLoading,
-                                    onPressed: (canSubmit && !isLoading && !isConnectLoading)
+                                    isLoading: isLoading,
+                                    onPressed: (canSubmit && !isLoading)
                                         ? () {
                                             AnnouncementPreviewSheet.show(
                                               ctx2,
@@ -308,7 +312,6 @@ class _CreateAnnouncementContentState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<CommissionMethodBloc>().add(CommissionMethodLoadRequested());
-        context.read<ConnectOnboardingBloc>().add(const ConnectOnboardingStatusRequested());
       }
     });
     if (_isLocked) {
@@ -1428,14 +1431,17 @@ class _CreateAnnouncementContentState
         icon: Icons.payments_rounded,
       ),
       const SizedBox(height: DonySpacing.sm),
-      BlocBuilder<ConnectOnboardingBloc, ConnectOnboardingState>(
-        builder: (ctx, connectState) {
-          final isStripeConfigured = connectState is ConnectOnboardingComplete ||
-              connectState is ConnectOnboardingPending;
-          final isConnectLoading = connectState is ConnectOnboardingInitial ||
-              connectState is ConnectOnboardingLoading;
+      BlocBuilder<AuthBloc, AuthState>(
+        builder: (ctx, authState) {
+          final authUser = authState is AuthAuthenticated
+              ? authState.user
+              : authState is AuthProfileUpdated
+                  ? authState.user
+                  : null;
+          final isStripeConfigured =
+              authUser?.stripeAccountStatus == 'ONBOARDING_COMPLETE';
 
-          if (!isStripeConfigured && !isConnectLoading) {
+          if (!isStripeConfigured) {
             return _buildStripeNotConfiguredPaymentSection(tt, cs, ctx);
           }
 
