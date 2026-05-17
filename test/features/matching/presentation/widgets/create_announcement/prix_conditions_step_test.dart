@@ -316,5 +316,26 @@ void main() {
       await _pump(tester);
       expect(find.text('0/500'), findsOneWidget);
     });
+
+    // ── Régression P6 — aucune flèche texte résiduelle ───────────────────────
+
+    testWidgets('aucun texte visible ne contient le caractère flèche →',
+        (tester) async {
+      // Teste à la fois l'état sans Stripe et sans carte commission (cas où
+      // les deux liens/boutons incriminés sont rendus).
+      await _pump(
+        tester,
+        authState: AuthAuthenticated(_stripeNotConfiguredUser),
+        commissionState: CommissionMethodNotConfigured(),
+      );
+      // Aucun widget Text (ou RichText) ne doit afficher le glyphe →.
+      expect(
+        find.textContaining('→'),
+        findsNothing,
+        reason:
+            'P6 : les flèches → doivent être des Icon(DonyIcons.arrowRight), '
+            'jamais des caractères Unicode dans les libellés.',
+      );
+    });
   });
 }

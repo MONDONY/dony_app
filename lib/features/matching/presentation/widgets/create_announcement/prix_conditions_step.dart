@@ -318,15 +318,26 @@ class PrixConditionsStep extends StatelessWidget {
                                 : GestureDetector(
                                     onTap: () => context
                                         .push('/payments/commission-method'),
-                                    child: Text(
-                                      'Ajouter une carte commission →',
-                                      key: const Key(
-                                          'add-commission-card-link'),
-                                      style: tt.bodySmall?.copyWith(
-                                        color: cs.primary,
-                                        decoration:
-                                            TextDecoration.underline,
-                                      ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          'Ajouter une carte commission',
+                                          key: const Key(
+                                              'add-commission-card-link'),
+                                          style: tt.bodySmall?.copyWith(
+                                            color: cs.primary,
+                                            decoration:
+                                                TextDecoration.underline,
+                                          ),
+                                        ),
+                                        const SizedBox(width: DonySpacing.xs),
+                                        Icon(
+                                          DonyIcons.arrowRight,
+                                          size: 14,
+                                          color: cs.primary,
+                                        ),
+                                      ],
                                     ),
                                   ),
                             contentPadding: const EdgeInsets.symmetric(
@@ -628,12 +639,23 @@ class PrixConditionsStep extends StatelessWidget {
                       color: cs.primary,
                       borderRadius: BorderRadius.circular(DonyRadius.full),
                     ),
-                    child: Text(
-                      'Configurer →',
-                      style: tt.labelSmall?.copyWith(
-                        color: cs.onPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Configurer',
+                          style: tt.labelSmall?.copyWith(
+                            color: cs.onPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: DonySpacing.xs),
+                        Icon(
+                          DonyIcons.arrowRight,
+                          size: 14,
+                          color: cs.onPrimary,
+                        ),
+                      ],
                     ),
                   ),
                 ),
