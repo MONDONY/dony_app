@@ -91,6 +91,47 @@ void main() {
       ));
       expect(find.byIcon(Icons.calendar_today), findsOneWidget);
     });
+
+    testWidgets(
+        'met à jour le texte affiché quand value change après rebuild '
+        '(guard anti-staleness)', (tester) async {
+      // Arrange — démarre avec une valeur initiale.
+      String value = 'lun. 18 mai 2026';
+
+      await tester.pumpWidget(
+        StatefulBuilder(
+          builder: (context, setState) => MaterialApp(
+            home: Scaffold(
+              body: Column(
+                children: [
+                  DonyTextField.tappable(
+                    label: 'Date de départ',
+                    value: value,
+                    onTap: () {},
+                  ),
+                  ElevatedButton(
+                    onPressed: () => setState(() => value = 'mar. 19 mai 2026'),
+                    child: const Text('Changer la date'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Assertion initiale.
+      expect(find.text('lun. 18 mai 2026'), findsOneWidget);
+      expect(find.text('mar. 19 mai 2026'), findsNothing);
+
+      // Act — déclenche le rebuild avec la nouvelle valeur.
+      await tester.tap(find.text('Changer la date'));
+      await tester.pump();
+
+      // La nouvelle valeur doit être visible, l'ancienne ne doit plus l'être.
+      expect(find.text('mar. 19 mai 2026'), findsOneWidget);
+      expect(find.text('lun. 18 mai 2026'), findsNothing);
+    });
   });
 
   group('DonyCard', () {

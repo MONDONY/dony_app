@@ -9,8 +9,8 @@ enum _DonyTextFieldVariant { text, tappable }
 /// Deux variantes :
 /// - **Constructeur par défaut** — champ texte classique (TextFormField).
 /// - **[DonyTextField.tappable]** — même habillage visuel, mais déclenche
-///   [onTap] au lieu d'ouvrir le clavier (utilise `TextField(readOnly: true)`
-///   pour garantir un rendu pixel-perfect identique sans dupliquer le style).
+///   [onTap] au lieu d'ouvrir le clavier (utilise `InputDecorator` pour un
+///   rendu identique sans clavier ni `TextEditingController`).
 class DonyTextField extends StatelessWidget {
   // ── Constructeur texte ──────────────────────────────────────────────────────
 
@@ -37,9 +37,9 @@ class DonyTextField extends StatelessWidget {
   /// Variante "tappable" : même habillage visuel que le champ texte, mais
   /// ouvre un picker (ou toute autre action) via [onTap] sans clavier.
   ///
-  /// Approche : `TextField(readOnly: true, onTap: onTap)` avec la même
-  /// [InputDecoration] que la variante texte — zéro duplication de style,
-  /// rendu identique garanti par Flutter.
+  /// Approche : `InkWell` + `InputDecorator` avec la même [InputDecoration]
+  /// que la variante texte — zéro `TextEditingController`, zéro fuite de
+  /// ressource, valeur toujours à jour à chaque rebuild.
   ///
   /// - [label] : label flottant du champ.
   /// - [value] : valeur affichée. Si null/vide, [label] est rendu en hint.
@@ -128,18 +128,25 @@ class DonyTextField extends StatelessWidget {
 
       case _DonyTextFieldVariant.tappable:
         final hasValue = _value != null && _value.isNotEmpty;
-        return TextField(
-          // readOnly empêche le clavier ; onTap déclenche l'action picker.
-          readOnly: true,
+        // Utilise InputDecorator (la couche visuelle interne de TextField)
+        // pour éviter tout TextEditingController — aucune fuite de ressource.
+        // Le Text enfant reflète toujours la valeur courante à chaque rebuild.
+        return InkWell(
           onTap: _onTap,
-          controller: hasValue
-              ? TextEditingController(text: _value)
-              : null,
-          decoration: _decoration(
-            // Quand aucune valeur : label joue le rôle de hint/placeholder.
-            labelOverride: hasValue ? label : null,
-            hintOverride: hasValue ? null : label,
-            suffixOverride: _trailing,
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+          child: InputDecorator(
+            // isEmpty: true force le label en position hint/placeholder.
+            isEmpty: !hasValue,
+            decoration: _decoration(
+              suffixOverride: _trailing,
+            ),
+            child: hasValue
+                ? Text(
+                    _value,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                    overflow: TextOverflow.ellipsis,
+                  )
+                : const SizedBox.shrink(),
           ),
         );
     }
