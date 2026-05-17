@@ -51,6 +51,20 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
 
   void _onFocusChanged() {
     setState(() => _showResults = _focusNode.hasFocus);
+    if (_focusNode.hasFocus) {
+      // Après le frame suivant, le clavier est en cours d'ouverture et le champ
+      // peut être partiellement masqué — on le ramène dans la zone visible.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Scrollable.maybeOf(context)?.position.ensureVisible(
+            context.findRenderObject()!,
+            alignment: 0.1,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
+          );
+        }
+      });
+    }
   }
 
   @override
