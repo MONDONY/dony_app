@@ -19,6 +19,10 @@ import 'package:intl/intl.dart';
 ///
 /// Tous les notifiers restent dans [_CreateAnnouncementContentState] (parent) ;
 /// ce widget reçoit ses dépendances via des paramètres (option a).
+///
+/// [departureCityBloc] et [arrivalCityBloc] sont optionnels — ils permettent
+/// l'injection en test. En production, le widget crée ses propres instances
+/// via GetIt.
 class TrajetStep extends StatelessWidget {
   final ValueNotifier<String?> departureCityNotifier;
   final ValueNotifier<String?> arrivalCityNotifier;
@@ -32,6 +36,10 @@ class TrajetStep extends StatelessWidget {
   final Future<void> Function() onSelectArrivalTime;
   final Future<void> Function() onSelectDate;
 
+  /// Blocs injectables pour les tests — null = créer via GetIt.
+  final CitySearchBloc? departureCityBloc;
+  final CitySearchBloc? arrivalCityBloc;
+
   const TrajetStep({
     super.key,
     required this.departureCityNotifier,
@@ -43,6 +51,8 @@ class TrajetStep extends StatelessWidget {
     required this.onSelectDepartureTime,
     required this.onSelectArrivalTime,
     required this.onSelectDate,
+    this.departureCityBloc,
+    this.arrivalCityBloc,
   });
 
   @override
@@ -167,18 +177,20 @@ class TrajetStep extends StatelessWidget {
         builder: (context, _) {
           return Column(
             children: [
+                      // ── Ville de départ ─────────────────────────────────────────
+              // CaFieldCard entoure UNIQUEMENT le TextField — les suggestions
+              // sont rendues HORS du ClipRRect pour ne pas être masquées.
               BlocProvider(
-                create: (_) => getIt<CitySearchBloc>(),
-                child: CaFieldCard(
-                  child: CityAutocompleteField(
-                    label: 'Ville de départ',
-                    initialValue: departureCityNotifier.value,
-                    prefixIcon: const CaFieldIcon(
-                        icon: Icons.flight_takeoff_rounded),
-                    onSelected: (CityModel city) {
-                      departureCityNotifier.value = city.name;
-                    },
-                  ),
+                create: (_) => departureCityBloc ?? getIt<CitySearchBloc>(),
+                child: CityAutocompleteField(
+                  label: 'Ville de départ',
+                  fieldKey: const Key('departureCityField'),
+                  initialValue: departureCityNotifier.value,
+                  prefixIcon: const CaFieldIcon(
+                      icon: Icons.flight_takeoff_rounded),
+                  onSelected: (CityModel city) {
+                    departureCityNotifier.value = city.name;
+                  },
                 ),
               ),
               const SizedBox(height: DonySpacing.sm),
@@ -191,18 +203,18 @@ class TrajetStep extends StatelessWidget {
                     : null,
               ),
               const SizedBox(height: DonySpacing.sm),
+              // ── Ville d'arrivée ──────────────────────────────────────────
               BlocProvider(
-                create: (_) => getIt<CitySearchBloc>(),
-                child: CaFieldCard(
-                  child: CityAutocompleteField(
-                    label: 'Ville d\'arrivée',
-                    initialValue: arrivalCityNotifier.value,
-                    prefixIcon:
-                        const CaFieldIcon(icon: Icons.flight_land_rounded),
-                    onSelected: (CityModel city) {
-                      arrivalCityNotifier.value = city.name;
-                    },
-                  ),
+                create: (_) => arrivalCityBloc ?? getIt<CitySearchBloc>(),
+                child: CityAutocompleteField(
+                  label: 'Ville d\'arrivée',
+                  fieldKey: const Key('arrivalCityField'),
+                  initialValue: arrivalCityNotifier.value,
+                  prefixIcon:
+                      const CaFieldIcon(icon: Icons.flight_land_rounded),
+                  onSelected: (CityModel city) {
+                    arrivalCityNotifier.value = city.name;
+                  },
                 ),
               ),
               const SizedBox(height: DonySpacing.sm),
