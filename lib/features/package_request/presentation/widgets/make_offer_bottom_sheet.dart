@@ -127,6 +127,14 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
     super.dispose();
   }
 
+  DateTime _clampDate(DateTime d) {
+    final now = DateTime.now();
+    final last = now.add(const Duration(days: 90));
+    if (d.isBefore(now)) return now;
+    if (d.isAfter(last)) return last;
+    return d;
+  }
+
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
     if (_dateNotifier.value == null) {
@@ -249,8 +257,8 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                   onTap: () async {
                     final picked = await showDatePicker(
                       context: ctx,
-                      initialDate: date ??
-                          DateTime.now().add(const Duration(days: 7)),
+                      initialDate: _clampDate(
+                          date ?? DateTime.now().add(const Duration(days: 7))),
                       firstDate: DateTime.now(),
                       lastDate: DateTime.now()
                           .add(const Duration(days: 90)),
