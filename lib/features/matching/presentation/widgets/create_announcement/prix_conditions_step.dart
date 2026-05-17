@@ -6,6 +6,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/_create_announcement_constants.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/price_hint_widget.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
@@ -15,17 +16,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-
-const _priceOptions = [5.0, 6.0, 7.0, 8.0];
-const _contentTypes = [
-  'Vêtements',
-  'Médicaments',
-  'Alim. sèche',
-  'Hi-fi',
-  'Documents',
-  'Téléphone',
-  'Cosmétiques',
-];
 
 /// Corps de l'étape 2 (Prix & Conditions) du formulaire de création d'annonce.
 ///
@@ -60,15 +50,16 @@ class PrixConditionsStep extends StatelessWidget {
     required this.customPriceCtrl,
   });
 
-  bool get _isCustomPrice => priceOptionNotifier.value == _priceOptions.length;
+  bool get _isCustomPrice => priceOptionNotifier.value == kPriceOptions.length;
 
   double get _pricePerKg => _isCustomPrice
       ? customPriceNotifier.value
-      : _priceOptions[
-          priceOptionNotifier.value.clamp(0, _priceOptions.length - 1)];
+      : kPriceOptions[
+          priceOptionNotifier.value.clamp(0, kPriceOptions.length - 1)];
 
   @override
   Widget build(BuildContext context) {
+    // TODO(refactor): décomposer en _PriceSection / _PaymentSection / _ContentSection / _NoteSection
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
@@ -94,7 +85,7 @@ class PrixConditionsStep extends StatelessWidget {
               children: [
                 // ── Chips preset ──────────────────────────────────────────────
                 Row(
-                  children: List.generate(_priceOptions.length, (i) {
+                  children: List.generate(kPriceOptions.length, (i) {
                     final selected = selectedIdx == i;
                     return Expanded(
                       child: Padding(
@@ -120,7 +111,7 @@ class PrixConditionsStep extends StatelessWidget {
                             ),
                             child: Center(
                               child: Text(
-                                '${_priceOptions[i].toStringAsFixed(0)}€',
+                                '${kPriceOptions[i].toStringAsFixed(0)}€',
                                 style: tt.titleMedium?.copyWith(
                                   color:
                                       selected ? cs.success : cs.onSurface,
@@ -138,9 +129,9 @@ class PrixConditionsStep extends StatelessWidget {
                 // ── Chip "Autre" ──────────────────────────────────────────────
                 GestureDetector(
                   onTap: () {
-                    priceOptionNotifier.value = _priceOptions.length;
+                    priceOptionNotifier.value = kPriceOptions.length;
                     WidgetsBinding.instance.addPostFrameCallback((_) {
-                      FocusScope.of(context).requestFocus(FocusNode());
+                      FocusScope.of(context).unfocus();
                     });
                   },
                   child: AnimatedContainer(
@@ -378,7 +369,7 @@ class PrixConditionsStep extends StatelessWidget {
                     child: Wrap(
                       spacing: DonySpacing.xs,
                       runSpacing: DonySpacing.xs,
-                      children: _contentTypes.map((type) {
+                      children: kContentTypes.map((type) {
                         final isSelected = selected.contains(type);
                         return GestureDetector(
                           onTap: () {

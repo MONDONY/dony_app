@@ -19,6 +19,7 @@ import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/matching/presentation/widgets/address_picker_field.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/_create_announcement_constants.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
@@ -31,17 +32,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-
-const _priceOptions = [5.0, 6.0, 7.0, 8.0];
-const _contentTypes = [
-  'Vêtements',
-  'Médicaments',
-  'Alim. sèche',
-  'Hi-fi',
-  'Documents',
-  'Téléphone',
-  'Cosmétiques',
-];
 
 // ─── Public entry point ───────────────────────────────────────────────────────
 
@@ -305,10 +295,10 @@ class _CreateAnnouncementContentState
 
   bool get _isEdit => widget.announcement != null;
   bool get _isLocked => widget.lockContext != null;
-  bool get _isCustomPrice => _priceOptionNotifier.value == _priceOptions.length;
+  bool get _isCustomPrice => _priceOptionNotifier.value == kPriceOptions.length;
   double get _pricePerKg => _isCustomPrice
       ? _customPriceNotifier.value
-      : _priceOptions[_priceOptionNotifier.value.clamp(0, _priceOptions.length - 1)];
+      : kPriceOptions[_priceOptionNotifier.value.clamp(0, kPriceOptions.length - 1)];
 
   @override
   void initState() {
@@ -357,10 +347,10 @@ class _CreateAnnouncementContentState
 
       if (a.acceptedContentTypes != null) {
         final presets = Set<String>.from(
-          a.acceptedContentTypes!.where(_contentTypes.contains),
+          a.acceptedContentTypes!.where(kContentTypes.contains),
         );
         final custom = Set<String>.from(
-          a.acceptedContentTypes!.where((t) => !_contentTypes.contains(t)),
+          a.acceptedContentTypes!.where((t) => !kContentTypes.contains(t)),
         );
         _selectedContentNotifier.value = presets;
         _customAcceptedNotifier.value = custom;
@@ -373,12 +363,12 @@ class _CreateAnnouncementContentState
           a.acceptedPaymentMethods.contains(BidPaymentMethod.cash);
 
       final price = a.pricePerKg;
-      final presetIdx = _priceOptions.indexOf(price);
+      final presetIdx = kPriceOptions.indexOf(price);
       if (presetIdx != -1) {
         _priceOptionNotifier.value = presetIdx;
       } else {
         // Prix custom — sélectionner "Autre" et pré-remplir le champ
-        _priceOptionNotifier.value = _priceOptions.length;
+        _priceOptionNotifier.value = kPriceOptions.length;
         _customPriceNotifier.value = price;
         _customPriceCtrl.text = price.toStringAsFixed(0);
       }
@@ -1131,7 +1121,7 @@ class _CreateAnnouncementContentState
                         child: Wrap(
                           spacing: DonySpacing.xs,
                           runSpacing: DonySpacing.xs,
-                          children: _contentTypes.map((type) {
+                          children: kContentTypes.map((type) {
                             final isSelected = selected.contains(type);
                             return GestureDetector(
                               onTap: () {
