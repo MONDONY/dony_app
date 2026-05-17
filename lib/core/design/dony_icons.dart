@@ -37,6 +37,7 @@ class DonyIcons {
   static const IconData check = PhosphorIconsRegular.check;
   static const IconData add = PhosphorIconsRegular.plus;
   static const IconData publish = PhosphorIconsRegular.rocketLaunch;
+  // Fill intentionnel — la variante outline manque de poids visuel pour un badge de vérification.
   static const IconData confirmed = PhosphorIconsFill.sealCheck;
 
   // Modes de transport
