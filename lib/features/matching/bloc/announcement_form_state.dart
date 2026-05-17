@@ -42,7 +42,7 @@ extension CapacityUnitWire on CapacityUnit {
       case CapacityUnit.kgFree:
         return null;
       case CapacityUnit.custom:
-        return 30.0;
+        return null;
     }
   }
 }

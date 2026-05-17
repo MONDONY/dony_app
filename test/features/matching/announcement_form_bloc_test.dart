@@ -194,18 +194,21 @@ void main() {
       expect(CapacityUnit.suitcase23kg.toWire(), 'SUITCASE_23KG');
       expect(CapacityUnit.suitcase32kg.toWire(), 'SUITCASE_32KG');
       expect(CapacityUnit.kgFree.toWire(), 'KG_FREE');
+      expect(CapacityUnit.custom.toWire(), 'KG_EXACT');
     });
 
     test('CapacityUnit.label retourne les bons libellés', () {
       expect(CapacityUnit.suitcase23kg.label, '1 valise 23 kg');
       expect(CapacityUnit.suitcase32kg.label, '1 valise 32 kg');
       expect(CapacityUnit.kgFree.label, 'Kg libre');
+      expect(CapacityUnit.custom.label, 'Personnalisé');
     });
 
     test('CapacityUnit.maxKg retourne les bons plafonds', () {
       expect(CapacityUnit.suitcase23kg.maxKg, 23.0);
       expect(CapacityUnit.suitcase32kg.maxKg, 32.0);
       expect(CapacityUnit.kgFree.maxKg, isNull);
+      expect(CapacityUnit.custom.maxKg, isNull);
     });
 
     // ── CapacityUnit.custom (M2) ──────────────────────────────────────────────
