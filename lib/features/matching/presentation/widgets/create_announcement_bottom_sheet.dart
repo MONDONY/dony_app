@@ -77,7 +77,15 @@ class CreateAnnouncementBottomSheet {
           if (negotiationBloc != null)
             BlocProvider<NegotiationBloc>.value(value: negotiationBloc),
         ];
-        return MultiBlocProvider(providers: providers, child: child);
+        // ScaffoldMessenger + Scaffold transparent : ancre les snackbars
+        // à l'intérieur du sheet, pas sur l'écran derrière.
+        return ScaffoldMessenger(
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            resizeToAvoidBottomInset: false,
+            body: MultiBlocProvider(providers: providers, child: child),
+          ),
+        );
       },
       stickyBottom: isLocked
           ? ValueListenableBuilder<bool>(
