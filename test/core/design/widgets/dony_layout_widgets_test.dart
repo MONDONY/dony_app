@@ -498,10 +498,13 @@ void main() {
       await tester.tap(find.text('Ouvrir'));
       await tester.pumpAndSettle();
 
+      // Le footer Container doit être présent (clé stable)
+      expect(find.byKey(const Key('donyBottomSheetFooter')), findsOneWidget);
+
       // Le CTA doit être visible
       expect(find.byKey(const Key('sticky-cta')), findsOneWidget);
 
-      // Vérifier qu'il est bien dans un SafeArea
+      // Vérifier qu'il est bien dans un SafeArea (ancêtre du CTA — pas global)
       final safeAreas = find.ancestor(
         of: find.byKey(const Key('sticky-cta')),
         matching: find.byType(SafeArea),
@@ -525,8 +528,8 @@ void main() {
               'Le stickyBottom doit avoir un padding horizontal >= DonySpacing.lg (20)');
     });
 
-    // M3 — le footer sans stickyBottom ne rend pas de SafeArea inutile
-    testWidgets('M3 — sans stickyBottom, aucun SafeArea/Padding de footer',
+    // M3 — le footer sans stickyBottom ne rend pas de Container footer
+    testWidgets('M3 — sans stickyBottom, le footer Container est absent',
         (tester) async {
       await tester.pumpWidget(_sheetTrigger(
         child: const Text('Contenu sans footer'),
@@ -534,8 +537,8 @@ void main() {
       await tester.tap(find.text('Open Sheet'));
       await tester.pumpAndSettle();
       expect(find.text('Contenu sans footer'), findsOneWidget);
-      // SafeArea ne doit pas exister pour le footer (pas de stickyBottom)
-      expect(find.byType(SafeArea), findsNothing);
+      // Le footer est identifié par sa clé stable — absent quand pas de stickyBottom
+      expect(find.byKey(const Key('donyBottomSheetFooter')), findsNothing);
     });
   });
 
