@@ -429,7 +429,7 @@ class _InProgressCard extends StatelessWidget {
               children: [
                 Text(
                   isKgFree
-                      ? '${remaining.toStringAsFixed(0)} kg dispo · au kilo'
+                      ? 'Kg libre · vendu au kilo'
                       : '${booked.toStringAsFixed(0)} / ${total.toStringAsFixed(0)} kg livrés',
                   style: tt.bodySmall?.copyWith(
                     color: cs.success,
@@ -747,7 +747,7 @@ class _AnnouncementCard extends StatelessWidget {
                 children: [
                   Text(
                     isKgFree
-                        ? '${remaining.toStringAsFixed(0)} kg dispo · vendu au kilo'
+                        ? 'Kg libre · vendu au kilo'
                         : '${booked.toStringAsFixed(0)} / ${total.toStringAsFixed(0)} kg réservés',
                     style: tt.bodySmall?.copyWith(
                       color: cs.onSurfaceVariant,

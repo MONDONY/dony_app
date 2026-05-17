@@ -784,8 +784,8 @@ class _CreateAnnouncementContentState
       builder: (context, state) => BlocListener<AnnouncementFormBloc, AnnouncementFormState>(
         listenWhen: (prev, curr) => prev.availableKg != curr.availableKg,
         listener: (context, formState) {
-          final kg = formState.availableKg;
-          if (kg != null && kg != _availableKgNotifier.value) {
+          final kg = formState.availableKg ?? 0.0;
+          if (kg != _availableKgNotifier.value) {
             _availableKgNotifier.value = kg;
           }
         },

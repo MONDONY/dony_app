@@ -293,7 +293,9 @@ class _AnnouncementDetailContent extends StatelessWidget {
             children: [
               Expanded(
                 child: _InfoPill(
-                  value: '${a.availableKg.toStringAsFixed(0)} kg',
+                  value: a.capacityUnit == 'KG_FREE'
+                      ? 'Illimité'
+                      : '${a.availableKg.toStringAsFixed(0)} kg',
                   label: 'disponibles',
                 ),
               ),

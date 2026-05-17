@@ -70,8 +70,8 @@ class PrixConditionsStep extends StatelessWidget {
         const CaSectionLabel(label: 'Prix par kg', icon: Icons.sell_rounded),
         const SizedBox(height: DonySpacing.md),
         ListenableBuilder(
-          listenable:
-              Listenable.merge([priceOptionNotifier, customPriceNotifier]),
+          listenable: Listenable.merge(
+              [priceOptionNotifier, customPriceNotifier, availableKgNotifier]),
           builder: (context, _) {
             final selectedIdx = priceOptionNotifier.value;
             final isCustom = _isCustomPrice;
@@ -197,7 +197,9 @@ class PrixConditionsStep extends StatelessWidget {
                 ],
                 const SizedBox(height: DonySpacing.sm),
                 Text(
-                  'Estimation : ${grossEstimate.toStringAsFixed(0)}€ · vous touchez ${netEstimate.toStringAsFixed(0)}€',
+                  kg == 0
+                      ? 'Capacité illimitée — estimation selon la demande'
+                      : 'Estimation : ${grossEstimate.toStringAsFixed(0)}€ · vous touchez ${netEstimate.toStringAsFixed(0)}€',
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],

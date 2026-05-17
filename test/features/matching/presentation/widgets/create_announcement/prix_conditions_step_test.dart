@@ -76,6 +76,7 @@ const _validCard = CommissionMethod(
 Widget _host({
   AuthState? authState,
   CommissionMethodState? commissionState,
+  double initialAvailableKg = 10,
 }) {
   final mockAuthBloc = _MockAuthBloc();
   final resolvedAuthState =
@@ -95,7 +96,7 @@ Widget _host({
   // en fin de test — accepté dans un contexte de test unitaire).
   final priceOptionNotifier = ValueNotifier<int>(0);
   final customPriceNotifier = ValueNotifier<double>(0);
-  final availableKgNotifier = ValueNotifier<double>(10);
+  final availableKgNotifier = ValueNotifier<double>(initialAvailableKg);
   final cashEnabledNotifier = ValueNotifier<bool>(false);
   final selectedContentNotifier = ValueNotifier<Set<String>>({});
   final customAcceptedNotifier = ValueNotifier<Set<String>>({});
@@ -336,6 +337,19 @@ void main() {
             'P6 : les flèches → doivent être des Icon(DonyIcons.arrowRight), '
             'jamais des caractères Unicode dans les libellés.',
       );
+    });
+
+    // ── kgFree — estimation illimitée ─────────────────────────────────────────
+
+    testWidgets(
+        'kgFree (availableKg=0) → affiche "Capacité illimitée" et non "Estimation"',
+        (tester) async {
+      await tester.pumpWidget(_host(initialAvailableKg: 0));
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
+
+      expect(find.textContaining('illimitée'), findsOneWidget);
+      expect(find.textContaining('Estimation'), findsNothing);
     });
   });
 }

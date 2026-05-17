@@ -36,6 +36,7 @@ class DonyIcons {
   static const IconData arrowRight = PhosphorIconsRegular.arrowRight;
   static const IconData check = PhosphorIconsRegular.check;
   static const IconData add = PhosphorIconsRegular.plus;
+  static const IconData minus = PhosphorIconsRegular.minus;
   static const IconData publish = PhosphorIconsRegular.rocketLaunch;
   // Fill intentionnel — la variante outline manque de poids visuel pour un badge de vérification.
   static const IconData confirmed = PhosphorIconsFill.sealCheck;

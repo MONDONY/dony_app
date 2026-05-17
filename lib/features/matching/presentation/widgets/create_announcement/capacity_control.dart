@@ -5,21 +5,56 @@ import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Contrôle de capacité : 4 chips single-select (DonyChip) + slider en mode custom.
+/// Contrôle de capacité : 4 chips single-select (DonyChip) + corps adapté par mode.
 ///
-/// Choix DonyChip vs Container+GestureDetector :
-///   - DonyChip couvre exactement le besoin (sélection unique, animation,
-///     couleurs sémantiques, touch target ≥ 44px via padding interne).
-///   - Évite de dupliquer la logique de style déjà centralisée dans le DS.
-///   - Note : DonyChip utilise `DonyRadius.full` (pill) — cohérent avec les chips
-///     partout dans l'app. Le plan de référence utilisait `DonyRadius.xl` qui est
-///     visuellement identique pour des textes courts.
-class CapacityControl extends StatelessWidget {
+/// - Presets valise (23/32 kg) : compteur ± sans plafond, availableKg = quantité × unitKg.
+/// - Kg libre : carte info statique (inchangé).
+/// - Personnalisé : champ de saisie libre (kg entier, minimum 1, sans maximum).
+///
+/// `StatefulWidget` requis pour :
+///   - `TextEditingController` du mode personnalisé (créé en initState, disposé en dispose).
+///   - Synchronisation controller ↔ état BLoC lors du changement de mode.
+class CapacityControl extends StatefulWidget {
   const CapacityControl({super.key});
 
   @override
+  State<CapacityControl> createState() => _CapacityControlState();
+}
+
+class _CapacityControlState extends State<CapacityControl> {
+  late final TextEditingController _customKgController;
+
+  @override
+  void initState() {
+    super.initState();
+    final bloc = context.read<AnnouncementFormBloc>();
+    final initialKg = bloc.state.availableKg;
+    _customKgController = TextEditingController(
+      text: initialKg != null && initialKg >= 1 ? initialKg.toInt().toString() : '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _customKgController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
+    return BlocConsumer<AnnouncementFormBloc, AnnouncementFormState>(
+      listenWhen: (prev, curr) => prev.capacityUnit != curr.capacityUnit,
+      listener: (context, state) {
+        // Quand on passe en mode personnalisé, pré-remplir le champ avec
+        // la valeur courante du bloc (ou vider si null/invalide).
+        if (state.capacityUnit == CapacityUnit.custom) {
+          final kg = state.availableKg;
+          final text = kg != null && kg >= 1 ? kg.toInt().toString() : '';
+          if (_customKgController.text != text) {
+            _customKgController.text = text;
+          }
+        }
+      },
       buildWhen: (prev, curr) =>
           prev.capacityUnit != curr.capacityUnit ||
           prev.availableKg != curr.availableKg,
@@ -51,21 +86,11 @@ class CapacityControl extends StatelessWidget {
     );
   }
 
-  Widget _buildBody(
-    BuildContext context,
-    AnnouncementFormState state,
-  ) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
+  Widget _buildBody(BuildContext context, AnnouncementFormState state) {
     switch (state.capacityUnit) {
       case CapacityUnit.suitcase23kg:
       case CapacityUnit.suitcase32kg:
-        return _InfoCard(
-          icon: DonyIcons.suitcase,
-          title: 'Vous offrez ${state.capacityUnit.maxKg!.toInt()} kg',
-          subtitle: 'Une valise standard en soute',
-        );
+        return _SuitcaseStepperCard(state: state);
       case CapacityUnit.kgFree:
         return const _InfoCard(
           icon: DonyIcons.infinity,
@@ -73,43 +98,198 @@ class CapacityControl extends StatelessWidget {
           subtitle: "L'expéditeur verra « kilo disponible »",
         );
       case CapacityUnit.custom:
-        final kg = (state.availableKg ?? 1).clamp(1, 30).toDouble();
-        return Container(
-          padding: const EdgeInsets.all(DonySpacing.base),
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: BorderRadius.circular(DonyRadius.card),
-            border: Border.all(color: cs.outline),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Vous offrez', style: tt.titleMedium),
-                  Text(
-                    '${kg.toInt()} kg',
-                    style: tt.headlineMedium?.copyWith(color: cs.primary),
-                  ),
-                ],
-              ),
-              const SizedBox(height: DonySpacing.xs),
-              Slider(
-                value: kg,
-                min: 1,
-                max: 30,
-                divisions: 29,
-                onChanged: (v) => context
-                    .read<AnnouncementFormBloc>()
-                    .add(AvailableKgChanged(v)),
-              ),
-            ],
-          ),
-        );
+        return _CustomKgCard(controller: _customKgController);
     }
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Carte valise avec compteur ±
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _SuitcaseStepperCard extends StatelessWidget {
+  const _SuitcaseStepperCard({required this.state});
+
+  final AnnouncementFormState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    final unitKg = state.capacityUnit.maxKg!;
+    final totalKg = state.availableKg ?? unitKg;
+    final quantite = ((totalKg / unitKg).round()).clamp(1, 999999);
+    final totalDisplay = (quantite * unitKg).toInt();
+    final valiseLabel = quantite == 1 ? 'valise' : 'valises';
+
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Ligne icône + titre total
+          Row(
+            children: [
+              Icon(DonyIcons.suitcase, color: cs.primary, size: 24),
+              const SizedBox(width: DonySpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Vous offrez $totalDisplay kg',
+                      style: tt.titleMedium,
+                    ),
+                    Text(
+                      '$quantite $valiseLabel de ${unitKg.toInt()} kg',
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: DonySpacing.md),
+          // Compteur ±
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Bouton −
+              _StepperButton(
+                icon: DonyIcons.minus,
+                enabled: quantite > 1,
+                semanticLabel: 'Diminuer la quantité',
+                onPressed: quantite > 1
+                    ? () => context.read<AnnouncementFormBloc>().add(
+                          AvailableKgChanged((quantite - 1) * unitKg),
+                        )
+                    : null,
+              ),
+              // Affichage quantité
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.xl,
+                ),
+                child: Text(
+                  '$quantite',
+                  style: tt.headlineMedium?.copyWith(color: cs.primary),
+                ),
+              ),
+              // Bouton +
+              _StepperButton(
+                icon: DonyIcons.add,
+                enabled: true,
+                semanticLabel: 'Augmenter la quantité',
+                onPressed: () => context.read<AnnouncementFormBloc>().add(
+                      AvailableKgChanged((quantite + 1) * unitKg),
+                    ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StepperButton extends StatelessWidget {
+  const _StepperButton({
+    required this.icon,
+    required this.enabled,
+    required this.semanticLabel,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final bool enabled;
+  final String semanticLabel;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Semantics(
+      label: semanticLabel,
+      button: true,
+      enabled: enabled,
+      child: IconButton(
+        icon: Icon(icon),
+        onPressed: onPressed,
+        color: enabled ? cs.primary : cs.onSurface.withValues(alpha: 0.3),
+        constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+        style: IconButton.styleFrom(
+          backgroundColor: enabled
+              ? cs.primary.withValues(alpha: 0.08)
+              : cs.onSurface.withValues(alpha: 0.06),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(DonyRadius.md),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Carte personnalisé — saisie libre
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _CustomKgCard extends StatelessWidget {
+  const _CustomKgCard({required this.controller});
+
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DonyTextField(
+            controller: controller,
+            label: 'Capacité (kg)',
+            prefixIcon: DonyIcons.suitcase,
+            keyboardType: TextInputType.number,
+            onChanged: (value) {
+              final parsed = int.tryParse(value.trim());
+              if (parsed != null && parsed >= 1) {
+                context
+                    .read<AnnouncementFormBloc>()
+                    .add(AvailableKgChanged(parsed.toDouble()));
+              }
+            },
+          ),
+          const SizedBox(height: DonySpacing.xs),
+          Text(
+            'Indiquez la capacité totale que vous offrez',
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Carte info statique (kgFree)
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _InfoCard extends StatelessWidget {
   const _InfoCard({
