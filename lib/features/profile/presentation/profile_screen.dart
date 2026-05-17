@@ -152,14 +152,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 centerTitle: false,
                                 backgroundColor: headerBg,
                                 surfaceTintColor: Colors.transparent,
-                                title: Text(
-                                  displayName,
-                                  style: tt.titleMedium!.copyWith(
-                                    color: titleColor,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                title: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Opacity(
+                                      opacity: progress,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(1.5),
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: isTraveler ? DonyColors.warning : cs.surface,
+                                            width: 1.5,
+                                          ),
+                                        ),
+                                        child: DonyAvatar(
+                                          name: displayName,
+                                          size: DonyAvatarSize.xs,
+                                          verified: false,
+                                          pro: false,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: DonySpacing.sm),
+                                    Flexible(
+                                      child: Text(
+                                        displayName,
+                                        style: tt.titleSmall!.copyWith(
+                                          color: titleColor,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    if (isKycVerified) ...[
+                                      const SizedBox(width: DonySpacing.xs),
+                                      Opacity(
+                                        opacity: progress,
+                                        child: Icon(
+                                          Icons.verified_rounded,
+                                          size: 13,
+                                          color: isProAccount
+                                              ? DonyColors.kycBadgeGold
+                                              : DonyColors.kycBadgeBlue,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
                                 actions: const [],
                                 flexibleSpace: FlexibleSpaceBar(
@@ -189,6 +229,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             context.go('/home');
                                           }
                                         : null,
+                                    onSettingsTap: () => context.push('/settings'),
                                   ),
                                 ),
                               ),
@@ -227,25 +268,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                                       // Menu principal contextuel au rôle
                                       if (activeRole == ActiveRole.traveler) ...[
-                                        // ─── TRAVELER ─────────────────────
+                                        // ─── MON ACTIVITÉ ─────────────────────────────────
+                                        _SectionLabel(label: 'MON ACTIVITÉ', cs: cs),
                                         DonyListSection(
                                           tiles: [
                                             DonyListTile(
                                               icon: Icons.flight_takeoff_rounded,
-                                              iconColor: Theme.of(context).colorScheme.primary,
-                                              iconBgColor: Theme.of(context).colorScheme.primaryContainer,
+                                              iconColor: cs.primary,
+                                              iconBgColor: cs.primaryContainer,
                                               label: 'Mes trajets',
                                               trailing: upcomingAnnouncements > 0
                                                   ? Text(
                                                       '$upcomingAnnouncements à venir',
-                                                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                                        color: Theme.of(context).colorScheme.primary,
+                                                      style: tt.labelMedium?.copyWith(
+                                                        color: cs.primary,
                                                         fontWeight: FontWeight.w600,
                                                       ),
                                                     )
                                                   : null,
                                               onTap: () => context.push('/announcements'),
                                             ),
+                                            DonyListTile(
+                                              icon: Icons.inventory_2_outlined,
+                                              iconColor: cs.primary,
+                                              iconBgColor: cs.primaryContainer,
+                                              label: 'Colis sur mes trajets',
+                                              trailing: upcomingAnnouncements > 0
+                                                  ? Text(
+                                                      '$upcomingAnnouncements matchs',
+                                                      style: tt.labelMedium?.copyWith(
+                                                        color: cs.primary,
+                                                        fontWeight: FontWeight.w600,
+                                                      ),
+                                                    )
+                                                  : null,
+                                              onTap: () => context.push('/package-requests/match'),
+                                            ),
+                                            DonyListTile(
+                                              icon: Icons.handshake_rounded,
+                                              iconColor: cs.tertiary,
+                                              iconBgColor: cs.tertiaryContainer,
+                                              label: 'Mes négociations',
+                                              showDivider: false,
+                                              onTap: () => context.push('/negotiations'),
+                                            ),
+                                          ],
+                                        ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                                        const SizedBox(height: DonySpacing.lg),
+
+                                        // ─── REVENUS & PAIEMENTS ───────────────────────────
+                                        _SectionLabel(label: 'REVENUS & PAIEMENTS', cs: cs),
+                                        DonyListSection(
+                                          tiles: [
                                             DonyListTile(
                                               icon: Icons.account_balance_wallet_rounded,
                                               iconColor: cs.success,
@@ -261,6 +335,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               onTap: () => context.push('/payments/commission-method'),
                                             ),
                                             DonyListTile(
+                                              icon: Icons.credit_card_outlined,
+                                              iconColor: DonyColors.purple,
+                                              iconBgColor: DonyColors.violetLight,
+                                              label: 'Paiements & factures',
+                                              showDivider: false,
+                                              onTap: () => ComingSoonBottomSheet.show(
+                                                context,
+                                                title: 'Paiements & factures',
+                                                description:
+                                                    'Retrouve ici tes paiements reçus et tes factures téléchargeables.',
+                                                icon: Icons.credit_card_rounded,
+                                              ),
+                                            ),
+                                          ],
+                                        ).animate().fadeIn(delay: 240.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                                        const SizedBox(height: DonySpacing.lg),
+
+                                        // ─── COMPTE PRO ────────────────────────────────────
+                                        _SectionLabel(label: 'COMPTE PRO', cs: cs),
+                                        DonyListSection(
+                                          tiles: [
+                                            DonyListTile(
                                               icon: Icons.business_center_rounded,
                                               iconColor: isProAccount ? cs.success : cs.warning,
                                               iconBgColor: isProAccount ? cs.successLight : cs.warningLight,
@@ -268,37 +364,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               trailing: isProAccount
                                                   ? Icon(Icons.verified_rounded, color: cs.success, size: 18)
                                                   : null,
+                                              showDivider: false,
                                               onTap: user != null
                                                   ? () => UpgradeProBottomSheet.show(context, user: user!)
                                                   : null,
                                             ),
-                                            DonyListTile(
-                                              icon: Icons.search_rounded,
-                                              iconColor: cs.success,
-                                              iconBgColor: cs.successLight,
-                                              label: 'Demandes d\'envoi à transporter',
-                                              onTap: () => context.push('/package-requests/search'),
-                                            ),
-                                            DonyListTile(
-                                              icon: Icons.handshake_rounded,
-                                              iconColor: Theme.of(context).colorScheme.tertiary,
-                                              iconBgColor: Theme.of(context).colorScheme.tertiaryContainer,
-                                              label: 'Mes négociations',
-                                              onTap: () => context.push('/negotiations'),
-                                            ),
-                                            DonyListTile(
-                                              icon: Icons.credit_card_outlined,
-                                              iconColor: DonyColors.purple,
-                                              iconBgColor: DonyColors.violetLight,
-                                              label: 'Paiements & factures',
-                                              onTap: () => ComingSoonBottomSheet.show(
-                                                context,
-                                                title: 'Paiements & factures',
-                                                description: 'Retrouve ici tes paiements reçus et tes factures téléchargeables.',
-                                                icon: Icons.credit_card_rounded,
-                                              ),
-                                            ),
+                                          ],
+                                        ).animate().fadeIn(delay: 260.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                                        const SizedBox(height: DonySpacing.lg),
+
+                                        // ─── IDENTITÉ & CONFIANCE ──────────────────────────
+                                        _SectionLabel(label: 'IDENTITÉ & CONFIANCE', cs: cs),
+                                        DonyListSection(
+                                          tiles: [
                                             _kycTile(context, user),
+                                            DonyListTile(
+                                              icon: Icons.account_box_outlined,
+                                              iconColor: cs.primary,
+                                              iconBgColor: cs.primaryContainer,
+                                              label: 'Mon profil public',
+                                              onTap: () => context.push('/profile/public'),
+                                            ),
+                                            DonyListTile(
+                                              icon: Icons.star_border_rounded,
+                                              iconColor: cs.tertiary,
+                                              iconBgColor: cs.tertiaryContainer,
+                                              label: 'Mes avis reçus',
+                                              showDivider: false,
+                                              onTap: () => context.push('/profile/reviews'),
+                                            ),
+                                          ],
+                                        ).animate().fadeIn(delay: 280.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                                        const SizedBox(height: DonySpacing.lg),
+
+                                        // ─── FIDÉLITÉ ──────────────────────────────────────
+                                        _SectionLabel(label: 'FIDÉLITÉ', cs: cs),
+                                        DonyListSection(
+                                          tiles: [
                                             DonyListTile(
                                               icon: Icons.people_outline_rounded,
                                               iconColor: cs.success,
@@ -306,15 +408,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               label: 'Parrainages',
                                               trailing: Text(
                                                 '0 invité',
-                                                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                                ),
+                                                style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
                                               ),
                                               showDivider: false,
                                               onTap: () => context.push('/profile/referral'),
                                             ),
                                           ],
-                                        ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                                        ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                                        const SizedBox(height: DonySpacing.lg),
+
+                                        // ─── SUPPORT ───────────────────────────────────────
+                                        _SectionLabel(label: 'SUPPORT', cs: cs),
+                                        DonyListSection(
+                                          tiles: [
+                                            DonyListTile(
+                                              icon: Icons.gavel_rounded,
+                                              iconColor: cs.error,
+                                              iconBgColor: cs.errorContainer.withValues(alpha: 0.5),
+                                              label: 'Mes litiges',
+                                              onTap: () => context.push('/disputes'),
+                                            ),
+                                            DonyListTile(
+                                              icon: Icons.support_agent_rounded,
+                                              iconColor: cs.primary,
+                                              iconBgColor: cs.primaryContainer,
+                                              label: 'Contacter le support',
+                                              onTap: () => context.push('/profile/help/contact'),
+                                            ),
+                                            DonyListTile(
+                                              icon: Icons.help_outline_rounded,
+                                              iconColor: cs.onSurfaceVariant,
+                                              iconBgColor: cs.outline.withValues(alpha: 0.3),
+                                              label: 'FAQ & aide',
+                                              showDivider: false,
+                                              onTap: () => context.push('/profile/help/faq'),
+                                            ),
+                                          ],
+                                        ).animate().fadeIn(delay: 320.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
                                       ] else ...[
                                         // ─── SENDER ───────────────────────
                                         // 1. Mon activité — pilote des envois en cours

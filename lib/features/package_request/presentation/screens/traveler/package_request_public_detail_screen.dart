@@ -1,12 +1,14 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/package_request/presentation/widgets/make_offer_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 
 class PackageRequestPublicDetailScreen extends StatefulWidget {
   const PackageRequestPublicDetailScreen({required this.requestId, super.key});
@@ -46,6 +48,8 @@ class _PackageRequestPublicDetailScreenState
 
   @override
   Widget build(BuildContext context) {
+    final extra = GoRouterState.of(context).extra as Map<String, dynamic>?;
+    final announcement = extra?['announcement'] as AnnouncementModel?;
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -58,17 +62,19 @@ class _PackageRequestPublicDetailScreenState
                     padding: const EdgeInsets.all(40),
                     child: Text(_error!,
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            fontSize: 14, color: kError)),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium!
+                            .copyWith(fontSize: 14, color: kError)),
                   ),
                 )
               : _request == null
                   ? const SizedBox.shrink()
-                  : _buildBody(_request!),
+                  : _buildBody(_request!, announcement),
     );
   }
 
-  Widget _buildBody(PackageRequest r) {
+  Widget _buildBody(PackageRequest r, AnnouncementModel? announcement) {
     final cs = Theme.of(context).colorScheme;
     return Stack(
       children: [
@@ -162,9 +168,10 @@ class _PackageRequestPublicDetailScreenState
               context,
               packageRequestId: r.id,
               targetPriceEur: r.targetPriceEur,
-              weightKg: r.weightKg,
+              weightKg: announcement?.availableKg ?? r.weightKg,
               departureCity: r.departureCity,
               arrivalCity: r.arrivalCity,
+              initialDate: announcement?.departureDate,
             ),
           ),
         ),

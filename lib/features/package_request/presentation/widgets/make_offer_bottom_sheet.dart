@@ -23,6 +23,7 @@ class MakeOfferBottomSheet {
     required double weightKg,
     required String departureCity,
     required String arrivalCity,
+    DateTime? initialDate,
   }) async {
     PriceEstimate? estimate;
     try {
@@ -57,6 +58,7 @@ class MakeOfferBottomSheet {
         estimate: estimate,
         rootRouter: rootRouter,
         onSubmitReady: (fn) => submitFn = fn,
+        initialDate: initialDate,
       ),
       stickyBottom: BlocBuilder<NegotiationBloc, NegotiationState>(
         builder: (ctx, state) {
@@ -80,6 +82,7 @@ class _MakeOfferContent extends StatefulWidget {
     required this.estimate,
     required this.rootRouter,
     required this.onSubmitReady,
+    this.initialDate,
   });
 
   final String packageRequestId;
@@ -88,6 +91,7 @@ class _MakeOfferContent extends StatefulWidget {
   final PriceEstimate? estimate;
   final GoRouter rootRouter;
   final void Function(VoidCallback) onSubmitReady;
+  final DateTime? initialDate;
 
   @override
   State<_MakeOfferContent> createState() => _MakeOfferContentState();
@@ -111,6 +115,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
     );
     _kgCtrl = TextEditingController(text: widget.weightKg.toStringAsFixed(1));
     _bodyCtrl = TextEditingController();
+    if (widget.initialDate != null) _dateNotifier.value = widget.initialDate;
   }
 
   @override
@@ -120,6 +125,14 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
     _bodyCtrl.dispose();
     _dateNotifier.dispose();
     super.dispose();
+  }
+
+  DateTime _clampDate(DateTime d) {
+    final now = DateTime.now();
+    final last = now.add(const Duration(days: 90));
+    if (d.isBefore(now)) return now;
+    if (d.isAfter(last)) return last;
+    return d;
   }
 
   void _submit() {
@@ -244,8 +257,8 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                   onTap: () async {
                     final picked = await showDatePicker(
                       context: ctx,
-                      initialDate: date ??
-                          DateTime.now().add(const Duration(days: 7)),
+                      initialDate: _clampDate(
+                          date ?? DateTime.now().add(const Duration(days: 7))),
                       firstDate: DateTime.now(),
                       lastDate: DateTime.now()
                           .add(const Duration(days: 90)),
