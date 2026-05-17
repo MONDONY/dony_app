@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/bloc/city_search_event.dart';
@@ -41,6 +43,7 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
   bool _showResults = false;
+  Timer? _ensureVisibleTimer;
 
   @override
   void initState() {
@@ -54,21 +57,29 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
     if (_focusNode.hasFocus) {
       // Après le frame suivant, le clavier est en cours d'ouverture et le champ
       // peut être partiellement masqué — on le ramène dans la zone visible.
+      // Un Timer annulable est utilisé pour attendre que les viewInsets du
+      // clavier Android soient complètement stabilisés (≈ 300 ms) avant de
+      // scroller — évite un scroll à la mauvaise position.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
+        _ensureVisibleTimer?.cancel();
+        _ensureVisibleTimer = Timer(const Duration(milliseconds: 300), () {
+          if (!mounted) {
+            return;
+          }
           Scrollable.maybeOf(context)?.position.ensureVisible(
             context.findRenderObject()!,
             alignment: 0.1,
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeOutCubic,
           );
-        }
+        });
       });
     }
   }
 
   @override
   void dispose() {
+    _ensureVisibleTimer?.cancel();
     _focusNode.removeListener(_onFocusChanged);
     _controller.dispose();
     _focusNode.dispose();
