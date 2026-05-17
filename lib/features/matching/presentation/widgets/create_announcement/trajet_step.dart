@@ -177,59 +177,114 @@ class TrajetStep extends StatelessWidget {
         builder: (context, _) {
           return Column(
             children: [
-                      // ── Ville de départ ─────────────────────────────────────────
-              // CaFieldCard entoure UNIQUEMENT le TextField — les suggestions
-              // sont rendues HORS du ClipRRect pour ne pas être masquées.
+              // ── Ville de départ * ───────────────────────────────────────
+              // CityAutocompleteField utilise le même InputDecoration (via
+              // le thème) que DonyTextField — uniformité visuelle garantie.
+              // L'autocomplétion (suggestions inline) est préservée.
+              // requiredLabel: true → astérisque rouge via InputDecoration.label.
               BlocProvider(
                 create: (_) => departureCityBloc ?? getIt<CitySearchBloc>(),
                 child: CityAutocompleteField(
                   label: 'Ville de départ',
                   fieldKey: const Key('departureCityField'),
                   initialValue: departureCityNotifier.value,
-                  prefixIcon: const CaFieldIcon(
-                      icon: Icons.flight_takeoff_rounded),
+                  prefixIcon: Icon(
+                    DonyIcons.departureCity,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  requiredLabel: true,
                   onSelected: (CityModel city) {
                     departureCityNotifier.value = city.name;
                   },
                 ),
               ),
               const SizedBox(height: DonySpacing.sm),
-              CaTimeRow(
-                isDeparture: true,
-                time: departureTimeNotifier.value,
-                onTap: onSelectDepartureTime,
-                onClear: departureTimeNotifier.value != null
-                    ? () => departureTimeNotifier.value = null
+              // ── Heure de départ (optionnel) — DonyTextField.tappable ───
+              DonyTextField.tappable(
+                key: const Key('departureTimeField'),
+                label: 'Heure de départ (optionnel)',
+                value: departureTimeNotifier.value != null
+                    ? '${departureTimeNotifier.value!.hour.toString().padLeft(2, '0')}:${departureTimeNotifier.value!.minute.toString().padLeft(2, '0')}'
                     : null,
+                prefixIcon: DonyIcons.time,
+                trailing: departureTimeNotifier.value != null
+                    ? GestureDetector(
+                        onTap: () => departureTimeNotifier.value = null,
+                        child: Icon(
+                          DonyIcons.close,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      )
+                    : Icon(
+                        DonyIcons.chevron,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                onTap: () => onSelectDepartureTime(),
               ),
               const SizedBox(height: DonySpacing.sm),
-              // ── Ville d'arrivée ──────────────────────────────────────────
+              // ── Ville d'arrivée * ───────────────────────────────────────
               BlocProvider(
                 create: (_) => arrivalCityBloc ?? getIt<CitySearchBloc>(),
                 child: CityAutocompleteField(
                   label: 'Ville d\'arrivée',
                   fieldKey: const Key('arrivalCityField'),
                   initialValue: arrivalCityNotifier.value,
-                  prefixIcon:
-                      const CaFieldIcon(icon: Icons.flight_land_rounded),
+                  prefixIcon: Icon(
+                    DonyIcons.arrivalCity,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  requiredLabel: true,
                   onSelected: (CityModel city) {
                     arrivalCityNotifier.value = city.name;
                   },
                 ),
               ),
               const SizedBox(height: DonySpacing.sm),
-              CaTimeRow(
-                isDeparture: false,
-                time: arrivalTimeNotifier.value,
-                onTap: onSelectArrivalTime,
-                onClear: arrivalTimeNotifier.value != null
-                    ? () => arrivalTimeNotifier.value = null
+              // ── Heure d'arrivée (optionnel) — DonyTextField.tappable ───
+              DonyTextField.tappable(
+                key: const Key('arrivalTimeField'),
+                label: 'Heure d\'arrivée (optionnel)',
+                value: arrivalTimeNotifier.value != null
+                    ? '${arrivalTimeNotifier.value!.hour.toString().padLeft(2, '0')}:${arrivalTimeNotifier.value!.minute.toString().padLeft(2, '0')}'
                     : null,
+                prefixIcon: DonyIcons.time,
+                trailing: arrivalTimeNotifier.value != null
+                    ? GestureDetector(
+                        onTap: () => arrivalTimeNotifier.value = null,
+                        child: Icon(
+                          DonyIcons.close,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      )
+                    : Icon(
+                        DonyIcons.chevron,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                onTap: () => onSelectArrivalTime(),
               ),
               const SizedBox(height: DonySpacing.sm),
-              CaDateRow(
-                date: departureDateNotifier.value,
-                onTap: onSelectDate,
+              // ── Date de départ * — DonyTextField.tappable ─────────────
+              DonyTextField.tappable(
+                key: const Key('departureDateField'),
+                label: 'Date de départ',
+                value: departureDateNotifier.value != null
+                    ? DateFormat('EEE d MMM yyyy', 'fr')
+                        .format(departureDateNotifier.value!)
+                    : null,
+                prefixIcon: DonyIcons.date,
+                trailing: Icon(
+                  DonyIcons.chevron,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                requiredLabel: true,
+                onTap: () => onSelectDate(),
               ),
             ],
           ).animate().fadeIn(delay: 60.ms);

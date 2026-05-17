@@ -27,6 +27,7 @@ class DonyTextField extends StatelessWidget {
     this.validator,
     this.errorText,
     this.enabled = true,
+    this.requiredLabel = false,
   })  : _variant = _DonyTextFieldVariant.text,
         _value = null,
         _onTap = null,
@@ -46,6 +47,7 @@ class DonyTextField extends StatelessWidget {
   /// - [prefixIcon] : icône à gauche (même position que la variante texte).
   /// - [trailing] : widget optionnel à droite (ex : chevron ou icône picker).
   /// - [onTap] : callback déclenché au tap.
+  /// - [requiredLabel] : si true, ajoute un astérisque rouge (cs.error) au label.
   const DonyTextField.tappable({
     super.key,
     this.label,
@@ -53,6 +55,7 @@ class DonyTextField extends StatelessWidget {
     this.prefixIcon,
     Widget? trailing,
     VoidCallback? onTap,
+    this.requiredLabel = false,
   })  : _variant = _DonyTextFieldVariant.tappable,
         _value = value,
         _onTap = onTap,
@@ -89,15 +92,54 @@ class DonyTextField extends StatelessWidget {
   final VoidCallback? _onTap;
   final Widget? _trailing;
 
+  /// Si true, affiche un astérisque rouge (`cs.error`) après le label via
+  /// `InputDecoration.label` (RichText). Disponible dans les deux variantes.
+  final bool requiredLabel;
+
   // ── Décoration partagée ─────────────────────────────────────────────────────
 
-  InputDecoration _decoration({
+  /// Construit un widget label avec un astérisque rouge si [requiredLabel] est true.
+  ///
+  /// Utilise `InputDecoration.label` (RichText) plutôt que `labelText` (String)
+  /// afin d'appliquer `cs.error` uniquement à l'astérisque tout en conservant
+  /// la couleur de label par défaut pour le reste du texte.
+  Widget? _buildLabel(BuildContext context) {
+    final effectiveLabel = label;
+    if (effectiveLabel == null) {
+      return null;
+    }
+    if (!requiredLabel) {
+      return null; // null → labelText utilisé à la place
+    }
+    final cs = Theme.of(context).colorScheme;
+    final labelStyle = Theme.of(context).inputDecorationTheme.labelStyle ??
+        Theme.of(context).textTheme.bodyMedium;
+    return Text.rich(
+      TextSpan(
+        text: effectiveLabel,
+        style: labelStyle,
+        children: [
+          TextSpan(
+            text: ' *',
+            style: TextStyle(color: cs.error),
+          ),
+        ],
+      ),
+    );
+  }
+
+  InputDecoration _decoration(
+    BuildContext context, {
     String? labelOverride,
     String? hintOverride,
     Widget? suffixOverride,
   }) {
+    final labelWidget = _buildLabel(context);
     return InputDecoration(
-      labelText: labelOverride ?? label,
+      // Si requiredLabel, on passe un widget label (RichText avec asterisque
+      // rouge) ; sinon on utilise labelText (String simple).
+      label: labelWidget,
+      labelText: labelWidget == null ? (labelOverride ?? label) : null,
       hintText: hintOverride ?? hint,
       prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
       suffixIcon: suffixOverride ?? suffixIcon,
@@ -123,7 +165,7 @@ class DonyTextField extends StatelessWidget {
           validator: validator,
           enabled: enabled,
           scrollPadding: const EdgeInsets.only(bottom: 120),
-          decoration: _decoration(),
+          decoration: _decoration(context),
         );
 
       case _DonyTextFieldVariant.tappable:
@@ -138,6 +180,7 @@ class DonyTextField extends StatelessWidget {
             // isEmpty: true force le label en position hint/placeholder.
             isEmpty: !hasValue,
             decoration: _decoration(
+              context,
               suffixOverride: _trailing,
             ),
             child: hasValue

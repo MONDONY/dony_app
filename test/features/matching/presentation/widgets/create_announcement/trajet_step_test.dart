@@ -1,9 +1,17 @@
 // Tests B1 — Autocomplétion ville en liste inline (non masquée par sticky button).
 // Vérifie que les suggestions s'affichent dans le flux scrollable (pas en Overlay)
 // et qu'un tap sur une suggestion remplit le champ + ferme la liste.
+//
+// Tests M4 — Uniformité visuelle : les champs heure et date sont des
+// DonyTextField.tappable (InputDecorator + InkWell, pas de clavier) et
+// les champs ville sont des CityAutocompleteField avec le même InputDecoration.
+//
+// Tests M5 — Marquage requis : les champs Ville de départ, Ville d'arrivée
+// et Date de départ affichent un astérisque rouge dans leur label.
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/bloc/city_search_event.dart';
 import 'package:dony/features/city/bloc/city_search_state.dart';
@@ -83,6 +91,202 @@ void main() {
   tearDown(() {
     departureCityBloc.close();
     arrivalCityBloc.close();
+  });
+
+  group('M4 — Uniformité visuelle champs heure/date', () {
+    testWidgets(
+      'les champs heure et date sont rendus via DonyTextField.tappable (InputDecorator)',
+      (tester) async {
+        await tester.pumpWidget(_buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+        ));
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // Les trois DonyTextField.tappable ont leurs Keys stables
+        expect(find.byKey(const Key('departureTimeField')), findsOneWidget);
+        expect(find.byKey(const Key('arrivalTimeField')), findsOneWidget);
+        expect(find.byKey(const Key('departureDateField')), findsOneWidget);
+
+        // Les champs heure/date utilisent InputDecorator (pas TextField)
+        // → au moins 3 InputDecorator présents (les 3 tappable)
+        expect(find.byType(InputDecorator), findsAtLeastNWidgets(3));
+      },
+    );
+
+    testWidgets(
+      'les labels des champs heure s\'affichent correctement (optionnel)',
+      (tester) async {
+        await tester.pumpWidget(_buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+        ));
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // Les labels optionnels sont présents
+        expect(find.text('Heure de départ (optionnel)'), findsOneWidget);
+        expect(find.text('Heure d\'arrivée (optionnel)'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'tap sur le champ heure de départ déclenche onSelectDepartureTime',
+      (tester) async {
+        var called = false;
+        final departureCityNotifier = ValueNotifier<String?>(null);
+        final arrivalCityNotifier = ValueNotifier<String?>(null);
+        final departureDateNotifier = ValueNotifier<DateTime?>(null);
+        final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+        final arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+        final transportModeNotifier = ValueNotifier<TransportMode?>(null);
+
+        await tester.pumpWidget(MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: TrajetStep(
+                departureCityNotifier: departureCityNotifier,
+                arrivalCityNotifier: arrivalCityNotifier,
+                departureDateNotifier: departureDateNotifier,
+                departureTimeNotifier: departureTimeNotifier,
+                arrivalTimeNotifier: arrivalTimeNotifier,
+                transportModeNotifier: transportModeNotifier,
+                departureCityBloc: departureCityBloc,
+                arrivalCityBloc: arrivalCityBloc,
+                onSelectDepartureTime: () async {
+                  called = true;
+                },
+                onSelectArrivalTime: () async {},
+                onSelectDate: () async {},
+              ),
+            ),
+          ),
+        ));
+        await tester.pump(const Duration(milliseconds: 300));
+
+        await tester.tap(find.byKey(const Key('departureTimeField')));
+        await tester.pump();
+
+        expect(called, isTrue);
+      },
+    );
+
+    testWidgets(
+      'tap sur le champ date de départ déclenche onSelectDate',
+      (tester) async {
+        var called = false;
+        final departureCityNotifier = ValueNotifier<String?>(null);
+        final arrivalCityNotifier = ValueNotifier<String?>(null);
+        final departureDateNotifier = ValueNotifier<DateTime?>(null);
+        final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+        final arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+        final transportModeNotifier = ValueNotifier<TransportMode?>(null);
+
+        await tester.pumpWidget(MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: TrajetStep(
+                departureCityNotifier: departureCityNotifier,
+                arrivalCityNotifier: arrivalCityNotifier,
+                departureDateNotifier: departureDateNotifier,
+                departureTimeNotifier: departureTimeNotifier,
+                arrivalTimeNotifier: arrivalTimeNotifier,
+                transportModeNotifier: transportModeNotifier,
+                departureCityBloc: departureCityBloc,
+                arrivalCityBloc: arrivalCityBloc,
+                onSelectDepartureTime: () async {},
+                onSelectArrivalTime: () async {},
+                onSelectDate: () async {
+                  called = true;
+                },
+              ),
+            ),
+          ),
+        ));
+        await tester.pump(const Duration(milliseconds: 300));
+
+        await tester.tap(find.byKey(const Key('departureDateField')));
+        await tester.pump();
+
+        expect(called, isTrue);
+      },
+    );
+  });
+
+  group('M5 — Marquage champs requis (astérisque)', () {
+    testWidgets(
+      'les champs requis affichent un astérisque dans leur label',
+      (tester) async {
+        await tester.pumpWidget(_buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+        ));
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // La date de départ est requise → son label contient " *"
+        // DonyTextField.tappable avec requiredLabel: true utilise
+        // InputDecoration.label (Text.rich) plutôt que labelText.
+        // On vérifie la présence du texte " *" dans le widget tree.
+        expect(find.textContaining(' *'), findsAtLeastNWidgets(1));
+      },
+    );
+
+    testWidgets(
+      'le champ date de départ a requiredLabel true',
+      (tester) async {
+        await tester.pumpWidget(_buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+        ));
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // Le champ date de départ est un DonyTextField.tappable (required)
+        // → son Key est présente et le widget est rendu
+        final dateFinder = find.byKey(const Key('departureDateField'));
+        expect(dateFinder, findsOneWidget);
+
+        // Le widget DonyTextField.tappable avec requiredLabel
+        // → on vérifie la propriété directement
+        final dateField = tester.widget<DonyTextField>(dateFinder);
+        expect(dateField.requiredLabel, isTrue);
+        expect(dateField.label, 'Date de départ');
+      },
+    );
+
+    testWidgets(
+      'les champs heure (optionnel) n\'ont pas d\'astérisque dans le label',
+      (tester) async {
+        await tester.pumpWidget(_buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+        ));
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // Les labels optionnels ne contiennent pas " *"
+        expect(find.text('Heure de départ (optionnel)'), findsOneWidget);
+        expect(find.text('Heure d\'arrivée (optionnel)'), findsOneWidget);
+        // Vérifier qu'aucun texte " * " n'est associé aux champs optionnels
+        // (les champs heure n'ont pas requiredLabel: true)
+        final donyTextFields = tester.widgetList<DonyTextField>(
+          find.byType(DonyTextField),
+        ).toList();
+        // 3 DonyTextField.tappable : 2 heures + 1 date
+        expect(donyTextFields.length, 3);
+        // Les 2 champs heure n'ont pas requiredLabel
+        final timeFields = donyTextFields
+            .where((f) => f.label?.contains('optionnel') == true)
+            .toList();
+        expect(timeFields.length, 2);
+        for (final f in timeFields) {
+          expect(f.requiredLabel, isFalse);
+        }
+        // Le champ date a requiredLabel: true
+        final dateFields = donyTextFields
+            .where((f) => f.label == 'Date de départ')
+            .toList();
+        expect(dateFields.length, 1);
+        expect(dateFields.first.requiredLabel, isTrue);
+      },
+    );
   });
 
   group('B1 — Suggestions ville inline', () {

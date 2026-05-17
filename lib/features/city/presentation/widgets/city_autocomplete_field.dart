@@ -25,6 +25,7 @@ class CityAutocompleteField extends StatefulWidget {
     this.initialValue,
     this.prefixIcon,
     this.fieldKey,
+    this.requiredLabel = false,
   });
 
   final String label;
@@ -34,6 +35,10 @@ class CityAutocompleteField extends StatefulWidget {
 
   /// Key stable transmise au [TextField] interne.
   final Key? fieldKey;
+
+  /// Si true, affiche un astérisque rouge (`cs.error`) après le label
+  /// via `InputDecoration.label` (RichText) — même rendu que [DonyTextField.requiredLabel].
+  final bool requiredLabel;
 
   @override
   State<CityAutocompleteField> createState() => _CityAutocompleteFieldState();
@@ -93,9 +98,32 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
     widget.onSelected(city);
   }
 
+  /// Construit le widget label (avec astérisque rouge si [requiredLabel]).
+  Widget? _buildLabel(BuildContext context) {
+    if (!widget.requiredLabel) {
+      return null;
+    }
+    final cs = Theme.of(context).colorScheme;
+    final labelStyle = Theme.of(context).inputDecorationTheme.labelStyle ??
+        Theme.of(context).textTheme.bodyMedium;
+    return Text.rich(
+      TextSpan(
+        text: widget.label,
+        style: labelStyle,
+        children: [
+          TextSpan(
+            text: ' *',
+            style: TextStyle(color: cs.error),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final labelWidget = _buildLabel(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,7 +142,9 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
                 color: cs.onSurface,
               ),
               decoration: InputDecoration(
-                labelText: widget.label,
+                // Si requiredLabel, label widget (RichText) ; sinon labelText.
+                label: labelWidget,
+                labelText: labelWidget == null ? widget.label : null,
                 prefixIcon: widget.prefixIcon,
                 suffixIcon: _controller.text.isNotEmpty
                     ? IconButton(
