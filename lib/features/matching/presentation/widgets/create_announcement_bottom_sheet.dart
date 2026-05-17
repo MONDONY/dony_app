@@ -3,9 +3,6 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
-import 'package:dony/features/city/bloc/city_search_bloc.dart';
-import 'package:dony/features/city/data/city_model.dart';
-import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
@@ -26,6 +23,8 @@ import 'package:dony/features/payments/cash/data/models/commission_method.dart';
 import 'package:dony/features/matching/presentation/widgets/address_picker_field.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/capacity_selector.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
 import 'package:dony/features/matching/presentation/widgets/price_hint_widget.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
@@ -796,188 +795,18 @@ class _CreateAnnouncementContentState
   // ── Step 0 — Trajet + Transport ─────────────────────────────────────────────
   List<Widget> _buildStep0(BuildContext context, TextTheme tt, ColorScheme cs) {
     return [
-      // ── Corridor preview ──────────────────────────────────────────────────
-      ListenableBuilder(
-        listenable: Listenable.merge([
-          _departureCityNotifier,
-          _arrivalCityNotifier,
-          _departureDateNotifier,
-          _departureTimeNotifier,
-          _arrivalTimeNotifier,
-        ]),
-        builder: (context, _) {
-          final dep = _departureCityNotifier.value;
-          final arr = _arrivalCityNotifier.value;
-          if (dep == null || arr == null) {
-            return const SizedBox.shrink();
-          }
-          final depCode = cityAirportCode(dep, departure: true);
-          final arrCode = cityAirportCode(arr, departure: false);
-          final dateStr = _formatCorridorDateTime();
-          return Column(
-            children: [
-              _SectionCard(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.base,
-                    vertical: DonySpacing.md,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '$depCode → $arrCode',
-                              style: tt.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            if (dateStr.isNotEmpty)
-                              Text(
-                                dateStr,
-                                style: tt.bodySmall?.copyWith(
-                                  color: cs.onSurfaceVariant,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: DonySpacing.sm,
-                          vertical: DonySpacing.xs,
-                        ),
-                        decoration: BoxDecoration(
-                          color: cs.primaryContainer,
-                          borderRadius: BorderRadius.circular(DonyRadius.full),
-                        ),
-                        child: Text(
-                          'Confirmé',
-                          style: tt.labelSmall?.copyWith(
-                            color: cs.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ).animate().fadeIn(duration: 250.ms),
-              const SizedBox(height: DonySpacing.xl),
-            ],
-          );
-        },
+      TrajetStep(
+        departureCityNotifier: _departureCityNotifier,
+        arrivalCityNotifier: _arrivalCityNotifier,
+        departureDateNotifier: _departureDateNotifier,
+        departureTimeNotifier: _departureTimeNotifier,
+        arrivalTimeNotifier: _arrivalTimeNotifier,
+        transportModeNotifier: _transportModeNotifier,
+        onSelectDepartureTime: _selectDepartureTime,
+        onSelectArrivalTime: _selectArrivalTime,
+        onSelectDate: _selectDate,
+        formatCorridorDateTime: _formatCorridorDateTime,
       ),
-
-      // ── TRAJET ────────────────────────────────────────────────────────────
-      const _SectionLabel(label: 'TRAJET', icon: Icons.flight_takeoff_rounded),
-      const SizedBox(height: DonySpacing.sm),
-      ListenableBuilder(
-        listenable: Listenable.merge([
-          _departureCityNotifier,
-          _arrivalCityNotifier,
-          _departureDateNotifier,
-          _departureTimeNotifier,
-          _arrivalTimeNotifier,
-        ]),
-        builder: (context, _) {
-          return Column(
-            children: [
-              BlocProvider(
-                create: (_) => getIt<CitySearchBloc>(),
-                child: _FieldCard(
-                  child: CityAutocompleteField(
-                    label: 'Ville de départ',
-                    initialValue: _departureCityNotifier.value,
-                    prefixIcon: const _FieldIcon(icon: Icons.flight_takeoff_rounded),
-                    onSelected: (CityModel city) {
-                      _departureCityNotifier.value = city.name;
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: DonySpacing.sm),
-              _TimeRow(
-                isDeparture: true,
-                time: _departureTimeNotifier.value,
-                onTap: _selectDepartureTime,
-                onClear: _departureTimeNotifier.value != null
-                    ? () => _departureTimeNotifier.value = null
-                    : null,
-              ),
-              const SizedBox(height: DonySpacing.sm),
-              BlocProvider(
-                create: (_) => getIt<CitySearchBloc>(),
-                child: _FieldCard(
-                  child: CityAutocompleteField(
-                    label: 'Ville d\'arrivée',
-                    initialValue: _arrivalCityNotifier.value,
-                    prefixIcon: const _FieldIcon(icon: Icons.flight_land_rounded),
-                    onSelected: (CityModel city) {
-                      _arrivalCityNotifier.value = city.name;
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: DonySpacing.sm),
-              _TimeRow(
-                isDeparture: false,
-                time: _arrivalTimeNotifier.value,
-                onTap: _selectArrivalTime,
-                onClear: _arrivalTimeNotifier.value != null
-                    ? () => _arrivalTimeNotifier.value = null
-                    : null,
-              ),
-              const SizedBox(height: DonySpacing.sm),
-              _DateRow(
-                date: _departureDateNotifier.value,
-                onTap: _selectDate,
-              ),
-            ],
-          ).animate().fadeIn(delay: 60.ms);
-        },
-      ),
-      const SizedBox(height: DonySpacing.xxl),
-
-      // ── MODE DE TRANSPORT ─────────────────────────────────────────────────
-      const _SectionLabel(
-        label: 'MODE DE TRANSPORT',
-        icon: Icons.commute_rounded,
-      ),
-      const SizedBox(height: DonySpacing.sm),
-      ValueListenableBuilder<TransportMode?>(
-        valueListenable: _transportModeNotifier,
-        builder: (context, current, _) {
-          return Wrap(
-            spacing: DonySpacing.sm,
-            runSpacing: DonySpacing.sm,
-            children: [
-              for (final mode in TransportMode.values)
-                Opacity(
-                  opacity: mode != TransportMode.plane ? 0.4 : 1.0,
-                  child: DonyChip(
-                    key: Key('transport-chip-${mode.name}'),
-                    label: mode.label,
-                    icon: mode.icon,
-                    selected: current == mode,
-                    onTap: mode == TransportMode.plane
-                        ? () => _transportModeNotifier.value = mode
-                        : () {
-                            DonySnackbar.show(
-                              context,
-                              message: 'Bientôt disponible',
-                              type: DonySnackbarType.info,
-                            );
-                          },
-                  ),
-                ),
-            ],
-          );
-        },
-      ).animate().fadeIn(delay: 110.ms),
-      const SizedBox(height: DonySpacing.xxl),
     ];
   }
 
@@ -985,7 +814,7 @@ class _CreateAnnouncementContentState
   List<Widget> _buildStep1(BuildContext context, TextTheme tt, ColorScheme cs) {
     return [
       // ── LIEUX DE REMISE ───────────────────────────────────────────────────
-      const _SectionLabel(label: 'LIEUX DE REMISE', icon: Icons.swap_horiz_rounded),
+      const CaSectionLabel(label: 'LIEUX DE REMISE', icon: Icons.swap_horiz_rounded),
       const SizedBox(height: DonySpacing.xs),
       Text(
         'Précisez l\'endroit exact de remise et récupération',
@@ -1025,7 +854,7 @@ class _CreateAnnouncementContentState
       const SizedBox(height: DonySpacing.xxl),
 
       // ── CAPACITÉ DISPONIBLE ───────────────────────────────────────────────
-      const _SectionLabel(label: 'CAPACITÉ DISPONIBLE', icon: Icons.luggage_rounded),
+      const CaSectionLabel(label: 'CAPACITÉ DISPONIBLE', icon: Icons.luggage_rounded),
       const SizedBox(height: DonySpacing.base),
       const CapacitySelector(),
       const SizedBox(height: DonySpacing.md),
@@ -1169,7 +998,7 @@ class _CreateAnnouncementContentState
     ColorScheme cs,
     BuildContext ctx,
   ) {
-    return _SectionCard(
+    return CaSectionCard(
       child: Column(
         children: [
           // ── Bannière warning ──────────────────────────────────────────────
@@ -1248,7 +1077,7 @@ class _CreateAnnouncementContentState
               vertical: DonySpacing.xs,
             ),
           ),
-          const _RowDivider(),
+          const CaRowDivider(),
           // ── Ligne Espèces (désactivée) ────────────────────────────────────
           SwitchListTile(
             value: false,
@@ -1285,7 +1114,7 @@ class _CreateAnnouncementContentState
   List<Widget> _buildStep2(BuildContext context, TextTheme tt, ColorScheme cs) {
     return [
       // ── PRIX PAR KG ───────────────────────────────────────────────────────
-      const _SectionLabel(label: 'PRIX PAR KG', icon: Icons.sell_rounded),
+      const CaSectionLabel(label: 'PRIX PAR KG', icon: Icons.sell_rounded),
       const SizedBox(height: DonySpacing.md),
       ListenableBuilder(
         listenable: Listenable.merge([_priceOptionNotifier, _customPriceNotifier]),
@@ -1434,7 +1263,7 @@ class _CreateAnnouncementContentState
       const SizedBox(height: DonySpacing.xxl),
 
       // ── MODES DE PAIEMENT ACCEPTÉS ────────────────────────────────────────
-      const _SectionLabel(
+      const CaSectionLabel(
         label: 'MODES DE PAIEMENT ACCEPTÉS',
         icon: Icons.payments_rounded,
       ),
@@ -1457,7 +1286,7 @@ class _CreateAnnouncementContentState
             builder: (context, cmState) {
               final isLoaded = cmState is CommissionMethodLoaded &&
                   cmState.card.expirationStatus != ExpirationStatus.expired;
-              return _SectionCard(
+              return CaSectionCard(
                 child: Column(
                   children: [
                     SwitchListTile(
@@ -1491,7 +1320,7 @@ class _CreateAnnouncementContentState
                         vertical: DonySpacing.xs,
                       ),
                     ),
-                    const _RowDivider(),
+                    const CaRowDivider(),
                     ValueListenableBuilder<bool>(
                       valueListenable: _cashEnabledNotifier,
                       builder: (context, cashEnabled, _) {
@@ -1548,7 +1377,7 @@ class _CreateAnnouncementContentState
       const SizedBox(height: DonySpacing.xxl),
 
       // ── CE QUE J'ACCEPTE ──────────────────────────────────────────────────
-      const _SectionLabel(label: 'CE QUE J\'ACCEPTE', icon: Icons.check_circle_outline_rounded),
+      const CaSectionLabel(label: 'CE QUE J\'ACCEPTE', icon: Icons.check_circle_outline_rounded),
       const SizedBox(height: DonySpacing.sm),
       ListenableBuilder(
         listenable: Listenable.merge([
@@ -1559,7 +1388,7 @@ class _CreateAnnouncementContentState
           final selected = _selectedContentNotifier.value;
           final custom = _customAcceptedNotifier.value;
 
-          return _SectionCard(
+          return CaSectionCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1620,7 +1449,7 @@ class _CreateAnnouncementContentState
                 ),
                 // Custom items
                 if (custom.isNotEmpty) ...[
-                  const _RowDivider(),
+                  const CaRowDivider(),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: DonySpacing.base,
@@ -1630,7 +1459,7 @@ class _CreateAnnouncementContentState
                       spacing: DonySpacing.xs,
                       runSpacing: DonySpacing.xs,
                       children: custom
-                          .map((item) => _RemovableChip(
+                          .map((item) => CaRemovableChip(
                                 label: item,
                                 accentColor: cs.success,
                                 onRemove: () {
@@ -1643,8 +1472,8 @@ class _CreateAnnouncementContentState
                     ),
                   ),
                 ],
-                const _RowDivider(),
-                _InlineAddRow(
+                const CaRowDivider(),
+                CaInlineAddRow(
                   controller: _customAcceptedCtrl,
                   hint: 'Ajouter un autre type…',
                   onAdd: () {
@@ -1665,16 +1494,16 @@ class _CreateAnnouncementContentState
       const SizedBox(height: DonySpacing.xxl),
 
       // ── CE QUE JE REFUSE ──────────────────────────────────────────────────
-      const _SectionLabel(label: 'CE QUE JE REFUSE', icon: Icons.block_rounded),
+      const CaSectionLabel(label: 'CE QUE JE REFUSE', icon: Icons.block_rounded),
       const SizedBox(height: DonySpacing.sm),
       ValueListenableBuilder<Set<String>>(
         valueListenable: _refusedTypesNotifier,
         builder: (context, refused, _) {
-          return _SectionCard(
+          return CaSectionCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _InlineAddRow(
+                CaInlineAddRow(
                   controller: _refusedCtrl,
                   hint: 'Ex: Liquides, Denrées périssables…',
                   accentColor: cs.error,
@@ -1686,7 +1515,7 @@ class _CreateAnnouncementContentState
                   },
                 ),
                 if (refused.isNotEmpty) ...[
-                  const _RowDivider(),
+                  const CaRowDivider(),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: DonySpacing.base,
@@ -1696,7 +1525,7 @@ class _CreateAnnouncementContentState
                       spacing: DonySpacing.xs,
                       runSpacing: DonySpacing.xs,
                       children: refused
-                          .map((item) => _RemovableChip(
+                          .map((item) => CaRemovableChip(
                                 label: item,
                                 accentColor: cs.error,
                                 onRemove: () {
@@ -1717,12 +1546,12 @@ class _CreateAnnouncementContentState
       const SizedBox(height: DonySpacing.xxl),
 
       // ── NOTE AUX EXPÉDITEURS ──────────────────────────────────────────────
-      const _SectionLabel(label: 'NOTE AUX EXPÉDITEURS', icon: Icons.edit_note_rounded),
+      const CaSectionLabel(label: 'NOTE AUX EXPÉDITEURS', icon: Icons.edit_note_rounded),
       const SizedBox(height: DonySpacing.sm),
       ValueListenableBuilder<TextEditingValue>(
         valueListenable: _descriptionCtrl,
         builder: (context, value, _) {
-          return _SectionCard(
+          return CaSectionCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -1799,7 +1628,7 @@ class _CreateAnnouncementContentState
                 final dateStr = _formatCorridorDateTime();
                 return Column(
                   children: [
-                    _SectionCard(
+                    CaSectionCard(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: DonySpacing.base,
@@ -1853,7 +1682,7 @@ class _CreateAnnouncementContentState
               },
             ),
             // ── TRAJET ────────────────────────────────────────────────────
-            const _SectionLabel(label: 'TRAJET', icon: Icons.flight_takeoff_rounded),
+            const CaSectionLabel(label: 'TRAJET', icon: Icons.flight_takeoff_rounded),
             const SizedBox(height: DonySpacing.sm),
             ListenableBuilder(
               listenable: Listenable.merge([
@@ -1864,7 +1693,7 @@ class _CreateAnnouncementContentState
                 _arrivalTimeNotifier,
               ]),
               builder: (context, _) {
-                return _SectionCard(
+                return CaSectionCard(
                   child: Column(
                     children: [
                       _LockedCityRow(
@@ -1873,8 +1702,8 @@ class _CreateAnnouncementContentState
                         icon: Icons.flight_takeoff_rounded,
                         iconColor: cs.primary,
                       ),
-                      const _RowDivider(),
-                      _TimeRow(
+                      const CaRowDivider(),
+                      CaTimeRow(
                         isDeparture: true,
                         time: _departureTimeNotifier.value,
                         onTap: _selectDepartureTime,
@@ -1882,15 +1711,15 @@ class _CreateAnnouncementContentState
                             ? () => _departureTimeNotifier.value = null
                             : null,
                       ),
-                      const _RowDivider(),
+                      const CaRowDivider(),
                       _LockedCityRow(
                         label: 'Ville d\'arrivée',
                         value: _arrivalCityNotifier.value ?? '',
                         icon: Icons.flight_land_rounded,
                         iconColor: DonyColors.accent,
                       ),
-                      const _RowDivider(),
-                      _TimeRow(
+                      const CaRowDivider(),
+                      CaTimeRow(
                         isDeparture: false,
                         time: _arrivalTimeNotifier.value,
                         onTap: _selectArrivalTime,
@@ -1898,8 +1727,8 @@ class _CreateAnnouncementContentState
                             ? () => _arrivalTimeNotifier.value = null
                             : null,
                       ),
-                      const _RowDivider(),
-                      _DateRow(
+                      const CaRowDivider(),
+                      CaDateRow(
                         date: _departureDateNotifier.value,
                         onTap: _selectDate,
                       ),
@@ -1910,7 +1739,7 @@ class _CreateAnnouncementContentState
             ),
             const SizedBox(height: DonySpacing.xxl),
             // ── LIEUX DE REMISE ───────────────────────────────────────────
-            const _SectionLabel(label: 'LIEUX DE REMISE', icon: Icons.swap_horiz_rounded),
+            const CaSectionLabel(label: 'LIEUX DE REMISE', icon: Icons.swap_horiz_rounded),
             const SizedBox(height: DonySpacing.xs),
             Text(
               'Précisez l\'endroit exact de remise et récupération',
@@ -1935,7 +1764,7 @@ class _CreateAnnouncementContentState
             ).animate().fadeIn(delay: 90.ms),
             const SizedBox(height: DonySpacing.xxl),
             // ── CAPACITÉ DISPONIBLE ───────────────────────────────────────
-            const _SectionLabel(label: 'CAPACITÉ DISPONIBLE', icon: Icons.luggage_rounded),
+            const CaSectionLabel(label: 'CAPACITÉ DISPONIBLE', icon: Icons.luggage_rounded),
             const SizedBox(height: DonySpacing.base),
             ValueListenableBuilder<double>(
               valueListenable: _availableKgNotifier,
@@ -2002,7 +1831,7 @@ class _CreateAnnouncementContentState
             ),
             const SizedBox(height: DonySpacing.xxl),
             // ── MODE DE TRANSPORT ─────────────────────────────────────────
-            const _SectionLabel(
+            const CaSectionLabel(
               label: 'MODE DE TRANSPORT',
               icon: Icons.commute_rounded,
             ),
@@ -2034,7 +1863,7 @@ class _CreateAnnouncementContentState
             ).animate().fadeIn(delay: 110.ms),
             const SizedBox(height: DonySpacing.xxl),
             // ── CE QUE J'ACCEPTE ──────────────────────────────────────────
-            const _SectionLabel(
+            const CaSectionLabel(
               label: 'CE QUE J\'ACCEPTE',
               icon: Icons.check_circle_outline_rounded,
             ),
@@ -2047,7 +1876,7 @@ class _CreateAnnouncementContentState
               builder: (context, _) {
                 final selected = _selectedContentNotifier.value;
                 final custom = _customAcceptedNotifier.value;
-                return _SectionCard(
+                return CaSectionCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -2109,7 +1938,7 @@ class _CreateAnnouncementContentState
                         ),
                       ),
                       if (custom.isNotEmpty) ...[
-                        const _RowDivider(),
+                        const CaRowDivider(),
                         Padding(
                           padding: const EdgeInsets.symmetric(
                             horizontal: DonySpacing.base,
@@ -2119,7 +1948,7 @@ class _CreateAnnouncementContentState
                             spacing: DonySpacing.xs,
                             runSpacing: DonySpacing.xs,
                             children: custom
-                                .map((item) => _RemovableChip(
+                                .map((item) => CaRemovableChip(
                                       label: item,
                                       accentColor: cs.success,
                                       onRemove: () {
@@ -2133,8 +1962,8 @@ class _CreateAnnouncementContentState
                           ),
                         ),
                       ],
-                      const _RowDivider(),
-                      _InlineAddRow(
+                      const CaRowDivider(),
+                      CaInlineAddRow(
                         controller: _customAcceptedCtrl,
                         hint: 'Ajouter un autre type…',
                         onAdd: () {
@@ -2154,16 +1983,16 @@ class _CreateAnnouncementContentState
             ).animate().fadeIn(delay: 120.ms),
             const SizedBox(height: DonySpacing.xxl),
             // ── CE QUE JE REFUSE ──────────────────────────────────────────
-            const _SectionLabel(label: 'CE QUE JE REFUSE', icon: Icons.block_rounded),
+            const CaSectionLabel(label: 'CE QUE JE REFUSE', icon: Icons.block_rounded),
             const SizedBox(height: DonySpacing.sm),
             ValueListenableBuilder<Set<String>>(
               valueListenable: _refusedTypesNotifier,
               builder: (context, refused, _) {
-                return _SectionCard(
+                return CaSectionCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _InlineAddRow(
+                      CaInlineAddRow(
                         controller: _refusedCtrl,
                         hint: 'Ex: Liquides, Denrées périssables…',
                         accentColor: cs.error,
@@ -2175,7 +2004,7 @@ class _CreateAnnouncementContentState
                         },
                       ),
                       if (refused.isNotEmpty) ...[
-                        const _RowDivider(),
+                        const CaRowDivider(),
                         Padding(
                           padding: const EdgeInsets.symmetric(
                             horizontal: DonySpacing.base,
@@ -2185,7 +2014,7 @@ class _CreateAnnouncementContentState
                             spacing: DonySpacing.xs,
                             runSpacing: DonySpacing.xs,
                             children: refused
-                                .map((item) => _RemovableChip(
+                                .map((item) => CaRemovableChip(
                                       label: item,
                                       accentColor: cs.error,
                                       onRemove: () {
@@ -2206,7 +2035,7 @@ class _CreateAnnouncementContentState
             ).animate().fadeIn(delay: 140.ms),
             const SizedBox(height: DonySpacing.xxl),
             // ── NOTE AUX EXPÉDITEURS ──────────────────────────────────────
-            const _SectionLabel(
+            const CaSectionLabel(
               label: 'NOTE AUX EXPÉDITEURS',
               icon: Icons.edit_note_rounded,
             ),
@@ -2214,7 +2043,7 @@ class _CreateAnnouncementContentState
             ValueListenableBuilder<TextEditingValue>(
               valueListenable: _descriptionCtrl,
               builder: (context, value, _) {
-                return _SectionCard(
+                return CaSectionCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -2278,7 +2107,7 @@ class _CreateAnnouncementContentState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _StepperHeader(currentStep: step, totalSteps: _totalSteps),
+              CaStepperHeader(currentStep: step, totalSteps: _totalSteps),
               const SizedBox(height: DonySpacing.lg),
               IndexedStack(
                 index: step,
@@ -2444,421 +2273,6 @@ class _LockedBanner extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ─── Field card (same as section card — thin white container for a single field) ─
-
-class _FieldCard extends StatelessWidget {
-  final Widget child;
-  const _FieldCard({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(DonyRadius.card),
-      child: Container(color: cs.surface, child: child),
-    );
-  }
-}
-
-// ─── Field icon (styled prefix icon for form fields) ─────────────────────────
-
-class _FieldIcon extends StatelessWidget {
-  final IconData icon;
-  const _FieldIcon({required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Icon(icon, size: 20, color: cs.primary);
-  }
-}
-
-// ─── Section card (white, no border, clip) ───────────────────────────────────
-
-class _SectionCard extends StatelessWidget {
-  final Widget child;
-  const _SectionCard({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(DonyRadius.card),
-      child: Container(
-        color: cs.surface,
-        child: child,
-      ),
-    );
-  }
-}
-
-// ─── Thin row divider ─────────────────────────────────────────────────────────
-
-class _RowDivider extends StatelessWidget {
-  const _RowDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(height: 0.5, color: cs.outline);
-  }
-}
-
-// ─── Section label ─────────────────────────────────────────────────────────────
-
-class _SectionLabel extends StatelessWidget {
-  final String label;
-  final IconData? icon;
-  const _SectionLabel({required this.label, this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final labelWidget = Text(
-      label,
-      style: tt.labelSmall?.copyWith(
-        color: cs.onSurfaceVariant,
-        letterSpacing: 0.8,
-        fontWeight: FontWeight.w600,
-      ),
-    );
-    if (icon == null) return labelWidget;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 13, color: cs.onSurfaceVariant),
-        const SizedBox(width: DonySpacing.xs),
-        labelWidget,
-      ],
-    );
-  }
-}
-
-// ─── Inline add row (no wrapper) ─────────────────────────────────────────────
-
-class _InlineAddRow extends StatelessWidget {
-  final TextEditingController controller;
-  final String hint;
-  final VoidCallback onAdd;
-  final Color accentColor;
-
-  const _InlineAddRow({
-    required this.controller,
-    required this.hint,
-    required this.onAdd,
-    this.accentColor = DonyColors.primary,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.base,
-        vertical: DonySpacing.xs,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: controller,
-              style:
-                  tt.bodyMedium?.copyWith(color: cs.onSurface),
-              onSubmitted: (_) => onAdd(),
-              textInputAction: TextInputAction.done,
-              scrollPadding: const EdgeInsets.only(bottom: 120),
-              decoration: InputDecoration(
-                hintText: hint,
-                hintStyle:
-                    tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: DonySpacing.md,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: DonySpacing.sm),
-          GestureDetector(
-            onTap: onAdd,
-            child: Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: accentColor,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.add_rounded,
-                  size: 18, color: DonyColors.white),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Removable chip ──────────────────────────────────────────────────────────
-
-class _RemovableChip extends StatelessWidget {
-  final String label;
-  final Color accentColor;
-  final VoidCallback onRemove;
-
-  const _RemovableChip({
-    required this.label,
-    required this.accentColor,
-    required this.onRemove,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.only(
-        left: DonySpacing.md,
-        right: DonySpacing.xs,
-        top: DonySpacing.xs,
-        bottom: DonySpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: accentColor.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(DonyRadius.full),
-        border: Border.all(color: accentColor.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: tt.bodySmall?.copyWith(
-              color: accentColor,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(width: DonySpacing.xs),
-          GestureDetector(
-            onTap: onRemove,
-            child: Icon(Icons.close_rounded, size: 14, color: accentColor),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Rangée heure ─────────────────────────────────────────────────────────────
-
-class _TimeRow extends StatelessWidget {
-  final bool isDeparture;
-  final TimeOfDay? time;
-  final VoidCallback onTap;
-  final VoidCallback? onClear;
-
-  const _TimeRow({
-    required this.isDeparture,
-    required this.time,
-    required this.onTap,
-    this.onClear,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final color = isDeparture ? cs.primary : DonyColors.accent;
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.base,
-          vertical: DonySpacing.md,
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.access_time_rounded,
-                size: 14, color: color.withValues(alpha: 0.7)),
-            const SizedBox(width: DonySpacing.md),
-            Expanded(
-              child: Text(
-                time == null
-                    ? isDeparture
-                        ? 'Heure de départ (optionnel)'
-                        : 'Heure d\'arrivée (optionnel)'
-                    : '${time!.hour.toString().padLeft(2, '0')}:${time!.minute.toString().padLeft(2, '0')}',
-                style: tt.bodyMedium?.copyWith(
-                  fontWeight:
-                      time != null ? FontWeight.w600 : FontWeight.w400,
-                  color: time != null
-                      ? cs.onSurface
-                      : cs.onSurfaceVariant,
-                ),
-              ),
-            ),
-            if (time != null && onClear != null)
-              GestureDetector(
-                onTap: onClear,
-                child: Icon(Icons.close_rounded,
-                    size: 16, color: cs.onSurfaceVariant),
-              )
-            else
-              Icon(Icons.chevron_right_rounded,
-                  size: 18, color: cs.onSurfaceVariant),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Stepper header ───────────────────────────────────────────────────────────
-
-class _StepperHeader extends StatelessWidget {
-  final int currentStep;
-  final int totalSteps;
-
-  const _StepperHeader({required this.currentStep, required this.totalSteps});
-
-  static const _labels = ['Trajet', 'Lieux & Cap.', 'Prix & Cond.'];
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
-          child: Row(
-            children: [
-              for (int i = 0; i < totalSteps; i++) ...[
-                _StepNode(index: i, currentStep: currentStep),
-                if (i < totalSteps - 1)
-                  Expanded(
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      height: 2,
-                      color: i < currentStep ? cs.primary : cs.outlineVariant,
-                    ),
-                  ),
-              ],
-            ],
-          ),
-        ),
-        const SizedBox(height: DonySpacing.xs),
-        Row(
-          children: List.generate(totalSteps, (i) {
-            return Expanded(
-              child: Text(
-                i < currentStep ? '${_labels[i]} ✓' : _labels[i],
-                textAlign: TextAlign.center,
-                style: tt.labelSmall?.copyWith(
-                  color: i == currentStep
-                      ? cs.primary
-                      : i < currentStep
-                          ? cs.primary.withValues(alpha: 0.7)
-                          : cs.onSurfaceVariant,
-                  fontWeight: i == currentStep ? FontWeight.w800 : FontWeight.w500,
-                ),
-              ),
-            );
-          }),
-        ),
-      ],
-    );
-  }
-}
-
-class _StepNode extends StatelessWidget {
-  final int index;
-  final int currentStep;
-  const _StepNode({required this.index, required this.currentStep});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final isDone = index < currentStep;
-    final isActive = index == currentStep;
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      width: 28,
-      height: 28,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: isDone || isActive ? cs.primary : cs.surfaceContainerHighest,
-        border: isActive
-            ? Border.all(color: cs.primary.withValues(alpha: 0.3), width: 4)
-            : null,
-        boxShadow: isActive
-            ? [BoxShadow(color: cs.primary.withValues(alpha: 0.25), blurRadius: 8)]
-            : null,
-      ),
-      child: Center(
-        child: isDone
-            ? Icon(Icons.check_rounded, size: 14, color: cs.onPrimary)
-            : Text(
-                '${index + 1}',
-                style: tt.labelSmall?.copyWith(
-                  color: isActive ? cs.onPrimary : cs.onSurfaceVariant,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-      ),
-    );
-  }
-}
-
-// ─── Rangée date ──────────────────────────────────────────────────────────────
-
-class _DateRow extends StatelessWidget {
-  final DateTime? date;
-  final VoidCallback onTap;
-
-  const _DateRow({required this.date, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.base,
-          vertical: DonySpacing.md,
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.calendar_today_rounded,
-                size: 14, color: cs.onSurfaceVariant),
-            const SizedBox(width: DonySpacing.md),
-            Expanded(
-              child: Text(
-                date == null
-                    ? 'Date de départ'
-                    : DateFormat('EEE d MMM yyyy', 'fr').format(date!),
-                style: tt.bodyMedium?.copyWith(
-                  fontWeight:
-                      date != null ? FontWeight.w600 : FontWeight.w400,
-                  color: date != null
-                      ? cs.onSurface
-                      : cs.onSurfaceVariant,
-                ),
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded,
-                size: 18, color: cs.onSurfaceVariant),
-          ],
-        ),
       ),
     );
   }
