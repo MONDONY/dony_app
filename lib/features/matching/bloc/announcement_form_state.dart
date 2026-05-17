@@ -1,3 +1,5 @@
+import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:equatable/equatable.dart';
 
 enum CapacityUnit { suitcase23kg, suitcase32kg, kgFree }
@@ -26,6 +28,17 @@ extension CapacityUnitWire on CapacityUnit {
         return 'Kg libre';
     }
   }
+
+  double? get maxKg {
+    switch (this) {
+      case CapacityUnit.suitcase23kg:
+        return 23.0;
+      case CapacityUnit.suitcase32kg:
+        return 32.0;
+      case CapacityUnit.kgFree:
+        return null;
+    }
+  }
 }
 
 class AnnouncementFormState extends Equatable {
@@ -39,6 +52,14 @@ class AnnouncementFormState extends Equatable {
   final PriceWarning? priceWarning;
   final bool isSubmitting;
 
+  // Nouveaux champs pour l'aperçu
+  final TransportMode? transportMode;
+  final AddressData? pickupAddress;
+  final AddressData? deliveryAddress;
+  final bool cashAccepted;
+  final List<String> acceptedTypes;
+  final List<String> rejectedTypes;
+
   const AnnouncementFormState({
     this.departureCity,
     this.arrivalCity,
@@ -49,6 +70,12 @@ class AnnouncementFormState extends Equatable {
     this.description,
     this.priceWarning,
     this.isSubmitting = false,
+    this.transportMode,
+    this.pickupAddress,
+    this.deliveryAddress,
+    this.cashAccepted = false,
+    this.acceptedTypes = const [],
+    this.rejectedTypes = const [],
   });
 
   bool get isFormValid =>
@@ -64,6 +91,18 @@ class AnnouncementFormState extends Equatable {
       availableKg != null &&
       availableKg! >= 1;
 
+  bool get isStep1Valid =>
+      departureCity != null &&
+      departureCity!.isNotEmpty &&
+      arrivalCity != null &&
+      arrivalCity!.isNotEmpty &&
+      departureDate != null;
+
+  bool get isStep2Valid =>
+      pickupAddress != null && deliveryAddress != null;
+
+  bool get isStep3Valid => pricePerKg != null && pricePerKg! > 0;
+
   AnnouncementFormState copyWith({
     String? departureCity,
     String? arrivalCity,
@@ -74,6 +113,12 @@ class AnnouncementFormState extends Equatable {
     String? description,
     PriceWarning? Function()? priceWarningGetter,
     bool? isSubmitting,
+    TransportMode? Function()? transportModeGetter,
+    AddressData? Function()? pickupAddressGetter,
+    AddressData? Function()? deliveryAddressGetter,
+    bool? cashAccepted,
+    List<String>? acceptedTypes,
+    List<String>? rejectedTypes,
   }) {
     return AnnouncementFormState(
       departureCity: departureCity ?? this.departureCity,
@@ -86,6 +131,15 @@ class AnnouncementFormState extends Equatable {
       priceWarning:
           priceWarningGetter != null ? priceWarningGetter() : this.priceWarning,
       isSubmitting: isSubmitting ?? this.isSubmitting,
+      transportMode:
+          transportModeGetter != null ? transportModeGetter() : this.transportMode,
+      pickupAddress:
+          pickupAddressGetter != null ? pickupAddressGetter() : this.pickupAddress,
+      deliveryAddress:
+          deliveryAddressGetter != null ? deliveryAddressGetter() : this.deliveryAddress,
+      cashAccepted: cashAccepted ?? this.cashAccepted,
+      acceptedTypes: acceptedTypes ?? this.acceptedTypes,
+      rejectedTypes: rejectedTypes ?? this.rejectedTypes,
     );
   }
 
@@ -100,5 +154,11 @@ class AnnouncementFormState extends Equatable {
         description,
         priceWarning,
         isSubmitting,
+        transportMode,
+        pickupAddress,
+        deliveryAddress,
+        cashAccepted,
+        acceptedTypes,
+        rejectedTypes,
       ];
 }

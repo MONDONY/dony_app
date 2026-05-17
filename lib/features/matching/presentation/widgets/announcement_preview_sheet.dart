@@ -7,12 +7,14 @@ class AnnouncementPreviewSheet extends StatelessWidget {
   final AnnouncementFormState formState;
   final VoidCallback onConfirm;
   final bool isSubmitting;
+  final TimeOfDay? departureTime;
 
   const AnnouncementPreviewSheet({
     super.key,
     required this.formState,
     required this.onConfirm,
     this.isSubmitting = false,
+    this.departureTime,
   });
 
   static Future<void> show(
@@ -20,6 +22,7 @@ class AnnouncementPreviewSheet extends StatelessWidget {
     required AnnouncementFormState formState,
     required VoidCallback onConfirm,
     bool isSubmitting = false,
+    TimeOfDay? departureTime,
   }) {
     return DonyBottomSheet.show<void>(
       context,
@@ -33,8 +36,15 @@ class AnnouncementPreviewSheet extends StatelessWidget {
         formState: formState,
         onConfirm: onConfirm,
         isSubmitting: isSubmitting,
+        departureTime: departureTime,
       ),
     );
+  }
+
+  String _formatTime(TimeOfDay t) {
+    final h = t.hour.toString().padLeft(2, '0');
+    final m = t.minute.toString().padLeft(2, '0');
+    return '$h:$m';
   }
 
   @override
@@ -44,6 +54,16 @@ class AnnouncementPreviewSheet extends StatelessWidget {
 
     final dateStr = formState.departureDate != null
         ? DateFormat('dd MMM yyyy', 'fr_FR').format(formState.departureDate!)
+        : '—';
+
+    final netEstimate = (formState.pricePerKg != null &&
+            formState.availableKg != null)
+        ? (formState.pricePerKg! * formState.availableKg! * 0.88)
+        : null;
+
+    final prixStr = formState.pricePerKg != null
+        ? '${formState.pricePerKg!.toStringAsFixed(0)} €/kg'
+            '${netEstimate != null ? ' · estimation ${netEstimate.toStringAsFixed(0)}€ net' : ''}'
         : '—';
 
     return Padding(
@@ -62,6 +82,24 @@ class AnnouncementPreviewSheet extends StatelessWidget {
             label: 'Date',
             value: dateStr,
           ),
+          if (departureTime != null)
+            _PreviewRow(
+              icon: Icons.schedule_rounded,
+              label: 'Départ',
+              value: _formatTime(departureTime!),
+            ),
+          if (formState.pickupAddress != null)
+            _PreviewRow(
+              icon: Icons.swap_horiz_rounded,
+              label: 'Remise',
+              value: formState.pickupAddress!.label,
+            ),
+          if (formState.deliveryAddress != null)
+            _PreviewRow(
+              icon: Icons.swap_horiz_rounded,
+              label: 'Récupération',
+              value: formState.deliveryAddress!.label,
+            ),
           _PreviewRow(
             icon: Icons.luggage,
             label: 'Capacité',
@@ -70,10 +108,27 @@ class AnnouncementPreviewSheet extends StatelessWidget {
           _PreviewRow(
             icon: Icons.euro,
             label: 'Prix',
-            value: formState.pricePerKg != null
-                ? '${formState.pricePerKg!.toStringAsFixed(0)} €/kg'
-                : '—',
+            value: prixStr,
           ),
+          _PreviewRow(
+            icon: Icons.payments_rounded,
+            label: 'Paiement',
+            value: formState.cashAccepted
+                ? 'Carte + Espèces'
+                : 'Carte uniquement',
+          ),
+          if (formState.acceptedTypes.isNotEmpty)
+            _PreviewRow(
+              icon: Icons.check_circle_outline_rounded,
+              label: 'Accepte',
+              value: formState.acceptedTypes.join(', '),
+            ),
+          if (formState.rejectedTypes.isNotEmpty)
+            _PreviewRow(
+              icon: Icons.cancel_outlined,
+              label: 'Refuse',
+              value: formState.rejectedTypes.join(', '),
+            ),
           if (formState.description != null &&
               formState.description!.isNotEmpty)
             _PreviewRow(
@@ -129,11 +184,12 @@ class _PreviewRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 18, color: cs.primary),
           const SizedBox(width: DonySpacing.sm),
           SizedBox(
-            width: 72,
+            width: 88,
             child: Text(
               label,
               style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),

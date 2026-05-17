@@ -15,6 +15,12 @@ class AnnouncementFormBloc
     on<AvailableKgChanged>(_onAvailableKgChanged);
     on<CapacityUnitChanged>(_onCapacityUnitChanged);
     on<DescriptionChanged>(_onDescriptionChanged);
+    on<TransportModeChanged>(_onTransportModeChanged);
+    on<PickupAddressChanged>(_onPickupAddressChanged);
+    on<DeliveryAddressChanged>(_onDeliveryAddressChanged);
+    on<CashAcceptedChanged>(_onCashAcceptedChanged);
+    on<AcceptedTypesChanged>(_onAcceptedTypesChanged);
+    on<RejectedTypesChanged>(_onRejectedTypesChanged);
     on<FormResetRequested>(_onFormReset);
   }
 
@@ -74,6 +80,48 @@ class AnnouncementFormBloc
     Emitter<AnnouncementFormState> emit,
   ) {
     emit(state.copyWith(description: event.description));
+  }
+
+  void _onTransportModeChanged(
+    TransportModeChanged event,
+    Emitter<AnnouncementFormState> emit,
+  ) {
+    emit(state.copyWith(transportModeGetter: () => event.mode));
+  }
+
+  void _onPickupAddressChanged(
+    PickupAddressChanged event,
+    Emitter<AnnouncementFormState> emit,
+  ) {
+    emit(state.copyWith(pickupAddressGetter: () => event.address));
+  }
+
+  void _onDeliveryAddressChanged(
+    DeliveryAddressChanged event,
+    Emitter<AnnouncementFormState> emit,
+  ) {
+    emit(state.copyWith(deliveryAddressGetter: () => event.address));
+  }
+
+  void _onCashAcceptedChanged(
+    CashAcceptedChanged event,
+    Emitter<AnnouncementFormState> emit,
+  ) {
+    emit(state.copyWith(cashAccepted: event.accepted));
+  }
+
+  void _onAcceptedTypesChanged(
+    AcceptedTypesChanged event,
+    Emitter<AnnouncementFormState> emit,
+  ) {
+    emit(state.copyWith(acceptedTypes: event.types));
+  }
+
+  void _onRejectedTypesChanged(
+    RejectedTypesChanged event,
+    Emitter<AnnouncementFormState> emit,
+  ) {
+    emit(state.copyWith(rejectedTypes: event.types));
   }
 
   void _onFormReset(

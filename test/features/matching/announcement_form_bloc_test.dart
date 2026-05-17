@@ -2,6 +2,8 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -199,5 +201,171 @@ void main() {
       expect(CapacityUnit.suitcase32kg.label, '1 valise 32 kg');
       expect(CapacityUnit.kgFree.label, 'Kg libre');
     });
+
+    test('CapacityUnit.maxKg retourne les bons plafonds', () {
+      expect(CapacityUnit.suitcase23kg.maxKg, 23.0);
+      expect(CapacityUnit.suitcase32kg.maxKg, 32.0);
+      expect(CapacityUnit.kgFree.maxKg, isNull);
+    });
+
+    // ── Nouveaux événements ───────────────────────────────────────────────────
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'TransportModeChanged met à jour transportMode',
+      build: () => AnnouncementFormBloc(),
+      act: (b) => b.add(const TransportModeChanged(TransportMode.plane)),
+      expect: () => [
+        predicate<AnnouncementFormState>(
+          (s) => s.transportMode == TransportMode.plane,
+          'transportMode is plane',
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'TransportModeChanged → null efface le mode',
+      build: () => AnnouncementFormBloc(),
+      act: (b) {
+        b.add(const TransportModeChanged(TransportMode.car));
+        b.add(const TransportModeChanged(TransportMode.plane));
+      },
+      verify: (b) => expect(b.state.transportMode, TransportMode.plane),
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'PickupAddressChanged met à jour pickupAddress',
+      build: () => AnnouncementFormBloc(),
+      act: (b) => b.add(const PickupAddressChanged(
+        AddressData(label: '12 rue de la Paix, Paris', lat: 48.87, lng: 2.33),
+      )),
+      expect: () => [
+        predicate<AnnouncementFormState>(
+          (s) => s.pickupAddress?.label == '12 rue de la Paix, Paris',
+          'pickupAddress is set',
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'PickupAddressChanged → null efface l\'adresse',
+      build: () => AnnouncementFormBloc(),
+      seed: () => const AnnouncementFormState(
+        pickupAddress: AddressData(label: 'Quelque part', lat: 0, lng: 0),
+      ),
+      act: (b) => b.add(const PickupAddressChanged(null)),
+      expect: () => [
+        predicate<AnnouncementFormState>(
+          (s) => s.pickupAddress == null,
+          'pickupAddress is null',
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'DeliveryAddressChanged met à jour deliveryAddress',
+      build: () => AnnouncementFormBloc(),
+      act: (b) => b.add(const DeliveryAddressChanged(
+        AddressData(label: 'Plateau, Abidjan', lat: 5.32, lng: -4.01),
+      )),
+      expect: () => [
+        predicate<AnnouncementFormState>(
+          (s) => s.deliveryAddress?.label == 'Plateau, Abidjan',
+          'deliveryAddress is set',
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'CashAcceptedChanged met à jour cashAccepted',
+      build: () => AnnouncementFormBloc(),
+      act: (b) => b.add(const CashAcceptedChanged(true)),
+      expect: () => [
+        predicate<AnnouncementFormState>(
+          (s) => s.cashAccepted == true,
+          'cashAccepted is true',
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'AcceptedTypesChanged met à jour acceptedTypes',
+      build: () => AnnouncementFormBloc(),
+      act: (b) =>
+          b.add(const AcceptedTypesChanged(['Vêtements', 'Médicaments'])),
+      expect: () => [
+        predicate<AnnouncementFormState>(
+          (s) =>
+              s.acceptedTypes.length == 2 &&
+              s.acceptedTypes.contains('Vêtements'),
+          'acceptedTypes has 2 items',
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'RejectedTypesChanged met à jour rejectedTypes',
+      build: () => AnnouncementFormBloc(),
+      act: (b) => b.add(const RejectedTypesChanged(['Alcool'])),
+      expect: () => [
+        predicate<AnnouncementFormState>(
+          (s) => s.rejectedTypes.contains('Alcool'),
+          'rejectedTypes contains Alcool',
+        ),
+      ],
+    );
+
+    // ── Validation par étape ──────────────────────────────────────────────────
+
+    test('isStep1Valid: faux sans données', () {
+      expect(bloc.state.isStep1Valid, isFalse);
+    });
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'isStep1Valid: vrai avec ville départ + arrivée + date',
+      build: () => AnnouncementFormBloc(),
+      act: (b) {
+        b.add(const DepartureCityChanged('Paris'));
+        b.add(const ArrivalCityChanged('Dakar'));
+        b.add(
+            DepartureDateChanged(DateTime.now().add(const Duration(days: 3))));
+      },
+      verify: (b) => expect(b.state.isStep1Valid, isTrue),
+    );
+
+    test('isStep2Valid: faux sans adresses', () {
+      expect(bloc.state.isStep2Valid, isFalse);
+    });
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'isStep2Valid: vrai avec pickup + delivery',
+      build: () => AnnouncementFormBloc(),
+      act: (b) {
+        b.add(const PickupAddressChanged(
+          AddressData(label: 'CDG, Paris', lat: 49.0, lng: 2.55),
+        ));
+        b.add(const DeliveryAddressChanged(
+          AddressData(label: 'Almadies, Dakar', lat: 14.74, lng: -17.49),
+        ));
+      },
+      verify: (b) => expect(b.state.isStep2Valid, isTrue),
+    );
+
+    test('isStep3Valid: faux sans prix', () {
+      expect(bloc.state.isStep3Valid, isFalse);
+    });
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'isStep3Valid: vrai avec prix > 0',
+      build: () => AnnouncementFormBloc(),
+      act: (b) => b.add(const PriceChanged(8.0)),
+      verify: (b) => expect(b.state.isStep3Valid, isTrue),
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'isStep3Valid: faux avec prix = 0',
+      build: () => AnnouncementFormBloc(),
+      act: (b) => b.add(const PriceChanged(0.0)),
+      verify: (b) => expect(b.state.isStep3Valid, isFalse),
+    );
   });
 }

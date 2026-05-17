@@ -14,6 +14,7 @@ class AddressPickerField extends FormField<AddressData> {
     required this.fieldLabel,
     required this.autocompleteService,
     this.showGpsButton = true,
+    this.onChanged,
     bool isRequired = false,
     super.initialValue,
     super.onSaved,
@@ -30,6 +31,7 @@ class AddressPickerField extends FormField<AddressData> {
   final String fieldLabel;
   final AddressAutocompleteService autocompleteService;
   final bool showGpsButton;
+  final void Function(AddressData?)? onChanged;
 
   @override
   FormFieldState<AddressData> createState() => _AddressPickerFieldState();
@@ -183,6 +185,7 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
     _committed = addr;
     _setCtrlText(addr.label);
     didChange(addr);
+    _w.onChanged?.call(addr);
     setState(() {
       _suggestions = [];
       _showFallback = false;
@@ -255,10 +258,10 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
                 padding:
                     const EdgeInsets.symmetric(vertical: DonySpacing.xs),
                 itemCount: _suggestions.length,
-                separatorBuilder: (_, __) => Divider(
+                separatorBuilder: (sepCtx, __) => Divider(
                   height: 1,
                   thickness: 1,
-                  color: Theme.of(context).colorScheme.outline,
+                  color: Theme.of(sepCtx).colorScheme.outline,
                   indent: 48,
                 ),
                 itemBuilder: (innerCtx, i) {

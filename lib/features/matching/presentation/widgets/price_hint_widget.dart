@@ -5,11 +5,13 @@ import 'package:flutter/material.dart';
 class PriceHintWidget extends StatelessWidget {
   final double? marketMedianPrice;
   final PriceWarning? warning;
+  final String? corridor;
 
   const PriceHintWidget({
     super.key,
     this.marketMedianPrice,
     this.warning,
+    this.corridor,
   });
 
   @override
@@ -18,56 +20,93 @@ class PriceHintWidget extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     if (warning == PriceWarning.tooLow) {
-      return _buildWarning(
+      return _buildHintCard(
+        cs: cs,
         tt: tt,
         icon: Icons.warning_amber_rounded,
-        color: cs.warning,
+        iconColor: cs.warning,
+        bgColor: cs.warningLight,
         message: 'Prix bas — risque de méfiance de l\'expéditeur',
       );
     }
+
     if (warning == PriceWarning.tooHigh) {
-      return _buildWarning(
+      return _buildHintCard(
+        cs: cs,
         tt: tt,
         icon: Icons.warning_amber_rounded,
-        color: cs.warning,
+        iconColor: cs.warning,
+        bgColor: cs.warningLight,
         message: 'Prix élevé — peu de demandes attendues',
       );
     }
+
     if (marketMedianPrice != null) {
-      return Padding(
-        padding: const EdgeInsets.only(top: DonySpacing.xs),
-        child: Row(
-          children: [
-            Icon(Icons.info_outline, size: 14, color: cs.onSurfaceVariant),
-            const SizedBox(width: 4),
-            Text(
-              '${marketMedianPrice!.toStringAsFixed(0)} €/kg — prix du marché',
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          ],
-        ),
+      final corridorStr = corridor != null ? '$corridor : ' : '';
+      return _buildHintCard(
+        cs: cs,
+        tt: tt,
+        icon: Icons.lightbulb_outline_rounded,
+        iconColor: cs.warning,
+        bgColor: cs.warningLight,
+        leading: 'Marché $corridorStr',
+        highlight: '${marketMedianPrice!.toStringAsFixed(0)}€/kg',
+        message: ' · Votre prix est compétitif.',
       );
     }
+
     return const SizedBox.shrink();
   }
 
-  Widget _buildWarning({
+  Widget _buildHintCard({
+    required ColorScheme cs,
     required TextTheme tt,
     required IconData icon,
-    required Color color,
-    required String message,
+    required Color iconColor,
+    required Color bgColor,
+    String? leading,
+    String? highlight,
+    String? message,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(top: DonySpacing.xs),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.base,
+        vertical: DonySpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+      ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
+          Icon(icon, size: 16, color: iconColor),
+          const SizedBox(width: DonySpacing.xs),
           Expanded(
-            child: Text(
-              message,
-              style: tt.bodySmall?.copyWith(color: color),
-            ),
+            child: highlight != null
+                ? RichText(
+                    text: TextSpan(
+                      style: tt.bodySmall?.copyWith(color: cs.onSurface),
+                      children: [
+                        if (leading != null)
+                          TextSpan(text: leading),
+                        TextSpan(
+                          text: highlight,
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurface,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        if (message != null)
+                          TextSpan(text: message),
+                      ],
+                    ),
+                  )
+                : Text(
+                    message ?? '',
+                    style: tt.bodySmall?.copyWith(color: cs.onSurface),
+                  ),
           ),
         ],
       ),
