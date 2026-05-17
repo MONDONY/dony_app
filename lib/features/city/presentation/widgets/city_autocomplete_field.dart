@@ -47,7 +47,6 @@ class CityAutocompleteField extends StatefulWidget {
 class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
-  bool _showResults = false;
   Timer? _ensureVisibleTimer;
 
   @override
@@ -58,7 +57,7 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
   }
 
   void _onFocusChanged() {
-    setState(() => _showResults = _focusNode.hasFocus);
+    setState(() {});
     if (_focusNode.hasFocus) {
       // Après le frame suivant, le clavier est en cours d'ouverture et le champ
       // peut être partiellement masqué — on le ramène dans la zone visible.
