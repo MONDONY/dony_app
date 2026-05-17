@@ -302,7 +302,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                       ),
                                                     )
                                                   : null,
-                                              onTap: () => context.push('/package-requests/search'),
+                                              onTap: () => context.push('/package-requests/match'),
                                             ),
                                             DonyListTile(
                                               icon: Icons.handshake_rounded,

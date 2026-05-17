@@ -46,6 +46,7 @@ import 'package:dony/features/package_request/presentation/screens/shared/my_neg
 import 'package:dony/features/package_request/presentation/screens/shared/negotiation_thread_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/link_trip_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_public_detail_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/traveler/colis_match_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_search_screen.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -554,6 +555,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/package-requests/me',
       builder: (_, __) => const MyPackageRequestsScreen(),
+    ),
+    GoRoute(
+      path: '/package-requests/match',
+      builder: (_, __) => const ColisMatchScreen(),
     ),
     GoRoute(
       path: '/package-requests/search',

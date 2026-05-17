@@ -131,6 +131,10 @@ Widget _buildTestHarness({
       builder: (_, __) => const Scaffold(body: Text('Announcements')),
     ),
     GoRoute(
+      path: '/package-requests/match',
+      builder: (_, __) => const Scaffold(body: Text('ColisMatch')),
+    ),
+    GoRoute(
       path: '/package-requests/search',
       builder: (_, __) => const Scaffold(body: Text('PackageRequestsSearch')),
     ),
@@ -667,7 +671,7 @@ void main() {
       expect(find.text('Announcements'), findsOneWidget);
     });
 
-    testWidgets('tapping "Colis sur mes trajets" navigates to /package-requests/search',
+    testWidgets('tapping "Colis sur mes trajets" navigates to /package-requests/match',
         (tester) async {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc,
@@ -687,7 +691,7 @@ void main() {
       await tester.tap(find.text('Colis sur mes trajets'), warnIfMissed: false);
       await tester.pumpAndSettle();
 
-      expect(find.text('PackageRequestsSearch'), findsOneWidget);
+      expect(find.text('ColisMatch'), findsOneWidget);
     });
 
     testWidgets('tapping "Mes négociations" navigates to /negotiations', (tester) async {
