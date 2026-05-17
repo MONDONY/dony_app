@@ -8,6 +8,7 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -66,6 +67,16 @@ final _pendingDeletionUser = UserModel(
   deletionRequestedAt: DateTime(2026, 5, 1),
 );
 
+final _travelerUser = UserModel(
+  id: 'user-3',
+  firstName: 'Amadou',
+  lastName: 'Diallo',
+  roles: const ['TRAVELER'],
+  kycStatus: 'VERIFIED',
+  status: 'ACTIVE',
+  totalTrips: 3,
+);
+
 // ── Test harness ──────────────────────────────────────────────────────────────
 
 /// Builds the full test widget tree with all required BLoC providers and a
@@ -103,6 +114,38 @@ Widget _buildTestHarness({
     GoRoute(
       path: '/home',
       builder: (_, __) => const Scaffold(body: Text('Home')),
+    ),
+    GoRoute(
+      path: '/announcements',
+      builder: (_, __) => const Scaffold(body: Text('Announcements')),
+    ),
+    GoRoute(
+      path: '/package-requests/search',
+      builder: (_, __) => const Scaffold(body: Text('PackageRequestsSearch')),
+    ),
+    GoRoute(
+      path: '/negotiations',
+      builder: (_, __) => const Scaffold(body: Text('Negotiations')),
+    ),
+    GoRoute(
+      path: '/profile/public',
+      builder: (_, __) => const Scaffold(body: Text('PublicProfile')),
+    ),
+    GoRoute(
+      path: '/profile/reviews',
+      builder: (_, __) => const Scaffold(body: Text('Reviews')),
+    ),
+    GoRoute(
+      path: '/disputes',
+      builder: (_, __) => const Scaffold(body: Text('Disputes')),
+    ),
+    GoRoute(
+      path: '/profile/help/contact',
+      builder: (_, __) => const Scaffold(body: Text('Contact')),
+    ),
+    GoRoute(
+      path: '/profile/help/faq',
+      builder: (_, __) => const Scaffold(body: Text('FAQ')),
     ),
     ...?extraRoutes,
   ];
@@ -301,5 +344,234 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Settings'), findsOneWidget);
+  });
+
+  group('Section voyageur', () {
+    setUp(() {
+      whenListen<AuthState>(
+        authBloc,
+        const Stream.empty(),
+        initialState: AuthAuthenticated(_travelerUser),
+      );
+      whenListen<AccountDeletionState>(
+        deletionBloc,
+        const Stream.empty(),
+        initialState: const AccountDeletionInitial(),
+      );
+      when(() => activeRoleCubit.state).thenReturn(ActiveRole.traveler);
+    });
+
+    testWidgets('affiche les 6 section labels voyageur', (tester) async {
+      await tester.pumpWidget(_buildTestHarness(
+        authBloc: authBloc,
+        deletionBloc: deletionBloc,
+        bidBloc: bidBloc,
+        announcementBloc: announcementBloc,
+        activeRoleCubit: activeRoleCubit,
+      ));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      for (final label in [
+        'MON ACTIVITÉ',
+        'REVENUS & PAIEMENTS',
+        'COMPTE PRO',
+        'IDENTITÉ & CONFIANCE',
+        'FIDÉLITÉ',
+        'SUPPORT',
+      ]) {
+        await tester.scrollUntilVisible(
+          find.text(label),
+          300,
+          scrollable: find.byType(Scrollable).first,
+        );
+        await tester.pump(const Duration(milliseconds: 100));
+        expect(find.text(label), findsOneWidget, reason: 'Section "$label" manquante');
+      }
+      // Drain pending animation timers before the test teardown.
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+    });
+
+    testWidgets(
+        'affiche "Colis sur mes trajets" et pas "Demandes d\'envoi à transporter"',
+        (tester) async {
+      await tester.pumpWidget(_buildTestHarness(
+        authBloc: authBloc,
+        deletionBloc: deletionBloc,
+        bidBloc: bidBloc,
+        announcementBloc: announcementBloc,
+        activeRoleCubit: activeRoleCubit,
+      ));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await tester.scrollUntilVisible(
+        find.text('Colis sur mes trajets'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('Colis sur mes trajets'), findsOneWidget);
+      expect(find.text("Demandes d'envoi à transporter"), findsNothing);
+    });
+
+    testWidgets('affiche "Mon profil public" dans IDENTITÉ & CONFIANCE',
+        (tester) async {
+      await tester.pumpWidget(_buildTestHarness(
+        authBloc: authBloc,
+        deletionBloc: deletionBloc,
+        bidBloc: bidBloc,
+        announcementBloc: announcementBloc,
+        activeRoleCubit: activeRoleCubit,
+      ));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await tester.scrollUntilVisible(
+        find.text('Mon profil public'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('Mon profil public'), findsOneWidget);
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+    });
+
+    testWidgets('affiche "Mes avis reçus" dans IDENTITÉ & CONFIANCE',
+        (tester) async {
+      await tester.pumpWidget(_buildTestHarness(
+        authBloc: authBloc,
+        deletionBloc: deletionBloc,
+        bidBloc: bidBloc,
+        announcementBloc: announcementBloc,
+        activeRoleCubit: activeRoleCubit,
+      ));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await tester.scrollUntilVisible(
+        find.text('Mes avis reçus'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('Mes avis reçus'), findsOneWidget);
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+    });
+
+    testWidgets('affiche les 3 tiles SUPPORT', (tester) async {
+      await tester.pumpWidget(_buildTestHarness(
+        authBloc: authBloc,
+        deletionBloc: deletionBloc,
+        bidBloc: bidBloc,
+        announcementBloc: announcementBloc,
+        activeRoleCubit: activeRoleCubit,
+      ));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      for (final tile in ['Mes litiges', 'Contacter le support', 'FAQ & aide']) {
+        await tester.scrollUntilVisible(
+          find.text(tile),
+          300,
+          scrollable: find.byType(Scrollable).first,
+        );
+        // Pump animation frames so flutter_animate timers are consumed.
+        await tester.pump(const Duration(milliseconds: 100));
+        expect(find.text(tile), findsOneWidget,
+            reason: '$tile manquant dans SUPPORT');
+      }
+      // Drain all pending animation timers before the test ends.
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+    });
+
+    testWidgets('badge "2 matchs" visible quand 2 annonces ACTIVE', (tester) async {
+      final now = DateTime(2026, 6, 1);
+      whenListen<AnnouncementState>(
+        announcementBloc,
+        const Stream.empty(),
+        initialState: AnnouncementListLoaded(
+          List.generate(
+            2,
+            (i) => AnnouncementModel(
+              id: 'ann-$i',
+              travelerId: 'user-3',
+              departureCity: 'Paris',
+              arrivalCity: 'Dakar',
+              departureDate: now,
+              availableKg: 10,
+              totalKg: 10,
+              pricePerKg: 5,
+              status: 'ACTIVE',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(_buildTestHarness(
+        authBloc: authBloc,
+        deletionBloc: deletionBloc,
+        bidBloc: bidBloc,
+        announcementBloc: announcementBloc,
+        activeRoleCubit: activeRoleCubit,
+      ));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await tester.scrollUntilVisible(
+        find.text('2 matchs'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('2 matchs'), findsOneWidget);
+    });
+
+    testWidgets('pas de badge matchs quand 0 annonces ACTIVE', (tester) async {
+      whenListen<AnnouncementState>(
+        announcementBloc,
+        const Stream.empty(),
+        initialState: AnnouncementListLoaded(const []),
+      );
+
+      await tester.pumpWidget(_buildTestHarness(
+        authBloc: authBloc,
+        deletionBloc: deletionBloc,
+        bidBloc: bidBloc,
+        announcementBloc: announcementBloc,
+        activeRoleCubit: activeRoleCubit,
+      ));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.textContaining('matchs'), findsNothing);
+    });
+
+    testWidgets('section sender non impactée quand activeRole == sender',
+        (tester) async {
+      when(() => activeRoleCubit.state).thenReturn(ActiveRole.sender);
+      whenListen<AuthState>(
+        authBloc,
+        const Stream.empty(),
+        initialState: AuthAuthenticated(_activeUser),
+      );
+
+      await tester.pumpWidget(_buildTestHarness(
+        authBloc: authBloc,
+        deletionBloc: deletionBloc,
+        bidBloc: bidBloc,
+        announcementBloc: announcementBloc,
+        activeRoleCubit: activeRoleCubit,
+      ));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      // Les sections exclusives au voyageur ne doivent pas apparaître.
+      expect(find.text('REVENUS & PAIEMENTS'), findsNothing);
+      expect(find.text('COMPTE PRO'), findsNothing);
+      expect(find.text('FIDÉLITÉ'), findsNothing);
+
+      // La section "MON ACTIVITÉ" existe aussi côté sender — vérifier son contenu.
+      await tester.scrollUntilVisible(
+        find.text('Mes envois en cours'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('Mes envois en cours'), findsOneWidget);
+      // "Colis sur mes trajets" est exclusif au voyageur.
+      expect(find.text('Colis sur mes trajets'), findsNothing);
+    });
   });
 }
