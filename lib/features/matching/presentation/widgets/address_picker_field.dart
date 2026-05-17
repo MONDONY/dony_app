@@ -255,10 +255,10 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
                 padding:
                     const EdgeInsets.symmetric(vertical: DonySpacing.xs),
                 itemCount: _suggestions.length,
-                separatorBuilder: (_, __) => Divider(
+                separatorBuilder: (sepCtx, __) => Divider(
                   height: 1,
                   thickness: 1,
-                  color: Theme.of(context).colorScheme.outline,
+                  color: Theme.of(sepCtx).colorScheme.outline,
                   indent: 48,
                 ),
                 itemBuilder: (innerCtx, i) {
