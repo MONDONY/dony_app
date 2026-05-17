@@ -1330,11 +1330,13 @@ class _CreateAnnouncementContentState
     }
 
     // Mode création ou édition — formulaire avec stepper.
-    // IndexedStack garde les 3 steps dans l'arbre en permanence :
+    // Offstage garde les 3 steps dans l'arbre en permanence :
     // - les AddressPickerField (step 1) ne perdent pas leur état quand on
     //   navigue vers step 0 ou step 2
     // - form.validate() et form.save() couvrent tous les champs quelle que
     //   soit l'étape visible
+    // - contrairement à IndexedStack, Offstage n'impose pas la hauteur du
+    //   plus grand enfant : le sheet se dimensionne au contenu de l'étape active
     return ValueListenableBuilder<int>(
       valueListenable: widget.currentStepNotifier!,
       builder: (context, step, _) {
@@ -1345,22 +1347,26 @@ class _CreateAnnouncementContentState
             children: [
               CaStepperHeader(currentStep: step, totalSteps: _totalSteps),
               const SizedBox(height: DonySpacing.lg),
-              IndexedStack(
-                index: step,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: _buildStep0(context, tt, cs),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: _buildStep1(context, tt, cs),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: _buildStep2(context, tt, cs),
-                  ),
-                ],
+              Offstage(
+                offstage: step != 0,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: _buildStep0(context, tt, cs),
+                ),
+              ),
+              Offstage(
+                offstage: step != 1,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: _buildStep1(context, tt, cs),
+                ),
+              ),
+              Offstage(
+                offstage: step != 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: _buildStep2(context, tt, cs),
+                ),
               ),
             ],
           ),

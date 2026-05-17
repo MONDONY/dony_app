@@ -180,13 +180,23 @@ class _DonyBottomSheetContent extends StatelessWidget {
                   ),
                 ],
               ),
+              // bottomInset inclut déjà viewPadding.bottom (zone de sécu bas).
+              // SafeArea(top:false, bottom:false) couvre les éventuels encoches
+              // latérales sans doubler le padding bas déjà calculé.
               padding: EdgeInsets.fromLTRB(
-                DonySpacing.lg,
+                0,
                 DonySpacing.md,
-                DonySpacing.lg,
+                0,
                 bottomInset + DonySpacing.base,
               ),
-              child: stickyBottom!,
+              child: SafeArea(
+                top: false,
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
+                  child: stickyBottom!,
+                ),
+              ),
             ),
         ],
       ),
