@@ -14,6 +14,7 @@ Widget _buildHeader({
   bool isLoadingStats = false,
   bool isProAccount = false,
   VoidCallback? onNotificationTap,
+  VoidCallback? onSettingsTap,
   ValueChanged<ActiveRole>? onRoleSwitch,
 }) {
   return MaterialApp(
@@ -30,6 +31,7 @@ Widget _buildHeader({
         totalShipments: totalShipments,
         isLoadingStats: isLoadingStats,
         onNotificationTap: onNotificationTap,
+        onSettingsTap: onSettingsTap,
         onRoleSwitch: onRoleSwitch,
       ),
     ),
@@ -112,6 +114,31 @@ void main() {
       await tester.pump();
       await tester.tap(find.text('Voyageur'));
       expect(switched, equals(ActiveRole.traveler));
+    });
+
+    testWidgets('settings icon absent when onSettingsTap is null', (tester) async {
+      await tester.pumpWidget(_buildHeader());
+      await tester.pump();
+      expect(find.byTooltip('Paramètres'), findsNothing);
+    });
+
+    testWidgets('calls onSettingsTap when settings button tapped', (tester) async {
+      var tapped = false;
+      await tester.pumpWidget(_buildHeader(onSettingsTap: () => tapped = true));
+      await tester.pump();
+      await tester.tap(find.byTooltip('Paramètres'));
+      expect(tapped, isTrue);
+    });
+
+    testWidgets('both notification and settings icons visible when both callbacks provided',
+        (tester) async {
+      await tester.pumpWidget(_buildHeader(
+        onNotificationTap: () {},
+        onSettingsTap: () {},
+      ));
+      await tester.pump();
+      expect(find.byTooltip('Notifications'), findsOneWidget);
+      expect(find.byTooltip('Paramètres'), findsOneWidget);
     });
   });
 }

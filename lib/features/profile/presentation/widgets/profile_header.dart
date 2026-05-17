@@ -17,6 +17,7 @@ class ProfileHeader extends StatelessWidget {
     required this.totalShipments,
     this.isLoadingStats = false,
     this.onNotificationTap,
+    this.onSettingsTap,
     this.onRoleSwitch,
   });
 
@@ -30,6 +31,7 @@ class ProfileHeader extends StatelessWidget {
   final int totalShipments;
   final bool isLoadingStats;
   final VoidCallback? onNotificationTap;
+  final VoidCallback? onSettingsTap;
   final ValueChanged<ActiveRole>? onRoleSwitch;
 
   @override
@@ -120,7 +122,7 @@ class ProfileHeader extends StatelessWidget {
           if (onNotificationTap != null)
             Positioned(
               top: 0,
-              right: 0,
+              right: onSettingsTap != null ? 48 : 0,
               child: IconButton(
                 icon: const Icon(
                   Icons.notifications_outlined,
@@ -128,6 +130,21 @@ class ProfileHeader extends StatelessWidget {
                 ),
                 onPressed: onNotificationTap,
                 tooltip: 'Notifications',
+              ),
+            ),
+
+          // ── Settings icon (uniquement si callback fourni) ─────────────
+          if (onSettingsTap != null)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: IconButton(
+                icon: const Icon(
+                  Icons.settings_outlined,
+                  color: DonyColors.textOnBrand,
+                ),
+                onPressed: onSettingsTap,
+                tooltip: 'Paramètres',
               ),
             ),
         ],

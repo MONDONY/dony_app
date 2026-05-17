@@ -8,6 +8,9 @@ import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
+import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_form_event.dart';
+import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -18,6 +21,9 @@ import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:dony/features/payments/cash/data/models/commission_method.dart';
 import 'package:dony/features/matching/presentation/widgets/address_picker_field.dart';
+import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/capacity_selector.dart';
+import 'package:dony/features/matching/presentation/widgets/price_hint_widget.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart' show NegotiationThreadStatus;
@@ -62,6 +68,7 @@ class CreateAnnouncementBottomSheet {
         final providers = <BlocProvider>[
           BlocProvider<AnnouncementBloc>(create: (_) => getIt<AnnouncementBloc>()),
           BlocProvider<CommissionMethodBloc>(create: (_) => getIt<CommissionMethodBloc>()),
+          BlocProvider<AnnouncementFormBloc>(create: (_) => AnnouncementFormBloc()),
           if (negotiationBloc != null)
             BlocProvider<NegotiationBloc>.value(value: negotiationBloc),
         ];
@@ -87,14 +94,40 @@ class CreateAnnouncementBottomSheet {
           return BlocBuilder<AnnouncementBloc, AnnouncementState>(
             builder: (ctx, state) {
               final isLoading = state is AnnouncementLoading;
-              return DonyButton(
-                key: const Key('create-announcement-submit'),
-                label: announcement != null
-                    ? 'Enregistrer les modifications'
-                    : 'Publier le trajet',
-                isLoading: isLoading,
-                onPressed:
-                    (canSubmit && !isLoading) ? () => submit?.call() : null,
+              // For edit mode, submit directly.
+              // For creation mode, open preview first.
+              if (announcement != null) {
+                return DonyButton(
+                  key: const Key('create-announcement-submit'),
+                  label: 'Enregistrer les modifications',
+                  isLoading: isLoading,
+                  onPressed:
+                      (canSubmit && !isLoading) ? () => submit?.call() : null,
+                );
+              }
+              return BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
+                builder: (ctx2, formState) {
+                  return DonyButton(
+                    key: const Key('create-announcement-preview'),
+                    label: 'Aperçu avant publication',
+                    isLoading: isLoading,
+                    onPressed: (canSubmit && !isLoading)
+                        ? () {
+                            AnnouncementPreviewSheet.show(
+                              ctx2,
+                              formState: ctx2
+                                  .read<AnnouncementFormBloc>()
+                                  .state,
+                              onConfirm: () {
+                                Navigator.of(ctx2, rootNavigator: true).pop();
+                                submit?.call();
+                              },
+                              isSubmitting: isLoading,
+                            );
+                          }
+                        : null,
+                  );
+                },
               );
             },
           );
@@ -233,14 +266,71 @@ class _CreateAnnouncementContentState
     widget.onSubmitReady?.call(_submit);
     _transportModeNotifier.addListener(_syncCanSubmit);
     widget.canSubmitNotifier?.value = _transportModeNotifier.value != null;
+
+    // Sync form fields to AnnouncementFormBloc for preview and validation
+    _departureCityNotifier.addListener(_syncCityToFormBloc);
+    _arrivalCityNotifier.addListener(_syncCityToFormBloc);
+    _departureDateNotifier.addListener(_syncDateToFormBloc);
+    _priceOptionNotifier.addListener(_syncPriceToFormBloc);
+    _availableKgNotifier.addListener(_syncKgToFormBloc);
+    _descriptionCtrl.addListener(_syncDescriptionToFormBloc);
   }
 
   void _syncCanSubmit() {
     widget.canSubmitNotifier?.value = _transportModeNotifier.value != null;
   }
 
+  void _syncCityToFormBloc() {
+    if (!mounted) return;
+    final formBloc = context.read<AnnouncementFormBloc>();
+    if (_departureCityNotifier.value != null) {
+      formBloc.add(DepartureCityChanged(_departureCityNotifier.value!));
+    }
+    if (_arrivalCityNotifier.value != null) {
+      formBloc.add(ArrivalCityChanged(_arrivalCityNotifier.value!));
+    }
+  }
+
+  void _syncDateToFormBloc() {
+    if (!mounted) return;
+    if (_departureDateNotifier.value != null) {
+      context
+          .read<AnnouncementFormBloc>()
+          .add(DepartureDateChanged(_departureDateNotifier.value!));
+    }
+  }
+
+  void _syncPriceToFormBloc() {
+    if (!mounted) return;
+    context
+        .read<AnnouncementFormBloc>()
+        .add(PriceChanged(_pricePerKg));
+  }
+
+  void _syncKgToFormBloc() {
+    if (!mounted) return;
+    context
+        .read<AnnouncementFormBloc>()
+        .add(AvailableKgChanged(_availableKgNotifier.value));
+  }
+
+  void _syncDescriptionToFormBloc() {
+    if (!mounted) return;
+    final desc = _descriptionCtrl.text.trim();
+    if (desc.isNotEmpty) {
+      context.read<AnnouncementFormBloc>().add(DescriptionChanged(desc));
+    }
+  }
+
   @override
   void dispose() {
+    _departureCityNotifier.removeListener(_syncCityToFormBloc);
+    _arrivalCityNotifier.removeListener(_syncCityToFormBloc);
+    _departureDateNotifier.removeListener(_syncDateToFormBloc);
+    _priceOptionNotifier.removeListener(_syncPriceToFormBloc);
+    _availableKgNotifier.removeListener(_syncKgToFormBloc);
+    _descriptionCtrl.removeListener(_syncDescriptionToFormBloc);
+    _transportModeNotifier.removeListener(_syncCanSubmit);
     _cashEnabledNotifier.dispose();
     _descriptionCtrl.dispose();
     _customAcceptedCtrl.dispose();
@@ -255,7 +345,6 @@ class _CreateAnnouncementContentState
     _selectedContentNotifier.dispose();
     _customAcceptedNotifier.dispose();
     _refusedTypesNotifier.dispose();
-    _transportModeNotifier.removeListener(_syncCanSubmit);
     _transportModeNotifier.dispose();
     super.dispose();
   }
@@ -343,6 +432,9 @@ class _CreateAnnouncementContentState
 
     final paymentMethods = ['STRIPE', if (_cashEnabledNotifier.value) 'CASH'];
 
+    final capacityUnitWire =
+        context.read<AnnouncementFormBloc>().state.capacityUnit.toWire();
+
     if (_isEdit) {
       context.read<AnnouncementBloc>().add(AnnouncementUpdateRequested(
             id: widget.announcement!.id,
@@ -360,6 +452,7 @@ class _CreateAnnouncementContentState
             acceptedContentTypes: allAccepted,
             refusedTypes: refused,
             acceptedPaymentMethods: paymentMethods,
+            capacityUnit: capacityUnitWire,
           ));
     } else {
       context.read<AnnouncementBloc>().add(AnnouncementCreateRequested(
@@ -377,6 +470,7 @@ class _CreateAnnouncementContentState
             acceptedContentTypes: allAccepted,
             refusedTypes: refused,
             acceptedPaymentMethods: paymentMethods,
+            capacityUnit: capacityUnitWire,
           ));
     }
   }
@@ -819,6 +913,8 @@ class _CreateAnnouncementContentState
                   );
                 },
               ),
+              const SizedBox(height: DonySpacing.sm),
+              if (!_isLocked) const CapacitySelector(),
               const SizedBox(height: DonySpacing.xxl),
 
               // ── PRIX (verrouillé en mode locked) ────────────────────────
@@ -900,6 +996,15 @@ class _CreateAnnouncementContentState
                   );
                 },
               ).animate().fadeIn(delay: 100.ms),
+              BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
+                buildWhen: (p, c) =>
+                    p.priceWarning != c.priceWarning ||
+                    p.pricePerKg != c.pricePerKg,
+                builder: (context, formState) => PriceHintWidget(
+                  marketMedianPrice: 10.0,
+                  warning: formState.priceWarning,
+                ),
+              ),
               const SizedBox(height: DonySpacing.xxl),
               ],
 

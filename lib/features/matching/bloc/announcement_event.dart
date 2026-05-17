@@ -19,6 +19,7 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
   final List<String> acceptedContentTypes;
   final List<String> refusedTypes;
   final List<String> acceptedPaymentMethods;
+  final String? capacityUnit;
 
   AnnouncementCreateRequested({
     required this.departureCity,
@@ -35,6 +36,7 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
     this.acceptedContentTypes = const [],
     this.refusedTypes = const [],
     this.acceptedPaymentMethods = const ['STRIPE'],
+    this.capacityUnit,
   });
 }
 
@@ -108,6 +110,7 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
   final List<String> acceptedContentTypes;
   final List<String> refusedTypes;
   final List<String> acceptedPaymentMethods;
+  final String? capacityUnit;
 
   AnnouncementUpdateRequested({
     required this.id,
@@ -125,5 +128,6 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
     this.acceptedContentTypes = const [],
     this.refusedTypes = const [],
     this.acceptedPaymentMethods = const ['STRIPE'],
+    this.capacityUnit,
   });
 }
