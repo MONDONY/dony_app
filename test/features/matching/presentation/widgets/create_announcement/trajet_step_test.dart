@@ -116,6 +116,15 @@ void main() {
         // La suggestion doit être visible dans le flux (pas en Overlay)
         expect(find.text('Dakar'), findsOneWidget);
         expect(find.text('Abidjan'), findsOneWidget);
+
+        // B1 structural check — la suggestion n'est pas enfant d'un ClipRRect
+        expect(
+          find.ancestor(
+            of: find.text('Dakar'),
+            matching: find.byType(ClipRRect),
+          ),
+          findsNothing,
+        );
       },
     );
 

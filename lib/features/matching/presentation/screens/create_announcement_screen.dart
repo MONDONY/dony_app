@@ -486,28 +486,32 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 ),
 
                 // ── TRAJET ──────────────────────────────────────────────────
+                // CityAutocompleteField gère lui-même le style de son champ
+                // (CaFieldCard) et rend ses suggestions HORS de tout ClipRRect.
+                // Ne pas entourer ces champs dans un _SectionCard (ClipRRect)
+                // qui masquerait la liste de suggestions — fix B1.
                 const _SectionLabel(label: 'TRAJET', icon: Icons.flight_takeoff_rounded),
                 const SizedBox(height: DonySpacing.sm),
-                _SectionCard(
-                  child: Column(
-                    children: [
-                      BlocProvider(
-                        create: (_) => getIt<CitySearchBloc>(),
-                        child: CityAutocompleteField(
-                          label: 'Ville de départ',
-                          prefixIcon: Icon(
-                            Icons.flight_takeoff_rounded,
-                            color: cs.primary,
-                            size: 20,
-                          ),
-                          initialValue: _departureCityNotifier.value,
-                          onSelected: (CityModel city) {
-                            _departureCityNotifier.value = city.name;
-                          },
+                Column(
+                  children: [
+                    BlocProvider(
+                      create: (_) => getIt<CitySearchBloc>(),
+                      child: CityAutocompleteField(
+                        label: 'Ville de départ',
+                        prefixIcon: Icon(
+                          Icons.flight_takeoff_rounded,
+                          color: cs.primary,
+                          size: 20,
                         ),
+                        initialValue: _departureCityNotifier.value,
+                        onSelected: (CityModel city) {
+                          _departureCityNotifier.value = city.name;
+                        },
                       ),
-                      const _RowDivider(),
-                      ValueListenableBuilder<TimeOfDay?>(
+                    ),
+                    const SizedBox(height: DonySpacing.sm),
+                    _SectionCard(
+                      child: ValueListenableBuilder<TimeOfDay?>(
                         valueListenable: _departureTimeNotifier,
                         builder: (context, time, _) => _TimeRow(
                           isDeparture: true,
@@ -518,44 +522,50 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                               : null,
                         ),
                       ),
-                      const _RowDivider(),
-                      BlocProvider(
-                        create: (_) => getIt<CitySearchBloc>(),
-                        child: CityAutocompleteField(
-                          label: 'Ville d\'arrivée',
-                          prefixIcon: const Icon(
-                            Icons.flight_land_rounded,
-                            color: DonyColors.accent,
-                            size: 20,
+                    ),
+                    const SizedBox(height: DonySpacing.sm),
+                    BlocProvider(
+                      create: (_) => getIt<CitySearchBloc>(),
+                      child: CityAutocompleteField(
+                        label: 'Ville d\'arrivée',
+                        prefixIcon: const Icon(
+                          Icons.flight_land_rounded,
+                          color: DonyColors.accent,
+                          size: 20,
+                        ),
+                        initialValue: _arrivalCityNotifier.value,
+                        onSelected: (CityModel city) {
+                          _arrivalCityNotifier.value = city.name;
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: DonySpacing.sm),
+                    _SectionCard(
+                      child: Column(
+                        children: [
+                          ValueListenableBuilder<TimeOfDay?>(
+                            valueListenable: _arrivalTimeNotifier,
+                            builder: (context, time, _) => _TimeRow(
+                              isDeparture: false,
+                              time: time,
+                              onTap: _selectArrivalTime,
+                              onClear: time != null
+                                  ? () => _arrivalTimeNotifier.value = null
+                                  : null,
+                            ),
                           ),
-                          initialValue: _arrivalCityNotifier.value,
-                          onSelected: (CityModel city) {
-                            _arrivalCityNotifier.value = city.name;
-                          },
-                        ),
+                          const _RowDivider(),
+                          ValueListenableBuilder<DateTime?>(
+                            valueListenable: _departureDateNotifier,
+                            builder: (context, date, _) => _DateRow(
+                              date: date,
+                              onTap: _selectDate,
+                            ),
+                          ),
+                        ],
                       ),
-                      const _RowDivider(),
-                      ValueListenableBuilder<TimeOfDay?>(
-                        valueListenable: _arrivalTimeNotifier,
-                        builder: (context, time, _) => _TimeRow(
-                          isDeparture: false,
-                          time: time,
-                          onTap: _selectArrivalTime,
-                          onClear: time != null
-                              ? () => _arrivalTimeNotifier.value = null
-                              : null,
-                        ),
-                      ),
-                      const _RowDivider(),
-                      ValueListenableBuilder<DateTime?>(
-                        valueListenable: _departureDateNotifier,
-                        builder: (context, date, _) => _DateRow(
-                          date: date,
-                          onTap: _selectDate,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ).animate().fadeIn(delay: 60.ms),
                 const SizedBox(height: DonySpacing.xxl),
 
