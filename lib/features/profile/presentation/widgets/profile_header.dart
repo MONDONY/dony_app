@@ -122,7 +122,7 @@ class ProfileHeader extends StatelessWidget {
           if (onNotificationTap != null)
             Positioned(
               top: 0,
-              right: 0,
+              right: onSettingsTap != null ? 48 : 0,
               child: IconButton(
                 icon: const Icon(
                   Icons.notifications_outlined,
