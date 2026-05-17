@@ -12,6 +12,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/core/design/widgets/dony_avatar.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
@@ -76,6 +77,15 @@ final _travelerUser = UserModel(
   kycStatus: 'VERIFIED',
   status: 'ACTIVE',
   totalTrips: 3,
+);
+
+final _dualRoleUser = UserModel(
+  id: 'user-4',
+  firstName: 'Dual',
+  lastName: 'Role',
+  roles: const ['TRAVELER', 'SENDER'],
+  kycStatus: 'NOT_STARTED',
+  status: 'ACTIVE',
 );
 
 // ── Test harness ──────────────────────────────────────────────────────────────
@@ -147,6 +157,30 @@ Widget _buildTestHarness({
     GoRoute(
       path: '/profile/help/faq',
       builder: (_, __) => const Scaffold(body: Text('FAQ')),
+    ),
+    GoRoute(
+      path: '/payments/onboarding',
+      builder: (_, __) => const Scaffold(body: Text('PaymentsOnboarding')),
+    ),
+    GoRoute(
+      path: '/payments/commission-method',
+      builder: (_, __) => const Scaffold(body: Text('CommissionMethod')),
+    ),
+    GoRoute(
+      path: '/profile/referral',
+      builder: (_, __) => const Scaffold(body: Text('Referral')),
+    ),
+    GoRoute(
+      path: '/profile/shipments/history',
+      builder: (_, __) => const Scaffold(body: Text('ShipmentsHistory')),
+    ),
+    GoRoute(
+      path: '/profile/addresses',
+      builder: (_, __) => const Scaffold(body: Text('Addresses')),
+    ),
+    GoRoute(
+      path: '/profile/recipients',
+      builder: (_, __) => const Scaffold(body: Text('Recipients')),
     ),
     ...?extraRoutes,
   ];
@@ -610,5 +644,429 @@ void main() {
       // "Colis sur mes trajets" est exclusif au voyageur.
       expect(find.text('Colis sur mes trajets'), findsNothing);
     });
+
+    testWidgets('tapping "Mes trajets" navigates to /announcements', (tester) async {
+      await tester.pumpWidget(_buildTestHarness(
+        authBloc: authBloc,
+        deletionBloc: deletionBloc,
+        bidBloc: bidBloc,
+        announcementBloc: announcementBloc,
+        activeRoleCubit: activeRoleCubit,
+      ));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      await tester.scrollUntilVisible(
+        find.text('Mes trajets'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle(const Duration(seconds: 1));
+      await tester.tap(find.text('Mes trajets'), warnIfMissed: false);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Announcements'), findsOneWidget);
+    });
+
+    testWidgets('tapping "Colis sur mes trajets" navigates to /package-requests/search',
+        (tester) async {
+      await tester.pumpWidget(_buildTestHarness(
+        authBloc: authBloc,
+        deletionBloc: deletionBloc,
+        bidBloc: bidBloc,
+        announcementBloc: announcementBloc,
+        activeRoleCubit: activeRoleCubit,
+      ));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      await tester.scrollUntilVisible(
+        find.text('Colis sur mes trajets'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle(const Duration(seconds: 1));
+      await tester.tap(find.text('Colis sur mes trajets'), warnIfMissed: false);
+      await tester.pumpAndSettle();
+
+      expect(find.text('PackageRequestsSearch'), findsOneWidget);
+    });
+
+    testWidgets('tapping "Mes négociations" navigates to /negotiations', (tester) async {
+      await tester.pumpWidget(_buildTestHarness(
+        authBloc: authBloc,
+        deletionBloc: deletionBloc,
+        bidBloc: bidBloc,
+        announcementBloc: announcementBloc,
+        activeRoleCubit: activeRoleCubit,
+      ));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      await tester.scrollUntilVisible(
+        find.text('Mes négociations'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle(const Duration(seconds: 1));
+      await tester.tap(find.text('Mes négociations'), warnIfMissed: false);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Negotiations'), findsOneWidget);
+    });
+
+    testWidgets('tapping "Mon profil public" navigates to /profile/public',
+        (tester) async {
+      await tester.pumpWidget(_buildTestHarness(
+        authBloc: authBloc,
+        deletionBloc: deletionBloc,
+        bidBloc: bidBloc,
+        announcementBloc: announcementBloc,
+        activeRoleCubit: activeRoleCubit,
+      ));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      await tester.scrollUntilVisible(
+        find.text('Mon profil public'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle(const Duration(seconds: 1));
+      await tester.tap(find.text('Mon profil public'), warnIfMissed: false);
+      await tester.pumpAndSettle();
+
+      expect(find.text('PublicProfile'), findsOneWidget);
+    });
+
+    testWidgets('tapping "Recevoir mes paiements" navigates to /payments/onboarding',
+        (tester) async {
+      await tester.pumpWidget(_buildTestHarness(
+        authBloc: authBloc,
+        deletionBloc: deletionBloc,
+        bidBloc: bidBloc,
+        announcementBloc: announcementBloc,
+        activeRoleCubit: activeRoleCubit,
+      ));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      await tester.scrollUntilVisible(
+        find.text('Recevoir mes paiements'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle(const Duration(seconds: 1));
+      await tester.tap(find.text('Recevoir mes paiements'), warnIfMissed: false);
+      await tester.pumpAndSettle();
+
+      expect(find.text('PaymentsOnboarding'), findsOneWidget);
+    });
+
+    testWidgets('tapping "Mes litiges" navigates to /disputes', (tester) async {
+      await tester.pumpWidget(_buildTestHarness(
+        authBloc: authBloc,
+        deletionBloc: deletionBloc,
+        bidBloc: bidBloc,
+        announcementBloc: announcementBloc,
+        activeRoleCubit: activeRoleCubit,
+      ));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      await tester.scrollUntilVisible(
+        find.text('Mes litiges'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle(const Duration(seconds: 1));
+      await tester.tap(find.text('Mes litiges'), warnIfMissed: false);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Disputes'), findsOneWidget);
+    });
+  });
+
+  // ── Auth navigation tests ─────────────────────────────────────────────────
+
+  testWidgets('AuthInitial state triggers navigation to /auth/phone',
+      (tester) async {
+    // Start authenticated, then emit AuthInitial to trigger logout redirect.
+    whenListen<AuthState>(
+      authBloc,
+      Stream.fromIterable([const AuthInitial()]),
+      initialState: AuthAuthenticated(_activeUser),
+    );
+    whenListen<AccountDeletionState>(
+      deletionBloc,
+      const Stream.empty(),
+      initialState: const AccountDeletionInitial(),
+    );
+
+    await tester.pumpWidget(_buildTestHarness(
+      authBloc: authBloc,
+      deletionBloc: deletionBloc,
+      bidBloc: bidBloc,
+      announcementBloc: announcementBloc,
+      activeRoleCubit: activeRoleCubit,
+    ));
+    // Pump once to let BlocListener react, then drain timers with pumpAndSettle.
+    await tester.pump();
+    await tester.pump();
+    await tester.pumpAndSettle(const Duration(seconds: 5));
+
+    expect(find.text('AuthPhone'), findsOneWidget);
+  });
+
+  testWidgets('AuthAccountDeleted state triggers navigation to /auth/phone',
+      (tester) async {
+    whenListen<AuthState>(
+      authBloc,
+      Stream.fromIterable([const AuthAccountDeleted()]),
+      initialState: AuthAuthenticated(_activeUser),
+    );
+    whenListen<AccountDeletionState>(
+      deletionBloc,
+      const Stream.empty(),
+      initialState: const AccountDeletionInitial(),
+    );
+
+    await tester.pumpWidget(_buildTestHarness(
+      authBloc: authBloc,
+      deletionBloc: deletionBloc,
+      bidBloc: bidBloc,
+      announcementBloc: announcementBloc,
+      activeRoleCubit: activeRoleCubit,
+    ));
+    await tester.pump();
+    await tester.pump();
+    await tester.pumpAndSettle(const Duration(seconds: 5));
+
+    expect(find.text('AuthPhone'), findsOneWidget);
+  });
+
+  testWidgets('AuthProfileUpdated state renders updated user display name',
+      (tester) async {
+    final updatedUser = UserModel(
+      id: 'user-1',
+      firstName: 'Updated',
+      lastName: 'Name',
+      roles: const ['SENDER'],
+      kycStatus: 'NOT_STARTED',
+      status: 'ACTIVE',
+    );
+    whenListen<AuthState>(
+      authBloc,
+      Stream.fromIterable([AuthProfileUpdated(updatedUser)]),
+      initialState: AuthAuthenticated(_activeUser),
+    );
+    whenListen<AccountDeletionState>(
+      deletionBloc,
+      const Stream.empty(),
+      initialState: const AccountDeletionInitial(),
+    );
+
+    await tester.pumpWidget(_buildTestHarness(
+      authBloc: authBloc,
+      deletionBloc: deletionBloc,
+      bidBloc: bidBloc,
+      announcementBloc: announcementBloc,
+      activeRoleCubit: activeRoleCubit,
+    ));
+    await tester.pump();
+    await tester.pump();
+    await tester.pumpAndSettle(const Duration(seconds: 5));
+
+    expect(find.text('Updated Name'), findsWidgets);
+  });
+
+  // ── KYC status tile tests ─────────────────────────────────────────────────
+
+  testWidgets('KYC REJECTED shows "Réessayer" trailing text', (tester) async {
+    final rejectedKycUser = UserModel(
+      id: 'user-rej',
+      firstName: 'Rejected',
+      lastName: 'User',
+      roles: const ['SENDER'],
+      kycStatus: 'REJECTED',
+      status: 'ACTIVE',
+    );
+    whenListen<AuthState>(
+      authBloc,
+      const Stream.empty(),
+      initialState: AuthAuthenticated(rejectedKycUser),
+    );
+    whenListen<AccountDeletionState>(
+      deletionBloc,
+      const Stream.empty(),
+      initialState: const AccountDeletionInitial(),
+    );
+
+    await tester.pumpWidget(_buildTestHarness(
+      authBloc: authBloc,
+      deletionBloc: deletionBloc,
+      bidBloc: bidBloc,
+      announcementBloc: announcementBloc,
+      activeRoleCubit: activeRoleCubit,
+    ));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await tester.scrollUntilVisible(
+      find.text('Réessayer'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Réessayer'), findsOneWidget);
+    // Flush zero-duration animation timers.
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+  });
+
+  testWidgets('KYC PENDING shows "En cours" trailing text', (tester) async {
+    final pendingKycUser = UserModel(
+      id: 'user-pend',
+      firstName: 'Pending',
+      lastName: 'User',
+      roles: const ['SENDER'],
+      kycStatus: 'PENDING',
+      status: 'ACTIVE',
+    );
+    whenListen<AuthState>(
+      authBloc,
+      const Stream.empty(),
+      initialState: AuthAuthenticated(pendingKycUser),
+    );
+    whenListen<AccountDeletionState>(
+      deletionBloc,
+      const Stream.empty(),
+      initialState: const AccountDeletionInitial(),
+    );
+
+    await tester.pumpWidget(_buildTestHarness(
+      authBloc: authBloc,
+      deletionBloc: deletionBloc,
+      bidBloc: bidBloc,
+      announcementBloc: announcementBloc,
+      activeRoleCubit: activeRoleCubit,
+    ));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await tester.scrollUntilVisible(
+      find.text('En cours'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('En cours'), findsOneWidget);
+    // The CircularProgressIndicator has an ongoing animation — pump a fixed
+    // number of frames to flush any zero-duration timers without waiting forever.
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+  });
+
+  testWidgets('sender section shows "X en cours" badge when activeBids > 0',
+      (tester) async {
+    final now = DateTime(2026, 6, 1);
+    whenListen<BidState>(
+      bidBloc,
+      const Stream.empty(),
+      initialState: BidListLoaded(
+        List.generate(
+          2,
+          (i) => BidModel(
+            id: 'bid-$i',
+            announcementId: 'ann-$i',
+            senderId: 'user-1',
+            weightKg: 5,
+            status: 'ACCEPTED',
+            paymentMethod: BidPaymentMethod.stripe,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ),
+      ),
+    );
+    whenListen<AuthState>(
+      authBloc,
+      const Stream.empty(),
+      initialState: AuthAuthenticated(_activeUser),
+    );
+    whenListen<AccountDeletionState>(
+      deletionBloc,
+      const Stream.empty(),
+      initialState: const AccountDeletionInitial(),
+    );
+
+    await tester.pumpWidget(_buildTestHarness(
+      authBloc: authBloc,
+      deletionBloc: deletionBloc,
+      bidBloc: bidBloc,
+      announcementBloc: announcementBloc,
+      activeRoleCubit: activeRoleCubit,
+    ));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    await tester.scrollUntilVisible(
+      find.text('2 en cours'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('2 en cours'), findsOneWidget);
+  });
+
+  testWidgets('tapping "Annuler la suppression" dispatches ReactivateAccount',
+      (tester) async {
+    whenListen<AuthState>(
+      authBloc,
+      const Stream.empty(),
+      initialState: AuthAuthenticated(_pendingDeletionUser),
+    );
+    whenListen<AccountDeletionState>(
+      deletionBloc,
+      const Stream.empty(),
+      initialState: const AccountDeletionInitial(),
+    );
+
+    await tester.pumpWidget(_buildTestHarness(
+      authBloc: authBloc,
+      deletionBloc: deletionBloc,
+      bidBloc: bidBloc,
+      announcementBloc: announcementBloc,
+      activeRoleCubit: activeRoleCubit,
+    ));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    // Tap the reactivation button in PendingDeletionBanner.
+    await tester.tap(find.text('Annuler la suppression'));
+    await tester.pump();
+
+    verify(() => deletionBloc.add(const ReactivateAccount())).called(1);
+  });
+
+  testWidgets('dual-role user: tapping Expéditeur pill calls switchToSender and goes /home',
+      (tester) async {
+    whenListen<AuthState>(
+      authBloc,
+      const Stream.empty(),
+      initialState: AuthAuthenticated(_dualRoleUser),
+    );
+    whenListen<AccountDeletionState>(
+      deletionBloc,
+      const Stream.empty(),
+      initialState: const AccountDeletionInitial(),
+    );
+    // Start as traveler so the Expéditeur pill is untapped.
+    when(() => activeRoleCubit.state).thenReturn(ActiveRole.traveler);
+
+    await tester.pumpWidget(_buildTestHarness(
+      authBloc: authBloc,
+      deletionBloc: deletionBloc,
+      bidBloc: bidBloc,
+      announcementBloc: announcementBloc,
+      activeRoleCubit: activeRoleCubit,
+    ));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    // The role pill switcher is visible in ProfileHeader — tap Expéditeur.
+    expect(find.text('Expéditeur'), findsOneWidget);
+    await tester.tap(find.text('Expéditeur'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+
+    verify(() => activeRoleCubit.switchToSender()).called(1);
   });
 }

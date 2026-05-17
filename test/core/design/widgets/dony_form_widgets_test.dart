@@ -105,6 +105,13 @@ void main() {
       expect(find.text('?'), findsOneWidget);
     });
 
+    testWidgets('xs size renders Container with dimension 24', (tester) async {
+      await tester.pumpWidget(_wrap(const DonyAvatar(name: 'Test', size: DonyAvatarSize.xs)));
+      expect(find.byType(DonyAvatar), findsOneWidget);
+      final size = tester.getSize(find.byType(DonyAvatar));
+      expect(size.width, greaterThanOrEqualTo(24));
+    });
+
     testWidgets('sm size renders Container with dimension 32', (tester) async {
       await tester.pumpWidget(_wrap(const DonyAvatar(name: 'Test', size: DonyAvatarSize.sm)));
       // Verify the avatar rendered (size sm = 32)
