@@ -19,13 +19,12 @@ class CapacityControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-
     return BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
       buildWhen: (prev, curr) =>
           prev.capacityUnit != curr.capacityUnit ||
           prev.availableKg != curr.availableKg,
       builder: (context, state) {
+        final tt = Theme.of(context).textTheme;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -45,7 +44,7 @@ class CapacityControl extends StatelessWidget {
               }).toList(),
             ),
             const SizedBox(height: DonySpacing.md),
-            _buildBody(context, state, tt),
+            _buildBody(context, state),
           ],
         );
       },
@@ -55,8 +54,8 @@ class CapacityControl extends StatelessWidget {
   Widget _buildBody(
     BuildContext context,
     AnnouncementFormState state,
-    TextTheme tt,
   ) {
+    final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
     switch (state.capacityUnit) {

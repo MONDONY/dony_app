@@ -85,7 +85,10 @@ class AnnouncementFormBloc
           availableKgGetter: () => null,
         ));
       case CapacityUnit.custom:
-        emit(state.copyWith(capacityUnit: event.unit));
+        emit(state.copyWith(
+          capacityUnit: event.unit,
+          availableKgGetter: () => state.availableKg ?? 1.0,
+        ));
     }
   }
 

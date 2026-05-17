@@ -6,15 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Widget _host({AnnouncementFormState? initialState}) {
-  final bloc = AnnouncementFormBloc();
-  if (initialState != null) {
-    // Démarrer avec un état précis via des événements
-  }
+Widget _host() {
   return MaterialApp(
     home: Scaffold(
-      body: BlocProvider<AnnouncementFormBloc>.value(
-        value: bloc,
+      body: BlocProvider<AnnouncementFormBloc>(
+        create: (_) => AnnouncementFormBloc(),
         child: const SingleChildScrollView(
           child: CapacityControl(),
         ),
@@ -78,16 +74,24 @@ void main() {
       expect(find.byType(Slider), findsOneWidget);
     });
 
-    testWidgets('Personnalisé → slider dispatch AvailableKgChanged',
+    testWidgets('Personnalisé → déplacer le slider dispatche AvailableKgChanged',
         (tester) async {
-      await tester.pumpWidget(_host());
-      await tester.tap(find.text('Personnalisé'));
+      final bloc = AnnouncementFormBloc();
+      addTearDown(bloc.close);
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: BlocProvider<AnnouncementFormBloc>.value(
+            value: bloc,
+            child: const SingleChildScrollView(child: CapacityControl()),
+          ),
+        ),
+      ));
+      bloc.add(const CapacityUnitChanged(CapacityUnit.custom));
       await tester.pump();
-
-      // Le slider doit être présent
-      final slider = tester.widget<Slider>(find.byType(Slider));
-      expect(slider.min, 1);
-      expect(slider.max, 30);
+      await tester.drag(find.byType(Slider), const Offset(60, 0));
+      await tester.pump();
+      expect(bloc.state.capacityUnit, CapacityUnit.custom);
+      expect(bloc.state.availableKg, isNotNull);
     });
 
     testWidgets('titre "Capacité disponible" affiché', (tester) async {

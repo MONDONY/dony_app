@@ -236,6 +236,17 @@ void main() {
     );
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'sélectionner custom sur formulaire vierge → availableKg=1.0',
+      build: () => AnnouncementFormBloc(),
+      act: (b) => b.add(const CapacityUnitChanged(CapacityUnit.custom)),
+      expect: () => [
+        isA<AnnouncementFormState>()
+            .having((s) => s.capacityUnit, 'unit', CapacityUnit.custom)
+            .having((s) => s.availableKg, 'kg', 1.0),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'sélectionner custom puis régler le slider met availableKg',
       build: () => AnnouncementFormBloc(),
       act: (b) => b
@@ -243,7 +254,8 @@ void main() {
         ..add(const AvailableKgChanged(15)),
       expect: () => [
         isA<AnnouncementFormState>()
-            .having((s) => s.capacityUnit, 'unit', CapacityUnit.custom),
+            .having((s) => s.capacityUnit, 'unit', CapacityUnit.custom)
+            .having((s) => s.availableKg, 'kg', 1.0),
         isA<AnnouncementFormState>().having((s) => s.availableKg, 'kg', 15.0),
       ],
     );
