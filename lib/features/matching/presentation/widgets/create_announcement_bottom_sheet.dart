@@ -22,8 +22,8 @@ import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:dony/features/payments/cash/data/models/commission_method.dart';
 import 'package:dony/features/matching/presentation/widgets/address_picker_field.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
-import 'package:dony/features/matching/presentation/widgets/capacity_selector.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
 import 'package:dony/features/matching/presentation/widgets/price_hint_widget.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
@@ -812,184 +812,19 @@ class _CreateAnnouncementContentState
   // ── Step 1 — Lieux & Capacité ────────────────────────────────────────────────
   List<Widget> _buildStep1(BuildContext context, TextTheme tt, ColorScheme cs) {
     return [
-      // ── LIEUX DE REMISE ───────────────────────────────────────────────────
-      const CaSectionLabel(label: 'LIEUX DE REMISE', icon: Icons.swap_horiz_rounded),
-      const SizedBox(height: DonySpacing.xs),
-      Text(
-        'Précisez l\'endroit exact de remise et récupération',
-        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-      ),
-      const SizedBox(height: DonySpacing.sm),
-      AddressPickerField(
-        fieldLabel: 'Lieu de remise du colis *',
-        isRequired: true,
-        initialValue: widget.announcement?.pickupAddress,
-        onSaved: (v) => _pickupAddress = v,
-        onChanged: (addr) {
+      LieuxCapaciteStep(
+        initialPickupAddress: widget.announcement?.pickupAddress,
+        initialDeliveryAddress: widget.announcement?.deliveryAddress,
+        onPickupSaved: (v) => _pickupAddress = v,
+        onPickupChanged: (addr) {
           _pickupAddress = addr;
-          if (!mounted) return;
-          context
-              .read<AnnouncementFormBloc>()
-              .add(PickupAddressChanged(addr));
         },
-        autocompleteService: getIt<AddressAutocompleteService>(),
-      ).animate().fadeIn(delay: 80.ms),
-      const SizedBox(height: 16),
-      AddressPickerField(
-        fieldLabel: 'Lieu de récupération *',
-        isRequired: true,
-        showGpsButton: false,
-        initialValue: widget.announcement?.deliveryAddress,
-        onSaved: (v) => _deliveryAddress = v,
-        onChanged: (addr) {
+        onDeliverySaved: (v) => _deliveryAddress = v,
+        onDeliveryChanged: (addr) {
           _deliveryAddress = addr;
-          if (!mounted) return;
-          context
-              .read<AnnouncementFormBloc>()
-              .add(DeliveryAddressChanged(addr));
-        },
-        autocompleteService: getIt<AddressAutocompleteService>(),
-      ).animate().fadeIn(delay: 90.ms),
-      const SizedBox(height: DonySpacing.xxl),
-
-      // ── CAPACITÉ DISPONIBLE ───────────────────────────────────────────────
-      const CaSectionLabel(label: 'CAPACITÉ DISPONIBLE', icon: Icons.luggage_rounded),
-      const SizedBox(height: DonySpacing.base),
-      const CapacitySelector(),
-      const SizedBox(height: DonySpacing.md),
-      BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
-        buildWhen: (prev, curr) => prev.capacityUnit != curr.capacityUnit,
-        builder: (ctx, formState) {
-          final unit = formState.capacityUnit;
-          if (unit == CapacityUnit.kgFree) {
-            return AnimatedSwitcher(
-              duration: const Duration(milliseconds: 250),
-              child: _buildKgFreeDisplay(tt, cs),
-            );
-          }
-          final maxKg = unit.maxKg ?? 23.0;
-          return AnimatedSwitcher(
-            duration: const Duration(milliseconds: 250),
-            child: ValueListenableBuilder<double>(
-              key: ValueKey(unit),
-              valueListenable: _availableKgNotifier,
-              builder: (ctx2, kg, _) {
-                final clamped = kg.clamp(1.0, maxKg);
-                if (clamped != kg) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) _availableKgNotifier.value = clamped;
-                  });
-                }
-                return Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        const Expanded(child: SizedBox()),
-                        Text(
-                          clamped.toStringAsFixed(0),
-                          style: tt.displayLarge?.copyWith(
-                            fontSize: 56,
-                            fontWeight: FontWeight.w800,
-                            color: cs.onSurface,
-                          ),
-                        ),
-                        Text(
-                          ' kg',
-                          style: tt.headlineMedium?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          ),
-                        ),
-                        Expanded(
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: DonySpacing.sm,
-                                vertical: DonySpacing.xs,
-                              ),
-                              decoration: BoxDecoration(
-                                color: cs.surfaceContainerHighest,
-                                borderRadius:
-                                    BorderRadius.circular(DonyRadius.full),
-                              ),
-                              child: Text(
-                                'VALISE',
-                                style: tt.labelSmall?.copyWith(
-                                  color: cs.onSurfaceVariant,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: DonySpacing.xs),
-                    SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        activeTrackColor: cs.primary,
-                        inactiveTrackColor: cs.outline,
-                        thumbColor: cs.primary,
-                        overlayColor: cs.primary.withValues(alpha: 0.1),
-                        trackHeight: 5,
-                      ),
-                      child: Slider(
-                        value: clamped,
-                        min: 1,
-                        max: maxKg,
-                        divisions: (maxKg - 1).toInt(),
-                        onChanged: (v) => _availableKgNotifier.value = v,
-                      ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('1 kg',
-                            style: tt.bodySmall
-                                ?.copyWith(color: cs.onSurfaceVariant)),
-                        Text('max ${maxKg.toStringAsFixed(0)} kg',
-                            style: tt.bodySmall
-                                ?.copyWith(color: cs.onSurfaceVariant)),
-                      ],
-                    ),
-                  ],
-                );
-              },
-            ),
-          );
         },
       ),
-      const SizedBox(height: DonySpacing.xxl),
     ];
-  }
-
-  Widget _buildKgFreeDisplay(TextTheme tt, ColorScheme cs) {
-    return Container(
-      key: const ValueKey('kg-free'),
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: DonySpacing.lg),
-      child: Column(
-        children: [
-          Icon(Icons.all_inclusive_rounded, size: 56, color: cs.primary),
-          const SizedBox(height: DonySpacing.sm),
-          Text(
-            'Kg libre — pas de limite',
-            style: tt.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: cs.onSurface,
-            ),
-          ),
-          const SizedBox(height: DonySpacing.xs),
-          Text(
-            'L\'expéditeur verra \'kilo disponible\' sans quota précis',
-            textAlign: TextAlign.center,
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildStripeNotConfiguredPaymentSection(
