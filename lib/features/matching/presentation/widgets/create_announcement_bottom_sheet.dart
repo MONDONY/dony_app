@@ -781,7 +781,16 @@ class _CreateAnnouncementContentState
           ErrorPresenter.show(context, state.error);
         }
       },
-      builder: (context, state) => formChild,
+      builder: (context, state) => BlocListener<AnnouncementFormBloc, AnnouncementFormState>(
+        listenWhen: (prev, curr) => prev.availableKg != curr.availableKg,
+        listener: (context, formState) {
+          final kg = formState.availableKg;
+          if (kg != null && kg != _availableKgNotifier.value) {
+            _availableKgNotifier.value = kg;
+          }
+        },
+        child: formChild,
+      ),
     );
   }
 
