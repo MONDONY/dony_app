@@ -12,6 +12,7 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement/
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 /// Corps de l'étape 0 (Trajet + Mode de transport) du formulaire de création
 /// d'annonce.
@@ -30,7 +31,6 @@ class TrajetStep extends StatelessWidget {
   final Future<void> Function() onSelectDepartureTime;
   final Future<void> Function() onSelectArrivalTime;
   final Future<void> Function() onSelectDate;
-  final String Function() formatCorridorDateTime;
 
   const TrajetStep({
     super.key,
@@ -43,7 +43,6 @@ class TrajetStep extends StatelessWidget {
     required this.onSelectDepartureTime,
     required this.onSelectArrivalTime,
     required this.onSelectDate,
-    required this.formatCorridorDateTime,
   });
 
   @override
@@ -55,6 +54,24 @@ class TrajetStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: _buildWidgets(context, tt, cs),
     );
+  }
+
+  /// Formate la date et les heures du corridor pour l'aperçu.
+  /// Reproduit exactement la logique de [_CreateAnnouncementContentState._formatCorridorDateTime].
+  String _formatCorridorDateTime() {
+    final departureDate = departureDateNotifier.value;
+    final departureTime = departureTimeNotifier.value;
+    final arrivalTime = arrivalTimeNotifier.value;
+    if (departureDate == null) {
+      return '';
+    }
+    final date = DateFormat('EEE d MMM', 'fr').format(departureDate);
+    if (departureTime != null && arrivalTime != null) {
+      return '$date · ${departureTime.hour}h–${arrivalTime.hour}h';
+    } else if (departureTime != null) {
+      return '$date · ${departureTime.hour}h';
+    }
+    return date;
   }
 
   List<Widget> _buildWidgets(
@@ -77,7 +94,7 @@ class TrajetStep extends StatelessWidget {
           }
           final depCode = cityAirportCode(dep, departure: true);
           final arrCode = cityAirportCode(arr, departure: false);
-          final dateStr = formatCorridorDateTime();
+          final dateStr = _formatCorridorDateTime();
           return Column(
             children: [
               CaSectionCard(

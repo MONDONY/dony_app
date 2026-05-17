@@ -805,7 +805,6 @@ class _CreateAnnouncementContentState
         onSelectDepartureTime: _selectDepartureTime,
         onSelectArrivalTime: _selectArrivalTime,
         onSelectDate: _selectDate,
-        formatCorridorDateTime: _formatCorridorDateTime,
       ),
     ];
   }

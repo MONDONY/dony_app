@@ -1,5 +1,6 @@
 // Widgets helpers partagés entre les étapes du formulaire CreateAnnouncement.
 // Ce fichier est interne à la feature matching — ne pas importer depuis l'extérieur.
+// Ca = préfixe CreateAnnouncement — widgets internes à la feature, ne pas importer ailleurs.
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
