@@ -156,9 +156,9 @@ void main() {
 
     // ── Section PRIX PAR KG ───────────────────────────────────────────────────
 
-    testWidgets('label de section PRIX PAR KG est affiché', (tester) async {
+    testWidgets('label de section Prix par kg est affiché', (tester) async {
       await _pump(tester);
-      expect(find.text('PRIX PAR KG'), findsOneWidget);
+      expect(find.text('Prix par kg'), findsOneWidget);
     });
 
     testWidgets('les 4 chips de prix prédéfinis sont affichés',
@@ -192,10 +192,10 @@ void main() {
     // ── Section MODES DE PAIEMENT ─────────────────────────────────────────────
 
     testWidgets(
-        'label de section MODES DE PAIEMENT ACCEPTÉS est affiché',
+        'label de section Modes de paiement acceptés est affiché',
         (tester) async {
       await _pump(tester);
-      expect(find.text('MODES DE PAIEMENT ACCEPTÉS'), findsOneWidget);
+      expect(find.text('Modes de paiement acceptés'), findsOneWidget);
     });
 
     testWidgets(
@@ -263,10 +263,10 @@ void main() {
 
     // ── Section CE QUE J'ACCEPTE ──────────────────────────────────────────────
 
-    testWidgets("label de section CE QUE J'ACCEPTE est affiché",
+    testWidgets("label de section Ce que j'accepte est affiché",
         (tester) async {
       await _pump(tester);
-      expect(find.text("CE QUE J'ACCEPTE"), findsOneWidget);
+      expect(find.text("Ce que j'accepte"), findsOneWidget);
     });
 
     testWidgets('les chips de types de contenu prédéfinis sont affichés',
@@ -276,25 +276,25 @@ void main() {
         expect(
           find.text(type),
           findsOneWidget,
-          reason: 'Chip "$type" doit être présent dans CE QUE J\'ACCEPTE',
+          reason: 'Chip "$type" doit être présent dans Ce que j\'accepte',
         );
       }
     });
 
     // ── Section CE QUE JE REFUSE ──────────────────────────────────────────────
 
-    testWidgets('label de section CE QUE JE REFUSE est affiché',
+    testWidgets('label de section Ce que je refuse est affiché',
         (tester) async {
       await _pump(tester);
-      expect(find.text('CE QUE JE REFUSE'), findsOneWidget);
+      expect(find.text('Ce que je refuse'), findsOneWidget);
     });
 
     // ── Section NOTE AUX EXPÉDITEURS ─────────────────────────────────────────
 
-    testWidgets('label de section NOTE AUX EXPÉDITEURS est affiché',
+    testWidgets('label de section Note aux expéditeurs est affiché',
         (tester) async {
       await _pump(tester);
-      expect(find.text('NOTE AUX EXPÉDITEURS'), findsOneWidget);
+      expect(find.text('Note aux expéditeurs'), findsOneWidget);
     });
 
     testWidgets('le champ note aux expéditeurs (TextField) est présent',

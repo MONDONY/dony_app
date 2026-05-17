@@ -67,7 +67,7 @@ class PrixConditionsStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── PRIX PAR KG ───────────────────────────────────────────────────────
-        const CaSectionLabel(label: 'PRIX PAR KG', icon: Icons.sell_rounded),
+        const CaSectionLabel(label: 'Prix par kg', icon: Icons.sell_rounded),
         const SizedBox(height: DonySpacing.md),
         ListenableBuilder(
           listenable:
@@ -226,7 +226,7 @@ class PrixConditionsStep extends StatelessWidget {
 
         // ── MODES DE PAIEMENT ACCEPTÉS ────────────────────────────────────────
         const CaSectionLabel(
-          label: 'MODES DE PAIEMENT ACCEPTÉS',
+          label: 'Modes de paiement acceptés',
           icon: Icons.payments_rounded,
         ),
         const SizedBox(height: DonySpacing.sm),
@@ -347,7 +347,7 @@ class PrixConditionsStep extends StatelessWidget {
 
         // ── CE QUE J'ACCEPTE ──────────────────────────────────────────────────
         const CaSectionLabel(
-            label: 'CE QUE J\'ACCEPTE',
+            label: 'Ce que j\'accepte',
             icon: Icons.check_circle_outline_rounded),
         const SizedBox(height: DonySpacing.sm),
         ListenableBuilder(
@@ -472,7 +472,7 @@ class PrixConditionsStep extends StatelessWidget {
 
         // ── CE QUE JE REFUSE ──────────────────────────────────────────────────
         const CaSectionLabel(
-            label: 'CE QUE JE REFUSE', icon: Icons.block_rounded),
+            label: 'Ce que je refuse', icon: Icons.block_rounded),
         const SizedBox(height: DonySpacing.sm),
         ValueListenableBuilder<Set<String>>(
           valueListenable: refusedTypesNotifier,
@@ -526,7 +526,7 @@ class PrixConditionsStep extends StatelessWidget {
 
         // ── NOTE AUX EXPÉDITEURS ──────────────────────────────────────────────
         const CaSectionLabel(
-            label: 'NOTE AUX EXPÉDITEURS', icon: Icons.edit_note_rounded),
+            label: 'Note aux expéditeurs', icon: Icons.edit_note_rounded),
         const SizedBox(height: DonySpacing.sm),
         ValueListenableBuilder<TextEditingValue>(
           valueListenable: descriptionCtrl,

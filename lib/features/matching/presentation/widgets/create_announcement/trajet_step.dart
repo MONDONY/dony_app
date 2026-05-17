@@ -164,7 +164,7 @@ class TrajetStep extends StatelessWidget {
       ),
 
       // ── TRAJET ────────────────────────────────────────────────────────────
-      const CaSectionLabel(label: 'TRAJET', icon: Icons.flight_takeoff_rounded),
+      const CaSectionLabel(label: 'Trajet', icon: Icons.flight_takeoff_rounded),
       const SizedBox(height: DonySpacing.sm),
       ListenableBuilder(
         listenable: Listenable.merge([
@@ -304,7 +304,7 @@ class TrajetStep extends StatelessWidget {
 
       // ── MODE DE TRANSPORT ─────────────────────────────────────────────────
       const CaSectionLabel(
-        label: 'MODE DE TRANSPORT',
+        label: 'Mode de transport',
         icon: Icons.commute_rounded,
       ),
       const SizedBox(height: DonySpacing.sm),

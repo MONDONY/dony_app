@@ -57,7 +57,7 @@ class LieuxCapaciteStep extends StatelessWidget {
       children: [
         // ── LIEUX DE REMISE ─────────────────────────────────────────────────
         const CaSectionLabel(
-          label: 'LIEUX DE REMISE',
+          label: 'Lieux de remise',
           icon: Icons.swap_horiz_rounded,
         ),
         const SizedBox(height: DonySpacing.xs),
@@ -102,7 +102,7 @@ class LieuxCapaciteStep extends StatelessWidget {
 
         // ── CAPACITÉ DISPONIBLE ─────────────────────────────────────────────
         const CaSectionLabel(
-          label: 'CAPACITÉ DISPONIBLE',
+          label: 'Capacité disponible',
           icon: Icons.luggage_rounded,
         ),
         const SizedBox(height: DonySpacing.base),

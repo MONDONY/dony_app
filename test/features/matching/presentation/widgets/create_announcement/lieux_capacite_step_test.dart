@@ -112,14 +112,31 @@ void main() {
       expect(find.byType(CapacityControl), findsOneWidget);
     });
 
-    testWidgets('label de section LIEUX DE REMISE affiché', (tester) async {
+    testWidgets('label de section Lieux de remise affiché', (tester) async {
       await _pumpHost(tester);
-      expect(find.text('LIEUX DE REMISE'), findsOneWidget);
+      expect(find.text('Lieux de remise'), findsOneWidget);
     });
 
-    testWidgets('label de section CAPACITÉ DISPONIBLE affiché', (tester) async {
+    testWidgets('label de section Capacité disponible affiché', (tester) async {
       await _pumpHost(tester);
-      expect(find.text('CAPACITÉ DISPONIBLE'), findsOneWidget);
+      // CapacityControl affiche aussi "Capacité disponible" en interne → au moins 1 occurrence
+      expect(find.text('Capacité disponible'), findsAtLeastNWidgets(1));
+    });
+
+    testWidgets('les libellés de section sont en casse normale (pas en majuscules intégrales)',
+        (tester) async {
+      await _pumpHost(tester);
+      // Vérifie que les libellés en casse normale sont présents
+      expect(find.text('Lieux de remise'), findsOneWidget,
+          reason: 'Le libellé doit être en casse normale, pas en MAJUSCULES');
+      // CapacityControl affiche aussi "Capacité disponible" → findsAtLeastNWidgets
+      expect(find.text('Capacité disponible'), findsAtLeastNWidgets(1),
+          reason: 'Le libellé doit être en casse normale, pas en MAJUSCULES');
+      // Vérifie que les anciennes versions en majuscules ne sont plus présentes
+      expect(find.text('LIEUX DE REMISE'), findsNothing,
+          reason: 'Les majuscules intégrales ne doivent plus être utilisées');
+      expect(find.text('CAPACITÉ DISPONIBLE'), findsNothing,
+          reason: 'Les majuscules intégrales ne doivent plus être utilisées');
     });
 
     testWidgets(

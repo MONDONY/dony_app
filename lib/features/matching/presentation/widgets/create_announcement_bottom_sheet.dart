@@ -103,8 +103,9 @@ class CreateAnnouncementBottomSheet {
                       if (step > 0) ...[
                         Expanded(
                           child: DonyButton(
-                            label: '← Retour',
+                            label: 'Retour',
                             variant: DonyButtonVariant.secondary,
+                            icon: DonyIcons.back,
                             onPressed: () => currentStepNotifier.value = step - 1,
                           ),
                         ),
@@ -112,7 +113,8 @@ class CreateAnnouncementBottomSheet {
                       ],
                       Expanded(
                         child: DonyButton(
-                          label: 'Continuer →',
+                          label: 'Continuer',
+                          iconRight: DonyIcons.arrowRight,
                           onPressed: () => currentStepNotifier.value = step + 1,
                         ),
                       ),
@@ -129,8 +131,9 @@ class CreateAnnouncementBottomSheet {
                         children: [
                           Expanded(
                             child: DonyButton(
-                              label: '← Retour',
+                              label: 'Retour',
                               variant: DonyButtonVariant.secondary,
+                              icon: DonyIcons.back,
                               onPressed: () => currentStepNotifier.value = step - 1,
                             ),
                           ),
@@ -167,8 +170,9 @@ class CreateAnnouncementBottomSheet {
                             children: [
                               Expanded(
                                 child: DonyButton(
-                                  label: '← Retour',
+                                  label: 'Retour',
                                   variant: DonyButtonVariant.secondary,
+                                  icon: DonyIcons.back,
                                   onPressed: () => currentStepNotifier.value = step - 1,
                                 ),
                               ),
@@ -190,8 +194,9 @@ class CreateAnnouncementBottomSheet {
                               children: [
                                 Expanded(
                                   child: DonyButton(
-                                    label: '← Retour',
+                                    label: 'Retour',
                                     variant: DonyButtonVariant.secondary,
+                                    icon: DonyIcons.back,
                                     onPressed: () => currentStepNotifier.value = step - 1,
                                   ),
                                 ),
@@ -199,7 +204,8 @@ class CreateAnnouncementBottomSheet {
                                 Expanded(
                                   child: DonyButton(
                                     key: const Key('create-announcement-preview'),
-                                    label: 'Aperçu →',
+                                    label: 'Aperçu',
+                                    iconRight: DonyIcons.arrowRight,
                                     isLoading: isLoading,
                                     onPressed: (canSubmit && !isLoading)
                                         ? () {
@@ -918,7 +924,7 @@ class _CreateAnnouncementContentState
               },
             ),
             // ── TRAJET ────────────────────────────────────────────────────
-            const CaSectionLabel(label: 'TRAJET', icon: Icons.flight_takeoff_rounded),
+            const CaSectionLabel(label: 'Trajet', icon: Icons.flight_takeoff_rounded),
             const SizedBox(height: DonySpacing.sm),
             ListenableBuilder(
               listenable: Listenable.merge([
@@ -975,7 +981,7 @@ class _CreateAnnouncementContentState
             ),
             const SizedBox(height: DonySpacing.xxl),
             // ── LIEUX DE REMISE ───────────────────────────────────────────
-            const CaSectionLabel(label: 'LIEUX DE REMISE', icon: Icons.swap_horiz_rounded),
+            const CaSectionLabel(label: 'Lieux de remise', icon: Icons.swap_horiz_rounded),
             const SizedBox(height: DonySpacing.xs),
             Text(
               'Précisez l\'endroit exact de remise et récupération',
@@ -1000,7 +1006,7 @@ class _CreateAnnouncementContentState
             ).animate().fadeIn(delay: 90.ms),
             const SizedBox(height: DonySpacing.xxl),
             // ── CAPACITÉ DISPONIBLE ───────────────────────────────────────
-            const CaSectionLabel(label: 'CAPACITÉ DISPONIBLE', icon: Icons.luggage_rounded),
+            const CaSectionLabel(label: 'Capacité disponible', icon: Icons.luggage_rounded),
             const SizedBox(height: DonySpacing.base),
             ValueListenableBuilder<double>(
               valueListenable: _availableKgNotifier,
@@ -1068,7 +1074,7 @@ class _CreateAnnouncementContentState
             const SizedBox(height: DonySpacing.xxl),
             // ── MODE DE TRANSPORT ─────────────────────────────────────────
             const CaSectionLabel(
-              label: 'MODE DE TRANSPORT',
+              label: 'Mode de transport',
               icon: Icons.commute_rounded,
             ),
             const SizedBox(height: DonySpacing.sm),
@@ -1100,7 +1106,7 @@ class _CreateAnnouncementContentState
             const SizedBox(height: DonySpacing.xxl),
             // ── CE QUE J'ACCEPTE ──────────────────────────────────────────
             const CaSectionLabel(
-              label: 'CE QUE J\'ACCEPTE',
+              label: 'Ce que j\'accepte',
               icon: Icons.check_circle_outline_rounded,
             ),
             const SizedBox(height: DonySpacing.sm),
@@ -1219,7 +1225,7 @@ class _CreateAnnouncementContentState
             ).animate().fadeIn(delay: 120.ms),
             const SizedBox(height: DonySpacing.xxl),
             // ── CE QUE JE REFUSE ──────────────────────────────────────────
-            const CaSectionLabel(label: 'CE QUE JE REFUSE', icon: Icons.block_rounded),
+            const CaSectionLabel(label: 'Ce que je refuse', icon: Icons.block_rounded),
             const SizedBox(height: DonySpacing.sm),
             ValueListenableBuilder<Set<String>>(
               valueListenable: _refusedTypesNotifier,
@@ -1272,7 +1278,7 @@ class _CreateAnnouncementContentState
             const SizedBox(height: DonySpacing.xxl),
             // ── NOTE AUX EXPÉDITEURS ──────────────────────────────────────
             const CaSectionLabel(
-              label: 'NOTE AUX EXPÉDITEURS',
+              label: 'Note aux expéditeurs',
               icon: Icons.edit_note_rounded,
             ),
             const SizedBox(height: DonySpacing.sm),

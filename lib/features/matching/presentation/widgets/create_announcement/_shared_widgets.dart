@@ -78,9 +78,8 @@ class CaSectionLabel extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final labelWidget = Text(
       label,
-      style: tt.labelSmall?.copyWith(
+      style: tt.titleMedium?.copyWith(
         color: cs.onSurfaceVariant,
-        letterSpacing: 0.8,
         fontWeight: FontWeight.w600,
       ),
     );
@@ -286,7 +285,7 @@ class CaStepperHeader extends StatelessWidget {
   const CaStepperHeader(
       {super.key, required this.currentStep, required this.totalSteps});
 
-  static const _labels = ['Trajet', 'Lieux & Cap.', 'Prix & Cond.'];
+  static const _labels = ['Trajet', 'Lieux & capacité', 'Prix & conditions'];
 
   @override
   Widget build(BuildContext context) {
