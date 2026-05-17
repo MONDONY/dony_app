@@ -81,7 +81,7 @@ class LieuxCapaciteStep extends StatelessWidget {
           },
           autocompleteService: getIt<AddressAutocompleteService>(),
         ).animate().fadeIn(delay: 80.ms),
-        const SizedBox(height: 16),
+        const SizedBox(height: DonySpacing.base),
         AddressPickerField(
           fieldLabel: 'Lieu de récupération *',
           isRequired: true,
