@@ -405,23 +405,16 @@ void main() {
     testWidgets(
       'icône ville d\'arrivée reçoit colorScheme.secondary (terracotta)',
       (tester) async {
-        await tester.pumpWidget(_buildSubject(
-          departureCityBloc: departureCityBloc,
-          arrivalCityBloc: arrivalCityBloc,
-        ));
-        await tester.pump(const Duration(milliseconds: 300));
-
         // L'icône de la ville d'arrivée est un Icon widget passé en prefixIcon
         // à CityAutocompleteField. On trouve l'Icon dont la couleur est secondary.
         // Le thème MaterialApp par défaut expose un ColorScheme — secondary est
         // la couleur terracotta #D96A3A de l'app.
         // On vérifie que le prefixIconColor passé à DonyIcons.arrivalCity est
         // secondary et non primary (qui serait pour le départ).
-        final subject = _buildSubject(
+        await tester.pumpWidget(_buildSubject(
           departureCityBloc: departureCityBloc,
           arrivalCityBloc: arrivalCityBloc,
-        );
-        await tester.pumpWidget(subject);
+        ));
         await tester.pump(const Duration(milliseconds: 300));
 
         // L'Icon arrivée est rendu avec DonyIcons.arrivalCity et color secondary

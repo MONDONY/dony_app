@@ -162,5 +162,39 @@ void main() {
       await _pumpHost(tester, initialDeliveryAddress: address);
       expect(find.text('Aéroport CDG, Roissy'), findsOneWidget);
     });
+
+    // ── P3 — Couleurs sémantiques icônes pickup (primary) / delivery (secondary) ──
+
+    testWidgets(
+        'AddressPickerField lieu de remise reçoit prefixIconColor = colorScheme.primary',
+        (tester) async {
+      await _pumpHost(tester);
+      // Les deux AddressPickerField sont rendus dans l'ordre : pickup puis delivery.
+      final fields = tester
+          .widgetList<AddressPickerField>(find.byType(AddressPickerField))
+          .toList();
+      expect(fields.length, 2);
+
+      final cs =
+          Theme.of(tester.element(find.byType(MaterialApp))).colorScheme;
+      // Le premier champ (lieu de remise / pickup) doit recevoir cs.primary.
+      expect(fields.first.prefixIconColor, equals(cs.primary));
+    });
+
+    testWidgets(
+        'AddressPickerField lieu de récupération reçoit prefixIconColor = colorScheme.secondary',
+        (tester) async {
+      await _pumpHost(tester);
+      // Les deux AddressPickerField sont rendus dans l'ordre : pickup puis delivery.
+      final fields = tester
+          .widgetList<AddressPickerField>(find.byType(AddressPickerField))
+          .toList();
+      expect(fields.length, 2);
+
+      final cs =
+          Theme.of(tester.element(find.byType(MaterialApp))).colorScheme;
+      // Le second champ (lieu de récupération / delivery) doit recevoir cs.secondary.
+      expect(fields.last.prefixIconColor, equals(cs.secondary));
+    });
   });
 }
