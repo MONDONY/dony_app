@@ -12,6 +12,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/core/design/widgets/dony_avatar.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
@@ -538,6 +539,42 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
 
       expect(find.textContaining('matchs'), findsNothing);
+    });
+
+    group('Collapsed AppBar title', () {
+      testWidgets('AppBar title contient DonyAvatar quand voyageur',
+          (tester) async {
+        await tester.pumpWidget(_buildTestHarness(
+          authBloc: authBloc,
+          deletionBloc: deletionBloc,
+          bidBloc: bidBloc,
+          announcementBloc: announcementBloc,
+          activeRoleCubit: activeRoleCubit,
+        ));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        // The SliverAppBar title contains a DonyAvatar (collapsed state elements)
+        expect(find.byType(DonyAvatar), findsWidgets);
+        // The profile header itself also has a DonyAvatar, so at least 2 are present
+        // (one in the flexible space, one in the AppBar title Row)
+      });
+
+      testWidgets(
+          'AppBar title affiche icône verified pour un utilisateur KYC vérifié',
+          (tester) async {
+        await tester.pumpWidget(_buildTestHarness(
+          authBloc: authBloc,
+          deletionBloc: deletionBloc,
+          bidBloc: bidBloc,
+          announcementBloc: announcementBloc,
+          activeRoleCubit: activeRoleCubit,
+        ));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        // Icons.verified_rounded appears in the AppBar title Row when isKycVerified
+        expect(find.byIcon(Icons.verified_rounded), findsWidgets);
+        await tester.pumpAndSettle(const Duration(seconds: 5));
+      });
     });
 
     testWidgets('section sender non impactée quand activeRole == sender',

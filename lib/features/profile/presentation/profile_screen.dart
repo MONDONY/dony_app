@@ -168,7 +168,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         ),
                                         child: DonyAvatar(
                                           name: displayName,
-                                          size: DonyAvatarSize.sm,
+                                          size: DonyAvatarSize.xs,
                                           verified: false,
                                           pro: false,
                                         ),

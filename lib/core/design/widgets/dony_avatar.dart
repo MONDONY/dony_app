@@ -1,7 +1,7 @@
 import 'package:dony/core/design/tokens/color_tokens.dart';
 import 'package:flutter/material.dart';
 
-enum DonyAvatarSize { sm, md, lg, xl }
+enum DonyAvatarSize { xs, sm, md, lg, xl }
 
 const Color _kVerifiedBlue = DonyColors.primary;
 const Color _kVerifiedGold = Color(0xFFF0B829);
@@ -23,6 +23,7 @@ class DonyAvatar extends StatelessWidget {
   final bool pro;
 
   double get _dimension => switch (size) {
+    DonyAvatarSize.xs => 24,
     DonyAvatarSize.sm => 32,
     DonyAvatarSize.md => 44,
     DonyAvatarSize.lg => 56,
@@ -30,6 +31,7 @@ class DonyAvatar extends StatelessWidget {
   };
 
   double get _fontSize => switch (size) {
+    DonyAvatarSize.xs => 9,
     DonyAvatarSize.sm => 12,
     DonyAvatarSize.md => 16,
     DonyAvatarSize.lg => 20,
