@@ -245,76 +245,77 @@ class _ActiveAccountView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    final h = DonyLayout.hPadding(context);
-
     return Scaffold(
       appBar: const DonyAppBar(title: 'Recevoir mes paiements'),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(h, DonySpacing.xxl, h, DonySpacing.huge),
-        child: DonyLayout.constrained(
-          context,
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DonyIconContainer(
-                icon: Icons.check_circle_rounded,
-                size: DonyIconContainerSize.xl,
-                borderRadius: DonyRadius.xl,
-                backgroundColor: cs.success.withValues(alpha: 0.1),
-                iconColor: cs.success,
-              ),
-              const SizedBox(height: DonySpacing.lg),
-              Text(
-                'Compte bancaire connecté',
-                style: tt.displayLarge?.copyWith(height: 1.2),
-              ),
-              const SizedBox(height: DonySpacing.md),
-              Text(
-                'Votre compte Stripe est actif. Après chaque livraison confirmée, '
-                'le paiement est automatiquement viré sur votre compte bancaire '
-                'sous 1 à 2 jours ouvrés.',
-                style: tt.bodyLarge?.copyWith(
-                  color: cs.onSurfaceVariant,
-                  height: 1.5,
+      body: Builder(builder: (context) {
+        final tt = Theme.of(context).textTheme;
+        final cs = Theme.of(context).colorScheme;
+        final h = DonyLayout.hPadding(context);
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(h, DonySpacing.xxl, h, DonySpacing.huge),
+          child: DonyLayout.constrained(
+            context,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DonyIconContainer(
+                  icon: Icons.check_circle_rounded,
+                  size: DonyIconContainerSize.xl,
+                  borderRadius: DonyRadius.xl,
+                  backgroundColor: cs.success.withValues(alpha: 0.1),
+                  iconColor: cs.success,
                 ),
-              ),
-              const SizedBox(height: DonySpacing.xxl),
-              DonyCard(
-                padding: EdgeInsets.zero,
-                child: Column(
-                  children: [
-                    _InfoRow(
-                      icon: Icons.lock_rounded,
-                      title: 'Paiement sécurisé en escrow',
-                      subtitle:
-                          "L'argent est retenu jusqu'à confirmation de livraison.",
-                    ),
-                    const Divider(height: 1, indent: 70),
-                    _InfoRow(
-                      icon: Icons.bolt_rounded,
-                      title: 'Virement automatique',
-                      subtitle:
-                          'Aucune action requise — Stripe vire directement sur votre RIB.',
-                    ),
-                    const Divider(height: 1, indent: 70),
-                    _InfoRow(
-                      icon: Icons.account_balance_rounded,
-                      title: 'Sur votre compte bancaire',
-                      subtitle:
-                          "Vous recevez l'argent sur le compte lié à votre RIB/IBAN, pas dans un wallet Stripe.",
-                    ),
-                  ],
+                const SizedBox(height: DonySpacing.lg),
+                Text(
+                  'Compte bancaire connecté',
+                  style: tt.displayLarge?.copyWith(height: 1.2),
                 ),
-              ),
-            ],
-          )
-              .animate()
-              .fadeIn(duration: 300.ms)
-              .slideY(begin: 0.04, curve: Curves.easeOutCubic),
-        ),
-      ),
+                const SizedBox(height: DonySpacing.md),
+                Text(
+                  'Votre compte Stripe est actif. Après chaque livraison confirmée, '
+                  'le paiement est automatiquement viré sur votre compte bancaire '
+                  'sous 1 à 2 jours ouvrés.',
+                  style: tt.bodyLarge?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: DonySpacing.xxl),
+                const DonyCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      _InfoRow(
+                        icon: Icons.lock_rounded,
+                        title: 'Paiement sécurisé en escrow',
+                        subtitle:
+                            "L'argent est retenu jusqu'à confirmation de livraison.",
+                      ),
+                      Divider(height: 1, indent: 70),
+                      _InfoRow(
+                        icon: Icons.bolt_rounded,
+                        title: 'Virement automatique',
+                        subtitle:
+                            'Aucune action requise — Stripe vire directement sur votre RIB.',
+                      ),
+                      Divider(height: 1, indent: 70),
+                      _InfoRow(
+                        icon: Icons.account_balance_rounded,
+                        title: 'Sur votre compte bancaire',
+                        subtitle:
+                            "Vous recevez l'argent sur le compte lié à votre RIB/IBAN, pas dans un wallet Stripe.",
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            )
+                .animate()
+                .fadeIn(duration: 300.ms)
+                .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+          ),
+        );
+      }),
     );
   }
 }

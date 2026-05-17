@@ -30,6 +30,16 @@ final _kUser = UserModel(
   stripeAccountStatus: 'NOT_CREATED',
 );
 
+final _kConnectedUser = UserModel(
+  id: 'uid-2',
+  firstName: 'Ibrahima',
+  lastName: 'Diallo',
+  roles: const ['ROLE_TRAVELER'],
+  kycStatus: 'VERIFIED',
+  status: 'ACTIVE',
+  stripeAccountStatus: 'ONBOARDING_COMPLETE',
+);
+
 Widget _wrap(PaymentBloc bloc, {MockAuthBloc? authBloc}) {
   final auth = authBloc ?? MockAuthBloc();
   if (authBloc == null) {
@@ -117,6 +127,32 @@ void main() {
       await tester.ensureVisible(find.text('Connecter mon compte bancaire'));
       await tester.tap(find.text('Connecter mon compte bancaire'));
       verify(() => mockBloc.add(const PaymentConnectAccountRequested())).called(1);
+    });
+  });
+
+  group('_ActiveAccountView (B3 — débordement texte)', () {
+    testWidgets(
+        'aucun débordement horizontal sur écran étroit (320×568)',
+        (tester) async {
+      // Simuler un écran narrow (ex: iPhone SE 1re gen)
+      tester.view.physicalSize = const Size(320, 568);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final auth = MockAuthBloc();
+      when(() => auth.state).thenReturn(AuthAuthenticated(_kConnectedUser));
+      when(() => auth.stream).thenAnswer((_) => const Stream.empty());
+
+      await tester.pumpWidget(_wrap(mockBloc, authBloc: auth));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // Vérifier que le titre et le paragraphe d'intro sont présents
+      expect(find.text('Compte bancaire connecté'), findsOneWidget);
+      expect(find.textContaining('Votre compte Stripe est actif'), findsOneWidget);
+
+      // Aucune exception de layout (RenderFlex overflow)
+      expect(tester.takeException(), isNull);
     });
   });
 }
