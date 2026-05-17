@@ -7,7 +7,6 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -49,12 +48,7 @@ class _ColisMatchViewState extends State<_ColisMatchView> {
   }
 
   void _search(BuildContext ctx, AnnouncementModel ann) {
-    ctx.read<PackageRequestSearchBloc>().add(SearchFiltersChanged(
-          departure: ann.departureCity,
-          arrival: ann.arrivalCity,
-          dateFrom: ann.departureDate.subtract(const Duration(days: 7)),
-          dateTo: ann.departureDate.add(const Duration(days: 7)),
-        ));
+    ctx.read<PackageRequestSearchBloc>().add(_searchFilters(ann));
   }
 
   void _selectChip(
@@ -270,12 +264,7 @@ class _ResultsView extends StatelessWidget {
   final AnnouncementModel announcement;
 
   void _triggerSearch(BuildContext ctx, AnnouncementModel ann) {
-    ctx.read<PackageRequestSearchBloc>().add(SearchFiltersChanged(
-          departure: ann.departureCity,
-          arrival: ann.arrivalCity,
-          dateFrom: ann.departureDate.subtract(const Duration(days: 7)),
-          dateTo: ann.departureDate.add(const Duration(days: 7)),
-        ));
+    ctx.read<PackageRequestSearchBloc>().add(_searchFilters(ann));
   }
 
   @override
@@ -310,52 +299,61 @@ class _ResultsView extends StatelessWidget {
             }
             return false;
           },
-          child: RefreshIndicator(
-            onRefresh: () async => _triggerSearch(ctx, announcement),
-            child: ListView.separated(
-              padding: const EdgeInsets.fromLTRB(
-                DonySpacing.lg,
-                DonySpacing.base,
-                DonySpacing.lg,
-                DonySpacing.huge,
-              ),
-              itemCount: state.results.length +
-                  (state.status == SearchStatus.loadingMore ? 1 : 0),
-              separatorBuilder: (context3, index) =>
-                  const SizedBox(height: DonySpacing.md),
-              itemBuilder: (lCtx, i) {
-                if (i == state.results.length) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(DonySpacing.base),
-                      child: CircularProgressIndicator(
-                          color: Theme.of(lCtx).colorScheme.primary),
-                    ),
-                  );
-                }
-                final item = state.results[i];
-                return PackageRequestListCard(
-                  item: item,
-                  index: i,
-                  onTap: () => lCtx.push(
-                    '/package-requests/${item.id}/public',
-                    extra: {'announcement': announcement},
+          child: Builder(
+            builder: (innerCtx) {
+              final bloc = innerCtx.read<PackageRequestSearchBloc>();
+              return RefreshIndicator(
+                onRefresh: () async => bloc.add(_searchFilters(announcement)),
+                child: ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(
+                    DonySpacing.lg,
+                    DonySpacing.base,
+                    DonySpacing.lg,
+                    DonySpacing.huge,
                   ),
-                )
-                    .animate()
-                    .fadeIn(
-                      delay: Duration(milliseconds: 60 * i),
-                      duration: 280.ms,
-                    )
-                    .slideY(begin: 0.04, curve: Curves.easeOutCubic);
-              },
-            ),
+                  itemCount: state.results.length +
+                      (state.status == SearchStatus.loadingMore ? 1 : 0),
+                  separatorBuilder: (context3, index) =>
+                      const SizedBox(height: DonySpacing.md),
+                  itemBuilder: (lCtx, i) {
+                    if (i == state.results.length) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(DonySpacing.base),
+                          child: CircularProgressIndicator(
+                              color: Theme.of(lCtx).colorScheme.primary),
+                        ),
+                      );
+                    }
+                    final item = state.results[i];
+                    return PackageRequestListCard(
+                      item: item,
+                      index: i,
+                      onTap: () => lCtx.push(
+                        '/package-requests/${item.id}/public',
+                        extra: {'announcement': announcement},
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
           ),
         );
       },
     );
   }
 }
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+SearchFiltersChanged _searchFilters(AnnouncementModel ann) =>
+    SearchFiltersChanged(
+      departure: ann.departureCity,
+      arrival: ann.arrivalCity,
+      dateFrom: ann.departureDate.subtract(const Duration(days: 7)),
+      dateTo: ann.departureDate.add(const Duration(days: 7)),
+    );
 
 // ─── Empty states ─────────────────────────────────────────────────────────────
 

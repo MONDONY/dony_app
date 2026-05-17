@@ -180,6 +180,8 @@ void main() {
       await tester.pumpWidget(wrap());
       await tester.pump(const Duration(milliseconds: 500));
 
+      verifyNever(() => searchBloc.add(any()));
+
       expect(find.text('Aucun trajet actif'), findsOneWidget);
       expect(find.text('Publier un trajet'), findsOneWidget);
     });
@@ -229,6 +231,21 @@ void main() {
 
       expect(find.textContaining('15.0 kg restants'), findsOneWidget);
       expect(find.textContaining('23.0 kg total'), findsOneWidget);
+    });
+
+    testWidgets('spinner footer affiché en état loadingMore',
+        (tester) async {
+      when(() => announcementBloc.state)
+          .thenReturn(AnnouncementListLoaded([_ann()]));
+      when(() => searchBloc.state).thenReturn(PackageRequestSearchState(
+        status: SearchStatus.loadingMore,
+        results: [_searchItem()],
+      ));
+
+      await tester.pumpWidget(wrap());
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
   });
 }
