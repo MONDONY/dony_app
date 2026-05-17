@@ -209,12 +209,17 @@ class TrajetStep extends StatelessWidget {
                     : null,
                 prefixIcon: DonyIcons.time,
                 trailing: departureTimeNotifier.value != null
-                    ? GestureDetector(
-                        onTap: () => departureTimeNotifier.value = null,
-                        child: Icon(
+                    ? IconButton(
+                        icon: Icon(
                           DonyIcons.close,
                           size: 18,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        onPressed: () => departureTimeNotifier.value = null,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 44,
+                          minHeight: 44,
                         ),
                       )
                     : Icon(
@@ -253,12 +258,17 @@ class TrajetStep extends StatelessWidget {
                     : null,
                 prefixIcon: DonyIcons.time,
                 trailing: arrivalTimeNotifier.value != null
-                    ? GestureDetector(
-                        onTap: () => arrivalTimeNotifier.value = null,
-                        child: Icon(
+                    ? IconButton(
+                        icon: Icon(
                           DonyIcons.close,
                           size: 18,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        onPressed: () => arrivalTimeNotifier.value = null,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 44,
+                          minHeight: 44,
                         ),
                       )
                     : Icon(

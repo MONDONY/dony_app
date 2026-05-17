@@ -100,33 +100,9 @@ class DonyTextField extends StatelessWidget {
 
   /// Construit un widget label avec un astérisque rouge si [requiredLabel] est true.
   ///
-  /// Utilise `InputDecoration.label` (RichText) plutôt que `labelText` (String)
-  /// afin d'appliquer `cs.error` uniquement à l'astérisque tout en conservant
-  /// la couleur de label par défaut pour le reste du texte.
-  Widget? _buildLabel(BuildContext context) {
-    final effectiveLabel = label;
-    if (effectiveLabel == null) {
-      return null;
-    }
-    if (!requiredLabel) {
-      return null; // null → labelText utilisé à la place
-    }
-    final cs = Theme.of(context).colorScheme;
-    final labelStyle = Theme.of(context).inputDecorationTheme.labelStyle ??
-        Theme.of(context).textTheme.bodyMedium;
-    return Text.rich(
-      TextSpan(
-        text: effectiveLabel,
-        style: labelStyle,
-        children: [
-          TextSpan(
-            text: ' *',
-            style: TextStyle(color: cs.error),
-          ),
-        ],
-      ),
-    );
-  }
+  /// Délègue à [buildRequiredLabel] (design system partagé).
+  Widget? _buildLabel(BuildContext context) =>
+      buildRequiredLabel(context, label, isRequired: requiredLabel);
 
   InputDecoration _decoration(
     BuildContext context, {

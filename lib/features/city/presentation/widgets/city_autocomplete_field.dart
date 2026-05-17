@@ -99,26 +99,10 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
   }
 
   /// Construit le widget label (avec astérisque rouge si [requiredLabel]).
-  Widget? _buildLabel(BuildContext context) {
-    if (!widget.requiredLabel) {
-      return null;
-    }
-    final cs = Theme.of(context).colorScheme;
-    final labelStyle = Theme.of(context).inputDecorationTheme.labelStyle ??
-        Theme.of(context).textTheme.bodyMedium;
-    return Text.rich(
-      TextSpan(
-        text: widget.label,
-        style: labelStyle,
-        children: [
-          TextSpan(
-            text: ' *',
-            style: TextStyle(color: cs.error),
-          ),
-        ],
-      ),
-    );
-  }
+  ///
+  /// Délègue à [buildRequiredLabel] (design system partagé).
+  Widget? _buildLabel(BuildContext context) =>
+      buildRequiredLabel(context, widget.label, isRequired: widget.requiredLabel);
 
   @override
   Widget build(BuildContext context) {

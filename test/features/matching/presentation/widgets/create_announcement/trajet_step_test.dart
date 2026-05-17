@@ -222,11 +222,11 @@ void main() {
         ));
         await tester.pump(const Duration(milliseconds: 300));
 
-        // La date de départ est requise → son label contient " *"
-        // DonyTextField.tappable avec requiredLabel: true utilise
-        // InputDecoration.label (Text.rich) plutôt que labelText.
-        // On vérifie la présence du texte " *" dans le widget tree.
-        expect(find.textContaining(' *'), findsAtLeastNWidgets(1));
+        // Exactement 3 champs requis : ville de départ, ville d'arrivée,
+        // date de départ. Chacun affiche un TextSpan " *" via Text.rich.
+        // find.textContaining(' *') matche chaque TextSpan séparément,
+        // donc on attend exactement 3 occurrences.
+        expect(find.textContaining(' *'), findsNWidgets(3));
       },
     );
 
