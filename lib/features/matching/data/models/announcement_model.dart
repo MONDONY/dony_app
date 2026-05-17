@@ -81,6 +81,8 @@ class AnnouncementModel {
   final DateTime createdAt;
   final DateTime updatedAt;
   final Set<BidPaymentMethod> acceptedPaymentMethods;
+  @JsonKey(name: 'capacity_unit')
+  final String? capacityUnit;
 
   const AnnouncementModel({
     required this.id,
@@ -105,6 +107,7 @@ class AnnouncementModel {
     required this.createdAt,
     required this.updatedAt,
     this.acceptedPaymentMethods = const {BidPaymentMethod.stripe},
+    this.capacityUnit,
   });
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) =>

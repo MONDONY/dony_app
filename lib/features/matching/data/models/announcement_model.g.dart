@@ -70,6 +70,7 @@ AnnouncementModel _$AnnouncementModelFromJson(Map<String, dynamic> json) =>
               ?.map((e) => $enumDecode(_$BidPaymentMethodEnumMap, e))
               .toSet() ??
           const {BidPaymentMethod.stripe},
+      capacityUnit: json['capacity_unit'] as String?,
     );
 
 Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
@@ -98,6 +99,7 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'acceptedPaymentMethods': instance.acceptedPaymentMethods
           .map((e) => _$BidPaymentMethodEnumMap[e]!)
           .toList(),
+      'capacity_unit': instance.capacityUnit,
     };
 
 const _$BidPaymentMethodEnumMap = {
