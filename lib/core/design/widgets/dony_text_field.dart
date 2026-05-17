@@ -20,6 +20,7 @@ class DonyTextField extends StatelessWidget {
     this.label,
     this.hint,
     this.prefixIcon,
+    this.prefixIconColor,
     this.suffixIcon,
     this.obscureText = false,
     this.keyboardType,
@@ -45,6 +46,9 @@ class DonyTextField extends StatelessWidget {
   /// - [label] : label flottant du champ.
   /// - [value] : valeur affichée. Si null/vide, [label] est rendu en hint.
   /// - [prefixIcon] : icône à gauche (même position que la variante texte).
+  /// - [prefixIconColor] : couleur de l'icône de préfixe. Si null, utilise
+  ///   la couleur d'icône par défaut du thème. Passer `colorScheme.primary`
+  ///   pour les champs « départ », `colorScheme.secondary` pour « arrivée ».
   /// - [trailing] : widget optionnel à droite (ex : chevron ou icône picker).
   /// - [onTap] : callback déclenché au tap.
   /// - [requiredLabel] : si true, ajoute un astérisque rouge (cs.error) au label.
@@ -53,6 +57,7 @@ class DonyTextField extends StatelessWidget {
     this.label,
     String? value,
     this.prefixIcon,
+    this.prefixIconColor,
     Widget? trailing,
     VoidCallback? onTap,
     this.requiredLabel = false,
@@ -79,6 +84,14 @@ class DonyTextField extends StatelessWidget {
   final String? label;
   final String? hint;
   final IconData? prefixIcon;
+
+  /// Couleur de l'icône de préfixe.
+  ///
+  /// `null` (défaut) → couleur d'icône du thème Material (aucune régression).
+  /// Passer `colorScheme.primary` pour les champs « départ »,
+  /// `colorScheme.secondary` pour les champs « arrivée ».
+  final Color? prefixIconColor;
+
   final Widget? suffixIcon;
   final bool obscureText;
   final TextInputType? keyboardType;
@@ -117,7 +130,9 @@ class DonyTextField extends StatelessWidget {
       label: labelWidget,
       labelText: labelWidget == null ? (labelOverride ?? label) : null,
       hintText: hintOverride ?? hint,
-      prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
+      prefixIcon: prefixIcon != null
+          ? Icon(prefixIcon, color: prefixIconColor)
+          : null,
       suffixIcon: suffixOverride ?? suffixIcon,
       errorText: errorText,
       contentPadding: const EdgeInsets.symmetric(

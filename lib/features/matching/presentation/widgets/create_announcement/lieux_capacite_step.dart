@@ -70,6 +70,7 @@ class LieuxCapaciteStep extends StatelessWidget {
           fieldLabel: 'Lieu de remise du colis *',
           isRequired: true,
           initialValue: initialPickupAddress,
+          prefixIconColor: cs.primary,
           onSaved: onPickupSaved,
           onChanged: (addr) {
             onPickupChanged(addr);
@@ -87,6 +88,7 @@ class LieuxCapaciteStep extends StatelessWidget {
           isRequired: true,
           showGpsButton: false,
           initialValue: initialDeliveryAddress,
+          prefixIconColor: cs.secondary,
           onSaved: onDeliverySaved,
           onChanged: (addr) {
             onDeliveryChanged(addr);

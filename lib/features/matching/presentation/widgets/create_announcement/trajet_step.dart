@@ -208,6 +208,7 @@ class TrajetStep extends StatelessWidget {
                     ? '${departureTimeNotifier.value!.hour.toString().padLeft(2, '0')}:${departureTimeNotifier.value!.minute.toString().padLeft(2, '0')}'
                     : null,
                 prefixIcon: DonyIcons.time,
+                prefixIconColor: Theme.of(context).colorScheme.primary,
                 trailing: departureTimeNotifier.value != null
                     ? IconButton(
                         icon: Icon(
@@ -240,7 +241,7 @@ class TrajetStep extends StatelessWidget {
                   prefixIcon: Icon(
                     DonyIcons.arrivalCity,
                     size: 20,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: Theme.of(context).colorScheme.secondary,
                   ),
                   requiredLabel: true,
                   onSelected: (CityModel city) {
@@ -257,6 +258,7 @@ class TrajetStep extends StatelessWidget {
                     ? '${arrivalTimeNotifier.value!.hour.toString().padLeft(2, '0')}:${arrivalTimeNotifier.value!.minute.toString().padLeft(2, '0')}'
                     : null,
                 prefixIcon: DonyIcons.time,
+                prefixIconColor: Theme.of(context).colorScheme.secondary,
                 trailing: arrivalTimeNotifier.value != null
                     ? IconButton(
                         icon: Icon(
@@ -288,6 +290,7 @@ class TrajetStep extends StatelessWidget {
                         .format(departureDateNotifier.value!)
                     : null,
                 prefixIcon: DonyIcons.date,
+                prefixIconColor: Theme.of(context).colorScheme.primary,
                 trailing: Icon(
                   DonyIcons.chevron,
                   size: 18,

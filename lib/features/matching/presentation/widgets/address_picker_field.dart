@@ -15,6 +15,7 @@ class AddressPickerField extends FormField<AddressData> {
     required this.autocompleteService,
     this.showGpsButton = true,
     this.onChanged,
+    this.prefixIconColor,
     bool isRequired = false,
     super.initialValue,
     super.onSaved,
@@ -32,6 +33,13 @@ class AddressPickerField extends FormField<AddressData> {
   final AddressAutocompleteService autocompleteService;
   final bool showGpsButton;
   final void Function(AddressData?)? onChanged;
+
+  /// Couleur sémantique de l'icône de préfixe à l'état neutre (non confirmé,
+  /// non focalisé). Passer `colorScheme.primary` pour un champ « départ »,
+  /// `colorScheme.secondary` pour un champ « arrivée ».
+  ///
+  /// `null` (défaut) → `cs.onSurfaceVariant` (comportement historique).
+  final Color? prefixIconColor;
 
   @override
   FormFieldState<AddressData> createState() => _AddressPickerFieldState();
@@ -427,7 +435,7 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
                         ? cs.success
                         : isFocused
                             ? cs.primary
-                            : cs.onSurfaceVariant,
+                            : _w.prefixIconColor ?? cs.onSurfaceVariant,
                   ),
                 ),
                 prefixIconConstraints: const BoxConstraints(

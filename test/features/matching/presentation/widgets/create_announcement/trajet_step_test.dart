@@ -396,4 +396,130 @@ void main() {
       },
     );
   });
+
+  // ---------------------------------------------------------------------------
+  // P3 — Couleurs sémantiques arrivée (secondary) vs départ (primary)
+  // P4 — Icône date utilise colorScheme.primary
+  // ---------------------------------------------------------------------------
+  group('P3/P4 — Couleurs sémantiques icônes départ/arrivée', () {
+    testWidgets(
+      'icône ville d\'arrivée reçoit colorScheme.secondary (terracotta)',
+      (tester) async {
+        await tester.pumpWidget(_buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+        ));
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // L'icône de la ville d'arrivée est un Icon widget passé en prefixIcon
+        // à CityAutocompleteField. On trouve l'Icon dont la couleur est secondary.
+        // Le thème MaterialApp par défaut expose un ColorScheme — secondary est
+        // la couleur terracotta #D96A3A de l'app.
+        // On vérifie que le prefixIconColor passé à DonyIcons.arrivalCity est
+        // secondary et non primary (qui serait pour le départ).
+        final subject = _buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+        );
+        await tester.pumpWidget(subject);
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // L'Icon arrivée est rendu avec DonyIcons.arrivalCity et color secondary
+        // On utilise find.byWidgetPredicate pour cibler l'Icon dont l'iconData
+        // est DonyIcons.arrivalCity et vérifier sa couleur.
+        final arrivalIconFinder = find.byWidgetPredicate((widget) {
+          if (widget is! Icon) return false;
+          if (widget.icon != DonyIcons.arrivalCity) return false;
+          // La couleur passée doit être secondary (non primary)
+          final cs = Theme.of(tester.element(find.byType(MaterialApp))).colorScheme;
+          return widget.color == cs.secondary;
+        });
+        expect(arrivalIconFinder, findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'icône ville de départ reçoit colorScheme.primary (bleu)',
+      (tester) async {
+        await tester.pumpWidget(_buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+        ));
+        await tester.pump(const Duration(milliseconds: 300));
+
+        final departureCityIconFinder = find.byWidgetPredicate((widget) {
+          if (widget is! Icon) return false;
+          if (widget.icon != DonyIcons.departureCity) return false;
+          final cs = Theme.of(tester.element(find.byType(MaterialApp))).colorScheme;
+          return widget.color == cs.primary;
+        });
+        expect(departureCityIconFinder, findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'P4 — champ date de départ a prefixIconColor = colorScheme.primary',
+      (tester) async {
+        await tester.pumpWidget(_buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+        ));
+        await tester.pump(const Duration(milliseconds: 300));
+
+        final dateField = tester.widget<DonyTextField>(
+          find.byKey(const Key('departureDateField')),
+        );
+        // Le paramètre prefixIconColor doit être non-null (couleur départ)
+        expect(dateField.prefixIconColor, isNotNull);
+
+        // Vérifier que la couleur correspond à colorScheme.primary
+        final cs = Theme.of(
+          tester.element(find.byKey(const Key('departureDateField'))),
+        ).colorScheme;
+        expect(dateField.prefixIconColor, equals(cs.primary));
+      },
+    );
+
+    testWidgets(
+      'champ heure d\'arrivée a prefixIconColor = colorScheme.secondary',
+      (tester) async {
+        await tester.pumpWidget(_buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+        ));
+        await tester.pump(const Duration(milliseconds: 300));
+
+        final arrivalTimeField = tester.widget<DonyTextField>(
+          find.byKey(const Key('arrivalTimeField')),
+        );
+        expect(arrivalTimeField.prefixIconColor, isNotNull);
+
+        final cs = Theme.of(
+          tester.element(find.byKey(const Key('arrivalTimeField'))),
+        ).colorScheme;
+        expect(arrivalTimeField.prefixIconColor, equals(cs.secondary));
+      },
+    );
+
+    testWidgets(
+      'champ heure de départ a prefixIconColor = colorScheme.primary',
+      (tester) async {
+        await tester.pumpWidget(_buildSubject(
+          departureCityBloc: departureCityBloc,
+          arrivalCityBloc: arrivalCityBloc,
+        ));
+        await tester.pump(const Duration(milliseconds: 300));
+
+        final departureTimeField = tester.widget<DonyTextField>(
+          find.byKey(const Key('departureTimeField')),
+        );
+        expect(departureTimeField.prefixIconColor, isNotNull);
+
+        final cs = Theme.of(
+          tester.element(find.byKey(const Key('departureTimeField'))),
+        ).colorScheme;
+        expect(departureTimeField.prefixIconColor, equals(cs.primary));
+      },
+    );
+  });
 }
