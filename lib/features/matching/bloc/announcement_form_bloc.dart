@@ -65,14 +65,28 @@ class AnnouncementFormBloc
     AvailableKgChanged event,
     Emitter<AnnouncementFormState> emit,
   ) {
-    emit(state.copyWith(availableKg: event.kg));
+    emit(state.copyWith(availableKgGetter: () => event.kg.toDouble()));
   }
 
   void _onCapacityUnitChanged(
     CapacityUnitChanged event,
     Emitter<AnnouncementFormState> emit,
   ) {
-    emit(state.copyWith(capacityUnit: event.unit));
+    switch (event.unit) {
+      case CapacityUnit.suitcase23kg:
+      case CapacityUnit.suitcase32kg:
+        emit(state.copyWith(
+          capacityUnit: event.unit,
+          availableKgGetter: () => event.unit.maxKg,
+        ));
+      case CapacityUnit.kgFree:
+        emit(state.copyWith(
+          capacityUnit: event.unit,
+          availableKgGetter: () => null,
+        ));
+      case CapacityUnit.custom:
+        emit(state.copyWith(capacityUnit: event.unit));
+    }
   }
 
   void _onDescriptionChanged(

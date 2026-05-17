@@ -208,6 +208,47 @@ void main() {
       expect(CapacityUnit.kgFree.maxKg, isNull);
     });
 
+    // ── CapacityUnit.custom (M2) ──────────────────────────────────────────────
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'sélectionner suitcase32kg fixe availableKg à 32',
+      build: () => AnnouncementFormBloc(),
+      act: (b) => b.add(const CapacityUnitChanged(CapacityUnit.suitcase32kg)),
+      expect: () => [
+        isA<AnnouncementFormState>()
+            .having((s) => s.capacityUnit, 'unit', CapacityUnit.suitcase32kg)
+            .having((s) => s.availableKg, 'kg', 32.0),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'sélectionner kgFree met availableKg à null',
+      build: () => AnnouncementFormBloc(),
+      act: (b) => b.add(const CapacityUnitChanged(CapacityUnit.kgFree)),
+      expect: () => [
+        isA<AnnouncementFormState>()
+            .having((s) => s.capacityUnit, 'unit', CapacityUnit.kgFree)
+            .having((s) => s.availableKg, 'kg', null),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'sélectionner custom puis régler le slider met availableKg',
+      build: () => AnnouncementFormBloc(),
+      act: (b) => b
+        ..add(const CapacityUnitChanged(CapacityUnit.custom))
+        ..add(const AvailableKgChanged(15)),
+      expect: () => [
+        isA<AnnouncementFormState>()
+            .having((s) => s.capacityUnit, 'unit', CapacityUnit.custom),
+        isA<AnnouncementFormState>().having((s) => s.availableKg, 'kg', 15.0),
+      ],
+    );
+
+    test('custom.toWire vaut KG_EXACT', () {
+      expect(CapacityUnit.custom.toWire(), 'KG_EXACT');
+    });
+
     // ── Nouveaux événements ───────────────────────────────────────────────────
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(

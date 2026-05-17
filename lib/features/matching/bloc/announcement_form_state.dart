@@ -2,7 +2,7 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:equatable/equatable.dart';
 
-enum CapacityUnit { suitcase23kg, suitcase32kg, kgFree }
+enum CapacityUnit { suitcase23kg, suitcase32kg, kgFree, custom }
 
 enum PriceWarning { tooLow, tooHigh }
 
@@ -15,6 +15,8 @@ extension CapacityUnitWire on CapacityUnit {
         return 'SUITCASE_32KG';
       case CapacityUnit.kgFree:
         return 'KG_FREE';
+      case CapacityUnit.custom:
+        return 'KG_EXACT';
     }
   }
 
@@ -26,6 +28,8 @@ extension CapacityUnitWire on CapacityUnit {
         return '1 valise 32 kg';
       case CapacityUnit.kgFree:
         return 'Kg libre';
+      case CapacityUnit.custom:
+        return 'Personnalisé';
     }
   }
 
@@ -37,6 +41,8 @@ extension CapacityUnitWire on CapacityUnit {
         return 32.0;
       case CapacityUnit.kgFree:
         return null;
+      case CapacityUnit.custom:
+        return 30.0;
     }
   }
 }
@@ -108,7 +114,7 @@ class AnnouncementFormState extends Equatable {
     String? arrivalCity,
     DateTime? departureDate,
     double? pricePerKg,
-    double? availableKg,
+    double? Function()? availableKgGetter,
     CapacityUnit? capacityUnit,
     String? description,
     PriceWarning? Function()? priceWarningGetter,
@@ -125,7 +131,7 @@ class AnnouncementFormState extends Equatable {
       arrivalCity: arrivalCity ?? this.arrivalCity,
       departureDate: departureDate ?? this.departureDate,
       pricePerKg: pricePerKg ?? this.pricePerKg,
-      availableKg: availableKg ?? this.availableKg,
+      availableKg: availableKgGetter != null ? availableKgGetter() : this.availableKg,
       capacityUnit: capacityUnit ?? this.capacityUnit,
       description: description ?? this.description,
       priceWarning:
