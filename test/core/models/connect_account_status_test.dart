@@ -56,5 +56,25 @@ void main() {
       final s = ConnectAccountStatus.fromJson({});
       expect(s.status, 'NOT_CREATED');
     });
+
+    test('needsOnboarding returns false for ONBOARDING_COMPLETE', () {
+      const s = ConnectAccountStatus(status: 'ONBOARDING_COMPLETE');
+      expect(s.needsOnboarding, isFalse);
+    });
+
+    test('fromJson parses isProAccount: true', () {
+      final json = {'status': 'ONBOARDING_COMPLETE', 'isProAccount': true};
+      final s = ConnectAccountStatus.fromJson(json);
+      expect(s.isProAccount, isTrue);
+    });
+
+    test('fromJson handles null optional fields', () {
+      final json = {'status': 'NOT_CREATED'};
+      final s = ConnectAccountStatus.fromJson(json);
+      expect(s.accountId, isNull);
+      expect(s.country, isNull);
+      expect(s.reason, isNull);
+      expect(s.isProAccount, isFalse);
+    });
   });
 }
