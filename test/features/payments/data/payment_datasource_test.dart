@@ -3,6 +3,7 @@ import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/payments/data/datasources/payment_remote_datasource.dart';
 import 'package:dony/features/payments/data/models/connect_account_model.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
+import 'package:dony/features/payments/data/models/payment_status.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -27,7 +28,7 @@ final _paymentJson = {
   'clientSecret': 'pi_secret',
   'amount': 120.0,
   'commissionAmount': 14.4,
-  'status': 'REQUIRES_PAYMENT_METHOD',
+  'status': 'PENDING',
 };
 
 void main() {
@@ -69,7 +70,7 @@ void main() {
       expect(m.clientSecret, 'pi_secret');
       expect(m.amount, 120.0);
       expect(m.commissionAmount, 14.4);
-      expect(m.status, 'REQUIRES_PAYMENT_METHOD');
+      expect(m.status, PaymentStatus.pending);
     });
 
     test('fromJson with null clientSecret', () {
@@ -88,7 +89,7 @@ void main() {
       final m = PaymentModel.fromJson(_paymentJson);
       final json = m.toJson();
       expect(json['id'], 'pay-001');
-      expect(json['status'], 'REQUIRES_PAYMENT_METHOD');
+      expect(json['status'], 'PENDING');
     });
 
     test('int amounts coerce to double', () {
@@ -151,7 +152,7 @@ void main() {
       final result = await datasource.createPayment('bid-001');
 
       expect(result.id, 'pay-001');
-      expect(result.status, 'REQUIRES_PAYMENT_METHOD');
+      expect(result.status, PaymentStatus.pending);
     });
   });
 

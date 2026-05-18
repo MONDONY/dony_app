@@ -7,6 +7,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
+import 'package:dony/features/payments/data/models/payment_status.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -457,17 +458,17 @@ class _EscrowBadge extends StatelessWidget {
   (IconData, Color, String) _resolve(ColorScheme cs) {
     final amount = payment.amount.toStringAsFixed(2);
     return switch (payment.status) {
-      'RELEASED' => (
+      PaymentStatus.captured => (
         Icons.check_circle_rounded,
         cs.success,
         'Voyageur payé — $amount €',
       ),
-      'REFUNDED' => (
+      PaymentStatus.refunded => (
         Icons.replay_rounded,
         cs.onSurfaceVariant,
         'Remboursé — $amount €',
       ),
-      'FAILED' => (Icons.error_outline_rounded, cs.error, 'Paiement échoué'),
+      PaymentStatus.failed => (Icons.error_outline_rounded, cs.error, 'Paiement échoué'),
       _ when bidStatus == 'PENDING' => (
         Icons.lock_clock_rounded,
         cs.warning,
