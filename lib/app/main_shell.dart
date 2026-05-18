@@ -16,6 +16,9 @@ import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_bottom_sheet.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/stripe_account/presentation/widgets/account_disabled_banner.dart';
+import 'package:dony/features/stripe_account/presentation/widgets/account_rejected_banner.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -31,7 +34,7 @@ class MainShell extends StatefulWidget {
   State<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends State<MainShell> {
+class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   StreamSubscription<void>? _fcmSub;
   bool _ratingPromptShown = false;
 
@@ -49,12 +52,14 @@ class _MainShellState extends State<MainShell> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
       }
       context.read<NotificationBloc>().add(const NotificationsLoadRequested());
       context.read<RatingBloc>().add(const PendingRatingChecked());
+      context.read<StripeAccountBloc>().add(const StripeAccountStatusLoaded());
       _fcmSub = getIt<NotificationService>().newNotificationStream.listen((_) {
         if (mounted) {
           context.read<NotificationBloc>().add(const NotificationsLoadRequested());
@@ -64,34 +69,70 @@ class _MainShellState extends State<MainShell> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      context.read<StripeAccountBloc>().add(const StripeAccountStatusRefreshed());
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _fcmSub?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<RatingBloc, RatingState>(
-      listener: (context, state) {
-        if (state is PendingRatingFound && !_ratingPromptShown) {
-          _ratingPromptShown = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            RatingBottomSheet.show(
-              context,
-              bidId: state.bidId,
-              travelerName: state.otherPartyName,
-              isTravelerRating: state.isTravelerRating,
-            );
-          });
-        }
-      },
-      child: Scaffold(
-        body: widget.navigationShell,
-        bottomNavigationBar: _DonyBottomNav(
-          currentIndex: widget.navigationShell.currentIndex,
-          onTap: _onTap,
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<RatingBloc, RatingState>(
+          listener: (context, state) {
+            if (state is PendingRatingFound && !_ratingPromptShown) {
+              _ratingPromptShown = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted) return;
+                RatingBottomSheet.show(
+                  context,
+                  bidId: state.bidId,
+                  travelerName: state.otherPartyName,
+                  isTravelerRating: state.isTravelerRating,
+                );
+              });
+            }
+          },
         ),
+      ],
+      child: BlocBuilder<StripeAccountBloc, StripeAccountState>(
+        buildWhen: (prev, curr) {
+          if (prev is StripeAccountReady && curr is StripeAccountReady) {
+            return prev.accountStatus.isDisabled != curr.accountStatus.isDisabled ||
+                prev.accountStatus.isRejected != curr.accountStatus.isRejected;
+          }
+          return prev.runtimeType != curr.runtimeType;
+        },
+        builder: (context, accountState) {
+          Widget? banner;
+          if (accountState is StripeAccountReady) {
+            if (accountState.accountStatus.isDisabled) {
+              banner = const AccountDisabledBanner();
+            } else if (accountState.accountStatus.isRejected) {
+              banner = const AccountRejectedBanner();
+            }
+          }
+          return Scaffold(
+            body: Column(
+              children: [
+                ?banner,
+                Expanded(child: widget.navigationShell),
+              ],
+            ),
+            bottomNavigationBar: _DonyBottomNav(
+              currentIndex: widget.navigationShell.currentIndex,
+              onTap: _onTap,
+            ),
+          );
+        },
       ),
     );
   }
