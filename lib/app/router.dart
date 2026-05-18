@@ -35,6 +35,9 @@ import 'package:dony/features/payments/presentation/screens/payout_onboarding_sc
 import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/presentation/screens/connect_onboarding_intro_screen.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/stripe_account/presentation/screens/account_disabled_screen.dart';
+import 'package:dony/features/stripe_account/presentation/screens/account_rejected_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/complete_details_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/shipment_steps_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
@@ -107,6 +110,16 @@ final appRouter = GoRouter(
     if (!isAuthenticated && !isPublic) {
       return '/auth/phone';
     }
+
+    const guardedRoutes = {'/announcements/create'};
+    if (guardedRoutes.contains(state.matchedLocation)) {
+      final accountState = context.read<StripeAccountBloc>().state;
+      if (accountState is StripeAccountReady) {
+        if (accountState.accountStatus.isDisabled) return '/account/disabled';
+        if (accountState.accountStatus.isRejected) return '/account/rejected';
+      }
+    }
+
     return null;
   },
   routes: [
@@ -181,6 +194,19 @@ final appRouter = GoRouter(
         final cancellation = state.extra as CancellationModel;
         return RematchSearchScreen(cancellation: cancellation);
       },
+    ),
+
+    // ── Stripe account status (hors shell) ──────────────────────────────
+    GoRoute(
+      path: '/account/disabled',
+      builder: (context, state) => const AccountDisabledScreen(),
+    ),
+    GoRoute(
+      path: '/account/rejected',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<ConnectOnboardingBloc>(),
+        child: const AccountRejectedScreen(),
+      ),
     ),
 
     // ── Connect onboarding (hors shell) ─────────────────────────────────
