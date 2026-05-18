@@ -1,6 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
-import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
@@ -23,7 +22,9 @@ class _MyPackageRequestsScreenState extends State<MyPackageRequestsScreen> {
   @override
   void initState() {
     super.initState();
-    getIt<PackageRequestBloc>().add(const FetchMyRequests());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<PackageRequestBloc>().add(const FetchMyRequests());
+    });
   }
 
   @override
@@ -42,10 +43,7 @@ class MyPackageRequestsBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: getIt<PackageRequestBloc>(),
-      child: _ListContent(showFab: showFab),
-    );
+    return _ListContent(showFab: showFab);
   }
 }
 

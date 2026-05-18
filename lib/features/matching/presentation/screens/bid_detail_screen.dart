@@ -131,6 +131,38 @@ class _BidDetailViewState extends State<_BidDetailView> {
     }
   }
 
+  void _showCardDeclinedSheet(BuildContext context, String message) {
+    DonyBottomSheet.show<void>(
+      context,
+      title: 'Paiement refusé',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(message,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(color: DonyColors.textPrimary)),
+          const SizedBox(height: 8),
+          Text(
+            'Changez votre carte de commission pour accepter cette demande.',
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: DonyColors.textMuted),
+          ),
+        ],
+      ),
+      stickyBottom: DonyButton(
+        label: 'Changer ma carte de commission',
+        onPressed: () {
+          context.pop();
+          context.push('/payments/commission-method');
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -146,11 +178,15 @@ class _BidDetailViewState extends State<_BidDetailView> {
           );
           context.read<BidBloc>().add(BidDetailRequested(_bid.id));
         } else if (state is acs.BidFailed) {
-          DonySnackbar.show(
-            context,
-            message: state.message,
-            type: DonySnackbarType.error,
-          );
+          if (state.cardDeclined) {
+            _showCardDeclinedSheet(context, state.message);
+          } else {
+            DonySnackbar.show(
+              context,
+              message: state.message,
+              type: DonySnackbarType.error,
+            );
+          }
         }
       },
       child: BlocListener<CancellationBloc, CancellationState>(

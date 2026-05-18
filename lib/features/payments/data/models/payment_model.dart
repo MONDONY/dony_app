@@ -1,3 +1,4 @@
+import 'package:dony/features/payments/data/models/payment_status.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'payment_model.g.dart';
@@ -9,7 +10,9 @@ class PaymentModel {
   final String? clientSecret;
   final double amount;
   final double commissionAmount;
-  final String status;
+  final PaymentStatus status;
+  @JsonKey(defaultValue: false)
+  final bool disputed;
 
   const PaymentModel({
     required this.id,
@@ -18,6 +21,7 @@ class PaymentModel {
     required this.amount,
     required this.commissionAmount,
     required this.status,
+    this.disputed = false,
   });
 
   factory PaymentModel.fromJson(Map<String, dynamic> json) =>

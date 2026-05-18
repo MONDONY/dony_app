@@ -9,8 +9,33 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 
-class CommissionMethodScreen extends StatelessWidget {
+class CommissionMethodScreen extends StatefulWidget {
   const CommissionMethodScreen({super.key});
+
+  @override
+  State<CommissionMethodScreen> createState() => _CommissionMethodScreenState();
+}
+
+class _CommissionMethodScreenState extends State<CommissionMethodScreen>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      context.read<CommissionMethodBloc>().add(CommissionMethodLoadRequested());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -3,6 +3,7 @@ import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/data/models/connect_account_model.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
+import 'package:dony/features/payments/data/models/payment_status.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -200,7 +201,7 @@ void main() {
             clientSecret: 'pi_test_secret',
             amount: 120.0,
             commissionAmount: 14.4,
-            status: 'REQUIRES_PAYMENT_METHOD',
+            status: PaymentStatus.pending,
           ),
         );
       },
@@ -224,7 +225,7 @@ void main() {
             clientSecret: null,
             amount: 120.0,
             commissionAmount: 14.4,
-            status: 'ALREADY_PAID',
+            status: PaymentStatus.pending,
           ),
         );
       },

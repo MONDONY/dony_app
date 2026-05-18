@@ -1,32 +1,8 @@
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/features/connect_onboarding/data/connect_onboarding_datasource.dart';
 
-class ConnectAccountStatus {
-  final String? accountId;
-  final String status;
-  final String? country;
-  final bool isProAccount;
-
-  const ConnectAccountStatus({
-    this.accountId,
-    required this.status,
-    this.country,
-    this.isProAccount = false,
-  });
-
-  factory ConnectAccountStatus.fromJson(Map<String, dynamic> json) {
-    return ConnectAccountStatus(
-      accountId: json['accountId'] as String?,
-      status: json['status'] as String? ?? 'NOT_CREATED',
-      country: json['country'] as String?,
-      isProAccount: json['isProAccount'] as bool? ?? false,
-    );
-  }
-
-  bool get isComplete => status == 'ONBOARDING_COMPLETE';
-  bool get needsOnboarding =>
-      status == 'NOT_CREATED' || status == 'PENDING_ONBOARDING';
-}
+export 'package:dony/core/models/connect_account_status.dart';
 
 abstract class IConnectOnboardingRepository {
   Future<ConnectAccountStatus> getAccountStatus();

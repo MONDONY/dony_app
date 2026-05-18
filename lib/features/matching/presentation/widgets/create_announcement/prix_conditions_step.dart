@@ -2,8 +2,7 @@
 // Extrait de create_announcement_bottom_sheet.dart — refactor pur, zéro changement
 // de comportement.
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/features/auth/bloc/auth_bloc.dart';
-import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_create_announcement_constants.dart';
@@ -232,15 +231,10 @@ class PrixConditionsStep extends StatelessWidget {
           icon: Icons.payments_rounded,
         ),
         const SizedBox(height: DonySpacing.sm),
-        BlocBuilder<AuthBloc, AuthState>(
-          builder: (ctx, authState) {
-            final authUser = authState is AuthAuthenticated
-                ? authState.user
-                : authState is AuthProfileUpdated
-                    ? authState.user
-                    : null;
-            final isStripeConfigured =
-                authUser?.stripeAccountStatus == 'ONBOARDING_COMPLETE';
+        BlocBuilder<StripeAccountBloc, StripeAccountState>(
+          builder: (ctx, stripeState) {
+            final isStripeConfigured = stripeState is StripeAccountReady &&
+                stripeState.accountStatus.isComplete;
 
             if (!isStripeConfigured) {
               return _buildStripeNotConfiguredPaymentSection(tt, cs, ctx);

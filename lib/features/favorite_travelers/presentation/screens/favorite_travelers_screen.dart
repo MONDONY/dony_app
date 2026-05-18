@@ -1,5 +1,4 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/favorite_travelers/bloc/favorite_traveler_bloc.dart';
 import 'package:dony/features/favorite_travelers/data/models/favorite_traveler.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +17,9 @@ class _FavoriteTravelersScreenState extends State<FavoriteTravelersScreen> {
   @override
   void initState() {
     super.initState();
-    getIt<FavoriteTravelerBloc>().add(const FavoriteTravelerLoaded());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<FavoriteTravelerBloc>().add(const FavoriteTravelerLoaded());
+    });
   }
 
   @override

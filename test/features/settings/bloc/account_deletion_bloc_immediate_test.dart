@@ -56,6 +56,38 @@ void main() {
         isA<AccountDeletionError>(),
       ],
     );
+
+    blocTest<AccountDeletionBloc, AccountDeletionState>(
+      'emits [Loading, AccountDeletionError] avec RateLimitException si trop de SMS',
+      build: () {
+        when(() => mockReauth.currentUserPhone).thenReturn('+33600000001');
+        when(() => mockReauth.sendVerificationCode())
+            .thenThrow(const RateLimitException('Trop de tentatives.'));
+        return bloc;
+      },
+      act: (b) => b.add(const RequestOtpForImmediateDeletion()),
+      expect: () => [
+        isA<AccountDeletionLoading>(),
+        isA<AccountDeletionError>()
+            .having((s) => s.error, 'error', isA<RateLimitException>()),
+      ],
+    );
+
+    blocTest<AccountDeletionBloc, AccountDeletionState>(
+      'emits [Loading, AccountDeletionError] avec OfflineException si pas de réseau',
+      build: () {
+        when(() => mockReauth.currentUserPhone).thenReturn('+33600000001');
+        when(() => mockReauth.sendVerificationCode())
+            .thenThrow(const OfflineException('Pas de connexion.'));
+        return bloc;
+      },
+      act: (b) => b.add(const RequestOtpForImmediateDeletion()),
+      expect: () => [
+        isA<AccountDeletionLoading>(),
+        isA<AccountDeletionError>()
+            .having((s) => s.error, 'error', isA<OfflineException>()),
+      ],
+    );
   });
 
   group('ConfirmImmediateDeletion', () {
@@ -104,6 +136,25 @@ void main() {
       },
       act: (b) => b.add(const ConfirmImmediateDeletion(
           verificationId: 'verif-id', smsCode: '123456')),
+      expect: () => [
+        isA<AccountDeletionLoading>(),
+        isA<AccountDeletionError>()
+            .having((s) => s.isReauthRequired, 'isReauthRequired', isTrue),
+      ],
+    );
+
+    blocTest<AccountDeletionBloc, AccountDeletionState>(
+      'emits [Loading, AccountDeletionError(isReauthRequired)] si code OTP invalide',
+      build: () {
+        when(() => mockReauth.reauthenticate(any(), any())).thenThrow(
+          const UnauthorizedException(
+            'Code SMS incorrect.', 'reauth-required',
+          ),
+        );
+        return bloc;
+      },
+      act: (b) => b.add(const ConfirmImmediateDeletion(
+          verificationId: 'verif-id', smsCode: 'wrong')),
       expect: () => [
         isA<AccountDeletionLoading>(),
         isA<AccountDeletionError>()
