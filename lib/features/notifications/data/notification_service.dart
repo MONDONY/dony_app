@@ -167,7 +167,15 @@ class NotificationService {
     }
   }
 
+  static final _uuidRegex = RegExp(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+    caseSensitive: false,
+  );
+  static bool _isUuid(String? v) => v != null && _uuidRegex.hasMatch(v);
+
   /// Maps the FCM data `type` field to a GoRouter path.
+  /// IDs are validated as UUIDs before being embedded in routes to prevent
+  /// path traversal from crafted FCM payloads.
   String? _routeForMessage(Map<String, dynamic> data) {
     final type = data['type'] as String?;
     final bidId = data['bidId'] as String?;
@@ -176,26 +184,26 @@ class NotificationService {
 
     return switch (type) {
       // Voyageur → liste des offres sur son annonce
-      'BID_CREATED' when announcementId != null => '/announcements/$announcementId/bids',
+      'BID_CREATED' when _isUuid(announcementId) => '/announcements/$announcementId/bids',
       // Expéditeur → détail de son offre
-      'BID_ACCEPTED' when bidId != null        => '/bids/$bidId',
-      'BID_REJECTED' when bidId != null        => '/bids/$bidId',
-      'HANDOVER_DEFINED' when bidId != null    => '/bids/$bidId',
-      'DELIVERY_CONFIRMED' when bidId != null  => '/bids/$bidId',
-      'PAYMENT_RELEASED' when bidId != null    => '/bids/$bidId',
-      'DISPUTE_OPENED' when bidId != null      => '/bids/$bidId',
+      'BID_ACCEPTED' when _isUuid(bidId)         => '/bids/$bidId',
+      'BID_REJECTED' when _isUuid(bidId)         => '/bids/$bidId',
+      'HANDOVER_DEFINED' when _isUuid(bidId)     => '/bids/$bidId',
+      'DELIVERY_CONFIRMED' when _isUuid(bidId)   => '/bids/$bidId',
+      'PAYMENT_RELEASED' when _isUuid(bidId)     => '/bids/$bidId',
+      'DISPUTE_OPENED' when _isUuid(bidId)       => '/bids/$bidId',
       // Négociation — les deux parties naviguent vers le thread
-      'negotiation_started' when threadId != null      => '/negotiations/$threadId',
-      'negotiation_counter' when threadId != null      => '/negotiations/$threadId',
-      'negotiation_awaiting_trip' when threadId != null => '/negotiations/$threadId',
-      'negotiation_awaiting_payment' when threadId != null => '/negotiations/$threadId',
-      'negotiation_expired' when threadId != null      => '/negotiations/$threadId',
-      'request_accepted' when threadId != null         => '/negotiations/$threadId',
+      'negotiation_started' when _isUuid(threadId)           => '/negotiations/$threadId',
+      'negotiation_counter' when _isUuid(threadId)           => '/negotiations/$threadId',
+      'negotiation_awaiting_trip' when _isUuid(threadId)     => '/negotiations/$threadId',
+      'negotiation_awaiting_payment' when _isUuid(threadId)  => '/negotiations/$threadId',
+      'negotiation_expired' when _isUuid(threadId)           => '/negotiations/$threadId',
+      'request_accepted' when _isUuid(threadId)              => '/negotiations/$threadId',
       // Nouveau message → liste des conversations
-      'NEW_MESSAGE'                            => '/messages',
+      'NEW_MESSAGE'                              => '/messages',
       // Trajet annulé → pas de navigation (le trajet n'existe plus)
-      'TRIP_CANCELLED'                         => null,
-      _                                        => null,
+      'TRIP_CANCELLED'                           => null,
+      _                                          => null,
     };
   }
 
