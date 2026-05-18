@@ -2,12 +2,11 @@ import 'package:json_annotation/json_annotation.dart';
 
 enum PaymentStatus {
   @JsonValue('PENDING') pending,
-  @JsonValue('AUTHORIZED') authorized,
-  @JsonValue('CAPTURED') captured,
+  @JsonValue('ESCROW') escrow,
+  @JsonValue('RELEASED') released,
   @JsonValue('REFUNDED') refunded,
   @JsonValue('FAILED') failed,
-  @JsonValue('DISPUTED') disputed,
-  @JsonValue('CANCELED') canceled;
+  @JsonValue('CANCELLED') cancelled;
 
   static PaymentStatus fromString(String raw) =>
       PaymentStatus.values.firstWhere(

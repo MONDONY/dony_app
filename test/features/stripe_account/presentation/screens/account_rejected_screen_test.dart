@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/data/connect_onboarding_repository.dart';
@@ -72,5 +73,23 @@ void main() {
     await tester.tap(find.text('Reconfigurer mon compte'));
     await tester.pump();
     expect(find.text('Contacter le support Dony'), findsOneWidget);
+  });
+
+  testWidgets('affiche un SnackBar quand ConnectOnboardingError est émis',
+      (tester) async {
+    const errorMessage = 'Impossible de générer le lien';
+    whenListen(
+      mockOnboardingBloc,
+      Stream.fromIterable([
+        const ConnectOnboardingInitial(),
+        ConnectOnboardingError(
+          NetworkException(errorMessage, code: 'link-failed'),
+        ),
+      ]),
+      initialState: const ConnectOnboardingInitial(),
+    );
+    await tester.pumpWidget(buildWidget());
+    await tester.pump();
+    expect(find.text(errorMessage), findsOneWidget);
   });
 }

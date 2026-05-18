@@ -110,6 +110,8 @@ void main() {
     );
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 300));
+    clearInteractions(bloc);
+
     await tester.tap(find.text('Réessayer'));
     verify(() => bloc.add(any(that: isA<FavoriteTravelerLoaded>()))).called(1);
   });

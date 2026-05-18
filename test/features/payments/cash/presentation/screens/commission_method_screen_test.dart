@@ -133,4 +133,16 @@ void main() {
     await tester.pumpAndSettle();
     verifyNever(() => bloc.add(any(that: isA<CommissionMethodDeleteRequested>())));
   });
+
+  testWidgets('dispatches LoadRequested when app resumes from background', (tester) async {
+    whenListen(bloc, Stream.value(CommissionMethodLoaded(_fakeCard)),
+        initialState: CommissionMethodLoaded(_fakeCard));
+    await tester.pumpWidget(_wrap(const CommissionMethodScreen(), bloc));
+    await tester.pump();
+    clearInteractions(bloc);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    verify(() => bloc.add(any(that: isA<CommissionMethodLoadRequested>()))).called(1);
+  });
 }

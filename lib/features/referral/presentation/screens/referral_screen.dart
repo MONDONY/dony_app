@@ -1,5 +1,4 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/bloc/referral_event.dart';
 import 'package:dony/features/referral/bloc/referral_state.dart';
@@ -21,7 +20,9 @@ class _ReferralScreenState extends State<ReferralScreen> {
   @override
   void initState() {
     super.initState();
-    getIt<ReferralBloc>().add(const ReferralLoadRequested());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<ReferralBloc>().add(const ReferralLoadRequested());
+    });
   }
 
   Widget _buildBody(ReferralState state) {

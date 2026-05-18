@@ -458,7 +458,7 @@ class _EscrowBadge extends StatelessWidget {
   (IconData, Color, String) _resolve(ColorScheme cs) {
     final amount = payment.amount.toStringAsFixed(2);
     return switch (payment.status) {
-      PaymentStatus.captured => (
+      PaymentStatus.released => (
         Icons.check_circle_rounded,
         cs.success,
         'Voyageur payé — $amount €',

@@ -150,6 +150,7 @@ void main() {
       await tester.pump(_kSettle);
 
       await tester.ensureVisible(_submitBtn);
+      await tester.pumpAndSettle();
       await tester.tap(_submitBtn);
       await tester.pumpAndSettle();
 

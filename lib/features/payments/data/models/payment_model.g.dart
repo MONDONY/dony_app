@@ -29,10 +29,9 @@ Map<String, dynamic> _$PaymentModelToJson(PaymentModel instance) =>
 
 const _$PaymentStatusEnumMap = {
   PaymentStatus.pending: 'PENDING',
-  PaymentStatus.authorized: 'AUTHORIZED',
-  PaymentStatus.captured: 'CAPTURED',
+  PaymentStatus.escrow: 'ESCROW',
+  PaymentStatus.released: 'RELEASED',
   PaymentStatus.refunded: 'REFUNDED',
   PaymentStatus.failed: 'FAILED',
-  PaymentStatus.disputed: 'DISPUTED',
-  PaymentStatus.canceled: 'CANCELED',
+  PaymentStatus.cancelled: 'CANCELLED',
 };

@@ -1,5 +1,4 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_bloc.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_event.dart';
 import 'package:dony/features/ratings/bloc/my_reviews_state.dart';
@@ -20,7 +19,9 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
   @override
   void initState() {
     super.initState();
-    getIt<MyReviewsBloc>().add(const MyReviewsRequested());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<MyReviewsBloc>().add(const MyReviewsRequested());
+    });
   }
 
   @override

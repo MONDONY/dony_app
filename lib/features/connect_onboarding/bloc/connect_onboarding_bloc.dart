@@ -61,6 +61,10 @@ class ConnectOnboardingBloc
       final status = await _repository.getAccountStatus();
       if (status.isComplete) {
         emit(const ConnectOnboardingComplete());
+      } else if (status.isDisabled) {
+        emit(const ConnectOnboardingDisabled());
+      } else if (status.isRejected) {
+        emit(ConnectOnboardingRejected(reason: status.reason));
       } else {
         emit(const ConnectOnboardingPending());
       }

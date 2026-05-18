@@ -13,7 +13,13 @@ class AccountRejectedScreen extends StatefulWidget {
 }
 
 class _AccountRejectedScreenState extends State<AccountRejectedScreen> {
-  int _primaryTapCount = 0;
+  final _tapCount = ValueNotifier<int>(0);
+
+  @override
+  void dispose() {
+    _tapCount.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,67 +36,82 @@ class _AccountRejectedScreenState extends State<AccountRejectedScreen> {
         ),
         title: const Text('Compte rejeté'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Icon(Icons.error_outline_rounded, size: 48, color: Color(0xFFE53935)),
-            const SizedBox(height: 16),
-            Text(
-              'Compte rejeté',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Votre compte Stripe a été rejeté. Vous devez '
-              'reconfigurer un nouveau compte pour continuer.',
-            ),
-            if (reason != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Raison : $reason',
-                style: const TextStyle(fontStyle: FontStyle.italic),
-              ),
-            ],
-            const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  setState(() => _primaryTapCount++);
-                  context
-                      .read<ConnectOnboardingBloc>()
-                      .add(const ConnectOnboardingLinkRequested());
-                },
-                child: const Text('Reconfigurer mon compte'),
-              ),
-            ),
-            if (_primaryTapCount >= 2) ...[
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () async {
-                    final uri = Uri.parse('mailto:support@dony.app');
-                    if (await canLaunchUrl(uri)) launchUrl(uri);
-                  },
-                  child: const Text('Contacter le support Dony'),
+      body: BlocListener<ConnectOnboardingBloc, ConnectOnboardingState>(
+        listener: (context, state) async {
+          if (state is ConnectOnboardingUrlReady) {
+            final uri = Uri.parse(state.url);
+            if (await canLaunchUrl(uri)) {
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
+            }
+          } else if (state is ConnectOnboardingError) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.error.message),
+                  behavior: SnackBarBehavior.floating,
                 ),
+              );
+            }
+          }
+        },
+        child: ValueListenableBuilder<int>(
+          valueListenable: _tapCount,
+          builder: (context, count, _) {
+            return Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.error_outline_rounded, size: 48, color: Color(0xFFE53935)),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Compte rejeté',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Votre compte Stripe a été rejeté. Vous devez '
+                    'reconfigurer un nouveau compte pour continuer.',
+                  ),
+                  if (reason != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Raison : $reason',
+                      style: const TextStyle(fontStyle: FontStyle.italic),
+                    ),
+                  ],
+                  const Spacer(),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _tapCount.value++;
+                        context
+                            .read<ConnectOnboardingBloc>()
+                            .add(const ConnectOnboardingLinkRequested());
+                      },
+                      child: const Text('Reconfigurer mon compte'),
+                    ),
+                  ),
+                  if (count >= 2) ...[
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: () async {
+                          final uri = Uri.parse('mailto:support@dony.app');
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri);
+                          }
+                        },
+                        child: const Text('Contacter le support Dony'),
+                      ),
+                    ),
+                  ],
+                ],
               ),
-            ],
-            BlocListener<ConnectOnboardingBloc, ConnectOnboardingState>(
-              listener: (context, state) async {
-                if (state is ConnectOnboardingUrlReady) {
-                  final uri = Uri.parse(state.url);
-                  if (await canLaunchUrl(uri)) {
-                    launchUrl(uri, mode: LaunchMode.externalApplication);
-                  }
-                }
-              },
-              child: const SizedBox.shrink(),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );

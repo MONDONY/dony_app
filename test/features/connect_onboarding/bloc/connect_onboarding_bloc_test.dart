@@ -182,6 +182,34 @@ void main() {
     );
 
     blocTest<ConnectOnboardingBloc, ConnectOnboardingState>(
+      'emits [Disabled] when account is DISABLED during polling',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.getAccountStatus())
+            .thenAnswer((_) async => _disabled);
+      },
+      act: (b) => b.add(const ConnectOnboardingPollingRequested()),
+      expect: () => [isA<ConnectOnboardingDisabled>()],
+    );
+
+    blocTest<ConnectOnboardingBloc, ConnectOnboardingState>(
+      'emits [Rejected] with reason when account is REJECTED during polling',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.getAccountStatus())
+            .thenAnswer((_) async => _rejected);
+      },
+      act: (b) => b.add(const ConnectOnboardingPollingRequested()),
+      expect: () => [
+        isA<ConnectOnboardingRejected>().having(
+          (s) => s.reason,
+          'reason',
+          'Docs invalides',
+        ),
+      ],
+    );
+
+    blocTest<ConnectOnboardingBloc, ConnectOnboardingState>(
       'emits [Error] when polling throws',
       build: buildBloc,
       setUp: () {

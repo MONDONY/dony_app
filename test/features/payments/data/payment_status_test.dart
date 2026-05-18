@@ -8,12 +8,12 @@ void main() {
       expect(PaymentStatus.fromString('PENDING'), PaymentStatus.pending);
     });
 
-    test('parses AUTHORIZED', () {
-      expect(PaymentStatus.fromString('AUTHORIZED'), PaymentStatus.authorized);
+    test('parses ESCROW', () {
+      expect(PaymentStatus.fromString('ESCROW'), PaymentStatus.escrow);
     });
 
-    test('parses CAPTURED', () {
-      expect(PaymentStatus.fromString('CAPTURED'), PaymentStatus.captured);
+    test('parses RELEASED', () {
+      expect(PaymentStatus.fromString('RELEASED'), PaymentStatus.released);
     });
 
     test('parses REFUNDED', () {
@@ -24,12 +24,8 @@ void main() {
       expect(PaymentStatus.fromString('FAILED'), PaymentStatus.failed);
     });
 
-    test('parses DISPUTED', () {
-      expect(PaymentStatus.fromString('DISPUTED'), PaymentStatus.disputed);
-    });
-
-    test('parses CANCELED', () {
-      expect(PaymentStatus.fromString('CANCELED'), PaymentStatus.canceled);
+    test('parses CANCELLED', () {
+      expect(PaymentStatus.fromString('CANCELLED'), PaymentStatus.cancelled);
     });
 
     test('falls back to pending for unknown value', () {
@@ -37,23 +33,48 @@ void main() {
     });
 
     test('is case-insensitive', () {
-      expect(PaymentStatus.fromString('captured'), PaymentStatus.captured);
+      expect(PaymentStatus.fromString('released'), PaymentStatus.released);
     });
   });
 
   group('PaymentModel.disputed field', () {
-    test('fromJson parses disputed: true', () {
+    test('fromJson parses disputed: true with RELEASED status', () {
       final json = {
         'id': 'pay_123',
         'bidId': 'bid_456',
         'amount': 50.0,
         'commissionAmount': 6.0,
-        'status': 'CAPTURED',
+        'status': 'RELEASED',
         'disputed': true,
       };
       final model = PaymentModel.fromJson(json);
       expect(model.disputed, isTrue);
-      expect(model.status, PaymentStatus.captured);
+      expect(model.status, PaymentStatus.released);
+    });
+
+    test('fromJson parses ESCROW status', () {
+      final json = {
+        'id': 'pay_123',
+        'bidId': 'bid_456',
+        'amount': 50.0,
+        'commissionAmount': 6.0,
+        'status': 'ESCROW',
+      };
+      final model = PaymentModel.fromJson(json);
+      expect(model.status, PaymentStatus.escrow);
+      expect(model.disputed, isFalse);
+    });
+
+    test('fromJson parses CANCELLED status', () {
+      final json = {
+        'id': 'pay_123',
+        'bidId': 'bid_456',
+        'amount': 50.0,
+        'commissionAmount': 6.0,
+        'status': 'CANCELLED',
+      };
+      final model = PaymentModel.fromJson(json);
+      expect(model.status, PaymentStatus.cancelled);
     });
 
     test('fromJson defaults disputed to false when absent', () {
