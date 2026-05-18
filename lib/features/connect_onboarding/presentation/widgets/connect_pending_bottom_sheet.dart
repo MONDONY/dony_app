@@ -1,6 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -53,7 +55,8 @@ class ConnectPendingBottomSheet extends StatelessWidget {
     return BlocListener<ConnectOnboardingBloc, ConnectOnboardingState>(
       listener: (context, state) {
         if (state is ConnectOnboardingComplete) {
-          Navigator.of(context).pop();
+          getIt<StripeAccountBloc>().add(const StripeAccountStatusRefreshed());
+          Navigator.of(context, rootNavigator: true).pop();
           DonySnackbar.show(
             context,
             message: 'Compte bancaire configuré !',

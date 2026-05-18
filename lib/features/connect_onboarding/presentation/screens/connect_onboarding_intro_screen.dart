@@ -1,7 +1,9 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/presentation/widgets/connect_pending_bottom_sheet.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,10 +19,13 @@ class ConnectOnboardingIntroScreen extends StatefulWidget {
 }
 
 class _ConnectOnboardingIntroScreenState
-    extends State<ConnectOnboardingIntroScreen> {
+    extends State<ConnectOnboardingIntroScreen> with WidgetsBindingObserver {
+  bool _hasLaunchedBrowser = false;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         final fromStripe =
@@ -33,13 +38,33 @@ class _ConnectOnboardingIntroScreenState
   }
 
   @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _hasLaunchedBrowser && mounted) {
+      context.read<ConnectOnboardingBloc>().add(
+        const ConnectOnboardingPollingRequested(),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocConsumer<ConnectOnboardingBloc, ConnectOnboardingState>(
       listener: (context, state) async {
         if (state is ConnectOnboardingUrlReady) {
           await _openExternalBrowser(context, state.url);
         } else if (state is ConnectOnboardingComplete) {
-          context.go('/home');
+          // Synchronise le singleton global pour que le reste de l'app
+          // reflète immédiatement ONBOARDING_COMPLETE sans logout/login.
+          getIt<StripeAccountBloc>().add(const StripeAccountStatusRefreshed());
+          if (context.mounted) {
+            context.go('/home');
+          }
         }
       },
       builder: (context, state) {
@@ -51,9 +76,10 @@ class _ConnectOnboardingIntroScreenState
   Future<void> _openExternalBrowser(BuildContext context, String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
+      _hasLaunchedBrowser = true;
       await launchUrl(uri, mode: LaunchMode.externalApplication);
-      // After launching external browser, show pending bottom sheet so the
-      // user can tap "J'ai complété le formulaire" if the deep link doesn't fire.
+      // Si le deep link ne s'est pas déclenché, affiche le bottom sheet
+      // pour que l'utilisateur puisse confirmer manuellement.
       if (context.mounted) {
         await ConnectPendingBottomSheet.show(context);
       }

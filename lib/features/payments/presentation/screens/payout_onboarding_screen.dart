@@ -1,9 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/features/auth/bloc/auth_bloc.dart';
-import 'package:dony/features/auth/bloc/auth_state.dart';
-import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,49 +10,41 @@ import 'package:webview_flutter/webview_flutter.dart';
 class PayoutOnboardingScreen extends StatelessWidget {
   const PayoutOnboardingScreen({super.key});
 
-  UserModel? _getUser(BuildContext context) {
-    final s = context.read<AuthBloc>().state;
-    if (s is AuthAuthenticated) return s.user;
-    if (s is AuthProfileUpdated) return s.user;
-    return null;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final user = _getUser(context);
-    final isAlreadyConnected =
-        user?.stripeAccountStatus == 'ONBOARDING_COMPLETE';
-
-    if (isAlreadyConnected) {
-      return const _ActiveAccountView();
-    }
-
-    return BlocConsumer<PaymentBloc, PaymentState>(
-      listener: (context, state) async {
-        if (state is PaymentOnboardingUrlReady) {
-          await showGeneralDialog<void>(
-            context: context,
-            pageBuilder: (ctx, animation, secondaryAnimation) =>
-                _StripeOnboardingWebView(
-              url: state.url,
-              // Bug #1 fix: le dialog est déjà fermé par _StripeOnboardingWebView
-              // avant d'appeler onReturn — ne pas re-popper ici.
-              onReturn: () {
-                if (context.mounted) {
-                  context
-                      .read<PaymentBloc>()
-                      .add(const PaymentOnboardingStatusChecked());
-                }
-              },
-            ),
-          );
+    return BlocBuilder<StripeAccountBloc, StripeAccountState>(
+      builder: (context, stripeState) {
+        if (stripeState is StripeAccountReady &&
+            stripeState.accountStatus.isComplete) {
+          return const _ActiveAccountView();
         }
-      },
-      builder: (context, state) {
-        if (state is PaymentOnboardingComplete) {
-          return const _SuccessView();
-        }
-        return _OnboardingView(state: state);
+
+        return BlocConsumer<PaymentBloc, PaymentState>(
+          listener: (context, state) async {
+            if (state is PaymentOnboardingUrlReady) {
+              await showGeneralDialog<void>(
+                context: context,
+                pageBuilder: (ctx, animation, secondaryAnimation) =>
+                    _StripeOnboardingWebView(
+                  url: state.url,
+                  onReturn: () {
+                    if (context.mounted) {
+                      context
+                          .read<PaymentBloc>()
+                          .add(const PaymentOnboardingStatusChecked());
+                    }
+                  },
+                ),
+              );
+            }
+          },
+          builder: (context, state) {
+            if (state is PaymentOnboardingComplete) {
+              return const _SuccessView();
+            }
+            return _OnboardingView(state: state);
+          },
+        );
       },
     );
   }

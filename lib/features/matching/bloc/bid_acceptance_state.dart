@@ -8,5 +8,6 @@ class BidAccepted extends BidAcceptanceState {}
 
 class BidFailed extends BidAcceptanceState {
   final String message;
-  BidFailed(this.message);
+  final bool cardDeclined;
+  BidFailed(this.message, {this.cardDeclined = false});
 }

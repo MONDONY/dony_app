@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
@@ -135,8 +136,17 @@ class BidRemoteDatasource {
   }
 
   Future<AcceptanceResponse> acceptBidWithCommission(String bidId) async {
-    final response = await _apiClient.dio.post('/bids/$bidId/accept-with-commission');
-    return AcceptanceResponse.fromJson(response.data as Map<String, dynamic>);
+    try {
+      final response = await _apiClient.dio.post('/bids/$bidId/accept-with-commission');
+      return AcceptanceResponse.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      // Le backend retourne 422 pour FAILED (carte refusée, etc.)
+      // On parse le body comme AcceptanceResponse pour afficher la raison précise
+      if (e.response?.statusCode == 422 && e.response?.data != null) {
+        return AcceptanceResponse.fromJson(e.response!.data as Map<String, dynamic>);
+      }
+      rethrow;
+    }
   }
 
   Future<ConfirmResponse> confirmCommissionAcceptance(String bidId) async {

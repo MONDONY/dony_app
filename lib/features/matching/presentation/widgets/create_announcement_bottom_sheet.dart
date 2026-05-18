@@ -3,8 +3,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
-import 'package:dony/features/auth/bloc/auth_bloc.dart';
-import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
@@ -155,15 +154,10 @@ class CreateAnnouncementBottomSheet {
                 return BlocBuilder<AnnouncementBloc, AnnouncementState>(
                   builder: (ctx, annState) {
                     final isLoading = annState is AnnouncementLoading;
-                    return BlocBuilder<AuthBloc, AuthState>(
-                      builder: (ctx3, authState) {
-                        final authUser = authState is AuthAuthenticated
-                            ? authState.user
-                            : authState is AuthProfileUpdated
-                                ? authState.user
-                                : null;
-                        final isStripeConfigured =
-                            authUser?.stripeAccountStatus == 'ONBOARDING_COMPLETE';
+                    return BlocBuilder<StripeAccountBloc, StripeAccountState>(
+                      builder: (ctx3, stripeState) {
+                        final isStripeConfigured = stripeState is StripeAccountReady &&
+                            stripeState.accountStatus.isComplete;
 
                         if (!isStripeConfigured) {
                           return Row(

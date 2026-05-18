@@ -28,13 +28,13 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
             final c = await _repo.confirmCommissionAcceptance(e.bidId);
             emit(c.accepted
                 ? BidAccepted()
-                : BidFailed(c.error ?? 'Confirmation échouée'));
+                : BidFailed(c.error ?? 'Confirmation échouée', cardDeclined: true));
           } on StripeException {
-            emit(BidFailed('Authentification bancaire interrompue'));
+            emit(BidFailed('Authentification bancaire interrompue', cardDeclined: true));
           }
           return;
         case AcceptanceStatus.failed:
-          emit(BidFailed(r.error ?? 'Acceptation refusée'));
+          emit(BidFailed(r.error ?? 'Acceptation refusée', cardDeclined: true));
           return;
       }
     } catch (err) {
