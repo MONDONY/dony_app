@@ -84,6 +84,9 @@ import 'package:dony/features/ratings/data/rating_repository.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/data/referral_datasource.dart';
 import 'package:dony/features/referral/data/referral_repository.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/stripe_account/data/stripe_account_datasource.dart';
+import 'package:dony/features/stripe_account/data/stripe_account_repository.dart';
 import 'package:get_it/get_it.dart';
 
 final getIt = GetIt.instance;
@@ -396,5 +399,17 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<CompleteDetailsBloc>(
     () => CompleteDetailsBloc(getIt<PackageRequestRepository>()),
+  );
+
+  // Stripe account status (global singleton)
+  getIt.registerLazySingleton<StripeAccountDatasource>(
+    () => StripeAccountDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<IStripeAccountRepository>(
+    () => StripeAccountRepository(getIt<StripeAccountDatasource>()),
+  );
+  getIt.registerLazySingleton<StripeAccountBloc>(
+    () => StripeAccountBloc(getIt<IStripeAccountRepository>()),
+    dispose: (b) => b.close(),
   );
 }

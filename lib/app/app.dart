@@ -14,6 +14,7 @@ import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -133,6 +134,9 @@ class _DonyAppState extends State<DonyApp> {
           ),
           BlocProvider<RatingBloc>(
             create: (_) => getIt<RatingBloc>(),
+          ),
+          BlocProvider<StripeAccountBloc>(
+            create: (_) => getIt<StripeAccountBloc>(),
           ),
         ],
         child: AnnotatedRegion<SystemUiOverlayStyle>(
