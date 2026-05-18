@@ -473,6 +473,73 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Title only'), findsOneWidget);
     });
+
+    // M3 — le footer sticky est enveloppé d'un SafeArea + Padding horizontal
+    testWidgets('M3 — stickyBottom est dans un SafeArea et un Padding horizontal',
+        (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        theme: AppTheme.light,
+        home: Builder(
+          builder: (ctx) => Scaffold(
+            body: Center(
+              child: ElevatedButton(
+                onPressed: () => DonyBottomSheet.show(
+                  ctx,
+                  child: const Text('Contenu'),
+                  stickyBottom:
+                      const Text('CTA footer', key: Key('sticky-cta')),
+                ),
+                child: const Text('Ouvrir'),
+              ),
+            ),
+          ),
+        ),
+      ));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      // Le footer Container doit être présent (clé stable)
+      expect(find.byKey(const Key('donyBottomSheetFooter')), findsOneWidget);
+
+      // Le CTA doit être visible
+      expect(find.byKey(const Key('sticky-cta')), findsOneWidget);
+
+      // Vérifier qu'il est bien dans un SafeArea (ancêtre du CTA — pas global)
+      final safeAreas = find.ancestor(
+        of: find.byKey(const Key('sticky-cta')),
+        matching: find.byType(SafeArea),
+      );
+      expect(safeAreas, findsAtLeastNWidgets(1));
+
+      // Vérifier qu'il y a bien un Padding horizontal non nul
+      final paddings = tester.widgetList<Padding>(
+        find.ancestor(
+          of: find.byKey(const Key('sticky-cta')),
+          matching: find.byType(Padding),
+        ),
+      );
+      final hasHPadding = paddings.any(
+        (p) =>
+            p.padding.resolve(TextDirection.ltr).left >= DonySpacing.lg &&
+            p.padding.resolve(TextDirection.ltr).right >= DonySpacing.lg,
+      );
+      expect(hasHPadding, isTrue,
+          reason:
+              'Le stickyBottom doit avoir un padding horizontal >= DonySpacing.lg (20)');
+    });
+
+    // M3 — le footer sans stickyBottom ne rend pas de Container footer
+    testWidgets('M3 — sans stickyBottom, le footer Container est absent',
+        (tester) async {
+      await tester.pumpWidget(_sheetTrigger(
+        child: const Text('Contenu sans footer'),
+      ));
+      await tester.tap(find.text('Open Sheet'));
+      await tester.pumpAndSettle();
+      expect(find.text('Contenu sans footer'), findsOneWidget);
+      // Le footer est identifié par sa clé stable — absent quand pas de stickyBottom
+      expect(find.byKey(const Key('donyBottomSheetFooter')), findsNothing);
+    });
   });
 
   // ── DonyPageScaffold ──────────────────────────────────────────────────────

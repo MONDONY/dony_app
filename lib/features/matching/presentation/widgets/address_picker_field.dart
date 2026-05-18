@@ -14,6 +14,8 @@ class AddressPickerField extends FormField<AddressData> {
     required this.fieldLabel,
     required this.autocompleteService,
     this.showGpsButton = true,
+    this.onChanged,
+    this.prefixIconColor,
     bool isRequired = false,
     super.initialValue,
     super.onSaved,
@@ -30,6 +32,14 @@ class AddressPickerField extends FormField<AddressData> {
   final String fieldLabel;
   final AddressAutocompleteService autocompleteService;
   final bool showGpsButton;
+  final void Function(AddressData?)? onChanged;
+
+  /// Couleur sémantique de l'icône de préfixe à l'état neutre (non confirmé,
+  /// non focalisé). Passer `colorScheme.primary` pour un champ « départ »,
+  /// `colorScheme.secondary` pour un champ « arrivée ».
+  ///
+  /// `null` (défaut) → `cs.onSurfaceVariant` (comportement historique).
+  final Color? prefixIconColor;
 
   @override
   FormFieldState<AddressData> createState() => _AddressPickerFieldState();
@@ -183,6 +193,7 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
     _committed = addr;
     _setCtrlText(addr.label);
     didChange(addr);
+    _w.onChanged?.call(addr);
     setState(() {
       _suggestions = [];
       _showFallback = false;
@@ -255,10 +266,10 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
                 padding:
                     const EdgeInsets.symmetric(vertical: DonySpacing.xs),
                 itemCount: _suggestions.length,
-                separatorBuilder: (_, __) => Divider(
+                separatorBuilder: (sepCtx, __) => Divider(
                   height: 1,
                   thickness: 1,
-                  color: Theme.of(context).colorScheme.outline,
+                  color: Theme.of(sepCtx).colorScheme.outline,
                   indent: 48,
                 ),
                 itemBuilder: (innerCtx, i) {
@@ -424,7 +435,7 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
                         ? cs.success
                         : isFocused
                             ? cs.primary
-                            : cs.onSurfaceVariant,
+                            : _w.prefixIconColor ?? cs.onSurfaceVariant,
                   ),
                 ),
                 prefixIconConstraints: const BoxConstraints(

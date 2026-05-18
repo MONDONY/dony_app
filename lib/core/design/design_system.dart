@@ -18,6 +18,7 @@ export 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
 export 'package:dony/core/design/widgets/dony_button.dart';
 export 'package:dony/core/design/widgets/dony_card.dart';
 // Form controls
+export 'package:dony/core/design/widgets/required_label.dart';
 export 'package:dony/core/design/widgets/dony_checkbox.dart';
 export 'package:dony/core/design/widgets/dony_chip.dart';
 // Glassmorphism
@@ -43,3 +44,5 @@ export 'package:dony/core/design/widgets/dony_text_field.dart';
 // Domain cards
 export 'package:dony/core/design/widgets/dony_trip_card.dart';
 export 'package:dony/core/design/widgets/dony_user_card.dart';
+// Icons
+export 'package:dony/core/design/dony_icons.dart';

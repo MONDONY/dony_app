@@ -1,4 +1,6 @@
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class AnnouncementFormEvent extends Equatable {
@@ -69,6 +71,60 @@ class DescriptionChanged extends AnnouncementFormEvent {
 
   @override
   List<Object?> get props => [description];
+}
+
+class TransportModeChanged extends AnnouncementFormEvent {
+  final TransportMode mode;
+
+  const TransportModeChanged(this.mode);
+
+  @override
+  List<Object?> get props => [mode];
+}
+
+class PickupAddressChanged extends AnnouncementFormEvent {
+  final AddressData? address;
+
+  const PickupAddressChanged(this.address);
+
+  @override
+  List<Object?> get props => [address];
+}
+
+class DeliveryAddressChanged extends AnnouncementFormEvent {
+  final AddressData? address;
+
+  const DeliveryAddressChanged(this.address);
+
+  @override
+  List<Object?> get props => [address];
+}
+
+class CashAcceptedChanged extends AnnouncementFormEvent {
+  final bool accepted;
+
+  const CashAcceptedChanged(this.accepted);
+
+  @override
+  List<Object?> get props => [accepted];
+}
+
+class AcceptedTypesChanged extends AnnouncementFormEvent {
+  final List<String> types;
+
+  const AcceptedTypesChanged(this.types);
+
+  @override
+  List<Object?> get props => [types];
+}
+
+class RejectedTypesChanged extends AnnouncementFormEvent {
+  final List<String> types;
+
+  const RejectedTypesChanged(this.types);
+
+  @override
+  List<Object?> get props => [types];
 }
 
 class FormResetRequested extends AnnouncementFormEvent {

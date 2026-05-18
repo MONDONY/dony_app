@@ -81,7 +81,6 @@ class AnnouncementModel {
   final DateTime createdAt;
   final DateTime updatedAt;
   final Set<BidPaymentMethod> acceptedPaymentMethods;
-  @JsonKey(name: 'capacity_unit')
   final String? capacityUnit;
 
   const AnnouncementModel({

@@ -1,0 +1,726 @@
+// Étape 2 du formulaire "Publier un trajet" : Prix & Conditions.
+// Extrait de create_announcement_bottom_sheet.dart — refactor pur, zéro changement
+// de comportement.
+import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_form_state.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/_create_announcement_constants.dart';
+import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/price_hint_widget.dart';
+import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
+import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
+import 'package:dony/features/payments/cash/data/models/commission_method.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+
+/// Corps de l'étape 2 (Prix & Conditions) du formulaire de création d'annonce.
+///
+/// Tous les [ValueNotifier] et [TextEditingController] restent la propriété de
+/// [_CreateAnnouncementContentState] — ils sont simplement passés en paramètre.
+/// Le cycle de vie (create / dispose) reste entièrement dans le state parent.
+class PrixConditionsStep extends StatelessWidget {
+  final ValueNotifier<int> priceOptionNotifier;
+  final ValueNotifier<double> customPriceNotifier;
+  final ValueNotifier<double> availableKgNotifier;
+  final ValueNotifier<bool> cashEnabledNotifier;
+  final ValueNotifier<Set<String>> selectedContentNotifier;
+  final ValueNotifier<Set<String>> customAcceptedNotifier;
+  final ValueNotifier<Set<String>> refusedTypesNotifier;
+  final TextEditingController descriptionCtrl;
+  final TextEditingController customAcceptedCtrl;
+  final TextEditingController refusedCtrl;
+  final TextEditingController customPriceCtrl;
+
+  const PrixConditionsStep({
+    super.key,
+    required this.priceOptionNotifier,
+    required this.customPriceNotifier,
+    required this.availableKgNotifier,
+    required this.cashEnabledNotifier,
+    required this.selectedContentNotifier,
+    required this.customAcceptedNotifier,
+    required this.refusedTypesNotifier,
+    required this.descriptionCtrl,
+    required this.customAcceptedCtrl,
+    required this.refusedCtrl,
+    required this.customPriceCtrl,
+  });
+
+  bool get _isCustomPrice => priceOptionNotifier.value == kPriceOptions.length;
+
+  double get _pricePerKg => _isCustomPrice
+      ? customPriceNotifier.value
+      : kPriceOptions[
+          priceOptionNotifier.value.clamp(0, kPriceOptions.length - 1)];
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO(refactor): décomposer en _PriceSection / _PaymentSection / _ContentSection / _NoteSection
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── PRIX PAR KG ───────────────────────────────────────────────────────
+        const CaSectionLabel(label: 'Prix par kg', icon: Icons.sell_rounded),
+        const SizedBox(height: DonySpacing.md),
+        ListenableBuilder(
+          listenable: Listenable.merge(
+              [priceOptionNotifier, customPriceNotifier, availableKgNotifier]),
+          builder: (context, _) {
+            final selectedIdx = priceOptionNotifier.value;
+            final isCustom = _isCustomPrice;
+            final pricePerKg = _pricePerKg;
+            final kg = availableKgNotifier.value;
+            final grossEstimate = kg * pricePerKg;
+            final netEstimate = grossEstimate * 0.88;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Chips preset ──────────────────────────────────────────────
+                Row(
+                  children: List.generate(kPriceOptions.length, (i) {
+                    final selected = selectedIdx == i;
+                    return Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          left: i == 0 ? 0 : DonySpacing.xs,
+                          right: DonySpacing.xs,
+                        ),
+                        child: GestureDetector(
+                          onTap: () => priceOptionNotifier.value = i,
+                          child: AnimatedContainer(
+                            duration: 180.ms,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: DonySpacing.md,
+                            ),
+                            decoration: BoxDecoration(
+                              color: selected ? cs.successLight : cs.surface,
+                              borderRadius:
+                                  BorderRadius.circular(DonyRadius.lg),
+                              border: Border.all(
+                                color: selected ? cs.success : cs.outline,
+                                width: selected ? 1.5 : 1,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${kPriceOptions[i].toStringAsFixed(0)}€',
+                                style: tt.titleMedium?.copyWith(
+                                  color:
+                                      selected ? cs.success : cs.onSurface,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+                const SizedBox(height: DonySpacing.xs),
+                // ── Chip "Autre" ──────────────────────────────────────────────
+                GestureDetector(
+                  onTap: () {
+                    priceOptionNotifier.value = kPriceOptions.length;
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      FocusScope.of(context).unfocus();
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: 180.ms,
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: DonySpacing.sm,
+                      horizontal: DonySpacing.base,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isCustom ? cs.successLight : cs.surface,
+                      borderRadius: BorderRadius.circular(DonyRadius.lg),
+                      border: Border.all(
+                        color: isCustom ? cs.success : cs.outline,
+                        width: isCustom ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.edit_outlined,
+                          size: 16,
+                          color: isCustom ? cs.success : cs.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: DonySpacing.xs),
+                        Text(
+                          'Autre prix',
+                          style: tt.bodyMedium?.copyWith(
+                            color: isCustom
+                                ? cs.success
+                                : cs.onSurfaceVariant,
+                            fontWeight: isCustom
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // ── Champ prix custom ─────────────────────────────────────────
+                if (isCustom) ...[
+                  const SizedBox(height: DonySpacing.sm),
+                  DonyTextField(
+                    label: 'Prix par kg',
+                    hint: 'ex: 12',
+                    controller: customPriceCtrl,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    suffixIcon: Padding(
+                      padding: const EdgeInsets.only(right: DonySpacing.md),
+                      child: Text('€/kg',
+                          style: tt.bodyMedium
+                              ?.copyWith(color: cs.onSurfaceVariant)),
+                    ),
+                    onChanged: (v) {
+                      final parsed = double.tryParse(v.replaceAll(',', '.'));
+                      if (parsed != null && parsed > 0) {
+                        customPriceNotifier.value = parsed;
+                      }
+                    },
+                  ),
+                ],
+                const SizedBox(height: DonySpacing.sm),
+                Text(
+                  kg == 0
+                      ? 'Capacité illimitée — estimation selon la demande'
+                      : 'Estimation : ${grossEstimate.toStringAsFixed(0)}€ · vous touchez ${netEstimate.toStringAsFixed(0)}€',
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
+            );
+          },
+        ).animate().fadeIn(delay: 100.ms),
+        BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
+          buildWhen: (p, c) =>
+              p.priceWarning != c.priceWarning ||
+              p.pricePerKg != c.pricePerKg ||
+              p.departureCity != c.departureCity ||
+              p.arrivalCity != c.arrivalCity,
+          builder: (context, formState) {
+            final dep = formState.departureCity;
+            final arr = formState.arrivalCity;
+            final corridor =
+                (dep != null && arr != null) ? '$dep – $arr' : null;
+            return PriceHintWidget(
+              marketMedianPrice: 8.0,
+              warning: formState.priceWarning,
+              corridor: corridor,
+            );
+          },
+        ),
+        const SizedBox(height: DonySpacing.xxl),
+
+        // ── MODES DE PAIEMENT ACCEPTÉS ────────────────────────────────────────
+        const CaSectionLabel(
+          label: 'Modes de paiement acceptés',
+          icon: Icons.payments_rounded,
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        BlocBuilder<AuthBloc, AuthState>(
+          builder: (ctx, authState) {
+            final authUser = authState is AuthAuthenticated
+                ? authState.user
+                : authState is AuthProfileUpdated
+                    ? authState.user
+                    : null;
+            final isStripeConfigured =
+                authUser?.stripeAccountStatus == 'ONBOARDING_COMPLETE';
+
+            if (!isStripeConfigured) {
+              return _buildStripeNotConfiguredPaymentSection(tt, cs, ctx);
+            }
+
+            return BlocBuilder<CommissionMethodBloc, CommissionMethodState>(
+              builder: (context, cmState) {
+                final isLoaded = cmState is CommissionMethodLoaded &&
+                    cmState.card.expirationStatus !=
+                        ExpirationStatus.expired;
+                return CaSectionCard(
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        key: const Key('payment-method-stripe'),
+                        value: true,
+                        onChanged: null,
+                        activeThumbColor: cs.primary,
+                        title: Row(
+                          children: [
+                            const Icon(Icons.credit_card_rounded, size: 18),
+                            const SizedBox(width: DonySpacing.sm),
+                            Text(
+                              'Carte bancaire (Stripe)',
+                              style: tt.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: cs.onSurface,
+                              ),
+                            ),
+                            const SizedBox(width: DonySpacing.xs),
+                            Icon(Icons.lock_rounded,
+                                size: 14, color: cs.onSurfaceVariant),
+                          ],
+                        ),
+                        subtitle: Text(
+                          'Paiement sécurisé par défaut',
+                          style: tt.bodySmall
+                              ?.copyWith(color: cs.onSurfaceVariant),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: DonySpacing.base,
+                          vertical: DonySpacing.xs,
+                        ),
+                      ),
+                      const CaRowDivider(),
+                      ValueListenableBuilder<bool>(
+                        valueListenable: cashEnabledNotifier,
+                        builder: (context, cashEnabled, _) {
+                          return SwitchListTile(
+                            key: const Key('payment-method-cash'),
+                            value: isLoaded ? cashEnabled : false,
+                            onChanged: isLoaded
+                                ? (val) => cashEnabledNotifier.value = val
+                                : null,
+                            activeThumbColor: cs.primary,
+                            title: Row(
+                              children: [
+                                const Icon(Icons.payments_rounded, size: 18),
+                                const SizedBox(width: DonySpacing.sm),
+                                Text(
+                                  'Espèces',
+                                  style: tt.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: isLoaded
+                                        ? cs.onSurface
+                                        : cs.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            subtitle: isLoaded
+                                ? Text(
+                                    'Le voyageur perçoit la commission à la remise',
+                                    style: tt.bodySmall?.copyWith(
+                                        color: cs.onSurfaceVariant),
+                                  )
+                                : GestureDetector(
+                                    onTap: () => context
+                                        .push('/payments/commission-method'),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          'Ajouter une carte commission',
+                                          key: const Key(
+                                              'add-commission-card-link'),
+                                          style: tt.bodySmall?.copyWith(
+                                            color: cs.primary,
+                                            decoration:
+                                                TextDecoration.underline,
+                                          ),
+                                        ),
+                                        const SizedBox(width: DonySpacing.xs),
+                                        Icon(
+                                          DonyIcons.arrowRight,
+                                          size: 14,
+                                          color: cs.primary,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: DonySpacing.base,
+                              vertical: DonySpacing.xs,
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ).animate().fadeIn(delay: 180.ms),
+        const SizedBox(height: DonySpacing.xxl),
+
+        // ── CE QUE J'ACCEPTE ──────────────────────────────────────────────────
+        const CaSectionLabel(
+            label: 'Ce que j\'accepte',
+            icon: Icons.check_circle_outline_rounded),
+        const SizedBox(height: DonySpacing.sm),
+        ListenableBuilder(
+          listenable: Listenable.merge([
+            selectedContentNotifier,
+            customAcceptedNotifier,
+          ]),
+          builder: (context, _) {
+            final selected = selectedContentNotifier.value;
+            final custom = customAcceptedNotifier.value;
+
+            return CaSectionCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Predefined chips
+                  Padding(
+                    padding: const EdgeInsets.all(DonySpacing.base),
+                    child: Wrap(
+                      spacing: DonySpacing.xs,
+                      runSpacing: DonySpacing.xs,
+                      children: kContentTypes.map((type) {
+                        final isSelected = selected.contains(type);
+                        return GestureDetector(
+                          onTap: () {
+                            final updated = Set<String>.from(selected);
+                            if (isSelected) {
+                              updated.remove(type);
+                            } else {
+                              updated.add(type);
+                            }
+                            selectedContentNotifier.value = updated;
+                          },
+                          child: AnimatedContainer(
+                            duration: 160.ms,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: DonySpacing.md,
+                              vertical: DonySpacing.xs,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? cs.success
+                                  : Theme.of(context)
+                                      .scaffoldBackgroundColor,
+                              borderRadius:
+                                  BorderRadius.circular(DonyRadius.full),
+                              border: Border.all(
+                                color:
+                                    isSelected ? cs.success : cs.outline,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (isSelected) ...[
+                                  const Icon(Icons.check_rounded,
+                                      size: 12, color: DonyColors.white),
+                                  const SizedBox(width: DonySpacing.xs),
+                                ],
+                                Text(
+                                  type,
+                                  style: tt.bodySmall?.copyWith(
+                                    color: isSelected
+                                        ? DonyColors.white
+                                        : cs.onSurface,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  // Custom items
+                  if (custom.isNotEmpty) ...[
+                    const CaRowDivider(),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.base,
+                        vertical: DonySpacing.sm,
+                      ),
+                      child: Wrap(
+                        spacing: DonySpacing.xs,
+                        runSpacing: DonySpacing.xs,
+                        children: custom
+                            .map((item) => CaRemovableChip(
+                                  label: item,
+                                  accentColor: cs.success,
+                                  onRemove: () {
+                                    final updated =
+                                        Set<String>.from(custom)
+                                          ..remove(item);
+                                    customAcceptedNotifier.value = updated;
+                                  },
+                                ))
+                            .toList(),
+                      ),
+                    ),
+                  ],
+                  const CaRowDivider(),
+                  CaInlineAddRow(
+                    controller: customAcceptedCtrl,
+                    hint: 'Ajouter un autre type…',
+                    onAdd: () {
+                      final val = customAcceptedCtrl.text.trim();
+                      if (val.isEmpty) return;
+                      customAcceptedNotifier.value = {
+                        ...customAcceptedNotifier.value,
+                        val,
+                      };
+                      customAcceptedCtrl.clear();
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        ).animate().fadeIn(delay: 120.ms),
+        const SizedBox(height: DonySpacing.xxl),
+
+        // ── CE QUE JE REFUSE ──────────────────────────────────────────────────
+        const CaSectionLabel(
+            label: 'Ce que je refuse', icon: Icons.block_rounded),
+        const SizedBox(height: DonySpacing.sm),
+        ValueListenableBuilder<Set<String>>(
+          valueListenable: refusedTypesNotifier,
+          builder: (context, refused, _) {
+            return CaSectionCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CaInlineAddRow(
+                    controller: refusedCtrl,
+                    hint: 'Ex: Liquides, Denrées périssables…',
+                    accentColor: cs.error,
+                    onAdd: () {
+                      final val = refusedCtrl.text.trim();
+                      if (val.isEmpty) return;
+                      refusedTypesNotifier.value = {...refused, val};
+                      refusedCtrl.clear();
+                    },
+                  ),
+                  if (refused.isNotEmpty) ...[
+                    const CaRowDivider(),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DonySpacing.base,
+                        vertical: DonySpacing.sm,
+                      ),
+                      child: Wrap(
+                        spacing: DonySpacing.xs,
+                        runSpacing: DonySpacing.xs,
+                        children: refused
+                            .map((item) => CaRemovableChip(
+                                  label: item,
+                                  accentColor: cs.error,
+                                  onRemove: () {
+                                    final updated =
+                                        Set<String>.from(refused)
+                                          ..remove(item);
+                                    refusedTypesNotifier.value = updated;
+                                  },
+                                ))
+                            .toList(),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          },
+        ).animate().fadeIn(delay: 140.ms),
+        const SizedBox(height: DonySpacing.xxl),
+
+        // ── NOTE AUX EXPÉDITEURS ──────────────────────────────────────────────
+        const CaSectionLabel(
+            label: 'Note aux expéditeurs', icon: Icons.edit_note_rounded),
+        const SizedBox(height: DonySpacing.sm),
+        ValueListenableBuilder<TextEditingValue>(
+          valueListenable: descriptionCtrl,
+          builder: (context, value, _) {
+            return CaSectionCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.base,
+                      vertical: DonySpacing.xs,
+                    ),
+                    child: TextField(
+                      controller: descriptionCtrl,
+                      maxLines: 4,
+                      maxLength: 500,
+                      scrollPadding: const EdgeInsets.only(bottom: 120),
+                      buildCounter: (_,
+                              {required currentLength,
+                              required isFocused,
+                              maxLength}) =>
+                          null,
+                      style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+                      decoration: InputDecoration(
+                        hintText:
+                            'Ex: Je préfère les colis bien emballés. Contactez-moi avant le départ.',
+                        hintStyle: tt.bodyMedium
+                            ?.copyWith(color: cs.onSurfaceVariant),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: DonySpacing.md,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      right: DonySpacing.base,
+                      bottom: DonySpacing.sm,
+                    ),
+                    child: Text(
+                      '${value.text.length}/500',
+                      style:
+                          tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ).animate().fadeIn(delay: 160.ms),
+        const SizedBox(height: DonySpacing.xl),
+      ],
+    );
+  }
+
+  Widget _buildStripeNotConfiguredPaymentSection(
+    TextTheme tt,
+    ColorScheme cs,
+    BuildContext ctx,
+  ) {
+    return CaSectionCard(
+      child: Column(
+        children: [
+          // ── Bannière warning ──────────────────────────────────────────────
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.base,
+              vertical: DonySpacing.sm,
+            ),
+            decoration: BoxDecoration(
+              color: cs.successLight,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(DonyRadius.card),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(Icons.warning_amber_rounded, color: cs.warning, size: 18),
+                const SizedBox(width: DonySpacing.xs),
+                Expanded(
+                  child: Text(
+                    'Connectez Stripe pour recevoir des paiements et publier votre trajet.',
+                    style: tt.bodySmall?.copyWith(color: cs.onSurface),
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                GestureDetector(
+                  onTap: () => ctx.push('/connect/onboarding/intro'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.sm,
+                      vertical: DonySpacing.xs,
+                    ),
+                    decoration: BoxDecoration(
+                      color: cs.primary,
+                      borderRadius: BorderRadius.circular(DonyRadius.full),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Configurer',
+                          style: tt.labelSmall?.copyWith(
+                            color: cs.onPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: DonySpacing.xs),
+                        Icon(
+                          DonyIcons.arrowRight,
+                          size: 14,
+                          color: cs.onPrimary,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // ── Ligne Carte bancaire (désactivée) ─────────────────────────────
+          SwitchListTile(
+            value: false,
+            onChanged: null,
+            title: Row(
+              children: [
+                Icon(Icons.credit_card_rounded,
+                    size: 18, color: cs.onSurfaceVariant),
+                const SizedBox(width: DonySpacing.sm),
+                Text(
+                  'Carte bancaire (Stripe)',
+                  style: tt.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+            subtitle: Text(
+              'Non configuré',
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.base,
+              vertical: DonySpacing.xs,
+            ),
+          ),
+          const CaRowDivider(),
+          // ── Ligne Espèces (désactivée) ────────────────────────────────────
+          SwitchListTile(
+            value: false,
+            onChanged: null,
+            title: Row(
+              children: [
+                Icon(Icons.payments_rounded,
+                    size: 18, color: cs.onSurfaceVariant),
+                const SizedBox(width: DonySpacing.sm),
+                Text(
+                  'Espèces',
+                  style: tt.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+            subtitle: Text(
+              'Disponible après Stripe',
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.base,
+              vertical: DonySpacing.xs,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

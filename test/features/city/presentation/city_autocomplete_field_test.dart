@@ -219,6 +219,39 @@ void main() {
     // Pas d'exception = succès
   });
 
+  testWidgets(
+      'focus dans un Scrollable ancêtre déclenche ensureVisible sans exception',
+      (tester) async {
+    // Construit le widget DANS un SingleChildScrollView pour que
+    // Scrollable.maybeOf() puisse résoudre un ancêtre scrollable,
+    // ce qui valide le chemin focus → delayed callback → ensureVisible.
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: BlocProvider<CitySearchBloc>.value(
+            value: mockBloc,
+            child: SingleChildScrollView(
+              child: CityAutocompleteField(
+                label: 'Ville de départ',
+                onSelected: (_) {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // Acquiert le focus sur le champ
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+
+    // Laisse s'écouler le délai du postFrameCallback (300 ms) + marge
+    await tester.pump(const Duration(milliseconds: 350));
+
+    // Aucune exception ne doit avoir été levée
+    expect(tester.takeException(), isNull);
+  });
+
   // ── Dispose ───────────────────────────────────────────────────────────────
 
   testWidgets('dispose s\'exécute sans erreur', (tester) async {

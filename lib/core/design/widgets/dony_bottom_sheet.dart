@@ -167,6 +167,7 @@ class _DonyBottomSheetContent extends StatelessWidget {
           ),
           if (stickyBottom != null)
             Container(
+              key: const Key('donyBottomSheetFooter'),
               decoration: BoxDecoration(
                 color: bgColor,
                 border: Border(
@@ -180,13 +181,24 @@ class _DonyBottomSheetContent extends StatelessWidget {
                   ),
                 ],
               ),
+              // bottomInset gère le padding vertical (viewInsets + viewPadding).
+              // SafeArea(top:false, bottom:false) protège uniquement les encoches
+              // latérales/découpes (left/right par défaut) sur foldables et certains
+              // Android ; les insets haut/bas sont gérés manuellement ci-dessus.
               padding: EdgeInsets.fromLTRB(
-                DonySpacing.lg,
+                0,
                 DonySpacing.md,
-                DonySpacing.lg,
+                0,
                 bottomInset + DonySpacing.base,
               ),
-              child: stickyBottom!,
+              child: SafeArea(
+                top: false,
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: DonySpacing.lg),
+                  child: stickyBottom!,
+                ),
+              ),
             ),
         ],
       ),

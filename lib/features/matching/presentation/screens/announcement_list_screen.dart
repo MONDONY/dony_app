@@ -353,6 +353,7 @@ class _InProgressCard extends StatelessWidget {
     final remaining = announcement.availableKg;
     final booked = (total - remaining).clamp(0, total);
     final progress = total > 0 ? (booked / total).clamp(0.0, 1.0) : 0.0;
+    final isKgFree = announcement.capacityUnit == 'KG_FREE';
 
     return GestureDetector(
       onTap: onDetailTap,
@@ -368,23 +369,12 @@ class _InProgressCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: cs.success,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.flight_rounded,
-                      color: Colors.white, size: 18),
-                ),
-                const SizedBox(width: DonySpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${announcement.departureCity} → ${announcement.arrivalCity}',
+                        '${announcement.departureCity} ✈ ${announcement.arrivalCity}',
                         style: tt.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: cs.onSurface,
@@ -422,22 +412,25 @@ class _InProgressCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(DonyRadius.full),
-              child: LinearProgressIndicator(
-                value: progress,
-                minHeight: 5,
-                backgroundColor: cs.success.withValues(alpha: 0.15),
-                valueColor:
-                    AlwaysStoppedAnimation<Color>(cs.success),
+            if (!isKgFree) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(DonyRadius.full),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 5,
+                  backgroundColor: cs.success.withValues(alpha: 0.15),
+                  valueColor: AlwaysStoppedAnimation<Color>(cs.success),
+                ),
               ),
-            ),
-            const SizedBox(height: DonySpacing.xs),
+              const SizedBox(height: DonySpacing.xs),
+            ],
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '${booked.toStringAsFixed(0)} / ${total.toStringAsFixed(0)} kg livrés',
+                  isKgFree
+                      ? 'Kg libre · vendu au kilo'
+                      : '${booked.toStringAsFixed(0)} / ${total.toStringAsFixed(0)} kg livrés',
                   style: tt.bodySmall?.copyWith(
                     color: cs.success,
                     fontWeight: FontWeight.w500,
@@ -673,6 +666,7 @@ class _AnnouncementCard extends StatelessWidget {
     final booked = (total - remaining).clamp(0, total);
     final progress = total > 0 ? (booked / total).clamp(0.0, 1.0) : 0.0;
     final bidsCount = announcement.bidsCount ?? 0;
+    final isKgFree = announcement.capacityUnit == 'KG_FREE';
 
     return GestureDetector(
       onTap: onTap,
@@ -697,26 +691,6 @@ class _AnnouncementCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [DonyColors.blue700, cs.primary],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Icon(
-                        Icons.flight_takeoff_rounded,
-                        color: cs.onPrimary,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: DonySpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -729,7 +703,8 @@ class _AnnouncementCard extends StatelessWidget {
                                 '${announcement.departureCity} → ${announcement.arrivalCity}',
                                 style: tt.titleMedium?.copyWith(
                                   color: cs.onSurface,
-                                  fontWeight: FontWeight.w700,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.2,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -738,11 +713,10 @@ class _AnnouncementCard extends StatelessWidget {
                             DonyBadge(label: _statusLabel, type: _badgeType),
                           ],
                         ),
-                        const SizedBox(height: 3),
+                        const SizedBox(height: 4),
                         Text(
                           dateLabel,
-                          style: tt.bodySmall
-                              ?.copyWith(color: cs.onSurfaceVariant),
+                          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                         ),
                       ],
                     ),
@@ -750,40 +724,69 @@ class _AnnouncementCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: DonySpacing.md),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(DonyRadius.full),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 6,
-                  backgroundColor: cs.surfaceContainerHighest,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    progress >= 1.0
-                        ? DonyColors.violet
-                        : cs.primary,
+              if (!isKgFree) ...[
+                if (progress > 0) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(DonyRadius.full),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 6,
+                      backgroundColor: cs.surfaceContainerHighest,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        progress >= 1.0 ? DonyColors.violet : cs.primary,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 6),
+                  const SizedBox(height: 6),
+                ] else ...[
+                  const SizedBox(height: DonySpacing.xs),
+                ],
+              ],
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '${booked.toStringAsFixed(0)} kg réservés sur ${total.toStringAsFixed(0)} kg',
+                    isKgFree
+                        ? 'Kg libre · vendu au kilo'
+                        : '${booked.toStringAsFixed(0)} / ${total.toStringAsFixed(0)} kg réservés',
                     style: tt.bodySmall?.copyWith(
                       color: cs.onSurfaceVariant,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   Text(
-                    '${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
+                    '${announcement.pricePerKg % 1 == 0 ? announcement.pricePerKg.toStringAsFixed(0) : announcement.pricePerKg.toStringAsFixed(1)} €/kg',
                     style: tt.bodySmall?.copyWith(
-                      color: cs.primary,
+                      color: const Color(0xFFF59E0B),
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: DonySpacing.md),
+              if (announcement.pickupAddress != null) ...[
+                const SizedBox(height: DonySpacing.xs),
+                Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFF6B6B),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: DonySpacing.xs),
+                    Expanded(
+                      child: Text(
+                        announcement.pickupAddress!.label,
+                        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              const SizedBox(height: DonySpacing.sm),
               Row(
                 children: [
                   if (bidsCount > 0)

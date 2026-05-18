@@ -142,7 +142,9 @@ class TravelerCard extends StatelessWidget {
                 Icon(Icons.inventory_2_outlined, size: 13, color: cs.onSurfaceVariant),
                 const SizedBox(width: DonySpacing.xxs),
                 Text(
-                  '${announcement.availableKg.toStringAsFixed(0)} kg dispo',
+                  announcement.capacityUnit == 'KG_FREE'
+                      ? 'Kg libre'
+                      : '${announcement.availableKg.toStringAsFixed(0)} kg dispo',
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],

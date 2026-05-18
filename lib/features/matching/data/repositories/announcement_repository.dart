@@ -24,6 +24,7 @@ class AnnouncementRepository {
     List<String> acceptedContentTypes = const [],
     List<String> refusedTypes = const [],
     List<String> acceptedPaymentMethods = const ['STRIPE'],
+    String? capacityUnit,
   }) async {
     return _remoteDatasource.createAnnouncement(
       departureCity: departureCity,
@@ -40,6 +41,7 @@ class AnnouncementRepository {
       acceptedContentTypes: acceptedContentTypes,
       refusedTypes: refusedTypes,
       acceptedPaymentMethods: acceptedPaymentMethods,
+      capacityUnit: capacityUnit,
     );
   }
 
@@ -114,6 +116,7 @@ class AnnouncementRepository {
     List<String> acceptedContentTypes = const [],
     List<String> refusedTypes = const [],
     List<String> acceptedPaymentMethods = const ['STRIPE'],
+    String? capacityUnit,
   }) async {
     return _remoteDatasource.updateAnnouncement(
       id: id,
@@ -131,6 +134,7 @@ class AnnouncementRepository {
       acceptedContentTypes: acceptedContentTypes,
       refusedTypes: refusedTypes,
       acceptedPaymentMethods: acceptedPaymentMethods,
+      capacityUnit: capacityUnit,
     );
   }
 }
