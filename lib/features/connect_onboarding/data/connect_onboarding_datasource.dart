@@ -1,5 +1,5 @@
+import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/core/network/api_client.dart';
-import 'package:dony/features/connect_onboarding/data/connect_onboarding_repository.dart';
 
 class ConnectOnboardingDatasource {
   final ApiClient _client;
