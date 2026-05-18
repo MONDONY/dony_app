@@ -10,6 +10,8 @@ class MockConnectOnboardingRepository extends Mock
 const _notCreated = ConnectAccountStatus(status: 'NOT_CREATED');
 const _pending = ConnectAccountStatus(status: 'PENDING_ONBOARDING');
 const _complete = ConnectAccountStatus(status: 'ONBOARDING_COMPLETE');
+const _disabled = ConnectAccountStatus(status: 'DISABLED');
+const _rejected = ConnectAccountStatus(status: 'REJECTED', reason: 'Docs invalides');
 
 void main() {
   late MockConnectOnboardingRepository mockRepo;
@@ -82,6 +84,38 @@ void main() {
       expect: () => [
         isA<ConnectOnboardingLoading>(),
         isA<ConnectOnboardingError>(),
+      ],
+    );
+
+    blocTest<ConnectOnboardingBloc, ConnectOnboardingState>(
+      'emits [Loading, Disabled] when status is DISABLED',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.getAccountStatus())
+            .thenAnswer((_) async => _disabled);
+      },
+      act: (b) => b.add(const ConnectOnboardingStatusRequested()),
+      expect: () => [
+        isA<ConnectOnboardingLoading>(),
+        isA<ConnectOnboardingDisabled>(),
+      ],
+    );
+
+    blocTest<ConnectOnboardingBloc, ConnectOnboardingState>(
+      'emits [Loading, Rejected] with reason when status is REJECTED',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.getAccountStatus())
+            .thenAnswer((_) async => _rejected);
+      },
+      act: (b) => b.add(const ConnectOnboardingStatusRequested()),
+      expect: () => [
+        isA<ConnectOnboardingLoading>(),
+        isA<ConnectOnboardingRejected>().having(
+          (s) => s.reason,
+          'reason',
+          'Docs invalides',
+        ),
       ],
     );
   });

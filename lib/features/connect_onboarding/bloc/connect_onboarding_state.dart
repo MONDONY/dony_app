@@ -29,6 +29,15 @@ class ConnectOnboardingComplete extends ConnectOnboardingState {
   const ConnectOnboardingComplete();
 }
 
+class ConnectOnboardingDisabled extends ConnectOnboardingState {
+  const ConnectOnboardingDisabled();
+}
+
+class ConnectOnboardingRejected extends ConnectOnboardingState {
+  final String? reason;
+  const ConnectOnboardingRejected({this.reason});
+}
+
 class ConnectOnboardingError extends ConnectOnboardingState {
   final AppException error;
   const ConnectOnboardingError(this.error);
