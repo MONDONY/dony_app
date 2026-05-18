@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
@@ -36,6 +37,9 @@ class PayoutOnboardingScreen extends StatelessWidget {
                   },
                 ),
               );
+            } else if (state is PaymentOnboardingComplete) {
+              getIt<StripeAccountBloc>()
+                  .add(const StripeAccountStatusRefreshed());
             }
           },
           builder: (context, state) {

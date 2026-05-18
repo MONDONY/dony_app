@@ -15,8 +15,8 @@ class ConnectAccountStatus {
 
   factory ConnectAccountStatus.fromJson(Map<String, dynamic> json) {
     return ConnectAccountStatus(
-      accountId: json['accountId'] as String?,
-      status: json['status'] as String? ?? 'NOT_CREATED',
+      accountId: json['stripeAccountId'] as String?,
+      status: json['stripeAccountStatus'] as String? ?? 'NOT_CREATED',
       country: json['country'] as String?,
       isProAccount: json['isProAccount'] as bool? ?? false,
       reason: json['reason'] as String?,
