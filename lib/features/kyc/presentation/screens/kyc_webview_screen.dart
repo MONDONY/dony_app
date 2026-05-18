@@ -29,10 +29,14 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
   @override
   void initState() {
     super.initState();
-    // onPermissionRequest is passed at construction so the selfie camera
-    // step on Stripe's hosted page works without a prompt.
+    // Only grant camera access — Stripe Identity needs it for the selfie step.
+    // Blanket grant() would also allow microphone/other sensors unnecessarily.
     _controller = WebViewController(
-      onPermissionRequest: (request) => request.grant(),
+      onPermissionRequest: (request) {
+        if (request.types.contains(WebViewPermissionResourceType.camera)) {
+          request.grant();
+        }
+      },
     )
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
