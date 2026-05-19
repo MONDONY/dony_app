@@ -226,7 +226,7 @@ class _DonyBottomNav extends StatelessWidget {
                   currentIndex: currentIndex,
                   onTap: () {
                     if (isTraveler) {
-                      context.push('/tracking/scan');
+                      onTap(2);
                     } else {
                       context.push('/tracking/search');
                     }
