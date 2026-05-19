@@ -49,6 +49,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthOtpTimerTicked>(_onOtpTimerTicked);
     on<AuthGoogleSignInRequested>(_onGoogleSignInRequested);
     on<AuthAppleSignInRequested>(_onAppleSignInRequested);
+    on<AuthEmailOtpSendRequested>(_onEmailOtpSendRequested);
+    on<AuthEmailOtpVerifyRequested>(_onEmailOtpVerifyRequested);
+    on<AuthRegisterWithEmailRequested>(_onRegisterWithEmailRequested);
   }
 
   @override
@@ -280,6 +283,61 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final current = state;
     if (current is AuthOtpSent && current.secondsLeft > 0) {
       emit(current.copyWith(secondsLeft: current.secondsLeft - 1));
+    } else if (current is AuthEmailOtpSent && current.secondsLeft > 0) {
+      emit(current.copyWith(secondsLeft: current.secondsLeft - 1));
+    }
+  }
+
+  // ─── Email OTP — envoi ────────────────────────────────────────────────────────
+
+  Future<void> _onEmailOtpSendRequested(
+    AuthEmailOtpSendRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      await _authRepository.sendEmailOtp(event.email);
+      emit(AuthEmailOtpSent(event.email, secondsLeft: 60));
+      _otpTimer?.cancel();
+      _otpTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (!isClosed) add(const AuthOtpTimerTicked());
+      });
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
+    }
+  }
+
+  // ─── Email OTP — vérification ─────────────────────────────────────────────────
+
+  Future<void> _onEmailOtpVerifyRequested(
+    AuthEmailOtpVerifyRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      await _authRepository.verifyEmailOtp(event.email, event.code);
+      emit(AuthEmailOtpVerified(event.email));
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
+    }
+  }
+
+  // ─── Inscription par email (post-OAuth ou post-email OTP) ────────────────────
+
+  Future<void> _onRegisterWithEmailRequested(
+    AuthRegisterWithEmailRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      final user = await _authRepository.registerWithEmail(
+        email: event.email,
+        roles: event.roles,
+      );
+      await _localAuthService.clearPin();
+      emit(AuthAuthenticated(user));
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
     }
   }
 
@@ -338,7 +396,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthAuthenticated(user));
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
-        emit(AuthOtpVerified(phoneNumber: _pendingPhoneNumber ?? ''));
+        final email = _firebaseAuth.currentUser?.email ?? '';
+        emit(AuthOAuthNewUser(email));
       } else {
         emit(AuthError(unwrapDioError(e)));
       }
