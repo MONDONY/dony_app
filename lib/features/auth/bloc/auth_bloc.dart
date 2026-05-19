@@ -8,12 +8,20 @@ import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive/hive.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+
+typedef AppleSignInCallback = Future<AuthorizationCredentialAppleID> Function(
+  List<AppleIDAuthorizationScopes> scopes,
+);
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
   final LocalAuthService _localAuthService;
   final FirebaseAuth _firebaseAuth;
+  final GoogleSignIn _googleSignIn;
+  final AppleSignInCallback _appleSignIn;
 
   String? _pendingPhoneNumber;
   Timer? _otpTimer;
@@ -22,7 +30,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     this._authRepository,
     this._localAuthService, {
     FirebaseAuth? firebaseAuth,
+    GoogleSignIn? googleSignIn,
+    AppleSignInCallback? appleSignIn,
   })  : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
+        _googleSignIn = googleSignIn ?? GoogleSignIn(),
+        _appleSignIn = appleSignIn ??
+            ((scopes) => SignInWithApple.getAppleIDCredential(scopes: scopes)),
         super(const AuthInitial()) {
     on<AuthCheckRequested>(_onCheckRequested);
     on<AuthSendOtpRequested>(_onSendOtpRequested);
@@ -34,6 +47,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<OnboardingCompleted>(_onOnboardingCompleted);
     on<AuthDialCodeChanged>(_onDialCodeChanged);
     on<AuthOtpTimerTicked>(_onOtpTimerTicked);
+    on<AuthGoogleSignInRequested>(_onGoogleSignInRequested);
+    on<AuthAppleSignInRequested>(_onAppleSignInRequested);
   }
 
   @override
@@ -265,6 +280,70 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final current = state;
     if (current is AuthOtpSent && current.secondsLeft > 0) {
       emit(current.copyWith(secondsLeft: current.secondsLeft - 1));
+    }
+  }
+
+  // ─── Google Sign-In ───────────────────────────────────────────────────────
+
+  Future<void> _onGoogleSignInRequested(
+    AuthGoogleSignInRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        emit(const AuthInitial());
+        return;
+      }
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      await _firebaseAuth.signInWithCredential(credential);
+      _pendingPhoneNumber = _firebaseAuth.currentUser?.email ?? '';
+      await _checkProfileAfterOAuth(emit);
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
+    }
+  }
+
+  // ─── Apple Sign-In ────────────────────────────────────────────────────────
+
+  Future<void> _onAppleSignInRequested(
+    AuthAppleSignInRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      final appleCredential = await _appleSignIn([
+        AppleIDAuthorizationScopes.email,
+      ]);
+      final oauthCredential = OAuthProvider('apple.com').credential(
+        idToken: appleCredential.identityToken,
+        accessToken: appleCredential.authorizationCode,
+      );
+      await _firebaseAuth.signInWithCredential(oauthCredential);
+      _pendingPhoneNumber = _firebaseAuth.currentUser?.email ?? '';
+      await _checkProfileAfterOAuth(emit);
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
+    }
+  }
+
+  Future<void> _checkProfileAfterOAuth(Emitter<AuthState> emit) async {
+    try {
+      final user = await _authRepository.getProfile();
+      emit(AuthAuthenticated(user));
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        emit(AuthOtpVerified(phoneNumber: _pendingPhoneNumber ?? ''));
+      } else {
+        emit(AuthError(unwrapDioError(e)));
+      }
+    } catch (_) {
+      emit(AuthOtpVerified(phoneNumber: _pendingPhoneNumber ?? ''));
     }
   }
 

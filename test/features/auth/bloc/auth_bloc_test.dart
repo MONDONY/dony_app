@@ -9,7 +9,9 @@ import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -24,6 +26,29 @@ class MockPhoneAuthCredential extends Mock implements PhoneAuthCredential {}
 
 class FakeAuthCredential extends Fake implements AuthCredential {}
 class FakePhoneAuthCredential extends Fake implements PhoneAuthCredential {}
+
+// Google mocks
+class MockGoogleSignIn extends Mock implements GoogleSignIn {}
+class MockGoogleSignInAccount extends Mock implements GoogleSignInAccount {}
+class MockGoogleSignInAuthentication extends Mock implements GoogleSignInAuthentication {}
+
+// Apple fake
+class FakeAppleCredential extends Fake implements AuthorizationCredentialAppleID {
+  @override
+  String? get identityToken => 'fake-id-token';
+  @override
+  String get authorizationCode => 'fake-auth-code';
+  @override
+  String? get givenName => null;
+  @override
+  String? get familyName => null;
+  @override
+  String? get email => null;
+  @override
+  String get userIdentifier => 'fake-user-id';
+  @override
+  String? get state => null;
+}
 
 void main() {
   late MockAuthRepository mockRepo;
@@ -640,6 +665,130 @@ void main() {
       ),
       act: (bloc) => bloc.add(const AuthOtpTimerTicked()),
       expect: () => [],
+    );
+  });
+
+  // ─── AuthGoogleSignInRequested ───────────────────────────────────────────────
+
+  group('AuthGoogleSignInRequested', () {
+    late MockGoogleSignIn mockGoogleSignIn;
+    late MockGoogleSignInAccount mockGoogleAccount;
+    late MockGoogleSignInAuthentication mockGoogleAuth;
+
+    setUp(() {
+      mockGoogleSignIn = MockGoogleSignIn();
+      mockGoogleAccount = MockGoogleSignInAccount();
+      mockGoogleAuth = MockGoogleSignInAuthentication();
+
+      when(() => mockGoogleSignIn.signIn())
+          .thenAnswer((_) async => mockGoogleAccount);
+      when(() => mockGoogleAccount.authentication)
+          .thenAnswer((_) async => mockGoogleAuth);
+      when(() => mockGoogleAuth.accessToken).thenReturn('access-token');
+      when(() => mockGoogleAuth.idToken).thenReturn('id-token');
+    });
+
+    AuthBloc buildGoogleBloc() => AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          googleSignIn: mockGoogleSignIn,
+        );
+
+    blocTest<AuthBloc, AuthState>(
+      'émet [Loading, Authenticated] quand compte existant',
+      build: buildGoogleBloc,
+      setUp: () {
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => MockUserCredential());
+        when(() => mockRepo.getProfile()).thenAnswer((_) async => testUser);
+      },
+      act: (b) => b.add(const AuthGoogleSignInRequested()),
+      expect: () => [const AuthLoading(), AuthAuthenticated(testUser)],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'émet [Loading, OtpVerified] quand nouveau compte (404)',
+      build: buildGoogleBloc,
+      setUp: () {
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => MockUserCredential());
+        when(() => mockRepo.getProfile()).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: ''),
+            response: Response(
+              statusCode: 404,
+              requestOptions: RequestOptions(path: ''),
+            ),
+          ),
+        );
+      },
+      act: (b) => b.add(const AuthGoogleSignInRequested()),
+      expect: () => [
+        const AuthLoading(),
+        isA<AuthOtpVerified>(),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'émet [Loading, Initial] quand utilisateur annule Google sign-in',
+      build: () => AuthBloc(
+        mockRepo,
+        mockLocalAuth,
+        firebaseAuth: mockFirebaseAuth,
+        googleSignIn: mockGoogleSignIn,
+      ),
+      setUp: () {
+        when(() => mockGoogleSignIn.signIn()).thenAnswer((_) async => null);
+      },
+      act: (b) => b.add(const AuthGoogleSignInRequested()),
+      expect: () => [const AuthLoading(), const AuthInitial()],
+    );
+  });
+
+  // ─── AuthAppleSignInRequested ────────────────────────────────────────────────
+
+  group('AuthAppleSignInRequested', () {
+    blocTest<AuthBloc, AuthState>(
+      'émet [Loading, Authenticated] quand compte existant',
+      build: () => AuthBloc(
+        mockRepo,
+        mockLocalAuth,
+        firebaseAuth: mockFirebaseAuth,
+        appleSignIn: (_) async => FakeAppleCredential(),
+      ),
+      setUp: () {
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => MockUserCredential());
+        when(() => mockRepo.getProfile()).thenAnswer((_) async => testUser);
+      },
+      act: (b) => b.add(const AuthAppleSignInRequested()),
+      expect: () => [const AuthLoading(), AuthAuthenticated(testUser)],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'émet [Loading, OtpVerified] quand nouveau compte (404)',
+      build: () => AuthBloc(
+        mockRepo,
+        mockLocalAuth,
+        firebaseAuth: mockFirebaseAuth,
+        appleSignIn: (_) async => FakeAppleCredential(),
+      ),
+      setUp: () {
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => MockUserCredential());
+        when(() => mockRepo.getProfile()).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: ''),
+            response: Response(
+              statusCode: 404,
+              requestOptions: RequestOptions(path: ''),
+            ),
+          ),
+        );
+      },
+      act: (b) => b.add(const AuthAppleSignInRequested()),
+      expect: () => [const AuthLoading(), isA<AuthOtpVerified>()],
     );
   });
 }

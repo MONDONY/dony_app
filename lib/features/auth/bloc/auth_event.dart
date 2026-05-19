@@ -81,3 +81,11 @@ class AuthDialCodeChanged extends AuthEvent {
 class AuthOtpTimerTicked extends AuthEvent {
   const AuthOtpTimerTicked();
 }
+
+class AuthGoogleSignInRequested extends AuthEvent {
+  const AuthGoogleSignInRequested();
+}
+
+class AuthAppleSignInRequested extends AuthEvent {
+  const AuthAppleSignInRequested();
+}
