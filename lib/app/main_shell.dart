@@ -154,7 +154,7 @@ class _DonyBottomNav extends StatelessWidget {
       buildWhen: (p, c) =>
           (p is AuthAuthenticated) != (c is AuthAuthenticated) ||
           (c is AuthAuthenticated && (p as AuthAuthenticated?)?.user.isProAccount !=
-              (c as AuthAuthenticated).user.isProAccount) ||
+              c.user.isProAccount) ||
           (c is AuthProfileUpdated),
       builder: (context, authState) {
         UserModel? authUser;
