@@ -84,16 +84,12 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
         } else if (state is QrScanQueued) {
           _showQueued(context);
         } else if (state is DeliveryConfirmSuccess) {
-          _showSuccess(context, state.event.stepLabel, isFinal: true);
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            RatingBottomSheet.show(
-              context,
-              bidId: state.event.bidId,
-              travelerName: "l'expéditeur",
-              isTravelerRating: true,
-            );
-          });
+          _showSuccess(
+            context,
+            state.event.stepLabel,
+            isFinal: true,
+            finalBidId: state.event.bidId,
+          );
         }
       },
       builder: (context, state) {
@@ -318,8 +314,12 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
     );
   }
 
-  void _showSuccess(BuildContext context, String label,
-      {required bool isFinal}) {
+  void _showSuccess(
+    BuildContext context,
+    String label, {
+    required bool isFinal,
+    String? finalBidId,
+  }) {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -355,9 +355,17 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
           SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed: () {
+              onPressed: () async {
                 ctx.pop();
-                context.go('/tracking');
+                if (isFinal && finalBidId != null) {
+                  await RatingBottomSheet.show(
+                    context,
+                    bidId: finalBidId,
+                    travelerName: "l'expéditeur",
+                    isTravelerRating: true,
+                  );
+                }
+                if (context.mounted) context.go('/tracking');
               },
               style: FilledButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.primary,

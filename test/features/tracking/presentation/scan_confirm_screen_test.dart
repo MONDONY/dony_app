@@ -265,4 +265,39 @@ void main() {
     await tester.pump();
     expect(find.textContaining('Transit'), findsWidgets);
   });
+
+  // ─── DeliveryConfirmSuccess — RatingBottomSheet non simultané ────────────
+  testWidgets(
+      'DeliveryConfirmSuccess — RatingBottomSheet pas affiché en même temps que le dialog',
+      (tester) async {
+    final bloc = MockTrackingBloc();
+    when(() => bloc.state).thenReturn(TrackingInitial());
+    whenListen(
+      bloc,
+      Stream.fromIterable(
+          [DeliveryConfirmSuccess(_fakeEvent(eventType: 'ARRIVEE'))]),
+    );
+    await tester.pumpWidget(_wrap('ARRIVEE', bloc));
+    await tester.pumpAndSettle();
+    // Dialog succès visible
+    expect(find.text('Colis livré !'), findsOneWidget);
+    // Rating sheet PAS affiché en même temps (régression)
+    expect(find.textContaining('Évaluer'), findsNothing);
+  });
+
+  // ─── DeliveryConfirmSuccess — bouton Terminé présent dans le dialog ──────
+  testWidgets('DeliveryConfirmSuccess — bouton Terminé présent dans le dialog',
+      (tester) async {
+    final bloc = MockTrackingBloc();
+    when(() => bloc.state).thenReturn(TrackingInitial());
+    whenListen(
+      bloc,
+      Stream.fromIterable(
+          [DeliveryConfirmSuccess(_fakeEvent(eventType: 'ARRIVEE'))]),
+    );
+    await tester.pumpWidget(_wrap('ARRIVEE', bloc));
+    await tester.pumpAndSettle();
+    expect(find.text('Colis livré !'), findsOneWidget);
+    expect(find.text('Terminé'), findsOneWidget);
+  });
 }

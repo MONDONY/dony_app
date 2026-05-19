@@ -68,7 +68,7 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
     }
 
     if (!mounted) return;
-    context.push<void>(
+    await context.push<void>(
       '/tracking/scan/photo',
       extra: <String, dynamic>{
         'bidId': bidId,
@@ -87,6 +87,24 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
     );
   }
 
+  Future<void> _handleSearchLoaded(TrackingSearchLoaded state) async {
+    String? etape = _selectedEtape;
+    if (etape == null) {
+      etape = await _showEtapePicker();
+      if (!mounted || etape == null) return;
+      _selectedEtape = etape;
+    }
+    if (!mounted) return;
+    await context.push<void>(
+      '/tracking/scan/photo',
+      extra: <String, dynamic>{
+        'bidId': state.result.bidId,
+        'etape': etape,
+        'packageLabel': state.result.trackingNumber,
+      },
+    );
+  }
+
   void _submitNumber() {
     final number = _numberCtrl.text.trim().toUpperCase();
     if (number.isEmpty) return;
@@ -102,29 +120,7 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
     return BlocConsumer<TrackingBloc, TrackingState>(
       listener: (context, state) {
         if (state is TrackingSearchLoaded) {
-          String? etape = _selectedEtape;
-          if (etape == null) {
-            _showEtapePicker().then((chosen) {
-              if (!mounted || chosen == null) return;
-              context.push<void>(
-                '/tracking/scan/photo',
-                extra: <String, dynamic>{
-                  'bidId': state.result.bidId,
-                  'etape': chosen,
-                  'packageLabel': state.result.trackingNumber,
-                },
-              );
-            });
-          } else {
-            context.push<void>(
-              '/tracking/scan/photo',
-              extra: <String, dynamic>{
-                'bidId': state.result.bidId,
-                'etape': etape,
-                'packageLabel': state.result.trackingNumber,
-              },
-            );
-          }
+          _handleSearchLoaded(state);
         }
       },
       builder: (context, state) {
