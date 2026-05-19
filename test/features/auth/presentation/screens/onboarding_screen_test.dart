@@ -33,8 +33,8 @@ GoRouter _buildRouter(AuthBloc authBloc) => GoRouter(routes: [
         ),
       ),
       GoRoute(
-        path: '/auth/phone',
-        builder: (_, __) => const Scaffold(body: Text('Phone Auth')),
+        path: '/onboarding/role',
+        builder: (_, __) => const Scaffold(body: Text('Role Screen')),
       ),
     ]);
 
@@ -121,7 +121,7 @@ void main() {
     expect(find.textContaining('politique de confidentialité'), findsOneWidget);
   });
 
-  testWidgets('tapping primary CTA dispatches OnboardingCompleted and navigates to /auth/phone',
+  testWidgets('tapping primary CTA navigates to role screen with SENDER',
       (tester) async {
     await _pump(tester, mockAuthBloc);
 
@@ -130,12 +130,12 @@ void main() {
     });
     await tester.pumpAndSettle();
 
-    verify(() => mockAuthBloc.add(const OnboardingCompleted())).called(1);
-    expect(find.text('Phone Auth'), findsOneWidget);
-    expect(Hive.box('user_prefs').get('onboarding_done'), isTrue);
+    // OnboardingCompleted n'est plus émis depuis OnboardingScreen
+    verifyNever(() => mockAuthBloc.add(const OnboardingCompleted()));
+    expect(find.text('Role Screen'), findsOneWidget);
   });
 
-  testWidgets('tapping ghost CTA dispatches OnboardingCompleted and navigates to /auth/phone',
+  testWidgets('tapping ghost CTA navigates to role screen with TRAVELER',
       (tester) async {
     await _pump(tester, mockAuthBloc);
 
@@ -144,9 +144,8 @@ void main() {
     });
     await tester.pumpAndSettle();
 
-    verify(() => mockAuthBloc.add(const OnboardingCompleted())).called(1);
-    expect(find.text('Phone Auth'), findsOneWidget);
-    expect(Hive.box('user_prefs').get('onboarding_done'), isTrue);
+    verifyNever(() => mockAuthBloc.add(const OnboardingCompleted()));
+    expect(find.text('Role Screen'), findsOneWidget);
   });
 
   testWidgets('OnboardingScreen affiche la mascotte joyeuse au-dessus du logo',

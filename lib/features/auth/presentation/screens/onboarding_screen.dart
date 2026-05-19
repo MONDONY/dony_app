@@ -1,9 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/features/auth/bloc/auth_bloc.dart';
-import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class OnboardingScreen extends StatelessWidget {
@@ -18,9 +15,8 @@ class OnboardingScreen extends StatelessWidget {
         'Paiement bloqué, libéré seulement à l\'arrivée'),
   ];
 
-  void _proceed(BuildContext context) {
-    context.read<AuthBloc>().add(const OnboardingCompleted());
-    context.go('/auth/phone');
+  void _goToRole(BuildContext context, String role) {
+    context.go('/onboarding/role', extra: role);
   }
 
   @override
@@ -126,7 +122,10 @@ class OnboardingScreen extends StatelessWidget {
               ),
 
               // ── Pinned CTAs ────────────────────────────────────────────
-              _OnboardingFooter(onSender: () => _proceed(context)),
+              _OnboardingFooter(
+                onSender: () => _goToRole(context, 'SENDER'),
+                onTraveler: () => _goToRole(context, 'TRAVELER'),
+              ),
             ],
           ),
         ),
@@ -197,8 +196,12 @@ class _FeatureCard extends StatelessWidget {
 // ── Bottom CTAs + footer ──────────────────────────────────────────────────────
 
 class _OnboardingFooter extends StatelessWidget {
-  const _OnboardingFooter({required this.onSender});
+  const _OnboardingFooter({
+    required this.onSender,
+    required this.onTraveler,
+  });
   final VoidCallback onSender;
+  final VoidCallback onTraveler;
 
   @override
   Widget build(BuildContext context) {
@@ -225,7 +228,7 @@ class _OnboardingFooter extends StatelessWidget {
 
           DonyButton(
             label: 'Je suis voyageur',
-            onPressed: onSender,
+            onPressed: onTraveler,
             variant: DonyButtonVariant.ghost,
           ).animate().fadeIn(delay: 360.ms),
 
