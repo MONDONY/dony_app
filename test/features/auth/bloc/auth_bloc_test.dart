@@ -744,6 +744,26 @@ void main() {
       act: (b) => b.add(const AuthGoogleSignInRequested()),
       expect: () => [const AuthLoading(), const AuthInitial()],
     );
+
+    blocTest<AuthBloc, AuthState>(
+      'émet [Loading, AuthError] quand backend répond 500',
+      build: buildGoogleBloc,
+      setUp: () {
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => MockUserCredential());
+        when(() => mockRepo.getProfile()).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: ''),
+            response: Response(
+              statusCode: 500,
+              requestOptions: RequestOptions(path: ''),
+            ),
+          ),
+        );
+      },
+      act: (b) => b.add(const AuthGoogleSignInRequested()),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
   });
 
   // ─── AuthAppleSignInRequested ────────────────────────────────────────────────
@@ -789,6 +809,31 @@ void main() {
       },
       act: (b) => b.add(const AuthAppleSignInRequested()),
       expect: () => [const AuthLoading(), isA<AuthOtpVerified>()],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'émet [Loading, AuthError] quand backend répond 500',
+      build: () => AuthBloc(
+        mockRepo,
+        mockLocalAuth,
+        firebaseAuth: mockFirebaseAuth,
+        appleSignIn: (_) async => FakeAppleCredential(),
+      ),
+      setUp: () {
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => MockUserCredential());
+        when(() => mockRepo.getProfile()).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: ''),
+            response: Response(
+              statusCode: 500,
+              requestOptions: RequestOptions(path: ''),
+            ),
+          ),
+        );
+      },
+      act: (b) => b.add(const AuthAppleSignInRequested()),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
     );
   });
 }
