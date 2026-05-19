@@ -254,30 +254,30 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/tracking/scan/photo',
       builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>;
+        final extra = state.extra as Map<String, dynamic>? ?? {};
         return ScanPhotoScreen(
-          bidId: extra['bidId'] as String,
-          etape: extra['etape'] as String,
-          packageLabel: extra['packageLabel'] as String,
+          bidId: extra['bidId'] as String? ?? '',
+          etape: extra['etape'] as String? ?? '',
+          packageLabel: extra['packageLabel'] as String? ?? '',
         );
       },
     ),
     GoRoute(
       path: '/tracking/scan/confirm',
       builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>;
+        final extra = state.extra as Map<String, dynamic>? ?? {};
         return MultiBlocProvider(
           providers: [
             BlocProvider(create: (_) => getIt<TrackingBloc>()),
             BlocProvider(create: (_) => getIt<RatingBloc>()),
           ],
           child: ScanConfirmScreen(
-            bidId: extra['bidId'] as String,
-            etape: extra['etape'] as String,
+            bidId: extra['bidId'] as String? ?? '',
+            etape: extra['etape'] as String? ?? '',
             photoPath: extra['photoPath'] as String?,
             gpsLat: extra['gpsLat'] as double?,
             gpsLon: extra['gpsLon'] as double?,
-            packageLabel: extra['packageLabel'] as String,
+            packageLabel: extra['packageLabel'] as String? ?? '',
           ),
         );
       },

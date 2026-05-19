@@ -228,6 +228,7 @@ class _DonyBottomNav extends StatelessWidget {
                     if (isTraveler) {
                       onTap(2);
                     } else {
+                      // Expéditeur : recherche de suivi en plein écran (hors shell, comportement intentionnel)
                       context.push('/tracking/search');
                     }
                   },
