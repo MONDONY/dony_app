@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -10,7 +12,9 @@ import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:path/path.dart' as p;
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
@@ -62,6 +66,7 @@ void main() {
   late MockAuthRepository mockRepo;
   late MockLocalAuthService mockLocalAuth;
   late MockFirebaseAuth mockFirebaseAuth;
+  late Directory tempDir;
 
   const testUser = UserModel(
     id: 'user-123',
@@ -71,9 +76,20 @@ void main() {
     status: 'ACTIVE',
   );
 
-  setUpAll(() {
+  setUpAll(() async {
     registerFallbackValue(FakeAuthCredential());
     registerFallbackValue(FakePhoneAuthCredential());
+    // Register fallbacks for verifyPhoneNumber named params
+    registerFallbackValue(const Duration(seconds: 30));
+    // Hive setup needed for OnboardingCompleted tests
+    tempDir = await Directory.systemTemp.createTemp('hive_auth_bloc_test');
+    Hive.init(p.join(tempDir.path));
+    await Hive.openBox('user_prefs');
+  });
+
+  tearDownAll(() async {
+    await Hive.close();
+    await tempDir.delete(recursive: true);
   });
 
   setUp(() {
@@ -999,6 +1015,253 @@ void main() {
       expect: () => [
         const AuthLoading(),
         isA<AuthOAuthNewUser>().having((s) => s.email, 'email', 'test@gmail.com'),
+      ],
+    );
+  });
+
+  // ─── AuthOtpTimerTicked — AuthEmailOtpSent branch ───────────────────────────
+
+  group('AuthOtpTimerTicked — AuthEmailOtpSent', () {
+    blocTest<AuthBloc, AuthState>(
+      'decrements secondsLeft in AuthEmailOtpSent',
+      build: buildBloc,
+      seed: () => AuthEmailOtpSent('user@example.com', secondsLeft: 30),
+      act: (bloc) => bloc.add(const AuthOtpTimerTicked()),
+      expect: () => [
+        AuthEmailOtpSent('user@example.com', secondsLeft: 29),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'does not emit when AuthEmailOtpSent secondsLeft is already 0',
+      build: buildBloc,
+      seed: () => AuthEmailOtpSent('user@example.com', secondsLeft: 0),
+      act: (bloc) => bloc.add(const AuthOtpTimerTicked()),
+      expect: () => [],
+    );
+  });
+
+  // ─── OnboardingCompleted ─────────────────────────────────────────────────────
+
+  group('OnboardingCompleted', () {
+    blocTest<AuthBloc, AuthState>(
+      'writes onboarding_done=true to Hive and emits nothing',
+      build: buildBloc,
+      act: (bloc) => bloc.add(const OnboardingCompleted()),
+      expect: () => [],
+      verify: (_) {
+        expect(Hive.box('user_prefs').get('onboarding_done'), isTrue);
+      },
+    );
+  });
+
+  // ─── _checkProfileAfterOAuth — generic exception ─────────────────────────────
+
+  group('_checkProfileAfterOAuth — generic exception', () {
+    blocTest<AuthBloc, AuthState>(
+      'Google: getProfile throws generic exception → émet AuthError',
+      build: () {
+        final mockGoogleSignIn = MockGoogleSignIn();
+        final mockGoogleUser = MockGoogleSignInAccount();
+        final mockGoogleAuth = MockGoogleSignInAuthentication();
+        final mockFirebaseUser = MockFirebaseUser()..emailValue = 'user@gmail.com';
+        when(() => mockGoogleSignIn.signIn()).thenAnswer((_) async => mockGoogleUser);
+        when(() => mockGoogleUser.authentication).thenAnswer((_) async => mockGoogleAuth);
+        when(() => mockGoogleAuth.accessToken).thenReturn('access');
+        when(() => mockGoogleAuth.idToken).thenReturn('id');
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => FakeUserCredential());
+        when(() => mockFirebaseAuth.currentUser).thenReturn(mockFirebaseUser);
+        when(() => mockRepo.getProfile())
+            .thenThrow(Exception('unexpected parse error'));
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          googleSignIn: mockGoogleSignIn,
+        );
+      },
+      act: (b) => b.add(const AuthGoogleSignInRequested()),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'Apple: getProfile throws generic exception → émet AuthError',
+      build: () {
+        final mockFirebaseUser = MockFirebaseUser()..emailValue = 'user@icloud.com';
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => FakeUserCredential());
+        when(() => mockFirebaseAuth.currentUser).thenReturn(mockFirebaseUser);
+        when(() => mockRepo.getProfile())
+            .thenThrow(Exception('unexpected parse error'));
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          appleSignIn: (_) async => FakeAppleCredential(),
+        );
+      },
+      act: (b) => b.add(const AuthAppleSignInRequested()),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
+  });
+
+  // ─── Google/Apple — currentUser?.email path ──────────────────────────────────
+
+  group('AuthGoogleSignInRequested — currentUser.email assigned', () {
+    blocTest<AuthBloc, AuthState>(
+      'émet [Loading, Authenticated] et assigne email depuis currentUser',
+      build: () {
+        final mockGoogleSignIn = MockGoogleSignIn();
+        final mockGoogleUser = MockGoogleSignInAccount();
+        final mockGoogleAuth = MockGoogleSignInAuthentication();
+        final mockFirebaseUser = MockFirebaseUser()..emailValue = 'user@gmail.com';
+        when(() => mockGoogleSignIn.signIn()).thenAnswer((_) async => mockGoogleUser);
+        when(() => mockGoogleUser.authentication).thenAnswer((_) async => mockGoogleAuth);
+        when(() => mockGoogleAuth.accessToken).thenReturn('access');
+        when(() => mockGoogleAuth.idToken).thenReturn('id');
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => FakeUserCredential());
+        when(() => mockFirebaseAuth.currentUser).thenReturn(mockFirebaseUser);
+        when(() => mockRepo.getProfile()).thenAnswer((_) async => testUser);
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          googleSignIn: mockGoogleSignIn,
+        );
+      },
+      act: (b) => b.add(const AuthGoogleSignInRequested()),
+      expect: () => [const AuthLoading(), AuthAuthenticated(testUser)],
+    );
+  });
+
+  group('AuthAppleSignInRequested — currentUser.email assigned', () {
+    blocTest<AuthBloc, AuthState>(
+      'émet [Loading, Authenticated] et assigne email depuis currentUser',
+      build: () {
+        final mockFirebaseUser = MockFirebaseUser()..emailValue = 'user@icloud.com';
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => FakeUserCredential());
+        when(() => mockFirebaseAuth.currentUser).thenReturn(mockFirebaseUser);
+        when(() => mockRepo.getProfile()).thenAnswer((_) async => testUser);
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          appleSignIn: (_) async => FakeAppleCredential(),
+        );
+      },
+      act: (b) => b.add(const AuthAppleSignInRequested()),
+      expect: () => [const AuthLoading(), AuthAuthenticated(testUser)],
+    );
+  });
+
+  // ─── catch(e) dans _onGoogleSignInRequested et _onAppleSignInRequested ─────
+
+  group('OAuth outer catch(e)', () {
+    blocTest<AuthBloc, AuthState>(
+      'Google: signIn() throws generic exception → émet [Loading, AuthError]',
+      build: () {
+        final mockGoogleSignIn = MockGoogleSignIn();
+        when(() => mockGoogleSignIn.signIn())
+            .thenThrow(Exception('Google play services unavailable'));
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          googleSignIn: mockGoogleSignIn,
+        );
+      },
+      act: (b) => b.add(const AuthGoogleSignInRequested()),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'Apple: appleSignIn() throws generic exception → émet [Loading, AuthError]',
+      build: () => AuthBloc(
+        mockRepo,
+        mockLocalAuth,
+        firebaseAuth: mockFirebaseAuth,
+        appleSignIn: (_) async => throw Exception('Apple auth unavailable'),
+      ),
+      act: (b) => b.add(const AuthAppleSignInRequested()),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
+  });
+
+  // ─── AuthSendOtpRequested — verifyPhoneNumber callbacks ──────────────────────
+
+  group('AuthSendOtpRequested', () {
+    // Helper to stub verifyPhoneNumber so it immediately calls codeSent
+    void stubVerifyCodeSent(MockFirebaseAuth auth, {String verificationId = 'test-vid'}) {
+      when(() => auth.verifyPhoneNumber(
+            phoneNumber: any(named: 'phoneNumber'),
+            verificationCompleted: any(named: 'verificationCompleted'),
+            verificationFailed: any(named: 'verificationFailed'),
+            codeSent: any(named: 'codeSent'),
+            codeAutoRetrievalTimeout: any(named: 'codeAutoRetrievalTimeout'),
+            timeout: any(named: 'timeout'),
+            forceResendingToken: any(named: 'forceResendingToken'),
+            multiFactorSession: any(named: 'multiFactorSession'),
+            multiFactorInfo: any(named: 'multiFactorInfo'),
+            autoRetrievedSmsCodeForTesting: any(named: 'autoRetrievedSmsCodeForTesting'),
+          )).thenAnswer((invocation) async {
+        final codeSent = invocation.namedArguments[#codeSent] as PhoneCodeSent;
+        codeSent(verificationId, null);
+      });
+    }
+
+    void stubVerifyFailed(MockFirebaseAuth auth, FirebaseAuthException error) {
+      when(() => auth.verifyPhoneNumber(
+            phoneNumber: any(named: 'phoneNumber'),
+            verificationCompleted: any(named: 'verificationCompleted'),
+            verificationFailed: any(named: 'verificationFailed'),
+            codeSent: any(named: 'codeSent'),
+            codeAutoRetrievalTimeout: any(named: 'codeAutoRetrievalTimeout'),
+            timeout: any(named: 'timeout'),
+            forceResendingToken: any(named: 'forceResendingToken'),
+            multiFactorSession: any(named: 'multiFactorSession'),
+            multiFactorInfo: any(named: 'multiFactorInfo'),
+            autoRetrievedSmsCodeForTesting: any(named: 'autoRetrievedSmsCodeForTesting'),
+          )).thenAnswer((invocation) async {
+        final verificationFailed =
+            invocation.namedArguments[#verificationFailed] as PhoneVerificationFailed;
+        verificationFailed(error);
+      });
+    }
+
+    blocTest<AuthBloc, AuthState>(
+      'codeSent callback → émet [Loading, AuthOtpSent]',
+      build: () {
+        stubVerifyCodeSent(mockFirebaseAuth);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthSendOtpRequested('+33612345678')),
+      expect: () => [
+        const AuthLoading(),
+        isA<AuthOtpSent>()
+            .having((s) => s.verificationId, 'verificationId', 'test-vid')
+            .having((s) => s.phoneNumber, 'phoneNumber', '+33612345678')
+            .having((s) => s.secondsLeft, 'secondsLeft', 60),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'verificationFailed → émet [Loading, AuthError] avec message localisé',
+      build: () {
+        stubVerifyFailed(
+          mockFirebaseAuth,
+          FirebaseAuthException(code: 'invalid-phone-number'),
+        );
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthSendOtpRequested('+33000')),
+      expect: () => [
+        const AuthLoading(),
+        predicate<AuthState>((s) =>
+            s is AuthError &&
+            s.error.message.contains('Numéro de téléphone invalide')),
       ],
     );
   });

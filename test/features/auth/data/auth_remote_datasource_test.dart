@@ -99,4 +99,57 @@ void main() {
       expect(result.id, 'user-123');
     });
   });
+
+  group('sendEmailOtp', () {
+    test('calls POST /auth/email-otp/send and completes', () async {
+      when(() => mockDio.post<void>(
+              '/auth/email-otp/send',
+              data: any(named: 'data')))
+          .thenAnswer((_) async =>
+              Response(data: null, statusCode: 204, requestOptions: RequestOptions(path: '/auth/email-otp/send')));
+
+      await expectLater(datasource.sendEmailOtp('user@example.com'), completes);
+      verify(() => mockDio.post<void>(
+            '/auth/email-otp/send',
+            data: {'email': 'user@example.com'},
+          )).called(1);
+    });
+  });
+
+  group('verifyEmailOtp', () {
+    test('calls POST /auth/email-otp/verify and completes', () async {
+      when(() => mockDio.post<void>(
+              '/auth/email-otp/verify',
+              data: any(named: 'data')))
+          .thenAnswer((_) async =>
+              Response(data: null, statusCode: 204, requestOptions: RequestOptions(path: '/auth/email-otp/verify')));
+
+      await expectLater(datasource.verifyEmailOtp('user@example.com', '123456'), completes);
+      verify(() => mockDio.post<void>(
+            '/auth/email-otp/verify',
+            data: {'email': 'user@example.com', 'code': '123456'},
+          )).called(1);
+    });
+  });
+
+  group('registerWithEmail', () {
+    test('returns UserModel on success', () async {
+      when(() => mockDio.post<Map<String, dynamic>>(
+              '/auth/register',
+              data: any(named: 'data')))
+          .thenAnswer((_) async =>
+              Response(data: _userJson, statusCode: 200, requestOptions: RequestOptions(path: '/auth/register')));
+
+      final result = await datasource.registerWithEmail(
+        email: 'user@example.com',
+        roles: ['SENDER'],
+      );
+
+      expect(result.id, 'user-123');
+      verify(() => mockDio.post<Map<String, dynamic>>(
+            '/auth/register',
+            data: {'email': 'user@example.com', 'roles': ['SENDER']},
+          )).called(1);
+    });
+  });
 }
