@@ -279,14 +279,8 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
 
                 // Bouton principal
                 DonyButton(
-                  label: isSubmitting
-                      ? (_isArrivee ? 'Confirmation...' : 'Enregistrement...')
-                      : (_isArrivee
-                          ? 'Confirmer la livraison'
-                          : 'Valider le scan'),
-                  icon: _isArrivee
-                      ? Icons.verified_rounded
-                      : Icons.check_rounded,
+                  label: _isArrivee ? 'Confirmer la livraison' : 'Valider le scan',
+                  icon: _isArrivee ? Icons.verified_rounded : Icons.check_rounded,
                   onPressed: isSubmitting ? null : () => _submit(context),
                   isLoading: isSubmitting,
                 ),
@@ -426,7 +420,7 @@ class _ScanConfirmScreenState extends State<ScanConfirmScreen> {
               },
               style: FilledButton.styleFrom(
                 backgroundColor: cs.warning,
-                foregroundColor: DonyColors.neutral0,
+                foregroundColor: cs.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(DonyRadius.lg),
                 ),
