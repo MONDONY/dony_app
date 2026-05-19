@@ -32,6 +32,7 @@ class ScanPhotoScreen extends StatefulWidget {
 class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
   final ValueNotifier<bool> _loading = ValueNotifier(false);
   Position? _position;
+  late final Future<void> _gpsFuture;
 
   bool get _photoRequired =>
       widget.etape == 'DEPART' || widget.etape == 'ARRIVEE';
@@ -39,7 +40,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
   @override
   void initState() {
     super.initState();
-    _captureGps();
+    _gpsFuture = _captureGps();
   }
 
   @override
@@ -63,6 +64,7 @@ class _ScanPhotoScreenState extends State<ScanPhotoScreen> {
 
   Future<void> _takePhoto() async {
     _loading.value = true;
+    await _gpsFuture;
     try {
       final picker = ImagePicker();
       final picked = await picker.pickImage(
