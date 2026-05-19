@@ -1,15 +1,23 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class RoleSelectionScreen extends StatefulWidget {
-  const RoleSelectionScreen({super.key, required this.initialRole});
+  const RoleSelectionScreen({
+    super.key,
+    required this.initialRole,
+    this.pendingEmail,
+  });
+
   final String initialRole; // 'SENDER' | 'TRAVELER'
+  final String? pendingEmail;
 
   @override
   State<RoleSelectionScreen> createState() => _RoleSelectionScreenState();
@@ -30,8 +38,16 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     } else {
       context.read<ActiveRoleCubit>().switchToSender();
     }
-    context.read<AuthBloc>().add(const OnboardingCompleted());
-    context.go('/auth/phone');
+
+    if (widget.pendingEmail != null) {
+      context.read<AuthBloc>().add(AuthRegisterWithEmailRequested(
+        email: widget.pendingEmail!,
+        roles: [_selectedRole],
+      ));
+    } else {
+      context.read<AuthBloc>().add(const OnboardingCompleted());
+      context.go('/auth/phone');
+    }
   }
 
   @override
@@ -45,7 +61,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         ? DonyMascotteType.enCourse
         : DonyMascotteType.tenantColis;
 
-    return Scaffold(
+    final scaffold = Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: DonyLayout.constrained(
@@ -126,6 +142,21 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
           ),
         ),
       ),
+    );
+
+    if (widget.pendingEmail == null) {
+      return scaffold;
+    }
+
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthAuthenticated) {
+          context.go('/auth/local');
+        } else if (state is AuthError) {
+          ErrorPresenter.show(context, state.error);
+        }
+      },
+      child: scaffold,
     );
   }
 }
