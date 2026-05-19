@@ -188,12 +188,12 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
                     child: Column(
                       children: [
                         Icon(Icons.qr_code_scanner_rounded,
-                            size: 36, color: DonyColors.neutral0),
+                            size: 36, color: cs.onPrimary),
                         const SizedBox(height: DonySpacing.sm),
                         Text(
                           'Ouvrir le scanner QR',
                           style: tt.titleMedium?.copyWith(
-                            color: DonyColors.neutral0,
+                            color: cs.onPrimary,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
@@ -201,7 +201,7 @@ class _ScanIdentifyScreenState extends State<ScanIdentifyScreen> {
                         Text(
                           'Pointez vers le QR du colis',
                           style: tt.bodySmall?.copyWith(
-                            color: DonyColors.neutral0.withValues(alpha: 0.75),
+                            color: cs.onPrimary.withValues(alpha: 0.75),
                           ),
                         ),
                       ],
@@ -357,8 +357,7 @@ class _EtapePickerSheet extends StatelessWidget {
                 entry.value.$1,
                 style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
-              onTap: () =>
-                  Navigator.of(context, rootNavigator: true).pop(entry.key),
+              onTap: () => context.pop(entry.key),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(DonyRadius.md),
               ),
