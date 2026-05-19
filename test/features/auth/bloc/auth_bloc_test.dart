@@ -865,13 +865,102 @@ void main() {
   });
 
   // ─── AuthEmailOtpSendRequested ────────────────────────────────────────────────
-  // TODO(#18): Enable when AuthRepository methods sendEmailOtp, verifyEmailOtp, registerWithEmail are added
+
+  group('AuthEmailOtpSendRequested', () {
+    blocTest<AuthBloc, AuthState>(
+      'émet [AuthLoading, AuthEmailOtpSent] en cas de succès',
+      build: () {
+        when(() => mockRepo.sendEmailOtp('a@b.com'))
+            .thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthEmailOtpSendRequested('a@b.com')),
+      expect: () => [
+        const AuthLoading(),
+        isA<AuthEmailOtpSent>().having((s) => s.email, 'email', 'a@b.com'),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'émet [AuthLoading, AuthError] si le repository lance une exception',
+      build: () {
+        when(() => mockRepo.sendEmailOtp(any()))
+            .thenThrow(Exception('network error'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthEmailOtpSendRequested('a@b.com')),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
+  });
 
   // ─── AuthEmailOtpVerifyRequested ─────────────────────────────────────────────
-  // TODO(#18): Enable when AuthRepository methods are added
+
+  group('AuthEmailOtpVerifyRequested', () {
+    blocTest<AuthBloc, AuthState>(
+      'émet [AuthLoading, AuthEmailOtpVerified] en cas de succès',
+      build: () {
+        when(() => mockRepo.verifyEmailOtp('a@b.com', '123456'))
+            .thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthEmailOtpVerifyRequested(email: 'a@b.com', code: '123456')),
+      expect: () => [
+        const AuthLoading(),
+        isA<AuthEmailOtpVerified>().having((s) => s.email, 'email', 'a@b.com'),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'émet [AuthLoading, AuthError] si code invalide',
+      build: () {
+        when(() => mockRepo.verifyEmailOtp(any(), any()))
+            .thenThrow(Exception('invalid code'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthEmailOtpVerifyRequested(email: 'a@b.com', code: '000000')),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
+  });
 
   // ─── AuthRegisterWithEmailRequested ──────────────────────────────────────────
-  // TODO(#18): Enable when AuthRepository methods are added
+
+  group('AuthRegisterWithEmailRequested', () {
+    blocTest<AuthBloc, AuthState>(
+      'émet [AuthLoading, AuthAuthenticated] en cas de succès',
+      build: () {
+        when(() => mockRepo.registerWithEmail(
+                email: 'a@b.com', roles: ['SENDER']))
+            .thenAnswer((_) async => testUser);
+        when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        const AuthRegisterWithEmailRequested(email: 'a@b.com', roles: ['SENDER']),
+      ),
+      expect: () => [
+        const AuthLoading(),
+        isA<AuthAuthenticated>(),
+      ],
+      verify: (_) {
+        verify(() => mockLocalAuth.clearPin()).called(1);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'émet [AuthLoading, AuthError] si register échoue',
+      build: () {
+        when(() => mockRepo.registerWithEmail(
+                email: any(named: 'email'), roles: any(named: 'roles')))
+            .thenThrow(Exception('email already exists'));
+        when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        const AuthRegisterWithEmailRequested(email: 'a@b.com', roles: ['SENDER']),
+      ),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
+  });
 
   // ─── Fix AuthGoogleSignInRequested → AuthOAuthNewUser (nouveau user) ──────────
 

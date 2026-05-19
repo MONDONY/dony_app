@@ -30,4 +30,16 @@ class AuthRepository {
         birthDate: birthDate,
         city: city,
       );
+
+  Future<void> sendEmailOtp(String email) =>
+      _datasource.sendEmailOtp(email);
+
+  Future<void> verifyEmailOtp(String email, String code) =>
+      _datasource.verifyEmailOtp(email, code);
+
+  Future<UserModel> registerWithEmail({
+    required String email,
+    required List<String> roles,
+  }) =>
+      _datasource.registerWithEmail(email: email, roles: roles);
 }

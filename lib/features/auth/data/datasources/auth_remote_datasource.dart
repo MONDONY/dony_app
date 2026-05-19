@@ -47,4 +47,29 @@ class AuthRemoteDatasource {
     );
     return UserModel.fromJson(response.data!);
   }
+
+  Future<void> sendEmailOtp(String email) async {
+    await _apiClient.dio.post<void>(
+      '/auth/email-otp/send',
+      data: {'email': email},
+    );
+  }
+
+  Future<void> verifyEmailOtp(String email, String code) async {
+    await _apiClient.dio.post<void>(
+      '/auth/email-otp/verify',
+      data: {'email': email, 'code': code},
+    );
+  }
+
+  Future<UserModel> registerWithEmail({
+    required String email,
+    required List<String> roles,
+  }) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/auth/register',
+      data: {'email': email, 'roles': roles},
+    );
+    return UserModel.fromJson(response.data!);
+  }
 }

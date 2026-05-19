@@ -49,10 +49,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthOtpTimerTicked>(_onOtpTimerTicked);
     on<AuthGoogleSignInRequested>(_onGoogleSignInRequested);
     on<AuthAppleSignInRequested>(_onAppleSignInRequested);
-    // TODO(#18): Enable when AuthRepository methods are added
-    // on<AuthEmailOtpSendRequested>(_onEmailOtpSendRequested);
-    // on<AuthEmailOtpVerifyRequested>(_onEmailOtpVerifyRequested);
-    // on<AuthRegisterWithEmailRequested>(_onRegisterWithEmailRequested);
+    on<AuthEmailOtpSendRequested>(_onEmailOtpSendRequested);
+    on<AuthEmailOtpVerifyRequested>(_onEmailOtpVerifyRequested);
+    on<AuthRegisterWithEmailRequested>(_onRegisterWithEmailRequested);
   }
 
   @override
@@ -290,60 +289,57 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   // ─── Email OTP — envoi ────────────────────────────────────────────────────────
-  // TODO(#18): Enable when AuthRepository methods are added
 
-  // Future<void> _onEmailOtpSendRequested(
-  //   AuthEmailOtpSendRequested event,
-  //   Emitter<AuthState> emit,
-  // ) async {
-  //   emit(const AuthLoading());
-  //   try {
-  //     await _authRepository.sendEmailOtp(event.email);
-  //     emit(AuthEmailOtpSent(event.email, secondsLeft: 60));
-  //     _otpTimer?.cancel();
-  //     _otpTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-  //       if (!isClosed) add(const AuthOtpTimerTicked());
-  //     });
-  //   } catch (e) {
-  //     emit(AuthError(_friendlyError(e)));
-  //   }
-  // }
+  Future<void> _onEmailOtpSendRequested(
+    AuthEmailOtpSendRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      await _authRepository.sendEmailOtp(event.email);
+      emit(AuthEmailOtpSent(event.email, secondsLeft: 60));
+      _otpTimer?.cancel();
+      _otpTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (!isClosed) add(const AuthOtpTimerTicked());
+      });
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
+    }
+  }
 
   // ─── Email OTP — vérification ─────────────────────────────────────────────────
-  // TODO(#18): Enable when AuthRepository methods are added
 
-  // Future<void> _onEmailOtpVerifyRequested(
-  //   AuthEmailOtpVerifyRequested event,
-  //   Emitter<AuthState> emit,
-  // ) async {
-  //   emit(const AuthLoading());
-  //   try {
-  //     await _authRepository.verifyEmailOtp(event.email, event.code);
-  //     emit(AuthEmailOtpVerified(event.email));
-  //   } catch (e) {
-  //     emit(AuthError(_friendlyError(e)));
-  //   }
-  // }
+  Future<void> _onEmailOtpVerifyRequested(
+    AuthEmailOtpVerifyRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      await _authRepository.verifyEmailOtp(event.email, event.code);
+      emit(AuthEmailOtpVerified(event.email));
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
+    }
+  }
 
   // ─── Inscription par email (post-OAuth ou post-email OTP) ────────────────────
-  // TODO(#18): Enable when AuthRepository methods are added
 
-  // Future<void> _onRegisterWithEmailRequested(
-  //   AuthRegisterWithEmailRequested event,
-  //   Emitter<AuthState> emit,
-  // ) async {
-  //   emit(const AuthLoading());
-  //   try {
-  //     final user = await _authRepository.registerWithEmail(
-  //       email: event.email,
-  //       roles: event.roles,
-  //     );
-  //     await _localAuthService.clearPin();
-  //     emit(AuthAuthenticated(user));
-  //   } catch (e) {
-  //     emit(AuthError(_friendlyError(e)));
-  //   }
-  // }
+  Future<void> _onRegisterWithEmailRequested(
+    AuthRegisterWithEmailRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      final user = await _authRepository.registerWithEmail(
+        email: event.email,
+        roles: event.roles,
+      );
+      await _localAuthService.clearPin();
+      emit(AuthAuthenticated(user));
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
+    }
+  }
 
   // ─── Google Sign-In ───────────────────────────────────────────────────────
 
