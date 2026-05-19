@@ -8,8 +8,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+enum OtpMode { phone, email }
+
 class OtpVerificationScreen extends StatefulWidget {
-  const OtpVerificationScreen({super.key});
+  const OtpVerificationScreen({
+    super.key,
+    this.mode = OtpMode.phone,
+    this.contact = '',
+  });
+
+  final OtpMode mode;
+  final String contact;
 
   @override
   State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
@@ -36,24 +45,35 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           type: DonySnackbarType.error);
       return;
     }
-    final state = context.read<AuthBloc>().state;
-    if (state is! AuthOtpSent) {
-      DonySnackbar.show(context,
-          message: 'Session expirée, veuillez recommencer',
-          type: DonySnackbarType.error);
-      return;
+    if (widget.mode == OtpMode.email) {
+      context.read<AuthBloc>().add(AuthEmailOtpVerifyRequested(
+            email: widget.contact,
+            code: _otpCode,
+          ));
+    } else {
+      final state = context.read<AuthBloc>().state;
+      if (state is! AuthOtpSent) {
+        DonySnackbar.show(context,
+            message: 'Session expirée, veuillez recommencer',
+            type: DonySnackbarType.error);
+        return;
+      }
+      context.read<AuthBloc>().add(AuthPhoneVerified(
+            verificationId: state.verificationId,
+            smsCode: _otpCode,
+          ));
     }
-    context.read<AuthBloc>().add(AuthPhoneVerified(
-          verificationId: state.verificationId,
-          smsCode: _otpCode,
-        ));
   }
 
   void _resend() {
     for (final c in _controllers) c.clear();
-    final state = context.read<AuthBloc>().state;
-    final phoneNumber = state is AuthOtpSent ? state.phoneNumber : '';
-    context.read<AuthBloc>().add(AuthSendOtpRequested(phoneNumber));
+    if (widget.mode == OtpMode.email) {
+      context.read<AuthBloc>().add(AuthEmailOtpSendRequested(widget.contact));
+    } else {
+      final state = context.read<AuthBloc>().state;
+      final phoneNumber = state is AuthOtpSent ? state.phoneNumber : '';
+      context.read<AuthBloc>().add(AuthSendOtpRequested(phoneNumber));
+    }
   }
 
   @override
@@ -63,17 +83,35 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthOtpVerified) {
-            context.read<AuthBloc>().add(const AuthRegisterRequested());
-          } else if (state is AuthAuthenticated) {
-            context.go('/auth/local');
-          } else if (state is AuthError) {
-            ErrorPresenter.show(context, state.error);
+          if (widget.mode == OtpMode.email) {
+            if (state is AuthEmailOtpVerified) {
+              context.go('/onboarding/role', extra: {
+                'initialRole': 'SENDER',
+                'pendingEmail': state.email,
+              });
+            } else if (state is AuthAuthenticated) {
+              context.go('/auth/local');
+            } else if (state is AuthError) {
+              ErrorPresenter.show(context, state.error);
+            }
+          } else {
+            if (state is AuthOtpVerified) {
+              context.read<AuthBloc>().add(const AuthRegisterRequested());
+            } else if (state is AuthAuthenticated) {
+              context.go('/auth/local');
+            } else if (state is AuthError) {
+              ErrorPresenter.show(context, state.error);
+            }
           }
         },
         builder: (context, state) {
           final isLoading = state is AuthLoading;
-          final secondsLeft = state is AuthOtpSent ? state.secondsLeft : 60;
+          final secondsLeft = state is AuthOtpSent
+              ? state.secondsLeft
+              : (state is AuthEmailOtpSent ? state.secondsLeft : 60);
+          final contact = widget.mode == OtpMode.email
+              ? widget.contact
+              : (state is AuthOtpSent ? state.phoneNumber : '');
           final cs = Theme.of(context).colorScheme;
           final tt = Theme.of(context).textTheme;
           final h = DonyLayout.hPadding(context);
@@ -125,7 +163,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           ),
                           const SizedBox(height: DonySpacing.xl),
                           Text(
-                            'Entrez le code',
+                            widget.mode == OtpMode.email ? 'Vérifie ton email' : 'Entrez le code',
                             style: tt.displayLarge?.copyWith(
                               color: cs.onSurface,
                               letterSpacing: -0.8,
@@ -137,11 +175,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                               style: tt.bodyLarge?.copyWith(
                                   color: cs.onSurfaceVariant, height: 1.5),
                               children: [
-                                const TextSpan(text: 'Code envoyé au '),
                                 TextSpan(
-                                  text: state is AuthOtpSent
-                                      ? state.phoneNumber
-                                      : '',
+                                  text: widget.mode == OtpMode.email
+                                      ? 'Code envoyé à '
+                                      : 'Code envoyé au ',
+                                ),
+                                TextSpan(
+                                  text: contact,
                                   style: tt.bodyLarge?.copyWith(
                                     fontWeight: FontWeight.w700,
                                     color: cs.primary,
