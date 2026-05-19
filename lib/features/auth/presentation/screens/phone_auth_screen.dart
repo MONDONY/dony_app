@@ -97,6 +97,11 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
             context.push('/auth/otp');
           } else if (state is AuthError) {
             ErrorPresenter.show(context, state.error);
+          } else if (state is AuthOAuthNewUser) {
+            context.go('/onboarding/role', extra: {
+              'initialRole': 'SENDER',
+              'pendingEmail': state.email,
+            });
           }
         },
         builder: (context, state) {
@@ -251,6 +256,28 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                 ],
                               ),
                             ),
+                            const SizedBox(height: DonySpacing.sm),
+                            Center(
+                              child: TextButton(
+                                onPressed: () => context.push('/auth/email'),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: cs.primary,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: DonySpacing.base,
+                                      vertical: DonySpacing.sm),
+                                ),
+                                child: Text(
+                                  'Continuer avec une adresse email',
+                                  style: tt.bodyMedium?.copyWith(
+                                    color: cs.primary,
+                                    fontWeight: FontWeight.w600,
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: cs.primary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: DonySpacing.base),
                           ],
                         ),
                       ),

@@ -24,6 +24,14 @@ GoRouter _buildRouter(AuthBloc authBloc) => GoRouter(routes: [
         path: '/auth/otp',
         builder: (_, __) => const Scaffold(body: Text('OTP Screen')),
       ),
+      GoRoute(
+        path: '/auth/email',
+        builder: (_, __) => const Scaffold(body: Text('Email Screen')),
+      ),
+      GoRoute(
+        path: '/onboarding/role',
+        builder: (_, __) => const Scaffold(body: Text('Role Screen')),
+      ),
     ]);
 
 Future<void> _pump(WidgetTester tester, AuthBloc authBloc) async {
@@ -235,6 +243,39 @@ void main() {
           const AuthDialCodeChanged(code: '+221', flag: '🇸🇳'),
         ),
       ).called(1);
+    });
+  });
+
+  group('PhoneAuthScreen — email link et OAuth new user', () {
+    testWidgets('affiche le lien "Continuer avec une adresse email"', (tester) async {
+      when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+      when(() => mockAuthBloc.stream).thenAnswer((_) => const Stream.empty());
+      await _pump(tester, mockAuthBloc);
+
+      expect(find.text('Continuer avec une adresse email'), findsOneWidget);
+    });
+
+    testWidgets('tap sur le lien email navigue vers /auth/email', (tester) async {
+      when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
+      when(() => mockAuthBloc.stream).thenAnswer((_) => const Stream.empty());
+      await _pump(tester, mockAuthBloc);
+
+      await tester.tap(find.text('Continuer avec une adresse email'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Email Screen'), findsOneWidget);
+    });
+
+    testWidgets('AuthOAuthNewUser → navigue vers /onboarding/role avec pendingEmail', (tester) async {
+      whenListen(
+        mockAuthBloc,
+        Stream.fromIterable([const AuthLoading(), const AuthOAuthNewUser('u@google.com')]),
+        initialState: const AuthInitial(),
+      );
+      await _pump(tester, mockAuthBloc);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Role Screen'), findsOneWidget);
     });
   });
 }
