@@ -16,7 +16,7 @@ class OnboardingScreen extends StatelessWidget {
   ];
 
   void _goToRole(BuildContext context, String role) {
-    context.go('/onboarding/role', extra: role);
+    context.go('/onboarding/role', extra: {'initialRole': role});
   }
 
   @override

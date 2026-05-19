@@ -6,6 +6,7 @@ import 'package:dony/features/auth/presentation/screens/local_auth_screen.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/presentation/chat_screen.dart';
+import 'package:dony/features/auth/presentation/screens/email_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
@@ -101,6 +102,8 @@ const _publicRoutes = {
   '/onboarding/role',
   '/auth/phone',
   '/auth/otp',
+  '/auth/email',
+  '/auth/email-otp',
   '/auth/pin-setup',
   '/auth/local',
 };
@@ -141,8 +144,21 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/onboarding/role',
       builder: (context, state) {
-        final initialRole = state.extra as String? ?? 'SENDER';
-        return RoleSelectionScreen(initialRole: initialRole);
+        final extra = state.extra;
+        String initialRole = 'SENDER';
+        String? pendingEmail;
+
+        if (extra is String) {
+          initialRole = extra;
+        } else if (extra is Map) {
+          initialRole = (extra['initialRole'] as String?) ?? 'SENDER';
+          pendingEmail = extra['pendingEmail'] as String?;
+        }
+
+        return RoleSelectionScreen(
+          initialRole: initialRole,
+          pendingEmail: pendingEmail,
+        );
       },
     ),
     GoRoute(
@@ -151,7 +167,21 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/auth/otp',
-      builder: (context, state) => const OtpVerificationScreen(),
+      builder: (context, state) => const OtpVerificationScreen(mode: OtpMode.phone),
+    ),
+    GoRoute(
+      path: '/auth/email',
+      builder: (context, state) => const EmailAuthScreen(),
+    ),
+    GoRoute(
+      path: '/auth/email-otp',
+      builder: (context, state) {
+        final extra = state.extra as Map? ?? {};
+        return OtpVerificationScreen(
+          mode: OtpMode.email,
+          contact: (extra['email'] as String?) ?? '',
+        );
+      },
     ),
     GoRoute(
       path: '/auth/pin-setup',
