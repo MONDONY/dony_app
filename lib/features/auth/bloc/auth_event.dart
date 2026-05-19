@@ -89,3 +89,26 @@ class AuthGoogleSignInRequested extends AuthEvent {
 class AuthAppleSignInRequested extends AuthEvent {
   const AuthAppleSignInRequested();
 }
+
+class AuthEmailOtpSendRequested extends AuthEvent {
+  final String email;
+  const AuthEmailOtpSendRequested(this.email);
+  @override
+  List<Object?> get props => [email];
+}
+
+class AuthEmailOtpVerifyRequested extends AuthEvent {
+  final String email;
+  final String code;
+  const AuthEmailOtpVerifyRequested({required this.email, required this.code});
+  @override
+  List<Object?> get props => [email, code];
+}
+
+class AuthRegisterWithEmailRequested extends AuthEvent {
+  final String email;
+  final List<String> roles;
+  const AuthRegisterWithEmailRequested({required this.email, required this.roles});
+  @override
+  List<Object?> get props => [email, roles];
+}
