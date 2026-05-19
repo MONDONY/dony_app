@@ -38,4 +38,40 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('qr-scan'), findsOneWidget);
   });
+
+  testWidgets('tap Transit navigue vers identify avec etape=TRANSIT',
+      (tester) async {
+    await tester.pumpWidget(_wrap());
+    await tester.tap(find.text('Transit'));
+    await tester.pumpAndSettle();
+    expect(find.text('identify'), findsOneWidget);
+  });
+
+  testWidgets('tap Arrivée navigue vers identify avec etape=ARRIVEE',
+      (tester) async {
+    await tester.pumpWidget(_wrap());
+    await tester.tap(find.text('Arrivée'));
+    await tester.pumpAndSettle();
+    expect(find.text('identify'), findsOneWidget);
+  });
+
+  testWidgets('tap Numéro navigue vers identify avec focusNumber=true',
+      (tester) async {
+    await tester.pumpWidget(_wrap());
+    await tester.tap(find.text('Numéro'));
+    await tester.pumpAndSettle();
+    expect(find.text('identify'), findsOneWidget);
+  });
+
+  testWidgets('affiche obligatoire pour Départ et Arrivée', (tester) async {
+    await tester.pumpWidget(_wrap());
+    expect(find.text('obligatoire'), findsNWidgets(2));
+    expect(find.text('optionnelle'), findsOneWidget);
+  });
+
+  testWidgets('affiche corridor du trajet actif', (tester) async {
+    await tester.pumpWidget(_wrap());
+    expect(find.textContaining('Paris'), findsOneWidget);
+    expect(find.textContaining('Dakar'), findsOneWidget);
+  });
 }

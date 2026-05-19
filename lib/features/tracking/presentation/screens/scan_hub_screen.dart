@@ -69,7 +69,7 @@ class _TripHeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final progress = _TripStub.scannedDepart / _TripStub.totalColis;
+    const progress = _TripStub.scannedDepart / _TripStub.totalColis;
 
     return Container(
       decoration: BoxDecoration(
@@ -138,7 +138,7 @@ class _TripHeroCard extends StatelessWidget {
                 ),
                 const SizedBox(height: DonySpacing.xs),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(DonyRadius.full),
                   child: LinearProgressIndicator(
                     value: progress,
                     backgroundColor: DonyColors.neutral0.withValues(alpha: 0.2),
@@ -248,7 +248,6 @@ class _EtapeChip extends StatelessWidget {
             Text(
               etape.photoRequired ? 'obligatoire' : 'optionnelle',
               style: tt.labelSmall?.copyWith(
-                fontSize: 9,
                 color: etape.photoRequired ? cs.error : cs.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
@@ -350,7 +349,6 @@ class _QuickBtn extends StatelessWidget {
             Text(
               subtitle,
               style: tt.labelSmall?.copyWith(
-                fontSize: 9,
                 color: cs.onSurfaceVariant,
               ),
             ),
