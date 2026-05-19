@@ -536,8 +536,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } else {
         emit(AuthError(unwrapDioError(e)));
       }
-    } catch (_) {
-      emit(AuthOtpVerified(phoneNumber: _pendingPhoneNumber ?? ''));
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
     }
   }
 

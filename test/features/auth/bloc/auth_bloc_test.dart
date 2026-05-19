@@ -1269,5 +1269,30 @@ void main() {
             s.error.message.contains('Numéro de téléphone invalide')),
       ],
     );
+
+    blocTest<AuthBloc, AuthState>(
+      'émet [Loading, AuthError] quand backend répond 500',
+      build: () => AuthBloc(
+        mockRepo,
+        mockLocalAuth,
+        firebaseAuth: mockFirebaseAuth,
+        appleSignIn: (_) async => FakeAppleCredential(),
+      ),
+      setUp: () {
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => MockUserCredential());
+        when(() => mockRepo.getProfile()).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: ''),
+            response: Response(
+              statusCode: 500,
+              requestOptions: RequestOptions(path: ''),
+            ),
+          ),
+        );
+      },
+      act: (b) => b.add(const AuthAppleSignInRequested()),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
   });
 }
