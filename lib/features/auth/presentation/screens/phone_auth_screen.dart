@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -126,13 +128,15 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const DonyLogo(fontSize: 48),
-                            const SizedBox(height: DonySpacing.lg),
-                            const Center(
-                              child: DonyMascotteAnimated(
-                                type: DonyMascotteType.joyeux,
-                                size: DonyMascotteSize.md,
-                              ),
+                            const Row(
+                              children: [
+                                DonyMascotteAnimated(
+                                  type: DonyMascotteType.confiant,
+                                  size: DonyMascotteSize.sm,
+                                ),
+                                SizedBox(width: DonySpacing.md),
+                                DonyLogo(fontSize: 48),
+                              ],
                             ),
                             const SizedBox(height: DonySpacing.xl),
                             Text(
@@ -144,7 +148,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             ),
                             const SizedBox(height: DonySpacing.sm),
                             Text(
-                              'Entrez votre numéro pour continuer. Nous vous enverrons un code par SMS.',
+                              'Crée ton compte ou connecte-toi',
                               style: tt.bodyLarge?.copyWith(
                                 color: cs.onSurfaceVariant,
                                 height: 1.55,
@@ -271,6 +275,62 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                           isLoading: isLoading,
                         ),
                         const SizedBox(height: DonySpacing.md),
+                        // Séparateur "ou connexion rapide"
+                        Row(
+                          children: [
+                            Expanded(child: Divider(color: cs.outline)),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: DonySpacing.md),
+                              child: Text(
+                                'ou connexion rapide',
+                                style: tt.bodySmall?.copyWith(
+                                    color: cs.onSurfaceVariant),
+                              ),
+                            ),
+                            Expanded(child: Divider(color: cs.outline)),
+                          ],
+                        ),
+                        const SizedBox(height: DonySpacing.md),
+                        // Boutons sociaux conditionnels
+                        if (Platform.isIOS)
+                          Row(
+                            children: [
+                              Expanded(
+                                  child: _SocialButton(
+                                label: 'Google',
+                                icon: Icons.g_mobiledata_rounded,
+                                onPressed: isLoading
+                                    ? null
+                                    : () => context
+                                        .read<AuthBloc>()
+                                        .add(const AuthGoogleSignInRequested()),
+                              )),
+                              const SizedBox(width: DonySpacing.sm),
+                              Expanded(
+                                  child: _SocialButton(
+                                label: 'Apple',
+                                icon: Icons.apple_rounded,
+                                onPressed: isLoading
+                                    ? null
+                                    : () => context
+                                        .read<AuthBloc>()
+                                        .add(const AuthAppleSignInRequested()),
+                              )),
+                            ],
+                          )
+                        else
+                          _SocialButton(
+                            label: 'Continuer avec Google',
+                            icon: Icons.g_mobiledata_rounded,
+                            fullWidth: true,
+                            onPressed: isLoading
+                                ? null
+                                : () => context
+                                    .read<AuthBloc>()
+                                    .add(const AuthGoogleSignInRequested()),
+                          ),
+                        const SizedBox(height: DonySpacing.md),
                         Text.rich(
                           TextSpan(
                             style: tt.bodySmall?.copyWith(
@@ -306,6 +366,47 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _SocialButton extends StatelessWidget {
+  const _SocialButton({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+    this.fullWidth = false,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final bool fullWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 20, color: cs.onSurface),
+      label: Text(
+        label,
+        style: tt.labelLarge?.copyWith(color: cs.onSurface),
+      ),
+      style: OutlinedButton.styleFrom(
+        side: BorderSide(color: cs.outline),
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.base,
+          vertical: DonySpacing.md,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DonyRadius.lg),
+        ),
+        minimumSize:
+            fullWidth ? const Size(double.infinity, 52) : const Size(0, 52),
       ),
     );
   }
