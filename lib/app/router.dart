@@ -10,6 +10,7 @@ import 'package:dony/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/pin_setup_screen.dart';
+import 'package:dony/features/auth/presentation/screens/role_selection_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/presentation/screens/rematch_search_screen.dart';
@@ -97,6 +98,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 const _publicRoutes = {
   '/splash',
   '/onboarding',
+  '/onboarding/role',
   '/auth/phone',
   '/auth/otp',
   '/auth/pin-setup',
@@ -135,6 +137,13 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/onboarding',
       builder: (context, state) => const OnboardingScreen(),
+    ),
+    GoRoute(
+      path: '/onboarding/role',
+      builder: (context, state) {
+        final initialRole = state.extra as String? ?? 'SENDER';
+        return RoleSelectionScreen(initialRole: initialRole);
+      },
     ),
     GoRoute(
       path: '/auth/phone',
