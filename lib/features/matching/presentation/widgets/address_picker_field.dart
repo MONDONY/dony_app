@@ -60,6 +60,11 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
   Timer? _debounce;
   bool _suppressListener = false;
 
+  // Tracks the last text value we acted on, to distinguish real keystrokes from
+  // cursor/selection changes (which also fire the TextEditingController listener
+  // but must NOT trigger a new autocomplete search).
+  String _lastSearchedText = '';
+
   // Session token lifecycle: generated on first keystroke, reset after
   // resolvePlace() or when the field is cleared/disposed.
   // Regenerate after 3 min inactivity to avoid billing outside session discount.
@@ -72,20 +77,28 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
   void initState() {
     super.initState();
     _committed = widget.initialValue;
-    _ctrl = TextEditingController(text: widget.initialValue?.label ?? '');
+    final initialText = widget.initialValue?.label ?? '';
+    _ctrl = TextEditingController(text: initialText);
+    _lastSearchedText = initialText;
     _focus = FocusNode()..addListener(_onFocusChange);
     _ctrl.addListener(_onCtrlChanged);
   }
 
   void _onCtrlChanged() {
     if (_suppressListener) return;
-    _onTyped(_ctrl.text);
+    final text = _ctrl.text;
+    // TextEditingController fires for selection changes too (cursor repositioning
+    // on focus restoration). Ignore if the text itself hasn't changed.
+    if (text == _lastSearchedText) return;
+    _lastSearchedText = text;
+    _onTyped(text);
   }
 
   void _setCtrlText(String text) {
     _suppressListener = true;
     try {
       _ctrl.text = text;
+      _lastSearchedText = text; // keep in sync so focus-restore doesn't re-search
     } finally {
       _suppressListener = false;
     }
@@ -148,7 +161,14 @@ class _AddressPickerFieldState extends FormFieldState<AddressData> {
         _showFallback = results.isEmpty;
         _loading = false;
       });
-      results.isNotEmpty ? _showOverlay() : _removeOverlay();
+      // Guard: if focus was lost while the HTTP request was in flight (e.g.
+      // user opened the preview sheet before the response arrived), don't
+      // re-show the overlay — _onFocusChange already cleaned up.
+      if (_focus.hasFocus) {
+        results.isNotEmpty ? _showOverlay() : _removeOverlay();
+      } else {
+        _removeOverlay();
+      }
     } on DioException {
       if (!mounted) return;
       setState(() {
