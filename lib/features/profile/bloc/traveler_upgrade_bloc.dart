@@ -1,8 +1,11 @@
 import 'package:dony/core/error/app_exception.dart';
-import 'package:dony/features/profile/bloc/traveler_upgrade_event.dart';
-import 'package:dony/features/profile/bloc/traveler_upgrade_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/profile/data/traveler_upgrade_repository.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+part 'traveler_upgrade_event.dart';
+part 'traveler_upgrade_state.dart';
 
 class TravelerUpgradeBloc
     extends Bloc<TravelerUpgradeEvent, TravelerUpgradeState> {

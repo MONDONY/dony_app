@@ -1,7 +1,8 @@
-import 'package:equatable/equatable.dart';
+part of 'traveler_upgrade_bloc.dart';
 
-abstract class TravelerUpgradeEvent extends Equatable {
+sealed class TravelerUpgradeEvent extends Equatable {
   const TravelerUpgradeEvent();
+
   @override
   List<Object?> get props => [];
 }
