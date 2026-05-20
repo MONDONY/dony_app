@@ -412,6 +412,7 @@ class _ActivityTab extends StatelessWidget {
         announcementState is AnnouncementLoading;
 
     return ListView(
+      key: const Key('profile_activity_tab'),
       padding: const EdgeInsets.fromLTRB(
         DonySpacing.lg,
         DonySpacing.xl,
@@ -636,6 +637,7 @@ class _AccountTab extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     return ListView(
+      key: const Key('profile_account_tab'),
       padding: const EdgeInsets.fromLTRB(
         DonySpacing.lg,
         DonySpacing.xl,
@@ -876,6 +878,7 @@ class _SettingsTab extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     return ListView(
+      key: const Key('profile_settings_tab'),
       padding: const EdgeInsets.fromLTRB(
         DonySpacing.lg,
         DonySpacing.xl,
