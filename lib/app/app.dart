@@ -83,13 +83,24 @@ class _DonyAppState extends State<DonyApp> {
     );
   }
 
+  // Exhaustive allowlist — only these paths can be reached via dony:// URIs.
+  // Prevents crafted deep-links (e.g. dony://admin/…) from routing to
+  // unintended screens.
+  static const _allowedDeepLinkPaths = {
+    '/stripe/onboarding/complete',
+    '/stripe/onboarding/refresh',
+    '/payment/confirm',
+    '/tracking/scan',
+  };
+
   void _handleDeepLink(Uri uri) {
     if (uri.scheme != 'dony') {
       return;
     }
-    // Build GoRouter path from host + path segments:
-    // dony://stripe/onboarding/complete  →  /stripe/onboarding/complete
     final routePath = '/${uri.host}${uri.path}';
+    if (!_allowedDeepLinkPaths.contains(routePath)) {
+      return;
+    }
     try {
       _navigateToRoute(routePath);
     } catch (_) {

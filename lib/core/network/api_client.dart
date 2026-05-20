@@ -1,7 +1,19 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+
+// PEM certificate for production TLS pinning.
+// Populated at build time via --dart-define-from-file=env.prod.json:
+//   "TLS_CERT_PEM": "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----\n"
+// How to obtain: openssl s_client -connect api.dony.app:443 -servername api.dony.app \
+//                  </dev/null 2>/dev/null | openssl x509 -outform PEM
+// Leave empty in env.dev.json — pinning is always skipped in debug mode.
+const _tlsCertPem = String.fromEnvironment('TLS_CERT_PEM');
 
 class ApiClient {
   ApiClient({required String baseUrl}) {
@@ -17,6 +29,7 @@ class ApiClient {
       ),
     );
 
+    _configureCertificatePinning();
     _dio.interceptors.add(_AuthInterceptor());
 
     if (kDebugMode) {
@@ -50,6 +63,23 @@ class ApiClient {
   late final Dio _dio;
 
   Dio get dio => _dio;
+
+  // Installs a custom SecurityContext that trusts ONLY the pinned server cert,
+  // rejecting any connection to a server presenting a different certificate —
+  // even if that certificate is signed by a trusted CA (MITM protection).
+  //
+  // Pinning is intentionally skipped when:
+  //   • running in debug mode (allows Charles/mitmproxy during dev)
+  //   • _tlsCertPem is empty (env.dev.json default — no pin configured)
+  //   • running on web (dart:io not available)
+  void _configureCertificatePinning() {
+    if (kIsWeb || kDebugMode || _tlsCertPem.isEmpty) return;
+    (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+      final context = SecurityContext(withTrustedRoots: false)
+        ..setTrustedCertificatesBytes(const Utf8Encoder().convert(_tlsCertPem));
+      return HttpClient(context: context);
+    };
+  }
 }
 
 class _AuthInterceptor extends Interceptor {
