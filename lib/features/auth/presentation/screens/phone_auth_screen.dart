@@ -100,11 +100,6 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
             });
           } else if (state is AuthError) {
             ErrorPresenter.show(context, state.error);
-          } else if (state is AuthOAuthNewUser) {
-            context.go('/onboarding/role', extra: {
-              'initialRole': 'SENDER',
-              'pendingEmail': state.email,
-            });
           }
         },
         builder: (context, state) {

@@ -12,7 +12,6 @@ import 'package:dony/features/auth/presentation/screens/otp_verification_screen.
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart';
 import 'package:dony/features/auth/presentation/screens/pin_setup_screen.dart';
-import 'package:dony/features/auth/presentation/screens/role_selection_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/presentation/screens/rematch_search_screen.dart';
