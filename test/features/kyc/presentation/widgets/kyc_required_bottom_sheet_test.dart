@@ -1,9 +1,23 @@
+import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
+import 'package:dony/features/kyc/bloc/kyc_event.dart';
+import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_required_bottom_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 
-Widget _wrap(String kycStatus) => MaterialApp(
-      home: Builder(
+class _MockKycBloc extends MockBloc<KycEvent, KycState> implements KycBloc {}
+
+Widget _wrap(String kycStatus) {
+  final kycBloc = _MockKycBloc();
+  when(() => kycBloc.state).thenReturn(const KycInitial());
+  when(() => kycBloc.stream).thenAnswer((_) => const Stream.empty());
+  return MaterialApp(
+    home: BlocProvider<KycBloc>.value(
+      value: kycBloc,
+      child: Builder(
         builder: (ctx) => Scaffold(
           body: Center(
             child: ElevatedButton(
@@ -14,7 +28,9 @@ Widget _wrap(String kycStatus) => MaterialApp(
           ),
         ),
       ),
-    );
+    ),
+  );
+}
 
 void main() {
   group('KycRequiredBottomSheet', () {

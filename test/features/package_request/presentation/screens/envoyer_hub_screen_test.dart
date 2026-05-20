@@ -4,6 +4,9 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
+import 'package:dony/features/kyc/bloc/kyc_event.dart';
+import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -38,6 +41,8 @@ class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
 class _MockPackageRequestFormBloc
     extends MockBloc<PackageRequestFormEvent, PackageRequestFormState>
     implements PackageRequestFormBloc {}
+
+class _MockKycBloc extends MockBloc<KycEvent, KycState> implements KycBloc {}
 
 void main() {
   late _MockPackageRequestBloc packageBloc;
@@ -128,8 +133,16 @@ void main() {
     when(() => authBloc.stream)
         .thenAnswer((_) => const Stream<AuthState>.empty());
 
-    return BlocProvider<AuthBloc>.value(
-      value: authBloc,
+    final kycBloc = _MockKycBloc();
+    when(() => kycBloc.state).thenReturn(const KycInitial());
+    when(() => kycBloc.stream)
+        .thenAnswer((_) => const Stream<KycState>.empty());
+
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>.value(value: authBloc),
+        BlocProvider<KycBloc>.value(value: kycBloc),
+      ],
       child: const MaterialApp(home: EnvoyerHubScreen()),
     );
   }

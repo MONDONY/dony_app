@@ -1,8 +1,13 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/features/kyc/presentation/widgets/kyc_onboarding_bottom_sheet.dart';
+import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
+import 'package:dony/features/kyc/bloc/kyc_event.dart';
+import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class KycRequiredBottomSheet extends StatelessWidget {
   const KycRequiredBottomSheet({super.key, required this.kycStatus});
@@ -10,38 +15,80 @@ class KycRequiredBottomSheet extends StatelessWidget {
   final String kycStatus;
 
   static Future<void> show(BuildContext context, {required String kycStatus}) async {
-    bool openKyc = false;
+    if (kycStatus == 'PENDING') {
+      bool openStatus = false;
+      await DonyBottomSheet.show<void>(
+        context,
+        stickyBottom: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            DonyButton(
+              label: 'Vérifier mon identité',
+              onPressed: () {
+                openStatus = true;
+                Navigator.of(context, rootNavigator: true).pop();
+              },
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            DonyButton(
+              label: 'Plus tard',
+              variant: DonyButtonVariant.ghost,
+              onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+            ),
+          ],
+        ),
+        child: KycRequiredBottomSheet(kycStatus: kycStatus),
+      );
+      if (openStatus && context.mounted) {
+        await KycStatusBottomSheet.show(context);
+      }
+      return;
+    }
 
-    await DonyBottomSheet.show<void>(
+    // NOT_STARTED / REJECTED : démarre la session KYC directement depuis le portail
+    final kycBloc = context.read<KycBloc>()..add(const KycReset());
+    final stripeUrl = await DonyBottomSheet.show<String>(
       context,
-      stickyBottom: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          DonyButton(
-            label: 'Vérifier mon identité',
-            onPressed: () {
-              openKyc = true;
-              Navigator.of(context, rootNavigator: true).pop();
-            },
-          ),
-          const SizedBox(height: DonySpacing.sm),
-          DonyButton(
-            label: 'Plus tard',
-            variant: DonyButtonVariant.ghost,
-            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
-          ),
-        ],
+      wrapper: (child) => BlocProvider.value(value: kycBloc, child: child),
+      stickyBottom: BlocBuilder<KycBloc, KycState>(
+        builder: (ctx, state) {
+          final isLoading = state is KycLoading;
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              DonyButton(
+                label: 'Vérifier mon identité',
+                isLoading: isLoading,
+                onPressed: isLoading
+                    ? null
+                    : () => ctx.read<KycBloc>().add(const KycSessionRequested()),
+              ),
+              const SizedBox(height: DonySpacing.sm),
+              DonyButton(
+                label: 'Plus tard',
+                variant: DonyButtonVariant.ghost,
+                onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+              ),
+            ],
+          );
+        },
       ),
-      child: KycRequiredBottomSheet(kycStatus: kycStatus),
+      child: BlocListener<KycBloc, KycState>(
+        listener: (ctx, state) {
+          if (state is KycSessionCreated) {
+            Navigator.of(ctx, rootNavigator: true).pop(state.stripeUrl);
+          } else if (state is KycError) {
+            ErrorPresenter.show(ctx, state.error);
+          }
+        },
+        child: KycRequiredBottomSheet(kycStatus: kycStatus),
+      ),
     );
 
-    if (openKyc && context.mounted) {
-      if (kycStatus == 'PENDING') {
-        await KycStatusBottomSheet.show(context);
-      } else {
-        await KycOnboardingBottomSheet.show(context);
-      }
+    if (stripeUrl != null && context.mounted) {
+      GoRouter.of(context).go('/kyc/verify', extra: stripeUrl);
     }
   }
 
