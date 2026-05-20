@@ -33,4 +33,13 @@ class ActiveRoleCubit extends Cubit<ActiveRole> {
     _hive.userPrefs.delete(_key);
     emit(ActiveRole.sender); // défaut : Expéditeur
   }
+
+  /// Synchronise l'activeRole avec les rôles réels du compte.
+  /// Si l'utilisateur n'a pas le rôle TRAVELER, on force le mode Expéditeur
+  /// et on efface le cache Hive pour éviter un état incohérent au prochain démarrage.
+  void syncWithRoles(List<String> roles) {
+    if (!roles.contains('TRAVELER') && state == ActiveRole.traveler) {
+      reset();
+    }
+  }
 }

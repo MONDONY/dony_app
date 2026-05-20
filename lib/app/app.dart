@@ -6,6 +6,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -150,7 +151,15 @@ class _DonyAppState extends State<DonyApp> {
             create: (_) => getIt<StripeAccountBloc>(),
           ),
         ],
-        child: AnnotatedRegion<SystemUiOverlayStyle>(
+        child: BlocListener<AuthBloc, AuthState>(
+          listener: (context, state) {
+            if (state is AuthAuthenticated) {
+              context.read<ActiveRoleCubit>().syncWithRoles(state.user.roles);
+            } else if (state is AuthProfileUpdated) {
+              context.read<ActiveRoleCubit>().syncWithRoles(state.user.roles);
+            }
+          },
+          child: AnnotatedRegion<SystemUiOverlayStyle>(
           value: const SystemUiOverlayStyle(
             systemNavigationBarColor: Colors.transparent,
             systemNavigationBarDividerColor: Colors.transparent,
@@ -174,6 +183,7 @@ class _DonyAppState extends State<DonyApp> {
               Locale('fr', 'FR'),
               Locale('en', 'US'),
             ],
+          ),
           ),
         ),
       );
