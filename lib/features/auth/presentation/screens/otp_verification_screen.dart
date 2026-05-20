@@ -113,10 +113,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           // ── Mode inscription (comportement existant) ─────────────────
           if (widget.mode == OtpMode.email) {
             if (state is AuthEmailOtpVerified) {
-              context.go('/onboarding/role', extra: {
-                'initialRole': 'SENDER',
-                'pendingEmail': state.email,
-              });
+              // Email vérifié → auto-register (backend force SENDER)
+              context.read<AuthBloc>().add(
+                AuthRegisterWithEmailRequested(email: state.email),
+              );
             } else if (state is AuthAuthenticated) {
               context.go('/auth/local');
             } else if (state is AuthError) {
@@ -150,26 +150,18 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // ── Back button ──────────────────────────────────
+                // ── Top bar ──────────────────────────────────────
                 Padding(
-                  padding: EdgeInsets.fromLTRB(
-                      DonySpacing.sm, DonySpacing.sm, DonySpacing.sm, 0),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: IconButton(
-                      tooltip: 'Retour',
-                      onPressed: () => context.pop(),
-                      icon: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: cs.primaryContainer,
-                          borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
-                        ),
-                        child: Icon(Icons.chevron_left_rounded, size: 20, color: cs.primary),
-                      ),
+                  padding: EdgeInsets.fromLTRB(h, DonySpacing.md, h, 0),
+                  child: Row(children: [
+                    DonyBackCircle(onTap: () => context.pop()),
+                    const Spacer(),
+                    DonyStepPill(
+                      current: 2,
+                      total: 3,
+                      label: widget.mode == OtpMode.email ? 'Code email' : 'Code SMS',
                     ),
-                  ),
+                  ]),
                 ),
 
                 // ── Scrollable content ───────────────────────────
@@ -183,17 +175,17 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Center(
-                            child: DonyMascotteAnimated(
-                              type: DonyMascotteType.confiant,
-                              size: DonyMascotteSize.md,
+                          Center(
+                            child: DonyHeroAvatar(
+                              emoji: widget.mode == OtpMode.email ? '📧' : '🔢',
+                              size: 72,
                             ),
                           ),
                           const SizedBox(height: DonySpacing.xl),
                           Text(
                             widget.mode == OtpMode.email
-                                ? (widget.fromProfile ? 'Vérifie ton email' : 'Vérifie ton email')
-                                : (widget.fromProfile ? 'Vérifie ton numéro' : 'Entrez le code'),
+                                ? 'Code reçu ?'
+                                : 'Entrez le code',
                             style: tt.displayLarge?.copyWith(
                               color: cs.onSurface,
                               letterSpacing: -0.8,

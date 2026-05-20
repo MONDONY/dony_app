@@ -28,10 +28,6 @@ GoRouter _buildRouter(AuthBloc authBloc) => GoRouter(routes: [
         path: '/auth/email',
         builder: (_, __) => const Scaffold(body: Text('Email Screen')),
       ),
-      GoRoute(
-        path: '/onboarding/role',
-        builder: (_, __) => const Scaffold(body: Text('Role Screen')),
-      ),
     ]);
 
 Future<void> _pump(WidgetTester tester, AuthBloc authBloc) async {
@@ -50,8 +46,6 @@ void main() {
     when(() => mockAuthBloc.state).thenReturn(const AuthInitial());
     when(() => mockAuthBloc.stream).thenAnswer((_) => const Stream.empty());
 
-    registerFallbackValue(const AuthGoogleSignInRequested());
-    registerFallbackValue(const AuthAppleSignInRequested());
     registerFallbackValue(AuthSendOtpRequested(''));
   });
 
@@ -60,24 +54,19 @@ void main() {
   });
 
   group('PhoneAuthScreen — affichage', () {
-    testWidgets('affiche le titre Bienvenue', (tester) async {
+    testWidgets('affiche le titre Ton numéro', (tester) async {
       await _pump(tester, mockAuthBloc);
-      expect(find.text('Bienvenue'), findsOneWidget);
+      expect(find.text('Ton numéro'), findsOneWidget);
     });
 
-    testWidgets('affiche le sous-titre Crée ton compte ou connecte-toi', (tester) async {
+    testWidgets('affiche le sous-titre envoi code SMS', (tester) async {
       await _pump(tester, mockAuthBloc);
-      expect(find.textContaining('Crée ton compte'), findsOneWidget);
+      expect(find.textContaining('code à 6 chiffres'), findsOneWidget);
     });
 
-    testWidgets('affiche le bouton Recevoir le code', (tester) async {
+    testWidgets('affiche le bouton Recevoir le code SMS', (tester) async {
       await _pump(tester, mockAuthBloc);
-      expect(find.text('Recevoir le code'), findsOneWidget);
-    });
-
-    testWidgets('affiche le séparateur ou connexion rapide', (tester) async {
-      await _pump(tester, mockAuthBloc);
-      expect(find.textContaining('connexion rapide'), findsOneWidget);
+      expect(find.text('Recevoir le code SMS'), findsOneWidget);
     });
 
     testWidgets('affiche le champ téléphone avec hint', (tester) async {
@@ -85,23 +74,12 @@ void main() {
       expect(find.byType(TextFormField), findsOneWidget);
     });
 
-    testWidgets('affiche la mascotte confiant', (tester) async {
+    testWidgets('affiche le widget PhoneAuthScreen', (tester) async {
       await _pump(tester, mockAuthBloc);
-      // L'écran est bien rendu (mascotte confiant est dans le widget tree)
       expect(find.byType(PhoneAuthScreen), findsOneWidget);
     });
 
-    testWidgets('affiche le bouton Google pleine largeur (plateforme non-iOS)', (tester) async {
-      // Sur Linux (env CI) : Platform.isIOS = false → bouton Google pleine largeur "Continuer avec Google"
-      await _pump(tester, mockAuthBloc);
-      expect(
-        find.textContaining('Continuer avec Google'),
-        findsOneWidget,
-      );
-    });
-
     testWidgets('bouton Apple absent sur plateforme non-iOS', (tester) async {
-      // Sur Linux (env CI) : Platform.isIOS = false → pas de bouton Apple
       await _pump(tester, mockAuthBloc);
       expect(find.text('Apple'), findsNothing);
     });
@@ -120,29 +98,9 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsWidgets);
     });
 
-    testWidgets('bouton Google désactivé pendant loading', (tester) async {
-      when(() => mockAuthBloc.state).thenReturn(const AuthLoading());
-      when(() => mockAuthBloc.stream).thenAnswer(
-        (_) => Stream.value(const AuthLoading()),
-      );
-      await _pump(tester, mockAuthBloc);
-      // Le bouton Google (OutlinedButton) a onPressed: null en loading
-      final outlinedButtons =
-          tester.widgetList<OutlinedButton>(find.byType(OutlinedButton));
-      expect(outlinedButtons.every((b) => b.onPressed == null), isTrue);
-    });
   });
 
   group('PhoneAuthScreen — interaction', () {
-    testWidgets('clic Google dispatche AuthGoogleSignInRequested', (tester) async {
-      await _pump(tester, mockAuthBloc);
-      final googleButton = find.textContaining('Continuer avec Google');
-      expect(googleButton, findsOneWidget);
-      await tester.tap(googleButton);
-      await tester.pump();
-      verify(() => mockAuthBloc.add(const AuthGoogleSignInRequested())).called(1);
-    });
-
     testWidgets('indicatif par défaut est +33 🇫🇷', (tester) async {
       await _pump(tester, mockAuthBloc);
       expect(find.text('+33'), findsOneWidget);
@@ -171,7 +129,7 @@ void main() {
       await tester.enterText(find.byType(TextFormField), '612345678');
       await tester.pump();
       // Taper sur le bouton "Recevoir le code"
-      await tester.tap(find.text('Recevoir le code'));
+      await tester.tap(find.text('Recevoir le code SMS'));
       await tester.pump();
       verify(
         () => mockAuthBloc.add(
@@ -184,7 +142,7 @@ void main() {
         (tester) async {
       await _pump(tester, mockAuthBloc);
       // Ne rien saisir — taper directement sur le bouton
-      await tester.tap(find.text('Recevoir le code'));
+      await tester.tap(find.text('Recevoir le code SMS'));
       await tester.pump();
       expect(find.text('Entrez votre numéro'), findsOneWidget);
     });
@@ -194,7 +152,7 @@ void main() {
       await _pump(tester, mockAuthBloc);
       await tester.enterText(find.byType(TextFormField), '123');
       await tester.pump();
-      await tester.tap(find.text('Recevoir le code'));
+      await tester.tap(find.text('Recevoir le code SMS'));
       await tester.pump();
       expect(find.text('Numéro trop court'), findsOneWidget);
     });
@@ -206,7 +164,7 @@ void main() {
       // Numéro commençant par 0 → doit envoyer +33612345678
       await tester.enterText(find.byType(TextFormField), '0612345678');
       await tester.pump();
-      await tester.tap(find.text('Recevoir le code'));
+      await tester.tap(find.text('Recevoir le code SMS'));
       await tester.pump();
       verify(
         () => mockAuthBloc.add(
@@ -266,7 +224,7 @@ void main() {
       expect(find.text('Email Screen'), findsOneWidget);
     });
 
-    testWidgets('AuthOAuthNewUser → navigue vers /onboarding/role avec pendingEmail', (tester) async {
+    testWidgets('AuthOAuthNewUser est ignoré par PhoneAuthScreen (géré par AuthMethodScreen)', (tester) async {
       whenListen(
         mockAuthBloc,
         Stream.fromIterable([const AuthLoading(), const AuthOAuthNewUser('u@google.com')]),
@@ -275,7 +233,8 @@ void main() {
       await _pump(tester, mockAuthBloc);
       await tester.pumpAndSettle();
 
-      expect(find.text('Role Screen'), findsOneWidget);
+      // PhoneAuthScreen ne gère plus AuthOAuthNewUser — reste sur le même écran
+      expect(find.byType(PhoneAuthScreen), findsOneWidget);
     });
   });
 }

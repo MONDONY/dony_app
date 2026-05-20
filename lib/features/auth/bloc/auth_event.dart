@@ -109,10 +109,9 @@ class AuthEmailOtpVerifyRequested extends AuthEvent {
 
 class AuthRegisterWithEmailRequested extends AuthEvent {
   final String email;
-  final List<String> roles;
-  const AuthRegisterWithEmailRequested({required this.email, required this.roles});
+  const AuthRegisterWithEmailRequested({required this.email});
   @override
-  List<Object?> get props => [email, roles];
+  List<Object?> get props => [email];
 }
 
 class AuthAddPhoneFromProfileRequested extends AuthEvent {

@@ -8,9 +8,8 @@ class AuthRepository {
 
   Future<UserModel> register({
     required String phoneNumber,
-    required List<String> roles,
   }) =>
-      _datasource.register(phoneNumber: phoneNumber, roles: roles);
+      _datasource.register(phoneNumber: phoneNumber);
 
   Future<UserModel> getProfile() => _datasource.getProfile();
 
@@ -41,7 +40,6 @@ class AuthRepository {
 
   Future<UserModel> registerWithEmail({
     required String email,
-    required List<String> roles,
   }) =>
-      _datasource.registerWithEmail(email: email, roles: roles);
+      _datasource.registerWithEmail(email: email);
 }

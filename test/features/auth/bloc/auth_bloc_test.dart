@@ -193,7 +193,6 @@ void main() {
       build: () {
         when(() => mockRepo.register(
               phoneNumber: any(named: 'phoneNumber'),
-              roles: any(named: 'roles'),
             )).thenAnswer((_) async => testUser);
         when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
         return buildBloc();
@@ -206,7 +205,6 @@ void main() {
       verify: (bloc) {
         verify(() => mockRepo.register(
               phoneNumber: any(named: 'phoneNumber'),
-              roles: ['TRAVELER', 'SENDER'],
             )).called(1);
         verify(() => mockLocalAuth.clearPin()).called(1);
       },
@@ -217,7 +215,6 @@ void main() {
       build: () {
         when(() => mockRepo.register(
               phoneNumber: any(named: 'phoneNumber'),
-              roles: any(named: 'roles'),
             )).thenThrow(Exception('Ce numéro est déjà associé à un compte'));
         return buildBloc();
       },
@@ -234,7 +231,6 @@ void main() {
       build: () {
         when(() => mockRepo.register(
               phoneNumber: any(named: 'phoneNumber'),
-              roles: any(named: 'roles'),
             )).thenThrow(Exception('Server error'));
         return buildBloc();
       },
@@ -954,13 +950,13 @@ void main() {
       'émet [AuthLoading, AuthAuthenticated] en cas de succès',
       build: () {
         when(() => mockRepo.registerWithEmail(
-                email: 'a@b.com', roles: ['SENDER']))
+                email: 'a@b.com'))
             .thenAnswer((_) async => testUser);
         when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
         return buildBloc();
       },
       act: (bloc) => bloc.add(
-        const AuthRegisterWithEmailRequested(email: 'a@b.com', roles: ['SENDER']),
+        const AuthRegisterWithEmailRequested(email: 'a@b.com'),
       ),
       expect: () => [
         const AuthLoading(),
@@ -975,13 +971,13 @@ void main() {
       'émet [AuthLoading, AuthError] si register échoue',
       build: () {
         when(() => mockRepo.registerWithEmail(
-                email: any(named: 'email'), roles: any(named: 'roles')))
+                email: any(named: 'email')))
             .thenThrow(Exception('email already exists'));
         when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
         return buildBloc();
       },
       act: (bloc) => bloc.add(
-        const AuthRegisterWithEmailRequested(email: 'a@b.com', roles: ['SENDER']),
+        const AuthRegisterWithEmailRequested(email: 'a@b.com'),
       ),
       expect: () => [const AuthLoading(), isA<AuthError>()],
     );

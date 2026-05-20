@@ -197,7 +197,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final user = await _authRepository.register(
         phoneNumber: _pendingPhoneNumber ?? '',
-        roles: const ['TRAVELER', 'SENDER'],
       );
       // Nouveau compte → effacer tout PIN résiduel d'un compte précédent
       // (le PIN est lié à l'appareil, pas à l'utilisateur Firebase)
@@ -344,7 +343,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final user = await _authRepository.registerWithEmail(
         email: event.email,
-        roles: event.roles,
       );
       await _localAuthService.clearPin();
       emit(AuthAuthenticated(user));

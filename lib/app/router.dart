@@ -10,8 +10,8 @@ import 'package:dony/features/auth/presentation/screens/email_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
+import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart';
 import 'package:dony/features/auth/presentation/screens/pin_setup_screen.dart';
-import 'package:dony/features/auth/presentation/screens/role_selection_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/presentation/screens/rematch_search_screen.dart';
@@ -99,7 +99,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 const _publicRoutes = {
   '/splash',
   '/onboarding',
-  '/onboarding/role',
+  '/auth/method',
   '/auth/phone',
   '/auth/otp',
   '/auth/email',
@@ -117,7 +117,7 @@ final appRouter = GoRouter(
     final isPublic =
         _publicRoutes.any((r) => state.matchedLocation.startsWith(r));
     if (!isAuthenticated && !isPublic) {
-      return '/auth/phone';
+      return '/auth/method';
     }
 
     const guardedRoutes = {'/announcements/create'};
@@ -142,24 +142,8 @@ final appRouter = GoRouter(
       builder: (context, state) => const OnboardingScreen(),
     ),
     GoRoute(
-      path: '/onboarding/role',
-      builder: (context, state) {
-        final extra = state.extra;
-        String initialRole = 'SENDER';
-        String? pendingEmail;
-
-        if (extra is String) {
-          initialRole = extra;
-        } else if (extra is Map) {
-          initialRole = (extra['initialRole'] as String?) ?? 'SENDER';
-          pendingEmail = extra['pendingEmail'] as String?;
-        }
-
-        return RoleSelectionScreen(
-          initialRole: initialRole,
-          pendingEmail: pendingEmail,
-        );
-      },
+      path: '/auth/method',
+      builder: (context, state) => const AuthMethodScreen(),
     ),
     GoRoute(
       path: '/auth/phone',

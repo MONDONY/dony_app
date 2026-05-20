@@ -27,7 +27,6 @@ Widget _buildEmail({required AuthBloc bloc, String contact = 'user@example.com'}
             ),
           ),
         ),
-        GoRoute(path: '/onboarding/role', builder: (_, __) => const Scaffold(body: Text('Role Screen'))),
         GoRoute(path: '/auth/local', builder: (_, __) => const Scaffold(body: Text('Local Auth'))),
       ],
     ),
@@ -40,9 +39,11 @@ void main() {
   setUp(() {
     mockBloc = MockAuthBloc();
     when(() => mockBloc.state).thenReturn(AuthEmailOtpSent('user@example.com'));
+    when(() => mockBloc.stream).thenAnswer((_) => const Stream.empty());
+    registerFallbackValue(const AuthRegisterWithEmailRequested(email: ''));
   });
 
-  testWidgets('mode email — affiche "Vérifie ton email" et l\'adresse', (tester) async {
+  testWidgets('mode email — affiche "Code reçu ?" et l\'adresse', (tester) async {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 3.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -50,7 +51,7 @@ void main() {
 
     await tester.pumpWidget(_buildEmail(bloc: mockBloc));
     await tester.pump(const Duration(seconds: 1));
-    expect(find.text('Vérifie ton email'), findsOneWidget);
+    expect(find.text('Code reçu ?'), findsOneWidget);
     expect(find.textContaining('user@example.com'), findsOneWidget);
   });
 
@@ -74,7 +75,7 @@ void main() {
         )).called(1);
   });
 
-  testWidgets('mode email — navigue vers /onboarding/role quand AuthEmailOtpVerified', (tester) async {
+  testWidgets('mode email — dispatche AuthRegisterWithEmailRequested quand AuthEmailOtpVerified', (tester) async {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 3.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -88,7 +89,9 @@ void main() {
     await tester.pumpWidget(_buildEmail(bloc: mockBloc));
     await tester.pumpAndSettle();
 
-    expect(find.text('Role Screen'), findsOneWidget);
+    verify(() => mockBloc.add(
+      const AuthRegisterWithEmailRequested(email: 'user@example.com'),
+    )).called(1);
   });
 
   testWidgets('mode email — affiche le timer du state AuthEmailOtpSent', (tester) async {

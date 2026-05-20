@@ -308,8 +308,8 @@ void main() {
       router.push('/auth/otp');
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
-      // The back button icon should be visible
-      final backBtn = find.byTooltip('Retour');
+      // The back button icon should be visible (DonyBackCircle uses arrow_back_rounded)
+      final backBtn = find.byIcon(Icons.arrow_back_rounded);
       expect(backBtn, findsOneWidget);
       await tester.tap(backBtn);
       await tester.pumpAndSettle();

@@ -15,8 +15,8 @@ class OnboardingScreen extends StatelessWidget {
         'Paiement bloqué, libéré seulement à l\'arrivée'),
   ];
 
-  void _goToRole(BuildContext context, String role) {
-    context.go('/onboarding/role', extra: {'initialRole': role});
+  void _proceed(BuildContext context) {
+    context.go('/auth/method');
   }
 
   @override
@@ -121,10 +121,9 @@ class OnboardingScreen extends StatelessWidget {
                 ),
               ),
 
-              // ── Pinned CTAs ────────────────────────────────────────────
+              // ── Pinned CTA ─────────────────────────────────────────────
               _OnboardingFooter(
-                onSender: () => _goToRole(context, 'SENDER'),
-                onTraveler: () => _goToRole(context, 'TRAVELER'),
+                onProceed: () => _proceed(context),
               ),
             ],
           ),
@@ -196,12 +195,8 @@ class _FeatureCard extends StatelessWidget {
 // ── Bottom CTAs + footer ──────────────────────────────────────────────────────
 
 class _OnboardingFooter extends StatelessWidget {
-  const _OnboardingFooter({
-    required this.onSender,
-    required this.onTraveler,
-  });
-  final VoidCallback onSender;
-  final VoidCallback onTraveler;
+  const _OnboardingFooter({required this.onProceed});
+  final VoidCallback onProceed;
 
   @override
   Widget build(BuildContext context) {
@@ -220,17 +215,9 @@ class _OnboardingFooter extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           DonyButton(
-            label: 'J\'envoie un colis',
-            onPressed: onSender,
+            label: 'Commencer',
+            onPressed: onProceed,
           ).animate().fadeIn(delay: 320.ms).slideY(begin: 0.05, curve: Curves.easeOutCubic),
-
-          const SizedBox(height: DonySpacing.sm),
-
-          DonyButton(
-            label: 'Je suis voyageur',
-            onPressed: onTraveler,
-            variant: DonyButtonVariant.ghost,
-          ).animate().fadeIn(delay: 360.ms),
 
           const SizedBox(height: DonySpacing.md),
 
@@ -260,7 +247,7 @@ class _OnboardingFooter extends StatelessWidget {
               ],
             ),
             textAlign: TextAlign.center,
-          ).animate().fadeIn(delay: 400.ms),
+          ).animate().fadeIn(delay: 360.ms),
         ],
       ),
     );

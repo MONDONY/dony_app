@@ -1,5 +1,3 @@
-import 'dart:io' show Platform;
-
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -102,11 +100,6 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
             });
           } else if (state is AuthError) {
             ErrorPresenter.show(context, state.error);
-          } else if (state is AuthOAuthNewUser) {
-            context.go('/onboarding/role', extra: {
-              'initialRole': 'SENDER',
-              'pendingEmail': state.email,
-            });
           }
         },
         builder: (context, state) {
@@ -127,30 +120,31 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // ── Top bar ────────────────────────────────────
+                  if (!widget.fromProfile) Padding(
+                    padding: EdgeInsets.fromLTRB(h, DonySpacing.md, h, 0),
+                    child: Row(children: [
+                      DonyBackCircle(onTap: () => context.pop()),
+                      const Spacer(),
+                      const DonyStepPill(current: 1, total: 3, label: 'Téléphone'),
+                    ]),
+                  ),
+
                   // ── Scrollable content ─────────────────────────
                   Expanded(
                     child: SingleChildScrollView(
                       physics: const ClampingScrollPhysics(),
                       padding: EdgeInsets.fromLTRB(
-                          h, DonySpacing.huge, h, DonySpacing.xl),
+                          h, DonySpacing.xl, h, DonySpacing.xl),
                       child: DonyLayout.constrained(
                         context,
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Row(
-                              children: [
-                                DonyMascotteAnimated(
-                                  type: DonyMascotteType.confiant,
-                                  size: DonyMascotteSize.sm,
-                                ),
-                                SizedBox(width: DonySpacing.md),
-                                DonyLogo(fontSize: 48),
-                              ],
-                            ),
+                            Center(child: DonyHeroAvatar(emoji: '📱', size: 72)),
                             const SizedBox(height: DonySpacing.xl),
                             Text(
-                              'Bienvenue',
+                              'Ton numéro',
                               style: tt.displayLarge?.copyWith(
                                 color: cs.onSurface,
                                 letterSpacing: -0.8,
@@ -158,7 +152,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             ),
                             const SizedBox(height: DonySpacing.sm),
                             Text(
-                              'Crée ton compte ou connecte-toi',
+                              'On t\'envoie un code à 6 chiffres par SMS pour vérifier que c\'est bien toi.',
                               style: tt.bodyLarge?.copyWith(
                                 color: cs.onSurfaceVariant,
                                 height: 1.55,
@@ -293,8 +287,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                   Container(
                     decoration: BoxDecoration(
                       color: Theme.of(context).scaffoldBackgroundColor,
-                      border: Border(
-                          top: BorderSide(color: cs.outline)),
+                      border: Border(top: BorderSide(color: cs.outline)),
                     ),
                     padding: EdgeInsets.fromLTRB(
                         h, DonySpacing.base, h, DonySpacing.base + bottom),
@@ -302,93 +295,28 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         DonyButton(
-                          label: 'Recevoir le code',
+                          label: 'Recevoir le code SMS',
                           onPressed: isLoading ? null : _submit,
                           isLoading: isLoading,
                         ),
-                        const SizedBox(height: DonySpacing.md),
-                        // Séparateur "ou connexion rapide"
-                        Row(
-                          children: [
-                            Expanded(child: Divider(color: cs.outline)),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: DonySpacing.md),
-                              child: Text(
-                                'ou connexion rapide',
-                                style: tt.bodySmall?.copyWith(
-                                    color: cs.onSurfaceVariant),
-                              ),
+                        const SizedBox(height: DonySpacing.sm),
+                        TextButton(
+                          onPressed: () => context.push('/auth/email'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: cs.primary,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: DonySpacing.base,
+                              vertical: DonySpacing.sm,
                             ),
-                            Expanded(child: Divider(color: cs.outline)),
-                          ],
-                        ),
-                        const SizedBox(height: DonySpacing.md),
-                        // Boutons sociaux conditionnels
-                        if (Platform.isIOS)
-                          Row(
-                            children: [
-                              Expanded(
-                                  child: _SocialButton(
-                                label: 'Google',
-                                icon: Icons.g_mobiledata_rounded,
-                                onPressed: isLoading
-                                    ? null
-                                    : () => context
-                                        .read<AuthBloc>()
-                                        .add(const AuthGoogleSignInRequested()),
-                              )),
-                              const SizedBox(width: DonySpacing.sm),
-                              Expanded(
-                                  child: _SocialButton(
-                                label: 'Apple',
-                                icon: Icons.apple_rounded,
-                                onPressed: isLoading
-                                    ? null
-                                    : () => context
-                                        .read<AuthBloc>()
-                                        .add(const AuthAppleSignInRequested()),
-                              )),
-                            ],
-                          )
-                        else
-                          _SocialButton(
-                            label: 'Continuer avec Google',
-                            icon: Icons.g_mobiledata_rounded,
-                            fullWidth: true,
-                            onPressed: isLoading
-                                ? null
-                                : () => context
-                                    .read<AuthBloc>()
-                                    .add(const AuthGoogleSignInRequested()),
                           ),
-                        const SizedBox(height: DonySpacing.md),
-                        Text.rich(
-                          TextSpan(
+                          child: Text(
+                            'Le SMS n\'arrive pas ? Essaie par email',
                             style: tt.bodySmall?.copyWith(
-                                color: cs.onSurfaceVariant, height: 1.6),
-                            children: [
-                              const TextSpan(
-                                  text:
-                                      'En continuant, vous acceptez les\n'),
-                              TextSpan(
-                                text: 'Conditions',
-                                style: tt.bodySmall?.copyWith(
-                                  color: cs.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const TextSpan(text: ' et la '),
-                              TextSpan(
-                                text: 'Politique de confidentialité',
-                                style: tt.bodySmall?.copyWith(
-                                  color: cs.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
+                              color: cs.onSurfaceVariant,
+                              decoration: TextDecoration.underline,
+                              decorationColor: cs.onSurfaceVariant,
+                            ),
                           ),
-                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
@@ -403,43 +331,3 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   }
 }
 
-class _SocialButton extends StatelessWidget {
-  const _SocialButton({
-    required this.label,
-    required this.icon,
-    required this.onPressed,
-    this.fullWidth = false,
-  });
-
-  final String label;
-  final IconData icon;
-  final VoidCallback? onPressed;
-  final bool fullWidth;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return OutlinedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon, size: 20, color: cs.onSurface),
-      label: Text(
-        label,
-        style: tt.labelLarge?.copyWith(color: cs.onSurface),
-      ),
-      style: OutlinedButton.styleFrom(
-        side: BorderSide(color: cs.outline),
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.base,
-          vertical: DonySpacing.md,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.lg),
-        ),
-        minimumSize:
-            fullWidth ? const Size(double.infinity, 52) : const Size(0, 52),
-      ),
-    );
-  }
-}

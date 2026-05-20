@@ -26,10 +26,9 @@ void main() {
   test('register delegates to datasource', () async {
     when(() => mockDs.register(
           phoneNumber: any(named: 'phoneNumber'),
-          roles: any(named: 'roles'),
         )).thenAnswer((_) async => _user);
 
-    final result = await repo.register(phoneNumber: '+33612345678', roles: ['SENDER']);
+    final result = await repo.register(phoneNumber: '+33612345678');
     expect(result.id, 'u1');
   });
 
@@ -79,17 +78,14 @@ void main() {
   test('registerWithEmail delegates to datasource', () async {
     when(() => mockDs.registerWithEmail(
           email: 'user@example.com',
-          roles: ['SENDER'],
         )).thenAnswer((_) async => _user);
 
     final result = await repo.registerWithEmail(
       email: 'user@example.com',
-      roles: ['SENDER'],
     );
     expect(result.id, 'u1');
     verify(() => mockDs.registerWithEmail(
           email: 'user@example.com',
-          roles: ['SENDER'],
         )).called(1);
   });
 }

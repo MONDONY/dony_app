@@ -9,11 +9,10 @@ class AuthRemoteDatasource {
 
   Future<UserModel> register({
     required String phoneNumber,
-    required List<String> roles,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/auth/register',
-      data: {'phoneNumber': phoneNumber, 'roles': roles},
+      data: {'phoneNumber': phoneNumber},
     );
     return UserModel.fromJson(response.data!);
   }
@@ -67,11 +66,10 @@ class AuthRemoteDatasource {
 
   Future<UserModel> registerWithEmail({
     required String email,
-    required List<String> roles,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/auth/register',
-      data: {'email': email, 'roles': roles},
+      data: {'email': email},
     );
     return UserModel.fromJson(response.data!);
   }

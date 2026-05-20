@@ -38,7 +38,6 @@ void main() {
 
       final result = await datasource.register(
         phoneNumber: '+33612345678',
-        roles: ['SENDER'],
       );
 
       expect(result.id, 'user-123');
@@ -146,13 +145,12 @@ void main() {
 
       final result = await datasource.registerWithEmail(
         email: 'user@example.com',
-        roles: ['SENDER'],
       );
 
       expect(result.id, 'user-123');
       verify(() => mockDio.post<Map<String, dynamic>>(
             '/auth/register',
-            data: {'email': 'user@example.com', 'roles': ['SENDER']},
+            data: {'email': 'user@example.com'},
           )).called(1);
     });
   });

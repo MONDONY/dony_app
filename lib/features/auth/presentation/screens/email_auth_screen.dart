@@ -90,20 +90,14 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // ── Back button row ─────────────────────────────
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(
-                        h - DonySpacing.sm, DonySpacing.md, h, 0),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back_rounded),
-                          color: cs.onSurface,
-                          onPressed: () => context.pop(),
-                          tooltip: 'Retour',
-                        ),
-                      ],
-                    ),
+                  // ── Top bar ─────────────────────────────────────
+                  if (!widget.fromProfile) Padding(
+                    padding: EdgeInsets.fromLTRB(h, DonySpacing.md, h, 0),
+                    child: Row(children: [
+                      DonyBackCircle(onTap: () => context.pop()),
+                      const Spacer(),
+                      const DonyStepPill(current: 1, total: 3, label: 'Email'),
+                    ]),
                   ),
 
                   // ── Scrollable content ──────────────────────────
@@ -117,16 +111,11 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Mascotte
-                            const DonyMascotteAnimated(
-                              type: DonyMascotteType.confiant,
-                              size: DonyMascotteSize.sm,
-                            ),
+                            Center(child: DonyHeroAvatar(emoji: '✉️', size: 72)),
                             const SizedBox(height: DonySpacing.xl),
 
-                            // Title
                             Text(
-                              'Connexion par email',
+                              'Ton adresse email',
                               style: tt.displayLarge?.copyWith(
                                 color: cs.onSurface,
                                 letterSpacing: -0.8,
@@ -134,7 +123,6 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                             ),
                             const SizedBox(height: DonySpacing.sm),
 
-                            // Subtitle
                             Text(
                               'Saisis ton adresse email pour recevoir un code de connexion.',
                               style: tt.bodyLarge?.copyWith(
@@ -144,20 +132,13 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                             ),
                             const SizedBox(height: DonySpacing.xxl),
 
-                            // Email label
-                            Text(
-                              'ADRESSE EMAIL',
-                              style: tt.labelMedium?.copyWith(
-                                color: cs.onSurfaceVariant,
-                                letterSpacing: 0.8,
-                              ),
-                            ),
-                            const SizedBox(height: DonySpacing.sm),
-
                             // Email input
                             Container(
                               decoration: BoxDecoration(
-                                border: Border.all(color: cs.outline),
+                                border: Border.all(
+                                  color: _isValid ? cs.primary : cs.outline,
+                                  width: _isValid ? 1.5 : 1.0,
+                                ),
                                 borderRadius:
                                     BorderRadius.circular(DonyRadius.md),
                                 color: cs.surface,
@@ -181,9 +162,13 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                                   focusedErrorBorder: InputBorder.none,
                                   prefixIcon: Icon(
                                     Icons.email_outlined,
-                                    color: cs.onSurfaceVariant,
+                                    color: _isValid ? cs.primary : cs.onSurfaceVariant,
                                     size: 20,
                                   ),
+                                  suffixIcon: _isValid
+                                      ? Icon(Icons.check_circle_rounded,
+                                          color: cs.primary, size: 20)
+                                      : null,
                                   contentPadding:
                                       const EdgeInsets.symmetric(
                                           horizontal: DonySpacing.base,
@@ -191,6 +176,19 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                                 ),
                               ),
                             ),
+                            const SizedBox(height: DonySpacing.sm),
+                            Row(children: [
+                              Icon(Icons.info_outline_rounded,
+                                  size: 14, color: cs.onSurfaceVariant),
+                              const SizedBox(width: DonySpacing.xs),
+                              Expanded(
+                                child: Text(
+                                  'Vérifie tes spams si tu ne reçois pas le code.',
+                                  style: tt.bodySmall?.copyWith(
+                                      color: cs.onSurfaceVariant),
+                                ),
+                              ),
+                            ]),
                           ],
                         ),
                       ),
@@ -201,34 +199,38 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                   Container(
                     decoration: BoxDecoration(
                       color: Theme.of(context).scaffoldBackgroundColor,
-                      border:
-                          Border(top: BorderSide(color: cs.outline)),
+                      border: Border(top: BorderSide(color: cs.outline)),
                     ),
                     padding: EdgeInsets.fromLTRB(
                         h, DonySpacing.base, h, DonySpacing.base + bottom),
-                    child: ElevatedButton(
-                      onPressed: (_isValid && !isLoading) ? _submit : null,
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 52),
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(DonyRadius.lg),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        DonyButton(
+                          label: 'Envoyer le code',
+                          onPressed: (_isValid && !isLoading) ? _submit : null,
+                          isLoading: isLoading,
                         ),
-                      ),
-                      child: isLoading
-                          ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: cs.onPrimary,
-                              ),
-                            )
-                          : Text(
-                              'Envoyer le code',
-                              style: tt.labelLarge?.copyWith(
-                                  color: cs.onPrimary),
+                        const SizedBox(height: DonySpacing.sm),
+                        TextButton(
+                          onPressed: () => context.pop(),
+                          style: TextButton.styleFrom(
+                            foregroundColor: cs.onSurfaceVariant,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: DonySpacing.base,
+                              vertical: DonySpacing.sm,
                             ),
+                          ),
+                          child: Text(
+                            'Préfères le SMS ?',
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                              decoration: TextDecoration.underline,
+                              decorationColor: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

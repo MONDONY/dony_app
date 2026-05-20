@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -34,6 +35,7 @@ void main() {
   setUp(() {
     mockBloc = MockAuthBloc();
     when(() => mockBloc.state).thenReturn(const AuthInitial());
+    when(() => mockBloc.stream).thenAnswer((_) => const Stream.empty());
   });
 
   testWidgets('affiche le champ email et le bouton désactivé à vide', (tester) async {
@@ -42,12 +44,7 @@ void main() {
 
     expect(find.byType(TextFormField), findsOneWidget);
     expect(find.text('Envoyer le code'), findsOneWidget);
-    final btn = tester.widget<ElevatedButton>(
-      find.ancestor(
-        of: find.text('Envoyer le code'),
-        matching: find.byType(ElevatedButton),
-      ),
-    );
+    final btn = tester.widget<DonyButton>(find.byType(DonyButton));
     expect(btn.onPressed, isNull);
   });
 
@@ -58,12 +55,7 @@ void main() {
     await tester.enterText(find.byType(TextFormField), 'user@example.com');
     await tester.pump();
 
-    final btn = tester.widget<ElevatedButton>(
-      find.ancestor(
-        of: find.text('Envoyer le code'),
-        matching: find.byType(ElevatedButton),
-      ),
-    );
+    final btn = tester.widget<DonyButton>(find.byType(DonyButton));
     expect(btn.onPressed, isNotNull);
   });
 

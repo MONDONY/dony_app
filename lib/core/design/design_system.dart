@@ -10,6 +10,10 @@ export 'package:dony/core/design/tokens/typography_tokens.dart';
 export 'package:dony/core/design/utils/dony_layout.dart';
 // Navigation & layout
 export 'package:dony/core/design/widgets/dony_app_bar.dart';
+// Onboarding shared
+export 'package:dony/core/design/widgets/dony_hero_avatar.dart';
+export 'package:dony/core/design/widgets/dony_step_pill.dart';
+export 'package:dony/core/design/widgets/dony_back_circle.dart';
 // Foundation components
 export 'package:dony/core/design/widgets/dony_logo.dart';
 export 'package:dony/core/design/widgets/dony_avatar.dart';

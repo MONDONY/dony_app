@@ -18,9 +18,9 @@ void main() {
   });
 
   group('AuthRegisterWithEmailRequested', () {
-    test('props contient email et roles', () {
-      const e = AuthRegisterWithEmailRequested(email: 'a@b.com', roles: ['SENDER']);
-      expect(e.props, ['a@b.com', ['SENDER']]);
+    test('props contient email', () {
+      const e = AuthRegisterWithEmailRequested(email: 'a@b.com');
+      expect(e.props, ['a@b.com']);
     });
   });
 
