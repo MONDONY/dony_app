@@ -19,7 +19,7 @@ Response<dynamic> _ok(dynamic data, String path) => Response(
 
 final _connectJson = {
   'stripeAccountId': 'acct_123',
-  'stripeOnboarded': true,
+  'stripeAccountStatus': 'ONBOARDING_COMPLETE',
 };
 
 final _paymentJson = {
