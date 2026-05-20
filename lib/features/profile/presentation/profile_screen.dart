@@ -598,6 +598,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         ).animate().fadeIn(delay: 280.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
                                         const SizedBox(height: DonySpacing.lg),
 
+                                        // ─── DEVENIR VOYAGEUR ─────────────────────────────
+                                        _SectionLabel(label: 'DEVENIR VOYAGEUR', cs: cs),
+                                        DonyListSection(
+                                          tiles: [
+                                            DonyListTile(
+                                              icon: Icons.flight_takeoff_rounded,
+                                              iconColor: cs.secondary,
+                                              iconBgColor: cs.secondaryContainer,
+                                              label: 'Devenir voyageur dony',
+                                              trailing: _TravelerUpgradeTrailing(
+                                                kycStatus: user?.kycStatus,
+                                                stripeStatus: user?.stripeAccountStatus,
+                                              ),
+                                              showDivider: false,
+                                              onTap: () => context.push('/profile/become-traveler'),
+                                            ),
+                                          ],
+                                        ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                                        const SizedBox(height: DonySpacing.lg),
+
                                         // 4. Identité & confiance
                                         _SectionLabel(label: 'IDENTITÉ & CONFIANCE', cs: cs),
                                         DonyListSection(
@@ -1244,6 +1264,49 @@ class DonyListSection extends StatelessWidget {
       child: Column(
         children: tiles,
       ),
+    );
+  }
+}
+
+// ── Traveler upgrade trailing indicator ──────────────────────────────────────
+
+class _TravelerUpgradeTrailing extends StatelessWidget {
+  const _TravelerUpgradeTrailing({
+    required this.kycStatus,
+    required this.stripeStatus,
+  });
+
+  final String? kycStatus;
+  final String? stripeStatus;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final kycOk = kycStatus == 'VERIFIED';
+    final stripeOk = stripeStatus == 'ONBOARDING_COMPLETE';
+
+    if (kycOk && stripeOk) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.check_circle_rounded, color: cs.success, size: 14),
+          const SizedBox(width: DonySpacing.xs),
+          Text(
+            'Prêt',
+            style: tt.labelSmall?.copyWith(
+              color: cs.success,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      );
+    }
+
+    final int done = (kycOk ? 1 : 0) + (stripeOk ? 1 : 0);
+    return Text(
+      '$done/2 étapes',
+      style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
     );
   }
 }

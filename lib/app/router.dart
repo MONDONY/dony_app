@@ -73,6 +73,8 @@ import 'package:dony/features/recipients/presentation/screens/recipients_screen.
 import 'package:dony/features/profile/presentation/screens/faq_screen.dart';
 import 'package:dony/features/profile/presentation/screens/shipments_history_screen.dart';
 import 'package:dony/features/profile/presentation/screens/support_contact_screen.dart';
+import 'package:dony/features/profile/bloc/traveler_upgrade_bloc.dart';
+import 'package:dony/features/profile/presentation/screens/become_traveler_screen.dart';
 import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
@@ -557,6 +559,15 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/profile/upgrade-to-pro',
       builder: (context, state) => const UpgradeToProScreen(),
+    ),
+
+    // ── Become Traveler (hors shell) ─────────────────────────────────
+    GoRoute(
+      path: '/profile/become-traveler',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<TravelerUpgradeBloc>(),
+        child: const BecomeATravelerScreen(),
+      ),
     ),
 
     // ── Referral (hors shell) ─────────────────────────────────────────
