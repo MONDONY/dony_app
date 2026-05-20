@@ -15,10 +15,12 @@ class OtpVerificationScreen extends StatefulWidget {
     super.key,
     this.mode = OtpMode.phone,
     this.contact = '',
+    this.fromProfile = false,
   });
 
   final OtpMode mode;
   final String contact;
+  final bool fromProfile;
 
   @override
   State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
@@ -83,6 +85,32 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
+          if (widget.fromProfile) {
+            // ── Mode profil : après vérif → retour au profil ────────────
+            if (state is AuthAuthenticated) {
+              if (widget.mode == OtpMode.phone && widget.contact.isNotEmpty) {
+                // Sauvegarde du numéro dans le backend
+                context.read<AuthBloc>().add(
+                  AuthUpdateProfileRequested(phoneNumber: widget.contact),
+                );
+              } else {
+                // Email vérifié via OTP — déjà sauvegardé côté backend
+                DonySnackbar.show(context,
+                    message: 'Email vérifié avec succès !',
+                    type: DonySnackbarType.success);
+                context.go('/profile');
+              }
+            } else if (state is AuthProfileUpdated) {
+              DonySnackbar.show(context,
+                  message: 'Numéro ajouté avec succès !',
+                  type: DonySnackbarType.success);
+              context.go('/profile');
+            } else if (state is AuthError) {
+              ErrorPresenter.show(context, state.error);
+            }
+            return;
+          }
+          // ── Mode inscription (comportement existant) ─────────────────
           if (widget.mode == OtpMode.email) {
             if (state is AuthEmailOtpVerified) {
               context.go('/onboarding/role', extra: {
@@ -163,7 +191,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           ),
                           const SizedBox(height: DonySpacing.xl),
                           Text(
-                            widget.mode == OtpMode.email ? 'Vérifie ton email' : 'Entrez le code',
+                            widget.mode == OtpMode.email
+                                ? (widget.fromProfile ? 'Vérifie ton email' : 'Vérifie ton email')
+                                : (widget.fromProfile ? 'Vérifie ton numéro' : 'Entrez le code'),
                             style: tt.displayLarge?.copyWith(
                               color: cs.onSurface,
                               letterSpacing: -0.8,

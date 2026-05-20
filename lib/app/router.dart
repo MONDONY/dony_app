@@ -163,15 +163,28 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/auth/phone',
-      builder: (context, state) => const PhoneAuthScreen(),
+      builder: (context, state) {
+        final extra = state.extra as Map? ?? {};
+        return PhoneAuthScreen(fromProfile: extra['fromProfile'] == true);
+      },
     ),
     GoRoute(
       path: '/auth/otp',
-      builder: (context, state) => const OtpVerificationScreen(mode: OtpMode.phone),
+      builder: (context, state) {
+        final extra = state.extra as Map? ?? {};
+        return OtpVerificationScreen(
+          mode: OtpMode.phone,
+          fromProfile: extra['fromProfile'] == true,
+          contact: (extra['contact'] as String?) ?? '',
+        );
+      },
     ),
     GoRoute(
       path: '/auth/email',
-      builder: (context, state) => const EmailAuthScreen(),
+      builder: (context, state) {
+        final extra = state.extra as Map? ?? {};
+        return EmailAuthScreen(fromProfile: extra['fromProfile'] == true);
+      },
     ),
     GoRoute(
       path: '/auth/email-otp',
@@ -179,6 +192,7 @@ final appRouter = GoRouter(
         final extra = state.extra as Map? ?? {};
         return OtpVerificationScreen(
           mode: OtpMode.email,
+          fromProfile: extra['fromProfile'] == true,
           contact: (extra['email'] as String?) ?? '',
         );
       },

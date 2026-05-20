@@ -52,6 +52,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthEmailOtpSendRequested>(_onEmailOtpSendRequested);
     on<AuthEmailOtpVerifyRequested>(_onEmailOtpVerifyRequested);
     on<AuthRegisterWithEmailRequested>(_onRegisterWithEmailRequested);
+    on<AuthAddPhoneFromProfileRequested>(_onAddPhoneFromProfileRequested);
+    on<AuthAddEmailFromProfileRequested>(_onAddEmailFromProfileRequested);
   }
 
   @override
@@ -255,6 +257,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         email: event.email,
         birthDate: event.birthDate,
         city: event.city,
+        phoneNumber: event.phoneNumber,
       );
       emit(AuthProfileUpdated(updatedUser));
     } catch (e) {
@@ -315,8 +318,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(const AuthLoading());
     try {
-      await _authRepository.verifyEmailOtp(event.email, event.code);
-      emit(AuthEmailOtpVerified(event.email));
+      final customToken = await _authRepository.verifyEmailOtp(event.email, event.code);
+      await _firebaseAuth.signInWithCustomToken(customToken);
+      // User existant → Home directement ; nouveau → RoleSelection
+      final user = await _authRepository.getProfile();
+      emit(AuthAuthenticated(user));
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        emit(AuthEmailOtpVerified(event.email));
+      } else {
+        emit(AuthError(unwrapDioError(e)));
+      }
     } catch (e) {
       emit(AuthError(_friendlyError(e)));
     }
@@ -385,6 +397,62 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await _firebaseAuth.signInWithCredential(oauthCredential);
       _pendingPhoneNumber = _firebaseAuth.currentUser?.email ?? '';
       await _checkProfileAfterOAuth(emit);
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
+    }
+  }
+
+  // ─── Ajout téléphone depuis profil (sans remplacer la session Firebase) ──────
+
+  Future<void> _onAddPhoneFromProfileRequested(
+    AuthAddPhoneFromProfileRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      final credential = PhoneAuthProvider.credential(
+        verificationId: event.verificationId,
+        smsCode: event.smsCode,
+      );
+      // Link to existing Firebase account instead of replacing the session.
+      // Ignore errors when phone already belongs to another Firebase account:
+      // user proved ownership by correctly entering the OTP, so we still
+      // update the backend profile.
+      try {
+        await _firebaseAuth.currentUser?.linkWithCredential(credential);
+      } on FirebaseAuthException catch (e) {
+        if (e.code != 'provider-already-linked' &&
+            e.code != 'credential-already-in-use') {
+          rethrow;
+        }
+      }
+      // Update backend profile with the verified phone number
+      final updatedUser = await _authRepository.updateProfile(
+        phoneNumber: event.phoneNumber,
+      );
+      emit(AuthProfileUpdated(updatedUser));
+    } on FirebaseAuthException catch (e) {
+      emit(AuthError(_friendlyFirebaseError(e)));
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
+    }
+  }
+
+  // ─── Ajout email depuis profil (sans remplacer la session Firebase) ───────────
+
+  Future<void> _onAddEmailFromProfileRequested(
+    AuthAddEmailFromProfileRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      // Validate OTP ownership on the backend — we intentionally discard the
+      // returned custom token to avoid replacing the current Firebase session.
+      await _authRepository.verifyEmailOtp(event.email, event.code);
+      // Update backend profile; freeEmailFromDeletedAccounts runs server-side
+      // if the email was previously held by a soft-deleted account.
+      final updatedUser = await _authRepository.updateProfile(email: event.email);
+      emit(AuthProfileUpdated(updatedUser));
     } catch (e) {
       emit(AuthError(_friendlyError(e)));
     }

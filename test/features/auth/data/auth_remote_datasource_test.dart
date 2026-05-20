@@ -117,15 +117,19 @@ void main() {
   });
 
   group('verifyEmailOtp', () {
-    test('calls POST /auth/email-otp/verify and completes', () async {
-      when(() => mockDio.post<void>(
+    test('calls POST /auth/email-otp/verify and returns customToken', () async {
+      when(() => mockDio.post<Map<String, dynamic>>(
               '/auth/email-otp/verify',
               data: any(named: 'data')))
-          .thenAnswer((_) async =>
-              Response(data: null, statusCode: 204, requestOptions: RequestOptions(path: '/auth/email-otp/verify')));
+          .thenAnswer((_) async => Response(
+                data: {'customToken': 'fake_token_123'},
+                statusCode: 200,
+                requestOptions: RequestOptions(path: '/auth/email-otp/verify'),
+              ));
 
-      await expectLater(datasource.verifyEmailOtp('user@example.com', '123456'), completes);
-      verify(() => mockDio.post<void>(
+      final token = await datasource.verifyEmailOtp('user@example.com', '123456');
+      expect(token, 'fake_token_123');
+      verify(() => mockDio.post<Map<String, dynamic>>(
             '/auth/email-otp/verify',
             data: {'email': 'user@example.com', 'code': '123456'},
           )).called(1);

@@ -22,6 +22,7 @@ class AuthRepository {
     String? email,
     DateTime? birthDate,
     String? city,
+    String? phoneNumber,
   }) =>
       _datasource.updateProfile(
         firstName: firstName,
@@ -29,12 +30,13 @@ class AuthRepository {
         email: email,
         birthDate: birthDate,
         city: city,
+        phoneNumber: phoneNumber,
       );
 
   Future<void> sendEmailOtp(String email) =>
       _datasource.sendEmailOtp(email);
 
-  Future<void> verifyEmailOtp(String email, String code) =>
+  Future<String> verifyEmailOtp(String email, String code) =>
       _datasource.verifyEmailOtp(email, code);
 
   Future<UserModel> registerWithEmail({

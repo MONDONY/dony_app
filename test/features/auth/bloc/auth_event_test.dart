@@ -65,12 +65,12 @@ void main() {
         birthDate: date,
         city: 'Paris',
       );
-      expect(e.props, ['Amadou', 'Diallo', 'a@d.com', date, 'Paris']);
+      expect(e.props, ['Amadou', 'Diallo', 'a@d.com', date, 'Paris', null]);
     });
 
     test('props with null fields', () {
       final e = AuthUpdateProfileRequested();
-      expect(e.props, [null, null, null, null, null]);
+      expect(e.props, [null, null, null, null, null, null]);
     });
   });
 

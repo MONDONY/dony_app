@@ -228,6 +228,38 @@ abstract final class ErrorCatalog {
       icon: Icons.location_off_rounded,
     ),
 
+    // ─── Email OTP ───────────────────────────────────────────────────
+    'otp-invalid': ErrorPresentation(
+      title: 'Code invalide',
+      message: 'Le code saisi est incorrect ou a déjà été utilisé. Vérifie le code reçu par email.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.mark_email_unread_outlined,
+    ),
+    'otp-expired': ErrorPresentation(
+      title: 'Code expiré',
+      message: 'Ce code a expiré. Reviens en arrière et demande un nouveau code.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.timer_off_rounded,
+    ),
+    'otp-attempts-exceeded': ErrorPresentation(
+      title: 'Trop de tentatives',
+      message: 'Trop d\'essais incorrects. Reviens en arrière et demande un nouveau code.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.hourglass_top_rounded,
+    ),
+    'email-already-exists': ErrorPresentation(
+      title: 'Email déjà utilisé',
+      message: 'Cette adresse email est déjà associée à un autre compte.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.email_outlined,
+    ),
+    'rate-limit': ErrorPresentation(
+      title: 'Trop de tentatives',
+      message: 'Tu as demandé trop de codes. Attends 5 minutes avant de réessayer.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.speed_rounded,
+    ),
+
     // ─── Utilisateur ─────────────────────────────────────────────────
     'user-not-found': ErrorPresentation(
       title: 'Utilisateur introuvable',

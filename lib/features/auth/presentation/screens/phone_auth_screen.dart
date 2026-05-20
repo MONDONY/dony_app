@@ -11,7 +11,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class PhoneAuthScreen extends StatefulWidget {
-  const PhoneAuthScreen({super.key});
+  const PhoneAuthScreen({super.key, this.fromProfile = false});
+
+  final bool fromProfile;
 
   @override
   State<PhoneAuthScreen> createState() => _PhoneAuthScreenState();
@@ -94,7 +96,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         },
         listener: (context, state) {
           if (state is AuthOtpSent) {
-            context.push('/auth/otp');
+            context.push('/auth/otp', extra: {
+              'fromProfile': widget.fromProfile,
+              'contact': state.phoneNumber,
+            });
           } else if (state is AuthError) {
             ErrorPresenter.show(context, state.error);
           } else if (state is AuthOAuthNewUser) {

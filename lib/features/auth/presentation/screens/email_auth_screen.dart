@@ -8,7 +8,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class EmailAuthScreen extends StatefulWidget {
-  const EmailAuthScreen({super.key});
+  const EmailAuthScreen({super.key, this.fromProfile = false});
+
+  final bool fromProfile;
 
   @override
   State<EmailAuthScreen> createState() => _EmailAuthScreenState();
@@ -68,7 +70,7 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
           if (state is AuthEmailOtpSent) {
             context.push(
               '/auth/email-otp',
-              extra: {'email': state.email},
+              extra: {'email': state.email, 'fromProfile': widget.fromProfile},
             );
           } else if (state is AuthError) {
             ErrorPresenter.show(context, state.error);

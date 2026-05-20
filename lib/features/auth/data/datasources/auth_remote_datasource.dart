@@ -33,6 +33,7 @@ class AuthRemoteDatasource {
     String? email,
     DateTime? birthDate,
     String? city,
+    String? phoneNumber,
   }) async {
     final response = await _apiClient.dio.patch<Map<String, dynamic>>(
       '/auth/me',
@@ -43,6 +44,7 @@ class AuthRemoteDatasource {
         if (birthDate != null)
           'birthDate': DateFormat('yyyy-MM-dd').format(birthDate),
         if (city != null) 'city': city,
+        if (phoneNumber != null) 'phoneNumber': phoneNumber,
       },
     );
     return UserModel.fromJson(response.data!);
@@ -55,11 +57,12 @@ class AuthRemoteDatasource {
     );
   }
 
-  Future<void> verifyEmailOtp(String email, String code) async {
-    await _apiClient.dio.post<void>(
+  Future<String> verifyEmailOtp(String email, String code) async {
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/auth/email-otp/verify',
       data: {'email': email, 'code': code},
     );
+    return response.data!['customToken'] as String;
   }
 
   Future<UserModel> registerWithEmail({

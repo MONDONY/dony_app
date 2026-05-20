@@ -449,6 +449,7 @@ void main() {
       );
       expect(find.text('Colis sur mes trajets'), findsOneWidget);
       expect(find.text("Demandes d'envoi à transporter"), findsNothing);
+      await tester.pumpAndSettle(const Duration(seconds: 5));
     });
 
     testWidgets('affiche "Mon profil public" dans IDENTITÉ & CONFIANCE',
@@ -558,6 +559,7 @@ void main() {
         scrollable: find.byType(Scrollable).first,
       );
       expect(find.text('2 matchs'), findsOneWidget);
+      await tester.pumpAndSettle(const Duration(seconds: 5));
     });
 
     testWidgets('pas de badge matchs quand 0 annonces ACTIVE', (tester) async {
@@ -647,6 +649,7 @@ void main() {
       expect(find.text('Mes envois en cours'), findsOneWidget);
       // "Colis sur mes trajets" est exclusif au voyageur.
       expect(find.text('Colis sur mes trajets'), findsNothing);
+      await tester.pumpAndSettle(const Duration(seconds: 5));
     });
 
     testWidgets('tapping "Mes trajets" navigates to /announcements', (tester) async {
@@ -1011,6 +1014,7 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('2 en cours'), findsOneWidget);
+    await tester.pumpAndSettle(const Duration(seconds: 5));
   });
 
   testWidgets('tapping "Annuler la suppression" dispatches ReactivateAccount',

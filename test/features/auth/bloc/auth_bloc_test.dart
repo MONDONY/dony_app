@@ -913,10 +913,19 @@ void main() {
 
   group('AuthEmailOtpVerifyRequested', () {
     blocTest<AuthBloc, AuthState>(
-      'émet [AuthLoading, AuthEmailOtpVerified] en cas de succès',
+      'émet [AuthLoading, AuthEmailOtpVerified] en cas de succès (nouveau compte)',
       build: () {
         when(() => mockRepo.verifyEmailOtp('a@b.com', '123456'))
-            .thenAnswer((_) async {});
+            .thenAnswer((_) async => 'custom_token_fake');
+        when(() => mockFirebaseAuth.signInWithCustomToken('custom_token_fake'))
+            .thenAnswer((_) async => MockUserCredential());
+        when(() => mockRepo.getProfile()).thenThrow(DioException(
+          requestOptions: RequestOptions(path: '/users/me'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/users/me'),
+            statusCode: 404,
+          ),
+        ));
         return buildBloc();
       },
       act: (bloc) => bloc.add(const AuthEmailOtpVerifyRequested(email: 'a@b.com', code: '123456')),

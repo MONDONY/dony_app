@@ -69,9 +69,10 @@ void main() {
 
   test('verifyEmailOtp delegates to datasource', () async {
     when(() => mockDs.verifyEmailOtp('user@example.com', '123456'))
-        .thenAnswer((_) async {});
+        .thenAnswer((_) async => 'fake_custom_token');
 
-    await expectLater(repo.verifyEmailOtp('user@example.com', '123456'), completes);
+    final token = await repo.verifyEmailOtp('user@example.com', '123456');
+    expect(token, 'fake_custom_token');
     verify(() => mockDs.verifyEmailOtp('user@example.com', '123456')).called(1);
   });
 
