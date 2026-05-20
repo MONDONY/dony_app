@@ -145,24 +145,3 @@ class AuthUserSynced extends AuthEvent {
   @override
   List<Object?> get props => [user];
 }
-
-class AuthAddPhoneFromProfileRequested extends AuthEvent {
-  final String verificationId;
-  final String smsCode;
-  final String phoneNumber;
-  const AuthAddPhoneFromProfileRequested({
-    required this.verificationId,
-    required this.smsCode,
-    required this.phoneNumber,
-  });
-  @override
-  List<Object?> get props => [verificationId, smsCode, phoneNumber];
-}
-
-class AuthAddEmailFromProfileRequested extends AuthEvent {
-  final String email;
-  final String code;
-  const AuthAddEmailFromProfileRequested({required this.email, required this.code});
-  @override
-  List<Object?> get props => [email, code];
-}
