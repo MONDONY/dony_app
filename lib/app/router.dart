@@ -82,7 +82,11 @@ import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/presentation/screens/offline_scan_queue_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/qr_scanner_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/reception_confirm_screen.dart';
-import 'package:dony/features/tracking/presentation/screens/tracking_hub_screen.dart';
+import 'package:dony/features/tracking/presentation/screens/scan_hub_screen.dart';
+import 'package:dony/features/tracking/presentation/screens/qr_picker_screen.dart';
+import 'package:dony/features/tracking/presentation/screens/scan_identify_screen.dart';
+import 'package:dony/features/tracking/presentation/screens/scan_photo_screen.dart';
+import 'package:dony/features/tracking/presentation/screens/scan_confirm_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/tracking_search_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/tracking_timeline_screen.dart';
 import 'package:flutter/material.dart';
@@ -228,6 +232,54 @@ final appRouter = GoRouter(
         ],
         child: const QrScannerScreen(),
       ),
+    ),
+    GoRoute(
+      path: '/tracking/scan/qr-picker',
+      builder: (context, state) => const QrPickerScreen(),
+    ),
+    GoRoute(
+      path: '/tracking/scan/identify',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>? ?? {};
+        return BlocProvider(
+          create: (_) => getIt<TrackingBloc>(),
+          child: ScanIdentifyScreen(
+            etape: extra['etape'] as String?,
+            focusNumber: extra['focusNumber'] as bool? ?? false,
+          ),
+        );
+      },
+    ),
+    GoRoute(
+      path: '/tracking/scan/photo',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>? ?? {};
+        return ScanPhotoScreen(
+          bidId: extra['bidId'] as String? ?? '',
+          etape: extra['etape'] as String? ?? '',
+          packageLabel: extra['packageLabel'] as String? ?? '',
+        );
+      },
+    ),
+    GoRoute(
+      path: '/tracking/scan/confirm',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>? ?? {};
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(create: (_) => getIt<TrackingBloc>()),
+            BlocProvider(create: (_) => getIt<RatingBloc>()),
+          ],
+          child: ScanConfirmScreen(
+            bidId: extra['bidId'] as String? ?? '',
+            etape: extra['etape'] as String? ?? '',
+            photoPath: extra['photoPath'] as String?,
+            gpsLat: extra['gpsLat'] as double?,
+            gpsLon: extra['gpsLon'] as double?,
+            packageLabel: extra['packageLabel'] as String? ?? '',
+          ),
+        );
+      },
     ),
     // ── Créer / modifier une annonce (plein écran, hors shell) ──────────────
     GoRoute(
@@ -544,7 +596,7 @@ final appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/tracking',
-              builder: (context, state) => const TrackingHubScreen(),
+              builder: (context, state) => const ScanHubScreen(),
             ),
           ],
         ),
