@@ -211,5 +211,40 @@ void main() {
       // propriété suffisante pour valider le comportement de la gate KYC.
       expect(find.text('Vérification requise'), findsNothing);
     });
+
+    testWidgets(
+        'tap "+Nouveau" ne montre pas le portail KYC si AuthProfileUpdated VERIFIED',
+        (tester) async {
+      // Override: use AuthProfileUpdated state instead of AuthAuthenticated
+      final authBloc = _MockAuthBloc();
+      when(() => authBloc.state).thenReturn(
+        AuthProfileUpdated(
+          UserModel(
+            id: 'u1',
+            roles: const ['SENDER'],
+            kycStatus: 'VERIFIED',
+            status: 'ACTIVE',
+          ),
+        ),
+      );
+      when(() => authBloc.stream)
+          .thenAnswer((_) => const Stream<AuthState>.empty());
+
+      await tester.pumpWidget(
+        BlocProvider<AuthBloc>.value(
+          value: authBloc,
+          child: const MaterialApp(home: EnvoyerHubScreen()),
+        ),
+      );
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      await tester.tap(find.byIcon(Icons.add_rounded).last);
+      // Ne pas pumpAndSettle : le wizard (VERIFIED path) tente de résoudre
+      // CitySearchBloc non enregistré dans ce test. On vérifie uniquement
+      // que le sheet KYC n'est PAS apparu avant que le wizard ne démarre.
+      // La vérification porte sur l'absence de 'Vérification requise' —
+      // propriété suffisante pour valider le comportement de la gate KYC.
+      expect(find.text('Vérification requise'), findsNothing);
+    });
   });
 }

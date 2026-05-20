@@ -115,12 +115,17 @@ class _EnvoyerHubViewState extends State<_EnvoyerHubView> {
             _DashboardHeader(
               onNew: () async {
                 final authState = context.read<AuthBloc>().state;
-                final kycStatus = authState is AuthAuthenticated
-                    ? authState.user.kycStatus
-                    : 'NOT_STARTED';
+                final user = authState is AuthAuthenticated
+                    ? authState.user
+                    : authState is AuthProfileUpdated
+                        ? authState.user
+                        : null;
 
-                if (kycStatus != 'VERIFIED') {
-                  await KycRequiredBottomSheet.show(context, kycStatus: kycStatus);
+                if (user == null || !user.isKycVerified) {
+                  await KycRequiredBottomSheet.show(
+                    context,
+                    kycStatus: user?.kycStatus ?? 'NOT_STARTED',
+                  );
                   return;
                 }
 
