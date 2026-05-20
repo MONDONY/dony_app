@@ -7,7 +7,7 @@ class MockTravelerUpgradeRepository extends Mock
     implements TravelerUpgradeRepository {}
 
 void main() {
-  test('placeholder — fails because TravelerUpgradeRepository does not exist', () {
+  test('MockTravelerUpgradeRepository can be instantiated', () {
     final repo = MockTravelerUpgradeRepository();
     expect(repo, isNotNull);
   });
