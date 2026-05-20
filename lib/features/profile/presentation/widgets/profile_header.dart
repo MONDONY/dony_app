@@ -125,19 +125,20 @@ class ProfileHeader extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: DonySpacing.md),
-
           // ── Toggle rôle (uniquement si double rôle) ───────────────────
           if (isTraveler && isSender) ...[
-            _RolePill(activeRole: activeRole, onRoleSwitch: onRoleSwitch),
             const SizedBox(height: DonySpacing.md),
+            _RolePill(activeRole: activeRole, onRoleSwitch: onRoleSwitch),
           ],
 
-          // ── Barre de complétion du profil ─────────────────────────────
-          _ProgressBar(
-            percent: profileCompletionPercent,
-            isPro: isProAccount,
-          ),
+          // ── Barre de complétion — masquée à 100% ──────────────────────
+          if (profileCompletionPercent < 1.0) ...[
+            const SizedBox(height: DonySpacing.md),
+            _ProgressBar(
+              percent: profileCompletionPercent,
+              isPro: isProAccount,
+            ),
+          ],
         ],
       ),
     );
@@ -198,7 +199,7 @@ class _ContactChips extends StatelessWidget {
       children: [
         if (hasPhone)
           const _Chip(
-            label: 'Tél.',
+            label: 'Tél. ✓',
             icon: Icons.phone_rounded,
             bg: DonyColors.success50,
             fg: DonyColors.success700,
