@@ -10,3 +10,7 @@ sealed class TravelerUpgradeEvent extends Equatable {
 class TravelerUpgradeActivateRequested extends TravelerUpgradeEvent {
   const TravelerUpgradeActivateRequested();
 }
+
+class TravelerUpgradeDeactivateRequested extends TravelerUpgradeEvent {
+  const TravelerUpgradeDeactivateRequested();
+}

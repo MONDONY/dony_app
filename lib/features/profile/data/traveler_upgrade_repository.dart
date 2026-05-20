@@ -20,4 +20,18 @@ class TravelerUpgradeRepository {
       throw unwrapDioError(e);
     }
   }
+
+  Future<UserModel> deactivateTravelerRole() async {
+    try {
+      final response = await _apiClient.dio.delete<Map<String, dynamic>>(
+        '/users/me/roles/traveler',
+      );
+      if (response.data == null) {
+        throw const NetworkException('Réponse invalide du serveur');
+      }
+      return UserModel.fromJson(response.data!);
+    } catch (e) {
+      throw unwrapDioError(e);
+    }
+  }
 }

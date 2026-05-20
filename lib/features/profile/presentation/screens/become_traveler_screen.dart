@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -19,13 +20,22 @@ class BecomeATravelerScreen extends StatelessWidget {
     return BlocConsumer<TravelerUpgradeBloc, TravelerUpgradeState>(
       listener: (context, state) {
         if (state is TravelerUpgradeSuccess) {
-          context.read<AuthBloc>().add(const AuthCheckRequested());
-          context.pop();
+          context.read<AuthBloc>().add(AuthUserSynced(state.user));
           DonySnackbar.show(
             context,
             message: 'Bienvenue parmi les voyageurs dony 🎉',
             type: DonySnackbarType.success,
           );
+          if (context.canPop()) context.pop();
+        } else if (state is TravelerUpgradeDeactivated) {
+          context.read<AuthBloc>().add(AuthUserSynced(state.user));
+          context.read<ActiveRoleCubit>().switchToSender();
+          DonySnackbar.show(
+            context,
+            message: 'Compte voyageur désactivé',
+            type: DonySnackbarType.info,
+          );
+          if (context.canPop()) context.pop();
         } else if (state is TravelerUpgradeError) {
           ErrorPresenter.show(context, state.error);
         }
@@ -49,6 +59,7 @@ class BecomeATravelerScreen extends StatelessWidget {
             final stripeComplete = stripeStatus == 'ONBOARDING_COMPLETE';
             final canActivate = kycVerified && stripeComplete;
             final isActivating = upgradeState is TravelerUpgradeLoading;
+            final isTraveler = user?.isTraveler ?? false;
 
             return Scaffold(
               appBar: const DonyAppBar(title: 'Devenir voyageur'),
@@ -107,7 +118,7 @@ class BecomeATravelerScreen extends StatelessWidget {
                             showCta: !stripeComplete,
                             onCta: stripeStatus == 'REJECTED' ||
                                     stripeStatus == 'DISABLED'
-                                ? null
+                                ? () => context.push('/profile/help/contact')
                                 : () async {
                                     await context.push('/payments/onboarding');
                                     if (context.mounted) {
@@ -121,12 +132,38 @@ class BecomeATravelerScreen extends StatelessWidget {
                               .fadeIn(delay: 140.ms)
                               .slideY(begin: 0.04, curve: Curves.easeOutCubic),
                           const SizedBox(height: DonySpacing.xxl),
-                          if (!canActivate)
-                            _PendingHint(
-                              kycStatus: kycStatus,
-                              stripeStatus: stripeStatus,
-                            ).animate().fadeIn(delay: 200.ms),
-                          if (canActivate) ...[
+                          if (isTraveler) ...[
+                            DonyButton(
+                              label: 'Désactiver mon compte voyageur',
+                              isLoading: isActivating,
+                              onPressed: isActivating
+                                  ? null
+                                  : () => context
+                                      .read<TravelerUpgradeBloc>()
+                                      .add(const TravelerUpgradeDeactivateRequested()),
+                              icon: Icons.flight_land_rounded,
+                              variant: DonyButtonVariant.ghost,
+                            )
+                                .animate()
+                                .fadeIn(delay: 200.ms)
+                                .scale(
+                                  begin: const Offset(0.95, 0.95),
+                                  curve: Curves.easeOutCubic,
+                                ),
+                            const SizedBox(height: DonySpacing.md),
+                            Text(
+                              'Votre vérification KYC et votre compte bancaire resteront actifs pour une réactivation future.',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                              textAlign: TextAlign.center,
+                            ).animate().fadeIn(delay: 240.ms),
+                          ] else if (canActivate) ...[
                             DonyButton(
                               label: 'Activer mon compte voyageur',
                               isLoading: isActivating,
@@ -134,8 +171,7 @@ class BecomeATravelerScreen extends StatelessWidget {
                                   ? null
                                   : () => context
                                       .read<TravelerUpgradeBloc>()
-                                      .add(
-                                          const TravelerUpgradeActivateRequested()),
+                                      .add(const TravelerUpgradeActivateRequested()),
                               icon: Icons.flight_takeoff_rounded,
                             )
                                 .animate()
@@ -157,7 +193,11 @@ class BecomeATravelerScreen extends StatelessWidget {
                                   ),
                               textAlign: TextAlign.center,
                             ).animate().fadeIn(delay: 240.ms),
-                          ],
+                          ] else
+                            _PendingHint(
+                              kycStatus: kycStatus,
+                              stripeStatus: stripeStatus,
+                            ).animate().fadeIn(delay: 200.ms),
                         ],
                       ),
                     ),

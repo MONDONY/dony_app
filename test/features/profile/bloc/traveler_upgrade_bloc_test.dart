@@ -42,6 +42,9 @@ void main() {
       const TravelerUpgradeLoading(),
       TravelerUpgradeSuccess(_fakeUser()),
     ],
+    verify: (_) {
+      verify(() => mockRepo.activateTravelerRole()).called(1);
+    },
   );
 
   blocTest<TravelerUpgradeBloc, TravelerUpgradeState>(
@@ -59,6 +62,9 @@ void main() {
         ConflictException('KYC ou Stripe non complété'),
       ),
     ],
+    verify: (_) {
+      verify(() => mockRepo.activateTravelerRole()).called(1);
+    },
   );
 
   blocTest<TravelerUpgradeBloc, TravelerUpgradeState>(
@@ -74,5 +80,89 @@ void main() {
       const TravelerUpgradeLoading(),
       const TravelerUpgradeError(NetworkException('Erreur réseau')),
     ],
+    verify: (_) {
+      verify(() => mockRepo.activateTravelerRole()).called(1);
+    },
+  );
+
+  blocTest<TravelerUpgradeBloc, TravelerUpgradeState>(
+    'ignore le second événement si déjà en Loading (protection double-tap)',
+    build: () {
+      when(() => mockRepo.activateTravelerRole()).thenAnswer((_) async {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        return _fakeUser();
+      });
+      return TravelerUpgradeBloc(mockRepo);
+    },
+    act: (bloc) async {
+      bloc.add(const TravelerUpgradeActivateRequested());
+      bloc.add(const TravelerUpgradeActivateRequested());
+    },
+    wait: const Duration(milliseconds: 100),
+    expect: () => [
+      const TravelerUpgradeLoading(),
+      TravelerUpgradeSuccess(_fakeUser()),
+    ],
+    verify: (_) {
+      verify(() => mockRepo.activateTravelerRole()).called(1);
+    },
+  );
+
+  blocTest<TravelerUpgradeBloc, TravelerUpgradeState>(
+    'émet [Loading, Deactivated] quand la désactivation réussit',
+    build: () {
+      when(() => mockRepo.deactivateTravelerRole())
+          .thenAnswer((_) async => _fakeUser());
+      return TravelerUpgradeBloc(mockRepo);
+    },
+    act: (bloc) => bloc.add(const TravelerUpgradeDeactivateRequested()),
+    expect: () => [
+      const TravelerUpgradeLoading(),
+      TravelerUpgradeDeactivated(_fakeUser()),
+    ],
+    verify: (_) {
+      verify(() => mockRepo.deactivateTravelerRole()).called(1);
+    },
+  );
+
+  blocTest<TravelerUpgradeBloc, TravelerUpgradeState>(
+    'émet [Loading, Error] quand la désactivation échoue',
+    build: () {
+      when(() => mockRepo.deactivateTravelerRole()).thenThrow(
+        const NetworkException('Erreur réseau'),
+      );
+      return TravelerUpgradeBloc(mockRepo);
+    },
+    act: (bloc) => bloc.add(const TravelerUpgradeDeactivateRequested()),
+    expect: () => [
+      const TravelerUpgradeLoading(),
+      const TravelerUpgradeError(NetworkException('Erreur réseau')),
+    ],
+    verify: (_) {
+      verify(() => mockRepo.deactivateTravelerRole()).called(1);
+    },
+  );
+
+  blocTest<TravelerUpgradeBloc, TravelerUpgradeState>(
+    'ignore la désactivation si déjà en Loading (protection double-tap)',
+    build: () {
+      when(() => mockRepo.deactivateTravelerRole()).thenAnswer((_) async {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        return _fakeUser();
+      });
+      return TravelerUpgradeBloc(mockRepo);
+    },
+    act: (bloc) async {
+      bloc.add(const TravelerUpgradeDeactivateRequested());
+      bloc.add(const TravelerUpgradeDeactivateRequested());
+    },
+    wait: const Duration(milliseconds: 100),
+    expect: () => [
+      const TravelerUpgradeLoading(),
+      TravelerUpgradeDeactivated(_fakeUser()),
+    ],
+    verify: (_) {
+      verify(() => mockRepo.deactivateTravelerRole()).called(1);
+    },
   );
 }

@@ -1,3 +1,4 @@
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class AuthEvent extends Equatable {
@@ -133,4 +134,14 @@ class AuthAddEmailFromProfileRequested extends AuthEvent {
   const AuthAddEmailFromProfileRequested({required this.email, required this.code});
   @override
   List<Object?> get props => [email, code];
+}
+
+/// Met à jour l'état AuthBloc directement avec un UserModel déjà chargé,
+/// sans faire d'aller-retour réseau. Utilisé après une activation locale
+/// (ex. activation rôle TRAVELER) où le serveur a déjà retourné l'entité à jour.
+class AuthUserSynced extends AuthEvent {
+  final UserModel user;
+  const AuthUserSynced(this.user);
+  @override
+  List<Object?> get props => [user];
 }

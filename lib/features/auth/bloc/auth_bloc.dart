@@ -54,6 +54,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthRegisterWithEmailRequested>(_onRegisterWithEmailRequested);
     on<AuthAddPhoneFromProfileRequested>(_onAddPhoneFromProfileRequested);
     on<AuthAddEmailFromProfileRequested>(_onAddEmailFromProfileRequested);
+    on<AuthUserSynced>(_onUserSynced);
   }
 
   @override
@@ -454,6 +455,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } catch (e) {
       emit(AuthError(_friendlyError(e)));
     }
+  }
+
+  void _onUserSynced(AuthUserSynced event, Emitter<AuthState> emit) {
+    emit(AuthProfileUpdated(event.user));
   }
 
   Future<void> _checkProfileAfterOAuth(Emitter<AuthState> emit) async {

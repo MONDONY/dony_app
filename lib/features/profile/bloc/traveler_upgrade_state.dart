@@ -24,6 +24,15 @@ class TravelerUpgradeSuccess extends TravelerUpgradeState {
   List<Object?> get props => [user];
 }
 
+class TravelerUpgradeDeactivated extends TravelerUpgradeState {
+  final UserModel user;
+
+  const TravelerUpgradeDeactivated(this.user);
+
+  @override
+  List<Object?> get props => [user];
+}
+
 class TravelerUpgradeError extends TravelerUpgradeState {
   final AppException error;
 
