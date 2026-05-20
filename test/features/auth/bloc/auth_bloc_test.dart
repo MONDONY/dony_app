@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
@@ -9,7 +11,11 @@ import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:path/path.dart' as p;
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -25,10 +31,42 @@ class MockPhoneAuthCredential extends Mock implements PhoneAuthCredential {}
 class FakeAuthCredential extends Fake implements AuthCredential {}
 class FakePhoneAuthCredential extends Fake implements PhoneAuthCredential {}
 
+class FakeUserCredential extends Fake implements UserCredential {}
+
+class MockFirebaseUser extends Mock implements User {
+  String emailValue = '';
+  @override
+  String? get email => emailValue;
+}
+
+// Google mocks
+class MockGoogleSignIn extends Mock implements GoogleSignIn {}
+class MockGoogleSignInAccount extends Mock implements GoogleSignInAccount {}
+class MockGoogleSignInAuthentication extends Mock implements GoogleSignInAuthentication {}
+
+// Apple fake
+class FakeAppleCredential extends Fake implements AuthorizationCredentialAppleID {
+  @override
+  String? get identityToken => 'fake-id-token';
+  @override
+  String get authorizationCode => 'fake-auth-code';
+  @override
+  String? get givenName => null;
+  @override
+  String? get familyName => null;
+  @override
+  String? get email => null;
+  @override
+  String get userIdentifier => 'fake-user-id';
+  @override
+  String? get state => null;
+}
+
 void main() {
   late MockAuthRepository mockRepo;
   late MockLocalAuthService mockLocalAuth;
   late MockFirebaseAuth mockFirebaseAuth;
+  late Directory tempDir;
 
   const testUser = UserModel(
     id: 'user-123',
@@ -38,9 +76,20 @@ void main() {
     status: 'ACTIVE',
   );
 
-  setUpAll(() {
+  setUpAll(() async {
     registerFallbackValue(FakeAuthCredential());
     registerFallbackValue(FakePhoneAuthCredential());
+    // Register fallbacks for verifyPhoneNumber named params
+    registerFallbackValue(const Duration(seconds: 30));
+    // Hive setup needed for OnboardingCompleted tests
+    tempDir = await Directory.systemTemp.createTemp('hive_auth_bloc_test');
+    Hive.init(p.join(tempDir.path));
+    await Hive.openBox('user_prefs');
+  });
+
+  tearDownAll(() async {
+    await Hive.close();
+    await tempDir.delete(recursive: true);
   });
 
   setUp(() {
@@ -144,7 +193,6 @@ void main() {
       build: () {
         when(() => mockRepo.register(
               phoneNumber: any(named: 'phoneNumber'),
-              roles: any(named: 'roles'),
             )).thenAnswer((_) async => testUser);
         when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
         return buildBloc();
@@ -157,7 +205,6 @@ void main() {
       verify: (bloc) {
         verify(() => mockRepo.register(
               phoneNumber: any(named: 'phoneNumber'),
-              roles: ['TRAVELER', 'SENDER'],
             )).called(1);
         verify(() => mockLocalAuth.clearPin()).called(1);
       },
@@ -168,7 +215,6 @@ void main() {
       build: () {
         when(() => mockRepo.register(
               phoneNumber: any(named: 'phoneNumber'),
-              roles: any(named: 'roles'),
             )).thenThrow(Exception('Ce numéro est déjà associé à un compte'));
         return buildBloc();
       },
@@ -185,7 +231,6 @@ void main() {
       build: () {
         when(() => mockRepo.register(
               phoneNumber: any(named: 'phoneNumber'),
-              roles: any(named: 'roles'),
             )).thenThrow(Exception('Server error'));
         return buildBloc();
       },
@@ -640,6 +685,589 @@ void main() {
       ),
       act: (bloc) => bloc.add(const AuthOtpTimerTicked()),
       expect: () => [],
+    );
+  });
+
+  // ─── AuthGoogleSignInRequested ───────────────────────────────────────────────
+
+  group('AuthGoogleSignInRequested', () {
+    late MockGoogleSignIn mockGoogleSignIn;
+    late MockGoogleSignInAccount mockGoogleAccount;
+    late MockGoogleSignInAuthentication mockGoogleAuth;
+
+    setUp(() {
+      mockGoogleSignIn = MockGoogleSignIn();
+      mockGoogleAccount = MockGoogleSignInAccount();
+      mockGoogleAuth = MockGoogleSignInAuthentication();
+
+      when(() => mockGoogleSignIn.signIn())
+          .thenAnswer((_) async => mockGoogleAccount);
+      when(() => mockGoogleAccount.authentication)
+          .thenAnswer((_) async => mockGoogleAuth);
+      when(() => mockGoogleAuth.accessToken).thenReturn('access-token');
+      when(() => mockGoogleAuth.idToken).thenReturn('id-token');
+    });
+
+    AuthBloc buildGoogleBloc() => AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          googleSignIn: mockGoogleSignIn,
+        );
+
+    blocTest<AuthBloc, AuthState>(
+      'émet [Loading, Authenticated] quand compte existant',
+      build: buildGoogleBloc,
+      setUp: () {
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => MockUserCredential());
+        when(() => mockRepo.getProfile()).thenAnswer((_) async => testUser);
+      },
+      act: (b) => b.add(const AuthGoogleSignInRequested()),
+      expect: () => [const AuthLoading(), AuthAuthenticated(testUser)],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'émet [Loading, AuthOAuthNewUser] quand nouveau compte (404)',
+      build: () {
+        final mockGoogleUser = MockGoogleSignInAccount();
+        final mockGoogleAuth = MockGoogleSignInAuthentication();
+        final mockGoogleSignIn = MockGoogleSignIn();
+        final mockFirebaseUser = MockFirebaseUser()..emailValue = 'newuser@gmail.com';
+        when(() => mockGoogleSignIn.signIn()).thenAnswer((_) async => mockGoogleUser);
+        when(() => mockGoogleUser.authentication).thenAnswer((_) async => mockGoogleAuth);
+        when(() => mockGoogleAuth.accessToken).thenReturn('access');
+        when(() => mockGoogleAuth.idToken).thenReturn('id');
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => FakeUserCredential());
+        when(() => mockFirebaseAuth.currentUser).thenReturn(mockFirebaseUser);
+        when(() => mockRepo.getProfile()).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: ''),
+            response: Response(
+              statusCode: 404,
+              requestOptions: RequestOptions(path: ''),
+            ),
+          ),
+        );
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          googleSignIn: mockGoogleSignIn,
+        );
+      },
+      act: (b) => b.add(const AuthGoogleSignInRequested()),
+      expect: () => [
+        const AuthLoading(),
+        isA<AuthOAuthNewUser>().having((s) => s.email, 'email', 'newuser@gmail.com'),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'émet [Loading, Initial] quand utilisateur annule Google sign-in',
+      build: () => AuthBloc(
+        mockRepo,
+        mockLocalAuth,
+        firebaseAuth: mockFirebaseAuth,
+        googleSignIn: mockGoogleSignIn,
+      ),
+      setUp: () {
+        when(() => mockGoogleSignIn.signIn()).thenAnswer((_) async => null);
+      },
+      act: (b) => b.add(const AuthGoogleSignInRequested()),
+      expect: () => [const AuthLoading(), const AuthInitial()],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'émet [Loading, AuthError] quand backend répond 500',
+      build: buildGoogleBloc,
+      setUp: () {
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => MockUserCredential());
+        when(() => mockRepo.getProfile()).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: ''),
+            response: Response(
+              statusCode: 500,
+              requestOptions: RequestOptions(path: ''),
+            ),
+          ),
+        );
+      },
+      act: (b) => b.add(const AuthGoogleSignInRequested()),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
+  });
+
+  // ─── AuthAppleSignInRequested ────────────────────────────────────────────────
+
+  group('AuthAppleSignInRequested', () {
+    blocTest<AuthBloc, AuthState>(
+      'émet [Loading, Authenticated] quand compte existant',
+      build: () => AuthBloc(
+        mockRepo,
+        mockLocalAuth,
+        firebaseAuth: mockFirebaseAuth,
+        appleSignIn: (_) async => FakeAppleCredential(),
+      ),
+      setUp: () {
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => MockUserCredential());
+        when(() => mockRepo.getProfile()).thenAnswer((_) async => testUser);
+      },
+      act: (b) => b.add(const AuthAppleSignInRequested()),
+      expect: () => [const AuthLoading(), AuthAuthenticated(testUser)],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'émet [Loading, AuthOAuthNewUser] quand nouveau compte (404)',
+      build: () {
+        final mockFirebaseUser = MockFirebaseUser()..emailValue = 'newaple@icloud.com';
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => FakeUserCredential());
+        when(() => mockFirebaseAuth.currentUser).thenReturn(mockFirebaseUser);
+        when(() => mockRepo.getProfile()).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: ''),
+            response: Response(
+              statusCode: 404,
+              requestOptions: RequestOptions(path: ''),
+            ),
+          ),
+        );
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          appleSignIn: (_) async => FakeAppleCredential(),
+        );
+      },
+      act: (b) => b.add(const AuthAppleSignInRequested()),
+      expect: () => [
+        const AuthLoading(),
+        isA<AuthOAuthNewUser>().having((s) => s.email, 'email', 'newaple@icloud.com'),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'émet [Loading, AuthError] quand backend répond 500',
+      build: () => AuthBloc(
+        mockRepo,
+        mockLocalAuth,
+        firebaseAuth: mockFirebaseAuth,
+        appleSignIn: (_) async => FakeAppleCredential(),
+      ),
+      setUp: () {
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => MockUserCredential());
+        when(() => mockRepo.getProfile()).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: ''),
+            response: Response(
+              statusCode: 500,
+              requestOptions: RequestOptions(path: ''),
+            ),
+          ),
+        );
+      },
+      act: (b) => b.add(const AuthAppleSignInRequested()),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
+  });
+
+  // ─── AuthEmailOtpSendRequested ────────────────────────────────────────────────
+
+  group('AuthEmailOtpSendRequested', () {
+    blocTest<AuthBloc, AuthState>(
+      'émet [AuthLoading, AuthEmailOtpSent] en cas de succès',
+      build: () {
+        when(() => mockRepo.sendEmailOtp('a@b.com'))
+            .thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthEmailOtpSendRequested('a@b.com')),
+      expect: () => [
+        const AuthLoading(),
+        isA<AuthEmailOtpSent>().having((s) => s.email, 'email', 'a@b.com'),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'émet [AuthLoading, AuthError] si le repository lance une exception',
+      build: () {
+        when(() => mockRepo.sendEmailOtp(any()))
+            .thenThrow(Exception('network error'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthEmailOtpSendRequested('a@b.com')),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
+  });
+
+  // ─── AuthEmailOtpVerifyRequested ─────────────────────────────────────────────
+
+  group('AuthEmailOtpVerifyRequested', () {
+    blocTest<AuthBloc, AuthState>(
+      'émet [AuthLoading, AuthEmailOtpVerified] en cas de succès (nouveau compte)',
+      build: () {
+        when(() => mockRepo.verifyEmailOtp('a@b.com', '123456'))
+            .thenAnswer((_) async => 'custom_token_fake');
+        when(() => mockFirebaseAuth.signInWithCustomToken('custom_token_fake'))
+            .thenAnswer((_) async => MockUserCredential());
+        when(() => mockRepo.getProfile()).thenThrow(DioException(
+          requestOptions: RequestOptions(path: '/users/me'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/users/me'),
+            statusCode: 404,
+          ),
+        ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthEmailOtpVerifyRequested(email: 'a@b.com', code: '123456')),
+      expect: () => [
+        const AuthLoading(),
+        isA<AuthEmailOtpVerified>().having((s) => s.email, 'email', 'a@b.com'),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'émet [AuthLoading, AuthError] si code invalide',
+      build: () {
+        when(() => mockRepo.verifyEmailOtp(any(), any()))
+            .thenThrow(Exception('invalid code'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthEmailOtpVerifyRequested(email: 'a@b.com', code: '000000')),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
+  });
+
+  // ─── AuthRegisterWithEmailRequested ──────────────────────────────────────────
+
+  group('AuthRegisterWithEmailRequested', () {
+    blocTest<AuthBloc, AuthState>(
+      'émet [AuthLoading, AuthAuthenticated] en cas de succès',
+      build: () {
+        when(() => mockRepo.registerWithEmail(
+                email: 'a@b.com'))
+            .thenAnswer((_) async => testUser);
+        when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        const AuthRegisterWithEmailRequested(email: 'a@b.com'),
+      ),
+      expect: () => [
+        const AuthLoading(),
+        isA<AuthAuthenticated>(),
+      ],
+      verify: (_) {
+        verify(() => mockLocalAuth.clearPin()).called(1);
+      },
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'émet [AuthLoading, AuthError] si register échoue',
+      build: () {
+        when(() => mockRepo.registerWithEmail(
+                email: any(named: 'email')))
+            .thenThrow(Exception('email already exists'));
+        when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(
+        const AuthRegisterWithEmailRequested(email: 'a@b.com'),
+      ),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
+  });
+
+  // ─── Fix AuthGoogleSignInRequested → AuthOAuthNewUser (nouveau user) ──────────
+
+  group('AuthGoogleSignInRequested 404 → AuthOAuthNewUser', () {
+    blocTest<AuthBloc, AuthState>(
+      'émet AuthOAuthNewUser (pas AuthOtpVerified) quand GET /me retourne 404',
+      build: () {
+        final mockGoogleUser = MockGoogleSignInAccount();
+        final mockGoogleAuth = MockGoogleSignInAuthentication();
+        final mockGoogleSignIn = MockGoogleSignIn();
+        final mockFirebaseUser = MockFirebaseUser()..emailValue = 'test@gmail.com';
+        when(() => mockGoogleSignIn.signIn()).thenAnswer((_) async => mockGoogleUser);
+        when(() => mockGoogleUser.authentication).thenAnswer((_) async => mockGoogleAuth);
+        when(() => mockGoogleAuth.accessToken).thenReturn('access');
+        when(() => mockGoogleAuth.idToken).thenReturn('id');
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => FakeUserCredential());
+        when(() => mockFirebaseAuth.currentUser).thenReturn(mockFirebaseUser);
+        when(() => mockRepo.getProfile()).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/auth/me'),
+            response: Response(
+              requestOptions: RequestOptions(path: '/auth/me'),
+              statusCode: 404,
+            ),
+          ),
+        );
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          googleSignIn: mockGoogleSignIn,
+        );
+      },
+      act: (bloc) => bloc.add(const AuthGoogleSignInRequested()),
+      expect: () => [
+        const AuthLoading(),
+        isA<AuthOAuthNewUser>().having((s) => s.email, 'email', 'test@gmail.com'),
+      ],
+    );
+  });
+
+  // ─── AuthOtpTimerTicked — AuthEmailOtpSent branch ───────────────────────────
+
+  group('AuthOtpTimerTicked — AuthEmailOtpSent', () {
+    blocTest<AuthBloc, AuthState>(
+      'decrements secondsLeft in AuthEmailOtpSent',
+      build: buildBloc,
+      seed: () => AuthEmailOtpSent('user@example.com', secondsLeft: 30),
+      act: (bloc) => bloc.add(const AuthOtpTimerTicked()),
+      expect: () => [
+        AuthEmailOtpSent('user@example.com', secondsLeft: 29),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'does not emit when AuthEmailOtpSent secondsLeft is already 0',
+      build: buildBloc,
+      seed: () => AuthEmailOtpSent('user@example.com', secondsLeft: 0),
+      act: (bloc) => bloc.add(const AuthOtpTimerTicked()),
+      expect: () => [],
+    );
+  });
+
+  // ─── OnboardingCompleted ─────────────────────────────────────────────────────
+
+  group('OnboardingCompleted', () {
+    blocTest<AuthBloc, AuthState>(
+      'writes onboarding_done=true to Hive and emits nothing',
+      build: buildBloc,
+      act: (bloc) => bloc.add(const OnboardingCompleted()),
+      expect: () => [],
+      verify: (_) {
+        expect(Hive.box('user_prefs').get('onboarding_done'), isTrue);
+      },
+    );
+  });
+
+  // ─── _checkProfileAfterOAuth — generic exception ─────────────────────────────
+
+  group('_checkProfileAfterOAuth — generic exception', () {
+    blocTest<AuthBloc, AuthState>(
+      'Google: getProfile throws generic exception → émet AuthError',
+      build: () {
+        final mockGoogleSignIn = MockGoogleSignIn();
+        final mockGoogleUser = MockGoogleSignInAccount();
+        final mockGoogleAuth = MockGoogleSignInAuthentication();
+        final mockFirebaseUser = MockFirebaseUser()..emailValue = 'user@gmail.com';
+        when(() => mockGoogleSignIn.signIn()).thenAnswer((_) async => mockGoogleUser);
+        when(() => mockGoogleUser.authentication).thenAnswer((_) async => mockGoogleAuth);
+        when(() => mockGoogleAuth.accessToken).thenReturn('access');
+        when(() => mockGoogleAuth.idToken).thenReturn('id');
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => FakeUserCredential());
+        when(() => mockFirebaseAuth.currentUser).thenReturn(mockFirebaseUser);
+        when(() => mockRepo.getProfile())
+            .thenThrow(Exception('unexpected parse error'));
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          googleSignIn: mockGoogleSignIn,
+        );
+      },
+      act: (b) => b.add(const AuthGoogleSignInRequested()),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'Apple: getProfile throws generic exception → émet AuthError',
+      build: () {
+        final mockFirebaseUser = MockFirebaseUser()..emailValue = 'user@icloud.com';
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => FakeUserCredential());
+        when(() => mockFirebaseAuth.currentUser).thenReturn(mockFirebaseUser);
+        when(() => mockRepo.getProfile())
+            .thenThrow(Exception('unexpected parse error'));
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          appleSignIn: (_) async => FakeAppleCredential(),
+        );
+      },
+      act: (b) => b.add(const AuthAppleSignInRequested()),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
+  });
+
+  // ─── Google/Apple — currentUser?.email path ──────────────────────────────────
+
+  group('AuthGoogleSignInRequested — currentUser.email assigned', () {
+    blocTest<AuthBloc, AuthState>(
+      'émet [Loading, Authenticated] et assigne email depuis currentUser',
+      build: () {
+        final mockGoogleSignIn = MockGoogleSignIn();
+        final mockGoogleUser = MockGoogleSignInAccount();
+        final mockGoogleAuth = MockGoogleSignInAuthentication();
+        final mockFirebaseUser = MockFirebaseUser()..emailValue = 'user@gmail.com';
+        when(() => mockGoogleSignIn.signIn()).thenAnswer((_) async => mockGoogleUser);
+        when(() => mockGoogleUser.authentication).thenAnswer((_) async => mockGoogleAuth);
+        when(() => mockGoogleAuth.accessToken).thenReturn('access');
+        when(() => mockGoogleAuth.idToken).thenReturn('id');
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => FakeUserCredential());
+        when(() => mockFirebaseAuth.currentUser).thenReturn(mockFirebaseUser);
+        when(() => mockRepo.getProfile()).thenAnswer((_) async => testUser);
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          googleSignIn: mockGoogleSignIn,
+        );
+      },
+      act: (b) => b.add(const AuthGoogleSignInRequested()),
+      expect: () => [const AuthLoading(), AuthAuthenticated(testUser)],
+    );
+  });
+
+  group('AuthAppleSignInRequested — currentUser.email assigned', () {
+    blocTest<AuthBloc, AuthState>(
+      'émet [Loading, Authenticated] et assigne email depuis currentUser',
+      build: () {
+        final mockFirebaseUser = MockFirebaseUser()..emailValue = 'user@icloud.com';
+        when(() => mockFirebaseAuth.signInWithCredential(any()))
+            .thenAnswer((_) async => FakeUserCredential());
+        when(() => mockFirebaseAuth.currentUser).thenReturn(mockFirebaseUser);
+        when(() => mockRepo.getProfile()).thenAnswer((_) async => testUser);
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          appleSignIn: (_) async => FakeAppleCredential(),
+        );
+      },
+      act: (b) => b.add(const AuthAppleSignInRequested()),
+      expect: () => [const AuthLoading(), AuthAuthenticated(testUser)],
+    );
+  });
+
+  // ─── catch(e) dans _onGoogleSignInRequested et _onAppleSignInRequested ─────
+
+  group('OAuth outer catch(e)', () {
+    blocTest<AuthBloc, AuthState>(
+      'Google: signIn() throws generic exception → émet [Loading, AuthError]',
+      build: () {
+        final mockGoogleSignIn = MockGoogleSignIn();
+        when(() => mockGoogleSignIn.signIn())
+            .thenThrow(Exception('Google play services unavailable'));
+        return AuthBloc(
+          mockRepo,
+          mockLocalAuth,
+          firebaseAuth: mockFirebaseAuth,
+          googleSignIn: mockGoogleSignIn,
+        );
+      },
+      act: (b) => b.add(const AuthGoogleSignInRequested()),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'Apple: appleSignIn() throws generic exception → émet [Loading, AuthError]',
+      build: () => AuthBloc(
+        mockRepo,
+        mockLocalAuth,
+        firebaseAuth: mockFirebaseAuth,
+        appleSignIn: (_) async => throw Exception('Apple auth unavailable'),
+      ),
+      act: (b) => b.add(const AuthAppleSignInRequested()),
+      expect: () => [const AuthLoading(), isA<AuthError>()],
+    );
+  });
+
+  // ─── AuthSendOtpRequested — verifyPhoneNumber callbacks ──────────────────────
+
+  group('AuthSendOtpRequested', () {
+    // Helper to stub verifyPhoneNumber so it immediately calls codeSent
+    void stubVerifyCodeSent(MockFirebaseAuth auth, {String verificationId = 'test-vid'}) {
+      when(() => auth.verifyPhoneNumber(
+            phoneNumber: any(named: 'phoneNumber'),
+            verificationCompleted: any(named: 'verificationCompleted'),
+            verificationFailed: any(named: 'verificationFailed'),
+            codeSent: any(named: 'codeSent'),
+            codeAutoRetrievalTimeout: any(named: 'codeAutoRetrievalTimeout'),
+            timeout: any(named: 'timeout'),
+            forceResendingToken: any(named: 'forceResendingToken'),
+            multiFactorSession: any(named: 'multiFactorSession'),
+            multiFactorInfo: any(named: 'multiFactorInfo'),
+            autoRetrievedSmsCodeForTesting: any(named: 'autoRetrievedSmsCodeForTesting'),
+          )).thenAnswer((invocation) async {
+        final codeSent = invocation.namedArguments[#codeSent] as PhoneCodeSent;
+        codeSent(verificationId, null);
+      });
+    }
+
+    void stubVerifyFailed(MockFirebaseAuth auth, FirebaseAuthException error) {
+      when(() => auth.verifyPhoneNumber(
+            phoneNumber: any(named: 'phoneNumber'),
+            verificationCompleted: any(named: 'verificationCompleted'),
+            verificationFailed: any(named: 'verificationFailed'),
+            codeSent: any(named: 'codeSent'),
+            codeAutoRetrievalTimeout: any(named: 'codeAutoRetrievalTimeout'),
+            timeout: any(named: 'timeout'),
+            forceResendingToken: any(named: 'forceResendingToken'),
+            multiFactorSession: any(named: 'multiFactorSession'),
+            multiFactorInfo: any(named: 'multiFactorInfo'),
+            autoRetrievedSmsCodeForTesting: any(named: 'autoRetrievedSmsCodeForTesting'),
+          )).thenAnswer((invocation) async {
+        final verificationFailed =
+            invocation.namedArguments[#verificationFailed] as PhoneVerificationFailed;
+        verificationFailed(error);
+      });
+    }
+
+    blocTest<AuthBloc, AuthState>(
+      'codeSent callback → émet [Loading, AuthOtpSent]',
+      build: () {
+        stubVerifyCodeSent(mockFirebaseAuth);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthSendOtpRequested('+33612345678')),
+      expect: () => [
+        const AuthLoading(),
+        isA<AuthOtpSent>()
+            .having((s) => s.verificationId, 'verificationId', 'test-vid')
+            .having((s) => s.phoneNumber, 'phoneNumber', '+33612345678')
+            .having((s) => s.secondsLeft, 'secondsLeft', 60),
+      ],
+    );
+
+    blocTest<AuthBloc, AuthState>(
+      'verificationFailed → émet [Loading, AuthError] avec message localisé',
+      build: () {
+        stubVerifyFailed(
+          mockFirebaseAuth,
+          FirebaseAuthException(code: 'invalid-phone-number'),
+        );
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthSendOtpRequested('+33000')),
+      expect: () => [
+        const AuthLoading(),
+        predicate<AuthState>((s) =>
+            s is AuthError &&
+            s.error.message.contains('Numéro de téléphone invalide')),
+      ],
     );
   });
 }

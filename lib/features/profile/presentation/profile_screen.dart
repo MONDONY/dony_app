@@ -15,6 +15,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/profile/presentation/widgets/add_contact_sheets.dart';
 import 'package:dony/features/profile/presentation/widgets/coming_soon_bottom_sheet.dart';
 import 'package:dony/features/profile/presentation/widgets/edit_profile_bottom_sheet.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
@@ -36,10 +37,12 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final _scroll = ScrollController();
 
-  // Hauteur du contenu sous l'AppBar de base (56) — donne expandedHeight total :
-  // topPad + 56 + _kContentHeight. Le ProfileHeader rendu en flexibleSpace a sa
-  // propre hauteur naturelle ; ce paramètre détermine juste la zone collapsable.
-  static const double _kContentHeight = 264.0;
+  // expandedHeight = topPad + 56 + contentHeight.
+  // contentHeight = col_height - 24 (padding haut DonySpacing.lg=20 + bas DonySpacing.md=12 - 56 toolbar)
+  // col_height dual   = avatar(72) + sm(12) + pill(38) + sm(12) + progressBar(24) = 158 → 158-24=134
+  // col_height single = avatar(72) + sm(12) + progressBar(24) = 108 → 108-24=84
+  static const double _kContentHeightDual   = 140.0; // double rôle (toggle présent, +6 buffer)
+  static const double _kContentHeightSingle = 90.0;  // rôle unique (+6 buffer)
 
   @override
   void initState() {
@@ -82,6 +85,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: BlocBuilder<AuthBloc, AuthState>(
+          buildWhen: (prev, curr) => curr is AuthAuthenticated || curr is AuthProfileUpdated,
           builder: (context, authState) {
             UserModel? user;
             if (authState is AuthAuthenticated) {
@@ -114,22 +118,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         final tt = Theme.of(context).textTheme;
                         final cs = Theme.of(context).colorScheme;
                         final topPad = MediaQuery.of(context).padding.top;
-                        final expandedHeight = topPad + 56.0 + _kContentHeight;
+                        final contentHeight = (isTraveler && isSender)
+                            ? _kContentHeightDual
+                            : _kContentHeightSingle;
+                        final expandedHeight = topPad + 56.0 + contentHeight;
                         final offset = _scroll.hasClients
                             ? _scroll.offset.clamp(0.0, double.infinity)
                             : 0.0;
-                        final progress =
-                            (offset / _kContentHeight).clamp(0.0, 1.0);
-                        final headerBg = Color.lerp(
-                          cs.primary,
-                          cs.surface,
-                          progress,
-                        )!;
-                        final titleColor = Color.lerp(
-                          cs.onPrimary.withValues(alpha: 0.0),
-                          cs.onSurface,
-                          progress,
-                        )!;
+                        final progress = (offset / contentHeight).clamp(0.0, 1.0);
+
+                        // Calcul du pourcentage de complétion du profil
+                        int completionSteps = user?.profileCompletionSteps ?? 0;
+                        if (user?.phoneNumber?.isNotEmpty == true) {
+                          completionSteps++;
+                        }
+                        if (user?.email?.isNotEmpty == true) {
+                          completionSteps++;
+                        }
+                        if (user?.isKycVerified == true) {
+                          completionSteps++;
+                        }
+                        const totalCompletionSteps = UserModel.profileTotalSteps + 3;
+                        final profileCompletionPercent = user != null
+                            ? completionSteps / totalCompletionSteps
+                            : 0.0;
 
                         return RefreshIndicator(
                           color: cs.primary,
@@ -150,40 +162,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 scrolledUnderElevation: 0,
                                 automaticallyImplyLeading: false,
                                 centerTitle: false,
-                                backgroundColor: headerBg,
+                                backgroundColor: cs.surface,
                                 surfaceTintColor: Colors.transparent,
                                 title: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Opacity(
                                       opacity: progress,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(1.5),
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: isTraveler ? DonyColors.warning : cs.surface,
-                                            width: 1.5,
-                                          ),
-                                        ),
-                                        child: DonyAvatar(
-                                          name: displayName,
-                                          size: DonyAvatarSize.xs,
-                                          verified: false,
-                                          pro: false,
-                                        ),
+                                      child: DonyAvatar(
+                                        name: displayName,
+                                        size: DonyAvatarSize.xs,
+                                        verified: isKycVerified,
+                                        pro: isProAccount,
                                       ),
                                     ),
                                     const SizedBox(width: DonySpacing.sm),
                                     Flexible(
-                                      child: Text(
-                                        displayName,
-                                        style: tt.titleSmall!.copyWith(
-                                          color: titleColor,
-                                          fontWeight: FontWeight.w700,
+                                      child: Opacity(
+                                        opacity: progress,
+                                        child: Text(
+                                          displayName,
+                                          style: tt.titleSmall!.copyWith(
+                                            color: cs.onSurface,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                     if (isKycVerified) ...[
@@ -211,10 +216,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     isSender: isSender,
                                     isKycVerified: isKycVerified,
                                     isProAccount: isProAccount,
-                                    totalTrips: user?.totalTrips ?? 0,
-                                    totalShipments: user?.totalShipments ?? 0,
-                                    isLoadingStats: bidState is BidLoading ||
-                                        announcementState is AnnouncementLoading,
+                                    phoneNumber: user?.phoneNumber,
+                                    email: user?.email,
+                                    city: user?.city,
+                                    profileCompletionPercent: profileCompletionPercent,
+                                    onEditProfile: () => EditProfileBottomSheet.show(context),
                                     onRoleSwitch: (isTraveler && isSender)
                                         ? (role) {
                                             if (role == ActiveRole.traveler) {
@@ -229,7 +235,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             context.go('/home');
                                           }
                                         : null,
-                                    onSettingsTap: () => context.push('/settings'),
                                   ),
                                 ),
                               ),
@@ -266,7 +271,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         const SizedBox(height: DonySpacing.lg),
                                       ],
 
-                                      // Menu principal contextuel au rôle
+                                      // ─── CONTACT & SÉCURITÉ ──────────────────────────────
+                                      _SectionLabel(label: 'CONTACT & SÉCURITÉ', cs: cs),
+                                      _ContactSecuritySection(
+                                        phoneNumber: user?.phoneNumber,
+                                        email: user?.email,
+                                        onPhoneTap: () => AddPhoneSheet.show(context),
+                                        onEmailTap: () => AddEmailSheet.show(context),
+                                      ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                                      const SizedBox(height: DonySpacing.xl),
+
+                                      // ─── ACTIVITÉ ─────────────────────────────────────────
+                                      _SectionLabel(
+                                        label: activeRole == ActiveRole.traveler
+                                            ? 'ACTIVITÉ · VOYAGEUR'
+                                            : 'ACTIVITÉ · EXPÉDITEUR',
+                                        cs: cs,
+                                      ),
+                                      _ActivitySection(
+                                        activeRole: activeRole,
+                                        totalTrips: user?.totalTrips ?? 0,
+                                        totalShipments: user?.totalShipments ?? 0,
+                                        isLoading: bidState is BidLoading ||
+                                            announcementState is AnnouncementLoading,
+                                      ).animate().fadeIn(delay: 140.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                                      const SizedBox(height: DonySpacing.xl),
+
+                                      // ─── MENU PRINCIPAL CONTEXTUEL AU RÔLE ───────────────
                                       if (activeRole == ActiveRole.traveler) ...[
                                         // ─── MON ACTIVITÉ ─────────────────────────────────
                                         _SectionLabel(label: 'MON ACTIVITÉ', cs: cs),
@@ -567,6 +598,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         ).animate().fadeIn(delay: 280.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
                                         const SizedBox(height: DonySpacing.lg),
 
+                                        // ─── DEVENIR VOYAGEUR ─────────────────────────────
+                                        _SectionLabel(label: 'DEVENIR VOYAGEUR', cs: cs),
+                                        DonyListSection(
+                                          tiles: [
+                                            DonyListTile(
+                                              icon: Icons.flight_takeoff_rounded,
+                                              iconColor: cs.secondary,
+                                              iconBgColor: cs.secondaryContainer,
+                                              label: 'Devenir voyageur dony',
+                                              trailing: _TravelerUpgradeTrailing(
+                                                kycStatus: user?.kycStatus,
+                                                stripeStatus: user?.stripeAccountStatus,
+                                              ),
+                                              showDivider: false,
+                                              onTap: () => context.push('/profile/become-traveler'),
+                                            ),
+                                          ],
+                                        ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                                        const SizedBox(height: DonySpacing.lg),
+
                                         // 4. Identité & confiance
                                         _SectionLabel(label: 'IDENTITÉ & CONFIANCE', cs: cs),
                                         DonyListSection(
@@ -699,6 +750,261 @@ class _ProfileScreenState extends State<ProfileScreen> {
           },
         ),
       ),
+    );
+  }
+}
+
+// ── Section Contact & Sécurité ────────────────────────────────────────────────
+
+class _ContactSecuritySection extends StatelessWidget {
+  const _ContactSecuritySection({
+    required this.phoneNumber,
+    required this.email,
+    required this.onPhoneTap,
+    required this.onEmailTap,
+  });
+
+  final String? phoneNumber;
+  final String? email;
+  final VoidCallback onPhoneTap;
+  final VoidCallback onEmailTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasPhone = phoneNumber != null && phoneNumber!.isNotEmpty;
+    final hasEmail = email != null && email!.isNotEmpty;
+    final cs = Theme.of(context).colorScheme;
+
+    return DonyCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          _ContactRow(
+            icon: Icons.phone_rounded,
+            iconBg: cs.primaryContainer,
+            iconColor: cs.primary,
+            typeLabel: 'TÉLÉPHONE',
+            value: hasPhone ? phoneNumber! : 'Non ajouté',
+            isEmpty: !hasPhone,
+            isVerified: hasPhone,
+            showDivider: true,
+            onTap: onPhoneTap,
+          ),
+          _ContactRow(
+            icon: Icons.email_rounded,
+            iconBg: cs.successLight,
+            iconColor: cs.success,
+            typeLabel: 'E-MAIL',
+            value: hasEmail ? email! : 'Non ajouté',
+            isEmpty: !hasEmail,
+            isVerified: hasEmail,
+            showDivider: false,
+            onTap: onEmailTap,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContactRow extends StatelessWidget {
+  const _ContactRow({
+    required this.icon,
+    required this.iconBg,
+    required this.iconColor,
+    required this.typeLabel,
+    required this.value,
+    required this.isEmpty,
+    required this.isVerified,
+    required this.showDivider,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final Color iconBg;
+  final Color iconColor;
+  final String typeLabel;
+  final String value;
+  final bool isEmpty;
+  final bool isVerified;
+  final bool showDivider;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return Column(
+      children: [
+        InkWell(
+          onTap: onTap,
+          borderRadius: showDivider
+              ? const BorderRadius.vertical(top: Radius.circular(DonyRadius.card))
+              : const BorderRadius.vertical(bottom: Radius.circular(DonyRadius.card)),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.base,
+              vertical: DonySpacing.md,
+            ),
+            child: Row(
+              children: [
+                DonyIconContainer(
+                  icon: icon,
+                  backgroundColor: iconBg,
+                  iconColor: iconColor,
+                  borderRadius: DonyRadius.sm,
+                  size: DonyIconContainerSize.sm,
+                ),
+                const SizedBox(width: DonySpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        typeLabel,
+                        style: tt.labelSmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: DonySpacing.xxs),
+                      Text(
+                        value,
+                        style: tt.bodyMedium?.copyWith(
+                          color: isEmpty ? cs.onSurfaceVariant : cs.onSurface,
+                          fontWeight: isEmpty ? FontWeight.w400 : FontWeight.w600,
+                          fontStyle: isEmpty ? FontStyle.italic : FontStyle.normal,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                _StatusBadge(isVerified: isVerified),
+              ],
+            ),
+          ),
+        ),
+        if (showDivider)
+          const Divider(height: 1, indent: DonySpacing.lg + 32),
+      ],
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.isVerified});
+  final bool isVerified;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final bg = isVerified ? cs.successLight : cs.primaryContainer;
+    final fg = isVerified ? cs.success : cs.primary;
+    final label = isVerified ? '✓ Vérifié' : '+ Ajouter';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs + 1,
+      ),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: fg,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Section Activité ──────────────────────────────────────────────────────────
+
+class _ActivitySection extends StatelessWidget {
+  const _ActivitySection({
+    required this.activeRole,
+    required this.totalTrips,
+    required this.totalShipments,
+    required this.isLoading,
+  });
+
+  final ActiveRole activeRole;
+  final int totalTrips;
+  final int totalShipments;
+  final bool isLoading;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isTraveler = activeRole == ActiveRole.traveler;
+    final mainValue = isLoading ? '—' : '${isTraveler ? totalTrips : totalShipments}';
+    final mainLabel = isTraveler ? 'Trajets' : 'Envois';
+    final thirdValue = isTraveler ? '98%' : '0€';
+    final thirdLabel = isTraveler ? 'Livraison' : 'Économisés';
+
+    return DonyCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.base,
+        vertical: DonySpacing.md,
+      ),
+      child: Row(
+        children: [
+          Expanded(child: _ActivityStat(value: mainValue, label: mainLabel, isLoading: isLoading)),
+          Container(width: 1, height: 28, color: cs.outline.withValues(alpha: 0.4)),
+          const Expanded(child: _ActivityStat(value: '4.9', label: 'Ma note', isLoading: false)),
+          Container(width: 1, height: 28, color: cs.outline.withValues(alpha: 0.4)),
+          Expanded(child: _ActivityStat(value: thirdValue, label: thirdLabel, isLoading: false)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActivityStat extends StatelessWidget {
+  const _ActivityStat({
+    required this.value,
+    required this.label,
+    required this.isLoading,
+  });
+
+  final String value;
+  final String label;
+  final bool isLoading;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Column(
+      children: [
+        if (isLoading)
+          SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2, color: cs.primary),
+          )
+        else
+          Text(
+            value,
+            style: tt.titleLarge?.copyWith(
+              color: cs.primary,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        const SizedBox(height: DonySpacing.xxs),
+        Text(
+          label,
+          style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 }
@@ -958,6 +1264,49 @@ class DonyListSection extends StatelessWidget {
       child: Column(
         children: tiles,
       ),
+    );
+  }
+}
+
+// ── Traveler upgrade trailing indicator ──────────────────────────────────────
+
+class _TravelerUpgradeTrailing extends StatelessWidget {
+  const _TravelerUpgradeTrailing({
+    required this.kycStatus,
+    required this.stripeStatus,
+  });
+
+  final String? kycStatus;
+  final String? stripeStatus;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final kycOk = kycStatus == 'VERIFIED';
+    final stripeOk = stripeStatus == 'ONBOARDING_COMPLETE';
+
+    if (kycOk && stripeOk) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.check_circle_rounded, color: cs.success, size: 14),
+          const SizedBox(width: DonySpacing.xs),
+          Text(
+            'Prêt',
+            style: tt.labelSmall?.copyWith(
+              color: cs.success,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      );
+    }
+
+    final int done = (kycOk ? 1 : 0) + (stripeOk ? 1 : 0);
+    return Text(
+      '$done/2 étapes',
+      style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
     );
   }
 }

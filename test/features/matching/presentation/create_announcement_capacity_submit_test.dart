@@ -15,6 +15,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -36,6 +37,7 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement_
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -54,6 +56,10 @@ class MockCommissionMethodBloc
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
+
+class MockStripeAccountBloc
+    extends MockBloc<StripeAccountEvent, StripeAccountState>
+    implements StripeAccountBloc {}
 
 class MockCitySearchBloc extends MockBloc<CitySearchEvent, CitySearchState>
     implements CitySearchBloc {}
@@ -99,6 +105,7 @@ Widget _buildHost({
   required MockAnnouncementBloc announcementBloc,
   required MockCommissionMethodBloc commissionBloc,
   required MockAuthBloc authBloc,
+  required MockStripeAccountBloc stripeBloc,
   AnnouncementModel? announcement,
 }) {
   final router = GoRouter(
@@ -140,8 +147,11 @@ Widget _buildHost({
       ),
     ],
   );
-  return BlocProvider<AuthBloc>.value(
-    value: authBloc,
+  return MultiBlocProvider(
+    providers: [
+      BlocProvider<AuthBloc>.value(value: authBloc),
+      BlocProvider<StripeAccountBloc>.value(value: stripeBloc),
+    ],
     child: MaterialApp.router(routerConfig: router, theme: AppTheme.light),
   );
 }
@@ -154,6 +164,7 @@ void main() {
   late MockAnnouncementBloc announcementBloc;
   late MockCommissionMethodBloc commissionBloc;
   late MockAuthBloc authBloc;
+  late MockStripeAccountBloc stripeBloc;
   late MockCityRepository cityRepo;
 
   setUpAll(() async {
@@ -221,6 +232,12 @@ void main() {
     when(() => authBloc.state).thenReturn(AuthAuthenticated(_stripeUser));
     when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
 
+    stripeBloc = MockStripeAccountBloc();
+    when(() => stripeBloc.state).thenReturn(StripeAccountReady(
+      const ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
+    ));
+    when(() => stripeBloc.stream).thenAnswer((_) => const Stream.empty());
+
     final autocomplete = MockAddressAutocompleteService();
     when(() => autocomplete.search(any(), any()))
         .thenAnswer((_) async => const <AddressSuggestion>[]);
@@ -245,6 +262,7 @@ void main() {
     announcementBloc.close();
     commissionBloc.close();
     authBloc.close();
+    stripeBloc.close();
     if (getIt.isRegistered<AddressAutocompleteService>()) {
       getIt.unregister<AddressAutocompleteService>();
     }
@@ -273,6 +291,7 @@ void main() {
         announcementBloc: announcementBloc,
         commissionBloc: commissionBloc,
         authBloc: authBloc,
+        stripeBloc: stripeBloc,
         announcement: _testAnnouncement,
       ));
       await tester.pump(_settle);

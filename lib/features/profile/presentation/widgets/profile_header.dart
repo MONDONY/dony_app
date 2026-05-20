@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:flutter/material.dart';
@@ -13,11 +11,11 @@ class ProfileHeader extends StatelessWidget {
     required this.isSender,
     required this.isKycVerified,
     required this.isProAccount,
-    required this.totalTrips,
-    required this.totalShipments,
-    this.isLoadingStats = false,
-    this.onNotificationTap,
-    this.onSettingsTap,
+    this.phoneNumber,
+    this.email,
+    this.city,
+    this.profileCompletionPercent = 0.0,
+    this.onEditProfile,
     this.onRoleSwitch,
   });
 
@@ -27,11 +25,11 @@ class ProfileHeader extends StatelessWidget {
   final bool isSender;
   final bool isKycVerified;
   final bool isProAccount;
-  final int totalTrips;
-  final int totalShipments;
-  final bool isLoadingStats;
-  final VoidCallback? onNotificationTap;
-  final VoidCallback? onSettingsTap;
+  final String? phoneNumber;
+  final String? email;
+  final String? city;
+  final double profileCompletionPercent;
+  final VoidCallback? onEditProfile;
   final ValueChanged<ActiveRole>? onRoleSwitch;
 
   @override
@@ -42,151 +40,236 @@ class ProfileHeader extends StatelessWidget {
 
     return Container(
       width: double.infinity,
+      color: cs.surface,
       padding: EdgeInsets.fromLTRB(
         DonySpacing.lg,
         topPad + DonySpacing.lg,
         DonySpacing.lg,
         DonySpacing.md,
       ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [cs.primary, DonyColors.blue900],
-        ),
-      ),
-      child: Stack(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            mainAxisSize: MainAxisSize.min,
+          // ── Row : avatar + infos + bouton édition ────────────────────
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Avatar + ring ─────────────────────────────────────────
-              Container(
-                padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: activeRole == ActiveRole.traveler
-                        ? DonyColors.warning
-                        : DonyColors.surface,
-                    width: 3,
+              DonyAvatar(
+                name: displayName,
+                size: DonyAvatarSize.xl,
+                verified: isKycVerified,
+                pro: isProAccount,
+              ),
+              const SizedBox(width: DonySpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Nom + badge VÉRIFIÉ / PRO
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            displayName,
+                            style: tt.headlineMedium?.copyWith(
+                              color: cs.onSurface,
+                              fontWeight: FontWeight.w800,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (isKycVerified) ...[
+                          const SizedBox(width: DonySpacing.xs),
+                          _BadgeLabel(isPro: isProAccount),
+                        ],
+                      ],
+                    ),
+                    if (city != null && city!.isNotEmpty) ...[
+                      const SizedBox(height: DonySpacing.xxs),
+                      Text(
+                        city!,
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: DonySpacing.sm),
+                    // Chips tél / email / KYC
+                    _ContactChips(
+                      phoneNumber: phoneNumber,
+                      email: email,
+                      isKycVerified: isKycVerified,
+                    ),
+                  ],
+                ),
+              ),
+              // Bouton édition
+              GestureDetector(
+                onTap: onEditProfile,
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHighest,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.edit_rounded,
+                    size: 15,
+                    color: cs.onSurfaceVariant,
                   ),
                 ),
-                child: DonyAvatar(
-                  name: displayName,
-                  size: DonyAvatarSize.xl,
-                  verified: isKycVerified,
-                  pro: isProAccount,
-                ),
-              ),
-              const SizedBox(height: DonySpacing.md),
-
-              // ── Nom ───────────────────────────────────────────────────
-              Text(
-                displayName,
-                style: tt.headlineMedium?.copyWith(
-                  color: DonyColors.textOnBrand,
-                  fontWeight: FontWeight.w700,
-                ),
-                textAlign: TextAlign.center,
-              ),
-
-              // ── Badge KYC ─────────────────────────────────────────────
-              if (isKycVerified) ...[
-                const SizedBox(height: DonySpacing.xs),
-                _KycBadge(isPro: isProAccount),
-              ],
-
-              const SizedBox(height: DonySpacing.md),
-
-              // ── Pill switcher style B ─────────────────────────────────
-              if (isTraveler && isSender)
-                _RolePillB(
-                  activeRole: activeRole,
-                  onRoleSwitch: onRoleSwitch,
-                ),
-
-              const SizedBox(height: DonySpacing.lg),
-
-              // ── Stats glassmorphisme ───────────────────────────────────
-              _GlassStats(
-                activeRole: activeRole,
-                totalTrips: totalTrips,
-                totalShipments: totalShipments,
-                isLoading: isLoadingStats,
               ),
             ],
           ),
 
-          // ── Notification bell (uniquement si callback fourni) ─────────
-          if (onNotificationTap != null)
-            Positioned(
-              top: 0,
-              right: onSettingsTap != null ? 48 : 0,
-              child: IconButton(
-                icon: const Icon(
-                  Icons.notifications_outlined,
-                  color: DonyColors.textOnBrand,
-                ),
-                onPressed: onNotificationTap,
-                tooltip: 'Notifications',
-              ),
-            ),
+          const SizedBox(height: DonySpacing.md),
 
-          // ── Settings icon (uniquement si callback fourni) ─────────────
-          if (onSettingsTap != null)
-            Positioned(
-              top: 0,
-              right: 0,
-              child: IconButton(
-                icon: const Icon(
-                  Icons.settings_outlined,
-                  color: DonyColors.textOnBrand,
-                ),
-                onPressed: onSettingsTap,
-                tooltip: 'Paramètres',
-              ),
-            ),
+          // ── Toggle rôle (uniquement si double rôle) ───────────────────
+          if (isTraveler && isSender) ...[
+            _RolePill(activeRole: activeRole, onRoleSwitch: onRoleSwitch),
+            const SizedBox(height: DonySpacing.md),
+          ],
+
+          // ── Barre de complétion du profil ─────────────────────────────
+          _ProgressBar(
+            percent: profileCompletionPercent,
+            isPro: isProAccount,
+          ),
         ],
       ),
     );
   }
 }
 
-// ── KYC Badge ─────────────────────────────────────────────────────────────────
+// ── Badge label VÉRIFIÉ / PRO ─────────────────────────────────────────────────
 
-const _kKycBadgeBlue = DonyColors.kycBadgeBlue;
-const _kKycBadgeGold = DonyColors.kycBadgeGold;
-
-class _KycBadge extends StatelessWidget {
-  const _KycBadge({required this.isPro});
-
+class _BadgeLabel extends StatelessWidget {
+  const _BadgeLabel({required this.isPro});
   final bool isPro;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final accent = isPro ? _kKycBadgeGold : _kKycBadgeBlue;
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.md,
-        vertical: DonySpacing.xs,
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs,
       ),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.18),
+        color: isPro ? DonyColors.amberLight : DonyColors.blue50,
         borderRadius: BorderRadius.circular(DonyRadius.full),
-        border: Border.all(color: accent.withValues(alpha: 0.6)),
+      ),
+      child: Text(
+        isPro ? 'PRO' : 'VÉRIFIÉ',
+        style: tt.labelSmall?.copyWith(
+          color: isPro ? DonyColors.amberDark : DonyColors.blue700,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Chips contact ─────────────────────────────────────────────────────────────
+
+class _ContactChips extends StatelessWidget {
+  const _ContactChips({
+    this.phoneNumber,
+    this.email,
+    required this.isKycVerified,
+  });
+
+  final String? phoneNumber;
+  final String? email;
+  final bool isKycVerified;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasPhone = phoneNumber != null && phoneNumber!.isNotEmpty;
+    final hasEmail = email != null && email!.isNotEmpty;
+
+    return Wrap(
+      spacing: DonySpacing.xs,
+      runSpacing: DonySpacing.xs,
+      children: [
+        if (hasPhone)
+          const _Chip(
+            label: 'Tél.',
+            icon: Icons.phone_rounded,
+            bg: DonyColors.success50,
+            fg: DonyColors.success700,
+          )
+        else
+          const _Chip(
+            label: 'Tél. manquant',
+            icon: Icons.phone_outlined,
+            bg: DonyColors.neutral100,
+            fg: DonyColors.neutral500,
+          ),
+        if (hasEmail)
+          const _Chip(
+            label: 'Email ✓',
+            icon: Icons.email_rounded,
+            bg: DonyColors.success50,
+            fg: DonyColors.success700,
+          )
+        else
+          const _Chip(
+            label: 'Email manquant',
+            icon: Icons.email_outlined,
+            bg: DonyColors.warning50,
+            fg: DonyColors.warning700,
+          ),
+        if (isKycVerified)
+          const _Chip(
+            label: 'KYC ✓',
+            icon: Icons.verified_user_rounded,
+            bg: DonyColors.blue50,
+            fg: DonyColors.blue700,
+          ),
+      ],
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  const _Chip({
+    required this.label,
+    required this.icon,
+    required this.bg,
+    required this.fg,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color bg;
+  final Color fg;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs + 1,
+      ),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.verified_rounded, color: accent, size: 13),
-          const SizedBox(width: DonySpacing.xs),
+          Icon(icon, size: 11, color: fg),
+          const SizedBox(width: 3),
           Text(
-            isPro ? 'Profil pro vérifié' : 'Identité vérifiée',
-            style: tt.labelSmall?.copyWith(
-              color: DonyColors.textOnBrand,
-              fontWeight: FontWeight.w600,
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: fg,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -195,37 +278,37 @@ class _KycBadge extends StatelessWidget {
   }
 }
 
-// ── Role Pill Style B ─────────────────────────────────────────────────────────
+// ── Toggle rôle ───────────────────────────────────────────────────────────────
 
-class _RolePillB extends StatelessWidget {
-  const _RolePillB({required this.activeRole, this.onRoleSwitch});
+class _RolePill extends StatelessWidget {
+  const _RolePill({required this.activeRole, this.onRoleSwitch});
 
   final ActiveRole activeRole;
   final ValueChanged<ActiveRole>? onRoleSwitch;
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.18),
+        color: cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(DonyRadius.full),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _PillBTab(
-            emoji: '🧭',
-            label: 'Voyageur',
-            isActive: activeRole == ActiveRole.traveler,
-            onTap: () => onRoleSwitch?.call(ActiveRole.traveler),
-          ),
-          _PillBTab(
+          _PillTab(
             emoji: '📦',
             label: 'Expéditeur',
             isActive: activeRole == ActiveRole.sender,
             onTap: () => onRoleSwitch?.call(ActiveRole.sender),
+          ),
+          _PillTab(
+            emoji: '✈️',
+            label: 'Voyageur',
+            isActive: activeRole == ActiveRole.traveler,
+            onTap: () => onRoleSwitch?.call(ActiveRole.traveler),
           ),
         ],
       ),
@@ -233,8 +316,8 @@ class _RolePillB extends StatelessWidget {
   }
 }
 
-class _PillBTab extends StatelessWidget {
-  const _PillBTab({
+class _PillTab extends StatelessWidget {
+  const _PillTab({
     required this.emoji,
     required this.label,
     required this.isActive,
@@ -249,6 +332,7 @@ class _PillBTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -259,21 +343,28 @@ class _PillBTab extends StatelessWidget {
           vertical: DonySpacing.sm,
         ),
         decoration: BoxDecoration(
-          color: isActive ? Colors.white : Colors.transparent,
+          color: isActive ? cs.surface : Colors.transparent,
           borderRadius: BorderRadius.circular(DonyRadius.full),
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                    color: cs.shadow,
+                    blurRadius: 6,
+                    offset: const Offset(0, 1),
+                  ),
+                ]
+              : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 14)),
+            Text(emoji, style: const TextStyle(fontSize: 13)),
             const SizedBox(width: DonySpacing.xs),
             Text(
               label,
               style: tt.labelMedium?.copyWith(
-                color: isActive
-                    ? DonyColors.primary
-                    : DonyColors.textOnBrand.withValues(alpha: 0.8),
-                fontWeight: FontWeight.w600,
+                color: isActive ? cs.primary : cs.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
@@ -283,96 +374,53 @@ class _PillBTab extends StatelessWidget {
   }
 }
 
-// ── Glass Stats ───────────────────────────────────────────────────────────────
+// ── Barre de progression ──────────────────────────────────────────────────────
 
-class _GlassStats extends StatelessWidget {
-  const _GlassStats({
-    required this.activeRole,
-    required this.totalTrips,
-    required this.totalShipments,
-    required this.isLoading,
-  });
+class _ProgressBar extends StatelessWidget {
+  const _ProgressBar({required this.percent, required this.isPro});
 
-  final ActiveRole activeRole;
-  final int totalTrips;
-  final int totalShipments;
-  final bool isLoading;
-
-  @override
-  Widget build(BuildContext context) {
-    final isTraveler = activeRole == ActiveRole.traveler;
-    final stat1Value = isLoading ? '—' : '${isTraveler ? totalTrips : totalShipments}';
-    final stat1Label = isTraveler ? 'Trajets' : 'Envois';
-    final stat3Value = isTraveler ? '98%' : '0€';
-    final stat3Label = isTraveler ? 'Livraison' : 'Économisés';
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(DonyRadius.card),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: DonySpacing.base,
-            vertical: DonySpacing.md,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(DonyRadius.card),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
-          ),
-          child: Row(
-            children: [
-              Expanded(child: _GlassStat(value: stat1Value, label: stat1Label)),
-              _GlassStatDivider(),
-              const Expanded(child: _GlassStat(value: '4.9', label: 'Ma note')),
-              _GlassStatDivider(),
-              Expanded(child: _GlassStat(value: stat3Value, label: stat3Label)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _GlassStat extends StatelessWidget {
-  const _GlassStat({required this.value, required this.label});
-
-  final String value;
-  final String label;
+  final double percent;
+  final bool isPro;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final pct = percent.clamp(0.0, 1.0);
+    final isComplete = pct >= 1.0;
+    final barColor = isPro ? DonyColors.starGold : cs.primary;
+    final pctLabel = isComplete ? '100% ✓' : '${(pct * 100).round()}%';
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          value,
-          style: tt.titleLarge?.copyWith(
-            color: DonyColors.textOnBrand,
-            fontWeight: FontWeight.w800,
-          ),
+        Row(
+          children: [
+            Text(
+              'Profil complet',
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const Spacer(),
+            Text(
+              pctLabel,
+              style: tt.labelSmall?.copyWith(
+                color: barColor,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: DonySpacing.xxs),
-        Text(
-          label,
-          style: tt.labelSmall?.copyWith(
-            color: DonyColors.textOnBrand.withValues(alpha: 0.7),
+        const SizedBox(height: DonySpacing.xs),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(DonyRadius.full),
+          child: LinearProgressIndicator(
+            value: pct,
+            backgroundColor: cs.outline.withValues(alpha: 0.25),
+            valueColor: AlwaysStoppedAnimation<Color>(barColor),
+            minHeight: 5,
           ),
         ),
       ],
-    );
-  }
-}
-
-class _GlassStatDivider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 32,
-      color: DonyColors.textOnBrand.withValues(alpha: 0.2),
-      margin: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
     );
   }
 }

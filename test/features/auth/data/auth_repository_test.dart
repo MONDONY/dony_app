@@ -26,10 +26,9 @@ void main() {
   test('register delegates to datasource', () async {
     when(() => mockDs.register(
           phoneNumber: any(named: 'phoneNumber'),
-          roles: any(named: 'roles'),
         )).thenAnswer((_) async => _user);
 
-    final result = await repo.register(phoneNumber: '+33612345678', roles: ['SENDER']);
+    final result = await repo.register(phoneNumber: '+33612345678');
     expect(result.id, 'u1');
   });
 
@@ -57,5 +56,36 @@ void main() {
 
     final result = await repo.updateProfile(firstName: 'Amadou');
     expect(result.id, 'u1');
+  });
+
+  test('sendEmailOtp delegates to datasource', () async {
+    when(() => mockDs.sendEmailOtp('user@example.com'))
+        .thenAnswer((_) async {});
+
+    await expectLater(repo.sendEmailOtp('user@example.com'), completes);
+    verify(() => mockDs.sendEmailOtp('user@example.com')).called(1);
+  });
+
+  test('verifyEmailOtp delegates to datasource', () async {
+    when(() => mockDs.verifyEmailOtp('user@example.com', '123456'))
+        .thenAnswer((_) async => 'fake_custom_token');
+
+    final token = await repo.verifyEmailOtp('user@example.com', '123456');
+    expect(token, 'fake_custom_token');
+    verify(() => mockDs.verifyEmailOtp('user@example.com', '123456')).called(1);
+  });
+
+  test('registerWithEmail delegates to datasource', () async {
+    when(() => mockDs.registerWithEmail(
+          email: 'user@example.com',
+        )).thenAnswer((_) async => _user);
+
+    final result = await repo.registerWithEmail(
+      email: 'user@example.com',
+    );
+    expect(result.id, 'u1');
+    verify(() => mockDs.registerWithEmail(
+          email: 'user@example.com',
+        )).called(1);
   });
 }

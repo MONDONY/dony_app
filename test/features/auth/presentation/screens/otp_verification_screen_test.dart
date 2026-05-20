@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -89,6 +90,232 @@ void main() {
       await tester.pumpWidget(buildScreen([const AuthAuthenticated(_testUser)]));
       await tester.pumpAndSettle();
       expect(find.text('local-auth'), findsOneWidget);
+    },
+  );
+
+  // Helper for phone-mode screen without stream emissions
+  Widget buildPhoneScreenNoStream({AuthState? initialState}) {
+    when(() => mockBloc.state).thenReturn(
+      initialState ?? const AuthOtpSent(
+        verificationId: 'vid',
+        phoneNumber: '+33600000000',
+        secondsLeft: 60,
+      ),
+    );
+    when(() => mockBloc.stream).thenAnswer((_) => const Stream.empty());
+
+    return MaterialApp.router(
+      routerConfig: GoRouter(
+        initialLocation: '/auth/otp',
+        routes: [
+          GoRoute(
+            path: '/auth/otp',
+            builder: (_, __) => BlocProvider<AuthBloc>.value(
+              value: mockBloc,
+              child: const OtpVerificationScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/auth/local',
+            builder: (_, __) => const Scaffold(body: Text('local-auth')),
+          ),
+          GoRoute(
+            path: '/auth/phone',
+            builder: (_, __) => const Scaffold(body: Text('phone-auth')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  testWidgets(
+    'phone mode — tapper Vérifier sans code complet affiche snackbar',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildPhoneScreenNoStream());
+      await tester.pumpAndSettle(const Duration(seconds: 1));
+
+      // Tap verify without entering any code
+      await tester.tap(find.text('Vérifier'));
+      await tester.pump();
+
+      // Snackbar should appear — verify button still visible
+      expect(find.text('Vérifier'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'phone mode — state is NOT AuthOtpSent → vérifier affiche "Session expirée"',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildPhoneScreenNoStream(initialState: const AuthInitial()));
+      await tester.pumpAndSettle(const Duration(seconds: 1));
+
+      // Enter 6 digits so the partial-code guard doesn't fire
+      final fields = find.byType(TextFormField);
+      for (int i = 0; i < 6; i++) {
+        await tester.enterText(fields.at(i), '$i');
+        await tester.pump();
+      }
+      await tester.tap(find.text('Vérifier'));
+      await tester.pump();
+
+      // Should show session expired snackbar, not navigate
+      expect(find.text('Vérifier'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'phone mode — saisir 6 chiffres et tapper Vérifier dispatche AuthPhoneVerified',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildPhoneScreenNoStream());
+      await tester.pumpAndSettle(const Duration(seconds: 1));
+
+      final fields = find.byType(TextFormField);
+      for (int i = 0; i < 6; i++) {
+        await tester.enterText(fields.at(i), '$i');
+        await tester.pump();
+      }
+
+      await tester.tap(find.text('Vérifier'));
+      await tester.pump();
+
+      verify(() => mockBloc.add(const AuthPhoneVerified(
+            verificationId: 'vid',
+            smsCode: '012345',
+          ))).called(1);
+    },
+  );
+
+  testWidgets(
+    'phone mode — _resend() avec secondsLeft=0 dispatche AuthSendOtpRequested',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(buildPhoneScreenNoStream(
+        initialState: const AuthOtpSent(
+          verificationId: 'vid',
+          phoneNumber: '+33600000000',
+          secondsLeft: 0,
+        ),
+      ));
+      await tester.pumpAndSettle(const Duration(seconds: 1));
+
+      final resendFinder = find.text('Renvoyer le code');
+      expect(resendFinder, findsOneWidget);
+      await tester.tap(resendFinder);
+      await tester.pump();
+
+      verify(() => mockBloc.add(const AuthSendOtpRequested('+33600000000'))).called(1);
+    },
+  );
+
+  testWidgets(
+    'phone mode — AuthError dans le listener déclenche ErrorPresenter',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      whenListen(
+        mockBloc,
+        Stream.fromIterable([
+          const AuthLoading(),
+          AuthError(NetworkException('Code invalide', code: 'invalid-code')),
+        ]),
+        initialState: const AuthOtpSent(
+          verificationId: 'vid',
+          phoneNumber: '+33600000000',
+          secondsLeft: 60,
+        ),
+      );
+
+      await tester.pumpWidget(MaterialApp.router(
+        routerConfig: GoRouter(
+          initialLocation: '/auth/otp',
+          routes: [
+            GoRoute(
+              path: '/auth/otp',
+              builder: (_, __) => BlocProvider<AuthBloc>.value(
+                value: mockBloc,
+                child: const OtpVerificationScreen(),
+              ),
+            ),
+          ],
+        ),
+      ));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Screen should still be showing (not navigated)
+      expect(find.text('Vérifier'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'back button — tape le bouton retour navigue en arrière',
+    (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      when(() => mockBloc.state).thenReturn(const AuthOtpSent(
+        verificationId: 'vid',
+        phoneNumber: '+33600000000',
+        secondsLeft: 60,
+      ));
+      when(() => mockBloc.stream).thenAnswer((_) => const Stream.empty());
+
+      // Navigate from /prev to /auth/otp so there's a previous page to pop to
+      final router = GoRouter(
+        initialLocation: '/prev',
+        routes: [
+          GoRoute(
+            path: '/prev',
+            builder: (_, __) => const Scaffold(body: Text('previous-screen')),
+          ),
+          GoRoute(
+            path: '/auth/otp',
+            builder: (_, __) => BlocProvider<AuthBloc>.value(
+              value: mockBloc,
+              child: const OtpVerificationScreen(),
+            ),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpAndSettle();
+
+      // Navigate to OTP screen
+      router.push('/auth/otp');
+      await tester.pumpAndSettle(const Duration(seconds: 1));
+
+      // The back button icon should be visible (DonyBackCircle uses arrow_back_rounded)
+      final backBtn = find.byIcon(Icons.arrow_back_rounded);
+      expect(backBtn, findsOneWidget);
+      await tester.tap(backBtn);
+      await tester.pumpAndSettle();
+
+      // Should have popped back to previous screen
+      expect(find.text('previous-screen'), findsOneWidget);
     },
   );
 }

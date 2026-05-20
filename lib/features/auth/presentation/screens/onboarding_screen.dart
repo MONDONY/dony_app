@@ -1,9 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/features/auth/bloc/auth_bloc.dart';
-import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class OnboardingScreen extends StatelessWidget {
@@ -19,8 +16,7 @@ class OnboardingScreen extends StatelessWidget {
   ];
 
   void _proceed(BuildContext context) {
-    context.read<AuthBloc>().add(const OnboardingCompleted());
-    context.go('/auth/phone');
+    context.go('/auth/method');
   }
 
   @override
@@ -125,8 +121,10 @@ class OnboardingScreen extends StatelessWidget {
                 ),
               ),
 
-              // ── Pinned CTAs ────────────────────────────────────────────
-              _OnboardingFooter(onSender: () => _proceed(context)),
+              // ── Pinned CTA ─────────────────────────────────────────────
+              _OnboardingFooter(
+                onProceed: () => _proceed(context),
+              ),
             ],
           ),
         ),
@@ -197,8 +195,8 @@ class _FeatureCard extends StatelessWidget {
 // ── Bottom CTAs + footer ──────────────────────────────────────────────────────
 
 class _OnboardingFooter extends StatelessWidget {
-  const _OnboardingFooter({required this.onSender});
-  final VoidCallback onSender;
+  const _OnboardingFooter({required this.onProceed});
+  final VoidCallback onProceed;
 
   @override
   Widget build(BuildContext context) {
@@ -217,17 +215,9 @@ class _OnboardingFooter extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           DonyButton(
-            label: 'J\'envoie un colis',
-            onPressed: onSender,
+            label: 'Commencer',
+            onPressed: onProceed,
           ).animate().fadeIn(delay: 320.ms).slideY(begin: 0.05, curve: Curves.easeOutCubic),
-
-          const SizedBox(height: DonySpacing.sm),
-
-          DonyButton(
-            label: 'Je suis voyageur',
-            onPressed: onSender,
-            variant: DonyButtonVariant.ghost,
-          ).animate().fadeIn(delay: 360.ms),
 
           const SizedBox(height: DonySpacing.md),
 
@@ -257,7 +247,7 @@ class _OnboardingFooter extends StatelessWidget {
               ],
             ),
             textAlign: TextAlign.center,
-          ).animate().fadeIn(delay: 400.ms),
+          ).animate().fadeIn(delay: 360.ms),
         ],
       ),
     );

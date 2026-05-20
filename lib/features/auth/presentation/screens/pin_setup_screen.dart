@@ -89,6 +89,15 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
             padding: EdgeInsets.symmetric(horizontal: h),
             child: Column(
               children: [
+                const SizedBox(height: DonySpacing.md),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: DonyStepPill(
+                    current: 3,
+                    total: 3,
+                    label: 'Code PIN',
+                  ),
+                ),
                 const Spacer(flex: 2),
                 _buildHeader(cs, tt),
                 const Spacer(flex: 2),

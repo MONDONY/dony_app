@@ -9,12 +9,12 @@ Widget _buildHeader({
   bool isTraveler = false,
   bool isSender = true,
   bool isKycVerified = false,
-  int totalTrips = 0,
-  int totalShipments = 0,
-  bool isLoadingStats = false,
   bool isProAccount = false,
-  VoidCallback? onNotificationTap,
-  VoidCallback? onSettingsTap,
+  String? phoneNumber,
+  String? email,
+  String? city,
+  double profileCompletionPercent = 0.0,
+  VoidCallback? onEditProfile,
   ValueChanged<ActiveRole>? onRoleSwitch,
 }) {
   return MaterialApp(
@@ -27,11 +27,11 @@ Widget _buildHeader({
         isSender: isSender,
         isKycVerified: isKycVerified,
         isProAccount: isProAccount,
-        totalTrips: totalTrips,
-        totalShipments: totalShipments,
-        isLoadingStats: isLoadingStats,
-        onNotificationTap: onNotificationTap,
-        onSettingsTap: onSettingsTap,
+        phoneNumber: phoneNumber,
+        email: email,
+        city: city,
+        profileCompletionPercent: profileCompletionPercent,
+        onEditProfile: onEditProfile,
         onRoleSwitch: onRoleSwitch,
       ),
     ),
@@ -46,16 +46,71 @@ void main() {
       expect(find.text('Ibrahima Diallo'), findsOneWidget);
     });
 
-    testWidgets('shows KYC verified badge when isKycVerified true', (tester) async {
+    testWidgets('shows VÉRIFIÉ badge when isKycVerified true', (tester) async {
       await tester.pumpWidget(_buildHeader(isKycVerified: true));
       await tester.pump();
-      expect(find.text('Identité vérifiée'), findsOneWidget);
+      expect(find.text('VÉRIFIÉ'), findsOneWidget);
     });
 
-    testWidgets('does NOT show KYC badge when isKycVerified false', (tester) async {
+    testWidgets('does NOT show VÉRIFIÉ badge when isKycVerified false', (tester) async {
       await tester.pumpWidget(_buildHeader(isKycVerified: false));
       await tester.pump();
-      expect(find.text('Identité vérifiée'), findsNothing);
+      expect(find.text('VÉRIFIÉ'), findsNothing);
+    });
+
+    testWidgets('shows PRO badge when isProAccount and isKycVerified true', (tester) async {
+      await tester.pumpWidget(_buildHeader(isKycVerified: true, isProAccount: true));
+      await tester.pump();
+      expect(find.text('PRO'), findsOneWidget);
+      expect(find.text('VÉRIFIÉ'), findsNothing);
+    });
+
+    testWidgets('shows city when provided', (tester) async {
+      await tester.pumpWidget(_buildHeader(city: 'Paris'));
+      await tester.pump();
+      expect(find.text('Paris'), findsOneWidget);
+    });
+
+    testWidgets('does NOT show city when null', (tester) async {
+      await tester.pumpWidget(_buildHeader());
+      await tester.pump();
+      expect(find.text('Paris'), findsNothing);
+    });
+
+    testWidgets('shows phone chip with "Tél." when phoneNumber provided', (tester) async {
+      await tester.pumpWidget(_buildHeader(phoneNumber: '+33612345678'));
+      await tester.pump();
+      expect(find.text('Tél.'), findsOneWidget);
+    });
+
+    testWidgets('shows "Tél. manquant" chip when phoneNumber absent', (tester) async {
+      await tester.pumpWidget(_buildHeader());
+      await tester.pump();
+      expect(find.text('Tél. manquant'), findsOneWidget);
+    });
+
+    testWidgets('shows "Email ✓" chip when email provided', (tester) async {
+      await tester.pumpWidget(_buildHeader(email: 'test@example.com'));
+      await tester.pump();
+      expect(find.text('Email ✓'), findsOneWidget);
+    });
+
+    testWidgets('shows "Email manquant" chip when email absent', (tester) async {
+      await tester.pumpWidget(_buildHeader());
+      await tester.pump();
+      expect(find.text('Email manquant'), findsOneWidget);
+    });
+
+    testWidgets('shows KYC chip when isKycVerified true', (tester) async {
+      await tester.pumpWidget(_buildHeader(isKycVerified: true));
+      await tester.pump();
+      expect(find.text('KYC ✓'), findsOneWidget);
+    });
+
+    testWidgets('does NOT show KYC chip when isKycVerified false', (tester) async {
+      await tester.pumpWidget(_buildHeader(isKycVerified: false));
+      await tester.pump();
+      expect(find.text('KYC ✓'), findsNothing);
     });
 
     testWidgets('shows pill switcher when user has both roles', (tester) async {
@@ -71,35 +126,23 @@ void main() {
       expect(find.text('Voyageur'), findsNothing);
     });
 
-    testWidgets('shows dash for stats when isLoadingStats true', (tester) async {
-      await tester.pumpWidget(_buildHeader(isLoadingStats: true));
+    testWidgets('shows profile completion percentage', (tester) async {
+      await tester.pumpWidget(_buildHeader(profileCompletionPercent: 0.5));
       await tester.pump();
-      expect(find.text('—'), findsOneWidget);
+      expect(find.text('50%'), findsOneWidget);
     });
 
-    testWidgets('shows trip count for traveler role', (tester) async {
-      await tester.pumpWidget(_buildHeader(
-        role: ActiveRole.traveler,
-        totalTrips: 5,
-      ));
+    testWidgets('shows 100% ✓ when profile is complete', (tester) async {
+      await tester.pumpWidget(_buildHeader(profileCompletionPercent: 1.0));
       await tester.pump();
-      expect(find.text('5'), findsOneWidget);
+      expect(find.text('100% ✓'), findsOneWidget);
     });
 
-    testWidgets('shows shipment count for sender role', (tester) async {
-      await tester.pumpWidget(_buildHeader(
-        role: ActiveRole.sender,
-        totalShipments: 7,
-      ));
-      await tester.pump();
-      expect(find.text('7'), findsOneWidget);
-    });
-
-    testWidgets('calls onNotificationTap when bell tapped', (tester) async {
+    testWidgets('edit button calls onEditProfile when tapped', (tester) async {
       var tapped = false;
-      await tester.pumpWidget(_buildHeader(onNotificationTap: () => tapped = true));
+      await tester.pumpWidget(_buildHeader(onEditProfile: () => tapped = true));
       await tester.pump();
-      await tester.tap(find.byTooltip('Notifications'));
+      await tester.tap(find.byIcon(Icons.edit_rounded));
       expect(tapped, isTrue);
     });
 
@@ -116,29 +159,17 @@ void main() {
       expect(switched, equals(ActiveRole.traveler));
     });
 
-    testWidgets('settings icon absent when onSettingsTap is null', (tester) async {
-      await tester.pumpWidget(_buildHeader());
-      await tester.pump();
-      expect(find.byTooltip('Paramètres'), findsNothing);
-    });
-
-    testWidgets('calls onSettingsTap when settings button tapped', (tester) async {
-      var tapped = false;
-      await tester.pumpWidget(_buildHeader(onSettingsTap: () => tapped = true));
-      await tester.pump();
-      await tester.tap(find.byTooltip('Paramètres'));
-      expect(tapped, isTrue);
-    });
-
-    testWidgets('both notification and settings icons visible when both callbacks provided',
-        (tester) async {
+    testWidgets('calls onRoleSwitch with sender when Expéditeur tab tapped', (tester) async {
+      ActiveRole? switched;
       await tester.pumpWidget(_buildHeader(
-        onNotificationTap: () {},
-        onSettingsTap: () {},
+        isTraveler: true,
+        isSender: true,
+        role: ActiveRole.traveler,
+        onRoleSwitch: (r) => switched = r,
       ));
       await tester.pump();
-      expect(find.byTooltip('Notifications'), findsOneWidget);
-      expect(find.byTooltip('Paramètres'), findsOneWidget);
+      await tester.tap(find.text('Expéditeur'));
+      expect(switched, equals(ActiveRole.sender));
     });
   });
 }

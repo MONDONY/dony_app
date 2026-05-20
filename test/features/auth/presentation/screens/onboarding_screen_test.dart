@@ -33,8 +33,8 @@ GoRouter _buildRouter(AuthBloc authBloc) => GoRouter(routes: [
         ),
       ),
       GoRoute(
-        path: '/auth/phone',
-        builder: (_, __) => const Scaffold(body: Text('Phone Auth')),
+        path: '/auth/method',
+        builder: (_, __) => const Scaffold(body: Text('Auth Method')),
       ),
     ]);
 
@@ -80,12 +80,11 @@ void main() {
     await mockAuthBloc.close();
   });
 
-  testWidgets('OnboardingScreen affiche les 2 CTAs', (tester) async {
+  testWidgets('OnboardingScreen affiche le CTA Commencer', (tester) async {
     await _pump(tester, mockAuthBloc);
 
-    expect(find.text('J\'envoie un colis'), findsOneWidget);
-    expect(find.text('Je suis voyageur'), findsOneWidget);
-    expect(find.byType(DonyButton), findsNWidgets(2));
+    expect(find.text('Commencer'), findsOneWidget);
+    expect(find.byType(DonyButton), findsOneWidget);
   });
 
   testWidgets('OnboardingScreen affiche 3 feature cards', (tester) async {
@@ -121,32 +120,17 @@ void main() {
     expect(find.textContaining('politique de confidentialité'), findsOneWidget);
   });
 
-  testWidgets('tapping primary CTA dispatches OnboardingCompleted and navigates to /auth/phone',
+  testWidgets('tapping CTA Commencer navigates to /auth/method',
       (tester) async {
     await _pump(tester, mockAuthBloc);
 
     await tester.runAsync(() async {
-      await tester.tap(find.text("J'envoie un colis"));
+      await tester.tap(find.text('Commencer'));
     });
     await tester.pumpAndSettle();
 
-    verify(() => mockAuthBloc.add(const OnboardingCompleted())).called(1);
-    expect(find.text('Phone Auth'), findsOneWidget);
-    expect(Hive.box('user_prefs').get('onboarding_done'), isTrue);
-  });
-
-  testWidgets('tapping ghost CTA dispatches OnboardingCompleted and navigates to /auth/phone',
-      (tester) async {
-    await _pump(tester, mockAuthBloc);
-
-    await tester.runAsync(() async {
-      await tester.tap(find.text('Je suis voyageur'));
-    });
-    await tester.pumpAndSettle();
-
-    verify(() => mockAuthBloc.add(const OnboardingCompleted())).called(1);
-    expect(find.text('Phone Auth'), findsOneWidget);
-    expect(Hive.box('user_prefs').get('onboarding_done'), isTrue);
+    verifyNever(() => mockAuthBloc.add(const OnboardingCompleted()));
+    expect(find.text('Auth Method'), findsOneWidget);
   });
 
   testWidgets('OnboardingScreen affiche la mascotte joyeuse au-dessus du logo',

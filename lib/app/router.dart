@@ -6,9 +6,11 @@ import 'package:dony/features/auth/presentation/screens/local_auth_screen.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
 import 'package:dony/features/messaging/presentation/chat_screen.dart';
+import 'package:dony/features/auth/presentation/screens/email_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
+import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart';
 import 'package:dony/features/auth/presentation/screens/pin_setup_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
@@ -71,6 +73,8 @@ import 'package:dony/features/recipients/presentation/screens/recipients_screen.
 import 'package:dony/features/profile/presentation/screens/faq_screen.dart';
 import 'package:dony/features/profile/presentation/screens/shipments_history_screen.dart';
 import 'package:dony/features/profile/presentation/screens/support_contact_screen.dart';
+import 'package:dony/features/profile/bloc/traveler_upgrade_bloc.dart';
+import 'package:dony/features/profile/presentation/screens/become_traveler_screen.dart';
 import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
@@ -97,8 +101,11 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 const _publicRoutes = {
   '/splash',
   '/onboarding',
+  '/auth/method',
   '/auth/phone',
   '/auth/otp',
+  '/auth/email',
+  '/auth/email-otp',
   '/auth/pin-setup',
   '/auth/local',
 };
@@ -112,7 +119,7 @@ final appRouter = GoRouter(
     final isPublic =
         _publicRoutes.any((r) => state.matchedLocation.startsWith(r));
     if (!isAuthenticated && !isPublic) {
-      return '/auth/phone';
+      return '/auth/method';
     }
 
     const guardedRoutes = {'/announcements/create'};
@@ -137,12 +144,44 @@ final appRouter = GoRouter(
       builder: (context, state) => const OnboardingScreen(),
     ),
     GoRoute(
+      path: '/auth/method',
+      builder: (context, state) => const AuthMethodScreen(),
+    ),
+    GoRoute(
       path: '/auth/phone',
-      builder: (context, state) => const PhoneAuthScreen(),
+      builder: (context, state) {
+        final extra = state.extra as Map? ?? {};
+        return PhoneAuthScreen(fromProfile: extra['fromProfile'] == true);
+      },
     ),
     GoRoute(
       path: '/auth/otp',
-      builder: (context, state) => const OtpVerificationScreen(),
+      builder: (context, state) {
+        final extra = state.extra as Map? ?? {};
+        return OtpVerificationScreen(
+          mode: OtpMode.phone,
+          fromProfile: extra['fromProfile'] == true,
+          contact: (extra['contact'] as String?) ?? '',
+        );
+      },
+    ),
+    GoRoute(
+      path: '/auth/email',
+      builder: (context, state) {
+        final extra = state.extra as Map? ?? {};
+        return EmailAuthScreen(fromProfile: extra['fromProfile'] == true);
+      },
+    ),
+    GoRoute(
+      path: '/auth/email-otp',
+      builder: (context, state) {
+        final extra = state.extra as Map? ?? {};
+        return OtpVerificationScreen(
+          mode: OtpMode.email,
+          fromProfile: extra['fromProfile'] == true,
+          contact: (extra['email'] as String?) ?? '',
+        );
+      },
     ),
     GoRoute(
       path: '/auth/pin-setup',
@@ -520,6 +559,15 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/profile/upgrade-to-pro',
       builder: (context, state) => const UpgradeToProScreen(),
+    ),
+
+    // ── Become Traveler (hors shell) ─────────────────────────────────
+    GoRoute(
+      path: '/profile/become-traveler',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<TravelerUpgradeBloc>(),
+        child: const BecomeATravelerScreen(),
+      ),
     ),
 
     // ── Referral (hors shell) ─────────────────────────────────────────

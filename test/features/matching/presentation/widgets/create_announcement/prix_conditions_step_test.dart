@@ -12,10 +12,7 @@
 // Les animations flutter_animate sont drainées via pump(200 ms).
 
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/features/auth/bloc/auth_bloc.dart';
-import 'package:dony/features/auth/bloc/auth_event.dart';
-import 'package:dony/features/auth/bloc/auth_state.dart';
-import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_create_announcement_constants.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
@@ -23,6 +20,7 @@ import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:dony/features/payments/cash/data/models/commission_method.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -30,8 +28,9 @@ import 'package:mocktail/mocktail.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
-class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
-    implements AuthBloc {}
+class _MockStripeAccountBloc
+    extends MockBloc<StripeAccountEvent, StripeAccountState>
+    implements StripeAccountBloc {}
 
 class _MockCommissionMethodBloc
     extends MockBloc<CommissionMethodEvent, CommissionMethodState>
@@ -39,23 +38,13 @@ class _MockCommissionMethodBloc
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
-/// Utilisateur avec Stripe configuré (section paiement complète visible).
-final _stripeConfiguredUser = UserModel(
-  id: 'u1',
-  roles: const [],
-  kycStatus: 'VERIFIED',
-  status: 'ACTIVE',
-  stripeAccountStatus: 'ONBOARDING_COMPLETE',
+/// StripeAccountState quand Stripe est configuré (onboarding complet).
+final _stripeConfiguredState = StripeAccountReady(
+  const ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
 );
 
-/// Utilisateur sans Stripe (section paiement en mode "bannière warning").
-final _stripeNotConfiguredUser = UserModel(
-  id: 'u2',
-  roles: const [],
-  kycStatus: 'VERIFIED',
-  status: 'ACTIVE',
-  stripeAccountStatus: 'NOT_CREATED',
-);
+/// StripeAccountState quand Stripe n'est pas encore configuré.
+const _stripeNotConfiguredState = StripeAccountInitial();
 
 const _validCard = CommissionMethod(
   brand: 'visa',
@@ -71,18 +60,17 @@ const _validCard = CommissionMethod(
 /// MaterialApp – Scaffold – MultiBlocProvider – SingleChildScrollView –
 /// PrixConditionsStep.
 ///
-/// [authState] contrôle la section paiement (Stripe configuré ou non).
+/// [stripeState] contrôle la section paiement (Stripe configuré ou non).
 /// [commissionState] contrôle le switch "Espèces".
 Widget _host({
-  AuthState? authState,
+  StripeAccountState? stripeState,
   CommissionMethodState? commissionState,
   double initialAvailableKg = 10,
 }) {
-  final mockAuthBloc = _MockAuthBloc();
-  final resolvedAuthState =
-      authState ?? AuthAuthenticated(_stripeConfiguredUser);
-  when(() => mockAuthBloc.state).thenReturn(resolvedAuthState);
-  when(() => mockAuthBloc.stream).thenAnswer((_) => const Stream.empty());
+  final mockStripeBloc = _MockStripeAccountBloc();
+  final resolvedStripeState = stripeState ?? _stripeConfiguredState;
+  when(() => mockStripeBloc.state).thenReturn(resolvedStripeState);
+  when(() => mockStripeBloc.stream).thenAnswer((_) => const Stream.empty());
 
   final mockCommissionBloc = _MockCommissionMethodBloc();
   final resolvedCommissionState =
@@ -113,7 +101,7 @@ Widget _host({
           BlocProvider<AnnouncementFormBloc>(
             create: (_) => AnnouncementFormBloc(),
           ),
-          BlocProvider<AuthBloc>.value(value: mockAuthBloc),
+          BlocProvider<StripeAccountBloc>.value(value: mockStripeBloc),
           BlocProvider<CommissionMethodBloc>.value(value: mockCommissionBloc),
         ],
         child: SingleChildScrollView(
@@ -137,8 +125,8 @@ Widget _host({
 }
 
 /// Pompe le widget et draine les animations flutter_animate (delay ≤ 180 ms).
-Future<void> _pump(WidgetTester tester, {AuthState? authState, CommissionMethodState? commissionState}) async {
-  await tester.pumpWidget(_host(authState: authState, commissionState: commissionState));
+Future<void> _pump(WidgetTester tester, {StripeAccountState? stripeState, CommissionMethodState? commissionState}) async {
+  await tester.pumpWidget(_host(stripeState: stripeState, commissionState: commissionState));
   await tester.pump(const Duration(milliseconds: 200));
   await tester.pump();
 }
@@ -204,6 +192,7 @@ void main() {
         (tester) async {
       await _pump(
         tester,
+        stripeState: _stripeConfiguredState,
         commissionState: CommissionMethodNotConfigured(),
       );
       final stripeSwitch = find.byKey(const Key('payment-method-stripe'));
@@ -222,6 +211,7 @@ void main() {
         (tester) async {
       await _pump(
         tester,
+        stripeState: _stripeConfiguredState,
         commissionState: CommissionMethodNotConfigured(),
       );
       final cashSwitch = find.byKey(const Key('payment-method-cash'));
@@ -239,6 +229,7 @@ void main() {
         (tester) async {
       await _pump(
         tester,
+        stripeState: _stripeConfiguredState,
         commissionState: CommissionMethodLoaded(_validCard),
       );
       final cashSwitch = find.byKey(const Key('payment-method-cash'));
@@ -256,7 +247,7 @@ void main() {
         (tester) async {
       await _pump(
         tester,
-        authState: AuthAuthenticated(_stripeNotConfiguredUser),
+        stripeState: _stripeNotConfiguredState,
       );
       // La bannière contient "Connectez Stripe"
       expect(find.textContaining('Connectez Stripe'), findsOneWidget);
@@ -326,7 +317,7 @@ void main() {
       // les deux liens/boutons incriminés sont rendus).
       await _pump(
         tester,
-        authState: AuthAuthenticated(_stripeNotConfiguredUser),
+        stripeState: _stripeNotConfiguredState,
         commissionState: CommissionMethodNotConfigured(),
       );
       // Aucun widget Text (ou RichText) ne doit afficher le glyphe →.

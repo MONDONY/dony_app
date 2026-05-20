@@ -89,3 +89,27 @@ class AuthProfileUpdated extends AuthState {
   @override
   List<Object?> get props => [user];
 }
+
+class AuthEmailOtpSent extends AuthState {
+  final String email;
+  final int secondsLeft;
+  const AuthEmailOtpSent(this.email, {this.secondsLeft = 60});
+  AuthEmailOtpSent copyWith({int? secondsLeft}) =>
+      AuthEmailOtpSent(email, secondsLeft: secondsLeft ?? this.secondsLeft);
+  @override
+  List<Object?> get props => [email, secondsLeft];
+}
+
+class AuthEmailOtpVerified extends AuthState {
+  final String email;
+  const AuthEmailOtpVerified(this.email);
+  @override
+  List<Object?> get props => [email];
+}
+
+class AuthOAuthNewUser extends AuthState {
+  final String email;
+  const AuthOAuthNewUser(this.email);
+  @override
+  List<Object?> get props => [email];
+}

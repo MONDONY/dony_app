@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -7,6 +8,7 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/presentation/screens/payout_onboarding_screen.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,7 +20,12 @@ class MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
+class MockStripeAccountBloc
+    extends MockBloc<StripeAccountEvent, StripeAccountState>
+    implements StripeAccountBloc {}
+
 class FakeAuthEvent extends Fake implements AuthEvent {}
+
 
 final _kUser = UserModel(
   id: 'uid-1',
@@ -30,11 +37,16 @@ final _kUser = UserModel(
   stripeAccountStatus: 'NOT_CREATED',
 );
 
-Widget _wrap(PaymentBloc bloc, {MockAuthBloc? authBloc}) {
+Widget _wrap(PaymentBloc bloc, {MockAuthBloc? authBloc, MockStripeAccountBloc? stripeBloc}) {
   final auth = authBloc ?? MockAuthBloc();
   if (authBloc == null) {
     when(() => auth.state).thenReturn(AuthAuthenticated(_kUser));
     when(() => auth.stream).thenAnswer((_) => const Stream.empty());
+  }
+  final stripe = stripeBloc ?? MockStripeAccountBloc();
+  if (stripeBloc == null) {
+    when(() => stripe.state).thenReturn(const StripeAccountInitial());
+    when(() => stripe.stream).thenAnswer((_) => const Stream.empty());
   }
   return MaterialApp.router(
     theme: AppTheme.light,
@@ -45,6 +57,7 @@ Widget _wrap(PaymentBloc bloc, {MockAuthBloc? authBloc}) {
           providers: [
             BlocProvider<AuthBloc>.value(value: auth),
             BlocProvider<PaymentBloc>.value(value: bloc),
+            BlocProvider<StripeAccountBloc>.value(value: stripe),
           ],
           child: const PayoutOnboardingScreen(),
         ),
@@ -54,9 +67,12 @@ Widget _wrap(PaymentBloc bloc, {MockAuthBloc? authBloc}) {
 }
 
 void main() {
-  setUpAll(() => registerFallbackValue(FakeAuthEvent()));
+  setUpAll(() {
+    registerFallbackValue(FakeAuthEvent());
+  });
 
   late MockPaymentBloc mockBloc;
+  late MockStripeAccountBloc mockStripeBloc;
 
   setUp(() {
     mockBloc = MockPaymentBloc();
@@ -65,6 +81,22 @@ void main() {
       Stream.value(const PaymentInitial()),
       initialState: const PaymentInitial(),
     );
+    mockStripeBloc = MockStripeAccountBloc();
+    when(() => mockStripeBloc.state).thenReturn(const StripeAccountInitial());
+    when(() => mockStripeBloc.stream).thenAnswer((_) => const Stream.empty());
+    when(() => mockStripeBloc.add(const StripeAccountStatusRefreshed())).thenReturn(null);
+    // Register in GetIt so the listener in PayoutOnboardingScreen can call
+    // getIt<StripeAccountBloc>() when PaymentOnboardingComplete fires.
+    if (getIt.isRegistered<StripeAccountBloc>()) {
+      getIt.unregister<StripeAccountBloc>();
+    }
+    getIt.registerSingleton<StripeAccountBloc>(mockStripeBloc);
+  });
+
+  tearDown(() {
+    if (getIt.isRegistered<StripeAccountBloc>()) {
+      getIt.unregister<StripeAccountBloc>();
+    }
   });
 
   group('PayoutOnboardingScreen', () {

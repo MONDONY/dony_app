@@ -9,7 +9,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class PhoneAuthScreen extends StatefulWidget {
-  const PhoneAuthScreen({super.key});
+  const PhoneAuthScreen({super.key, this.fromProfile = false});
+
+  final bool fromProfile;
 
   @override
   State<PhoneAuthScreen> createState() => _PhoneAuthScreenState();
@@ -92,7 +94,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         },
         listener: (context, state) {
           if (state is AuthOtpSent) {
-            context.push('/auth/otp');
+            context.push('/auth/otp', extra: {
+              'fromProfile': widget.fromProfile,
+              'contact': state.phoneNumber,
+            });
           } else if (state is AuthError) {
             ErrorPresenter.show(context, state.error);
           }
@@ -115,28 +120,31 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // ── Top bar ────────────────────────────────────
+                  if (!widget.fromProfile) Padding(
+                    padding: EdgeInsets.fromLTRB(h, DonySpacing.md, h, 0),
+                    child: Row(children: [
+                      DonyBackCircle(onTap: () => context.pop()),
+                      const Spacer(),
+                      const DonyStepPill(current: 1, total: 3, label: 'Téléphone'),
+                    ]),
+                  ),
+
                   // ── Scrollable content ─────────────────────────
                   Expanded(
                     child: SingleChildScrollView(
                       physics: const ClampingScrollPhysics(),
                       padding: EdgeInsets.fromLTRB(
-                          h, DonySpacing.huge, h, DonySpacing.xl),
+                          h, DonySpacing.xl, h, DonySpacing.xl),
                       child: DonyLayout.constrained(
                         context,
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const DonyLogo(fontSize: 48),
-                            const SizedBox(height: DonySpacing.lg),
-                            const Center(
-                              child: DonyMascotteAnimated(
-                                type: DonyMascotteType.joyeux,
-                                size: DonyMascotteSize.md,
-                              ),
-                            ),
+                            Center(child: DonyHeroAvatar(emoji: '📱', size: 72)),
                             const SizedBox(height: DonySpacing.xl),
                             Text(
-                              'Bienvenue',
+                              'Ton numéro',
                               style: tt.displayLarge?.copyWith(
                                 color: cs.onSurface,
                                 letterSpacing: -0.8,
@@ -144,7 +152,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             ),
                             const SizedBox(height: DonySpacing.sm),
                             Text(
-                              'Entrez votre numéro pour continuer. Nous vous enverrons un code par SMS.',
+                              'On t\'envoie un code à 6 chiffres par SMS pour vérifier que c\'est bien toi.',
                               style: tt.bodyLarge?.copyWith(
                                 color: cs.onSurfaceVariant,
                                 height: 1.55,
@@ -247,6 +255,28 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                 ],
                               ),
                             ),
+                            const SizedBox(height: DonySpacing.sm),
+                            Center(
+                              child: TextButton(
+                                onPressed: () => context.push('/auth/email'),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: cs.primary,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: DonySpacing.base,
+                                      vertical: DonySpacing.sm),
+                                ),
+                                child: Text(
+                                  'Continuer avec une adresse email',
+                                  style: tt.bodyMedium?.copyWith(
+                                    color: cs.primary,
+                                    fontWeight: FontWeight.w600,
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: cs.primary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: DonySpacing.base),
                           ],
                         ),
                       ),
@@ -257,8 +287,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                   Container(
                     decoration: BoxDecoration(
                       color: Theme.of(context).scaffoldBackgroundColor,
-                      border: Border(
-                          top: BorderSide(color: cs.outline)),
+                      border: Border(top: BorderSide(color: cs.outline)),
                     ),
                     padding: EdgeInsets.fromLTRB(
                         h, DonySpacing.base, h, DonySpacing.base + bottom),
@@ -266,37 +295,28 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         DonyButton(
-                          label: 'Recevoir le code',
+                          label: 'Recevoir le code SMS',
                           onPressed: isLoading ? null : _submit,
                           isLoading: isLoading,
                         ),
-                        const SizedBox(height: DonySpacing.md),
-                        Text.rich(
-                          TextSpan(
-                            style: tt.bodySmall?.copyWith(
-                                color: cs.onSurfaceVariant, height: 1.6),
-                            children: [
-                              const TextSpan(
-                                  text:
-                                      'En continuant, vous acceptez les\n'),
-                              TextSpan(
-                                text: 'Conditions',
-                                style: tt.bodySmall?.copyWith(
-                                  color: cs.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const TextSpan(text: ' et la '),
-                              TextSpan(
-                                text: 'Politique de confidentialité',
-                                style: tt.bodySmall?.copyWith(
-                                  color: cs.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
+                        const SizedBox(height: DonySpacing.sm),
+                        TextButton(
+                          onPressed: () => context.push('/auth/email'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: cs.primary,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: DonySpacing.base,
+                              vertical: DonySpacing.sm,
+                            ),
                           ),
-                          textAlign: TextAlign.center,
+                          child: Text(
+                            'Le SMS n\'arrive pas ? Essaie par email',
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                              decoration: TextDecoration.underline,
+                              decorationColor: cs.onSurfaceVariant,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -310,3 +330,4 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     );
   }
 }
+

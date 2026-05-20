@@ -6,34 +6,29 @@
 // - Ajout d'un type custom "Ce que j'accepte" via CaInlineAddRow
 // - Ajout d'un type refusé via CaInlineAddRow
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dony/features/auth/bloc/auth_bloc.dart';
-import 'package:dony/features/auth/bloc/auth_event.dart';
-import 'package:dony/features/auth/bloc/auth_state.dart';
-import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:dony/features/payments/cash/data/models/commission_method.dart';
+import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
-    implements AuthBloc {}
+class _MockStripeAccountBloc
+    extends MockBloc<StripeAccountEvent, StripeAccountState>
+    implements StripeAccountBloc {}
 
 class _MockCommissionMethodBloc
     extends MockBloc<CommissionMethodEvent, CommissionMethodState>
     implements CommissionMethodBloc {}
 
-final _stripeConfiguredUser = UserModel(
-  id: 'u1',
-  roles: const [],
-  kycStatus: 'VERIFIED',
-  status: 'ACTIVE',
-  stripeAccountStatus: 'ONBOARDING_COMPLETE',
+final _stripeConfiguredState = StripeAccountReady(
+  const ConnectAccountStatus(status: 'ONBOARDING_COMPLETE'),
 );
 
 const _validCard = CommissionMethod(
@@ -45,7 +40,7 @@ const _validCard = CommissionMethod(
 );
 
 Widget _host({
-  AuthState? authState,
+  StripeAccountState? stripeState,
   CommissionMethodState? commissionState,
   ValueNotifier<int>? priceOption,
   ValueNotifier<double>? customPrice,
@@ -59,10 +54,10 @@ Widget _host({
   TextEditingController? refusedCtrl,
   TextEditingController? customPriceCtrl,
 }) {
-  final mockAuthBloc = _MockAuthBloc();
-  final resolvedAuthState = authState ?? AuthAuthenticated(_stripeConfiguredUser);
-  when(() => mockAuthBloc.state).thenReturn(resolvedAuthState);
-  when(() => mockAuthBloc.stream).thenAnswer((_) => const Stream.empty());
+  final mockStripeBloc = _MockStripeAccountBloc();
+  final resolvedStripeState = stripeState ?? _stripeConfiguredState;
+  when(() => mockStripeBloc.state).thenReturn(resolvedStripeState);
+  when(() => mockStripeBloc.stream).thenAnswer((_) => const Stream.empty());
 
   final mockCommissionBloc = _MockCommissionMethodBloc();
   final resolvedCommissionState = commissionState ?? CommissionMethodNotConfigured();
@@ -74,7 +69,7 @@ Widget _host({
       body: MultiBlocProvider(
         providers: [
           BlocProvider<AnnouncementFormBloc>(create: (_) => AnnouncementFormBloc()),
-          BlocProvider<AuthBloc>.value(value: mockAuthBloc),
+          BlocProvider<StripeAccountBloc>.value(value: mockStripeBloc),
           BlocProvider<CommissionMethodBloc>.value(value: mockCommissionBloc),
         ],
         child: SingleChildScrollView(
@@ -101,7 +96,7 @@ Widget _host({
 }
 
 Future<void> _pump(WidgetTester tester, {
-  AuthState? authState,
+  StripeAccountState? stripeState,
   CommissionMethodState? commissionState,
   ValueNotifier<int>? priceOption,
   ValueNotifier<double>? customPrice,
@@ -116,7 +111,7 @@ Future<void> _pump(WidgetTester tester, {
   TextEditingController? customPriceCtrl,
 }) async {
   await tester.pumpWidget(_host(
-    authState: authState,
+    stripeState: stripeState,
     commissionState: commissionState,
     priceOption: priceOption,
     customPrice: customPrice,

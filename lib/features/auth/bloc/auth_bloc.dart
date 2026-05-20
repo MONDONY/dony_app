@@ -8,12 +8,20 @@ import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive/hive.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+
+typedef AppleSignInCallback = Future<AuthorizationCredentialAppleID> Function(
+  List<AppleIDAuthorizationScopes> scopes,
+);
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _authRepository;
   final LocalAuthService _localAuthService;
   final FirebaseAuth _firebaseAuth;
+  final GoogleSignIn _googleSignIn;
+  final AppleSignInCallback _appleSignIn;
 
   String? _pendingPhoneNumber;
   Timer? _otpTimer;
@@ -22,7 +30,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     this._authRepository,
     this._localAuthService, {
     FirebaseAuth? firebaseAuth,
+    GoogleSignIn? googleSignIn,
+    AppleSignInCallback? appleSignIn,
   })  : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
+        _googleSignIn = googleSignIn ?? GoogleSignIn(),
+        _appleSignIn = appleSignIn ??
+            ((scopes) => SignInWithApple.getAppleIDCredential(scopes: scopes)),
         super(const AuthInitial()) {
     on<AuthCheckRequested>(_onCheckRequested);
     on<AuthSendOtpRequested>(_onSendOtpRequested);
@@ -34,6 +47,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<OnboardingCompleted>(_onOnboardingCompleted);
     on<AuthDialCodeChanged>(_onDialCodeChanged);
     on<AuthOtpTimerTicked>(_onOtpTimerTicked);
+    on<AuthGoogleSignInRequested>(_onGoogleSignInRequested);
+    on<AuthAppleSignInRequested>(_onAppleSignInRequested);
+    on<AuthEmailOtpSendRequested>(_onEmailOtpSendRequested);
+    on<AuthEmailOtpVerifyRequested>(_onEmailOtpVerifyRequested);
+    on<AuthRegisterWithEmailRequested>(_onRegisterWithEmailRequested);
+    on<AuthAddPhoneFromProfileRequested>(_onAddPhoneFromProfileRequested);
+    on<AuthAddEmailFromProfileRequested>(_onAddEmailFromProfileRequested);
+    on<AuthUserSynced>(_onUserSynced);
   }
 
   @override
@@ -177,7 +198,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final user = await _authRepository.register(
         phoneNumber: _pendingPhoneNumber ?? '',
-        roles: const ['TRAVELER', 'SENDER'],
       );
       // Nouveau compte → effacer tout PIN résiduel d'un compte précédent
       // (le PIN est lié à l'appareil, pas à l'utilisateur Firebase)
@@ -237,6 +257,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         email: event.email,
         birthDate: event.birthDate,
         city: event.city,
+        phoneNumber: event.phoneNumber,
       );
       emit(AuthProfileUpdated(updatedUser));
     } catch (e) {
@@ -265,6 +286,194 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final current = state;
     if (current is AuthOtpSent && current.secondsLeft > 0) {
       emit(current.copyWith(secondsLeft: current.secondsLeft - 1));
+    } else if (current is AuthEmailOtpSent && current.secondsLeft > 0) {
+      emit(current.copyWith(secondsLeft: current.secondsLeft - 1));
+    }
+  }
+
+  // ─── Email OTP — envoi ────────────────────────────────────────────────────────
+
+  Future<void> _onEmailOtpSendRequested(
+    AuthEmailOtpSendRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      await _authRepository.sendEmailOtp(event.email);
+      emit(AuthEmailOtpSent(event.email, secondsLeft: 60));
+      _otpTimer?.cancel();
+      _otpTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (!isClosed) add(const AuthOtpTimerTicked());
+      });
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
+    }
+  }
+
+  // ─── Email OTP — vérification ─────────────────────────────────────────────────
+
+  Future<void> _onEmailOtpVerifyRequested(
+    AuthEmailOtpVerifyRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      final customToken = await _authRepository.verifyEmailOtp(event.email, event.code);
+      await _firebaseAuth.signInWithCustomToken(customToken);
+      // User existant → Home directement ; nouveau → RoleSelection
+      final user = await _authRepository.getProfile();
+      emit(AuthAuthenticated(user));
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        emit(AuthEmailOtpVerified(event.email));
+      } else {
+        emit(AuthError(unwrapDioError(e)));
+      }
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
+    }
+  }
+
+  // ─── Inscription par email (post-OAuth ou post-email OTP) ────────────────────
+
+  Future<void> _onRegisterWithEmailRequested(
+    AuthRegisterWithEmailRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      final user = await _authRepository.registerWithEmail(
+        email: event.email,
+      );
+      await _localAuthService.clearPin();
+      emit(AuthAuthenticated(user));
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
+    }
+  }
+
+  // ─── Google Sign-In ───────────────────────────────────────────────────────
+
+  Future<void> _onGoogleSignInRequested(
+    AuthGoogleSignInRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        emit(const AuthInitial());
+        return;
+      }
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      await _firebaseAuth.signInWithCredential(credential);
+      _pendingPhoneNumber = _firebaseAuth.currentUser?.email ?? '';
+      await _checkProfileAfterOAuth(emit);
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
+    }
+  }
+
+  // ─── Apple Sign-In ────────────────────────────────────────────────────────
+
+  Future<void> _onAppleSignInRequested(
+    AuthAppleSignInRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      final appleCredential = await _appleSignIn([
+        AppleIDAuthorizationScopes.email,
+      ]);
+      final oauthCredential = OAuthProvider('apple.com').credential(
+        idToken: appleCredential.identityToken,
+        accessToken: appleCredential.authorizationCode,
+      );
+      await _firebaseAuth.signInWithCredential(oauthCredential);
+      _pendingPhoneNumber = _firebaseAuth.currentUser?.email ?? '';
+      await _checkProfileAfterOAuth(emit);
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
+    }
+  }
+
+  // ─── Ajout téléphone depuis profil (sans remplacer la session Firebase) ──────
+
+  Future<void> _onAddPhoneFromProfileRequested(
+    AuthAddPhoneFromProfileRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      final credential = PhoneAuthProvider.credential(
+        verificationId: event.verificationId,
+        smsCode: event.smsCode,
+      );
+      // Link to existing Firebase account instead of replacing the session.
+      // Ignore errors when phone already belongs to another Firebase account:
+      // user proved ownership by correctly entering the OTP, so we still
+      // update the backend profile.
+      try {
+        await _firebaseAuth.currentUser?.linkWithCredential(credential);
+      } on FirebaseAuthException catch (e) {
+        if (e.code != 'provider-already-linked' &&
+            e.code != 'credential-already-in-use') {
+          rethrow;
+        }
+      }
+      // Update backend profile with the verified phone number
+      final updatedUser = await _authRepository.updateProfile(
+        phoneNumber: event.phoneNumber,
+      );
+      emit(AuthProfileUpdated(updatedUser));
+    } on FirebaseAuthException catch (e) {
+      emit(AuthError(_friendlyFirebaseError(e)));
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
+    }
+  }
+
+  // ─── Ajout email depuis profil (sans remplacer la session Firebase) ───────────
+
+  Future<void> _onAddEmailFromProfileRequested(
+    AuthAddEmailFromProfileRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      // Validate OTP ownership on the backend — we intentionally discard the
+      // returned custom token to avoid replacing the current Firebase session.
+      await _authRepository.verifyEmailOtp(event.email, event.code);
+      // Update backend profile; freeEmailFromDeletedAccounts runs server-side
+      // if the email was previously held by a soft-deleted account.
+      final updatedUser = await _authRepository.updateProfile(email: event.email);
+      emit(AuthProfileUpdated(updatedUser));
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
+    }
+  }
+
+  void _onUserSynced(AuthUserSynced event, Emitter<AuthState> emit) {
+    emit(AuthProfileUpdated(event.user));
+  }
+
+  Future<void> _checkProfileAfterOAuth(Emitter<AuthState> emit) async {
+    try {
+      final user = await _authRepository.getProfile();
+      emit(AuthAuthenticated(user));
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        final email = _firebaseAuth.currentUser?.email ?? '';
+        emit(AuthOAuthNewUser(email));
+      } else {
+        emit(AuthError(unwrapDioError(e)));
+      }
+    } catch (e) {
+      emit(AuthError(_friendlyError(e)));
     }
   }
 

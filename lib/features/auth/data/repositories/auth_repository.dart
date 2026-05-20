@@ -8,9 +8,8 @@ class AuthRepository {
 
   Future<UserModel> register({
     required String phoneNumber,
-    required List<String> roles,
   }) =>
-      _datasource.register(phoneNumber: phoneNumber, roles: roles);
+      _datasource.register(phoneNumber: phoneNumber);
 
   Future<UserModel> getProfile() => _datasource.getProfile();
 
@@ -22,6 +21,7 @@ class AuthRepository {
     String? email,
     DateTime? birthDate,
     String? city,
+    String? phoneNumber,
   }) =>
       _datasource.updateProfile(
         firstName: firstName,
@@ -29,5 +29,17 @@ class AuthRepository {
         email: email,
         birthDate: birthDate,
         city: city,
+        phoneNumber: phoneNumber,
       );
+
+  Future<void> sendEmailOtp(String email) =>
+      _datasource.sendEmailOtp(email);
+
+  Future<String> verifyEmailOtp(String email, String code) =>
+      _datasource.verifyEmailOtp(email, code);
+
+  Future<UserModel> registerWithEmail({
+    required String email,
+  }) =>
+      _datasource.registerWithEmail(email: email);
 }
