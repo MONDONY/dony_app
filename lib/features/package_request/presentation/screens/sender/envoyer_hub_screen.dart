@@ -1,5 +1,8 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/kyc/presentation/widgets/kyc_required_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
@@ -111,6 +114,16 @@ class _EnvoyerHubViewState extends State<_EnvoyerHubView> {
           children: [
             _DashboardHeader(
               onNew: () async {
+                final authState = context.read<AuthBloc>().state;
+                final kycStatus = authState is AuthAuthenticated
+                    ? authState.user.kycStatus
+                    : 'NOT_STARTED';
+
+                if (kycStatus != 'VERIFIED') {
+                  await KycRequiredBottomSheet.show(context, kycStatus: kycStatus);
+                  return;
+                }
+
                 await PackageRequestCreateWizard.show(context);
                 if (mounted) {
                   context
