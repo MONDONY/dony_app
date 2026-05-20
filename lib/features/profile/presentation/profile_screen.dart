@@ -39,8 +39,9 @@ class _ProfileScreenState extends State<ProfileScreen>
   final _scroll = ScrollController();
   late final _tabController = TabController(length: 3, vsync: this);
 
-  static const double _kContentHeightDual   = 140.0;
-  static const double _kContentHeightSingle = 90.0;
+  static const double _kContentHeightDual          = 124.0;
+  static const double _kContentHeightSingle        = 74.0;
+  static const double _kProgressBarSectionHeight   = 38.0;
 
   @override
   void initState() {
@@ -122,7 +123,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                         final contentHeight = (isTraveler && isSender)
                             ? _kContentHeightDual
                             : _kContentHeightSingle;
-                        final expandedHeight = topPad + 56.0 + contentHeight;
                         final offset = _scroll.hasClients
                             ? _scroll.offset.clamp(0.0, double.infinity)
                             : 0.0;
@@ -141,6 +141,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                         final profileCompletionPercent = user != null
                             ? completionSteps / totalCompletionSteps
                             : 0.0;
+                        final isProfileComplete = profileCompletionPercent >= 1.0;
+                        final expandedHeight = topPad + 56.0 + contentHeight -
+                            (isProfileComplete ? _kProgressBarSectionHeight : 0.0);
 
                         return RefreshIndicator(
                           color: cs.primary,
@@ -1108,6 +1111,8 @@ class _ContactRow extends StatelessWidget {
                       const SizedBox(height: DonySpacing.xxs),
                       Text(
                         value,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: tt.bodyMedium?.copyWith(
                           color: isEmpty
                               ? cs.onSurfaceVariant
