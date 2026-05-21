@@ -25,6 +25,7 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement_
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
+import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -56,6 +57,8 @@ class MockAddressAutocompleteService extends Mock
     implements AddressAutocompleteService {}
 
 class MockCityRepository extends Mock implements CityRepository {}
+
+class MockPriceGridRepository extends Mock implements PriceGridRepository {}
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -168,6 +171,9 @@ void main() {
     if (getIt.isRegistered<CommissionMethodBloc>()) {
       getIt.unregister<CommissionMethodBloc>();
     }
+    if (getIt.isRegistered<PriceGridRepository>()) {
+      getIt.unregister<PriceGridRepository>();
+    }
   });
 
   setUp(() {
@@ -208,6 +214,13 @@ void main() {
       getIt.unregister<CommissionMethodBloc>();
     }
     getIt.registerFactory<CommissionMethodBloc>(() => commissionBloc);
+
+    if (getIt.isRegistered<PriceGridRepository>()) {
+      getIt.unregister<PriceGridRepository>();
+    }
+    getIt.registerLazySingleton<PriceGridRepository>(
+      () => MockPriceGridRepository(),
+    );
   });
 
   tearDown(() {
@@ -223,6 +236,9 @@ void main() {
     }
     if (getIt.isRegistered<CommissionMethodBloc>()) {
       getIt.unregister<CommissionMethodBloc>();
+    }
+    if (getIt.isRegistered<PriceGridRepository>()) {
+      getIt.unregister<PriceGridRepository>();
     }
   });
 
