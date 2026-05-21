@@ -82,9 +82,12 @@ import 'package:dony/features/profile/bloc/traveler_upgrade_bloc.dart';
 import 'package:dony/features/profile/presentation/screens/become_traveler_screen.dart';
 import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
+import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/data_export_bloc.dart';
+import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
 import 'package:dony/features/settings/presentation/settings_screen.dart';
 import 'package:dony/features/settings/presentation/screens/accessibility_settings_screen.dart';
@@ -669,15 +672,24 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: 'notifications',
-          builder: (context, state) => const NotificationSettingsScreen(),
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<NotificationPrefsBloc>(),
+            child: const NotificationSettingsScreen(),
+          ),
         ),
         GoRoute(
           path: 'preferences',
-          builder: (context, state) => const BusinessPrefsScreen(),
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<BusinessPrefsBloc>(),
+            child: const BusinessPrefsScreen(),
+          ),
         ),
         GoRoute(
           path: 'accessibility',
-          builder: (context, state) => const AccessibilitySettingsScreen(),
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<AccessibilityBloc>(),
+            child: const AccessibilitySettingsScreen(),
+          ),
         ),
         GoRoute(
           path: 'diagnostics',

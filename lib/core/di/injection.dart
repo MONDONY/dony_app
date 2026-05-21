@@ -23,9 +23,12 @@ import 'package:dony/features/profile/bloc/traveler_upgrade_bloc.dart';
 import 'package:dony/features/profile/data/pro_stats_repository.dart';
 import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/features/profile/data/traveler_upgrade_repository.dart';
+import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/data_export_bloc.dart';
+import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
 import 'package:dony/features/settings/data/account_deletion_repository.dart';
 import 'package:dony/features/settings/data/firebase_phone_reauth.dart';
@@ -321,6 +324,21 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Settings — Privacy (profile visibility, hide phone)
   getIt.registerFactory<PrivacySettingsBloc>(
     () => PrivacySettingsBloc(getIt<HiveService>().userPrefs),
+  );
+
+  // Settings — Notification preferences
+  getIt.registerFactory<NotificationPrefsBloc>(
+    () => NotificationPrefsBloc(getIt<HiveService>().userPrefs),
+  );
+
+  // Settings — Business preferences (weight unit, currency, pickup radius)
+  getIt.registerFactory<BusinessPrefsBloc>(
+    () => BusinessPrefsBloc(getIt<HiveService>().userPrefs),
+  );
+
+  // Settings — Accessibility (text scale, high contrast, reduce animations)
+  getIt.registerFactory<AccessibilityBloc>(
+    () => AccessibilityBloc(getIt<HiveService>().userPrefs),
   );
 
   // Ratings
