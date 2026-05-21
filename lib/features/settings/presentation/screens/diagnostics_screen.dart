@@ -181,7 +181,7 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
           controller: controller,
           maxLines: 4,
           decoration: InputDecoration(
-            hintText: 'Decris le probleme rencontre...',
+            hintText: 'Décris le problème rencontré...',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(DonyRadius.md),
             ),
