@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class AccessibilitySettingsScreen extends StatelessWidget {
@@ -91,7 +92,10 @@ class AccessibilitySettingsScreen extends StatelessWidget {
               ),
             ]),
           ],
-        ),
+        )
+            .animate()
+            .fadeIn(duration: 280.ms, curve: Curves.easeOutCubic)
+            .slideY(begin: 0.04, duration: 280.ms, curve: Curves.easeOutCubic),
       ),
     );
   }

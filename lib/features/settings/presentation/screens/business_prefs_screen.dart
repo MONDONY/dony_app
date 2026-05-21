@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class BusinessPrefsScreen extends StatelessWidget {
@@ -35,7 +36,6 @@ class BusinessPrefsScreen extends StatelessWidget {
                       .read<BusinessPrefsBloc>()
                       .add(WeightUnitChanged(s.first)),
                 ),
-                onTap: null,
               ),
             ]),
             const SizedBox(height: DonySpacing.lg),
@@ -92,7 +92,10 @@ class BusinessPrefsScreen extends StatelessWidget {
               ),
             ),
           ],
-        ),
+        )
+            .animate()
+            .fadeIn(duration: 280.ms, curve: Curves.easeOutCubic)
+            .slideY(begin: 0.04, duration: 280.ms, curve: Curves.easeOutCubic),
       ),
     );
   }
@@ -101,7 +104,7 @@ class BusinessPrefsScreen extends StatelessWidget {
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
-      builder: (_) => SafeArea(
+      builder: (sheetCtx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -117,7 +120,7 @@ class BusinessPrefsScreen extends StatelessWidget {
                   context
                       .read<BusinessPrefsBloc>()
                       .add(CurrencyChanged(code));
-                  Navigator.pop(context);
+                  Navigator.pop(sheetCtx);
                 },
               ),
           ],
