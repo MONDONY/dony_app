@@ -85,6 +85,7 @@ import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:dony/features/settings/bloc/data_export_bloc.dart';
+import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
 import 'package:dony/features/settings/presentation/settings_screen.dart';
 import 'package:dony/features/settings/presentation/screens/accessibility_settings_screen.dart';
 import 'package:dony/features/settings/presentation/screens/business_prefs_screen.dart';
@@ -651,7 +652,10 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: 'privacy',
-          builder: (context, state) => const PrivacySettingsScreen(),
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<PrivacySettingsBloc>(),
+            child: const PrivacySettingsScreen(),
+          ),
         ),
         GoRoute(
           path: 'data',
