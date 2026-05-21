@@ -78,6 +78,7 @@ class TravelerCard extends StatelessWidget {
         padding: const EdgeInsets.all(DonySpacing.base),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             if (hasExistingBid) ...[
               _ExistingBidChip(
@@ -131,6 +132,8 @@ class TravelerCard extends StatelessWidget {
                       ? 'Grille tarifaire'
                       : '${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
                   style: tt.titleLarge?.copyWith(color: cs.success, fontWeight: FontWeight.w700),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ],
             ),

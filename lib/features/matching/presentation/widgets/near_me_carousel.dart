@@ -170,7 +170,9 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
                   return Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: DonySpacing.sm),
-                    child: TravelerCard(
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: TravelerCard(
                       key: Key('near-me-card-${a.id}'),
                       announcement: a,
                       index: i,
@@ -195,6 +197,7 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
                                     );
                                   }
                                 },
+                    ),
                     ),
                   );
                 },

@@ -23,6 +23,11 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
     BidCheckoutPaymentRequested event,
     Emitter<PaymentState> emit,
   ) async {
+    // Transition intermédiaire obligatoire : si le backend renvoie le même
+    // clientSecret (idempotency sur un PI encore en requires_payment_method),
+    // le nouvel état serait Equatable-égal au précédent et emit() serait un
+    // no-op silencieux. L'état initial garantit la transition.
+    emit(const PaymentInitial());
     emit(CheckoutPaymentSheetReady(
       clientSecret: event.clientSecret,
       publishableKey: event.publishableKey,

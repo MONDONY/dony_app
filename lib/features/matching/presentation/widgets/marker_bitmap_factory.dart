@@ -103,9 +103,11 @@ class MarkerBitmapFactory {
     required Color dotColor,
     required bool isSelected,
   }) async {
-    final label = pricePerKg == pricePerKg.roundToDouble()
-        ? '${pricePerKg.toInt()}€'
-        : '${pricePerKg.toStringAsFixed(1)}€';
+    final label = pricePerKg <= 0
+        ? 'Grille'
+        : pricePerKg == pricePerKg.roundToDouble()
+            ? '${pricePerKg.toInt()}€'
+            : '${pricePerKg.toStringAsFixed(1)}€';
 
     const fontSize = 12.0;
     const paddingH = 8.0;
@@ -287,9 +289,11 @@ class MarkerBitmapFactory {
     required Color dotColor,
     required bool isSelected,
   }) async {
-    final label = pricePerKg == pricePerKg.roundToDouble()
-        ? '${pricePerKg.toInt()}€'
-        : '${pricePerKg.toStringAsFixed(1)}€';
+    final label = pricePerKg <= 0
+        ? 'Grille'
+        : pricePerKg == pricePerKg.roundToDouble()
+            ? '${pricePerKg.toInt()}€'
+            : '${pricePerKg.toStringAsFixed(1)}€';
 
     const fontSize = 12.0;
     const paddingH = 8.0;

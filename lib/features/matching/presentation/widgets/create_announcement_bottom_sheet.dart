@@ -379,6 +379,25 @@ class _CreateAnnouncementContentState
         _customPriceNotifier.value = price;
         _customPriceCtrl.text = price.toStringAsFixed(0);
       }
+
+      // Sync capacityUnit et pricingMode vers le BLoC (requiert context → postFrame)
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final formBloc = context.read<AnnouncementFormBloc>();
+
+        final unit = switch (a.capacityUnit) {
+          'KG_FREE' => CapacityUnit.kgFree,
+          'SUITCASE_32KG' => CapacityUnit.suitcase32kg,
+          'KG_EXACT' => CapacityUnit.custom,
+          _ => CapacityUnit.suitcase23kg,
+        };
+        formBloc.add(CapacityUnitChanged(unit));
+
+        final mode = a.pricingMode == 'MIXED'
+            ? PricingMode.mixed
+            : PricingMode.kg;
+        formBloc.add(AnnouncementPricingModeSetRequested(mode));
+      });
     }
     widget.onSubmitReady?.call(_submit);
     _kgPriceEnabledNotifier = ValueNotifier<bool>(true); // KG = ON par défaut

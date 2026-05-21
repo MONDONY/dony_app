@@ -4,6 +4,8 @@ import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_profile_sheet.dart';
@@ -21,6 +23,11 @@ void showTravelerAnnouncementSheet(
   final authState = context.read<AuthBloc>().state;
   final isKycVerified =
       authState is AuthAuthenticated && authState.user.isKycVerified;
+  // Capture la référence au BidBloc du parent (carousel / liste) pour pouvoir
+  // déclencher un refresh après la fermeture de CreateBidBottomSheet, même
+  // quand useRootNavigator: true sort du BlocProvider tree.
+  final BidBloc? parentBidBloc =
+      context.mounted ? context.read<BidBloc>() : null;
 
   final isPending = existingBidStatus == 'PENDING' ||
       existingBidStatus == 'AWAITING_PAYMENT';
@@ -43,16 +50,20 @@ void showTravelerAnnouncementSheet(
             : Icons.send_rounded,
         onPressed: hasActiveBid
             ? null
-            : () {
+            : () async {
                 final navigator =
                     Navigator.of(innerCtx, rootNavigator: true);
                 final rootCtx = navigator.context;
                 navigator.pop();
                 if (isKycVerified) {
-                  CreateBidBottomSheet.show(rootCtx,
+                  await CreateBidBottomSheet.show(rootCtx,
                       announcement: announcement);
+                  // Refresh silencieux du BidBloc parent pour que la liste
+                  // affiche immédiatement le chip "Demande en attente".
+                  parentBidBloc
+                      ?.add(const BidMyListAutoRefreshRequested(force: true));
                 } else {
-                  KycStatusBottomSheet.show(rootCtx);
+                  await KycStatusBottomSheet.show(rootCtx);
                 }
               },
       ),

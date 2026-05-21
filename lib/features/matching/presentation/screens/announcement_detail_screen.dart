@@ -289,7 +289,9 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                 child: _StatCard(
                   icon: Icons.scale_rounded,
                   label: 'Capacité dispo.',
-                  value: '${a.availableKg.toStringAsFixed(1)} kg',
+                  value: a.capacityUnit == 'KG_FREE'
+                      ? 'Kg libre'
+                      : '${a.availableKg.toStringAsFixed(0)} kg',
                   color: DonyColors.blue800,
                   cs: cs,
                   tt: tt,
@@ -299,8 +301,10 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
               Expanded(
                 child: _StatCard(
                   icon: Icons.euro_rounded,
-                  label: 'Prix par kg',
-                  value: '${a.pricePerKg.toStringAsFixed(2)} €',
+                  label: a.pricingMode == 'MIXED' ? 'Tarification' : 'Prix par kg',
+                  value: a.pricingMode == 'MIXED'
+                      ? 'Grille'
+                      : '${a.pricePerKg % 1 == 0 ? a.pricePerKg.toStringAsFixed(0) : a.pricePerKg.toStringAsFixed(1)} €/kg',
                   color: cs.primary,
                   cs: cs,
                   tt: tt,

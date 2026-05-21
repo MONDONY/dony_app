@@ -827,8 +827,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
                   bottom: 0,
                   child: SafeArea(
                     child: SizedBox(
-                      height: (MediaQuery.of(context).size.height * 0.37)
-                          .clamp(310.0, 400.0),
+                      height: (MediaQuery.of(context).size.height * 0.40)
+                          .clamp(360.0, 450.0),
                       child: activeRole == ActiveRole.traveler
                           ? NearMePackageRequestCarousel(
                               items: prState.results,

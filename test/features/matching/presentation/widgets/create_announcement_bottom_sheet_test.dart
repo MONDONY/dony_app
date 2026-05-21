@@ -20,6 +20,8 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/address_suggestion.dart';
+import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/trajet_step.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement_bottom_sheet.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
@@ -68,6 +70,25 @@ final _stripeUser = UserModel(
   kycStatus: 'VERIFIED',
   status: 'ACTIVE',
   stripeAccountStatus: 'ONBOARDING_COMPLETE',
+);
+
+// ── Fixtures ──────────────────────────────────────────────────────────────────
+
+final _kgFreeAnnouncement = AnnouncementModel(
+  id: 'ann-kgfree',
+  travelerId: 'u1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  departureDate: DateTime(2026, 8, 15),
+  availableKg: 0.0,
+  totalKg: 0.0,
+  pricePerKg: 6.0,
+  status: 'PUBLISHED',
+  createdAt: DateTime(2026, 5, 1),
+  updatedAt: DateTime(2026, 5, 1),
+  capacityUnit: 'KG_FREE',
+  pricingMode: 'MIXED',
+  transportMode: TransportMode.plane,
 );
 
 // ── Builder ───────────────────────────────────────────────────────────────────
@@ -125,6 +146,61 @@ Widget _buildHost({
   // AuthBloc et StripeAccountBloc sont fournis au niveau root (au-dessus de
   // MaterialApp.router) pour que les sheets ouverts avec useRootNavigator: true
   // puissent y accéder.
+  return MultiBlocProvider(
+    providers: [
+      BlocProvider<AuthBloc>.value(value: authBloc),
+      BlocProvider<StripeAccountBloc>.value(value: stripeBloc),
+    ],
+    child: MaterialApp.router(routerConfig: router, theme: AppTheme.light),
+  );
+}
+
+/// Construit un écran minimal avec un bouton qui ouvre le sheet en mode édition.
+Widget _buildHostEdit({
+  required MockAnnouncementBloc announcementBloc,
+  required MockCommissionMethodBloc commissionBloc,
+  required MockAuthBloc authBloc,
+  required MockStripeAccountBloc stripeBloc,
+  required AnnouncementModel announcement,
+}) {
+  final router = GoRouter(
+    initialLocation: '/',
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (ctx, state) => Scaffold(
+          body: Center(
+            child: ElevatedButton(
+              key: const Key('open-edit-sheet-btn'),
+              onPressed: () {
+                CreateAnnouncementBottomSheet.show(ctx, announcement: announcement);
+              },
+              child: const Text('Modifier'),
+            ),
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/announcements',
+        builder: (_, __) =>
+            const Scaffold(body: Center(child: Text('Announcements'))),
+      ),
+      GoRoute(
+        path: '/connect/onboarding/intro',
+        builder: (_, __) =>
+            const Scaffold(body: Center(child: Text('Stripe onboarding'))),
+      ),
+      GoRoute(
+        path: '/payments/commission-method',
+        builder: (_, __) =>
+            const Scaffold(body: Center(child: Text('Commission'))),
+      ),
+      GoRoute(
+        path: '/profile/upgrade-to-pro',
+        builder: (_, __) => const Scaffold(body: Center(child: Text('Upgrade'))),
+      ),
+    ],
+  );
   return MultiBlocProvider(
     providers: [
       BlocProvider<AuthBloc>.value(value: authBloc),
@@ -389,6 +465,38 @@ void main() {
         find.byKey(const Key('configure-stripe-btn')).evaluate().isNotEmpty,
         isTrue,
       );
+    });
+  });
+
+  group('CreateAnnouncementBottomSheet — édition (mode KG_FREE + MIXED)', () {
+    testWidgets(
+        'affiche "Sans limite précise" à l\'étape capacité pour une annonce KG_FREE',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(_buildHostEdit(
+        announcementBloc: announcementBloc,
+        commissionBloc: commissionBloc,
+        authBloc: authBloc,
+        stripeBloc: stripeBloc,
+        announcement: _kgFreeAnnouncement,
+      ));
+      await tester.pump(_settle);
+
+      await tester.tap(find.byKey(const Key('open-edit-sheet-btn')));
+      await tester.pump(_settle);
+      await tester.pump(_settle);
+
+      // Avancer à l'étape 1 (Lieux & capacité)
+      await tester.tap(find.text('Continuer'));
+      await tester.pump(_settle);
+      await tester.pump(_settle);
+
+      // Le postFrameCallback a dispatché CapacityUnitChanged(kgFree)
+      // → CapacityControl doit afficher "Sans limite précise"
+      expect(find.text('Sans limite précise'), findsOneWidget);
     });
   });
 }

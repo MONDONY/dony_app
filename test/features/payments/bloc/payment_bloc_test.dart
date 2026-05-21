@@ -314,4 +314,64 @@ void main() {
       expect(s.props, [ex]);
     });
   });
+
+  // ── BidCheckoutPaymentRequested ─────────────────────────────────────────────
+
+  group('BidCheckoutPaymentRequested', () {
+    const clientSecret = 'pi_test_secret_xxx';
+    const publishableKey = 'pk_test_xxx';
+    const bidId = 'bid-001';
+
+    blocTest<PaymentBloc, PaymentState>(
+      'emits [PaymentInitial, CheckoutPaymentSheetReady] on first checkout',
+      build: buildBloc,
+      act: (b) => b.add(const BidCheckoutPaymentRequested(
+        clientSecret: clientSecret,
+        publishableKey: publishableKey,
+        bidId: bidId,
+      )),
+      expect: () => [
+        const PaymentInitial(),
+        const CheckoutPaymentSheetReady(
+          clientSecret: clientSecret,
+          publishableKey: publishableKey,
+          bidId: bidId,
+        ),
+      ],
+    );
+
+    blocTest<PaymentBloc, PaymentState>(
+      'régression : émet CheckoutPaymentSheetReady même si le clientSecret est identique (retry après annulation Stripe)',
+      build: buildBloc,
+      act: (b) async {
+        // Premier checkout
+        b.add(const BidCheckoutPaymentRequested(
+          clientSecret: clientSecret,
+          publishableKey: publishableKey,
+          bidId: bidId,
+        ));
+        await Future<void>.delayed(Duration.zero);
+        // Deuxième checkout avec le MÊME clientSecret (idempotency backend)
+        b.add(const BidCheckoutPaymentRequested(
+          clientSecret: clientSecret,
+          publishableKey: publishableKey,
+          bidId: bidId,
+        ));
+      },
+      expect: () => [
+        const PaymentInitial(),
+        const CheckoutPaymentSheetReady(
+          clientSecret: clientSecret,
+          publishableKey: publishableKey,
+          bidId: bidId,
+        ),
+        const PaymentInitial(),
+        const CheckoutPaymentSheetReady(
+          clientSecret: clientSecret,
+          publishableKey: publishableKey,
+          bidId: bidId,
+        ),
+      ],
+    );
+  });
 }

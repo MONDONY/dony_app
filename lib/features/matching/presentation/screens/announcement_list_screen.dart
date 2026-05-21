@@ -755,7 +755,9 @@ class _AnnouncementCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${announcement.pricePerKg % 1 == 0 ? announcement.pricePerKg.toStringAsFixed(0) : announcement.pricePerKg.toStringAsFixed(1)} €/kg',
+                    announcement.pricingMode == 'MIXED'
+                        ? 'Grille tarifaire'
+                        : '${announcement.pricePerKg % 1 == 0 ? announcement.pricePerKg.toStringAsFixed(0) : announcement.pricePerKg.toStringAsFixed(1)} €/kg',
                     style: tt.bodySmall?.copyWith(
                       color: const Color(0xFFF59E0B),
                       fontWeight: FontWeight.w700,
