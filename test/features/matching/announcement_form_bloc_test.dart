@@ -567,4 +567,42 @@ void main() {
       ],
     );
   });
+
+  group('AnnouncementFormEvent props / equality', () {
+    test('base event props (no-override) returns []', () {
+      expect(const FormResetRequested().props, isEmpty);
+    });
+
+    test('PickupAddressChanged props contains address', () {
+      const address = AddressData(
+        label: 'Paris',
+        lat: 48.8566,
+        lng: 2.3522,
+      );
+      const e1 = PickupAddressChanged(address);
+      const e2 = PickupAddressChanged(address);
+      expect(e1.props, [address]);
+      expect(e1, equals(e2));
+    });
+
+    test('PickupAddressChanged null props', () {
+      expect(const PickupAddressChanged(null).props, [null]);
+    });
+
+    test('DeliveryAddressChanged props contains address', () {
+      const address = AddressData(
+        label: 'Lyon',
+        lat: 45.7640,
+        lng: 4.8357,
+      );
+      const e1 = DeliveryAddressChanged(address);
+      const e2 = DeliveryAddressChanged(address);
+      expect(e1.props, [address]);
+      expect(e1, equals(e2));
+    });
+
+    test('DeliveryAddressChanged null props', () {
+      expect(const DeliveryAddressChanged(null).props, [null]);
+    });
+  });
 }
