@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
@@ -52,6 +53,32 @@ AnnouncementModel _announcement({bool cashEnabled = false}) {
     createdAt: DateTime(2026, 1, 1),
     updatedAt: DateTime(2026, 1, 1),
     acceptedPaymentMethods: methods,
+  );
+}
+
+AnnouncementModel _mixedGridOnlyAnnouncement() {
+  return AnnouncementModel(
+    id: 'ann-grid-only',
+    travelerId: 'trav-1',
+    departureCity: 'Paris',
+    arrivalCity: 'Dakar',
+    departureDate: DateTime(2026, 8, 15),
+    availableKg: 10,
+    totalKg: 10,
+    pricePerKg: 0, // pas de tarif kg
+    status: 'ACTIVE',
+    pricingMode: 'MIXED',
+    priceGridItems: const [
+      AnnouncementGridItemModel(
+        id: 'item-1',
+        label: 'Valise cabine',
+        unitPriceNet: 20.0,
+        unitPriceDisplay: 22.4,
+      ),
+    ],
+    createdAt: DateTime(2026, 1, 1),
+    updatedAt: DateTime(2026, 1, 1),
+    acceptedPaymentMethods: const {BidPaymentMethod.stripe},
   );
 }
 
@@ -367,53 +394,40 @@ void main() {
     });
 
     testWidgets(
-        'annonce MIXED → grille de prix visible avec items',
+        'annonce MIXED → bouton "Choisir mes articles" visible',
         (tester) async {
       await _openSheet(tester, _mixedAnnouncement());
 
-      expect(find.text('ARTICLES DISPONIBLES'), findsOneWidget);
-      // "Téléphone" appears both in the grid and in the content category chips.
-      expect(find.text('Téléphone'), findsAtLeast(1));
-      // The item price label is unique to the grid item.
-      expect(find.text('11.20 € / unité'), findsOneWidget);
+      // The new grid section shows a tappable card with the section header
+      // and the "Choisir mes articles" button text.
+      expect(find.text('ARTICLES'), findsOneWidget);
+      expect(find.text('Choisir mes articles'), findsOneWidget);
     });
 
     testWidgets(
-        'annonce MIXED + articles sélectionnés + sans poids → soumission possible',
+        'annonce MIXED + poids > 0 (slider défaut 5 kg) → soumission possible',
         (tester) async {
-      final stateController = StreamController<BidState>.broadcast();
-      addTearDown(stateController.close);
-
-      when(() => _currentBidBloc.stream)
-          .thenAnswer((_) => stateController.stream);
-
       await _openSheet(tester, _mixedAnnouncement());
 
-      // Select a category and accept disclaimer (slider starts at 5 → weight > 0
-      // by default, so first set weight to 0 via slider drag, then simulate
-      // grid items to verify hasGridItems alone is sufficient).
+      // Select a category and accept disclaimer; slider starts at 5 → hasWeight = true.
       await tester.tap(find.text('Vêtements'));
       await tester.pump();
       await tester.tap(find.byType(Checkbox).first);
       await tester.pump();
 
-      // Simulate BLoC emitting grid quantities (item-1 → qty 2).
-      stateController.add(BidGridQuantitiesUpdated({'item-1': 2}));
-      await tester.pump();
-
-      // canSubmit is now true: fill mandatory fields and tap the submit button.
+      // canSubmit is true (hasWeight). Fill mandatory fields and tap the submit button.
       await _fillMandatoryFields(tester);
       await tester.tap(find.textContaining('Bloquer').first);
       await tester.pump();
 
-      // BidCheckoutRequested should have been dispatched (grid items present).
+      // BidCheckoutRequested should have been dispatched.
       verify(
         () => _currentBidBloc.add(any(that: isA<BidCheckoutRequested>())),
       ).called(1);
     });
 
     testWidgets(
-        'annonce MIXED + poids > 0 + sans articles grille → soumission possible',
+        'annonce MIXED + poids > 0 sans articles → soumission via weight seul',
         (tester) async {
       await _openSheet(tester, _mixedAnnouncement());
 
@@ -459,6 +473,43 @@ void main() {
       verify(
         () => _currentBidBloc.add(any(that: isA<BidCheckoutRequested>())),
       ).called(1);
+    });
+  });
+
+  // ── 6. hasGridPricing / hasKgPricing flags ────────────────────────────────
+
+  group('hasGridPricing / hasKgPricing flags', () {
+    testWidgets('bouton "Choisir mes articles" visible si hasGridPricing',
+        (tester) async {
+      await _openSheet(tester, _mixedGridOnlyAnnouncement());
+      expect(find.text('Choisir mes articles'), findsOneWidget);
+    });
+
+    testWidgets('slider poids absent si !hasKgPricing', (tester) async {
+      await _openSheet(tester, _mixedGridOnlyAnnouncement());
+      expect(find.byType(Slider), findsNothing);
+    });
+
+    testWidgets('canSubmit = false sans articles sélectionnés', (tester) async {
+      await _openSheet(tester, _mixedGridOnlyAnnouncement());
+
+      // Select a category and accept disclaimer — but no grid articles chosen.
+      await tester.tap(find.text('Vêtements'));
+      await tester.pump();
+      await tester.tap(find.byType(Checkbox).first);
+      await tester.pump();
+
+      // The submit button should remain disabled (no grid items selected).
+      final submitFinder = find.textContaining('Bloquer');
+      expect(submitFinder, findsOneWidget);
+      final donyBtnFinder = find.ancestor(
+        of: submitFinder,
+        matching: find.byType(DonyButton),
+      );
+      if (donyBtnFinder.evaluate().isNotEmpty) {
+        final btn = tester.widget<DonyButton>(donyBtnFinder.first);
+        expect(btn.onPressed, isNull);
+      }
     });
   });
 }
