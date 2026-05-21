@@ -36,8 +36,10 @@ class PriceGridScreen extends StatelessWidget {
 
   Widget _buildBody(BuildContext context, PriceGridState state) {
     if (state is PriceGridInitial) {
-      // Trigger load on first render
-      context.read<PriceGridBloc>().add(const PriceGridLoadRequested());
+      // Trigger load on first render — deferred to avoid setState during build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<PriceGridBloc>().add(const PriceGridLoadRequested());
+      });
       return const Center(child: CircularProgressIndicator());
     }
 

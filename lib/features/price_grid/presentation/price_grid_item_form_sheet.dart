@@ -34,7 +34,9 @@ abstract final class PriceGridItemFormSheet {
         onValidityChanged: (v) => isValid.value = v,
         onSubmitReady: (fn) => submitFn = fn,
       ),
-    ).whenComplete(isValid.dispose);
+    ).whenComplete(() {
+      WidgetsBinding.instance.addPostFrameCallback((_) => isValid.dispose());
+    });
   }
 }
 
@@ -90,7 +92,7 @@ class _PriceGridItemFormContentState
     });
 
     _labelController.addListener(_updateValidity);
-    _priceController.addListener(_updateValidity);
+    // _updateParsedPrice calls _updateValidity internally — no separate listener needed
     _priceController.addListener(_updateParsedPrice);
   }
 
@@ -120,7 +122,10 @@ class _PriceGridItemFormContentState
     }
 
     final label = _labelController.text.trim();
-    final price = _parsedPrice!;
+    final price = _parsedPrice;
+    if (price == null) {
+      return;
+    }
     final bloc = context.read<PriceGridBloc>();
 
     if (widget.item == null) {
