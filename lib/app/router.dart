@@ -83,7 +83,16 @@ import 'package:dony/features/profile/presentation/screens/become_traveler_scree
 import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
+import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:dony/features/settings/presentation/settings_screen.dart';
+import 'package:dony/features/settings/presentation/screens/accessibility_settings_screen.dart';
+import 'package:dony/features/settings/presentation/screens/business_prefs_screen.dart';
+import 'package:dony/features/settings/presentation/screens/data_settings_screen.dart';
+import 'package:dony/features/settings/presentation/screens/diagnostics_screen.dart';
+import 'package:dony/features/settings/presentation/screens/legal_web_view_screen.dart';
+import 'package:dony/features/settings/presentation/screens/notification_settings_screen.dart';
+import 'package:dony/features/settings/presentation/screens/privacy_settings_screen.dart';
+import 'package:dony/features/settings/presentation/screens/security_settings_screen.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/presentation/screens/referral_screen.dart';
@@ -627,10 +636,57 @@ final appRouter = GoRouter(
     // ── Settings (hors shell) ──────────────────────────────────────────
     GoRoute(
       path: '/settings',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<AccountDeletionBloc>(),
+      builder: (context, state) => MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => getIt<AccountDeletionBloc>()),
+          BlocProvider.value(value: getIt<AppPreferencesBloc>()),
+        ],
         child: const SettingsScreen(),
       ),
+      routes: [
+        GoRoute(
+          path: 'security',
+          builder: (context, state) => const SecuritySettingsScreen(),
+        ),
+        GoRoute(
+          path: 'privacy',
+          builder: (context, state) => const PrivacySettingsScreen(),
+        ),
+        GoRoute(
+          path: 'data',
+          builder: (context, state) => const DataSettingsScreen(),
+        ),
+        GoRoute(
+          path: 'notifications',
+          builder: (context, state) => const NotificationSettingsScreen(),
+        ),
+        GoRoute(
+          path: 'preferences',
+          builder: (context, state) => const BusinessPrefsScreen(),
+        ),
+        GoRoute(
+          path: 'accessibility',
+          builder: (context, state) => const AccessibilitySettingsScreen(),
+        ),
+        GoRoute(
+          path: 'diagnostics',
+          builder: (context, state) => const DiagnosticsScreen(),
+        ),
+        GoRoute(
+          path: 'legal/terms',
+          builder: (context, state) => const LegalWebViewScreen(
+            title: 'CGU',
+            url: 'https://dony.app/legal/terms',
+          ),
+        ),
+        GoRoute(
+          path: 'legal/privacy',
+          builder: (context, state) => const LegalWebViewScreen(
+            title: 'Politique de confidentialité',
+            url: 'https://dony.app/legal/privacy',
+          ),
+        ),
+      ],
     ),
 
     // ── Shell principal avec Bottom Navigation ───────────────────────────
