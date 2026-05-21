@@ -12,6 +12,8 @@ class MockAppPreferencesBloc
     extends MockBloc<AppPreferencesEvent, AppPreferencesState>
     implements AppPreferencesBloc {}
 
+class _FakeAppPreferencesEvent extends Fake implements AppPreferencesEvent {}
+
 Widget _wrap({UserPreferencesModel? prefs}) {
   final mockBloc = MockAppPreferencesBloc();
   final state = AppPreferencesState(
@@ -54,6 +56,10 @@ Widget _wrap({UserPreferencesModel? prefs}) {
 }
 
 void main() {
+  setUpAll(() {
+    registerFallbackValue(_FakeAppPreferencesEvent());
+  });
+
   group('SettingsScreen', () {
     testWidgets('renders Paramètres title', (tester) async {
       await tester.pumpWidget(_wrap());
@@ -203,5 +209,318 @@ void main() {
 
       expect(find.text('English'), findsOneWidget);
     });
+
+    testWidgets('tap dark mode tile dispatches ThemeChanged event',
+        (tester) async {
+      final mockBloc = MockAppPreferencesBloc();
+      final state = AppPreferencesState(
+        preferences: const UserPreferencesModel(themeMode: 'system'),
+      );
+      when(() => mockBloc.state).thenReturn(state);
+      whenListen<AppPreferencesState>(mockBloc, const Stream.empty(),
+          initialState: state);
+
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
+
+      // Tap the Switch widget (dark mode toggle)
+      final switchWidget = find.byType(Switch).first;
+      await tester.tap(switchWidget);
+      await tester.pump();
+
+      verify(() => mockBloc.add(any(that: isA<ThemeChanged>()))).called(1);
+    });
+
+    testWidgets('tap SMS alerts switch dispatches SmsAlertsToggled',
+        (tester) async {
+      final mockBloc = MockAppPreferencesBloc();
+      final state = AppPreferencesState(
+        preferences: const UserPreferencesModel(),
+      );
+      when(() => mockBloc.state).thenReturn(state);
+      whenListen<AppPreferencesState>(mockBloc, const Stream.empty(),
+          initialState: state);
+
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
+
+      // Tap the second Switch (SMS alerts)
+      final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
+      expect(switches.length, greaterThanOrEqualTo(2));
+      await tester.tap(find.byWidget(switches[1]));
+      await tester.pump();
+
+      verify(() => mockBloc.add(any(that: isA<SmsAlertsToggled>()))).called(1);
+    });
+
+    testWidgets('tap langue tile ouvre le language picker modal',
+        (tester) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Langue'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Français'), findsAtLeastNWidgets(1));
+      expect(find.text('English'), findsOneWidget);
+    });
+
+    testWidgets('tap destination chip dispatches DestinationToggled',
+        (tester) async {
+      final mockBloc = MockAppPreferencesBloc();
+      final state = AppPreferencesState(
+        preferences: const UserPreferencesModel(),
+      );
+      when(() => mockBloc.state).thenReturn(state);
+      whenListen<AppPreferencesState>(mockBloc, const Stream.empty(),
+          initialState: state);
+
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.textContaining('Dakar'));
+      await tester.pump();
+
+      verify(() => mockBloc.add(any(that: isA<DestinationToggled>()))).called(1);
+    });
+
+    testWidgets('tap dark mode tile dispatches ThemeChanged via onTap',
+        (tester) async {
+      final mockBloc = MockAppPreferencesBloc();
+      final state = AppPreferencesState(
+        preferences: const UserPreferencesModel(themeMode: 'system'),
+      );
+      when(() => mockBloc.state).thenReturn(state);
+      whenListen<AppPreferencesState>(mockBloc, const Stream.empty(),
+          initialState: state);
+
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
+
+      // Tap the dark mode tile text (onTap path)
+      await tester.tap(find.text('Thème sombre'));
+      await tester.pump();
+
+      verify(() => mockBloc.add(any(that: isA<ThemeChanged>()))).called(1);
+    });
+
+    testWidgets('tap SMS alerts tile text dispatches SmsAlertsToggled via onTap',
+        (tester) async {
+      final mockBloc = MockAppPreferencesBloc();
+      final state = AppPreferencesState(
+        preferences: const UserPreferencesModel(),
+      );
+      when(() => mockBloc.state).thenReturn(state);
+      whenListen<AppPreferencesState>(mockBloc, const Stream.empty(),
+          initialState: state);
+
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Alertes critiques par SMS'));
+      await tester.pump();
+
+      verify(() => mockBloc.add(any(that: isA<SmsAlertsToggled>()))).called(1);
+    });
+
+    testWidgets('tap Sécurité tile navigates to /settings/security',
+        (tester) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+
+      // Scroll down a bit to ensure Sécurité tile is visible
+      await tester.drag(find.byType(ListView), const Offset(0, -200));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Sécurité'));
+      await tester.pumpAndSettle();
+
+      // After navigation, the security screen placeholder is shown
+      expect(find.text('Sécurité'), findsNothing);
+    });
+
+    testWidgets('tap Confidentialité tile navigates to /settings/privacy',
+        (tester) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+
+      await tester.drag(find.byType(ListView), const Offset(0, -200));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Confidentialité'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Confidentialité'), findsNothing);
+    });
+
+    testWidgets('tap Mes données tile navigates to /settings/data',
+        (tester) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+
+      await tester.drag(find.byType(ListView), const Offset(0, -200));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Mes données'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Mes données'), findsNothing);
+    });
+
+    testWidgets('tap Notifications tile navigates to /settings/notifications',
+        (tester) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+
+      await tester.drag(find.byType(ListView), const Offset(0, -600));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Notifications'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Notifications'), findsNothing);
+    });
+
+    testWidgets('tap Préférences tile navigates to /settings/preferences',
+        (tester) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+
+      await tester.drag(find.byType(ListView), const Offset(0, -700));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Préférences'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Préférences'), findsNothing);
+    });
+
+    testWidgets('tap Accessibilité tile navigates to /settings/accessibility',
+        (tester) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+
+      await tester.drag(find.byType(ListView), const Offset(0, -800));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Accessibilité'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Accessibilité'), findsNothing);
+    });
+
+    testWidgets('tap CGU tile navigates to /settings/legal/terms',
+        (tester) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+
+      // Scroll to bottom to reveal INFORMATIONS section
+      await tester.drag(find.byType(ListView), const Offset(0, -3000));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('CGU'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('CGU'), findsNothing);
+    });
+
+    testWidgets(
+        'tap Politique de confidentialité tile navigates to /settings/legal/privacy',
+        (tester) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+
+      await tester.drag(find.byType(ListView), const Offset(0, -3000));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Politique de confidentialité'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Politique de confidentialité'), findsNothing);
+    });
+
+    testWidgets('tap Diagnostics tile navigates to /settings/diagnostics',
+        (tester) async {
+      await tester.pumpWidget(_wrap());
+      await tester.pumpAndSettle();
+
+      await tester.drag(find.byType(ListView), const Offset(0, -3000));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Diagnostics'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Diagnostics'), findsNothing);
+    });
+
+    testWidgets('language picker — tap Français dispatches LanguageChanged(fr)',
+        (tester) async {
+      final mockBloc = MockAppPreferencesBloc();
+      final state = AppPreferencesState(
+        preferences: const UserPreferencesModel(languageCode: 'en'),
+      );
+      when(() => mockBloc.state).thenReturn(state);
+      whenListen<AppPreferencesState>(mockBloc, const Stream.empty(),
+          initialState: state);
+
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
+
+      // Open language picker
+      await tester.tap(find.text('Langue'));
+      await tester.pumpAndSettle();
+
+      // Tap Français
+      await tester.tap(find.text('Français').last);
+      await tester.pump();
+
+      verify(() => mockBloc.add(any(that: isA<LanguageChanged>()))).called(1);
+    });
+
+    testWidgets('language picker — tap English dispatches LanguageChanged(en)',
+        (tester) async {
+      final mockBloc = MockAppPreferencesBloc();
+      final state = AppPreferencesState(
+        preferences: const UserPreferencesModel(languageCode: 'fr'),
+      );
+      when(() => mockBloc.state).thenReturn(state);
+      whenListen<AppPreferencesState>(mockBloc, const Stream.empty(),
+          initialState: state);
+
+      await tester.pumpWidget(_wrapWithBloc(mockBloc));
+      await tester.pumpAndSettle();
+
+      // Open language picker
+      await tester.tap(find.text('Langue'));
+      await tester.pumpAndSettle();
+
+      // Tap English
+      await tester.tap(find.text('English'));
+      await tester.pump();
+
+      verify(() => mockBloc.add(any(that: isA<LanguageChanged>()))).called(1);
+    });
   });
+}
+
+Widget _wrapWithBloc(MockAppPreferencesBloc mockBloc) {
+  final router = GoRouter(routes: [
+    GoRoute(
+      path: '/',
+      builder: (_, __) => BlocProvider<AppPreferencesBloc>.value(
+        value: mockBloc,
+        child: const SettingsScreen(),
+      ),
+    ),
+    GoRoute(path: '/settings/security', builder: (_, __) => const Scaffold()),
+    GoRoute(path: '/settings/privacy', builder: (_, __) => const Scaffold()),
+    GoRoute(path: '/settings/data', builder: (_, __) => const Scaffold()),
+    GoRoute(path: '/settings/notifications', builder: (_, __) => const Scaffold()),
+    GoRoute(path: '/settings/preferences', builder: (_, __) => const Scaffold()),
+    GoRoute(path: '/settings/accessibility', builder: (_, __) => const Scaffold()),
+    GoRoute(path: '/settings/legal/terms', builder: (_, __) => const Scaffold()),
+    GoRoute(path: '/settings/legal/privacy', builder: (_, __) => const Scaffold()),
+    GoRoute(path: '/settings/diagnostics', builder: (_, __) => const Scaffold()),
+  ]);
+  return MaterialApp.router(routerConfig: router);
 }

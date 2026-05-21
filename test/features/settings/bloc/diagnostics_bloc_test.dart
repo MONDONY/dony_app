@@ -4,6 +4,7 @@ import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class MockApiClient extends Mock implements ApiClient {}
 
@@ -17,6 +18,13 @@ void main() {
     mockApiClient = MockApiClient();
     mockDio = MockDio();
     when(() => mockApiClient.dio).thenReturn(mockDio);
+    PackageInfo.setMockInitialValues(
+      appName: 'dony',
+      packageName: 'com.dony.app',
+      version: '1.2.3',
+      buildNumber: '42',
+      buildSignature: '',
+    );
   });
 
   group('DiagnosticsBloc', () {
@@ -52,6 +60,17 @@ void main() {
       );
       expect(state.props, equals(['2.0', '99', true, false]));
     });
+
+    blocTest<DiagnosticsBloc, DiagnosticsState>(
+      'DiagnosticsLoadRequested emets appVersion et buildNumber',
+      build: () => DiagnosticsBloc(mockApiClient),
+      act: (bloc) => bloc.add(const DiagnosticsLoadRequested()),
+      expect: () => [
+        isA<DiagnosticsState>()
+            .having((s) => s.appVersion, 'appVersion', '1.2.3')
+            .having((s) => s.buildNumber, 'buildNumber', '42'),
+      ],
+    );
 
     blocTest<DiagnosticsBloc, DiagnosticsState>(
       'ApiPingRequested emet isPinging=true puis apiOk=true si succes',
