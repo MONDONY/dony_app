@@ -17,6 +17,26 @@ class HiveService {
   static const String kTravelerBannerDismissed = 'traveler_banner_dismissed';
   static const String kSenderBannerDismissed = 'sender_banner_dismissed';
 
+  // ── Préférences app ──────────────────────────────────────────────────────
+  static const String kThemeMode         = 'theme_mode';       // 'system' | 'light' | 'dark'
+  static const String kLanguageCode      = 'language_code';    // 'fr' | 'en'
+  static const String kSmsAlertsEnabled  = 'sms_alerts_enabled'; // bool
+  static const String kFavDestinations   = 'fav_destinations'; // List<String> ex: ['SN','CI']
+
+  // ── Préférences métier ───────────────────────────────────────────────────
+  static const String kWeightUnit        = 'weight_unit';      // 'kg' | 'lbs'
+  static const String kCurrencyCode      = 'currency_code';    // 'EUR' | 'XOF' | 'XAF'
+  static const String kPickupRadiusKm    = 'pickup_radius_km'; // int
+
+  // ── Accessibilité ────────────────────────────────────────────────────────
+  static const String kTextScale         = 'text_scale';       // 'small'|'normal'|'large'|'xlarge'
+  static const String kHighContrast      = 'high_contrast';    // bool
+  static const String kReduceAnimations  = 'reduce_animations';// bool
+
+  // ── Confidentialité ──────────────────────────────────────────────────────
+  static const String kProfileVisibility = 'profile_visibility'; // 'public' | 'limited'
+  static const String kHidePhoneNumber   = 'hide_phone_number'; // bool
+
   Future<void> init() async {
     await Hive.initFlutter();
     await Hive.openBox<Map>(offlineQueueBox);
