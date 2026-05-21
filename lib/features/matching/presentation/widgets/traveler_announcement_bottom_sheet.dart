@@ -183,9 +183,42 @@ class _TravelerAnnouncementContent extends StatelessWidget {
         const SizedBox(height: DonySpacing.sm),
         _InfoRow(
           icon: Icons.euro_rounded,
-          label: '${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
+          label: announcement.pricingMode == 'MIXED'
+              ? 'Grille tarifaire'
+              : '${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
           labelStyle: TextStyle(color: cs.primary, fontWeight: FontWeight.w700),
         ),
+
+        if (announcement.pricingMode == 'MIXED' && announcement.priceGridItems.isNotEmpty) ...[
+          const SizedBox(height: DonySpacing.lg),
+          Text('Tarif par article', style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant)),
+          const SizedBox(height: DonySpacing.sm),
+          Container(
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: DonySpacing.xs),
+            child: Column(
+              children: announcement.priceGridItems.map((item) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base, vertical: DonySpacing.xs),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(item.label, style: tt.bodyMedium),
+                    Text(
+                      '${item.unitPriceDisplay % 1 == 0 ? item.unitPriceDisplay.toStringAsFixed(0) : item.unitPriceDisplay.toStringAsFixed(2)} €',
+                      style: tt.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: cs.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              )).toList(),
+            ),
+          ),
+        ],
 
         if (categories.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.lg),

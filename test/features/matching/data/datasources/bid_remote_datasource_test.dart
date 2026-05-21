@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/datasources/bid_remote_datasource.dart';
+import 'package:dony/features/matching/data/models/acceptance_response.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -245,6 +247,256 @@ void main() {
       final result = await datasource.confirmPresence('bid-001');
 
       expect(result.id, 'bid-001');
+    });
+  });
+
+  // ── checkoutBid ──────────────────────────────────────────────────────────────
+
+  group('checkoutBid', () {
+    final _checkoutJson = {
+      'bidId': 'bid-001',
+      'clientSecret': 'pi_secret_xxx',
+      'publishableKey': 'pk_test_xxx',
+      'expiresAt': '2030-01-01T00:00:00.000Z',
+    };
+
+    test('returns BidCheckoutResponseModel on success', () async {
+      when(() => mockDio.post('/bids/checkout', data: any(named: 'data')))
+          .thenAnswer((_) async => _ok(_checkoutJson, '/bids/checkout'));
+
+      final result = await datasource.checkoutBid(
+        announcementId: 'ann-001',
+        weightKg: 5.0,
+        declaredValueEur: 100.0,
+        description: 'Vêtements',
+        contentCategory: 'CLOTHING',
+        recipientName: 'Fatou',
+        recipientPhone: '+221',
+      );
+
+      expect(result.bidId, 'bid-001');
+      expect(result.clientSecret, 'pi_secret_xxx');
+    });
+
+    test('checkoutBid with gridItems includes gridItems in body', () async {
+      dynamic capturedBody;
+      when(() => mockDio.post('/bids/checkout', data: any(named: 'data')))
+          .thenAnswer((inv) async {
+        capturedBody = inv.namedArguments[const Symbol('data')];
+        return _ok(_checkoutJson, '/bids/checkout');
+      });
+
+      await datasource.checkoutBid(
+        announcementId: 'ann-001',
+        weightKg: 5.0,
+        declaredValueEur: 100.0,
+        description: 'Électronique',
+        contentCategory: 'ELECTRONICS',
+        recipientName: 'Mamadou',
+        recipientPhone: '+221',
+        gridItems: [
+          {'announcementGridItemId': 'item-1', 'quantity': 2}
+        ],
+      );
+
+      expect((capturedBody as Map)['gridItems'], isNotNull);
+      expect((capturedBody)['gridItems'], hasLength(1));
+    });
+
+    test('checkoutBid without gridItems does not include gridItems in body',
+        () async {
+      dynamic capturedBody;
+      when(() => mockDio.post('/bids/checkout', data: any(named: 'data')))
+          .thenAnswer((inv) async {
+        capturedBody = inv.namedArguments[const Symbol('data')];
+        return _ok(_checkoutJson, '/bids/checkout');
+      });
+
+      await datasource.checkoutBid(
+        announcementId: 'ann-001',
+        weightKg: 5.0,
+        declaredValueEur: 100.0,
+        description: 'Vêtements',
+        contentCategory: 'CLOTHING',
+        recipientName: 'Fatou',
+        recipientPhone: '+221',
+      );
+
+      expect((capturedBody as Map).containsKey('gridItems'), isFalse);
+    });
+  });
+
+  // ── confirmPayment ────────────────────────────────────────────────────────────
+
+  group('confirmPayment', () {
+    test('calls POST and returns BidModel', () async {
+      when(() => mockDio.post('/bids/bid-001/confirm-payment'))
+          .thenAnswer((_) async => _ok(_bidJson, '/bids/bid-001/confirm-payment'));
+
+      final result = await datasource.confirmPayment('bid-001');
+      expect(result.id, 'bid-001');
+    });
+  });
+
+  // ── acceptBidWithCommission ───────────────────────────────────────────────────
+
+  group('acceptBidWithCommission', () {
+    test('returns AcceptanceResponse on success', () async {
+      final acceptedJson = {'status': 'ACCEPTED', 'clientSecret': null};
+      when(() => mockDio.post('/bids/bid-001/accept-with-commission'))
+          .thenAnswer((_) async =>
+              _ok(acceptedJson, '/bids/bid-001/accept-with-commission'));
+
+      final result = await datasource.acceptBidWithCommission('bid-001');
+      expect(result.status, AcceptanceStatus.accepted);
+    });
+
+    test('returns requires3ds response when status is REQUIRES_3DS', () async {
+      final json3ds = {
+        'status': 'REQUIRES_3DS',
+        'clientSecret': 'pi_xxx_secret',
+      };
+      when(() => mockDio.post('/bids/bid-001/accept-with-commission'))
+          .thenAnswer((_) async =>
+              _ok(json3ds, '/bids/bid-001/accept-with-commission'));
+
+      final result = await datasource.acceptBidWithCommission('bid-001');
+      expect(result.status, AcceptanceStatus.requires3ds);
+      expect(result.clientSecret, 'pi_xxx_secret');
+    });
+
+    test('parses 422 DioException body as failed AcceptanceResponse', () async {
+      final failedJson = {
+        'status': 'FAILED',
+        'error': 'Carte refusée',
+      };
+      when(() => mockDio.post('/bids/bid-001/accept-with-commission'))
+          .thenThrow(DioException(
+        requestOptions:
+            RequestOptions(path: '/bids/bid-001/accept-with-commission'),
+        response: Response(
+          requestOptions:
+              RequestOptions(path: '/bids/bid-001/accept-with-commission'),
+          statusCode: 422,
+          data: failedJson,
+        ),
+      ));
+
+      final result = await datasource.acceptBidWithCommission('bid-001');
+      expect(result.status, AcceptanceStatus.failed);
+      expect(result.error, 'Carte refusée');
+    });
+
+    test('rethrows DioException non-422', () async {
+      when(() => mockDio.post('/bids/bid-001/accept-with-commission'))
+          .thenThrow(DioException(
+        requestOptions:
+            RequestOptions(path: '/bids/bid-001/accept-with-commission'),
+        type: DioExceptionType.connectionTimeout,
+      ));
+
+      expect(
+        () => datasource.acceptBidWithCommission('bid-001'),
+        throwsA(isA<DioException>()),
+      );
+    });
+  });
+
+  // ── confirmCommissionAcceptance ───────────────────────────────────────────────
+
+  group('confirmCommissionAcceptance', () {
+    test('returns ConfirmResponse on success', () async {
+      when(() => mockDio.post('/bids/bid-001/confirm-acceptance'))
+          .thenAnswer((_) async => _ok(
+              {'accepted': true}, '/bids/bid-001/confirm-acceptance'));
+
+      final result = await datasource.confirmCommissionAcceptance('bid-001');
+      expect(result.accepted, isTrue);
+    });
+
+    test('returns ConfirmResponse with error when not accepted', () async {
+      when(() => mockDio.post('/bids/bid-001/confirm-acceptance'))
+          .thenAnswer((_) async => _ok(
+              {'accepted': false, 'error': 'Échec de confirmation'},
+              '/bids/bid-001/confirm-acceptance'));
+
+      final result = await datasource.confirmCommissionAcceptance('bid-001');
+      expect(result.accepted, isFalse);
+      expect(result.error, 'Échec de confirmation');
+    });
+  });
+
+  // ── createBid with gridItems ─────────────────────────────────────────────────
+
+  group('createBid with gridItems', () {
+    test('includes gridItems in body when provided', () async {
+      dynamic capturedBody;
+      when(() => mockDio.post(
+              '/announcements/ann-001/bids', data: any(named: 'data')))
+          .thenAnswer((inv) async {
+        capturedBody = inv.namedArguments[const Symbol('data')];
+        return _ok(_bidJson, '/announcements/ann-001/bids');
+      });
+
+      await datasource.createBid(
+        announcementId: 'ann-001',
+        weightKg: 5.0,
+        declaredValueEur: 100.0,
+        description: 'Vêtements',
+        contentCategory: 'CLOTHING',
+        recipientName: 'Fatou',
+        recipientPhone: '+221',
+        gridItems: [
+          {'announcementGridItemId': 'item-1', 'quantity': 1}
+        ],
+      );
+
+      expect((capturedBody as Map)['gridItems'], isNotNull);
+    });
+
+    test('does not include gridItems when not provided', () async {
+      dynamic capturedBody;
+      when(() => mockDio.post(
+              '/announcements/ann-001/bids', data: any(named: 'data')))
+          .thenAnswer((inv) async {
+        capturedBody = inv.namedArguments[const Symbol('data')];
+        return _ok(_bidJson, '/announcements/ann-001/bids');
+      });
+
+      await datasource.createBid(
+        announcementId: 'ann-001',
+        weightKg: 5.0,
+        declaredValueEur: 100.0,
+        description: 'Vêtements',
+        contentCategory: 'CLOTHING',
+        recipientName: 'Fatou',
+        recipientPhone: '+221',
+      );
+
+      expect((capturedBody as Map).containsKey('gridItems'), isFalse);
+    });
+
+    test('uses CASH payment method when specified', () async {
+      dynamic capturedBody;
+      when(() => mockDio.post(
+              '/announcements/ann-001/bids', data: any(named: 'data')))
+          .thenAnswer((inv) async {
+        capturedBody = inv.namedArguments[const Symbol('data')];
+        return _ok(_bidJson, '/announcements/ann-001/bids');
+      });
+
+      await datasource.createBid(
+        announcementId: 'ann-001',
+        weightKg: 5.0,
+        declaredValueEur: 100.0,
+        description: 'Vêtements',
+        contentCategory: 'CLOTHING',
+        recipientName: 'Fatou',
+        recipientPhone: '+221',
+        paymentMethod: BidPaymentMethod.cash,
+      );
+
+      expect((capturedBody as Map)['paymentMethod'], 'CASH');
     });
   });
 }

@@ -1,4 +1,6 @@
 import 'package:dony/features/matching/data/datasources/bid_remote_datasource.dart';
+import 'package:dony/features/matching/data/models/acceptance_response.dart';
+import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -149,6 +151,97 @@ void main() {
 
       final result = await repo.confirmPresence('bid-001');
       expect(result.id, 'bid-001');
+    });
+
+    test('checkoutBid delegates correctly', () async {
+      final checkoutResponse = BidCheckoutResponseModel(
+        bidId: 'bid-001',
+        clientSecret: 'pi_secret_xxx',
+        publishableKey: 'pk_test_xxx',
+        expiresAt: DateTime(2030),
+      );
+      when(() => mockDs.checkoutBid(
+            announcementId: any(named: 'announcementId'),
+            weightKg: any(named: 'weightKg'),
+            declaredValueEur: any(named: 'declaredValueEur'),
+            description: any(named: 'description'),
+            contentCategory: any(named: 'contentCategory'),
+            recipientName: any(named: 'recipientName'),
+            recipientPhone: any(named: 'recipientPhone'),
+          )).thenAnswer((_) async => checkoutResponse);
+
+      final result = await repo.checkoutBid(
+        announcementId: 'ann-001',
+        weightKg: 5.0,
+        declaredValueEur: 100.0,
+        description: 'Test',
+        contentCategory: 'OTHER',
+        recipientName: 'Fatou',
+        recipientPhone: '+221',
+      );
+
+      expect(result.bidId, 'bid-001');
+      expect(result.clientSecret, 'pi_secret_xxx');
+    });
+
+    test('checkoutBid with gridItems delegates correctly', () async {
+      final checkoutResponse = BidCheckoutResponseModel(
+        bidId: 'bid-001',
+        clientSecret: 'pi_secret_xxx',
+        publishableKey: 'pk_test_xxx',
+        expiresAt: DateTime(2030),
+      );
+      when(() => mockDs.checkoutBid(
+            announcementId: any(named: 'announcementId'),
+            weightKg: any(named: 'weightKg'),
+            declaredValueEur: any(named: 'declaredValueEur'),
+            description: any(named: 'description'),
+            contentCategory: any(named: 'contentCategory'),
+            recipientName: any(named: 'recipientName'),
+            recipientPhone: any(named: 'recipientPhone'),
+            gridItems: any(named: 'gridItems'),
+          )).thenAnswer((_) async => checkoutResponse);
+
+      final result = await repo.checkoutBid(
+        announcementId: 'ann-001',
+        weightKg: 5.0,
+        declaredValueEur: 100.0,
+        description: 'Test',
+        contentCategory: 'OTHER',
+        recipientName: 'Fatou',
+        recipientPhone: '+221',
+        gridItems: [
+          {'announcementGridItemId': 'item-1', 'quantity': 2}
+        ],
+      );
+
+      expect(result.bidId, 'bid-001');
+    });
+
+    test('confirmPayment delegates correctly', () async {
+      when(() => mockDs.confirmPayment('bid-001'))
+          .thenAnswer((_) async => _bid(status: 'PENDING'));
+
+      final result = await repo.confirmPayment('bid-001');
+      expect(result.id, 'bid-001');
+    });
+
+    test('acceptBidWithCommission delegates correctly', () async {
+      const response = AcceptanceResponse(status: AcceptanceStatus.accepted);
+      when(() => mockDs.acceptBidWithCommission('bid-001'))
+          .thenAnswer((_) async => response);
+
+      final result = await repo.acceptBidWithCommission('bid-001');
+      expect(result.status, AcceptanceStatus.accepted);
+    });
+
+    test('confirmCommissionAcceptance delegates correctly', () async {
+      const response = ConfirmResponse(accepted: true);
+      when(() => mockDs.confirmCommissionAcceptance('bid-001'))
+          .thenAnswer((_) async => response);
+
+      final result = await repo.confirmCommissionAcceptance('bid-001');
+      expect(result.accepted, isTrue);
     });
   });
 }

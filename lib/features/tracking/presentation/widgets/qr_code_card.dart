@@ -153,27 +153,19 @@ class _QrCodeContentState extends State<_QrCodeContent> {
 
         const SizedBox(height: DonySpacing.md),
 
-        Row(
-          children: [
-            Expanded(
-              child: DonyButton(
-                label: 'Enregistrer',
-                onPressed: _saving || _sharing ? null : () => _saveToGallery(imageBytes),
-                isLoading: _saving,
-                icon: Icons.download_rounded,
-              ),
-            ),
-            const SizedBox(width: DonySpacing.md),
-            Expanded(
-              child: DonyButton(
-                label: 'Partager',
-                onPressed: _saving || _sharing ? null : () => _shareQrCode(imageBytes),
-                isLoading: _sharing,
-                variant: DonyButtonVariant.secondary,
-                icon: Icons.share_rounded,
-              ),
-            ),
-          ],
+        DonyButton(
+          label: 'Enregistrer',
+          onPressed: _saving || _sharing ? null : () => _saveToGallery(imageBytes),
+          isLoading: _saving,
+          icon: Icons.download_rounded,
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        DonyButton(
+          label: 'Partager',
+          onPressed: _saving || _sharing ? null : () => _shareQrCode(imageBytes),
+          isLoading: _sharing,
+          variant: DonyButtonVariant.secondary,
+          icon: Icons.share_rounded,
         ),
       ],
     );

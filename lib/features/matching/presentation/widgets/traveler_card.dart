@@ -127,7 +127,9 @@ class TravelerCard extends StatelessWidget {
                 ),
                 const SizedBox(width: DonySpacing.sm),
                 Text(
-                  '${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
+                  announcement.pricingMode == 'MIXED'
+                      ? 'Grille tarifaire'
+                      : '${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
                   style: tt.titleLarge?.copyWith(color: cs.success, fontWeight: FontWeight.w700),
                 ),
               ],

@@ -16,7 +16,7 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
   senderKycVerified: json['senderKycVerified'] as bool? ?? false,
   senderIsProAccount: json['senderIsProAccount'] as bool? ?? false,
   senderKiloPro: json['senderKiloPro'] as bool? ?? false,
-  weightKg: (json['weightKg'] as num).toDouble(),
+  weightKg: (json['weightKg'] as num?)?.toDouble(),
   declaredValueEur: (json['declaredValueEur'] as num?)?.toDouble(),
   description: json['description'] as String?,
   contentCategory: json['contentCategory'] as String?,
@@ -75,6 +75,10 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
   contestationDeadline: json['contestationDeadline'] == null
       ? null
       : DateTime.parse(json['contestationDeadline'] as String),
+  pricingMode:
+      $enumDecodeNullable(_$BidPricingModeEnumMap, json['pricingMode']) ??
+      BidPricingMode.kg,
+  totalAmountEur: (json['totalNetAmountEur'] as num?)?.toDouble(),
 );
 
 Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
@@ -129,6 +133,8 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'commissionStatus': _$CommissionStatusEnumMap[instance.commissionStatus],
   'cancellationNoShowStatus': instance.cancellationNoShowStatus,
   'contestationDeadline': instance.contestationDeadline?.toIso8601String(),
+  'pricingMode': _$BidPricingModeEnumMap[instance.pricingMode]!,
+  'totalNetAmountEur': instance.totalAmountEur,
 };
 
 const _$BidPaymentMethodEnumMap = {
@@ -142,4 +148,10 @@ const _$CommissionStatusEnumMap = {
   CommissionStatus.charged: 'CHARGED',
   CommissionStatus.failed: 'FAILED',
   CommissionStatus.refunded: 'REFUNDED',
+};
+
+const _$BidPricingModeEnumMap = {
+  BidPricingMode.kg: 'KG',
+  BidPricingMode.grid: 'GRID',
+  BidPricingMode.mixed: 'MIXED',
 };

@@ -642,14 +642,15 @@ class _CreateBidContentState extends State<_CreateBidContent> {
                     const SizedBox(height: DonySpacing.md),
                   ],
 
-                  // ── Price breakdown ─────────────────────────────────────
-                  _PriceBreakdown(
-                    weightKg: weightKg,
-                    pricePerKg: _pricePerKg,
-                    basePrice: basePrice,
-                    serviceFee: serviceFee,
-                    totalPrice: totalPrice,
-                  ),
+                  // ── Price breakdown (KG mode uniquement) ────────────────
+                  if (hasKgPricing)
+                    _PriceBreakdown(
+                      weightKg: weightKg,
+                      pricePerKg: _pricePerKg,
+                      basePrice: basePrice,
+                      serviceFee: serviceFee,
+                      totalPrice: totalPrice,
+                    ),
                   const SizedBox(height: DonySpacing.md),
                 ],
               );

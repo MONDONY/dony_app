@@ -302,8 +302,10 @@ class _AnnouncementDetailContent extends StatelessWidget {
               const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: _InfoPill(
-                  value: '${a.pricePerKg % 1 == 0 ? a.pricePerKg.toStringAsFixed(0) : a.pricePerKg.toStringAsFixed(1)}€/kg',
-                  label: 'prix',
+                  value: a.pricingMode == 'MIXED'
+                      ? 'Grille'
+                      : '${a.pricePerKg % 1 == 0 ? a.pricePerKg.toStringAsFixed(0) : a.pricePerKg.toStringAsFixed(1)}€/kg',
+                  label: a.pricingMode == 'MIXED' ? 'tarifaire' : 'prix',
                 ),
               ),
               const SizedBox(width: DonySpacing.sm),

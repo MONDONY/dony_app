@@ -5,6 +5,15 @@ import 'package:flutter/material.dart';
 // 1 − 12% de commission dony
 const _kTravelerShareRate = 0.88;
 
+String _travelerEarnings(BidModel bid) {
+  final total = bid.totalAmountEur ??
+      (bid.pricePerKg != null && bid.weightKg != null
+          ? bid.pricePerKg! * bid.weightKg!
+          : null);
+  if (total == null) return '—';
+  return (total * _kTravelerShareRate).toStringAsFixed(2);
+}
+
 /// Carte affichant la libération des fonds au voyageur (statut COMPLETED).
 ///
 /// Correspond à l'ancienne classe privée `_PaymentReleaseCard` de
@@ -37,7 +46,7 @@ class PaymentReleaseCard extends StatelessWidget {
                   style: tt.bodyMedium?.copyWith(color: cs.onSurface),
                 ),
                 Text(
-                  'Reçu disponible · ${bid.pricePerKg != null ? (bid.pricePerKg! * bid.weightKg * _kTravelerShareRate).toStringAsFixed(2) : '—'} €',
+                  'Reçu disponible · ${_travelerEarnings(bid)} €',
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],

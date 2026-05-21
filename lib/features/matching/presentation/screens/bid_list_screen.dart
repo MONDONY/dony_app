@@ -775,9 +775,11 @@ class _BidCard extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
-    final amount = bid.pricePerKg != null
-        ? '${(bid.weightKg * bid.pricePerKg!).toStringAsFixed(0)} €'
-        : '—';
+    final amount = bid.totalAmountEur != null
+        ? '${bid.totalAmountEur!.toStringAsFixed(0)} €'
+        : bid.pricePerKg != null
+            ? '${((bid.weightKg ?? 0) * bid.pricePerKg!).toStringAsFixed(0)} €'
+            : '—';
     final content = bid.contentCategory ?? bid.description;
     final hasTracking =
         bid.trackingNumber != null && bid.trackingNumber!.isNotEmpty;
@@ -851,7 +853,11 @@ class _BidCard extends StatelessWidget {
                 children: [
                   _MetaPill(
                     icon: Icons.scale_outlined,
-                    label: '${bid.weightKg.toStringAsFixed(0)} kg',
+                    label: bid.weightKg != null
+                        ? '${bid.weightKg!.toStringAsFixed(0)} kg'
+                        : bid.pricingMode == BidPricingMode.grid
+                            ? 'Forfait'
+                            : '—',
                   ),
                   if (content != null && content.isNotEmpty)
                     _MetaPill(
