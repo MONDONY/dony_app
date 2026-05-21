@@ -9,6 +9,10 @@ class BidBloc extends Bloc<BidEvent, BidState> {
   final BidRepository _repository;
   bool _checkoutInProgress = false;
 
+  /// Quantités sélectionnées dans la grille de prix du formulaire de création.
+  /// Clé = itemId, valeur = quantité (toujours ≥ 1 si présente).
+  final Map<String, int> _gridQuantities = {};
+
   static const _myBidsTtl = Duration(minutes: 3);
 
   BidBloc(this._repository) : super(BidInitial()) {
@@ -27,7 +31,12 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     on<BidDeleteRequested>(_onDeleteRequested);
     on<BidTravelerDismissRequested>(_onTravelerDismissRequested);
     on<BidConfirmPaymentRequested>(_onConfirmPaymentRequested);
+    on<BidGridItemIncrementRequested>(_onGridItemIncrementRequested);
+    on<BidGridItemDecrementRequested>(_onGridItemDecrementRequested);
   }
+
+  /// Expose une copie en lecture seule des quantités grille courantes.
+  Map<String, int> get gridQuantities => Map.unmodifiable(_gridQuantities);
 
   Future<void> _onConfirmPaymentRequested(
     BidConfirmPaymentRequested event,
@@ -57,6 +66,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         contentCategory: event.contentCategory,
         recipientName: event.recipientName,
         recipientPhone: event.recipientPhone,
+        gridItems: event.gridItems,
       );
       emit(BidCheckoutReady(response));
     } catch (e) {
@@ -81,6 +91,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         recipientName: event.recipientName,
         recipientPhone: event.recipientPhone,
         paymentMethod: event.paymentMethod,
+        gridItems: event.gridItems,
       );
       emit(BidCreated(bid));
     } catch (e) {
@@ -280,5 +291,26 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     } catch (e) {
       emit(BidError(unwrapDioError(e)));
     }
+  }
+
+  void _onGridItemIncrementRequested(
+    BidGridItemIncrementRequested event,
+    Emitter<BidState> emit,
+  ) {
+    _gridQuantities[event.itemId] = (_gridQuantities[event.itemId] ?? 0) + 1;
+    emit(BidGridQuantitiesUpdated(Map<String, int>.from(_gridQuantities)));
+  }
+
+  void _onGridItemDecrementRequested(
+    BidGridItemDecrementRequested event,
+    Emitter<BidState> emit,
+  ) {
+    final current = _gridQuantities[event.itemId] ?? 0;
+    if (current <= 1) {
+      _gridQuantities.remove(event.itemId);
+    } else {
+      _gridQuantities[event.itemId] = current - 1;
+    }
+    emit(BidGridQuantitiesUpdated(Map<String, int>.from(_gridQuantities)));
   }
 }

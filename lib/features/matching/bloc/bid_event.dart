@@ -12,6 +12,9 @@ class BidCheckoutRequested extends BidEvent {
   final String contentCategory;
   final String recipientName;
   final String recipientPhone;
+  /// Articles de la grille sélectionnés (mode MIXED). Null si aucun article.
+  /// Format: [{'announcementGridItemId': String, 'quantity': int}]
+  final List<Map<String, dynamic>>? gridItems;
 
   BidCheckoutRequested({
     required this.announcementId,
@@ -21,6 +24,7 @@ class BidCheckoutRequested extends BidEvent {
     required this.contentCategory,
     required this.recipientName,
     required this.recipientPhone,
+    this.gridItems,
   });
 }
 
@@ -33,6 +37,9 @@ class BidCreateRequested extends BidEvent {
   final String recipientName;
   final String recipientPhone;
   final BidPaymentMethod paymentMethod;
+  /// Articles de la grille sélectionnés (mode MIXED). Null si aucun article.
+  /// Format: [{'announcementGridItemId': String, 'quantity': int}]
+  final List<Map<String, dynamic>>? gridItems;
 
   BidCreateRequested({
     required this.announcementId,
@@ -43,6 +50,7 @@ class BidCreateRequested extends BidEvent {
     required this.recipientName,
     required this.recipientPhone,
     this.paymentMethod = BidPaymentMethod.stripe,
+    this.gridItems,
   });
 }
 
@@ -123,4 +131,17 @@ class BidTravelerDismissRequested extends BidEvent {
 class BidConfirmPaymentRequested extends BidEvent {
   final String bidId;
   BidConfirmPaymentRequested(this.bidId);
+}
+
+/// Incrémente la quantité d'un article de la grille dans le formulaire de création de bid.
+class BidGridItemIncrementRequested extends BidEvent {
+  final String itemId;
+  const BidGridItemIncrementRequested(this.itemId);
+}
+
+/// Décrémente la quantité d'un article de la grille. Si la quantité atteint 0,
+/// l'entrée est retirée de la map.
+class BidGridItemDecrementRequested extends BidEvent {
+  final String itemId;
+  const BidGridItemDecrementRequested(this.itemId);
 }

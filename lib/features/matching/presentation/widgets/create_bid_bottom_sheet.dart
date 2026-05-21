@@ -143,6 +143,8 @@ class _CreateBidContentState extends State<_CreateBidContent> {
   // Local copy of payment method so the widget doesn't hold a reference to
   // the external notifier that may be disposed during the sheet exit animation.
   late final ValueNotifier<BidPaymentMethod> _methodNotifier;
+  // Grid quantities for MIXED pricing mode (itemId → quantity).
+  final _gridQuantitiesNotifier = ValueNotifier<Map<String, int>>({});
 
   double get _maxKg => widget.announcement.availableKg;
   double get _pricePerKg => widget.announcement.pricePerKg;
@@ -205,6 +207,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
     _categoriesNotifier.dispose();
     _disclaimerNotifier.dispose();
     _methodNotifier.dispose();
+    _gridQuantitiesNotifier.dispose();
     super.dispose();
   }
 
@@ -230,6 +233,17 @@ class _CreateBidContentState extends State<_CreateBidContent> {
       _showError('Téléphone du destinataire obligatoire');
       return;
     }
+
+    // Build grid items payload for MIXED pricing mode.
+    final gridItems = widget.announcement.priceGridItems
+        .where((item) =>
+            (_gridQuantitiesNotifier.value[item.id] ?? 0) > 0)
+        .map((item) => {
+              'announcementGridItemId': item.id,
+              'quantity': _gridQuantitiesNotifier.value[item.id]!,
+            })
+        .toList();
+
     final method = _methodNotifier.value;
     if (method == BidPaymentMethod.cash) {
       context.read<BidBloc>().add(BidCreateRequested(
@@ -241,6 +255,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
         recipientName: _recipientNameCtrl.text.trim(),
         recipientPhone: _recipientPhoneCtrl.text.trim(),
         paymentMethod: BidPaymentMethod.cash,
+        gridItems: gridItems.isEmpty ? null : gridItems,
       ));
     } else {
       context.read<BidBloc>().add(BidCheckoutRequested(
@@ -251,6 +266,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
         contentCategory: _categoriesNotifier.value.join(', '),
         recipientName: _recipientNameCtrl.text.trim(),
         recipientPhone: _recipientPhoneCtrl.text.trim(),
+        gridItems: gridItems.isEmpty ? null : gridItems,
       ));
     }
   }
@@ -278,6 +294,9 @@ class _CreateBidContentState extends State<_CreateBidContent> {
               ));
             } else if (state is BidError) {
               ErrorPresenter.show(context, state.error);
+            } else if (state is BidGridQuantitiesUpdated) {
+              // Mirror BLoC grid quantities into local notifier for display.
+              _gridQuantitiesNotifier.value = state.gridQuantities;
             }
           },
         ),
@@ -297,22 +316,49 @@ class _CreateBidContentState extends State<_CreateBidContent> {
               _categoriesNotifier,
               _disclaimerNotifier,
               _methodNotifier,
+              _gridQuantitiesNotifier,
             ]),
             builder: (context, _) {
               final weightKg = _weightNotifier.value;
               final categories = _categoriesNotifier.value;
               final disclaimerAccepted = _disclaimerNotifier.value;
               final currentMethod = _methodNotifier.value;
+              final gridQuantities = _gridQuantitiesNotifier.value;
+              final isMixed = widget.announcement.pricingMode == 'MIXED' &&
+                  widget.announcement.priceGridItems.isNotEmpty;
               final serviceFee = weightKg * _pricePerKg * 0.12;
               final basePrice = weightKg * _pricePerKg;
               final totalPrice = basePrice + serviceFee;
 
+              // Grid total (articles only, displayed as informational recap).
+              final gridTotal = isMixed
+                  ? widget.announcement.priceGridItems.fold<double>(
+                      0,
+                      (sum, item) =>
+                          sum +
+                          item.unitPriceDisplay *
+                              (gridQuantities[item.id] ?? 0),
+                    )
+                  : 0.0;
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // ── SECTION: Articles de la grille (MIXED uniquement) ──
+                  if (isMixed) ...[
+                    _SectionLabel(label: 'ARTICLES DISPONIBLES'),
+                    const SizedBox(height: DonySpacing.sm),
+                    ...widget.announcement.priceGridItems.map((item) {
+                      final qty = gridQuantities[item.id] ?? 0;
+                      return _GridItemStepper(item: item, quantity: qty);
+                    }),
+                    const SizedBox(height: DonySpacing.xxl),
+
+                    _SectionLabel(label: 'COLIS HORS GRILLE (OPTIONNEL)'),
+                    const SizedBox(height: DonySpacing.sm),
+                  ],
+
                   // ── SECTION: Poids estimé ───────────────────────────────
-                  _SectionLabel(label: 'POIDS ESTIMÉ'),
-                  const SizedBox(height: DonySpacing.sm),
                   _WeightSection(
                     weightKg: weightKg,
                     maxKg: _maxKg,
@@ -416,6 +462,12 @@ class _CreateBidContentState extends State<_CreateBidContent> {
                     onChanged: (v) => _disclaimerNotifier.value = v,
                   ).animate().fadeIn(delay: 200.ms),
                   const SizedBox(height: DonySpacing.xxl),
+
+                  // ── Récap articles grille (MIXED, si articles sélectionnés) ─
+                  if (isMixed && gridTotal > 0) ...[
+                    _GridTotalRecap(gridTotal: gridTotal),
+                    const SizedBox(height: DonySpacing.md),
+                  ],
 
                   // ── Price breakdown ─────────────────────────────────────
                   _PriceBreakdown(
@@ -809,6 +861,154 @@ class _MethodTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Grid item stepper ─────────────────────────────────────────────────────────
+
+class _GridItemStepper extends StatelessWidget {
+  const _GridItemStepper({required this.item, required this.quantity});
+
+  final AnnouncementGridItemModel item;
+  final int quantity;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final isActive = quantity > 0;
+    return Container(
+      margin: const EdgeInsets.only(bottom: DonySpacing.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.base,
+        vertical: 10,
+      ),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(
+          color: isActive ? cs.primary : cs.outline,
+          width: isActive ? 1.5 : 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item.label, style: tt.titleSmall),
+                Text(
+                  '${item.unitPriceDisplay.toStringAsFixed(2)} € / unité',
+                  style: tt.bodySmall?.copyWith(
+                    color: isActive ? cs.primary : cs.onSurfaceVariant,
+                    fontWeight:
+                        isActive ? FontWeight.w700 : FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Row(
+            children: [
+              _StepBtn(
+                icon: Icons.remove,
+                active: quantity > 0,
+                onTap: quantity > 0
+                    ? () => context
+                        .read<BidBloc>()
+                        .add(BidGridItemDecrementRequested(item.id))
+                    : null,
+              ),
+              SizedBox(
+                width: 28,
+                child: Center(
+                  child: Text('$quantity', style: tt.titleSmall),
+                ),
+              ),
+              _StepBtn(
+                icon: Icons.add,
+                active: true,
+                onTap: () => context
+                    .read<BidBloc>()
+                    .add(BidGridItemIncrementRequested(item.id)),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StepBtn extends StatelessWidget {
+  const _StepBtn({
+    required this.icon,
+    required this.active,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final bool active;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final bgColor = active ? cs.primary : cs.surfaceContainerLow;
+    final iconColor = active ? cs.onPrimary : cs.onSurfaceVariant;
+    return GestureDetector(
+      onTap: onTap,
+      child: Opacity(
+        opacity: onTap != null ? 1.0 : 0.4,
+        child: Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(DonyRadius.sm),
+          ),
+          child: Icon(icon, size: 14, color: iconColor),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Grid total recap ─────────────────────────────────────────────────────────
+
+class _GridTotalRecap extends StatelessWidget {
+  const _GridTotalRecap({required this.gridTotal});
+
+  final double gridTotal;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: cs.primary,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Total articles',
+            style: tt.labelMedium?.copyWith(color: cs.onPrimary),
+          ),
+          Text(
+            '${gridTotal.toStringAsFixed(2)} €',
+            style: tt.titleSmall?.copyWith(
+              color: cs.onPrimary,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -72,6 +72,8 @@ AnnouncementModel _$AnnouncementModelFromJson(Map<String, dynamic> json) =>
           const {BidPaymentMethod.stripe},
       capacityUnit: json['capacityUnit'] as String?,
       pricingMode: json['pricingMode'] as String? ?? 'KG',
+      priceGridItems:
+          _gridItemsFromJson(json['priceGridItems'] as List<dynamic>?),
     );
 
 Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
@@ -102,6 +104,7 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
           .toList(),
       'capacityUnit': instance.capacityUnit,
       'pricingMode': instance.pricingMode,
+      'priceGridItems': _gridItemsToJson(instance.priceGridItems),
     };
 
 const _$BidPaymentMethodEnumMap = {

@@ -6,6 +6,38 @@ import 'transport_mode.dart';
 
 part 'announcement_model.g.dart';
 
+/// Représente un article d'une grille de prix (mode MIXED).
+/// Ne fait pas partie du modèle généré — pas de @JsonSerializable car la
+/// classe est simple et n'est pas un `part` du fichier d'annotation.
+class AnnouncementGridItemModel {
+  final String id;
+  final String label;
+  final double unitPriceNet;
+  final double unitPriceDisplay;
+
+  const AnnouncementGridItemModel({
+    required this.id,
+    required this.label,
+    required this.unitPriceNet,
+    required this.unitPriceDisplay,
+  });
+
+  factory AnnouncementGridItemModel.fromJson(Map<String, dynamic> json) =>
+      AnnouncementGridItemModel(
+        id: json['id'] as String,
+        label: json['label'] as String,
+        unitPriceNet: (json['unitPriceNet'] as num).toDouble(),
+        unitPriceDisplay: (json['unitPriceDisplay'] as num).toDouble(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'label': label,
+        'unitPriceNet': unitPriceNet,
+        'unitPriceDisplay': unitPriceDisplay,
+      };
+}
+
 @JsonSerializable()
 class TravelerProfile {
   final String id;
@@ -83,6 +115,13 @@ class AnnouncementModel {
   final Set<BidPaymentMethod> acceptedPaymentMethods;
   final String? capacityUnit;
   final String pricingMode;
+  /// Articles disponibles dans la grille de prix (mode MIXED uniquement).
+  /// Vide pour le mode KG.
+  @JsonKey(
+    fromJson: _gridItemsFromJson,
+    toJson: _gridItemsToJson,
+  )
+  final List<AnnouncementGridItemModel> priceGridItems;
 
   const AnnouncementModel({
     required this.id,
@@ -109,6 +148,7 @@ class AnnouncementModel {
     this.acceptedPaymentMethods = const {BidPaymentMethod.stripe},
     this.capacityUnit,
     this.pricingMode = 'KG',
+    this.priceGridItems = const [],
   });
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) =>
@@ -119,3 +159,13 @@ class AnnouncementModel {
 
 String? _transportModeToWireOrNull(TransportMode? mode) =>
     mode == null ? null : transportModeToWire(mode);
+
+List<AnnouncementGridItemModel> _gridItemsFromJson(List<dynamic>? json) =>
+    (json ?? [])
+        .map((e) =>
+            AnnouncementGridItemModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+
+List<Map<String, dynamic>> _gridItemsToJson(
+        List<AnnouncementGridItemModel> items) =>
+    items.map((e) => e.toJson()).toList();
