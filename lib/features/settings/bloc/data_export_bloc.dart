@@ -1,3 +1,4 @@
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -20,8 +21,8 @@ class DataExportBloc extends Bloc<DataExportEvent, DataExportState> {
     try {
       await _api.dio.get('/users/me/export');
       emit(const DataExportSuccess());
-    } catch (_) {
-      emit(const DataExportError('Impossible de lancer l\'export. Réessaie.'));
+    } catch (e) {
+      emit(DataExportError(unwrapDioError(e).message));
     }
   }
 }
