@@ -101,10 +101,9 @@ class AnnouncementFormState extends Equatable {
       departureDate != null &&
       departureDate!
           .isAfter(DateTime.now().subtract(const Duration(days: 1))) &&
-      pricePerKg != null &&
-      pricePerKg! > 0 &&
       availableKg != null &&
-      availableKg! >= 1;
+      availableKg! >= 1 &&
+      isStep3Valid;
 
   bool get isStep1Valid =>
       departureCity != null &&
@@ -116,13 +115,22 @@ class AnnouncementFormState extends Equatable {
   bool get isStep2Valid =>
       pickupAddress != null && deliveryAddress != null;
 
-  bool get isStep3Valid => pricePerKg != null && pricePerKg! > 0;
+  bool get isStep3Valid {
+    switch (pricingMode) {
+      case PricingMode.kg:
+        return pricePerKg != null && pricePerKg! > 0;
+      case PricingMode.mixed:
+        return (pricePerKg != null && pricePerKg! > 0) ||
+            gridPreviewItems.isNotEmpty;
+    }
+  }
 
   AnnouncementFormState copyWith({
     String? departureCity,
     String? arrivalCity,
     DateTime? departureDate,
     double? pricePerKg,
+    double? Function()? pricePerKgGetter,
     double? Function()? availableKgGetter,
     CapacityUnit? capacityUnit,
     String? description,
@@ -141,7 +149,9 @@ class AnnouncementFormState extends Equatable {
       departureCity: departureCity ?? this.departureCity,
       arrivalCity: arrivalCity ?? this.arrivalCity,
       departureDate: departureDate ?? this.departureDate,
-      pricePerKg: pricePerKg ?? this.pricePerKg,
+      pricePerKg: pricePerKgGetter != null
+          ? pricePerKgGetter()
+          : (pricePerKg ?? this.pricePerKg),
       availableKg: availableKgGetter != null ? availableKgGetter() : this.availableKg,
       capacityUnit: capacityUnit ?? this.capacityUnit,
       description: description ?? this.description,

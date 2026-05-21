@@ -30,6 +30,7 @@ class AnnouncementFormBloc
     on<FormResetRequested>(_onFormReset);
     on<AnnouncementPricingModeSetRequested>(_onPricingModeSet);
     on<AnnouncementGridPreviewLoadRequested>(_onGridPreviewLoad);
+    on<AnnouncementPricePerKgClearedRequested>(_onPricePerKgCleared);
   }
 
   void _onDepartureCityChanged(
@@ -185,5 +186,12 @@ class AnnouncementFormBloc
     } catch (_) {
       // silence — preview only, non bloquant
     }
+  }
+
+  void _onPricePerKgCleared(
+    AnnouncementPricePerKgClearedRequested event,
+    Emitter<AnnouncementFormState> emit,
+  ) {
+    emit(state.copyWith(pricePerKgGetter: () => null));
   }
 }

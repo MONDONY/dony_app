@@ -145,3 +145,7 @@ class AnnouncementPricingModeSetRequested extends AnnouncementFormEvent {
 class AnnouncementGridPreviewLoadRequested extends AnnouncementFormEvent {
   const AnnouncementGridPreviewLoadRequested();
 }
+
+class AnnouncementPricePerKgClearedRequested extends AnnouncementFormEvent {
+  const AnnouncementPricePerKgClearedRequested();
+}

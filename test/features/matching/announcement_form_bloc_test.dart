@@ -553,5 +553,18 @@ void main() {
         expect(items.first.unitPriceDisplay, 5.60);
       },
     );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'AnnouncementPricePerKgClearedRequested → pricePerKg == null',
+      build: () => AnnouncementFormBloc(),
+      seed: () => const AnnouncementFormState(pricePerKg: 8.0),
+      act: (b) => b.add(const AnnouncementPricePerKgClearedRequested()),
+      expect: () => [
+        predicate<AnnouncementFormState>(
+          (s) => s.pricePerKg == null,
+          'state has pricePerKg=null',
+        ),
+      ],
+    );
   });
 }
