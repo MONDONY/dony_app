@@ -25,6 +25,7 @@ import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/features/profile/data/traveler_upgrade_repository.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
+import 'package:dony/features/settings/bloc/data_export_bloc.dart';
 import 'package:dony/features/settings/data/account_deletion_repository.dart';
 import 'package:dony/features/settings/data/firebase_phone_reauth.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
@@ -304,6 +305,11 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AccountDeletionRepository>(),
       getIt<FirebasePhoneReauth>(),
     ),
+  );
+
+  // Settings — Data Export (RGPD)
+  getIt.registerFactory<DataExportBloc>(
+    () => DataExportBloc(getIt<ApiClient>()),
   );
 
   // Settings — App Preferences (theme, language, SMS, destinations)

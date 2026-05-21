@@ -84,6 +84,7 @@ import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen
 import 'package:dony/features/splash/presentation/splash_screen.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
+import 'package:dony/features/settings/bloc/data_export_bloc.dart';
 import 'package:dony/features/settings/presentation/settings_screen.dart';
 import 'package:dony/features/settings/presentation/screens/accessibility_settings_screen.dart';
 import 'package:dony/features/settings/presentation/screens/business_prefs_screen.dart';
@@ -654,7 +655,13 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: 'data',
-          builder: (context, state) => const DataSettingsScreen(),
+          builder: (context, state) => MultiBlocProvider(
+            providers: [
+              BlocProvider(create: (_) => getIt<AccountDeletionBloc>()),
+              BlocProvider(create: (_) => getIt<DataExportBloc>()),
+            ],
+            child: const DataSettingsScreen(),
+          ),
         ),
         GoRoute(
           path: 'notifications',
