@@ -708,6 +708,14 @@ class _AccountTab extends StatelessWidget {
                 onTap: () => context.push('/payments/commission-method'),
               ),
               DonyListTile(
+                icon: Icons.grid_view_outlined,
+                iconColor: cs.primary,
+                iconBgColor: cs.primaryContainer,
+                label: 'Ma grille de prix',
+                subtitle: 'Tarifs par article pour vos trajets',
+                onTap: () => context.push('/profile/price-grid'),
+              ),
+              DonyListTile(
                 icon: Icons.receipt_rounded,
                 iconColor: DonyColors.purple,
                 iconBgColor: DonyColors.violetLight,

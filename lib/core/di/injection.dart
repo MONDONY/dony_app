@@ -53,6 +53,7 @@ import 'package:dony/features/matching/data/datasources/bid_remote_datasource.da
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:dony/features/matching/data/services/saved_trips_service.dart';
+import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
 import 'package:dony/features/price_grid/data/datasources/price_grid_datasource.dart';
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
@@ -169,6 +170,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerLazySingleton<PriceGridRepository>(
     () => PriceGridRepository(getIt<PriceGridDatasource>()),
+  );
+  getIt.registerFactory<PriceGridBloc>(
+    () => PriceGridBloc(getIt<PriceGridRepository>()),
   );
 
   // Matching — Bids
