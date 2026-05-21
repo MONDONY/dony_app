@@ -35,6 +35,12 @@ void showTravelerAnnouncementSheet(
       existingBidStatus == 'PAYMENT_ESCROWED';
   final hasActiveBid = isPending || isAccepted;
 
+  final isPending = existingBidStatus == 'PENDING' ||
+      existingBidStatus == 'AWAITING_PAYMENT';
+  final isAccepted = existingBidStatus == 'ACCEPTED' ||
+      existingBidStatus == 'PAYMENT_ESCROWED';
+  final hasActiveBid = isPending || isAccepted;
+
   DonyBottomSheet.show<void>(
     context,
     title: 'Détail du trajet',
