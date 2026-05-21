@@ -164,6 +164,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
     _weightNotifier.addListener(_syncStickyState);
     _categoriesNotifier.addListener(_syncStickyState);
     _disclaimerNotifier.addListener(_syncStickyState);
+    _gridQuantitiesNotifier.addListener(_syncStickyState);
     _methodNotifier.addListener(_syncMethodToExternal);
     WidgetsBinding.instance.addPostFrameCallback((_) => _syncStickyState());
   }
@@ -186,7 +187,13 @@ class _CreateBidContentState extends State<_CreateBidContent> {
     final weightKg = _weightNotifier.value;
     final categories = _categoriesNotifier.value;
     final disclaimerAccepted = _disclaimerNotifier.value;
-    final canSubmit = weightKg > 0 && categories.isNotEmpty && disclaimerAccepted;
+    final isMixed = widget.announcement.pricingMode == 'MIXED' &&
+        widget.announcement.priceGridItems.isNotEmpty;
+    final hasGridItems =
+        isMixed && _gridQuantitiesNotifier.value.isNotEmpty;
+    final hasWeight = weightKg > 0;
+    final canSubmit =
+        (hasWeight || hasGridItems) && categories.isNotEmpty && disclaimerAccepted;
     final totalPrice = weightKg * _pricePerKg * 1.12;
     widget.canSubmitNotifier?.value = canSubmit;
     widget.totalPriceNotifier?.value = totalPrice;
@@ -202,6 +209,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
     _weightNotifier.removeListener(_syncStickyState);
     _categoriesNotifier.removeListener(_syncStickyState);
     _disclaimerNotifier.removeListener(_syncStickyState);
+    _gridQuantitiesNotifier.removeListener(_syncStickyState);
     _methodNotifier.removeListener(_syncMethodToExternal);
     _weightNotifier.dispose();
     _categoriesNotifier.dispose();
@@ -362,6 +370,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
                   _WeightSection(
                     weightKg: weightKg,
                     maxKg: _maxKg,
+                    isMixed: isMixed,
                     onChanged: (v) => _weightNotifier.value = v,
                   ).animate().fadeIn(duration: 250.ms),
                   const SizedBox(height: DonySpacing.xxl),
@@ -551,18 +560,34 @@ class _WeightSection extends StatelessWidget {
     required this.weightKg,
     required this.maxKg,
     required this.onChanged,
+    this.isMixed = false,
   });
 
   final double weightKg;
   final double maxKg;
   final ValueChanged<double> onChanged;
+  /// En mode MIXED, le poids est optionnel : min slider = 0.
+  final bool isMixed;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final sliderMin = isMixed ? 0.0 : 1.0;
+    final divisions = (maxKg - sliderMin).round();
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Section label with optional indicator
+        Row(
+          children: [
+            Text(
+              isMixed ? 'Poids du colis (optionnel)' : 'Poids du colis',
+              style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ],
+        ),
+        const SizedBox(height: DonySpacing.sm),
         // Large weight display
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -599,9 +624,9 @@ class _WeightSection extends StatelessWidget {
           ),
           child: Slider(
             value: weightKg,
-            min: 1,
+            min: sliderMin,
             max: maxKg,
-            divisions: (maxKg - 1).round(),
+            divisions: divisions > 0 ? divisions : null,
             onChanged: onChanged,
           ),
         ),
@@ -610,7 +635,7 @@ class _WeightSection extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              '1 kg',
+              isMixed ? '0 kg' : '1 kg',
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             Text(

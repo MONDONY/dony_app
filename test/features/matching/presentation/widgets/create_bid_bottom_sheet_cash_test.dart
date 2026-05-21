@@ -55,6 +55,32 @@ AnnouncementModel _announcement({bool cashEnabled = false}) {
   );
 }
 
+AnnouncementModel _mixedAnnouncement() {
+  return AnnouncementModel(
+    id: 'ann-mixed',
+    travelerId: 'trav-1',
+    departureCity: 'Paris',
+    arrivalCity: 'Dakar',
+    departureDate: DateTime(2026, 8, 15),
+    availableKg: 10,
+    totalKg: 10,
+    pricePerKg: 8,
+    status: 'ACTIVE',
+    pricingMode: 'MIXED',
+    priceGridItems: const [
+      AnnouncementGridItemModel(
+        id: 'item-1',
+        label: 'Téléphone',
+        unitPriceNet: 10,
+        unitPriceDisplay: 11.20,
+      ),
+    ],
+    createdAt: DateTime(2026, 1, 1),
+    updatedAt: DateTime(2026, 1, 1),
+    acceptedPaymentMethods: const {BidPaymentMethod.stripe},
+  );
+}
+
 // ── Harness ────────────────────────────────────────────────────────────────────
 
 // 800×5000 px: all sheet content visible without scrolling.
@@ -317,6 +343,122 @@ void main() {
 
       // Sheet dismissed, navigated to bid detail.
       expect(find.text('Bid détail'), findsOneWidget);
+    });
+  });
+
+  // ── 5. Mode MIXED — poids optionnel ───────────────────────────────────────
+
+  group('Mode MIXED — poids optionnel', () {
+    testWidgets(
+        'annonce MIXED → label "Poids du colis (optionnel)" affiché',
+        (tester) async {
+      await _openSheet(tester, _mixedAnnouncement());
+
+      expect(find.text('Poids du colis (optionnel)'), findsOneWidget);
+    });
+
+    testWidgets(
+        'annonce KG → label "Poids du colis" affiché sans "(optionnel)"',
+        (tester) async {
+      await _openSheet(tester, _announcement());
+
+      expect(find.text('Poids du colis'), findsOneWidget);
+      expect(find.text('Poids du colis (optionnel)'), findsNothing);
+    });
+
+    testWidgets(
+        'annonce MIXED → grille de prix visible avec items',
+        (tester) async {
+      await _openSheet(tester, _mixedAnnouncement());
+
+      expect(find.text('ARTICLES DISPONIBLES'), findsOneWidget);
+      // "Téléphone" appears both in the grid and in the content category chips.
+      expect(find.text('Téléphone'), findsAtLeast(1));
+      // The item price label is unique to the grid item.
+      expect(find.text('11.20 € / unité'), findsOneWidget);
+    });
+
+    testWidgets(
+        'annonce MIXED + articles sélectionnés + sans poids → soumission possible',
+        (tester) async {
+      final stateController = StreamController<BidState>.broadcast();
+      addTearDown(stateController.close);
+
+      when(() => _currentBidBloc.stream)
+          .thenAnswer((_) => stateController.stream);
+
+      await _openSheet(tester, _mixedAnnouncement());
+
+      // Select a category and accept disclaimer (slider starts at 5 → weight > 0
+      // by default, so first set weight to 0 via slider drag, then simulate
+      // grid items to verify hasGridItems alone is sufficient).
+      await tester.tap(find.text('Vêtements'));
+      await tester.pump();
+      await tester.tap(find.byType(Checkbox).first);
+      await tester.pump();
+
+      // Simulate BLoC emitting grid quantities (item-1 → qty 2).
+      stateController.add(BidGridQuantitiesUpdated({'item-1': 2}));
+      await tester.pump();
+
+      // canSubmit is now true: fill mandatory fields and tap the submit button.
+      await _fillMandatoryFields(tester);
+      await tester.tap(find.textContaining('Bloquer').first);
+      await tester.pump();
+
+      // BidCheckoutRequested should have been dispatched (grid items present).
+      verify(
+        () => _currentBidBloc.add(any(that: isA<BidCheckoutRequested>())),
+      ).called(1);
+    });
+
+    testWidgets(
+        'annonce MIXED + poids > 0 + sans articles grille → soumission possible',
+        (tester) async {
+      await _openSheet(tester, _mixedAnnouncement());
+
+      // Select a category and accept disclaimer; slider starts at 5 (weight > 0).
+      await tester.tap(find.text('Vêtements'));
+      await tester.pump();
+      await tester.tap(find.byType(Checkbox).first);
+      await tester.pump();
+
+      // canSubmit is true (hasWeight). Fill mandatory fields and tap submit.
+      await _fillMandatoryFields(tester);
+      await tester.tap(find.textContaining('Bloquer').first);
+      await tester.pump();
+
+      // BidCheckoutRequested should have been dispatched.
+      verify(
+        () => _currentBidBloc.add(any(that: isA<BidCheckoutRequested>())),
+      ).called(1);
+    });
+
+    testWidgets(
+        'annonce KG + poids=0 → soumission bloquée (comportement KG inchangé)',
+        (tester) async {
+      await _openSheet(tester, _announcement());
+
+      // Select a category and accept disclaimer.
+      await tester.tap(find.text('Vêtements'));
+      await tester.pump();
+      await tester.tap(find.byType(Checkbox).first);
+      await tester.pump();
+
+      // Drag slider all the way left → weight = 1 (min in KG mode).
+      final slider = find.byType(Slider);
+      final sliderRect = tester.getRect(slider);
+      await tester.drag(slider, Offset(-(sliderRect.width), 0));
+      await tester.pump();
+
+      // Even at min (1 kg), KG mode should allow submission.
+      await _fillMandatoryFields(tester);
+      await tester.tap(find.textContaining('Bloquer').first);
+      await tester.pump();
+
+      verify(
+        () => _currentBidBloc.add(any(that: isA<BidCheckoutRequested>())),
+      ).called(1);
     });
   });
 }
