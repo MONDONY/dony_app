@@ -28,6 +28,7 @@ import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/data_export_bloc.dart';
+import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
 import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
 import 'package:dony/features/settings/data/account_deletion_repository.dart';
@@ -339,6 +340,11 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Settings — Accessibility (text scale, high contrast, reduce animations)
   getIt.registerFactory<AccessibilityBloc>(
     () => AccessibilityBloc(getIt<HiveService>().userPrefs),
+  );
+
+  // Settings — Diagnostics (version app + ping API)
+  getIt.registerFactory<DiagnosticsBloc>(
+    () => DiagnosticsBloc(getIt<ApiClient>()),
   );
 
   // Ratings

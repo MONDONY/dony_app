@@ -87,6 +87,7 @@ import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/data_export_bloc.dart';
+import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
 import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
 import 'package:dony/features/settings/presentation/settings_screen.dart';
@@ -693,7 +694,10 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: 'diagnostics',
-          builder: (context, state) => const DiagnosticsScreen(),
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<DiagnosticsBloc>(),
+            child: const DiagnosticsScreen(),
+          ),
         ),
         GoRoute(
           path: 'legal/terms',
