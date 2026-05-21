@@ -27,6 +27,7 @@ class PrixConditionsStep extends StatelessWidget {
   final ValueNotifier<double> customPriceNotifier;
   final ValueNotifier<double> availableKgNotifier;
   final ValueNotifier<bool> cashEnabledNotifier;
+  final ValueNotifier<bool> kgPriceEnabledNotifier; // ← NOUVEAU
   final ValueNotifier<Set<String>> selectedContentNotifier;
   final ValueNotifier<Set<String>> customAcceptedNotifier;
   final ValueNotifier<Set<String>> refusedTypesNotifier;
@@ -41,6 +42,7 @@ class PrixConditionsStep extends StatelessWidget {
     required this.customPriceNotifier,
     required this.availableKgNotifier,
     required this.cashEnabledNotifier,
+    required this.kgPriceEnabledNotifier, // ← NOUVEAU
     required this.selectedContentNotifier,
     required this.customAcceptedNotifier,
     required this.refusedTypesNotifier,
@@ -106,160 +108,229 @@ class PrixConditionsStep extends StatelessWidget {
         const SizedBox(height: DonySpacing.md),
 
         // ── PRIX PAR KG ───────────────────────────────────────────────────────
-        const CaSectionLabel(label: 'Prix par kg', icon: Icons.sell_rounded),
-        const SizedBox(height: DonySpacing.md),
-        ListenableBuilder(
-          listenable: Listenable.merge(
-              [priceOptionNotifier, customPriceNotifier, availableKgNotifier]),
-          builder: (context, _) {
-            final selectedIdx = priceOptionNotifier.value;
-            final isCustom = _isCustomPrice;
-            final pricePerKg = _pricePerKg;
-            final kg = availableKgNotifier.value;
-            final grossEstimate = kg * pricePerKg;
-            final netEstimate = grossEstimate * 0.88;
-
+        BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
+          buildWhen: (p, c) => p.pricingMode != c.pricingMode,
+          builder: (context, formState) {
+            final isMixed = formState.pricingMode == PricingMode.mixed;
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Chips preset ──────────────────────────────────────────────
-                Row(
-                  children: List.generate(kPriceOptions.length, (i) {
-                    final selected = selectedIdx == i;
-                    return Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                          left: i == 0 ? 0 : DonySpacing.xs,
-                          right: DonySpacing.xs,
+                const CaSectionLabel(
+                    label: 'Prix par kg', icon: Icons.sell_rounded),
+                const SizedBox(height: DonySpacing.md),
+                // ── Toggle "Tarif au kilo" (MIXED uniquement) ─────────────
+                if (isMixed)
+                  ValueListenableBuilder<bool>(
+                    valueListenable: kgPriceEnabledNotifier,
+                    builder: (context, kgEnabled, _) {
+                      return SwitchListTile(
+                        key: const Key('kg-price-toggle'),
+                        value: kgEnabled,
+                        onChanged: (v) => kgPriceEnabledNotifier.value = v,
+                        activeColor: cs.primary,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          'Tarif au kilo',
+                          style: tt.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
                         ),
-                        child: GestureDetector(
-                          onTap: () => priceOptionNotifier.value = i,
-                          child: AnimatedContainer(
-                            duration: 180.ms,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: DonySpacing.md,
+                        subtitle: Text(
+                          'Optionnel en mode grille',
+                          style: tt.bodySmall
+                              ?.copyWith(color: cs.onSurfaceVariant),
+                        ),
+                      );
+                    },
+                  ),
+                // ── Chips (cachées si toggle OFF) ─────────────────────────
+                ValueListenableBuilder<bool>(
+                  valueListenable: kgPriceEnabledNotifier,
+                  builder: (context, kgEnabled, _) {
+                    if (!kgEnabled) return const SizedBox.shrink();
+                    return ListenableBuilder(
+                      listenable: Listenable.merge([
+                        priceOptionNotifier,
+                        customPriceNotifier,
+                        availableKgNotifier,
+                      ]),
+                      builder: (context, _) {
+                        final selectedIdx = priceOptionNotifier.value;
+                        final isCustom = _isCustomPrice;
+                        final pricePerKg = _pricePerKg;
+                        final kg = availableKgNotifier.value;
+                        final grossEstimate = kg * pricePerKg;
+                        final netEstimate = grossEstimate * 0.88;
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // ── Chips preset ──────────────────────────
+                            Row(
+                              children: List.generate(kPriceOptions.length, (i) {
+                                final selected = selectedIdx == i;
+                                return Expanded(
+                                  child: Padding(
+                                    padding: EdgeInsets.only(
+                                      left: i == 0 ? 0 : DonySpacing.xs,
+                                      right: DonySpacing.xs,
+                                    ),
+                                    child: GestureDetector(
+                                      onTap: () =>
+                                          priceOptionNotifier.value = i,
+                                      child: AnimatedContainer(
+                                        duration: 180.ms,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: DonySpacing.md,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: selected
+                                              ? cs.successLight
+                                              : cs.surface,
+                                          borderRadius: BorderRadius.circular(
+                                              DonyRadius.lg),
+                                          border: Border.all(
+                                            color: selected
+                                                ? cs.success
+                                                : cs.outline,
+                                            width: selected ? 1.5 : 1,
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            '${kPriceOptions[i].toStringAsFixed(0)}€',
+                                            style: tt.titleMedium?.copyWith(
+                                              color: selected
+                                                  ? cs.success
+                                                  : cs.onSurface,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }),
                             ),
-                            decoration: BoxDecoration(
-                              color: selected ? cs.successLight : cs.surface,
-                              borderRadius:
-                                  BorderRadius.circular(DonyRadius.lg),
-                              border: Border.all(
-                                color: selected ? cs.success : cs.outline,
-                                width: selected ? 1.5 : 1,
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                '${kPriceOptions[i].toStringAsFixed(0)}€',
-                                style: tt.titleMedium?.copyWith(
+                            const SizedBox(height: DonySpacing.xs),
+                            // ── Chip "Autre" ──────────────────────────
+                            GestureDetector(
+                              onTap: () {
+                                priceOptionNotifier.value =
+                                    kPriceOptions.length;
+                                WidgetsBinding.instance
+                                    .addPostFrameCallback((_) {
+                                  FocusScope.of(context).unfocus();
+                                });
+                              },
+                              child: AnimatedContainer(
+                                duration: 180.ms,
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: DonySpacing.sm,
+                                  horizontal: DonySpacing.base,
+                                ),
+                                decoration: BoxDecoration(
                                   color:
-                                      selected ? cs.success : cs.onSurface,
-                                  fontWeight: FontWeight.w700,
+                                      isCustom ? cs.successLight : cs.surface,
+                                  borderRadius:
+                                      BorderRadius.circular(DonyRadius.lg),
+                                  border: Border.all(
+                                    color: isCustom ? cs.success : cs.outline,
+                                    width: isCustom ? 1.5 : 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.edit_outlined,
+                                      size: 16,
+                                      color: isCustom
+                                          ? cs.success
+                                          : cs.onSurfaceVariant,
+                                    ),
+                                    const SizedBox(width: DonySpacing.xs),
+                                    Text(
+                                      'Autre prix',
+                                      style: tt.bodyMedium?.copyWith(
+                                        color: isCustom
+                                            ? cs.success
+                                            : cs.onSurfaceVariant,
+                                        fontWeight: isCustom
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                      ),
+                            // ── Champ prix custom ─────────────────────
+                            if (isCustom) ...[
+                              const SizedBox(height: DonySpacing.sm),
+                              DonyTextField(
+                                label: 'Prix par kg',
+                                hint: 'ex: 12',
+                                controller: customPriceCtrl,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                        decimal: true),
+                                suffixIcon: Padding(
+                                  padding: const EdgeInsets.only(
+                                      right: DonySpacing.md),
+                                  child: Text('€/kg',
+                                      style: tt.bodyMedium?.copyWith(
+                                          color: cs.onSurfaceVariant)),
+                                ),
+                                onChanged: (v) {
+                                  final parsed =
+                                      double.tryParse(v.replaceAll(',', '.'));
+                                  if (parsed != null && parsed > 0) {
+                                    customPriceNotifier.value = parsed;
+                                  }
+                                },
+                              ),
+                            ],
+                            const SizedBox(height: DonySpacing.sm),
+                            Text(
+                              kg == 0
+                                  ? 'Capacité illimitée — estimation selon la demande'
+                                  : 'Estimation : ${grossEstimate.toStringAsFixed(0)}€ · vous touchez ${netEstimate.toStringAsFixed(0)}€',
+                              style: tt.bodySmall
+                                  ?.copyWith(color: cs.onSurfaceVariant),
+                            ),
+                          ],
+                        );
+                      },
                     );
-                  }),
-                ),
-                const SizedBox(height: DonySpacing.xs),
-                // ── Chip "Autre" ──────────────────────────────────────────────
-                GestureDetector(
-                  onTap: () {
-                    priceOptionNotifier.value = kPriceOptions.length;
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      FocusScope.of(context).unfocus();
-                    });
                   },
-                  child: AnimatedContainer(
-                    duration: 180.ms,
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: DonySpacing.sm,
-                      horizontal: DonySpacing.base,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isCustom ? cs.successLight : cs.surface,
-                      borderRadius: BorderRadius.circular(DonyRadius.lg),
-                      border: Border.all(
-                        color: isCustom ? cs.success : cs.outline,
-                        width: isCustom ? 1.5 : 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.edit_outlined,
-                          size: 16,
-                          color: isCustom ? cs.success : cs.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: DonySpacing.xs),
-                        Text(
-                          'Autre prix',
-                          style: tt.bodyMedium?.copyWith(
-                            color: isCustom
-                                ? cs.success
-                                : cs.onSurfaceVariant,
-                            fontWeight: isCustom
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                // ── Champ prix custom ─────────────────────────────────────────
-                if (isCustom) ...[
-                  const SizedBox(height: DonySpacing.sm),
-                  DonyTextField(
-                    label: 'Prix par kg',
-                    hint: 'ex: 12',
-                    controller: customPriceCtrl,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    suffixIcon: Padding(
-                      padding: const EdgeInsets.only(right: DonySpacing.md),
-                      child: Text('€/kg',
-                          style: tt.bodyMedium
-                              ?.copyWith(color: cs.onSurfaceVariant)),
-                    ),
-                    onChanged: (v) {
-                      final parsed = double.tryParse(v.replaceAll(',', '.'));
-                      if (parsed != null && parsed > 0) {
-                        customPriceNotifier.value = parsed;
-                      }
-                    },
-                  ),
-                ],
-                const SizedBox(height: DonySpacing.sm),
-                Text(
-                  kg == 0
-                      ? 'Capacité illimitée — estimation selon la demande'
-                      : 'Estimation : ${grossEstimate.toStringAsFixed(0)}€ · vous touchez ${netEstimate.toStringAsFixed(0)}€',
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
             );
           },
         ).animate().fadeIn(delay: 100.ms),
-        BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
-          buildWhen: (p, c) =>
-              p.priceWarning != c.priceWarning ||
-              p.pricePerKg != c.pricePerKg ||
-              p.departureCity != c.departureCity ||
-              p.arrivalCity != c.arrivalCity,
-          builder: (context, formState) {
-            final dep = formState.departureCity;
-            final arr = formState.arrivalCity;
-            final corridor =
-                (dep != null && arr != null) ? '$dep – $arr' : null;
-            return PriceHintWidget(
-              marketMedianPrice: 8.0,
-              warning: formState.priceWarning,
-              corridor: corridor,
+        // ── Price hint (masqué si toggle OFF) ────────────────────────────────
+        ValueListenableBuilder<bool>(
+          valueListenable: kgPriceEnabledNotifier,
+          builder: (context, kgEnabled, _) {
+            if (!kgEnabled) return const SizedBox.shrink();
+            return BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
+              buildWhen: (p, c) =>
+                  p.priceWarning != c.priceWarning ||
+                  p.pricePerKg != c.pricePerKg ||
+                  p.departureCity != c.departureCity ||
+                  p.arrivalCity != c.arrivalCity,
+              builder: (context, formState) {
+                final dep = formState.departureCity;
+                final arr = formState.arrivalCity;
+                final corridor =
+                    (dep != null && arr != null) ? '$dep – $arr' : null;
+                return PriceHintWidget(
+                  marketMedianPrice: 8.0,
+                  warning: formState.priceWarning,
+                  corridor: corridor,
+                );
+              },
             );
           },
         ),

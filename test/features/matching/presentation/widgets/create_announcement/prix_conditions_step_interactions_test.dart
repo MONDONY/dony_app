@@ -46,6 +46,7 @@ Widget _host({
   ValueNotifier<double>? customPrice,
   ValueNotifier<double>? availableKg,
   ValueNotifier<bool>? cashEnabled,
+  ValueNotifier<bool>? kgPriceEnabled,
   ValueNotifier<Set<String>>? selectedContent,
   ValueNotifier<Set<String>>? customAccepted,
   ValueNotifier<Set<String>>? refusedTypes,
@@ -78,6 +79,7 @@ Widget _host({
             customPriceNotifier: customPrice ?? ValueNotifier<double>(0),
             availableKgNotifier: availableKg ?? ValueNotifier<double>(10),
             cashEnabledNotifier: cashEnabled ?? ValueNotifier<bool>(false),
+            kgPriceEnabledNotifier: kgPriceEnabled ?? ValueNotifier<bool>(true),
             selectedContentNotifier:
                 selectedContent ?? ValueNotifier<Set<String>>({}),
             customAcceptedNotifier:

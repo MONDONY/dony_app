@@ -293,6 +293,7 @@ class _CreateAnnouncementContentState
   final _customAcceptedNotifier = ValueNotifier<Set<String>>({});
   final _refusedTypesNotifier = ValueNotifier<Set<String>>({});
   final _cashEnabledNotifier = ValueNotifier<bool>(false);
+  late final ValueNotifier<bool> _kgPriceEnabledNotifier;
   final _descriptionCtrl = TextEditingController();
   final _customAcceptedCtrl = TextEditingController();
   final _refusedCtrl = TextEditingController();
@@ -380,6 +381,8 @@ class _CreateAnnouncementContentState
       }
     }
     widget.onSubmitReady?.call(_submit);
+    _kgPriceEnabledNotifier = ValueNotifier<bool>(true); // KG = ON par défaut
+    _kgPriceEnabledNotifier.addListener(_onKgToggleChanged);
     _transportModeNotifier.addListener(_syncCanSubmit);
     // Avion sélectionné par défaut en mode création
     if (!_isEdit && !_isLocked) {
@@ -431,6 +434,7 @@ class _CreateAnnouncementContentState
 
   void _syncPriceToFormBloc() {
     if (!mounted) return;
+    if (!_kgPriceEnabledNotifier.value) return; // évite d'écraser le clear
     context
         .read<AnnouncementFormBloc>()
         .add(PriceChanged(_pricePerKg));
@@ -486,6 +490,16 @@ class _CreateAnnouncementContentState
         .add(RejectedTypesChanged(_refusedTypesNotifier.value.toList()));
   }
 
+  void _onKgToggleChanged() {
+    if (!mounted) return;
+    if (!_kgPriceEnabledNotifier.value) {
+      context
+          .read<AnnouncementFormBloc>()
+          .add(const AnnouncementPricePerKgClearedRequested());
+      _priceOptionNotifier.value = 0; // reset chips visuellement
+    }
+  }
+
   @override
   void dispose() {
     _departureCityNotifier.removeListener(_syncCityToFormBloc);
@@ -502,6 +516,8 @@ class _CreateAnnouncementContentState
     _customAcceptedNotifier.removeListener(_syncAcceptedTypesToFormBloc);
     _refusedTypesNotifier.removeListener(_syncRejectedTypesToFormBloc);
     _departureTimeNotifier.removeListener(_syncDepartureTimeToParent);
+    _kgPriceEnabledNotifier.removeListener(_onKgToggleChanged);
+    _kgPriceEnabledNotifier.dispose();
     _cashEnabledNotifier.dispose();
     _descriptionCtrl.dispose();
     _customAcceptedCtrl.dispose();
@@ -608,6 +624,7 @@ class _CreateAnnouncementContentState
     final formBlocState = context.read<AnnouncementFormBloc>().state;
     final capacityUnitWire = formBlocState.capacityUnit.toWire();
     final pricingModeWire = formBlocState.pricingMode == PricingMode.mixed ? 'MIXED' : 'KG';
+    final pricePerKgToSubmit = formBlocState.pricePerKg ?? 0.0;
 
     if (_isEdit) {
       context.read<AnnouncementBloc>().add(AnnouncementUpdateRequested(
@@ -620,7 +637,7 @@ class _CreateAnnouncementContentState
             pickupAddress: _pickupAddress!,
             deliveryAddress: _deliveryAddress!,
             availableKg: _availableKgNotifier.value,
-            pricePerKg: _pricePerKg,
+            pricePerKg: pricePerKgToSubmit,
             transportMode: transportMode,
             description: description,
             acceptedContentTypes: allAccepted,
@@ -639,7 +656,7 @@ class _CreateAnnouncementContentState
             pickupAddress: _pickupAddress!,
             deliveryAddress: _deliveryAddress!,
             availableKg: _availableKgNotifier.value,
-            pricePerKg: _pricePerKg,
+            pricePerKg: pricePerKgToSubmit,
             transportMode: transportMode,
             description: description,
             acceptedContentTypes: allAccepted,
@@ -760,39 +777,49 @@ class _CreateAnnouncementContentState
       );
     }
 
-    return BlocConsumer<AnnouncementBloc, AnnouncementState>(
-      listener: (context, state) async {
-        if (state is AnnouncementCreated || state is AnnouncementUpdated) {
-          Navigator.of(context, rootNavigator: true).pop();
-          if (context.mounted) context.go('/announcements');
-        } else if (state is AnnouncementProLimitReached) {
-          Navigator.of(context, rootNavigator: true).pop();
-          if (context.mounted) {
-            final confirmed = await DonyDialog.show(
-              context,
-              title: 'Limite mensuelle atteinte',
-              message: state.message,
-              confirmLabel: 'Passer en PRO',
-              cancelLabel: 'Plus tard',
-              variant: DonyDialogVariant.info,
-            );
-            if (confirmed == true && context.mounted) {
-              context.push('/profile/upgrade-to-pro');
-            }
-          }
-        } else if (state is AnnouncementError) {
-          ErrorPresenter.show(context, state.error);
+    return BlocListener<AnnouncementFormBloc, AnnouncementFormState>(
+      listenWhen: (prev, curr) => prev.pricingMode != curr.pricingMode,
+      listener: (context, formState) {
+        if (formState.pricingMode == PricingMode.mixed) {
+          _kgPriceEnabledNotifier.value = false;
+        } else {
+          _kgPriceEnabledNotifier.value = true;
         }
       },
-      builder: (context, state) => BlocListener<AnnouncementFormBloc, AnnouncementFormState>(
-        listenWhen: (prev, curr) => prev.availableKg != curr.availableKg,
-        listener: (context, formState) {
-          final kg = formState.availableKg ?? 0.0;
-          if (kg != _availableKgNotifier.value) {
-            _availableKgNotifier.value = kg;
+      child: BlocConsumer<AnnouncementBloc, AnnouncementState>(
+        listener: (context, state) async {
+          if (state is AnnouncementCreated || state is AnnouncementUpdated) {
+            Navigator.of(context, rootNavigator: true).pop();
+            if (context.mounted) context.go('/announcements');
+          } else if (state is AnnouncementProLimitReached) {
+            Navigator.of(context, rootNavigator: true).pop();
+            if (context.mounted) {
+              final confirmed = await DonyDialog.show(
+                context,
+                title: 'Limite mensuelle atteinte',
+                message: state.message,
+                confirmLabel: 'Passer en PRO',
+                cancelLabel: 'Plus tard',
+                variant: DonyDialogVariant.info,
+              );
+              if (confirmed == true && context.mounted) {
+                context.push('/profile/upgrade-to-pro');
+              }
+            }
+          } else if (state is AnnouncementError) {
+            ErrorPresenter.show(context, state.error);
           }
         },
-        child: formChild,
+        builder: (context, state) => BlocListener<AnnouncementFormBloc, AnnouncementFormState>(
+          listenWhen: (prev, curr) => prev.availableKg != curr.availableKg,
+          listener: (context, formState) {
+            final kg = formState.availableKg ?? 0.0;
+            if (kg != _availableKgNotifier.value) {
+              _availableKgNotifier.value = kg;
+            }
+          },
+          child: formChild,
+        ),
       ),
     );
   }
@@ -840,6 +867,7 @@ class _CreateAnnouncementContentState
         customPriceNotifier: _customPriceNotifier,
         availableKgNotifier: _availableKgNotifier,
         cashEnabledNotifier: _cashEnabledNotifier,
+        kgPriceEnabledNotifier: _kgPriceEnabledNotifier, // ← NOUVEAU
         selectedContentNotifier: _selectedContentNotifier,
         customAcceptedNotifier: _customAcceptedNotifier,
         refusedTypesNotifier: _refusedTypesNotifier,

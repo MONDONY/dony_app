@@ -86,6 +86,7 @@ Widget _host({
   final customPriceNotifier = ValueNotifier<double>(0);
   final availableKgNotifier = ValueNotifier<double>(initialAvailableKg);
   final cashEnabledNotifier = ValueNotifier<bool>(false);
+  final kgPriceEnabledNotifier = ValueNotifier<bool>(true);
   final selectedContentNotifier = ValueNotifier<Set<String>>({});
   final customAcceptedNotifier = ValueNotifier<Set<String>>({});
   final refusedTypesNotifier = ValueNotifier<Set<String>>({});
@@ -110,6 +111,7 @@ Widget _host({
             customPriceNotifier: customPriceNotifier,
             availableKgNotifier: availableKgNotifier,
             cashEnabledNotifier: cashEnabledNotifier,
+            kgPriceEnabledNotifier: kgPriceEnabledNotifier,
             selectedContentNotifier: selectedContentNotifier,
             customAcceptedNotifier: customAcceptedNotifier,
             refusedTypesNotifier: refusedTypesNotifier,
