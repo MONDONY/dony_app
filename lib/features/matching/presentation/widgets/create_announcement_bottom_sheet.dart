@@ -62,9 +62,7 @@ class CreateAnnouncementBottomSheet {
           BlocProvider<CommissionMethodBloc>(create: (_) => getIt<CommissionMethodBloc>()),
           BlocProvider<AnnouncementFormBloc>(
             create: (_) => AnnouncementFormBloc(
-              priceGridRepository: getIt.isRegistered<PriceGridRepository>()
-                  ? getIt<PriceGridRepository>()
-                  : null,
+              priceGridRepository: getIt<PriceGridRepository>(),
             ),
           ),
           if (negotiationBloc != null)

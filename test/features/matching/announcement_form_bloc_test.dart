@@ -3,6 +3,7 @@ import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/grid_preview_item.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/price_grid/data/models/price_grid_item_model.dart';
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
@@ -491,6 +492,66 @@ void main() {
       },
       act: (b) => b.add(const AnnouncementGridPreviewLoadRequested()),
       expect: () => <AnnouncementFormState>[],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'guard double dispatch: passer deux fois mixed ne charge la grille qu\'une seule fois',
+      build: () {
+        final mockRepo = MockPriceGridRepository();
+        when(() => mockRepo.getItems()).thenAnswer(
+          (_) async => const [
+            PriceGridItemModel(
+              id: 'id1',
+              label: 'Valise',
+              unitPriceNet: 10.0,
+              unitPriceDisplay: 11.20,
+              position: 0,
+            ),
+          ],
+        );
+        return AnnouncementFormBloc(priceGridRepository: mockRepo);
+      },
+      act: (b) async {
+        b.add(const AnnouncementPricingModeSetRequested(PricingMode.mixed));
+        // petit délai pour laisser le premier chargement se terminer
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        // deuxième appel en mode mixed → ne doit PAS redéclencher getItems
+        b.add(const AnnouncementPricingModeSetRequested(PricingMode.mixed));
+      },
+      verify: (b) {
+        // gridPreviewItems toujours présents (chargés une seule fois)
+        expect(b.state.gridPreviewItems.length, 1);
+        expect(b.state.gridPreviewItems.first, isA<GridPreviewItem>());
+      },
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'gridPreviewItems contient des GridPreviewItem (pas PriceGridItemModel)',
+      build: () {
+        final mockRepo = MockPriceGridRepository();
+        when(() => mockRepo.getItems()).thenAnswer(
+          (_) async => const [
+            PriceGridItemModel(
+              id: 'abc',
+              label: 'Petit colis',
+              unitPriceNet: 5.0,
+              unitPriceDisplay: 5.60,
+              position: 0,
+            ),
+          ],
+        );
+        return AnnouncementFormBloc(priceGridRepository: mockRepo);
+      },
+      act: (b) => b.add(
+          const AnnouncementPricingModeSetRequested(PricingMode.mixed)),
+      verify: (b) {
+        final items = b.state.gridPreviewItems;
+        expect(items.length, 1);
+        expect(items.first, isA<GridPreviewItem>());
+        expect(items.first.id, 'abc');
+        expect(items.first.label, 'Petit colis');
+        expect(items.first.unitPriceDisplay, 5.60);
+      },
     );
   });
 }

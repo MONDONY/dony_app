@@ -1,6 +1,6 @@
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/grid_preview_item.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
-import 'package:dony/features/price_grid/data/models/price_grid_item_model.dart';
 import 'package:equatable/equatable.dart';
 
 enum CapacityUnit { suitcase23kg, suitcase32kg, kgFree, custom }
@@ -71,7 +71,7 @@ class AnnouncementFormState extends Equatable {
 
   // Mode de tarification + aperçu grille
   final PricingMode pricingMode;
-  final List<PriceGridItemModel> gridPreviewItems;
+  final List<GridPreviewItem> gridPreviewItems;
 
   const AnnouncementFormState({
     this.departureCity,
@@ -135,7 +135,7 @@ class AnnouncementFormState extends Equatable {
     List<String>? acceptedTypes,
     List<String>? rejectedTypes,
     PricingMode? pricingMode,
-    List<PriceGridItemModel>? gridPreviewItems,
+    List<GridPreviewItem>? gridPreviewItems,
   }) {
     return AnnouncementFormState(
       departureCity: departureCity ?? this.departureCity,

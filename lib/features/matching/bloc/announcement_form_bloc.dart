@@ -1,5 +1,6 @@
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
+import 'package:dony/features/matching/data/models/grid_preview_item.dart';
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -159,8 +160,9 @@ class AnnouncementFormBloc
     AnnouncementPricingModeSetRequested event,
     Emitter<AnnouncementFormState> emit,
   ) {
+    final wasAlreadyMixed = state.pricingMode == PricingMode.mixed;
     emit(state.copyWith(pricingMode: event.mode));
-    if (event.mode == PricingMode.mixed) {
+    if (event.mode == PricingMode.mixed && !wasAlreadyMixed) {
       add(const AnnouncementGridPreviewLoadRequested());
     }
   }
@@ -172,7 +174,14 @@ class AnnouncementFormBloc
     if (_priceGridRepository == null) return;
     try {
       final items = await _priceGridRepository.getItems();
-      emit(state.copyWith(gridPreviewItems: items));
+      final previewItems = items
+          .map((e) => GridPreviewItem(
+                id: e.id,
+                label: e.label,
+                unitPriceDisplay: e.unitPriceDisplay,
+              ))
+          .toList();
+      emit(state.copyWith(gridPreviewItems: previewItems));
     } catch (_) {
       // silence — preview only, non bloquant
     }
