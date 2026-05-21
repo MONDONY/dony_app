@@ -188,8 +188,11 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
                                   if (widget.onTapCard != null) {
                                     widget.onTapCard!(a);
                                   } else {
-                                    showTravelerAnnouncementSheet(context,
-                                        announcement: a);
+                                    showTravelerAnnouncementSheet(
+                                      context,
+                                      announcement: a,
+                                      existingBidStatus: existingBid?.status,
+                                    );
                                   }
                                 },
                     ),

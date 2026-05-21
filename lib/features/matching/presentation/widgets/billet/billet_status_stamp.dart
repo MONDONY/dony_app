@@ -12,13 +12,14 @@ class BilletStatusStamp extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     final (Color color, String label) = switch (status) {
+      'AWAITING_PAYMENT' => (cs.warning, 'À payer'),
+      'PENDING' || 'PAYMENT_ESCROWED' => (cs.warning, 'En attente'),
       'ACCEPTED' => (cs.success, 'Confirmé'),
       'HANDED_OVER' => (cs.primary, 'En route'),
       'IN_TRANSIT' => (cs.primary, 'En transit'),
       'COMPLETED' || 'DELIVERED' => (cs.success, 'Livré'),
       'REJECTED' => (cs.error, 'Refusé'),
       'CANCELLED' => (cs.onSurfaceVariant, 'Annulé'),
-      'PENDING' => (cs.warning, 'En attente'),
       _ => (cs.onSurfaceVariant, status),
     };
 

@@ -14,6 +14,7 @@ import 'package:intl/intl.dart';
 void showTravelerAnnouncementSheet(
   BuildContext context, {
   required AnnouncementModel announcement,
+  String? existingBidStatus,
 }) {
   // Captured before DonyBottomSheet.show() — context may be invalid inside
   // onPressed since useRootNavigator: true places the sheet outside BlocProvider.
@@ -21,23 +22,39 @@ void showTravelerAnnouncementSheet(
   final isKycVerified =
       authState is AuthAuthenticated && authState.user.isKycVerified;
 
+  final isPending = existingBidStatus == 'PENDING' ||
+      existingBidStatus == 'AWAITING_PAYMENT';
+  final isAccepted = existingBidStatus == 'ACCEPTED' ||
+      existingBidStatus == 'PAYMENT_ESCROWED';
+  final hasActiveBid = isPending || isAccepted;
+
   DonyBottomSheet.show<void>(
     context,
     title: 'Détail du trajet',
     stickyBottom: Builder(
       builder: (innerCtx) => DonyButton(
-        label: 'Faire une demande',
-        icon: Icons.send_rounded,
-        onPressed: () {
-          final navigator = Navigator.of(innerCtx, rootNavigator: true);
-          final rootCtx = navigator.context;
-          navigator.pop();
-          if (isKycVerified) {
-            CreateBidBottomSheet.show(rootCtx, announcement: announcement);
-          } else {
-            KycStatusBottomSheet.show(rootCtx);
-          }
-        },
+        label: isPending
+            ? 'Demande en attente'
+            : isAccepted
+                ? 'Demande acceptée'
+                : 'Faire une demande',
+        icon: hasActiveBid
+            ? Icons.check_circle_rounded
+            : Icons.send_rounded,
+        onPressed: hasActiveBid
+            ? null
+            : () {
+                final navigator =
+                    Navigator.of(innerCtx, rootNavigator: true);
+                final rootCtx = navigator.context;
+                navigator.pop();
+                if (isKycVerified) {
+                  CreateBidBottomSheet.show(rootCtx,
+                      announcement: announcement);
+                } else {
+                  KycStatusBottomSheet.show(rootCtx);
+                }
+              },
       ),
     ),
     child: _TravelerAnnouncementContent(announcement: announcement),

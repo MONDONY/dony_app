@@ -4,17 +4,20 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 
 abstract class BidState {}
 
-/// Helper exposant les bids actifs (PENDING / ACCEPTED) du sender courant
-/// indexés par `announcementId`. Utilisé pour annoter les cartes de trajets
-/// déjà couverts par une demande, afin d'éviter un double bid et d'orienter
-/// l'utilisateur vers le détail de SA demande au lieu du détail du trajet.
+/// Helper exposant les bids actifs du sender courant indexés par
+/// `announcementId`. Couvre tous les statuts qui signifient qu'une demande
+/// est déjà en cours : AWAITING_PAYMENT (paiement non encore effectué),
+/// PENDING (en attente de réponse du voyageur), PAYMENT_ESCROWED et ACCEPTED.
 extension MyActiveBidsLookup on BidState {
   Map<String, BidModel> activeBidsByAnnouncement() {
     final state = this;
     if (state is! BidListLoaded) return const {};
     final result = <String, BidModel>{};
     for (final bid in state.bids) {
-      if (bid.status == 'PENDING' || bid.status == 'ACCEPTED') {
+      if (bid.status == 'AWAITING_PAYMENT' ||
+          bid.status == 'PENDING' ||
+          bid.status == 'PAYMENT_ESCROWED' ||
+          bid.status == 'ACCEPTED') {
         result[bid.announcementId] = bid;
       }
     }

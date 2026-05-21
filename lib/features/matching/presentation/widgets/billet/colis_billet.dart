@@ -77,14 +77,18 @@ class _BilletHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            'DONY · TRANSPORT DE COLIS',
-            style: tt.bodySmall?.copyWith(
-              color: cs.primary,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.6,
+          Flexible(
+            child: Text(
+              'DONY · TRANSPORT DE COLIS',
+              style: tt.bodySmall?.copyWith(
+                color: cs.primary,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.6,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
+          const SizedBox(width: DonySpacing.sm),
           BilletStatusStamp(status: bid.status),
         ],
       ),
