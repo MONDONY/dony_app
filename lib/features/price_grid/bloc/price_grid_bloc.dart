@@ -6,16 +6,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class PriceGridBloc extends Bloc<PriceGridEvent, PriceGridState> {
   final PriceGridRepository _repository;
 
-  PriceGridBloc(this._repository) : super(PriceGridInitial()) {
-    on<LoadPriceGrid>(_onLoad);
-    on<AddPriceGridItem>(_onAdd);
-    on<UpdatePriceGridItem>(_onUpdate);
-    on<DeletePriceGridItem>(_onDelete);
-    on<ReorderPriceGridItems>(_onReorder);
+  PriceGridBloc(this._repository) : super(const PriceGridInitial()) {
+    on<PriceGridLoadRequested>(_onLoad);
+    on<PriceGridItemAddRequested>(_onAdd);
+    on<PriceGridItemUpdateRequested>(_onUpdate);
+    on<PriceGridItemDeleteRequested>(_onDelete);
+    on<PriceGridItemsReorderRequested>(_onReorder);
   }
 
-  Future<void> _onLoad(LoadPriceGrid event, Emitter<PriceGridState> emit) async {
-    emit(PriceGridLoading());
+  Future<void> _onLoad(PriceGridLoadRequested event, Emitter<PriceGridState> emit) async {
+    emit(const PriceGridLoading());
     try {
       final items = await _repository.getItems();
       emit(PriceGridLoaded(items));
@@ -24,8 +24,9 @@ class PriceGridBloc extends Bloc<PriceGridEvent, PriceGridState> {
     }
   }
 
-  Future<void> _onAdd(AddPriceGridItem event, Emitter<PriceGridState> emit) async {
+  Future<void> _onAdd(PriceGridItemAddRequested event, Emitter<PriceGridState> emit) async {
     try {
+      emit(const PriceGridLoading());
       await _repository.addItem(label: event.label, unitPriceNet: event.unitPriceNet);
       final items = await _repository.getItems();
       emit(PriceGridLoaded(items));
@@ -34,8 +35,9 @@ class PriceGridBloc extends Bloc<PriceGridEvent, PriceGridState> {
     }
   }
 
-  Future<void> _onUpdate(UpdatePriceGridItem event, Emitter<PriceGridState> emit) async {
+  Future<void> _onUpdate(PriceGridItemUpdateRequested event, Emitter<PriceGridState> emit) async {
     try {
+      emit(const PriceGridLoading());
       await _repository.updateItem(
         itemId: event.itemId,
         label: event.label,
@@ -48,8 +50,9 @@ class PriceGridBloc extends Bloc<PriceGridEvent, PriceGridState> {
     }
   }
 
-  Future<void> _onDelete(DeletePriceGridItem event, Emitter<PriceGridState> emit) async {
+  Future<void> _onDelete(PriceGridItemDeleteRequested event, Emitter<PriceGridState> emit) async {
     try {
+      emit(const PriceGridLoading());
       await _repository.deleteItem(event.itemId);
       final items = await _repository.getItems();
       emit(PriceGridLoaded(items));
@@ -58,8 +61,9 @@ class PriceGridBloc extends Bloc<PriceGridEvent, PriceGridState> {
     }
   }
 
-  Future<void> _onReorder(ReorderPriceGridItems event, Emitter<PriceGridState> emit) async {
+  Future<void> _onReorder(PriceGridItemsReorderRequested event, Emitter<PriceGridState> emit) async {
     try {
+      emit(const PriceGridLoading());
       final items = await _repository.reorder(event.orderedIds);
       emit(PriceGridLoaded(items));
     } catch (e) {

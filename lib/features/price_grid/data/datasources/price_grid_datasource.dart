@@ -8,7 +8,11 @@ class PriceGridDatasource {
 
   Future<List<PriceGridItemModel>> getItems() async {
     final response = await _apiClient.dio.get('/travelers/me/price-grid');
-    return (response.data as List)
+    final data = response.data;
+    if (data is! List) {
+      throw const FormatException('Expected List from API');
+    }
+    return data
         .map((e) => PriceGridItemModel.fromJson(e as Map<String, dynamic>))
         .toList();
   }
@@ -21,7 +25,11 @@ class PriceGridDatasource {
       '/travelers/me/price-grid/items',
       data: {'label': label, 'unitPriceNet': unitPriceNet},
     );
-    return PriceGridItemModel.fromJson(response.data as Map<String, dynamic>);
+    final data = response.data;
+    if (data is! Map<String, dynamic>) {
+      throw const FormatException('Expected Map from API');
+    }
+    return PriceGridItemModel.fromJson(data);
   }
 
   Future<PriceGridItemModel> updateItem({
@@ -33,7 +41,11 @@ class PriceGridDatasource {
       '/travelers/me/price-grid/items/$itemId',
       data: {'label': label, 'unitPriceNet': unitPriceNet},
     );
-    return PriceGridItemModel.fromJson(response.data as Map<String, dynamic>);
+    final data = response.data;
+    if (data is! Map<String, dynamic>) {
+      throw const FormatException('Expected Map from API');
+    }
+    return PriceGridItemModel.fromJson(data);
   }
 
   Future<void> deleteItem(String itemId) =>
@@ -44,7 +56,11 @@ class PriceGridDatasource {
       '/travelers/me/price-grid/reorder',
       data: orderedIds,
     );
-    return (response.data as List)
+    final data = response.data;
+    if (data is! List) {
+      throw const FormatException('Expected List from API');
+    }
+    return data
         .map((e) => PriceGridItemModel.fromJson(e as Map<String, dynamic>))
         .toList();
   }

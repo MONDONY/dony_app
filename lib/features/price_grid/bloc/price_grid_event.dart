@@ -2,33 +2,33 @@ abstract class PriceGridEvent {
   const PriceGridEvent();
 }
 
-class LoadPriceGrid extends PriceGridEvent {
-  const LoadPriceGrid();
+class PriceGridLoadRequested extends PriceGridEvent {
+  const PriceGridLoadRequested();
 }
 
-class AddPriceGridItem extends PriceGridEvent {
+class PriceGridItemAddRequested extends PriceGridEvent {
   final String label;
   final double unitPriceNet;
-  const AddPriceGridItem({required this.label, required this.unitPriceNet});
+  const PriceGridItemAddRequested({required this.label, required this.unitPriceNet});
 }
 
-class UpdatePriceGridItem extends PriceGridEvent {
+class PriceGridItemUpdateRequested extends PriceGridEvent {
   final String itemId;
   final String label;
   final double unitPriceNet;
-  const UpdatePriceGridItem({
+  const PriceGridItemUpdateRequested({
     required this.itemId,
     required this.label,
     required this.unitPriceNet,
   });
 }
 
-class DeletePriceGridItem extends PriceGridEvent {
+class PriceGridItemDeleteRequested extends PriceGridEvent {
   final String itemId;
-  const DeletePriceGridItem(this.itemId);
+  const PriceGridItemDeleteRequested(this.itemId);
 }
 
-class ReorderPriceGridItems extends PriceGridEvent {
+class PriceGridItemsReorderRequested extends PriceGridEvent {
   final List<String> orderedIds;
-  const ReorderPriceGridItems(this.orderedIds);
+  const PriceGridItemsReorderRequested(this.orderedIds);
 }
