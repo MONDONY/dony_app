@@ -132,16 +132,3 @@ class BidConfirmPaymentRequested extends BidEvent {
   final String bidId;
   BidConfirmPaymentRequested(this.bidId);
 }
-
-/// Incrémente la quantité d'un article de la grille dans le formulaire de création de bid.
-class BidGridItemIncrementRequested extends BidEvent {
-  final String itemId;
-  const BidGridItemIncrementRequested(this.itemId);
-}
-
-/// Décrémente la quantité d'un article de la grille. Si la quantité atteint 0,
-/// l'entrée est retirée de la map.
-class BidGridItemDecrementRequested extends BidEvent {
-  final String itemId;
-  const BidGridItemDecrementRequested(this.itemId);
-}

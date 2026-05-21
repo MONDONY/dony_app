@@ -93,12 +93,3 @@ class BidPaymentConfirmed extends BidState {
   final BidModel bid;
   BidPaymentConfirmed(this.bid);
 }
-
-/// État transitoire émis pendant la sélection d'articles de grille dans le
-/// formulaire de création de bid. Porte les quantités en cours de saisie.
-/// Ne représente pas une action réseau — uniquement de l'état de formulaire.
-class BidGridQuantitiesUpdated extends BidState {
-  /// itemId → quantité sélectionnée. Les entrées avec quantité 0 sont absentes.
-  final Map<String, int> gridQuantities;
-  BidGridQuantitiesUpdated(this.gridQuantities);
-}
