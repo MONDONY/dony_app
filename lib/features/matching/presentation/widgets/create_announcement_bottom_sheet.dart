@@ -9,6 +9,8 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
+import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
+// PricingMode is exported from announcement_form_event.dart
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -58,7 +60,13 @@ class CreateAnnouncementBottomSheet {
         final providers = <BlocProvider>[
           BlocProvider<AnnouncementBloc>(create: (_) => getIt<AnnouncementBloc>()),
           BlocProvider<CommissionMethodBloc>(create: (_) => getIt<CommissionMethodBloc>()),
-          BlocProvider<AnnouncementFormBloc>(create: (_) => AnnouncementFormBloc()),
+          BlocProvider<AnnouncementFormBloc>(
+            create: (_) => AnnouncementFormBloc(
+              priceGridRepository: getIt.isRegistered<PriceGridRepository>()
+                  ? getIt<PriceGridRepository>()
+                  : null,
+            ),
+          ),
           if (negotiationBloc != null)
             BlocProvider<NegotiationBloc>.value(value: negotiationBloc),
         ];
@@ -599,8 +607,9 @@ class _CreateAnnouncementContentState
 
     final paymentMethods = ['STRIPE', if (_cashEnabledNotifier.value) 'CASH'];
 
-    final capacityUnitWire =
-        context.read<AnnouncementFormBloc>().state.capacityUnit.toWire();
+    final formBlocState = context.read<AnnouncementFormBloc>().state;
+    final capacityUnitWire = formBlocState.capacityUnit.toWire();
+    final pricingModeWire = formBlocState.pricingMode == PricingMode.mixed ? 'MIXED' : 'KG';
 
     if (_isEdit) {
       context.read<AnnouncementBloc>().add(AnnouncementUpdateRequested(
@@ -620,6 +629,7 @@ class _CreateAnnouncementContentState
             refusedTypes: refused,
             acceptedPaymentMethods: paymentMethods,
             capacityUnit: capacityUnitWire,
+            pricingMode: pricingModeWire,
           ));
     } else {
       context.read<AnnouncementBloc>().add(AnnouncementCreateRequested(
@@ -638,6 +648,7 @@ class _CreateAnnouncementContentState
             refusedTypes: refused,
             acceptedPaymentMethods: paymentMethods,
             capacityUnit: capacityUnitWire,
+            pricingMode: pricingModeWire,
           ));
     }
   }

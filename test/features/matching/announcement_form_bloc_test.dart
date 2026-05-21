@@ -4,7 +4,12 @@ import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/price_grid/data/models/price_grid_item_model.dart';
+import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+
+class MockPriceGridRepository extends Mock implements PriceGridRepository {}
 
 void main() {
   group('AnnouncementFormBloc', () {
@@ -422,6 +427,70 @@ void main() {
       build: () => AnnouncementFormBloc(),
       act: (b) => b.add(const PriceChanged(0.0)),
       verify: (b) => expect(b.state.isStep3Valid, isFalse),
+    );
+
+    // ── PricingMode ───────────────────────────────────────────────────────────
+
+    test('état initial: pricingMode = kg, gridPreviewItems vide', () {
+      expect(bloc.state.pricingMode, PricingMode.kg);
+      expect(bloc.state.gridPreviewItems, isEmpty);
+    });
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'AnnouncementPricingModeSetRequested.kg → pricingMode = kg',
+      build: () => AnnouncementFormBloc(),
+      act: (b) => b.add(
+          const AnnouncementPricingModeSetRequested(PricingMode.kg)),
+      expect: () => [
+        isA<AnnouncementFormState>()
+            .having((s) => s.pricingMode, 'mode', PricingMode.kg),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'AnnouncementPricingModeSetRequested.mixed triggers preview load and emits gridPreviewItems',
+      build: () {
+        final mockRepo = MockPriceGridRepository();
+        when(() => mockRepo.getItems()).thenAnswer(
+          (_) async => const [
+            PriceGridItemModel(
+              id: 'id1',
+              label: 'Valise',
+              unitPriceNet: 10.0,
+              unitPriceDisplay: 11.20,
+              position: 0,
+            ),
+          ],
+        );
+        return AnnouncementFormBloc(priceGridRepository: mockRepo);
+      },
+      act: (b) => b.add(
+          const AnnouncementPricingModeSetRequested(PricingMode.mixed)),
+      expect: () => [
+        isA<AnnouncementFormState>()
+            .having((s) => s.pricingMode, 'mode', PricingMode.mixed),
+        isA<AnnouncementFormState>()
+            .having((s) => s.pricingMode, 'mode', PricingMode.mixed)
+            .having((s) => s.gridPreviewItems.length, 'items', 1),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'AnnouncementGridPreviewLoadRequested silencieux si repository null',
+      build: () => AnnouncementFormBloc(),
+      act: (b) => b.add(const AnnouncementGridPreviewLoadRequested()),
+      expect: () => <AnnouncementFormState>[],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'AnnouncementGridPreviewLoadRequested silencieux si repo throws',
+      build: () {
+        final mockRepo = MockPriceGridRepository();
+        when(() => mockRepo.getItems()).thenThrow(Exception('network error'));
+        return AnnouncementFormBloc(priceGridRepository: mockRepo);
+      },
+      act: (b) => b.add(const AnnouncementGridPreviewLoadRequested()),
+      expect: () => <AnnouncementFormState>[],
     );
   });
 }

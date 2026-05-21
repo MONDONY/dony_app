@@ -1,8 +1,11 @@
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/price_grid/data/models/price_grid_item_model.dart';
 import 'package:equatable/equatable.dart';
 
 enum CapacityUnit { suitcase23kg, suitcase32kg, kgFree, custom }
+
+enum PricingMode { kg, mixed }
 
 enum PriceWarning { tooLow, tooHigh }
 
@@ -66,6 +69,10 @@ class AnnouncementFormState extends Equatable {
   final List<String> acceptedTypes;
   final List<String> rejectedTypes;
 
+  // Mode de tarification + aperçu grille
+  final PricingMode pricingMode;
+  final List<PriceGridItemModel> gridPreviewItems;
+
   const AnnouncementFormState({
     this.departureCity,
     this.arrivalCity,
@@ -82,6 +89,8 @@ class AnnouncementFormState extends Equatable {
     this.cashAccepted = false,
     this.acceptedTypes = const [],
     this.rejectedTypes = const [],
+    this.pricingMode = PricingMode.kg,
+    this.gridPreviewItems = const [],
   });
 
   bool get isFormValid =>
@@ -125,6 +134,8 @@ class AnnouncementFormState extends Equatable {
     bool? cashAccepted,
     List<String>? acceptedTypes,
     List<String>? rejectedTypes,
+    PricingMode? pricingMode,
+    List<PriceGridItemModel>? gridPreviewItems,
   }) {
     return AnnouncementFormState(
       departureCity: departureCity ?? this.departureCity,
@@ -146,6 +157,8 @@ class AnnouncementFormState extends Equatable {
       cashAccepted: cashAccepted ?? this.cashAccepted,
       acceptedTypes: acceptedTypes ?? this.acceptedTypes,
       rejectedTypes: rejectedTypes ?? this.rejectedTypes,
+      pricingMode: pricingMode ?? this.pricingMode,
+      gridPreviewItems: gridPreviewItems ?? this.gridPreviewItems,
     );
   }
 
@@ -166,5 +179,7 @@ class AnnouncementFormState extends Equatable {
         cashAccepted,
         acceptedTypes,
         rejectedTypes,
+        pricingMode,
+        gridPreviewItems,
       ];
 }

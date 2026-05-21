@@ -4,6 +4,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_create_announcement_constants.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
@@ -65,6 +66,45 @@ class PrixConditionsStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // ── MODE DE TARIFICATION ──────────────────────────────────────────────
+        BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
+          buildWhen: (p, c) => p.pricingMode != c.pricingMode,
+          builder: (context, formState) {
+            return Container(
+              decoration: BoxDecoration(
+                color: cs.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(DonyRadius.md),
+              ),
+              padding: const EdgeInsets.all(3),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _ModeToggleOption(
+                      label: 'Au kilo',
+                      active: formState.pricingMode == PricingMode.kg,
+                      onTap: () => context.read<AnnouncementFormBloc>().add(
+                            const AnnouncementPricingModeSetRequested(
+                                PricingMode.kg),
+                          ),
+                    ),
+                  ),
+                  Expanded(
+                    child: _ModeToggleOption(
+                      label: 'Grille + kilo',
+                      active: formState.pricingMode == PricingMode.mixed,
+                      onTap: () => context.read<AnnouncementFormBloc>().add(
+                            const AnnouncementPricingModeSetRequested(
+                                PricingMode.mixed),
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ).animate().fadeIn(delay: 50.ms),
+        const SizedBox(height: DonySpacing.md),
+
         // ── PRIX PAR KG ───────────────────────────────────────────────────────
         const CaSectionLabel(label: 'Prix par kg', icon: Icons.sell_rounded),
         const SizedBox(height: DonySpacing.md),
@@ -220,6 +260,101 @@ class PrixConditionsStep extends StatelessWidget {
               marketMedianPrice: 8.0,
               warning: formState.priceWarning,
               corridor: corridor,
+            );
+          },
+        ),
+
+        // ── APERÇU GRILLE (mode MIXED) ────────────────────────────────────────
+        BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
+          buildWhen: (p, c) =>
+              p.pricingMode != c.pricingMode ||
+              p.gridPreviewItems != c.gridPreviewItems,
+          builder: (context, formState) {
+            if (formState.pricingMode != PricingMode.mixed) {
+              return const SizedBox.shrink();
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: DonySpacing.md),
+                Container(
+                  padding: const EdgeInsets.all(DonySpacing.md),
+                  decoration: BoxDecoration(
+                    color: cs.surface,
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                    border: Border.all(color: cs.outline),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Ma grille · ${formState.gridPreviewItems.length} article${formState.gridPreviewItems.length == 1 ? '' : 's'}',
+                            style: tt.labelSmall?.copyWith(
+                                color: cs.onSurfaceVariant),
+                          ),
+                          GestureDetector(
+                            onTap: () =>
+                                context.push('/profile/price-grid'),
+                            child: Text(
+                              'Modifier →',
+                              style: tt.labelSmall
+                                  ?.copyWith(color: cs.primary),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (formState.gridPreviewItems.isNotEmpty) ...[
+                        const SizedBox(height: DonySpacing.sm),
+                        ...formState.gridPreviewItems.map(
+                          (item) => Padding(
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 3),
+                            child: Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(item.label,
+                                    style: tt.bodySmall),
+                                Text(
+                                  '${item.unitPriceDisplay.toStringAsFixed(2)} €',
+                                  style: tt.labelSmall?.copyWith(
+                                    color: cs.primary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ] else ...[
+                        const SizedBox(height: DonySpacing.sm),
+                        Text(
+                          'Aucun article configuré',
+                          style: tt.bodySmall
+                              ?.copyWith(color: cs.onSurfaceVariant),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: DonySpacing.sm),
+                Container(
+                  padding: const EdgeInsets.all(DonySpacing.sm),
+                  decoration: BoxDecoration(
+                    color: cs.primary.withValues(alpha: 0.08),
+                    borderRadius:
+                        BorderRadius.circular(DonyRadius.sm),
+                  ),
+                  child: Text(
+                    'Dony ajoute 12 % sur chaque article et sur le prix au kilo',
+                    style: tt.bodySmall
+                        ?.copyWith(color: cs.primary),
+                  ),
+                ),
+              ],
             );
           },
         ),
@@ -591,6 +726,7 @@ class PrixConditionsStep extends StatelessWidget {
     );
   }
 
+  // Private method — unchanged
   Widget _buildStripeNotConfiguredPaymentSection(
     TextTheme tt,
     ColorScheme cs,
@@ -714,6 +850,54 @@ class PrixConditionsStep extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Bouton de sélection du mode de tarification dans le toggle.
+class _ModeToggleOption extends StatelessWidget {
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  const _ModeToggleOption({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
+        decoration: BoxDecoration(
+          color: active ? cs.surface : Colors.transparent,
+          borderRadius: BorderRadius.circular(DonyRadius.sm),
+          boxShadow: active
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  )
+                ]
+              : null,
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: tt.labelMedium?.copyWith(
+              color: active ? cs.primary : cs.onSurfaceVariant,
+              fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
+import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class AnnouncementFormBloc
@@ -7,7 +8,11 @@ class AnnouncementFormBloc
   static const double _minReasonablePrice = 5.0;
   static const double _maxReasonablePrice = 15.0;
 
-  AnnouncementFormBloc() : super(const AnnouncementFormState()) {
+  final PriceGridRepository? _priceGridRepository;
+
+  AnnouncementFormBloc({PriceGridRepository? priceGridRepository})
+      : _priceGridRepository = priceGridRepository,
+        super(const AnnouncementFormState()) {
     on<DepartureCityChanged>(_onDepartureCityChanged);
     on<ArrivalCityChanged>(_onArrivalCityChanged);
     on<DepartureDateChanged>(_onDepartureDateChanged);
@@ -22,6 +27,8 @@ class AnnouncementFormBloc
     on<AcceptedTypesChanged>(_onAcceptedTypesChanged);
     on<RejectedTypesChanged>(_onRejectedTypesChanged);
     on<FormResetRequested>(_onFormReset);
+    on<AnnouncementPricingModeSetRequested>(_onPricingModeSet);
+    on<AnnouncementGridPreviewLoadRequested>(_onGridPreviewLoad);
   }
 
   void _onDepartureCityChanged(
@@ -146,5 +153,28 @@ class AnnouncementFormBloc
     Emitter<AnnouncementFormState> emit,
   ) {
     emit(const AnnouncementFormState());
+  }
+
+  void _onPricingModeSet(
+    AnnouncementPricingModeSetRequested event,
+    Emitter<AnnouncementFormState> emit,
+  ) {
+    emit(state.copyWith(pricingMode: event.mode));
+    if (event.mode == PricingMode.mixed) {
+      add(const AnnouncementGridPreviewLoadRequested());
+    }
+  }
+
+  Future<void> _onGridPreviewLoad(
+    AnnouncementGridPreviewLoadRequested event,
+    Emitter<AnnouncementFormState> emit,
+  ) async {
+    if (_priceGridRepository == null) return;
+    try {
+      final items = await _priceGridRepository.getItems();
+      emit(state.copyWith(gridPreviewItems: items));
+    } catch (_) {
+      // silence — preview only, non bloquant
+    }
   }
 }

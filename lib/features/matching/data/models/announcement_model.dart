@@ -82,6 +82,7 @@ class AnnouncementModel {
   final DateTime updatedAt;
   final Set<BidPaymentMethod> acceptedPaymentMethods;
   final String? capacityUnit;
+  final String pricingMode;
 
   const AnnouncementModel({
     required this.id,
@@ -107,6 +108,7 @@ class AnnouncementModel {
     required this.updatedAt,
     this.acceptedPaymentMethods = const {BidPaymentMethod.stripe},
     this.capacityUnit,
+    this.pricingMode = 'KG',
   });
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) =>
