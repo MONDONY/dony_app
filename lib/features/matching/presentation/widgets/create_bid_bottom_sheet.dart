@@ -189,12 +189,26 @@ class _CreateBidContentState extends State<_CreateBidContent> {
     final disclaimerAccepted = _disclaimerNotifier.value;
     final isMixed = widget.announcement.pricingMode == 'MIXED' &&
         widget.announcement.priceGridItems.isNotEmpty;
+    final gridQuantities = _gridQuantitiesNotifier.value;
     final hasGridItems =
-        isMixed && _gridQuantitiesNotifier.value.isNotEmpty;
+        isMixed && gridQuantities.isNotEmpty;
     final hasWeight = weightKg > 0;
     final canSubmit =
         (hasWeight || hasGridItems) && categories.isNotEmpty && disclaimerAccepted;
-    final totalPrice = weightKg * _pricePerKg * 1.12;
+
+    // Weight portion (with 12% service fee).
+    final weightTotal = weightKg * _pricePerKg * 1.12;
+
+    // Grid articles portion (MIXED mode only).
+    final gridTotal = isMixed
+        ? widget.announcement.priceGridItems.fold<double>(
+            0.0,
+            (sum, item) =>
+                sum + item.unitPriceDisplay * (gridQuantities[item.id] ?? 0),
+          )
+        : 0.0;
+
+    final totalPrice = weightTotal + gridTotal;
     widget.canSubmitNotifier?.value = canSubmit;
     widget.totalPriceNotifier?.value = totalPrice;
   }
@@ -574,6 +588,26 @@ class _WeightSection extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final sliderMin = isMixed ? 0.0 : 1.0;
+
+    // Guard: if maxKg <= sliderMin the slider range is invalid (Flutter requires
+    // min < max). Show a graceful "no capacity" message instead of crashing.
+    if (maxKg <= sliderMin) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            isMixed ? 'Poids du colis (optionnel)' : 'Poids du colis',
+            style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            'Aucune capacité disponible',
+            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
+      );
+    }
+
     final divisions = (maxKg - sliderMin).round();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
