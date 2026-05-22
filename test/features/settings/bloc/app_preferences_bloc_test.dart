@@ -149,6 +149,40 @@ void main() {
       ],
     );
 
+    blocTest<AppPreferencesBloc, AppPreferencesState>(
+      'BiometricToggled active biometricEnabled quand désactivé',
+      build: () => AppPreferencesBloc(mockBox),
+      act: (bloc) => bloc.add(const BiometricToggled()),
+      expect: () => [
+        isA<AppPreferencesState>().having(
+          (s) => s.preferences.biometricEnabled,
+          'biometricEnabled',
+          isTrue,
+        ),
+      ],
+      verify: (_) =>
+          verify(() => mockBox.put(HiveService.kBiometricEnabled, true)).called(1),
+    );
+
+    blocTest<AppPreferencesBloc, AppPreferencesState>(
+      'BiometricToggled désactive biometricEnabled quand activé',
+      build: () {
+        when(() => mockBox.get(
+              HiveService.kBiometricEnabled,
+              defaultValue: any(named: 'defaultValue'),
+            )).thenReturn(true);
+        return AppPreferencesBloc(mockBox);
+      },
+      act: (bloc) => bloc.add(const BiometricToggled()),
+      expect: () => [
+        isA<AppPreferencesState>().having(
+          (s) => s.preferences.biometricEnabled,
+          'biometricEnabled',
+          isFalse,
+        ),
+      ],
+    );
+
     test('AppPreferencesEvent props sont corrects', () {
       const themeEvent = ThemeChanged('dark');
       expect(themeEvent.props, equals(['dark']));
@@ -161,6 +195,9 @@ void main() {
 
       const destEvent = DestinationToggled('SN');
       expect(destEvent.props, equals(['SN']));
+
+      const bioEvent = BiometricToggled();
+      expect(bioEvent.props, equals([]));
     });
   });
 }

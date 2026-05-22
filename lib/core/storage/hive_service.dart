@@ -37,6 +37,9 @@ class HiveService {
   static const String kProfileVisibility = 'profile_visibility'; // 'public' | 'limited'
   static const String kHidePhoneNumber   = 'hide_phone_number'; // bool
 
+  // ── Sécurité ─────────────────────────────────────────────────────────────
+  static const String kBiometricEnabled   = 'biometric_enabled'; // bool
+
   Future<void> init() async {
     await Hive.initFlutter();
     await Hive.openBox<Map>(offlineQueueBox);

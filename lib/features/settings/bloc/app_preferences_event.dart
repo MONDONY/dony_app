@@ -34,3 +34,7 @@ class DestinationToggled extends AppPreferencesEvent {
   @override
   List<Object?> get props => [countryCode];
 }
+
+class BiometricToggled extends AppPreferencesEvent {
+  const BiometricToggled();
+}

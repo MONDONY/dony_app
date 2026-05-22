@@ -18,6 +18,7 @@ class AppPreferencesBloc extends Bloc<AppPreferencesEvent, AppPreferencesState> 
     on<LanguageChanged>(_onLanguageChanged);
     on<SmsAlertsToggled>(_onSmsAlertsToggled);
     on<DestinationToggled>(_onDestinationToggled);
+    on<BiometricToggled>(_onBiometricToggled);
   }
 
   void _onThemeChanged(
@@ -61,6 +62,17 @@ class AppPreferencesBloc extends Bloc<AppPreferencesEvent, AppPreferencesState> 
       current.add(event.countryCode);
     }
     final updated = state.preferences.copyWith(favDestinations: current);
+    updated.writeToHive(_box);
+    emit(AppPreferencesState(preferences: updated));
+  }
+
+  void _onBiometricToggled(
+    BiometricToggled event,
+    Emitter<AppPreferencesState> emit,
+  ) {
+    final updated = state.preferences.copyWith(
+      biometricEnabled: !state.preferences.biometricEnabled,
+    );
     updated.writeToHive(_box);
     emit(AppPreferencesState(preferences: updated));
   }
