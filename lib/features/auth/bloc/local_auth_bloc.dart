@@ -168,11 +168,15 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
     }
 
     await _persistAttempts(_attemptsLeft);
+    final appLockEnabled = _userPrefs.get(
+      HiveService.kAppLockBiometric,
+      defaultValue: true,
+    ) as bool;
     final biometricAvailable = await _service.isBiometricAvailable();
     if (!emit.isDone) {
       emit(LocalAuthPinRequired(
         attemptsLeft: _attemptsLeft,
-        biometricAvailable: biometricAvailable,
+        biometricAvailable: biometricAvailable && appLockEnabled,
       ));
     }
   }
