@@ -1,4 +1,3 @@
-import 'package:dony/features/settings/data/notification_prefs_repository.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -9,7 +8,6 @@ part 'notification_prefs_state.dart';
 class NotificationPrefsBloc
     extends Bloc<NotificationPrefsEvent, NotificationPrefsState> {
   final Box _box;
-  final NotificationPrefsRepository _repository;
 
   static const Map<String, bool> _defaults = {
     'push_activity_bids': true,
@@ -20,14 +18,14 @@ class NotificationPrefsBloc
     'email_promo': false,
   };
 
-  NotificationPrefsBloc(this._box, this._repository)
+  NotificationPrefsBloc(this._box)
       : super(NotificationPrefsState(
           prefs: {
             for (final e in _defaults.entries)
-              e.key: _box.get(
+              e.key: (_box.get(
                     'notif_${e.key}',
                     defaultValue: e.value,
-                  ) as bool,
+                  ) as bool?) ?? e.value,
           },
         )) {
     on<NotifPrefToggled>(_onToggled);
@@ -37,11 +35,12 @@ class NotificationPrefsBloc
     NotifPrefToggled event,
     Emitter<NotificationPrefsState> emit,
   ) {
+    if (!state.prefs.containsKey(event.key)) {
+      return;
+    }
     final updated = Map<String, bool>.from(state.prefs);
-    updated[event.key] = !(updated[event.key] ?? false);
+    updated[event.key] = !state.prefs[event.key]!;
     _box.put('notif_${event.key}', updated[event.key]);
     emit(NotificationPrefsState(prefs: updated));
-    // fire-and-forget — les erreurs réseau sont silencieuses (Hive est source de vérité)
-    _repository.syncPrefs(updated).ignore();
   }
 }

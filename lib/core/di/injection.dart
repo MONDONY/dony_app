@@ -32,8 +32,6 @@ import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
 import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
 import 'package:dony/features/settings/data/account_deletion_repository.dart';
-import 'package:dony/features/settings/data/notification_prefs_datasource.dart';
-import 'package:dony/features/settings/data/notification_prefs_repository.dart';
 import 'package:dony/features/settings/data/firebase_phone_reauth.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
@@ -119,11 +117,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => NotificationRepository(getIt<NotificationRemoteDatasource>()),
   );
   getIt.registerLazySingleton<NotificationService>(
-    () => NotificationService(
-      getIt<ApiClient>(),
-      getIt<NotificationRepository>(),
-      getIt<HiveService>().userPrefs,
-    ),
+    () => NotificationService(getIt<ApiClient>(), getIt<NotificationRepository>()),
     dispose: (s) => s.dispose(),
   );
   getIt.registerFactory<NotificationBloc>(
@@ -152,7 +146,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Local auth (biometric + PIN)
   getIt.registerLazySingleton<LocalAuthService>(() => LocalAuthService());
   getIt.registerFactory<LocalAuthBloc>(
-    () => LocalAuthBloc(getIt<LocalAuthService>()),
+    () => LocalAuthBloc(
+      getIt<LocalAuthService>(),
+      getIt<HiveService>().userPrefs,
+    ),
   );
 
   // KYC
@@ -334,17 +331,8 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
 
   // Settings — Notification preferences
-  getIt.registerLazySingleton<NotificationPrefsDatasource>(
-    () => NotificationPrefsDatasource(getIt<ApiClient>()),
-  );
-  getIt.registerLazySingleton<NotificationPrefsRepository>(
-    () => NotificationPrefsRepository(getIt<NotificationPrefsDatasource>()),
-  );
   getIt.registerFactory<NotificationPrefsBloc>(
-    () => NotificationPrefsBloc(
-      getIt<HiveService>().userPrefs,
-      getIt<NotificationPrefsRepository>(),
-    ),
+    () => NotificationPrefsBloc(getIt<HiveService>().userPrefs),
   );
 
   // Settings — Business preferences (weight unit, currency, pickup radius)

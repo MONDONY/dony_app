@@ -1,13 +1,16 @@
 import 'dart:async';
 
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/local_auth_event.dart';
 import 'package:dony/features/auth/bloc/local_auth_state.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
   final LocalAuthService _service;
+  final Box _userPrefs;
   final FlutterSecureStorage _secureStorage;
   int _attemptsLeft = 3;
 
@@ -17,7 +20,8 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
   static const _lockoutSeconds = 30;
 
   LocalAuthBloc(
-    this._service, {
+    this._service,
+    this._userPrefs, {
     FlutterSecureStorage? secureStorage,
   })  : _secureStorage = secureStorage ??
             const FlutterSecureStorage(
@@ -104,9 +108,13 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
       return;
     }
 
+    final appLockEnabled = _userPrefs.get(
+      HiveService.kAppLockBiometric,
+      defaultValue: true,
+    ) as bool;
     final biometricAvailable = await _service.isBiometricAvailable();
 
-    if (biometricAvailable) {
+    if (biometricAvailable && appLockEnabled) {
       final success = await _service.authenticateWithBiometric();
       if (!isClosed && !emit.isDone) {
         if (success) {
@@ -120,7 +128,7 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
     if (!emit.isDone) {
       emit(LocalAuthPinRequired(
         attemptsLeft: _attemptsLeft,
-        biometricAvailable: biometricAvailable,
+        biometricAvailable: biometricAvailable && appLockEnabled,
       ));
     }
   }

@@ -38,6 +38,7 @@ class HiveService {
 
   // ── Sécurité ─────────────────────────────────────────────────────────────
   static const String kBiometricEnabled   = 'biometric_enabled'; // bool
+  static const String kAppLockBiometric   = 'app_lock_biometric'; // bool
 
   Future<void> init() async {
     await Hive.initFlutter();

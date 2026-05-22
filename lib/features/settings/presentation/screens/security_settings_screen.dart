@@ -80,6 +80,39 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                     ),
                   ]),
                   const SizedBox(height: DonySpacing.lg),
+                  const _SectionLabel('APPLICATION'),
+                  DonyListSection(tiles: [
+                    DonyListTile(
+                      icon: Icons.lock_rounded,
+                      iconColor: biometricAvailable
+                          ? cs.primary
+                          : cs.onSurfaceVariant,
+                      iconBgColor: biometricAvailable
+                          ? cs.primaryContainer
+                          : cs.surfaceContainerHighest,
+                      label: "Verrouillage de l'app",
+                      subtitle: biometricAvailable
+                          ? "Biométrie ou Face ID à l'ouverture"
+                          : 'Non disponible sur cet appareil',
+                      trailing: Switch(
+                        value: biometricAvailable &&
+                            prefsState.preferences.appLockBiometricEnabled,
+                        activeThumbColor: cs.primary,
+                        onChanged: biometricAvailable
+                            ? (_) => context
+                                .read<AppPreferencesBloc>()
+                                .add(const AppLockBiometricToggled())
+                            : null,
+                      ),
+                      showDivider: false,
+                      onTap: biometricAvailable
+                          ? () => context
+                              .read<AppPreferencesBloc>()
+                              .add(const AppLockBiometricToggled())
+                          : null,
+                    ),
+                  ]),
+                  const SizedBox(height: DonySpacing.lg),
                   const _SectionLabel('SESSION'),
                   DonyListSection(tiles: [
                     DonyListTile(

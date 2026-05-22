@@ -161,5 +161,52 @@ void main() {
       const bioEvent = BiometricToggled();
       expect(bioEvent.props, equals([]));
     });
+
+    group('AppLockBiometricToggled', () {
+      blocTest<AppPreferencesBloc, AppPreferencesState>(
+        'AppLockBiometricToggled bascule appLockBiometricEnabled de true à false',
+        build: () {
+          // appLockBiometricEnabled par défaut = true
+          when(() => mockBox.get(
+                HiveService.kAppLockBiometric,
+                defaultValue: any(named: 'defaultValue'),
+              )).thenReturn(true);
+          return AppPreferencesBloc(mockBox);
+        },
+        act: (bloc) => bloc.add(const AppLockBiometricToggled()),
+        expect: () => [
+          isA<AppPreferencesState>().having(
+            (s) => s.preferences.appLockBiometricEnabled,
+            'appLockBiometricEnabled',
+            isFalse,
+          ),
+        ],
+        verify: (_) => verify(
+          () => mockBox.put(HiveService.kAppLockBiometric, false),
+        ).called(1),
+      );
+
+      blocTest<AppPreferencesBloc, AppPreferencesState>(
+        'AppLockBiometricToggled bascule appLockBiometricEnabled de false à true',
+        build: () {
+          when(() => mockBox.get(
+                HiveService.kAppLockBiometric,
+                defaultValue: any(named: 'defaultValue'),
+              )).thenReturn(false);
+          return AppPreferencesBloc(mockBox);
+        },
+        act: (bloc) => bloc.add(const AppLockBiometricToggled()),
+        expect: () => [
+          isA<AppPreferencesState>().having(
+            (s) => s.preferences.appLockBiometricEnabled,
+            'appLockBiometricEnabled',
+            isTrue,
+          ),
+        ],
+        verify: (_) => verify(
+          () => mockBox.put(HiveService.kAppLockBiometric, true),
+        ).called(1),
+      );
+    });
   });
 }

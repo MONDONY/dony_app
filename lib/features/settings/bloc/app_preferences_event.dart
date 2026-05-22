@@ -34,3 +34,7 @@ class DestinationToggled extends AppPreferencesEvent {
 class BiometricToggled extends AppPreferencesEvent {
   const BiometricToggled();
 }
+
+class AppLockBiometricToggled extends AppPreferencesEvent {
+  const AppLockBiometricToggled();
+}

@@ -1,23 +1,29 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/auth/bloc/local_auth_event.dart';
 import 'package:dony/features/auth/bloc/local_auth_state.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockLocalAuthService extends Mock implements LocalAuthService {}
 
 class MockFlutterSecureStorage extends Mock implements FlutterSecureStorage {}
 
+class MockBox extends Mock implements Box<dynamic> {}
+
 void main() {
   late MockLocalAuthService mockService;
   late MockFlutterSecureStorage mockStorage;
+  late MockBox mockUserPrefs;
 
   setUp(() {
     mockService = MockLocalAuthService();
     mockStorage = MockFlutterSecureStorage();
+    mockUserPrefs = MockBox();
 
     // Default: no lockout, full attempts.
     when(() => mockStorage.read(key: 'pin_lockout_until'))
@@ -28,10 +34,16 @@ void main() {
         .thenAnswer((_) async {});
     when(() => mockStorage.delete(key: any(named: 'key')))
         .thenAnswer((_) async {});
+
+    // Default: appLockBiometric = true (biometric enabled by default)
+    when(() => mockUserPrefs.get(
+          HiveService.kAppLockBiometric,
+          defaultValue: any(named: 'defaultValue'),
+        )).thenReturn(true);
   });
 
   LocalAuthBloc buildBloc() =>
-      LocalAuthBloc(mockService, secureStorage: mockStorage);
+      LocalAuthBloc(mockService, mockUserPrefs, secureStorage: mockStorage);
 
   // ── LocalAuthStarted ────────────────────────────────────────────────────────
 
@@ -259,6 +271,76 @@ void main() {
             )).called(1);
         verify(() => mockStorage.delete(key: 'pin_lockout_until')).called(1);
       },
+    );
+  });
+
+  // ── appLockBiometric toggle ─────────────────────────────────────────────────
+
+  group('LocalAuthBloc — verrouillage biométrie (appLockBiometric)', () {
+    late MockBox userPrefsBox;
+
+    setUp(() {
+      userPrefsBox = MockBox();
+      // Par défaut: pas de lockout, 3 tentatives
+      when(() => mockStorage.read(key: 'pin_lockout_until'))
+          .thenAnswer((_) async => null);
+      when(() => mockStorage.read(key: 'pin_attempts_left'))
+          .thenAnswer((_) async => '3');
+      when(() => mockStorage.write(
+              key: any(named: 'key'), value: any(named: 'value')))
+          .thenAnswer((_) async {});
+      when(() => mockStorage.delete(key: any(named: 'key')))
+          .thenAnswer((_) async {});
+      when(() => mockService.isPinSet()).thenAnswer((_) async => true);
+    });
+
+    blocTest<LocalAuthBloc, LocalAuthState>(
+      'skips biometric quand appLockBiometric = false',
+      build: () {
+        when(() => userPrefsBox.get(
+              HiveService.kAppLockBiometric,
+              defaultValue: any(named: 'defaultValue'),
+            )).thenReturn(false);
+        when(() => mockService.isBiometricAvailable())
+            .thenAnswer((_) async => true);
+        return LocalAuthBloc(
+          mockService,
+          userPrefsBox,
+          secureStorage: mockStorage,
+        );
+      },
+      act: (bloc) => bloc.add(const LocalAuthStarted()),
+      expect: () => [
+        isA<LocalAuthChecking>(),
+        isA<LocalAuthPinRequired>(),
+      ],
+      verify: (_) {
+        verifyNever(() => mockService.authenticateWithBiometric());
+      },
+    );
+
+    blocTest<LocalAuthBloc, LocalAuthState>(
+      'tente biometric quand appLockBiometric = true et biometric disponible',
+      build: () {
+        when(() => userPrefsBox.get(
+              HiveService.kAppLockBiometric,
+              defaultValue: any(named: 'defaultValue'),
+            )).thenReturn(true);
+        when(() => mockService.isBiometricAvailable())
+            .thenAnswer((_) async => true);
+        when(() => mockService.authenticateWithBiometric())
+            .thenAnswer((_) async => true);
+        return LocalAuthBloc(
+          mockService,
+          userPrefsBox,
+          secureStorage: mockStorage,
+        );
+      },
+      act: (bloc) => bloc.add(const LocalAuthStarted()),
+      expect: () => [
+        isA<LocalAuthChecking>(),
+        isA<LocalAuthSuccess>(),
+      ],
     );
   });
 }

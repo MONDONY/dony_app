@@ -1,4 +1,3 @@
-import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/settings/data/models/user_preferences_model.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,6 +17,7 @@ class AppPreferencesBloc extends Bloc<AppPreferencesEvent, AppPreferencesState> 
     on<LanguageChanged>(_onLanguageChanged);
     on<DestinationToggled>(_onDestinationToggled);
     on<BiometricToggled>(_onBiometricToggled);
+    on<AppLockBiometricToggled>(_onAppLockBiometricToggled);
   }
 
   void _onThemeChanged(
@@ -60,6 +60,17 @@ class AppPreferencesBloc extends Bloc<AppPreferencesEvent, AppPreferencesState> 
   ) {
     final updated = state.preferences.copyWith(
       biometricEnabled: !state.preferences.biometricEnabled,
+    );
+    updated.writeToHive(_box);
+    emit(AppPreferencesState(preferences: updated));
+  }
+
+  void _onAppLockBiometricToggled(
+    AppLockBiometricToggled event,
+    Emitter<AppPreferencesState> emit,
+  ) {
+    final updated = state.preferences.copyWith(
+      appLockBiometricEnabled: !state.preferences.appLockBiometricEnabled,
     );
     updated.writeToHive(_box);
     emit(AppPreferencesState(preferences: updated));

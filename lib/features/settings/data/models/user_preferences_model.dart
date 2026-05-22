@@ -14,6 +14,7 @@ class UserPreferencesModel {
   final String profileVisibility;
   final bool hidePhoneNumber;
   final bool biometricEnabled;
+  final bool appLockBiometricEnabled;
 
   const UserPreferencesModel({
     this.themeMode = 'system',
@@ -28,6 +29,7 @@ class UserPreferencesModel {
     this.profileVisibility = 'public',
     this.hidePhoneNumber = false,
     this.biometricEnabled = false,
+    this.appLockBiometricEnabled = true,
   });
 
   UserPreferencesModel copyWith({
@@ -43,6 +45,7 @@ class UserPreferencesModel {
     String? profileVisibility,
     bool? hidePhoneNumber,
     bool? biometricEnabled,
+    bool? appLockBiometricEnabled,
   }) =>
       UserPreferencesModel(
         themeMode: themeMode ?? this.themeMode,
@@ -57,6 +60,8 @@ class UserPreferencesModel {
         profileVisibility: profileVisibility ?? this.profileVisibility,
         hidePhoneNumber: hidePhoneNumber ?? this.hidePhoneNumber,
         biometricEnabled: biometricEnabled ?? this.biometricEnabled,
+        appLockBiometricEnabled:
+            appLockBiometricEnabled ?? this.appLockBiometricEnabled,
       );
 
   factory UserPreferencesModel.fromHive(Box box) => UserPreferencesModel(
@@ -84,6 +89,8 @@ class UserPreferencesModel {
             box.get(HiveService.kHidePhoneNumber, defaultValue: false) as bool,
         biometricEnabled: box.get(HiveService.kBiometricEnabled,
             defaultValue: false) as bool,
+        appLockBiometricEnabled: box.get(HiveService.kAppLockBiometric,
+            defaultValue: true) as bool,
       );
 
   void writeToHive(Box box) {
@@ -99,5 +106,6 @@ class UserPreferencesModel {
     box.put(HiveService.kProfileVisibility, profileVisibility);
     box.put(HiveService.kHidePhoneNumber, hidePhoneNumber);
     box.put(HiveService.kBiometricEnabled, biometricEnabled);
+    box.put(HiveService.kAppLockBiometric, appLockBiometricEnabled);
   }
 }

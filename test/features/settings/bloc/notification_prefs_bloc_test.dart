@@ -1,42 +1,32 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
-import 'package:dony/features/settings/data/notification_prefs_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockBox extends Mock implements Box<dynamic> {}
 
-class MockNotificationPrefsRepository extends Mock
-    implements NotificationPrefsRepository {}
-
 void main() {
   late MockBox mockBox;
-  late MockNotificationPrefsRepository mockRepo;
 
   setUp(() {
     mockBox = MockBox();
-    mockRepo = MockNotificationPrefsRepository();
+    reset(mockBox);
     when(() => mockBox.get(any(), defaultValue: any(named: 'defaultValue')))
         .thenAnswer((inv) => inv.namedArguments[#defaultValue]);
     when(() => mockBox.put(any(), any())).thenAnswer((_) async {});
-    when(() => mockRepo.syncPrefs(any())).thenAnswer((_) async {});
   });
 
   group('NotificationPrefsBloc', () {
-    test('état initial utilise les 6 defaults', () {
-      final bloc = NotificationPrefsBloc(mockBox, mockRepo);
+    test('état initial utilise les 6 nouvelles defaults', () {
+      final bloc = NotificationPrefsBloc(mockBox);
       expect(bloc.state.prefs['push_activity_bids'], isTrue);
       expect(bloc.state.prefs['push_activity_negotiations'], isTrue);
       expect(bloc.state.prefs['push_messages'], isTrue);
       expect(bloc.state.prefs['push_trip_reminder'], isTrue);
       expect(bloc.state.prefs['push_promo'], isFalse);
       expect(bloc.state.prefs['email_promo'], isFalse);
-      bloc.close();
-    });
-
-    test('état initial ne contient plus les anciennes clés obsolètes', () {
-      final bloc = NotificationPrefsBloc(mockBox, mockRepo);
+      // Anciennes clés supprimées
       expect(bloc.state.prefs.containsKey('push_payment'), isFalse);
       expect(bloc.state.prefs.containsKey('sms_payment'), isFalse);
       expect(bloc.state.prefs.containsKey('push_delivery'), isFalse);
@@ -56,35 +46,30 @@ void main() {
         ),
       ).thenReturn(false);
 
-      final bloc = NotificationPrefsBloc(mockBox, mockRepo);
+      final bloc = NotificationPrefsBloc(mockBox);
       expect(bloc.state.prefs['push_activity_bids'], isFalse);
       bloc.close();
     });
 
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
-      'NotifPrefToggled push_activity_bids false → true',
-      build: () {
-        when(
-          () => mockBox.get(
-            'notif_push_activity_bids',
-            defaultValue: any(named: 'defaultValue'),
-          ),
-        ).thenReturn(false);
-        return NotificationPrefsBloc(mockBox, mockRepo);
-      },
+      'NotifPrefToggled inverse push_activity_bids (true → false)',
+      build: () => NotificationPrefsBloc(mockBox),
       act: (bloc) => bloc.add(const NotifPrefToggled('push_activity_bids')),
       expect: () => [
         isA<NotificationPrefsState>().having(
           (s) => s.prefs['push_activity_bids'],
           'push_activity_bids',
-          isTrue,
+          isFalse,
         ),
       ],
+      verify: (_) => verify(
+        () => mockBox.put('notif_push_activity_bids', false),
+      ).called(1),
     );
 
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
-      'NotifPrefToggled push_activity_negotiations true → false',
-      build: () => NotificationPrefsBloc(mockBox, mockRepo),
+      'NotifPrefToggled inverse push_activity_negotiations (true → false)',
+      build: () => NotificationPrefsBloc(mockBox),
       act: (bloc) =>
           bloc.add(const NotifPrefToggled('push_activity_negotiations')),
       expect: () => [
@@ -97,39 +82,29 @@ void main() {
     );
 
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
-      'NotifPrefToggled push_messages false → true',
-      build: () {
-        when(
-          () => mockBox.get(
-            'notif_push_messages',
-            defaultValue: any(named: 'defaultValue'),
-          ),
-        ).thenReturn(false);
-        return NotificationPrefsBloc(mockBox, mockRepo);
-      },
+      'NotifPrefToggled inverse push_messages (true → false)',
+      build: () => NotificationPrefsBloc(mockBox),
       act: (bloc) => bloc.add(const NotifPrefToggled('push_messages')),
       expect: () => [
         isA<NotificationPrefsState>().having(
           (s) => s.prefs['push_messages'],
           'push_messages',
-          isTrue,
+          isFalse,
         ),
       ],
     );
 
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
       'NotifPrefToggled écrit la nouvelle valeur dans Hive',
-      build: () => NotificationPrefsBloc(mockBox, mockRepo),
-      act: (bloc) =>
-          bloc.add(const NotifPrefToggled('push_activity_negotiations')),
-      verify: (_) => verify(
-        () => mockBox.put('notif_push_activity_negotiations', false),
-      ).called(1),
+      build: () => NotificationPrefsBloc(mockBox),
+      act: (bloc) => bloc.add(const NotifPrefToggled('push_promo')),
+      verify: (_) =>
+          verify(() => mockBox.put('notif_push_promo', true)).called(1),
     );
 
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
-      'deux toggles successifs restituent la valeur initiale',
-      build: () => NotificationPrefsBloc(mockBox, mockRepo),
+      'Deux toggles successifs restituent la valeur initiale',
+      build: () => NotificationPrefsBloc(mockBox),
       act: (bloc) => bloc
         ..add(const NotifPrefToggled('push_promo'))
         ..add(const NotifPrefToggled('push_promo')),
@@ -142,31 +117,17 @@ void main() {
     );
 
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
-      'toggler une clé ne modifie pas les autres clés',
-      build: () => NotificationPrefsBloc(mockBox, mockRepo),
+      'Toggler une clé ne modifie pas les autres clés',
+      build: () => NotificationPrefsBloc(mockBox),
       act: (bloc) => bloc.add(const NotifPrefToggled('push_promo')),
       expect: () => [
         isA<NotificationPrefsState>()
             .having((s) => s.prefs['push_promo'], 'push_promo', isTrue)
+            .having((s) => s.prefs['push_activity_bids'], 'bids', isTrue)
             .having(
-              (s) => s.prefs['push_activity_bids'],
-              'push_activity_bids',
-              isTrue,
-            )
-            .having(
-              (s) => s.prefs['push_trip_reminder'],
-              'push_trip_reminder',
-              isTrue,
-            ),
+                (s) => s.prefs['push_activity_negotiations'], 'negs', isTrue),
       ],
     );
-
-    test('NotificationPrefsState avec mêmes prefs sont égaux', () {
-      const prefs = {'push_activity_bids': true, 'push_promo': false};
-      const a = NotificationPrefsState(prefs: prefs);
-      const b = NotificationPrefsState(prefs: prefs);
-      expect(a, equals(b));
-    });
 
     test('NotifPrefToggled props contient la clé', () {
       const event = NotifPrefToggled('push_activity_bids');
@@ -174,29 +135,12 @@ void main() {
     });
 
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
-      'NotifPrefToggled appelle syncPrefs avec les valeurs mises à jour',
-      build: () => NotificationPrefsBloc(mockBox, mockRepo),
-      act: (bloc) => bloc.add(const NotifPrefToggled('push_activity_bids')),
-      verify: (_) => verify(
-        () => mockRepo.syncPrefs(any(
-          that: predicate<Map<String, bool>>(
-            (m) => m['push_activity_bids'] == false,
-          ),
-        )),
-      ).called(1),
-    );
-
-    blocTest<NotificationPrefsBloc, NotificationPrefsState>(
-      'syncPrefs est appelé même si le repo lance une exception',
-      build: () {
-        when(() => mockRepo.syncPrefs(any())).thenAnswer((_) async => throw Exception('network'));
-        return NotificationPrefsBloc(mockBox, mockRepo);
-      },
-      act: (bloc) => bloc.add(const NotifPrefToggled('push_promo')),
-      expect: () => [
-        isA<NotificationPrefsState>()
-            .having((s) => s.prefs['push_promo'], 'push_promo', isTrue),
-      ],
+      'NotifPrefToggled ignore une clé inconnue',
+      build: () => NotificationPrefsBloc(mockBox),
+      act: (bloc) => bloc.add(const NotifPrefToggled('cle_inexistante')),
+      expect: () => [],
+      verify: (_) =>
+          verifyNever(() => mockBox.put('notif_cle_inexistante', any())),
     );
   });
 }
