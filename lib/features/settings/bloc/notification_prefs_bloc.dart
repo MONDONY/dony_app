@@ -42,8 +42,6 @@ class NotificationPrefsBloc
     _box.put('notif_${event.key}', updated[event.key]);
     emit(NotificationPrefsState(prefs: updated));
     // fire-and-forget — les erreurs réseau sont silencieuses (Hive est source de vérité)
-    try {
-      _repository.syncPrefs(updated).ignore();
-    } catch (_) {}
+    _repository.syncPrefs(updated).ignore();
   }
 }
