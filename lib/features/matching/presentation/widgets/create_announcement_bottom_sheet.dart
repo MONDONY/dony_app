@@ -319,7 +319,7 @@ class _CreateAnnouncementContentState
   AddressData? _pickupAddress;
   AddressData? _deliveryAddress;
   final _availableKgNotifier = ValueNotifier<double>(15);
-  final _priceOptionNotifier = ValueNotifier<int>(1);
+  final _priceOptionNotifier = ValueNotifier<int>(-1); // -1 = aucune sélection
   final _transportModeNotifier = ValueNotifier<TransportMode?>(null);
   final _selectedContentNotifier = ValueNotifier<Set<String>>(
     {'Vêtements', 'Médicaments', 'Documents'},
@@ -342,11 +342,16 @@ class _CreateAnnouncementContentState
       : kPriceOptions[_priceOptionNotifier.value.clamp(0, kPriceOptions.length - 1)];
 
   // Vrai si le prix est correctement renseigné :
-  // — chip preset sélectionnée → toujours valide
+  // — mode verrouillé → prix fixé par la demande, toujours valide
+  // — kg toggle OFF (mode grille) → tarification via la grille, toujours valide
+  // — aucun choix effectué (idx == -1) → invalide
+  // — chip preset sélectionnée → valide
   // — "Autre prix" sélectionné → le champ doit contenir un nombre > 0
-  // — kg toggle OFF (mode grille) → la tarification vient de la grille, toujours valide
   bool get _isPriceValid {
+    if (_isLocked) return true;
     if (!_kgPriceEnabledNotifier.value) return true;
+    final idx = _priceOptionNotifier.value;
+    if (idx == -1) return false;
     if (!_isCustomPrice) return true;
     final parsed = double.tryParse(_customPriceCtrl.text.replaceAll(',', '.'));
     return parsed != null && parsed > 0;
@@ -539,6 +544,7 @@ class _CreateAnnouncementContentState
   void _syncPriceToFormBloc() {
     if (!mounted) return;
     if (!_kgPriceEnabledNotifier.value) return; // évite d'écraser le clear
+    if (_priceOptionNotifier.value == -1) return; // pas encore de sélection
     context
         .read<AnnouncementFormBloc>()
         .add(PriceChanged(_pricePerKg));
