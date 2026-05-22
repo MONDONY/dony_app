@@ -35,7 +35,9 @@ class NotificationPrefsBloc
     NotifPrefToggled event,
     Emitter<NotificationPrefsState> emit,
   ) {
-    if (!state.prefs.containsKey(event.key)) return;
+    if (!state.prefs.containsKey(event.key)) {
+      return;
+    }
     final updated = Map<String, bool>.from(state.prefs);
     updated[event.key] = !state.prefs[event.key]!;
     _box.put('notif_${event.key}', updated[event.key]);
