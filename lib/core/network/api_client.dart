@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/device_id_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
@@ -16,7 +17,7 @@ import 'package:flutter/foundation.dart';
 const _tlsCertPem = String.fromEnvironment('TLS_CERT_PEM');
 
 class ApiClient {
-  ApiClient({required String baseUrl}) {
+  ApiClient({required String baseUrl, required DeviceIdService deviceIdService}) {
     _dio = Dio(
       BaseOptions(
         baseUrl: baseUrl,
@@ -30,7 +31,7 @@ class ApiClient {
     );
 
     _configureCertificatePinning();
-    _dio.interceptors.add(_AuthInterceptor());
+    _dio.interceptors.add(_AuthInterceptor(deviceIdService));
 
     if (kDebugMode) {
       // Log only method/path/status. Bodies and headers contain Firebase
@@ -83,6 +84,9 @@ class ApiClient {
 }
 
 class _AuthInterceptor extends Interceptor {
+  final DeviceIdService _deviceIdService;
+  _AuthInterceptor(this._deviceIdService);
+
   @override
   Future<void> onRequest(
     RequestOptions options,
@@ -102,6 +106,8 @@ class _AuthInterceptor extends Interceptor {
             options.path.contains('/bids/checkout');
         final token = await user.getIdToken(isCritical);
         options.headers['Authorization'] = 'Bearer $token';
+        final deviceId = await _deviceIdService.getDeviceId();
+        options.headers['X-Device-Id'] = deviceId;
       }
     } on FirebaseException catch (e) {
       if (e.code == 'no-app') {

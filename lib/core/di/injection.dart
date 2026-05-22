@@ -41,6 +41,7 @@ import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -109,7 +110,13 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<ActiveRoleCubit>(
     () => ActiveRoleCubit(hiveService: getIt<HiveService>()),
   );
-  getIt.registerLazySingleton<ApiClient>(() => ApiClient(baseUrl: apiBaseUrl));
+  getIt.registerLazySingleton<DeviceIdService>(() => DeviceIdService());
+  getIt.registerLazySingleton<ApiClient>(
+    () => ApiClient(
+      baseUrl: apiBaseUrl,
+      deviceIdService: getIt<DeviceIdService>(),
+    ),
+  );
   getIt.registerLazySingleton<NotificationRemoteDatasource>(
     () => NotificationRemoteDatasource(getIt<ApiClient>()),
   );
