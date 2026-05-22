@@ -8,6 +8,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/grid_item_selection_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -143,6 +144,8 @@ class _CreateBidContentState extends State<_CreateBidContent> {
   // Local copy of payment method so the widget doesn't hold a reference to
   // the external notifier that may be disposed during the sheet exit animation.
   late final ValueNotifier<BidPaymentMethod> _methodNotifier;
+  // Grid quantities for MIXED pricing mode (itemId → quantity).
+  final _gridQuantitiesNotifier = ValueNotifier<Map<String, int>>({});
 
   double get _maxKg => widget.announcement.availableKg;
   double get _pricePerKg => widget.announcement.pricePerKg;
@@ -150,8 +153,13 @@ class _CreateBidContentState extends State<_CreateBidContent> {
   @override
   void initState() {
     super.initState();
+    final hasKgPricing = widget.announcement.pricePerKg > 0;
     _weightNotifier = ValueNotifier<double>(
-      widget.announcement.availableKg >= 5 ? 5 : widget.announcement.availableKg,
+      hasKgPricing
+          ? (widget.announcement.availableKg >= 5
+              ? 5
+              : widget.announcement.availableKg)
+          : 0.0,
     );
     _methodNotifier = ValueNotifier<BidPaymentMethod>(
       widget.paymentMethodNotifier?.value ?? BidPaymentMethod.stripe,
@@ -162,6 +170,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
     _weightNotifier.addListener(_syncStickyState);
     _categoriesNotifier.addListener(_syncStickyState);
     _disclaimerNotifier.addListener(_syncStickyState);
+    _gridQuantitiesNotifier.addListener(_syncStickyState);
     _methodNotifier.addListener(_syncMethodToExternal);
     WidgetsBinding.instance.addPostFrameCallback((_) => _syncStickyState());
   }
@@ -184,8 +193,24 @@ class _CreateBidContentState extends State<_CreateBidContent> {
     final weightKg = _weightNotifier.value;
     final categories = _categoriesNotifier.value;
     final disclaimerAccepted = _disclaimerNotifier.value;
-    final canSubmit = weightKg > 0 && categories.isNotEmpty && disclaimerAccepted;
-    final totalPrice = weightKg * _pricePerKg * 1.12;
+    final hasGridPricing = widget.announcement.priceGridItems.isNotEmpty;
+    final hasKgPricing = widget.announcement.pricePerKg > 0;
+    final gridQuantities = _gridQuantitiesNotifier.value;
+    final hasGridItems = hasGridPricing && gridQuantities.isNotEmpty;
+    final hasWeight = hasKgPricing && weightKg > 0;
+    final canSubmit =
+        (hasGridItems || hasWeight) && categories.isNotEmpty && disclaimerAccepted;
+
+    final weightTotal = hasKgPricing ? weightKg * widget.announcement.pricePerKg * 1.12 : 0.0;
+    final gridTotal = hasGridPricing
+        ? widget.announcement.priceGridItems.fold<double>(
+            0.0,
+            (sum, item) =>
+                sum + item.unitPriceDisplay * (gridQuantities[item.id] ?? 0),
+          )
+        : 0.0;
+
+    final totalPrice = weightTotal + gridTotal;
     widget.canSubmitNotifier?.value = canSubmit;
     widget.totalPriceNotifier?.value = totalPrice;
   }
@@ -200,11 +225,13 @@ class _CreateBidContentState extends State<_CreateBidContent> {
     _weightNotifier.removeListener(_syncStickyState);
     _categoriesNotifier.removeListener(_syncStickyState);
     _disclaimerNotifier.removeListener(_syncStickyState);
+    _gridQuantitiesNotifier.removeListener(_syncStickyState);
     _methodNotifier.removeListener(_syncMethodToExternal);
     _weightNotifier.dispose();
     _categoriesNotifier.dispose();
     _disclaimerNotifier.dispose();
     _methodNotifier.dispose();
+    _gridQuantitiesNotifier.dispose();
     super.dispose();
   }
 
@@ -230,6 +257,17 @@ class _CreateBidContentState extends State<_CreateBidContent> {
       _showError('Téléphone du destinataire obligatoire');
       return;
     }
+
+    // Build grid items payload for MIXED pricing mode.
+    final gridItems = widget.announcement.priceGridItems
+        .where((item) =>
+            (_gridQuantitiesNotifier.value[item.id] ?? 0) > 0)
+        .map((item) => {
+              'announcementGridItemId': item.id,
+              'quantity': _gridQuantitiesNotifier.value[item.id]!,
+            })
+        .toList();
+
     final method = _methodNotifier.value;
     if (method == BidPaymentMethod.cash) {
       context.read<BidBloc>().add(BidCreateRequested(
@@ -241,6 +279,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
         recipientName: _recipientNameCtrl.text.trim(),
         recipientPhone: _recipientPhoneCtrl.text.trim(),
         paymentMethod: BidPaymentMethod.cash,
+        gridItems: gridItems.isEmpty ? null : gridItems,
       ));
     } else {
       context.read<BidBloc>().add(BidCheckoutRequested(
@@ -251,6 +290,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
         contentCategory: _categoriesNotifier.value.join(', '),
         recipientName: _recipientNameCtrl.text.trim(),
         recipientPhone: _recipientPhoneCtrl.text.trim(),
+        gridItems: gridItems.isEmpty ? null : gridItems,
       ));
     }
   }
@@ -297,31 +337,210 @@ class _CreateBidContentState extends State<_CreateBidContent> {
               _categoriesNotifier,
               _disclaimerNotifier,
               _methodNotifier,
+              _gridQuantitiesNotifier,
             ]),
             builder: (context, _) {
               final weightKg = _weightNotifier.value;
               final categories = _categoriesNotifier.value;
               final disclaimerAccepted = _disclaimerNotifier.value;
               final currentMethod = _methodNotifier.value;
+              final gridQuantities = _gridQuantitiesNotifier.value;
+              final hasGridPricing = widget.announcement.priceGridItems.isNotEmpty;
+              final hasKgPricing = widget.announcement.pricePerKg > 0;
               final serviceFee = weightKg * _pricePerKg * 0.12;
               final basePrice = weightKg * _pricePerKg;
               final totalPrice = basePrice + serviceFee;
 
+              // Grid total (articles only, displayed as informational recap).
+              final gridTotal = hasGridPricing
+                  ? widget.announcement.priceGridItems.fold<double>(
+                      0,
+                      (sum, item) =>
+                          sum +
+                          item.unitPriceDisplay *
+                              (gridQuantities[item.id] ?? 0),
+                    )
+                  : 0.0;
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── SECTION: Poids estimé ───────────────────────────────
-                  _SectionLabel(label: 'POIDS ESTIMÉ'),
-                  const SizedBox(height: DonySpacing.sm),
-                  _WeightSection(
-                    weightKg: weightKg,
-                    maxKg: _maxKg,
-                    onChanged: (v) => _weightNotifier.value = v,
-                  ).animate().fadeIn(duration: 250.ms),
-                  const SizedBox(height: DonySpacing.xxl),
+                  // ── SECTION: Articles de la grille ─────────────────────
+                  if (hasGridPricing) ...[
+                    const _SectionLabel(label: 'ARTICLES'),
+                    const SizedBox(height: DonySpacing.sm),
+                    ValueListenableBuilder<Map<String, int>>(
+                      valueListenable: _gridQuantitiesNotifier,
+                      builder: (context, quantities, _) {
+                        final totalSelected = quantities.values
+                            .fold<int>(0, (s, q) => s + q);
+                        final subtotal = widget.announcement.priceGridItems
+                            .fold<double>(
+                          0.0,
+                          (s, item) =>
+                              s +
+                              item.unitPriceDisplay *
+                                  (quantities[item.id] ?? 0),
+                        );
+                        final hasSelection = quantities.isNotEmpty;
+
+                        return GestureDetector(
+                          onTap: () async {
+                            final result = await GridItemSelectionSheet.show(
+                              context,
+                              items: widget.announcement.priceGridItems,
+                              initialQuantities: quantities,
+                              corridor:
+                                  '${widget.announcement.departureCity} → ${widget.announcement.arrivalCity}',
+                            );
+                            if (result != null) {
+                              _gridQuantitiesNotifier.value = result;
+                            }
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 160),
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(DonySpacing.base),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surface,
+                              borderRadius:
+                                  BorderRadius.circular(DonyRadius.card),
+                              border: hasSelection
+                                  ? Border.all(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .success,
+                                      width: 1.5,
+                                    )
+                                  : Border.all(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .warning,
+                                      width: 1.5,
+                                    ),
+                            ),
+                            child: hasSelection
+                                ? Row(
+                                    children: [
+                                      Icon(
+                                        Icons.check_circle_rounded,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .success,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: DonySpacing.sm),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              '$totalSelected article${totalSelected > 1 ? 's' : ''} sélectionné${totalSelected > 1 ? 's' : ''}',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyMedium
+                                                  ?.copyWith(
+                                                    fontWeight:
+                                                        FontWeight.w600,
+                                                  ),
+                                            ),
+                                            Text(
+                                              'Sous-total : ${subtotal.toStringAsFixed(2)} €',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodySmall
+                                                  ?.copyWith(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .success,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Text(
+                                        'Modifier',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary,
+                                            ),
+                                      ),
+                                    ],
+                                  )
+                                : Row(
+                                    children: [
+                                      Icon(
+                                        Icons.inventory_2_outlined,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .warning,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: DonySpacing.sm),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Choisir mes articles',
+                                              key: const Key(
+                                                  'choose-articles-btn'),
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyMedium
+                                                  ?.copyWith(
+                                                    fontWeight:
+                                                        FontWeight.w600,
+                                                  ),
+                                            ),
+                                            Text(
+                                              'Requis — au moins 1 article',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodySmall
+                                                  ?.copyWith(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurfaceVariant,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Icon(
+                                        Icons.chevron_right_rounded,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                      ),
+                                    ],
+                                  ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: DonySpacing.xxl),
+                  ],
+
+                  // ── SECTION: Poids estimé (masqué si pas de tarif kg) ──
+                  if (hasKgPricing) ...[
+                    _WeightSection(
+                      weightKg: weightKg,
+                      maxKg: _maxKg,
+                      isMixed: hasGridPricing,
+                      onChanged: (v) => _weightNotifier.value = v,
+                    ).animate().fadeIn(duration: 250.ms),
+                    const SizedBox(height: DonySpacing.xxl),
+                  ],
 
                   // ── SECTION: Contenu du colis ───────────────────────────
-                  _SectionLabel(label: 'CONTENU DU COLIS'),
+                  const _SectionLabel(label: 'CONTENU DU COLIS'),
                   const SizedBox(height: DonySpacing.md),
                   Wrap(
                     spacing: DonySpacing.sm,
@@ -345,7 +564,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
                   const SizedBox(height: DonySpacing.xxl),
 
                   // ── SECTION: Description ────────────────────────────────
-                  _SectionLabel(label: 'DESCRIPTION (AU VOYAGEUR)'),
+                  const _SectionLabel(label: 'DESCRIPTION (AU VOYAGEUR)'),
                   const SizedBox(height: DonySpacing.sm),
                   DonyTextField(
                     controller: _descCtrl,
@@ -354,7 +573,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
                   const SizedBox(height: DonySpacing.xxl),
 
                   // ── Valeur déclarée ─────────────────────────────────────
-                  _SectionLabel(label: 'VALEUR DÉCLARÉE (€)'),
+                  const _SectionLabel(label: 'VALEUR DÉCLARÉE (€)'),
                   const SizedBox(height: DonySpacing.sm),
                   TextFormField(
                     controller: _valueCtrl,
@@ -383,7 +602,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
                   const SizedBox(height: DonySpacing.xxl),
 
                   // ── Destinataire ────────────────────────────────────────
-                  _SectionLabel(label: 'DESTINATAIRE'),
+                  const _SectionLabel(label: 'DESTINATAIRE'),
                   const SizedBox(height: DonySpacing.md),
                   DonyTextField(
                     controller: _recipientNameCtrl,
@@ -401,7 +620,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
 
                   // ── SECTION: Mode de paiement ────────────────────────────
                   if (widget.isCashAvailable) ...[
-                    _SectionLabel(label: 'MODE DE PAIEMENT'),
+                    const _SectionLabel(label: 'MODE DE PAIEMENT'),
                     const SizedBox(height: DonySpacing.md),
                     _PaymentMethodSelector(
                       selectedMethod: currentMethod,
@@ -417,14 +636,21 @@ class _CreateBidContentState extends State<_CreateBidContent> {
                   ).animate().fadeIn(delay: 200.ms),
                   const SizedBox(height: DonySpacing.xxl),
 
-                  // ── Price breakdown ─────────────────────────────────────
-                  _PriceBreakdown(
-                    weightKg: weightKg,
-                    pricePerKg: _pricePerKg,
-                    basePrice: basePrice,
-                    serviceFee: serviceFee,
-                    totalPrice: totalPrice,
-                  ),
+                  // ── Récap articles grille (si articles sélectionnés) ─
+                  if (hasGridPricing && gridTotal > 0) ...[
+                    _GridTotalRecap(gridTotal: gridTotal),
+                    const SizedBox(height: DonySpacing.md),
+                  ],
+
+                  // ── Price breakdown (KG mode uniquement) ────────────────
+                  if (hasKgPricing)
+                    _PriceBreakdown(
+                      weightKg: weightKg,
+                      pricePerKg: _pricePerKg,
+                      basePrice: basePrice,
+                      serviceFee: serviceFee,
+                      totalPrice: totalPrice,
+                    ),
                   const SizedBox(height: DonySpacing.md),
                 ],
               );
@@ -499,18 +725,54 @@ class _WeightSection extends StatelessWidget {
     required this.weightKg,
     required this.maxKg,
     required this.onChanged,
+    this.isMixed = false,
   });
 
   final double weightKg;
   final double maxKg;
   final ValueChanged<double> onChanged;
+  /// En mode MIXED, le poids est optionnel : min slider = 0.
+  final bool isMixed;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final sliderMin = isMixed ? 0.0 : 1.0;
+
+    // Guard: if maxKg <= sliderMin the slider range is invalid (Flutter requires
+    // min < max). Show a graceful "no capacity" message instead of crashing.
+    if (maxKg <= sliderMin) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            isMixed ? 'Poids du colis (optionnel)' : 'Poids du colis',
+            style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            'Aucune capacité disponible',
+            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
+      );
+    }
+
+    final divisions = (maxKg - sliderMin).round();
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Section label with optional indicator
+        Row(
+          children: [
+            Text(
+              isMixed ? 'Poids du colis (optionnel)' : 'Poids du colis',
+              style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ],
+        ),
+        const SizedBox(height: DonySpacing.sm),
         // Large weight display
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -547,9 +809,9 @@ class _WeightSection extends StatelessWidget {
           ),
           child: Slider(
             value: weightKg,
-            min: 1,
+            min: sliderMin,
             max: maxKg,
-            divisions: (maxKg - 1).round(),
+            divisions: divisions > 0 ? divisions : null,
             onChanged: onChanged,
           ),
         ),
@@ -558,7 +820,7 @@ class _WeightSection extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              '1 kg',
+              isMixed ? '0 kg' : '1 kg',
               style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             Text(
@@ -809,6 +1071,43 @@ class _MethodTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Grid total recap ─────────────────────────────────────────────────────────
+
+class _GridTotalRecap extends StatelessWidget {
+  const _GridTotalRecap({required this.gridTotal});
+
+  final double gridTotal;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: cs.primary,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Total articles',
+            style: tt.labelMedium?.copyWith(color: cs.onPrimary),
+          ),
+          Text(
+            '${gridTotal.toStringAsFixed(2)} €',
+            style: tt.titleSmall?.copyWith(
+              color: cs.onPrimary,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,8 +1,11 @@
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/grid_preview_item.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:equatable/equatable.dart';
 
 enum CapacityUnit { suitcase23kg, suitcase32kg, kgFree, custom }
+
+enum PricingMode { kg, mixed }
 
 enum PriceWarning { tooLow, tooHigh }
 
@@ -66,6 +69,10 @@ class AnnouncementFormState extends Equatable {
   final List<String> acceptedTypes;
   final List<String> rejectedTypes;
 
+  // Mode de tarification + aperçu grille
+  final PricingMode pricingMode;
+  final List<GridPreviewItem> gridPreviewItems;
+
   const AnnouncementFormState({
     this.departureCity,
     this.arrivalCity,
@@ -82,6 +89,8 @@ class AnnouncementFormState extends Equatable {
     this.cashAccepted = false,
     this.acceptedTypes = const [],
     this.rejectedTypes = const [],
+    this.pricingMode = PricingMode.kg,
+    this.gridPreviewItems = const [],
   });
 
   bool get isFormValid =>
@@ -92,10 +101,9 @@ class AnnouncementFormState extends Equatable {
       departureDate != null &&
       departureDate!
           .isAfter(DateTime.now().subtract(const Duration(days: 1))) &&
-      pricePerKg != null &&
-      pricePerKg! > 0 &&
       availableKg != null &&
-      availableKg! >= 1;
+      availableKg! >= 1 &&
+      isStep3Valid;
 
   bool get isStep1Valid =>
       departureCity != null &&
@@ -107,13 +115,22 @@ class AnnouncementFormState extends Equatable {
   bool get isStep2Valid =>
       pickupAddress != null && deliveryAddress != null;
 
-  bool get isStep3Valid => pricePerKg != null && pricePerKg! > 0;
+  bool get isStep3Valid {
+    switch (pricingMode) {
+      case PricingMode.kg:
+        return pricePerKg != null && pricePerKg! > 0;
+      case PricingMode.mixed:
+        return (pricePerKg != null && pricePerKg! > 0) ||
+            gridPreviewItems.isNotEmpty;
+    }
+  }
 
   AnnouncementFormState copyWith({
     String? departureCity,
     String? arrivalCity,
     DateTime? departureDate,
     double? pricePerKg,
+    double? Function()? pricePerKgGetter,
     double? Function()? availableKgGetter,
     CapacityUnit? capacityUnit,
     String? description,
@@ -125,12 +142,16 @@ class AnnouncementFormState extends Equatable {
     bool? cashAccepted,
     List<String>? acceptedTypes,
     List<String>? rejectedTypes,
+    PricingMode? pricingMode,
+    List<GridPreviewItem>? gridPreviewItems,
   }) {
     return AnnouncementFormState(
       departureCity: departureCity ?? this.departureCity,
       arrivalCity: arrivalCity ?? this.arrivalCity,
       departureDate: departureDate ?? this.departureDate,
-      pricePerKg: pricePerKg ?? this.pricePerKg,
+      pricePerKg: pricePerKgGetter != null
+          ? pricePerKgGetter()
+          : (pricePerKg ?? this.pricePerKg),
       availableKg: availableKgGetter != null ? availableKgGetter() : this.availableKg,
       capacityUnit: capacityUnit ?? this.capacityUnit,
       description: description ?? this.description,
@@ -146,6 +167,8 @@ class AnnouncementFormState extends Equatable {
       cashAccepted: cashAccepted ?? this.cashAccepted,
       acceptedTypes: acceptedTypes ?? this.acceptedTypes,
       rejectedTypes: rejectedTypes ?? this.rejectedTypes,
+      pricingMode: pricingMode ?? this.pricingMode,
+      gridPreviewItems: gridPreviewItems ?? this.gridPreviewItems,
     );
   }
 
@@ -166,5 +189,7 @@ class AnnouncementFormState extends Equatable {
         cashAccepted,
         acceptedTypes,
         rejectedTypes,
+        pricingMode,
+        gridPreviewItems,
       ];
 }

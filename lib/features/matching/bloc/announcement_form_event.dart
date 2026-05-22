@@ -3,6 +3,9 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:equatable/equatable.dart';
 
+// Re-export PricingMode so callers only need to import this file
+export 'package:dony/features/matching/bloc/announcement_form_state.dart' show PricingMode;
+
 abstract class AnnouncementFormEvent extends Equatable {
   const AnnouncementFormEvent();
 
@@ -129,4 +132,20 @@ class RejectedTypesChanged extends AnnouncementFormEvent {
 
 class FormResetRequested extends AnnouncementFormEvent {
   const FormResetRequested();
+}
+
+class AnnouncementPricingModeSetRequested extends AnnouncementFormEvent {
+  final PricingMode mode;
+  const AnnouncementPricingModeSetRequested(this.mode);
+
+  @override
+  List<Object?> get props => [mode];
+}
+
+class AnnouncementGridPreviewLoadRequested extends AnnouncementFormEvent {
+  const AnnouncementGridPreviewLoadRequested();
+}
+
+class AnnouncementPricePerKgClearedRequested extends AnnouncementFormEvent {
+  const AnnouncementPricePerKgClearedRequested();
 }

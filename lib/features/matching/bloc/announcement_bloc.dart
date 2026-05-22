@@ -42,6 +42,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         refusedTypes: event.refusedTypes,
         acceptedPaymentMethods: event.acceptedPaymentMethods,
         capacityUnit: event.capacityUnit,
+        pricingMode: event.pricingMode,
       );
       await _hive.userPrefs
           .put(HiveService.kHasPublishedAsTraveler, true);
@@ -174,6 +175,7 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         refusedTypes: event.refusedTypes,
         acceptedPaymentMethods: event.acceptedPaymentMethods,
         capacityUnit: event.capacityUnit,
+        pricingMode: event.pricingMode,
       );
       emit(AnnouncementUpdated(announcement));
     } catch (e) {

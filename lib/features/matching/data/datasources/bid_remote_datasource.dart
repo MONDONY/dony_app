@@ -17,20 +17,22 @@ class BidRemoteDatasource {
     required String contentCategory,
     required String recipientName,
     required String recipientPhone,
+    List<Map<String, dynamic>>? gridItems,
   }) async {
-    final response = await _apiClient.dio.post(
-      '/bids/checkout',
-      data: {
-        'announcementId': announcementId,
-        'weightKg': weightKg,
-        'declaredValueEur': declaredValueEur,
-        'description': description,
-        'contentCategory': contentCategory,
-        'recipientName': recipientName,
-        'recipientPhone': recipientPhone,
-        'disclaimerSigned': true,
-      },
-    );
+    final body = <String, dynamic>{
+      'announcementId': announcementId,
+      'weightKg': weightKg,
+      'declaredValueEur': declaredValueEur,
+      'description': description,
+      'contentCategory': contentCategory,
+      'recipientName': recipientName,
+      'recipientPhone': recipientPhone,
+      'disclaimerSigned': true,
+    };
+    if (gridItems != null && gridItems.isNotEmpty) {
+      body['gridItems'] = gridItems;
+    }
+    final response = await _apiClient.dio.post('/bids/checkout', data: body);
     return BidCheckoutResponseModel.fromJson(response.data as Map<String, dynamic>);
   }
 
@@ -43,19 +45,24 @@ class BidRemoteDatasource {
     required String recipientName,
     required String recipientPhone,
     BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
+    List<Map<String, dynamic>>? gridItems,
   }) async {
+    final body = <String, dynamic>{
+      'weightKg': weightKg,
+      'declaredValueEur': declaredValueEur,
+      'description': description,
+      'contentCategory': contentCategory,
+      'recipientName': recipientName,
+      'recipientPhone': recipientPhone,
+      'disclaimerSigned': true,
+      'paymentMethod': paymentMethod.name.toUpperCase(),
+    };
+    if (gridItems != null && gridItems.isNotEmpty) {
+      body['gridItems'] = gridItems;
+    }
     final response = await _apiClient.dio.post(
       '/announcements/$announcementId/bids',
-      data: {
-        'weightKg': weightKg,
-        'declaredValueEur': declaredValueEur,
-        'description': description,
-        'contentCategory': contentCategory,
-        'recipientName': recipientName,
-        'recipientPhone': recipientPhone,
-        'disclaimerSigned': true,
-        'paymentMethod': paymentMethod.name.toUpperCase(),
-      },
+      data: body,
     );
     return BidModel.fromJson(response.data as Map<String, dynamic>);
   }

@@ -157,8 +157,11 @@ class RouteBottomSheet extends StatelessWidget {
                                     }
                                   : () {
                                       ctx.pop();
-                                      showTravelerAnnouncementSheet(context,
-                                          announcement: ann);
+                                      showTravelerAnnouncementSheet(
+                                        context,
+                                        announcement: ann,
+                                        existingBidStatus: existingBid?.status,
+                                      );
                                     },
                             );
                           },

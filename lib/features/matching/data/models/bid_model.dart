@@ -15,6 +15,12 @@ enum CommissionStatus {
   @JsonValue('REFUNDED') refunded,
 }
 
+enum BidPricingMode {
+  @JsonValue('KG') kg,
+  @JsonValue('GRID') grid,
+  @JsonValue('MIXED') mixed,
+}
+
 @JsonSerializable()
 class BidModel {
   final String id;
@@ -26,7 +32,7 @@ class BidModel {
   final bool senderKycVerified;
   final bool senderIsProAccount;
   final bool senderKiloPro;
-  final double weightKg;
+  final double? weightKg;
   // Nullable: bids issued from the package_request marketplace flow have
   // null declared value until the sender completes the post-acceptance details.
   final double? declaredValueEur;
@@ -69,6 +75,8 @@ class BidModel {
   final CommissionStatus? commissionStatus;
   final String? cancellationNoShowStatus;
   final DateTime? contestationDeadline;
+  final BidPricingMode pricingMode;
+  final double? totalAmountEur;
 
   const BidModel({
     required this.id,
@@ -80,7 +88,7 @@ class BidModel {
     this.senderKycVerified = false,
     this.senderIsProAccount = false,
     this.senderKiloPro = false,
-    required this.weightKg,
+    this.weightKg,
     this.declaredValueEur,
     this.description,
     this.contentCategory,
@@ -120,6 +128,8 @@ class BidModel {
     this.commissionStatus,
     this.cancellationNoShowStatus,
     this.contestationDeadline,
+    this.pricingMode = BidPricingMode.kg,
+    this.totalAmountEur,
   });
 
   factory BidModel.fromJson(Map<String, dynamic> json) =>

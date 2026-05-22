@@ -17,6 +17,7 @@ class BidRepository {
     required String contentCategory,
     required String recipientName,
     required String recipientPhone,
+    List<Map<String, dynamic>>? gridItems,
   }) =>
       _datasource.checkoutBid(
         announcementId: announcementId,
@@ -26,6 +27,7 @@ class BidRepository {
         contentCategory: contentCategory,
         recipientName: recipientName,
         recipientPhone: recipientPhone,
+        gridItems: gridItems,
       );
 
   Future<BidModel> createBid({
@@ -37,6 +39,7 @@ class BidRepository {
     required String recipientName,
     required String recipientPhone,
     BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
+    List<Map<String, dynamic>>? gridItems,
   }) =>
       _datasource.createBid(
         announcementId: announcementId,
@@ -47,6 +50,7 @@ class BidRepository {
         recipientName: recipientName,
         recipientPhone: recipientPhone,
         paymentMethod: paymentMethod,
+        gridItems: gridItems,
       );
 
   Future<List<BidModel>> getBidsForAnnouncement(String announcementId) =>

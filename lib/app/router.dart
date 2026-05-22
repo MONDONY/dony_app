@@ -73,6 +73,9 @@ import 'package:dony/features/recipients/presentation/screens/recipients_screen.
 import 'package:dony/features/profile/presentation/screens/faq_screen.dart';
 import 'package:dony/features/profile/presentation/screens/shipments_history_screen.dart';
 import 'package:dony/features/profile/presentation/screens/support_contact_screen.dart';
+import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
+import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
+import 'package:dony/features/price_grid/presentation/price_grid_screen.dart';
 import 'package:dony/features/profile/bloc/traveler_upgrade_bloc.dart';
 import 'package:dony/features/profile/presentation/screens/become_traveler_screen.dart';
 import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
@@ -567,6 +570,15 @@ final appRouter = GoRouter(
       builder: (context, state) => BlocProvider(
         create: (_) => getIt<TravelerUpgradeBloc>(),
         child: const BecomeATravelerScreen(),
+      ),
+    ),
+
+    // ── Grille de prix voyageur (hors shell) ─────────────────────────
+    GoRoute(
+      path: '/profile/price-grid',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<PriceGridBloc>()..add(const PriceGridLoadRequested()),
+        child: const PriceGridScreen(),
       ),
     ),
 

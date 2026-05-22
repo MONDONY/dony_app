@@ -62,7 +62,7 @@ class TrajetCard extends StatelessWidget {
               value: _formatTime(bid.arrivalTime),
             ),
           ],
-          if (bid.pricePerKg != null) ...[
+          if (bid.pricePerKg != null && bid.pricePerKg! > 0) ...[
             const SizedBox(height: DonySpacing.sm),
             InfoRow(
               label: 'Tarif par kg',

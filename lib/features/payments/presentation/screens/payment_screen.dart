@@ -96,7 +96,7 @@ class _PaymentSummaryView extends StatelessWidget {
     required this.commissionRate,
   });
 
-  double get _amount => bid.weightKg * (bid.pricePerKg ?? 0);
+  double get _amount => bid.totalAmountEur ?? (bid.weightKg ?? 0) * (bid.pricePerKg ?? 0);
   double get _commission => _amount * commissionRate;
 
   Future<void> _pay(BuildContext context) async {
@@ -223,16 +223,25 @@ class _SummaryCard extends StatelessWidget {
             ),
             child: Column(
               children: [
-                DonyInfoRow(
-                  label: 'Poids',
-                  value: '${bid.weightKg.toStringAsFixed(1)} kg',
-                ),
-                const DonyInfoRow.divider(),
-                DonyInfoRow(
-                  label: 'Prix/kg',
-                  value: '${(bid.pricePerKg ?? 0).toStringAsFixed(2)} €/kg',
-                ),
-                const DonyInfoRow.divider(),
+                if (bid.pricingMode == BidPricingMode.kg || bid.pricingMode == BidPricingMode.mixed) ...[
+                  DonyInfoRow(
+                    label: 'Poids',
+                    value: bid.weightKg != null ? '${bid.weightKg!.toStringAsFixed(1)} kg' : '—',
+                  ),
+                  const DonyInfoRow.divider(),
+                  DonyInfoRow(
+                    label: 'Prix/kg',
+                    value: bid.pricePerKg != null ? '${bid.pricePerKg!.toStringAsFixed(2)} €/kg' : '—',
+                  ),
+                  const DonyInfoRow.divider(),
+                ],
+                if (bid.pricingMode == BidPricingMode.grid) ...[
+                  DonyInfoRow(
+                    label: 'Type',
+                    value: 'Forfait articles',
+                  ),
+                  const DonyInfoRow.divider(),
+                ],
                 DonyInfoRow(
                   label: 'Montant',
                   value: '${amount.toStringAsFixed(2)} €',

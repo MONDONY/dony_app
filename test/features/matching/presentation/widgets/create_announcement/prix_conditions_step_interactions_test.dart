@@ -46,6 +46,7 @@ Widget _host({
   ValueNotifier<double>? customPrice,
   ValueNotifier<double>? availableKg,
   ValueNotifier<bool>? cashEnabled,
+  ValueNotifier<bool>? kgPriceEnabled,
   ValueNotifier<Set<String>>? selectedContent,
   ValueNotifier<Set<String>>? customAccepted,
   ValueNotifier<Set<String>>? refusedTypes,
@@ -78,6 +79,7 @@ Widget _host({
             customPriceNotifier: customPrice ?? ValueNotifier<double>(0),
             availableKgNotifier: availableKg ?? ValueNotifier<double>(10),
             cashEnabledNotifier: cashEnabled ?? ValueNotifier<bool>(false),
+            kgPriceEnabledNotifier: kgPriceEnabled ?? ValueNotifier<bool>(true),
             selectedContentNotifier:
                 selectedContent ?? ValueNotifier<Set<String>>({}),
             customAcceptedNotifier:
@@ -284,6 +286,12 @@ void main() {
       () {
     testWidgets('ajout via CaInlineAddRow customAccepted met à jour le notifier',
         (tester) async {
+      // Grand viewport pour que la section "Ce que j'accepte" soit dans le rendu
+      // après l'ajout du toggle KG/MIXED qui pousse le contenu vers le bas.
+      tester.view.physicalSize = const Size(800, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
       final customAccepted = ValueNotifier<Set<String>>({});
       final customCtrl = TextEditingController();
       await _pump(
@@ -306,6 +314,12 @@ void main() {
 
     testWidgets('suppression d\'un chip customAccepted met à jour le notifier',
         (tester) async {
+      // Grand viewport pour que la section "Ce que j'accepte" soit dans le rendu
+      // après l'ajout du toggle KG/MIXED qui pousse le contenu vers le bas.
+      tester.view.physicalSize = const Size(800, 4000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
       final customAccepted = ValueNotifier<Set<String>>({'Bijoux'});
       await _pump(tester, customAccepted: customAccepted);
 

@@ -57,6 +57,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         contentCategory: event.contentCategory,
         recipientName: event.recipientName,
         recipientPhone: event.recipientPhone,
+        gridItems: event.gridItems,
       );
       emit(BidCheckoutReady(response));
     } catch (e) {
@@ -81,6 +82,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         recipientName: event.recipientName,
         recipientPhone: event.recipientPhone,
         paymentMethod: event.paymentMethod,
+        gridItems: event.gridItems,
       );
       emit(BidCreated(bid));
     } catch (e) {
@@ -281,4 +283,5 @@ class BidBloc extends Bloc<BidEvent, BidState> {
       emit(BidError(unwrapDioError(e)));
     }
   }
+
 }

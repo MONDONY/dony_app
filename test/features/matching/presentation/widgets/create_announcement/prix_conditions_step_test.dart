@@ -14,12 +14,17 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/models/connect_account_status.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_form_event.dart';
+import 'package:dony/features/matching/bloc/announcement_form_state.dart';
+import 'package:dony/features/matching/data/models/grid_preview_item.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_create_announcement_constants.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/prix_conditions_step.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:dony/features/payments/cash/data/models/commission_method.dart';
+import 'package:dony/features/price_grid/data/models/price_grid_item_model.dart';
+import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -35,6 +40,12 @@ class _MockStripeAccountBloc
 class _MockCommissionMethodBloc
     extends MockBloc<CommissionMethodEvent, CommissionMethodState>
     implements CommissionMethodBloc {}
+
+class _MockPriceGridRepository extends Mock implements PriceGridRepository {}
+
+class _MockAnnouncementFormBloc
+    extends MockBloc<AnnouncementFormEvent, AnnouncementFormState>
+    implements AnnouncementFormBloc {}
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -86,6 +97,7 @@ Widget _host({
   final customPriceNotifier = ValueNotifier<double>(0);
   final availableKgNotifier = ValueNotifier<double>(initialAvailableKg);
   final cashEnabledNotifier = ValueNotifier<bool>(false);
+  final kgPriceEnabledNotifier = ValueNotifier<bool>(true);
   final selectedContentNotifier = ValueNotifier<Set<String>>({});
   final customAcceptedNotifier = ValueNotifier<Set<String>>({});
   final refusedTypesNotifier = ValueNotifier<Set<String>>({});
@@ -110,6 +122,7 @@ Widget _host({
             customPriceNotifier: customPriceNotifier,
             availableKgNotifier: availableKgNotifier,
             cashEnabledNotifier: cashEnabledNotifier,
+            kgPriceEnabledNotifier: kgPriceEnabledNotifier,
             selectedContentNotifier: selectedContentNotifier,
             customAcceptedNotifier: customAcceptedNotifier,
             refusedTypesNotifier: refusedTypesNotifier,
@@ -341,6 +354,112 @@ void main() {
 
       expect(find.textContaining('illimitée'), findsOneWidget);
       expect(find.textContaining('Estimation'), findsNothing);
+    });
+  });
+
+  group('Mode MIXED — toggle et aperçu grille', () {
+    testWidgets('tap "Grille + kilo" affiche le SwitchListTile kg-price-toggle',
+        (tester) async {
+      await _pump(tester);
+      await tester.tap(find.text('Grille + kilo'));
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
+      expect(find.byKey(const Key('kg-price-toggle')), findsOneWidget);
+      expect(find.text('Tarif au kilo'), findsOneWidget);
+      expect(find.text('Optionnel en mode grille'), findsOneWidget);
+    });
+
+    testWidgets('tap "Grille + kilo" puis "Au kilo" masque le toggle kg',
+        (tester) async {
+      await _pump(tester);
+      await tester.tap(find.text('Grille + kilo'));
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
+      await tester.tap(find.text('Au kilo'));
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
+      expect(find.byKey(const Key('kg-price-toggle')), findsNothing);
+    });
+
+    testWidgets('mode MIXED sans items — affiche "Aucun article configuré"',
+        (tester) async {
+      await _pump(tester);
+      await tester.tap(find.text('Grille + kilo'));
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
+      expect(find.text('Aucun article configuré'), findsOneWidget);
+    });
+
+    testWidgets('mode MIXED avec items — affiche les labels et prix',
+        (tester) async {
+      // Utilise un MockBloc synchrone pour éviter les problèmes d'async avec runAsync.
+      final mockBloc = _MockAnnouncementFormBloc();
+      final mixedWithItemsState = const AnnouncementFormState(
+        pricingMode: PricingMode.mixed,
+        gridPreviewItems: [
+          GridPreviewItem(id: 'a1', label: 'Petit colis', unitPriceDisplay: 5.0),
+          GridPreviewItem(id: 'a2', label: 'Grand colis', unitPriceDisplay: 10.0),
+        ],
+      );
+      when(() => mockBloc.state).thenReturn(mixedWithItemsState);
+      when(() => mockBloc.stream).thenAnswer((_) => const Stream.empty());
+
+      final mockStripe = _MockStripeAccountBloc();
+      when(() => mockStripe.state).thenReturn(_stripeConfiguredState);
+      when(() => mockStripe.stream).thenAnswer((_) => const Stream.empty());
+      final mockComm = _MockCommissionMethodBloc();
+      when(() => mockComm.state).thenReturn(CommissionMethodNotConfigured());
+      when(() => mockComm.stream).thenAnswer((_) => const Stream.empty());
+
+      final priceOpt = ValueNotifier<int>(0);
+      final customPrice = ValueNotifier<double>(0);
+      final availKg = ValueNotifier<double>(10);
+      final cash = ValueNotifier<bool>(false);
+      final kgEnabled = ValueNotifier<bool>(true);
+      final selContent = ValueNotifier<Set<String>>({});
+      final custAccepted = ValueNotifier<Set<String>>({});
+      final refused = ValueNotifier<Set<String>>({});
+      final descCtrl = TextEditingController();
+      final custAccCtrl = TextEditingController();
+      final refCtrl = TextEditingController();
+      final custPriceCtrl = TextEditingController();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: MultiBlocProvider(
+              providers: [
+                BlocProvider<AnnouncementFormBloc>.value(value: mockBloc),
+                BlocProvider<StripeAccountBloc>.value(value: mockStripe),
+                BlocProvider<CommissionMethodBloc>.value(value: mockComm),
+              ],
+              child: SingleChildScrollView(
+                child: PrixConditionsStep(
+                  priceOptionNotifier: priceOpt,
+                  customPriceNotifier: customPrice,
+                  availableKgNotifier: availKg,
+                  cashEnabledNotifier: cash,
+                  kgPriceEnabledNotifier: kgEnabled,
+                  selectedContentNotifier: selContent,
+                  customAcceptedNotifier: custAccepted,
+                  refusedTypesNotifier: refused,
+                  descriptionCtrl: descCtrl,
+                  customAcceptedCtrl: custAccCtrl,
+                  refusedCtrl: refCtrl,
+                  customPriceCtrl: custPriceCtrl,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
+
+      expect(find.text('Petit colis'), findsOneWidget);
+      expect(find.text('Grand colis'), findsOneWidget);
+      expect(find.textContaining('5.00 €'), findsOneWidget);
+      expect(find.textContaining('10.00 €'), findsOneWidget);
     });
   });
 }

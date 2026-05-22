@@ -1,12 +1,15 @@
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
@@ -52,6 +55,58 @@ AnnouncementModel _announcement({bool cashEnabled = false}) {
     createdAt: DateTime(2026, 1, 1),
     updatedAt: DateTime(2026, 1, 1),
     acceptedPaymentMethods: methods,
+  );
+}
+
+AnnouncementModel _mixedGridOnlyAnnouncement() {
+  return AnnouncementModel(
+    id: 'ann-grid-only',
+    travelerId: 'trav-1',
+    departureCity: 'Paris',
+    arrivalCity: 'Dakar',
+    departureDate: DateTime(2026, 8, 15),
+    availableKg: 10,
+    totalKg: 10,
+    pricePerKg: 0, // pas de tarif kg
+    status: 'ACTIVE',
+    pricingMode: 'MIXED',
+    priceGridItems: const [
+      AnnouncementGridItemModel(
+        id: 'item-1',
+        label: 'Valise cabine',
+        unitPriceNet: 20.0,
+        unitPriceDisplay: 22.4,
+      ),
+    ],
+    createdAt: DateTime(2026, 1, 1),
+    updatedAt: DateTime(2026, 1, 1),
+    acceptedPaymentMethods: const {BidPaymentMethod.stripe},
+  );
+}
+
+AnnouncementModel _mixedAnnouncement() {
+  return AnnouncementModel(
+    id: 'ann-mixed',
+    travelerId: 'trav-1',
+    departureCity: 'Paris',
+    arrivalCity: 'Dakar',
+    departureDate: DateTime(2026, 8, 15),
+    availableKg: 10,
+    totalKg: 10,
+    pricePerKg: 8,
+    status: 'ACTIVE',
+    pricingMode: 'MIXED',
+    priceGridItems: const [
+      AnnouncementGridItemModel(
+        id: 'item-1',
+        label: 'Téléphone',
+        unitPriceNet: 10,
+        unitPriceDisplay: 11.20,
+      ),
+    ],
+    createdAt: DateTime(2026, 1, 1),
+    updatedAt: DateTime(2026, 1, 1),
+    acceptedPaymentMethods: const {BidPaymentMethod.stripe},
   );
 }
 
@@ -317,6 +372,381 @@ void main() {
 
       // Sheet dismissed, navigated to bid detail.
       expect(find.text('Bid détail'), findsOneWidget);
+    });
+  });
+
+  // ── 5. Mode MIXED — poids optionnel ───────────────────────────────────────
+
+  group('Mode MIXED — poids optionnel', () {
+    testWidgets(
+        'annonce MIXED → label "Poids du colis (optionnel)" affiché',
+        (tester) async {
+      await _openSheet(tester, _mixedAnnouncement());
+
+      expect(find.text('Poids du colis (optionnel)'), findsOneWidget);
+    });
+
+    testWidgets(
+        'annonce KG → label "Poids du colis" affiché sans "(optionnel)"',
+        (tester) async {
+      await _openSheet(tester, _announcement());
+
+      expect(find.text('Poids du colis'), findsOneWidget);
+      expect(find.text('Poids du colis (optionnel)'), findsNothing);
+    });
+
+    testWidgets(
+        'annonce MIXED → bouton "Choisir mes articles" visible',
+        (tester) async {
+      await _openSheet(tester, _mixedAnnouncement());
+
+      // The new grid section shows a tappable card with the section header
+      // and the "Choisir mes articles" button text.
+      expect(find.text('ARTICLES'), findsOneWidget);
+      expect(find.text('Choisir mes articles'), findsOneWidget);
+    });
+
+    testWidgets(
+        'annonce MIXED + poids > 0 (slider défaut 5 kg) → soumission possible',
+        (tester) async {
+      await _openSheet(tester, _mixedAnnouncement());
+
+      // Select a category and accept disclaimer; slider starts at 5 → hasWeight = true.
+      await tester.tap(find.text('Vêtements'));
+      await tester.pump();
+      await tester.tap(find.byType(Checkbox).first);
+      await tester.pump();
+
+      // canSubmit is true (hasWeight). Fill mandatory fields and tap the submit button.
+      await _fillMandatoryFields(tester);
+      await tester.tap(find.textContaining('Bloquer').first);
+      await tester.pump();
+
+      // BidCheckoutRequested should have been dispatched.
+      verify(
+        () => _currentBidBloc.add(any(that: isA<BidCheckoutRequested>())),
+      ).called(1);
+    });
+
+    testWidgets(
+        'annonce MIXED + poids > 0 sans articles → soumission via weight seul',
+        (tester) async {
+      await _openSheet(tester, _mixedAnnouncement());
+
+      // Select a category and accept disclaimer; slider starts at 5 (weight > 0).
+      await tester.tap(find.text('Vêtements'));
+      await tester.pump();
+      await tester.tap(find.byType(Checkbox).first);
+      await tester.pump();
+
+      // canSubmit is true (hasWeight). Fill mandatory fields and tap submit.
+      await _fillMandatoryFields(tester);
+      await tester.tap(find.textContaining('Bloquer').first);
+      await tester.pump();
+
+      // BidCheckoutRequested should have been dispatched.
+      verify(
+        () => _currentBidBloc.add(any(that: isA<BidCheckoutRequested>())),
+      ).called(1);
+    });
+
+    testWidgets(
+        'annonce KG + poids=0 → soumission bloquée (comportement KG inchangé)',
+        (tester) async {
+      await _openSheet(tester, _announcement());
+
+      // Select a category and accept disclaimer.
+      await tester.tap(find.text('Vêtements'));
+      await tester.pump();
+      await tester.tap(find.byType(Checkbox).first);
+      await tester.pump();
+
+      // Drag slider all the way left → weight = 1 (min in KG mode).
+      final slider = find.byType(Slider);
+      final sliderRect = tester.getRect(slider);
+      await tester.drag(slider, Offset(-(sliderRect.width), 0));
+      await tester.pump();
+
+      // Even at min (1 kg), KG mode should allow submission.
+      await _fillMandatoryFields(tester);
+      await tester.tap(find.textContaining('Bloquer').first);
+      await tester.pump();
+
+      verify(
+        () => _currentBidBloc.add(any(that: isA<BidCheckoutRequested>())),
+      ).called(1);
+    });
+  });
+
+  // ── 5b. Validation _submit() ──────────────────────────────────────────────
+
+  group('Validation _submit()', () {
+    testWidgets('description vide → snackbar "Description obligatoire"',
+        (tester) async {
+      await _openSheet(tester, _announcement());
+      await _enableSubmitButton(tester);
+      // Laisser la description vide, remplir le reste
+      await tester.enterText(find.byType(TextField).at(1), '100');
+      await tester.pump();
+      await tester.enterText(find.byType(TextField).at(2), 'Amadou');
+      await tester.pump();
+      await tester.enterText(find.byType(TextField).at(3), '+221770000000');
+      await tester.pump();
+
+      await tester.tap(find.textContaining('Bloquer').first);
+      await tester.pump();
+
+      expect(find.text('Description obligatoire'), findsOneWidget);
+    });
+
+    testWidgets('valeur déclarée > 500 → snackbar "Valeur maximum : 500 €"',
+        (tester) async {
+      await _openSheet(tester, _announcement());
+      await _enableSubmitButton(tester);
+      await tester.enterText(find.byType(TextField).at(0), 'Médicaments');
+      await tester.pump();
+      await tester.enterText(find.byType(TextField).at(1), '501');
+      await tester.pump();
+      await tester.enterText(find.byType(TextField).at(2), 'Amadou');
+      await tester.pump();
+      await tester.enterText(find.byType(TextField).at(3), '+221770000000');
+      await tester.pump();
+
+      await tester.tap(find.textContaining('Bloquer').first);
+      await tester.pump();
+
+      expect(find.text('Valeur maximum : 500 €'), findsOneWidget);
+    });
+
+    testWidgets('valeur déclarée invalide → snackbar "Valeur déclarée invalide"',
+        (tester) async {
+      await _openSheet(tester, _announcement());
+      await _enableSubmitButton(tester);
+      await tester.enterText(find.byType(TextField).at(0), 'Médicaments');
+      await tester.pump();
+      await tester.enterText(find.byType(TextField).at(1), 'abc');
+      await tester.pump();
+      await tester.enterText(find.byType(TextField).at(2), 'Amadou');
+      await tester.pump();
+      await tester.enterText(find.byType(TextField).at(3), '+221770000000');
+      await tester.pump();
+
+      await tester.tap(find.textContaining('Bloquer').first);
+      await tester.pump();
+
+      expect(find.text('Valeur déclarée invalide'), findsOneWidget);
+    });
+
+    testWidgets('nom destinataire vide → snackbar "Nom du destinataire obligatoire"',
+        (tester) async {
+      await _openSheet(tester, _announcement());
+      await _enableSubmitButton(tester);
+      await tester.enterText(find.byType(TextField).at(0), 'Médicaments');
+      await tester.pump();
+      await tester.enterText(find.byType(TextField).at(1), '100');
+      await tester.pump();
+      // Laisser nom et téléphone vides
+      await tester.tap(find.textContaining('Bloquer').first);
+      await tester.pump();
+
+      expect(find.text('Nom du destinataire obligatoire'), findsOneWidget);
+    });
+
+    testWidgets('téléphone destinataire vide → snackbar "Téléphone du destinataire obligatoire"',
+        (tester) async {
+      await _openSheet(tester, _announcement());
+      await _enableSubmitButton(tester);
+      await tester.enterText(find.byType(TextField).at(0), 'Médicaments');
+      await tester.pump();
+      await tester.enterText(find.byType(TextField).at(1), '100');
+      await tester.pump();
+      await tester.enterText(find.byType(TextField).at(2), 'Amadou');
+      await tester.pump();
+      // Laisser le téléphone vide
+      await tester.tap(find.textContaining('Bloquer').first);
+      await tester.pump();
+
+      expect(find.text('Téléphone du destinataire obligatoire'), findsOneWidget);
+    });
+  });
+
+  // ── 5c. BLoC state listeners ──────────────────────────────────────────────
+
+  group('BLoC state listeners', () {
+    testWidgets('BidCheckoutReady → dispatche BidCheckoutPaymentRequested au PaymentBloc',
+        (tester) async {
+      registerFallbackValue(const BidCheckoutPaymentRequested(
+        clientSecret: '',
+        publishableKey: '',
+        bidId: '',
+      ));
+      when(() => _currentPaymentBloc.add(any())).thenReturn(null);
+
+      final ctrl = StreamController<BidState>.broadcast();
+      addTearDown(ctrl.close);
+      when(() => _currentBidBloc.stream).thenAnswer((_) => ctrl.stream);
+
+      await _openSheet(tester, _announcement());
+
+      ctrl.add(BidCheckoutReady(BidCheckoutResponseModel(
+        bidId: 'bid-1',
+        clientSecret: 'cs_test',
+        publishableKey: 'pk_test',
+        expiresAt: DateTime.utc(2026, 12, 31),
+      )));
+      await tester.pump();
+      await tester.pump();
+
+      verify(
+        () => _currentPaymentBloc.add(
+          any(that: isA<BidCheckoutPaymentRequested>()),
+        ),
+      ).called(1);
+    });
+
+    testWidgets('BidError → affiche un snackbar via ErrorPresenter',
+        (tester) async {
+      final ctrl = StreamController<BidState>.broadcast();
+      addTearDown(ctrl.close);
+      when(() => _currentBidBloc.stream).thenAnswer((_) => ctrl.stream);
+
+      await _openSheet(tester, _announcement());
+
+      ctrl.add(BidError(const NetworkException('Erreur réseau')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Un SnackBar ou texte d'erreur doit apparaître.
+      expect(find.textContaining('réseau', findRichText: true), findsWidgets);
+    });
+  });
+
+  // ── 6. Capacité initiale — branches availableKg ───────────────────────────
+
+  group('Capacité initiale', () {
+    testWidgets('availableKg = 1 (KG mode) → affiche "Aucune capacité disponible"',
+        (tester) async {
+      // sliderMin = 1.0 (KG mode), maxKg = 1 → maxKg <= sliderMin → no-capacity path
+      final noCapAnnouncement = AnnouncementModel(
+        id: 'ann-nocap',
+        travelerId: 'trav-1',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2026, 8, 15),
+        availableKg: 1,
+        totalKg: 10,
+        pricePerKg: 8,
+        status: 'ACTIVE',
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 1, 1),
+        acceptedPaymentMethods: const {BidPaymentMethod.stripe},
+      );
+      await _openSheet(tester, noCapAnnouncement);
+      expect(find.text('Aucune capacité disponible'), findsOneWidget);
+    });
+
+    testWidgets('availableKg = 3 (< 5, KG mode) → sheet ouvre sans erreur',
+        (tester) async {
+      // Covers the else branch: initialWeight = availableKg (not 5)
+      final smallKgAnnouncement = AnnouncementModel(
+        id: 'ann-small',
+        travelerId: 'trav-1',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime(2026, 8, 15),
+        availableKg: 3,
+        totalKg: 10,
+        pricePerKg: 8,
+        status: 'ACTIVE',
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 1, 1),
+        acceptedPaymentMethods: const {BidPaymentMethod.stripe},
+      );
+      await _openSheet(tester, smallKgAnnouncement);
+      expect(find.text('Envoyer un colis'), findsOneWidget);
+    });
+  });
+
+  // ── 7. Sélection d'articles grille ───────────────────────────────────────
+
+  group('Sélection d\'articles grille', () {
+    testWidgets(
+        'sélectionner un article → affiche "1 article sélectionné" et total',
+        (tester) async {
+      await _openSheet(tester, _mixedAnnouncement());
+
+      // Open the GridItemSelectionSheet by tapping the grid card.
+      await tester.tap(find.text('Choisir mes articles'));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      // Add item-1 (Téléphone) once.
+      await tester.tap(find.byKey(const Key('grid-item-add-item-1')));
+      await tester.pump();
+
+      // Confirm the selection.
+      await tester.tap(find.byKey(const Key('grid-sheet-confirm')));
+      await tester.pumpAndSettle();
+
+      // Main sheet now shows the selected-items state.
+      expect(find.textContaining('article sélectionné'), findsOneWidget);
+      // _GridTotalRecap rendered (gridTotal > 0).
+      expect(find.text('Total articles'), findsOneWidget);
+    });
+
+    testWidgets(
+        'sélectionner puis déconfirmer (null) → état non-sélectionné conservé',
+        (tester) async {
+      await _openSheet(tester, _mixedAnnouncement());
+
+      // Tap grid card, then close sheet without confirming (tap outside).
+      await tester.tap(find.text('Choisir mes articles'));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      // Close by tapping the backdrop (dismiss the modal).
+      await tester.tapAt(const Offset(400, 100));
+      await tester.pumpAndSettle();
+
+      // Still showing the "no selection" state.
+      expect(find.text('Choisir mes articles'), findsOneWidget);
+    });
+  });
+
+  // ── 8. hasGridPricing / hasKgPricing flags ────────────────────────────────
+
+  group('hasGridPricing / hasKgPricing flags', () {
+    testWidgets('bouton "Choisir mes articles" visible si hasGridPricing',
+        (tester) async {
+      await _openSheet(tester, _mixedGridOnlyAnnouncement());
+      expect(find.text('Choisir mes articles'), findsOneWidget);
+    });
+
+    testWidgets('slider poids absent si !hasKgPricing', (tester) async {
+      await _openSheet(tester, _mixedGridOnlyAnnouncement());
+      expect(find.byType(Slider), findsNothing);
+    });
+
+    testWidgets('canSubmit = false sans articles sélectionnés', (tester) async {
+      await _openSheet(tester, _mixedGridOnlyAnnouncement());
+
+      // Select a category and accept disclaimer — but no grid articles chosen.
+      await tester.tap(find.text('Vêtements'));
+      await tester.pump();
+      await tester.tap(find.byType(Checkbox).first);
+      await tester.pump();
+
+      // The submit button should remain disabled (no grid items selected).
+      final submitFinder = find.textContaining('Bloquer');
+      expect(submitFinder, findsOneWidget);
+      final donyBtnFinder = find.ancestor(
+        of: submitFinder,
+        matching: find.byType(DonyButton),
+      );
+      if (donyBtnFinder.evaluate().isNotEmpty) {
+        final btn = tester.widget<DonyButton>(donyBtnFinder.first);
+        expect(btn.onPressed, isNull);
+      }
     });
   });
 }

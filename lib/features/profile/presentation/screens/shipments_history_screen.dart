@@ -96,10 +96,10 @@ class _DeliveryCard extends StatelessWidget {
     final route = [bid.departureCity, bid.arrivalCity]
         .where((c) => c != null)
         .join(' → ');
-    final weight = bid.weightKg > 0 ? '${bid.weightKg} kg' : null;
+    final weight = (bid.weightKg ?? 0) > 0 ? '${bid.weightKg} kg' : null;
     final description = bid.description;
     final price = bid.pricePerKg != null
-        ? '${(bid.pricePerKg! * bid.weightKg).toStringAsFixed(0)} €'
+        ? '${(bid.pricePerKg! * (bid.weightKg ?? 0)).toStringAsFixed(0)} €'
         : null;
 
     return GestureDetector(

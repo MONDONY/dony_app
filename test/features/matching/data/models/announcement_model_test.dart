@@ -89,4 +89,134 @@ void main() {
       expect(json['transportMode'], isNull);
     });
   });
+
+  group('AnnouncementGridItemModel', () {
+    test('constructs correctly', () {
+      const item = AnnouncementGridItemModel(
+        id: 'item-1',
+        label: 'Valise cabine',
+        unitPriceNet: 10.0,
+        unitPriceDisplay: 11.2,
+      );
+
+      expect(item.id, 'item-1');
+      expect(item.label, 'Valise cabine');
+      expect(item.unitPriceNet, 10.0);
+      expect(item.unitPriceDisplay, 11.2);
+    });
+
+    test('fromJson parses correctly', () {
+      final json = {
+        'id': 'item-2',
+        'label': 'Téléphone',
+        'unitPriceNet': 20.0,
+        'unitPriceDisplay': 22.4,
+      };
+      final item = AnnouncementGridItemModel.fromJson(json);
+
+      expect(item.id, 'item-2');
+      expect(item.label, 'Téléphone');
+      expect(item.unitPriceNet, 20.0);
+      expect(item.unitPriceDisplay, 22.4);
+    });
+
+    test('fromJson handles integer price values', () {
+      final json = {
+        'id': 'item-3',
+        'label': 'Ordinateur',
+        'unitPriceNet': 50,
+        'unitPriceDisplay': 56,
+      };
+      final item = AnnouncementGridItemModel.fromJson(json);
+
+      expect(item.unitPriceNet, 50.0);
+      expect(item.unitPriceDisplay, 56.0);
+    });
+
+    test('toJson serializes correctly', () {
+      const item = AnnouncementGridItemModel(
+        id: 'item-4',
+        label: 'Chaussures',
+        unitPriceNet: 15.0,
+        unitPriceDisplay: 16.8,
+      );
+      final json = item.toJson();
+
+      expect(json['id'], 'item-4');
+      expect(json['label'], 'Chaussures');
+      expect(json['unitPriceNet'], 15.0);
+      expect(json['unitPriceDisplay'], 16.8);
+    });
+
+    test('round-trips through JSON', () {
+      const original = AnnouncementGridItemModel(
+        id: 'item-round',
+        label: 'Sacoche',
+        unitPriceNet: 8.0,
+        unitPriceDisplay: 9.0,
+      );
+      final json = original.toJson();
+      final restored = AnnouncementGridItemModel.fromJson(json);
+
+      expect(restored.id, original.id);
+      expect(restored.label, original.label);
+      expect(restored.unitPriceNet, original.unitPriceNet);
+      expect(restored.unitPriceDisplay, original.unitPriceDisplay);
+    });
+  });
+
+  group('AnnouncementModel with priceGridItems', () {
+    test('deserializes priceGridItems from JSON', () {
+      final json = baseAnnouncementJson()
+        ..['pricingMode'] = 'MIXED'
+        ..['priceGridItems'] = [
+          {
+            'id': 'item-1',
+            'label': 'Valise cabine',
+            'unitPriceNet': 10.0,
+            'unitPriceDisplay': 11.2,
+          }
+        ];
+
+      final model = AnnouncementModel.fromJson(json);
+      expect(model.priceGridItems, hasLength(1));
+      expect(model.priceGridItems.first.id, 'item-1');
+      expect(model.priceGridItems.first.label, 'Valise cabine');
+    });
+
+    test('priceGridItems defaults to empty list when null in JSON', () {
+      final json = baseAnnouncementJson();
+      final model = AnnouncementModel.fromJson(json);
+      expect(model.priceGridItems, isEmpty);
+    });
+
+    test('priceGridItems serializes back to JSON', () {
+      final model = AnnouncementModel(
+        id: 'a1',
+        travelerId: 't1',
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime.parse('2026-06-01'),
+        availableKg: 10.0,
+        totalKg: 10.0,
+        pricePerKg: 5.0,
+        status: 'ACTIVE',
+        createdAt: DateTime.parse('2026-05-02'),
+        updatedAt: DateTime.parse('2026-05-02'),
+        pricingMode: 'MIXED',
+        priceGridItems: const [
+          AnnouncementGridItemModel(
+            id: 'item-1',
+            label: 'Valise',
+            unitPriceNet: 10.0,
+            unitPriceDisplay: 11.2,
+          ),
+        ],
+      );
+
+      final json = model.toJson();
+      expect(json['priceGridItems'], isNotNull);
+      expect((json['priceGridItems'] as List), hasLength(1));
+    });
+  });
 }

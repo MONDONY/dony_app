@@ -1,5 +1,7 @@
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
+import 'package:dony/features/matching/data/models/grid_preview_item.dart';
+import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class AnnouncementFormBloc
@@ -7,7 +9,11 @@ class AnnouncementFormBloc
   static const double _minReasonablePrice = 5.0;
   static const double _maxReasonablePrice = 15.0;
 
-  AnnouncementFormBloc() : super(const AnnouncementFormState()) {
+  final PriceGridRepository? _priceGridRepository;
+
+  AnnouncementFormBloc({PriceGridRepository? priceGridRepository})
+      : _priceGridRepository = priceGridRepository,
+        super(const AnnouncementFormState()) {
     on<DepartureCityChanged>(_onDepartureCityChanged);
     on<ArrivalCityChanged>(_onArrivalCityChanged);
     on<DepartureDateChanged>(_onDepartureDateChanged);
@@ -22,6 +28,9 @@ class AnnouncementFormBloc
     on<AcceptedTypesChanged>(_onAcceptedTypesChanged);
     on<RejectedTypesChanged>(_onRejectedTypesChanged);
     on<FormResetRequested>(_onFormReset);
+    on<AnnouncementPricingModeSetRequested>(_onPricingModeSet);
+    on<AnnouncementGridPreviewLoadRequested>(_onGridPreviewLoad);
+    on<AnnouncementPricePerKgClearedRequested>(_onPricePerKgCleared);
   }
 
   void _onDepartureCityChanged(
@@ -146,5 +155,43 @@ class AnnouncementFormBloc
     Emitter<AnnouncementFormState> emit,
   ) {
     emit(const AnnouncementFormState());
+  }
+
+  void _onPricingModeSet(
+    AnnouncementPricingModeSetRequested event,
+    Emitter<AnnouncementFormState> emit,
+  ) {
+    final wasAlreadyMixed = state.pricingMode == PricingMode.mixed;
+    emit(state.copyWith(pricingMode: event.mode));
+    if (event.mode == PricingMode.mixed && !wasAlreadyMixed) {
+      add(const AnnouncementGridPreviewLoadRequested());
+    }
+  }
+
+  Future<void> _onGridPreviewLoad(
+    AnnouncementGridPreviewLoadRequested event,
+    Emitter<AnnouncementFormState> emit,
+  ) async {
+    if (_priceGridRepository == null) return;
+    try {
+      final items = await _priceGridRepository.getItems();
+      final previewItems = items
+          .map((e) => GridPreviewItem(
+                id: e.id,
+                label: e.label,
+                unitPriceDisplay: e.unitPriceDisplay,
+              ))
+          .toList();
+      emit(state.copyWith(gridPreviewItems: previewItems));
+    } catch (_) {
+      // silence — preview only, non bloquant
+    }
+  }
+
+  void _onPricePerKgCleared(
+    AnnouncementPricePerKgClearedRequested event,
+    Emitter<AnnouncementFormState> emit,
+  ) {
+    emit(state.copyWith(pricePerKgGetter: () => null));
   }
 }

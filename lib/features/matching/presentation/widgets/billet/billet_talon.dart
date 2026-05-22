@@ -200,7 +200,7 @@ class _TravelerDecisionSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
 
-    final weight = '${bid.weightKg.toStringAsFixed(1)} kg';
+    final weight = bid.weightKg != null ? '${bid.weightKg!.toStringAsFixed(1)} kg' : '—';
     final value = bid.declaredValueEur != null
         ? '${bid.declaredValueEur!.toStringAsFixed(0)} €'
         : '—';

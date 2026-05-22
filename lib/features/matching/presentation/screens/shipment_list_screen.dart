@@ -138,7 +138,7 @@ class _ShipmentListScreenState extends State<ShipmentListScreen> {
     setState(() => _payingBidId = bid.id);
     context.read<BidBloc>().add(BidCheckoutRequested(
       announcementId: bid.announcementId,
-      weightKg: bid.weightKg,
+      weightKg: bid.weightKg ?? 0,
       declaredValueEur: bid.declaredValueEur ?? 0,
       description: bid.description ?? '',
       contentCategory: bid.contentCategory ?? '',
@@ -981,7 +981,13 @@ class _ShipmentCard extends StatelessWidget {
   }
 
   String _buildMeta() {
-    final parts = <String>['${bid.weightKg.toStringAsFixed(0)} kg'];
+    final parts = <String>[
+      bid.weightKg != null
+          ? '${bid.weightKg!.toStringAsFixed(0)} kg'
+          : bid.pricingMode == BidPricingMode.grid
+              ? 'Forfait'
+              : '—',
+    ];
     if (bid.contentCategory != null) parts.add(bid.contentCategory!);
     return parts.join(' · ');
   }

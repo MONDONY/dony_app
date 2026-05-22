@@ -3,8 +3,14 @@ import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
+import 'package:dony/features/matching/data/models/grid_preview_item.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/price_grid/data/models/price_grid_item_model.dart';
+import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+
+class MockPriceGridRepository extends Mock implements PriceGridRepository {}
 
 void main() {
   group('AnnouncementFormBloc', () {
@@ -423,5 +429,180 @@ void main() {
       act: (b) => b.add(const PriceChanged(0.0)),
       verify: (b) => expect(b.state.isStep3Valid, isFalse),
     );
+
+    // ── PricingMode ───────────────────────────────────────────────────────────
+
+    test('état initial: pricingMode = kg, gridPreviewItems vide', () {
+      expect(bloc.state.pricingMode, PricingMode.kg);
+      expect(bloc.state.gridPreviewItems, isEmpty);
+    });
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'AnnouncementPricingModeSetRequested.kg → pricingMode = kg',
+      build: () => AnnouncementFormBloc(),
+      act: (b) => b.add(
+          const AnnouncementPricingModeSetRequested(PricingMode.kg)),
+      expect: () => [
+        isA<AnnouncementFormState>()
+            .having((s) => s.pricingMode, 'mode', PricingMode.kg),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'AnnouncementPricingModeSetRequested.mixed triggers preview load and emits gridPreviewItems',
+      build: () {
+        final mockRepo = MockPriceGridRepository();
+        when(() => mockRepo.getItems()).thenAnswer(
+          (_) async => const [
+            PriceGridItemModel(
+              id: 'id1',
+              label: 'Valise',
+              unitPriceNet: 10.0,
+              unitPriceDisplay: 11.20,
+              position: 0,
+            ),
+          ],
+        );
+        return AnnouncementFormBloc(priceGridRepository: mockRepo);
+      },
+      act: (b) => b.add(
+          const AnnouncementPricingModeSetRequested(PricingMode.mixed)),
+      expect: () => [
+        isA<AnnouncementFormState>()
+            .having((s) => s.pricingMode, 'mode', PricingMode.mixed),
+        isA<AnnouncementFormState>()
+            .having((s) => s.pricingMode, 'mode', PricingMode.mixed)
+            .having((s) => s.gridPreviewItems.length, 'items', 1),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'AnnouncementGridPreviewLoadRequested silencieux si repository null',
+      build: () => AnnouncementFormBloc(),
+      act: (b) => b.add(const AnnouncementGridPreviewLoadRequested()),
+      expect: () => <AnnouncementFormState>[],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'AnnouncementGridPreviewLoadRequested silencieux si repo throws',
+      build: () {
+        final mockRepo = MockPriceGridRepository();
+        when(() => mockRepo.getItems()).thenThrow(Exception('network error'));
+        return AnnouncementFormBloc(priceGridRepository: mockRepo);
+      },
+      act: (b) => b.add(const AnnouncementGridPreviewLoadRequested()),
+      expect: () => <AnnouncementFormState>[],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'guard double dispatch: passer deux fois mixed ne charge la grille qu\'une seule fois',
+      build: () {
+        final mockRepo = MockPriceGridRepository();
+        when(() => mockRepo.getItems()).thenAnswer(
+          (_) async => const [
+            PriceGridItemModel(
+              id: 'id1',
+              label: 'Valise',
+              unitPriceNet: 10.0,
+              unitPriceDisplay: 11.20,
+              position: 0,
+            ),
+          ],
+        );
+        return AnnouncementFormBloc(priceGridRepository: mockRepo);
+      },
+      act: (b) async {
+        b.add(const AnnouncementPricingModeSetRequested(PricingMode.mixed));
+        // petit délai pour laisser le premier chargement se terminer
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        // deuxième appel en mode mixed → ne doit PAS redéclencher getItems
+        b.add(const AnnouncementPricingModeSetRequested(PricingMode.mixed));
+      },
+      verify: (b) {
+        // gridPreviewItems toujours présents (chargés une seule fois)
+        expect(b.state.gridPreviewItems.length, 1);
+        expect(b.state.gridPreviewItems.first, isA<GridPreviewItem>());
+      },
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'gridPreviewItems contient des GridPreviewItem (pas PriceGridItemModel)',
+      build: () {
+        final mockRepo = MockPriceGridRepository();
+        when(() => mockRepo.getItems()).thenAnswer(
+          (_) async => const [
+            PriceGridItemModel(
+              id: 'abc',
+              label: 'Petit colis',
+              unitPriceNet: 5.0,
+              unitPriceDisplay: 5.60,
+              position: 0,
+            ),
+          ],
+        );
+        return AnnouncementFormBloc(priceGridRepository: mockRepo);
+      },
+      act: (b) => b.add(
+          const AnnouncementPricingModeSetRequested(PricingMode.mixed)),
+      verify: (b) {
+        final items = b.state.gridPreviewItems;
+        expect(items.length, 1);
+        expect(items.first, isA<GridPreviewItem>());
+        expect(items.first.id, 'abc');
+        expect(items.first.label, 'Petit colis');
+        expect(items.first.unitPriceDisplay, 5.60);
+      },
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'AnnouncementPricePerKgClearedRequested → pricePerKg == null',
+      build: () => AnnouncementFormBloc(),
+      seed: () => const AnnouncementFormState(pricePerKg: 8.0),
+      act: (b) => b.add(const AnnouncementPricePerKgClearedRequested()),
+      expect: () => [
+        predicate<AnnouncementFormState>(
+          (s) => s.pricePerKg == null,
+          'state has pricePerKg=null',
+        ),
+      ],
+    );
+  });
+
+  group('AnnouncementFormEvent props / equality', () {
+    test('base event props (no-override) returns []', () {
+      expect(const FormResetRequested().props, isEmpty);
+    });
+
+    test('PickupAddressChanged props contains address', () {
+      const address = AddressData(
+        label: 'Paris',
+        lat: 48.8566,
+        lng: 2.3522,
+      );
+      const e1 = PickupAddressChanged(address);
+      const e2 = PickupAddressChanged(address);
+      expect(e1.props, [address]);
+      expect(e1, equals(e2));
+    });
+
+    test('PickupAddressChanged null props', () {
+      expect(const PickupAddressChanged(null).props, [null]);
+    });
+
+    test('DeliveryAddressChanged props contains address', () {
+      const address = AddressData(
+        label: 'Lyon',
+        lat: 45.7640,
+        lng: 4.8357,
+      );
+      const e1 = DeliveryAddressChanged(address);
+      const e2 = DeliveryAddressChanged(address);
+      expect(e1.props, [address]);
+      expect(e1, equals(e2));
+    });
+
+    test('DeliveryAddressChanged null props', () {
+      expect(const DeliveryAddressChanged(null).props, [null]);
+    });
   });
 }

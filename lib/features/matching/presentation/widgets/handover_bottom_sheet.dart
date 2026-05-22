@@ -24,7 +24,7 @@ class HandoverBottomSheet extends StatefulWidget {
     return DonyBottomSheet.show(
       context,
       title: 'Lieu de remise',
-      subtitle: '${bid.id.substring(0, 6).toUpperCase()} · ${bid.weightKg} kg',
+      subtitle: '${bid.id.substring(0, 6).toUpperCase()}${bid.weightKg != null ? ' · ${bid.weightKg} kg' : ''}',
       wrapper: (child) => BlocProvider.value(value: bidBloc, child: child),
       stickyBottom: BlocBuilder<BidBloc, BidState>(
         builder: (ctx, state) => DonyButton(

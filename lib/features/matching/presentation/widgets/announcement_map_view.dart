@@ -195,7 +195,8 @@ double _cellDegForZoom(double zoom) {
 
 // ── Map style (beige/crème, style Cocolis) ────────────────────────────────────
 
-const String _kMapStyle = '''[
+/// Custom map style (beige/cream, Cocolis-inspired). Pass to [AnnouncementMapView.mapStyle].
+const String kAnnouncementMapStyle = '''[
   {"elementType":"geometry","stylers":[{"color":"#f5f0e8"}]},
   {"elementType":"labels.icon","stylers":[{"visibility":"off"}]},
   {"elementType":"labels.text.fill","stylers":[{"color":"#746855"}]},

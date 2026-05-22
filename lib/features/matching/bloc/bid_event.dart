@@ -12,6 +12,9 @@ class BidCheckoutRequested extends BidEvent {
   final String contentCategory;
   final String recipientName;
   final String recipientPhone;
+  /// Articles de la grille sélectionnés (mode MIXED). Null si aucun article.
+  /// Format: [{'announcementGridItemId': String, 'quantity': int}]
+  final List<Map<String, dynamic>>? gridItems;
 
   BidCheckoutRequested({
     required this.announcementId,
@@ -21,6 +24,7 @@ class BidCheckoutRequested extends BidEvent {
     required this.contentCategory,
     required this.recipientName,
     required this.recipientPhone,
+    this.gridItems,
   });
 }
 
@@ -33,6 +37,9 @@ class BidCreateRequested extends BidEvent {
   final String recipientName;
   final String recipientPhone;
   final BidPaymentMethod paymentMethod;
+  /// Articles de la grille sélectionnés (mode MIXED). Null si aucun article.
+  /// Format: [{'announcementGridItemId': String, 'quantity': int}]
+  final List<Map<String, dynamic>>? gridItems;
 
   BidCreateRequested({
     required this.announcementId,
@@ -43,6 +50,7 @@ class BidCreateRequested extends BidEvent {
     required this.recipientName,
     required this.recipientPhone,
     this.paymentMethod = BidPaymentMethod.stripe,
+    this.gridItems,
   });
 }
 
