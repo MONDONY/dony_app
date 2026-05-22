@@ -1,11 +1,13 @@
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/settings/data/notification_prefs_datasource.dart';
+import 'package:dony/features/settings/data/notification_prefs_repository.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockApiClient extends Mock implements ApiClient {}
 class MockDio extends Mock implements Dio {}
+class MockNotificationPrefsDatasource extends Mock implements NotificationPrefsDatasource {}
 
 void main() {
   late MockApiClient apiClient;
@@ -64,6 +66,31 @@ void main() {
       expect(body['pushMessages'],             isTrue);
       expect(body['pushTripReminder'],         isTrue);
       expect(body['pushPromo'],                isFalse);
+    });
+  });
+
+  group('NotificationPrefsRepository', () {
+    late MockNotificationPrefsDatasource mockDatasource;
+    late NotificationPrefsRepository repo;
+
+    setUp(() {
+      mockDatasource = MockNotificationPrefsDatasource();
+      repo = NotificationPrefsRepository(mockDatasource);
+    });
+
+    test('syncPrefs délègue au datasource', () async {
+      when(() => mockDatasource.syncPrefs(any())).thenAnswer((_) async {});
+      const prefs = {'push_activity_bids': false, 'push_promo': true};
+
+      await repo.syncPrefs(prefs);
+
+      verify(() => mockDatasource.syncPrefs(prefs)).called(1);
+    });
+
+    test('syncPrefs ne lève pas si le datasource échoue', () async {
+      when(() => mockDatasource.syncPrefs(any())).thenThrow(Exception('network error'));
+
+      await expectLater(repo.syncPrefs({'push_activity_bids': true}), completes);
     });
   });
 }
