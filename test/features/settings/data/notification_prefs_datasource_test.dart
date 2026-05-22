@@ -60,6 +60,9 @@ void main() {
       final captured = verify(() => dio.put(any(), data: captureAny(named: 'data'))).captured;
       final body = captured.first as Map<String, dynamic>;
       expect(body['pushActivityBids'],         isTrue);
+      expect(body['pushActivityNegotiations'], isTrue);
+      expect(body['pushMessages'],             isTrue);
+      expect(body['pushTripReminder'],         isTrue);
       expect(body['pushPromo'],                isFalse);
     });
   });
