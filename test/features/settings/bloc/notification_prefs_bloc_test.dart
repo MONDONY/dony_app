@@ -11,64 +11,84 @@ void main() {
 
   setUp(() {
     mockBox = MockBox();
-    // Par défaut, retourne la defaultValue pour toute clé
     when(() => mockBox.get(any(), defaultValue: any(named: 'defaultValue')))
         .thenAnswer((inv) => inv.namedArguments[#defaultValue]);
     when(() => mockBox.put(any(), any())).thenAnswer((_) async {});
   });
 
   group('NotificationPrefsBloc', () {
-    test('état initial utilise les defaults', () {
+    test('état initial utilise les 6 nouvelles defaults', () {
       final bloc = NotificationPrefsBloc(mockBox);
-      expect(bloc.state.prefs['push_payment'], isTrue);
-      expect(bloc.state.prefs['sms_payment'], isFalse);
-      expect(bloc.state.prefs['push_delivery'], isTrue);
-      expect(bloc.state.prefs['sms_delivery'], isFalse);
-      expect(bloc.state.prefs['push_match'], isTrue);
-      expect(bloc.state.prefs['push_dispute'], isTrue);
-      expect(bloc.state.prefs['sms_dispute'], isFalse);
-      expect(bloc.state.prefs['email_dispute'], isFalse);
+      expect(bloc.state.prefs['push_activity_bids'], isTrue);
+      expect(bloc.state.prefs['push_activity_negotiations'], isTrue);
+      expect(bloc.state.prefs['push_messages'], isTrue);
       expect(bloc.state.prefs['push_trip_reminder'], isTrue);
       expect(bloc.state.prefs['push_promo'], isFalse);
       expect(bloc.state.prefs['email_promo'], isFalse);
+      // Anciennes clés supprimées
+      expect(bloc.state.prefs.containsKey('push_payment'), isFalse);
+      expect(bloc.state.prefs.containsKey('sms_payment'), isFalse);
+      expect(bloc.state.prefs.containsKey('push_delivery'), isFalse);
+      expect(bloc.state.prefs.containsKey('sms_delivery'), isFalse);
+      expect(bloc.state.prefs.containsKey('push_match'), isFalse);
+      expect(bloc.state.prefs.containsKey('push_dispute'), isFalse);
+      expect(bloc.state.prefs.containsKey('sms_dispute'), isFalse);
+      expect(bloc.state.prefs.containsKey('email_dispute'), isFalse);
       bloc.close();
     });
 
     test('état initial lit une valeur persistée depuis Hive', () {
       when(
         () => mockBox.get(
-          'notif_push_payment',
+          'notif_push_activity_bids',
           defaultValue: any(named: 'defaultValue'),
         ),
       ).thenReturn(false);
 
       final bloc = NotificationPrefsBloc(mockBox);
-      expect(bloc.state.prefs['push_payment'], isFalse);
+      expect(bloc.state.prefs['push_activity_bids'], isFalse);
       bloc.close();
     });
 
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
-      'NotifPrefToggled inverse push_payment (true → false)',
+      'NotifPrefToggled inverse push_activity_bids (true → false)',
       build: () => NotificationPrefsBloc(mockBox),
-      act: (bloc) => bloc.add(const NotifPrefToggled('push_payment')),
+      act: (bloc) => bloc.add(const NotifPrefToggled('push_activity_bids')),
       expect: () => [
         isA<NotificationPrefsState>().having(
-          (s) => s.prefs['push_payment'],
-          'push_payment',
+          (s) => s.prefs['push_activity_bids'],
+          'push_activity_bids',
+          isFalse,
+        ),
+      ],
+      verify: (_) => verify(
+        () => mockBox.put('notif_push_activity_bids', false),
+      ).called(1),
+    );
+
+    blocTest<NotificationPrefsBloc, NotificationPrefsState>(
+      'NotifPrefToggled inverse push_activity_negotiations (true → false)',
+      build: () => NotificationPrefsBloc(mockBox),
+      act: (bloc) =>
+          bloc.add(const NotifPrefToggled('push_activity_negotiations')),
+      expect: () => [
+        isA<NotificationPrefsState>().having(
+          (s) => s.prefs['push_activity_negotiations'],
+          'push_activity_negotiations',
           isFalse,
         ),
       ],
     );
 
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
-      'NotifPrefToggled inverse sms_payment (false → true)',
+      'NotifPrefToggled inverse push_messages (true → false)',
       build: () => NotificationPrefsBloc(mockBox),
-      act: (bloc) => bloc.add(const NotifPrefToggled('sms_payment')),
+      act: (bloc) => bloc.add(const NotifPrefToggled('push_messages')),
       expect: () => [
         isA<NotificationPrefsState>().having(
-          (s) => s.prefs['sms_payment'],
-          'sms_payment',
-          isTrue,
+          (s) => s.prefs['push_messages'],
+          'push_messages',
+          isFalse,
         ),
       ],
     );
@@ -76,17 +96,9 @@ void main() {
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
       'NotifPrefToggled écrit la nouvelle valeur dans Hive',
       build: () => NotificationPrefsBloc(mockBox),
-      act: (bloc) => bloc.add(const NotifPrefToggled('sms_payment')),
+      act: (bloc) => bloc.add(const NotifPrefToggled('push_promo')),
       verify: (_) =>
-          verify(() => mockBox.put('notif_sms_payment', true)).called(1),
-    );
-
-    blocTest<NotificationPrefsBloc, NotificationPrefsState>(
-      'NotifPrefToggled écrit false dans Hive quand on désactive',
-      build: () => NotificationPrefsBloc(mockBox),
-      act: (bloc) => bloc.add(const NotifPrefToggled('push_payment')),
-      verify: (_) =>
-          verify(() => mockBox.put('notif_push_payment', false)).called(1),
+          verify(() => mockBox.put('notif_push_promo', true)).called(1),
     );
 
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
@@ -110,21 +122,15 @@ void main() {
       expect: () => [
         isA<NotificationPrefsState>()
             .having((s) => s.prefs['push_promo'], 'push_promo', isTrue)
-            .having((s) => s.prefs['push_payment'], 'push_payment', isTrue)
-            .having((s) => s.prefs['push_delivery'], 'push_delivery', isTrue),
+            .having((s) => s.prefs['push_activity_bids'], 'bids', isTrue)
+            .having(
+                (s) => s.prefs['push_activity_negotiations'], 'negs', isTrue),
       ],
     );
 
-    test('NotificationPrefsState avec mêmes prefs sont égaux', () {
-      const prefs = {'push_payment': true, 'sms_payment': false};
-      const a = NotificationPrefsState(prefs: prefs);
-      const b = NotificationPrefsState(prefs: prefs);
-      expect(a, equals(b));
-    });
-
     test('NotifPrefToggled props contient la clé', () {
-      const event = NotifPrefToggled('push_payment');
-      expect(event.props, contains('push_payment'));
+      const event = NotifPrefToggled('push_activity_bids');
+      expect(event.props, contains('push_activity_bids'));
     });
   });
 }

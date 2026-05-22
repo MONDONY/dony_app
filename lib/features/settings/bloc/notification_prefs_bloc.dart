@@ -10,14 +10,9 @@ class NotificationPrefsBloc
   final Box _box;
 
   static const Map<String, bool> _defaults = {
-    'push_payment': true,
-    'sms_payment': false,
-    'push_delivery': true,
-    'sms_delivery': false,
-    'push_match': true,
-    'push_dispute': true,
-    'sms_dispute': false,
-    'email_dispute': false,
+    'push_activity_bids': true,
+    'push_activity_negotiations': true,
+    'push_messages': true,
     'push_trip_reminder': true,
     'push_promo': false,
     'email_promo': false,
