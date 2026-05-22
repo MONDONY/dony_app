@@ -11,6 +11,7 @@ void main() {
 
   setUp(() {
     mockBox = MockBox();
+    reset(mockBox);
     when(() => mockBox.get(any(), defaultValue: any(named: 'defaultValue')))
         .thenAnswer((inv) => inv.namedArguments[#defaultValue]);
     when(() => mockBox.put(any(), any())).thenAnswer((_) async {});
@@ -132,5 +133,14 @@ void main() {
       const event = NotifPrefToggled('push_activity_bids');
       expect(event.props, contains('push_activity_bids'));
     });
+
+    blocTest<NotificationPrefsBloc, NotificationPrefsState>(
+      'NotifPrefToggled ignore une clé inconnue',
+      build: () => NotificationPrefsBloc(mockBox),
+      act: (bloc) => bloc.add(const NotifPrefToggled('cle_inexistante')),
+      expect: () => [],
+      verify: (_) =>
+          verifyNever(() => mockBox.put('notif_cle_inexistante', any())),
+    );
   });
 }
