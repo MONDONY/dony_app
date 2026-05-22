@@ -95,6 +95,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   gal: ^2.3.2
+  flutter_skill: ^0.9.36
 
 dev_dependencies:
   flutter_test:
@@ -108,7 +109,6 @@ dev_dependencies:
   mocktail: ^1.0.4
   fake_cloud_firestore: ^3.0.3
   flutter_launcher_icons: ^0.14.0
-  flutter_skill: ^0.9.36
 
 flutter_launcher_icons:
   android: true

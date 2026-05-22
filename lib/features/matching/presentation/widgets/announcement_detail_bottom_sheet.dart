@@ -38,6 +38,8 @@ class AnnouncementDetailBottomSheet {
               (a.status == 'ACTIVE' && (a.bidsCount ?? 0) == 0) || isCancelled;
 
           // Bouton principal — Voir les demandes (pleine largeur)
+          // TODO(backend): bidsCount doit retourner le total (pending + accepted)
+          // pour que ce compteur soit fidèle à la réalité.
           final Widget? primaryBtn = a.status == 'ACTIVE'
               ? DonyButton(
                   label: 'Voir les demandes (${a.bidsCount ?? 0})',

@@ -540,18 +540,21 @@ class _MapSenderViewState extends State<_MapSenderView> {
     if (!mounted) return;
     final dep = result.departureCity;
     final arr = result.arrivalCity;
-    final matchedCorridor = _corridorOptions.firstWhere(
-      (c) => c.departure == dep && c.arrival == arr,
-      orElse: () => (
-        label: '${dep.split(' ').first} → ${arr.split(' ').first}',
-        departure: dep,
-        arrival: arr,
-      ),
-    );
 
     setState(() {
-      _corridor = matchedCorridor;
-      _allCorridors = false;
+      if (dep != null && arr != null) {
+        final matchedCorridor = _corridorOptions.firstWhere(
+          (c) => c.departure == dep && c.arrival == arr,
+          orElse: () => (
+            label: '${dep.split(' ').first} → ${arr.split(' ').first}',
+            departure: dep,
+            arrival: arr,
+          ),
+        );
+        _corridor = matchedCorridor;
+        _allCorridors = false;
+      }
+      // If both cities are null (user cleared them), keep the current corridor.
       if (result.date != null) {
         _datePreset = _DatePreset.custom;
         _customDate = result.date;

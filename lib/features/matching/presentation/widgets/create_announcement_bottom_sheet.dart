@@ -50,6 +50,9 @@ class CreateAnnouncementBottomSheet {
     final currentStepNotifier = ValueNotifier<int>(0);
     final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
     VoidCallback? submit;
+    // Callback de validation de l'étape 0 (Trajet) — injecté depuis le widget Content.
+    // Retourne true si les champs obligatoires sont renseignés.
+    bool Function()? validateStep0;
     final isLocked = lockContext != null;
     return DonyBottomSheet.show(
       context,
@@ -120,7 +123,14 @@ class CreateAnnouncementBottomSheet {
                         child: DonyButton(
                           label: 'Continuer',
                           iconRight: DonyIcons.arrowRight,
-                          onPressed: () => currentStepNotifier.value = step + 1,
+                          onPressed: () {
+                            // BUG-004 : valider l'étape 0 avant d'avancer
+                            if (step == 0) {
+                              final isValid = validateStep0?.call() ?? true;
+                              if (!isValid) return;
+                            }
+                            currentStepNotifier.value = step + 1;
+                          },
                         ),
                       ),
                     ],
@@ -242,6 +252,7 @@ class CreateAnnouncementBottomSheet {
         currentStepNotifier: currentStepNotifier,
         departureTimeNotifier: departureTimeNotifier,
         onSubmitReady: (fn) => submit = fn,
+        onValidateStep0Ready: (fn) => validateStep0 = fn,
       ),
     ).whenComplete(() {
       canSubmitNotifier.dispose();
@@ -260,6 +271,10 @@ class _CreateAnnouncementContent extends StatefulWidget {
   final ValueNotifier<int>? currentStepNotifier;
   final ValueNotifier<TimeOfDay?>? departureTimeNotifier;
   final void Function(VoidCallback)? onSubmitReady;
+  /// Injecte le callback de validation de l'étape 0 dans le parent (show()).
+  /// Le callback retourne true si tous les champs obligatoires de l'étape 0
+  /// (ville départ, ville arrivée, date) sont renseignés.
+  final void Function(bool Function())? onValidateStep0Ready;
   const _CreateAnnouncementContent({
     this.announcement,
     this.lockContext,
@@ -267,6 +282,7 @@ class _CreateAnnouncementContent extends StatefulWidget {
     this.currentStepNotifier,
     this.departureTimeNotifier,
     this.onSubmitReady,
+    this.onValidateStep0Ready,
   });
 
   @override
@@ -400,6 +416,7 @@ class _CreateAnnouncementContentState
       });
     }
     widget.onSubmitReady?.call(_submit);
+    widget.onValidateStep0Ready?.call(_validateStep0);
     _kgPriceEnabledNotifier = ValueNotifier<bool>(true); // KG = ON par défaut
     _kgPriceEnabledNotifier.addListener(_onKgToggleChanged);
     _transportModeNotifier.addListener(_syncCanSubmit);
@@ -429,6 +446,24 @@ class _CreateAnnouncementContentState
 
   void _syncCanSubmit() {
     widget.canSubmitNotifier?.value = _transportModeNotifier.value != null;
+  }
+
+  /// Valide les champs obligatoires de l'étape 0 (Trajet).
+  /// Affiche un snackbar d'erreur si un champ manque et retourne false.
+  bool _validateStep0() {
+    if (_departureCityNotifier.value == null) {
+      _showError('Remplis tous les champs obligatoires');
+      return false;
+    }
+    if (_arrivalCityNotifier.value == null) {
+      _showError('Remplis tous les champs obligatoires');
+      return false;
+    }
+    if (_departureDateNotifier.value == null) {
+      _showError('Remplis tous les champs obligatoires');
+      return false;
+    }
+    return true;
   }
 
   void _syncCityToFormBloc() {

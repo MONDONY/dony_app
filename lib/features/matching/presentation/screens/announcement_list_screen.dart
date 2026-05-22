@@ -175,7 +175,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
                             DonyLayout.hPadding(context),
                             DonySpacing.md,
                             DonyLayout.hPadding(context),
-                            100,
+                            100 + MediaQuery.paddingOf(context).bottom,
                           ),
                           itemCount: filtered.length,
                           separatorBuilder: (_, __) =>

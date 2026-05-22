@@ -628,11 +628,10 @@ class _TrackingLinkCard extends StatelessWidget {
 
   static const String _trackingPublicBase = String.fromEnvironment(
     'TRACKING_PUBLIC_URL',
-    defaultValue: 'https://api.dony.app/api/v1',
+    defaultValue: 'https://track.dony.app',
   );
 
-  String get _trackingUrl =>
-      '$_trackingPublicBase/tracking/public/${bid.trackingToken}';
+  String get _trackingUrl => '$_trackingPublicBase/${bid.trackingToken}';
 
   @override
   Widget build(BuildContext context) {
