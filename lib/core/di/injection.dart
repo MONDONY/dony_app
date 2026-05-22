@@ -117,11 +117,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => NotificationRepository(getIt<NotificationRemoteDatasource>()),
   );
   getIt.registerLazySingleton<NotificationService>(
-    () => NotificationService(
-      getIt<ApiClient>(),
-      getIt<NotificationRepository>(),
-      getIt<HiveService>().userPrefs,
-    ),
+    () => NotificationService(getIt<ApiClient>(), getIt<NotificationRepository>()),
     dispose: (s) => s.dispose(),
   );
   getIt.registerFactory<NotificationBloc>(

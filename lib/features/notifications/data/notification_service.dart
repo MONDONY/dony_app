@@ -5,7 +5,6 @@ import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 
 // Must be top-level — Firebase requirement for background handler
 @pragma('vm:entry-point')
@@ -19,33 +18,11 @@ const _criticalTypes = {
   'DISPUTE_OPENED',
 };
 
-// Maps each filterable FCM type to its Hive pref key.
-// Types absent from this map (including critical types) are always shown.
-const _prefKeyForType = {
-  'BID_CREATED'                 : 'push_activity_bids',
-  'BID_ACCEPTED'                : 'push_activity_bids',
-  'BID_REJECTED'                : 'push_activity_bids',
-  'HANDOVER_DEFINED'            : 'push_activity_bids',
-  'PARCEL_REFUSED'              : 'push_activity_bids',
-  'BID_EXPIRED'                 : 'push_activity_bids',
-  'TRIP_CANCELLED'              : 'push_activity_bids',
-  'negotiation_started'         : 'push_activity_negotiations',
-  'negotiation_counter'         : 'push_activity_negotiations',
-  'negotiation_awaiting_trip'   : 'push_activity_negotiations',
-  'negotiation_awaiting_payment': 'push_activity_negotiations',
-  'request_accepted'            : 'push_activity_negotiations',
-  'request_expired'             : 'push_activity_negotiations',
-  'negotiation_expired'         : 'push_activity_negotiations',
-  'NEW_MESSAGE'                 : 'push_messages',
-  'TRIP_IN_PROGRESS'            : 'push_trip_reminder',
-};
-
 class NotificationService {
   final ApiClient _apiClient;
   final NotificationRepository _repository;
-  final Box _prefsBox;
 
-  NotificationService(this._apiClient, this._repository, this._prefsBox);
+  NotificationService(this._apiClient, this._repository);
 
   // late: deferred until initialize() so tests can instantiate this class without Firebase
   late final FirebaseMessaging _fcm = FirebaseMessaging.instance;
@@ -140,28 +117,15 @@ class NotificationService {
     }
   }
 
-  bool _isForegroundAllowed(Map<String, dynamic> data) {
-    final type = data['type'] as String?;
-    if (type == null) return true;
-    if (_criticalTypes.contains(type)) return true;
-    final prefKey = _prefKeyForType[type];
-    if (prefKey == null) return true;
-    return _prefsBox.get('notif_$prefKey', defaultValue: true) as bool;
-  }
-
   @visibleForTesting
   Future<void> testAckIfCritical(Map<String, dynamic> data) => _ackIfCritical(data);
 
   @visibleForTesting
   String? testRouteForMessage(Map<String, dynamic> data) => _routeForMessage(data);
 
-  @visibleForTesting
-  bool testIsForegroundAllowed(Map<String, dynamic> data) => _isForegroundAllowed(data);
-
   void _handleForegroundMessage(RemoteMessage message) {
     _ackIfCritical(message.data);
     _newNotificationController.add(null);
-    if (!_isForegroundAllowed(message.data)) return;
     final notification = message.notification;
     if (notification == null) return;
 
