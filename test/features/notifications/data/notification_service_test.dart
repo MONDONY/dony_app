@@ -2,20 +2,26 @@ import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockApiClient extends Mock implements ApiClient {}
 class MockNotificationRepository extends Mock implements NotificationRepository {}
+class MockBox extends Mock implements Box<dynamic> {}
 
 void main() {
   late MockApiClient apiClient;
   late MockNotificationRepository repository;
+  late MockBox prefsBox;
   late NotificationService service;
 
   setUp(() {
     apiClient = MockApiClient();
     repository = MockNotificationRepository();
-    service = NotificationService(apiClient, repository);
+    prefsBox = MockBox();
+    when(() => prefsBox.get(any(), defaultValue: any(named: 'defaultValue')))
+        .thenAnswer((inv) => inv.namedArguments[#defaultValue]);
+    service = NotificationService(apiClient, repository, prefsBox);
   });
 
   group('NotificationService._ackIfCritical', () {
@@ -182,6 +188,76 @@ void main() {
         service.testRouteForMessage({'type': 'request_accepted', 'threadId': _threadId}),
         '/negotiations/$_threadId',
       );
+    });
+  });
+
+  group('NotificationService.isForegroundAllowed — filtrage par prefs Hive', () {
+    test('PAYMENT_RELEASED est toujours affiché (critique)', () {
+      when(() => prefsBox.get('notif_push_activity_bids', defaultValue: any(named: 'defaultValue')))
+          .thenReturn(false);
+      expect(service.testIsForegroundAllowed({'type': 'PAYMENT_RELEASED'}), isTrue);
+    });
+
+    test('DELIVERY_CONFIRMED est toujours affiché (critique)', () {
+      expect(service.testIsForegroundAllowed({'type': 'DELIVERY_CONFIRMED'}), isTrue);
+    });
+
+    test('DISPUTE_OPENED est toujours affiché (critique)', () {
+      expect(service.testIsForegroundAllowed({'type': 'DISPUTE_OPENED'}), isTrue);
+    });
+
+    test('BID_CREATED affiché quand push_activity_bids activé (défaut)', () {
+      expect(service.testIsForegroundAllowed({'type': 'BID_CREATED'}), isTrue);
+    });
+
+    test('BID_CREATED bloqué quand push_activity_bids désactivé', () {
+      when(() => prefsBox.get('notif_push_activity_bids', defaultValue: any(named: 'defaultValue')))
+          .thenReturn(false);
+      expect(service.testIsForegroundAllowed({'type': 'BID_CREATED'}), isFalse);
+    });
+
+    test('BID_ACCEPTED bloqué quand push_activity_bids désactivé', () {
+      when(() => prefsBox.get('notif_push_activity_bids', defaultValue: any(named: 'defaultValue')))
+          .thenReturn(false);
+      expect(service.testIsForegroundAllowed({'type': 'BID_ACCEPTED'}), isFalse);
+    });
+
+    test('TRIP_CANCELLED bloqué quand push_activity_bids désactivé', () {
+      when(() => prefsBox.get('notif_push_activity_bids', defaultValue: any(named: 'defaultValue')))
+          .thenReturn(false);
+      expect(service.testIsForegroundAllowed({'type': 'TRIP_CANCELLED'}), isFalse);
+    });
+
+    test('negotiation_started bloqué quand push_activity_negotiations désactivé', () {
+      when(() => prefsBox.get('notif_push_activity_negotiations', defaultValue: any(named: 'defaultValue')))
+          .thenReturn(false);
+      expect(service.testIsForegroundAllowed({'type': 'negotiation_started'}), isFalse);
+    });
+
+    test('negotiation_counter bloqué quand push_activity_negotiations désactivé', () {
+      when(() => prefsBox.get('notif_push_activity_negotiations', defaultValue: any(named: 'defaultValue')))
+          .thenReturn(false);
+      expect(service.testIsForegroundAllowed({'type': 'negotiation_counter'}), isFalse);
+    });
+
+    test('NEW_MESSAGE bloqué quand push_messages désactivé', () {
+      when(() => prefsBox.get('notif_push_messages', defaultValue: any(named: 'defaultValue')))
+          .thenReturn(false);
+      expect(service.testIsForegroundAllowed({'type': 'NEW_MESSAGE'}), isFalse);
+    });
+
+    test('TRIP_IN_PROGRESS bloqué quand push_trip_reminder désactivé', () {
+      when(() => prefsBox.get('notif_push_trip_reminder', defaultValue: any(named: 'defaultValue')))
+          .thenReturn(false);
+      expect(service.testIsForegroundAllowed({'type': 'TRIP_IN_PROGRESS'}), isFalse);
+    });
+
+    test('type inconnu est affiché par défaut', () {
+      expect(service.testIsForegroundAllowed({'type': 'UNKNOWN_TYPE'}), isTrue);
+    });
+
+    test('type null est affiché par défaut', () {
+      expect(service.testIsForegroundAllowed({}), isTrue);
     });
   });
 }
