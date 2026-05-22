@@ -43,5 +43,26 @@ void main() {
       expect(id1, id2);
       verify(() => storage.read(key: 'dony_device_id')).called(1);
     });
+
+    test('appels concurrents partagent le même UUID et un seul write', () async {
+      when(() => storage.read(key: 'dony_device_id')).thenAnswer((_) async {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        return null;
+      });
+      when(() => storage.write(key: 'dony_device_id', value: any(named: 'value')))
+          .thenAnswer((_) async {});
+
+      final results = await Future.wait([
+        service.getDeviceId(),
+        service.getDeviceId(),
+        service.getDeviceId(),
+      ]);
+
+      // les 3 appels retournent le même UUID
+      expect(results.toSet().length, 1);
+      // un seul write effectué
+      verify(() => storage.write(key: 'dony_device_id', value: any(named: 'value')))
+          .called(1);
+    });
   });
 }

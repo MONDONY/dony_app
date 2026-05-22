@@ -6,6 +6,7 @@ class DeviceIdService {
 
   final FlutterSecureStorage _storage;
   String? _cached;
+  Future<String>? _ongoingInit;
 
   DeviceIdService({
     FlutterSecureStorage? storage,
@@ -14,19 +15,26 @@ class DeviceIdService {
               aOptions: AndroidOptions(encryptedSharedPreferences: true),
             );
 
-  Future<String> getDeviceId() async {
+  Future<String> getDeviceId() {
     if (_cached != null) {
-      return _cached!;
+      return Future.value(_cached);
     }
-    final stored = await _storage.read(key: _key);
-    if (stored != null && stored.isNotEmpty) {
-      _cached = stored;
-      return stored;
-    }
+    return _ongoingInit ??= _init();
+  }
 
-    final id = const Uuid().v4();
-    await _storage.write(key: _key, value: id);
-    _cached = id;
-    return id;
+  Future<String> _init() async {
+    try {
+      final stored = await _storage.read(key: _key);
+      if (stored != null && stored.isNotEmpty) {
+        _cached = stored;
+        return stored;
+      }
+      final id = const Uuid().v4();
+      await _storage.write(key: _key, value: id);
+      _cached = id;
+      return id;
+    } finally {
+      _ongoingInit = null;
+    }
   }
 }
