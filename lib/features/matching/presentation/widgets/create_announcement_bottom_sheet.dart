@@ -341,6 +341,17 @@ class _CreateAnnouncementContentState
       ? _customPriceNotifier.value
       : kPriceOptions[_priceOptionNotifier.value.clamp(0, kPriceOptions.length - 1)];
 
+  // Vrai si le prix est correctement renseigné :
+  // — chip preset sélectionnée → toujours valide
+  // — "Autre prix" sélectionné → le champ doit contenir un nombre > 0
+  // — kg toggle OFF (mode grille) → la tarification vient de la grille, toujours valide
+  bool get _isPriceValid {
+    if (!_kgPriceEnabledNotifier.value) return true;
+    if (!_isCustomPrice) return true;
+    final parsed = double.tryParse(_customPriceCtrl.text.replaceAll(',', '.'));
+    return parsed != null && parsed > 0;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -437,14 +448,15 @@ class _CreateAnnouncementContentState
     widget.onValidateStep0Ready?.call(_validateStep0);
     _kgPriceEnabledNotifier = ValueNotifier<bool>(true); // KG = ON par défaut
     _kgPriceEnabledNotifier.addListener(_onKgToggleChanged);
+    _kgPriceEnabledNotifier.addListener(_syncCanSubmit);
     _transportModeNotifier.addListener(_syncCanSubmit);
+    _priceOptionNotifier.addListener(_syncCanSubmit);
+    _customPriceCtrl.addListener(_syncCanSubmit);
     // Avion sélectionné par défaut en mode création
     if (!_isEdit && !_isLocked) {
       _transportModeNotifier.value = TransportMode.plane;
-      widget.canSubmitNotifier?.value = true;
-    } else {
-      widget.canSubmitNotifier?.value = _transportModeNotifier.value != null;
     }
+    _syncCanSubmit(); // état initial — transport + prix
 
     // Désactivation du bouton Continuer tant que les 3 champs obligatoires
     // de l'étape 0 ne sont pas renseignés.
@@ -482,7 +494,8 @@ class _CreateAnnouncementContentState
   }
 
   void _syncCanSubmit() {
-    widget.canSubmitNotifier?.value = _transportModeNotifier.value != null;
+    widget.canSubmitNotifier?.value =
+        _transportModeNotifier.value != null && _isPriceValid;
   }
 
   /// Valide les champs obligatoires de l'étape 0 (Trajet).
@@ -611,6 +624,9 @@ class _CreateAnnouncementContentState
     _refusedTypesNotifier.removeListener(_syncRejectedTypesToFormBloc);
     _departureTimeNotifier.removeListener(_syncDepartureTimeToParent);
     _kgPriceEnabledNotifier.removeListener(_onKgToggleChanged);
+    _kgPriceEnabledNotifier.removeListener(_syncCanSubmit);
+    _priceOptionNotifier.removeListener(_syncCanSubmit);
+    _customPriceCtrl.removeListener(_syncCanSubmit);
     _kgPriceEnabledNotifier.dispose();
     _cashEnabledNotifier.dispose();
     _descriptionCtrl.dispose();
