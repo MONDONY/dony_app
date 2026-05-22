@@ -1,12 +1,21 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
+import 'package:dony/features/settings/presentation/widgets/pin_confirm_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:local_auth/local_auth.dart';
 
 class SecuritySettingsScreen extends StatefulWidget {
-  const SecuritySettingsScreen({super.key});
+  const SecuritySettingsScreen({
+    super.key,
+    @visibleForTesting this.biometricAvailableOverride,
+  });
+
+  /// Override for tests only — bypasses the real [LocalAuthentication] check.
+  final bool? biometricAvailableOverride;
 
   @override
   State<SecuritySettingsScreen> createState() => _SecuritySettingsScreenState();
@@ -18,11 +27,37 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
   @override
   void initState() {
     super.initState();
-    final auth = LocalAuthentication();
-    _biometricFuture = Future.wait([
-      auth.canCheckBiometrics,
-      auth.isDeviceSupported(),
-    ]).then((r) => r[0] || r[1]);
+    if (widget.biometricAvailableOverride != null) {
+      _biometricFuture = Future.value(widget.biometricAvailableOverride);
+    } else {
+      final auth = LocalAuthentication();
+      _biometricFuture = Future.wait([
+        auth.canCheckBiometrics,
+        auth.isDeviceSupported(),
+      ]).then((r) => r[0] || r[1]);
+    }
+  }
+
+  /// Shows PIN confirmation when the toggle is currently ON (disabling).
+  /// Dispatches the [event] directly when the toggle is currently OFF (enabling).
+  Future<void> _toggleWithPinGuard(
+    BuildContext context, {
+    required bool currentlyEnabled,
+    required AppPreferencesEvent event,
+  }) async {
+    if (currentlyEnabled) {
+      // Désactivation → confirmation PIN requise
+      final confirmed = await PinConfirmBottomSheet.show(
+        context,
+        authService: getIt<LocalAuthService>(),
+      );
+      if (confirmed != true || !context.mounted) {
+        return;
+      }
+    }
+    if (context.mounted) {
+      context.read<AppPreferencesBloc>().add(event);
+    }
   }
 
   @override
@@ -67,16 +102,22 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                         value: biometricEnabled,
                         activeThumbColor: cs.primary,
                         onChanged: biometricAvailable
-                            ? (_) => context
-                                .read<AppPreferencesBloc>()
-                                .add(const BiometricToggled())
+                            ? (_) => _toggleWithPinGuard(
+                                  context,
+                                  currentlyEnabled:
+                                      prefsState.preferences.biometricEnabled,
+                                  event: const BiometricToggled(),
+                                )
                             : null,
                       ),
                       showDivider: false,
                       onTap: biometricAvailable
-                          ? () => context
-                              .read<AppPreferencesBloc>()
-                              .add(const BiometricToggled())
+                          ? () => _toggleWithPinGuard(
+                                context,
+                                currentlyEnabled:
+                                    prefsState.preferences.biometricEnabled,
+                                event: const BiometricToggled(),
+                              )
                           : null,
                     ),
                   ]),
@@ -100,16 +141,22 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                             prefsState.preferences.appLockBiometricEnabled,
                         activeThumbColor: cs.primary,
                         onChanged: biometricAvailable
-                            ? (_) => context
-                                .read<AppPreferencesBloc>()
-                                .add(const AppLockBiometricToggled())
+                            ? (_) => _toggleWithPinGuard(
+                                  context,
+                                  currentlyEnabled: prefsState
+                                      .preferences.appLockBiometricEnabled,
+                                  event: const AppLockBiometricToggled(),
+                                )
                             : null,
                       ),
                       showDivider: false,
                       onTap: biometricAvailable
-                          ? () => context
-                              .read<AppPreferencesBloc>()
-                              .add(const AppLockBiometricToggled())
+                          ? () => _toggleWithPinGuard(
+                                context,
+                                currentlyEnabled: prefsState
+                                    .preferences.appLockBiometricEnabled,
+                                event: const AppLockBiometricToggled(),
+                              )
                           : null,
                     ),
                   ]),
@@ -153,7 +200,6 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
       ),
     );
   }
-
 }
 
 class _SectionLabel extends StatelessWidget {
