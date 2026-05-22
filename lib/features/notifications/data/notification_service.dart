@@ -1,6 +1,9 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -21,8 +24,13 @@ const _criticalTypes = {
 class NotificationService {
   final ApiClient _apiClient;
   final NotificationRepository _repository;
+  final DeviceIdService _deviceIdService;
 
-  NotificationService(this._apiClient, this._repository);
+  NotificationService(
+    this._apiClient,
+    this._repository,
+    this._deviceIdService,
+  );
 
   // late: deferred until initialize() so tests can instantiate this class without Firebase
   late final FirebaseMessaging _fcm = FirebaseMessaging.instance;
@@ -97,12 +105,42 @@ class NotificationService {
 
   Future<void> _uploadToken(String token) async {
     try {
-      await _apiClient.dio.put('/auth/me/fcm-token', data: {'fcmToken': token});
+      final deviceId = await _deviceIdService.getDeviceId();
+      final (deviceName, platform) = await _getDeviceInfo();
+      await _apiClient.dio.put('/auth/me/fcm-token', data: {
+        'fcmToken': token,
+        'deviceId': deviceId,
+        'deviceName': deviceName,
+        'platform': platform,
+      });
       if (kDebugMode) debugPrint('[FCM] Token uploaded to backend');
     } catch (e) {
       if (kDebugMode) debugPrint('[FCM] Token upload failed: $e');
     }
   }
+
+  /// Returns (deviceName, platform) with graceful fallback on failure.
+  /// Platform must be lowercase 'ios' or 'android' to match backend validation.
+  Future<(String, String)> _getDeviceInfo() async {
+    try {
+      final info = DeviceInfoPlugin();
+      if (Platform.isIOS) {
+        final ios = await info.iosInfo;
+        return (ios.name, 'ios');
+      } else {
+        final android = await info.androidInfo;
+        return (android.model, 'android');
+      }
+    } catch (_) {
+      return ('Appareil', Platform.isIOS ? 'ios' : 'android');
+    }
+  }
+
+  @visibleForTesting
+  Future<(String, String)> testGetDeviceInfo() => _getDeviceInfo();
+
+  @visibleForTesting
+  Future<void> testUploadToken(String token) => _uploadToken(token);
 
   Future<void> _ackIfCritical(Map<String, dynamic> data) async {
     final type = data['type'] as String?;

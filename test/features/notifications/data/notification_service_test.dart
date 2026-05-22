@@ -1,4 +1,6 @@
+import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,16 +8,72 @@ import 'package:mocktail/mocktail.dart';
 
 class MockApiClient extends Mock implements ApiClient {}
 class MockNotificationRepository extends Mock implements NotificationRepository {}
+class MockDeviceIdService extends Mock implements DeviceIdService {}
+class MockDio extends Mock implements Dio {}
 
 void main() {
   late MockApiClient apiClient;
   late MockNotificationRepository repository;
+  late MockDeviceIdService deviceIdService;
   late NotificationService service;
 
   setUp(() {
     apiClient = MockApiClient();
     repository = MockNotificationRepository();
-    service = NotificationService(apiClient, repository);
+    deviceIdService = MockDeviceIdService();
+    service = NotificationService(apiClient, repository, deviceIdService);
+  });
+
+  group('NotificationService._uploadToken', () {
+    late MockDio mockDio;
+
+    setUp(() {
+      mockDio = MockDio();
+      when(() => apiClient.dio).thenReturn(mockDio);
+      when(() => deviceIdService.getDeviceId())
+          .thenAnswer((_) async => 'test-device-id-uuid');
+    });
+
+    test('sends fcmToken, deviceId, deviceName and platform to the endpoint', () async {
+      when(
+        () => mockDio.put(
+          '/auth/me/fcm-token',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((_) async => Response(
+            requestOptions: RequestOptions(path: '/auth/me/fcm-token'),
+            statusCode: 200,
+          ));
+
+      await service.testUploadToken('test-fcm-token');
+
+      final captured = verify(
+        () => mockDio.put(
+          '/auth/me/fcm-token',
+          data: captureAny(named: 'data'),
+        ),
+      ).captured;
+
+      final body = captured.first as Map<String, dynamic>;
+      expect(body['fcmToken'], 'test-fcm-token');
+      expect(body['deviceId'], 'test-device-id-uuid');
+      expect(body.containsKey('deviceName'), isTrue);
+      expect(body['platform'], anyOf('ios', 'android'));
+    });
+
+    test('swallows errors silently when upload fails', () async {
+      when(
+        () => mockDio.put(
+          '/auth/me/fcm-token',
+          data: any(named: 'data'),
+        ),
+      ).thenThrow(Exception('network error'));
+
+      await expectLater(
+        service.testUploadToken('test-fcm-token'),
+        completes,
+      );
+    });
   });
 
   group('NotificationService._ackIfCritical', () {
