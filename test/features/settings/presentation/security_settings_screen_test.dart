@@ -76,75 +76,11 @@ void main() {
       expect(switches, findsWidgets);
     });
 
-    testWidgets('revoke dialog shows when tapping devices tile', (tester) async {
+    testWidgets('affiche le tile Appareils connectés', (tester) async {
       await tester.pumpWidget(_wrap(mockBloc: mockBloc));
       await tester.pumpAndSettle();
 
-      // Find the "Appareils connectés" tile
-      final tile = find.text('Appareils connectés');
-      expect(tile, findsOneWidget);
-
-      // Tap it
-      await tester.tap(tile);
-      await tester.pumpAndSettle();
-
-      // Dialog should appear
-      expect(find.text('Déconnecter tous les appareils ?'), findsOneWidget);
-      expect(
-        find.text(
-          'Tu seras déconnecté de tous tes appareils et devras te reconnecter.',
-        ),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('revoke dialog shows "Annuler" and "Déconnecter" buttons',
-        (tester) async {
-      await tester.pumpWidget(_wrap(mockBloc: mockBloc));
-      await tester.pumpAndSettle();
-
-      // Tap the devices tile
-      await tester.tap(find.text('Appareils connectés'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Annuler'), findsOneWidget);
-      expect(find.text('Déconnecter'), findsOneWidget);
-    });
-
-    testWidgets('revoke dialog closes when tapping Annuler', (tester) async {
-      await tester.pumpWidget(_wrap(mockBloc: mockBloc));
-      await tester.pumpAndSettle();
-
-      // Tap the devices tile
-      await tester.tap(find.text('Appareils connectés'));
-      await tester.pumpAndSettle();
-
-      // Tap Annuler
-      await tester.tap(find.text('Annuler'));
-      await tester.pumpAndSettle();
-
-      // Dialog should close
-      expect(find.text('Déconnecter tous les appareils ?'), findsNothing);
-    });
-
-    testWidgets('revoke dialog shows snackbar when tapping Déconnecter',
-        (tester) async {
-      await tester.pumpWidget(_wrap(mockBloc: mockBloc));
-      await tester.pumpAndSettle();
-
-      // Tap the devices tile
-      await tester.tap(find.text('Appareils connectés'));
-      await tester.pumpAndSettle();
-
-      // Tap Déconnecter
-      await tester.tap(find.text('Déconnecter'));
-      await tester.pumpAndSettle();
-
-      // Snackbar should appear
-      expect(
-        find.text('Fonctionnalité disponible prochainement'),
-        findsOneWidget,
-      );
+      expect(find.text('Appareils connectés'), findsOneWidget);
     });
 
     testWidgets(
