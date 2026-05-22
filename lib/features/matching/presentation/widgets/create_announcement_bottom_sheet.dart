@@ -52,6 +52,10 @@ class CreateAnnouncementBottomSheet {
     // true dès que ville départ + ville arrivée + date sont renseignés (étape 0).
     // Initialisé à true en mode édition car les champs sont pré-remplis.
     final canContinueNotifier = ValueNotifier<bool>(announcement != null);
+    // true dès que lieu de remise + lieu de récupération sont renseignés (étape 1).
+    final canContinueStep1Notifier = ValueNotifier<bool>(
+      announcement?.pickupAddress != null && announcement?.deliveryAddress != null,
+    );
     VoidCallback? submit;
     // Callback de validation de l'étape 0 (Trajet) — injecté depuis le widget Content.
     // Retourne true si les champs obligatoires sont renseignés.
@@ -103,11 +107,12 @@ class CreateAnnouncementBottomSheet {
               },
             )
           : ListenableBuilder(
-              listenable: Listenable.merge([canSubmitNotifier, currentStepNotifier, canContinueNotifier]),
+              listenable: Listenable.merge([canSubmitNotifier, currentStepNotifier, canContinueNotifier, canContinueStep1Notifier]),
               builder: (ctx, _) {
                 final step = currentStepNotifier.value;
                 final canSubmit = canSubmitNotifier.value;
                 final canContinue = canContinueNotifier.value;
+                final canContinueStep1 = canContinueStep1Notifier.value;
 
                 if (step < 2) {
                   return Row(
@@ -127,7 +132,7 @@ class CreateAnnouncementBottomSheet {
                         child: DonyButton(
                           label: 'Continuer',
                           iconRight: DonyIcons.arrowRight,
-                          onPressed: (step == 0 && !canContinue)
+                          onPressed: ((step == 0 && !canContinue) || (step == 1 && !canContinueStep1))
                               ? null
                               : () {
                                   if (step == 0) {
@@ -255,6 +260,7 @@ class CreateAnnouncementBottomSheet {
         lockContext: lockContext,
         canSubmitNotifier: canSubmitNotifier,
         canContinueNotifier: canContinueNotifier,
+        canContinueStep1Notifier: canContinueStep1Notifier,
         currentStepNotifier: currentStepNotifier,
         departureTimeNotifier: departureTimeNotifier,
         onSubmitReady: (fn) => submit = fn,
@@ -263,6 +269,7 @@ class CreateAnnouncementBottomSheet {
     ).whenComplete(() {
       canSubmitNotifier.dispose();
       canContinueNotifier.dispose();
+      canContinueStep1Notifier.dispose();
       currentStepNotifier.dispose();
       departureTimeNotifier.dispose();
     });
@@ -276,6 +283,7 @@ class _CreateAnnouncementContent extends StatefulWidget {
   final LockedTripContext? lockContext;
   final ValueNotifier<bool>? canSubmitNotifier;
   final ValueNotifier<bool>? canContinueNotifier;
+  final ValueNotifier<bool>? canContinueStep1Notifier;
   final ValueNotifier<int>? currentStepNotifier;
   final ValueNotifier<TimeOfDay?>? departureTimeNotifier;
   final void Function(VoidCallback)? onSubmitReady;
@@ -288,6 +296,7 @@ class _CreateAnnouncementContent extends StatefulWidget {
     this.lockContext,
     this.canSubmitNotifier,
     this.canContinueNotifier,
+    this.canContinueStep1Notifier,
     this.currentStepNotifier,
     this.departureTimeNotifier,
     this.onSubmitReady,
@@ -465,6 +474,11 @@ class _CreateAnnouncementContentState
         _departureCityNotifier.value != null &&
         _arrivalCityNotifier.value != null &&
         _departureDateNotifier.value != null;
+  }
+
+  void _updateCanContinueStep1() {
+    widget.canContinueStep1Notifier?.value =
+        _pickupAddress != null && _deliveryAddress != null;
   }
 
   void _syncCanSubmit() {
@@ -930,10 +944,12 @@ class _CreateAnnouncementContentState
         onPickupSaved: (v) => _pickupAddress = v,
         onPickupChanged: (addr) {
           _pickupAddress = addr;
+          _updateCanContinueStep1();
         },
         onDeliverySaved: (v) => _deliveryAddress = v,
         onDeliveryChanged: (addr) {
           _deliveryAddress = addr;
+          _updateCanContinueStep1();
         },
       ),
     ];
