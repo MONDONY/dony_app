@@ -72,23 +72,6 @@ class SettingsScreen extends StatelessWidget {
                   onTap: () =>
                       _showLanguagePicker(context, prefs.languageCode),
                 ),
-                DonyListTile(
-                  icon: Icons.sms_rounded,
-                  iconColor: cs.primary,
-                  iconBgColor: cs.primaryContainer,
-                  label: 'Alertes critiques par SMS',
-                  subtitle: 'Paiement reçu, colis remis, litige',
-                  trailing: Switch(
-                    value: prefs.smsAlertsEnabled,
-                    activeThumbColor: cs.primary,
-                    onChanged: (_) => context
-                        .read<AppPreferencesBloc>()
-                        .add(const SmsAlertsToggled()),
-                  ),
-                  onTap: () => context
-                      .read<AppPreferencesBloc>()
-                      .add(const SmsAlertsToggled()),
-                ),
               ]),
               const SizedBox(height: DonySpacing.lg),
 

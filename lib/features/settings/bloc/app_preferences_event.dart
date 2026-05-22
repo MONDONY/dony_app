@@ -23,10 +23,6 @@ class LanguageChanged extends AppPreferencesEvent {
   List<Object?> get props => [languageCode];
 }
 
-class SmsAlertsToggled extends AppPreferencesEvent {
-  const SmsAlertsToggled();
-}
-
 class DestinationToggled extends AppPreferencesEvent {
   final String countryCode; // 'SN' | 'CI' | 'ML' | 'CM'
   const DestinationToggled(this.countryCode);

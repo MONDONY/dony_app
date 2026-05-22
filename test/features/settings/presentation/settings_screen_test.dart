@@ -82,7 +82,6 @@ void main() {
 
       expect(find.text('LANGUE & COMMUNICATION'), findsOneWidget);
       expect(find.text('Langue'), findsOneWidget);
-      expect(find.text('Alertes critiques par SMS'), findsOneWidget);
     });
 
     testWidgets('shows DESTINATIONS FAVORITES section with 4 chips',
@@ -159,20 +158,6 @@ void main() {
       expect(switches.first.value, isFalse);
     });
 
-    testWidgets('SMS alerts switch reflects smsAlertsEnabled state',
-        (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          prefs: const UserPreferencesModel(smsAlertsEnabled: true),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
-      // Second switch is SMS alerts
-      expect(switches[1].value, isTrue);
-    });
-
     testWidgets('selected destination chip shows primary styling',
         (tester) async {
       await tester.pumpWidget(
@@ -231,28 +216,6 @@ void main() {
       verify(() => mockBloc.add(any(that: isA<ThemeChanged>()))).called(1);
     });
 
-    testWidgets('tap SMS alerts switch dispatches SmsAlertsToggled',
-        (tester) async {
-      final mockBloc = MockAppPreferencesBloc();
-      final state = AppPreferencesState(
-        preferences: const UserPreferencesModel(),
-      );
-      when(() => mockBloc.state).thenReturn(state);
-      whenListen<AppPreferencesState>(mockBloc, const Stream.empty(),
-          initialState: state);
-
-      await tester.pumpWidget(_wrapWithBloc(mockBloc));
-      await tester.pumpAndSettle();
-
-      // Tap the second Switch (SMS alerts)
-      final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
-      expect(switches.length, greaterThanOrEqualTo(2));
-      await tester.tap(find.byWidget(switches[1]));
-      await tester.pump();
-
-      verify(() => mockBloc.add(any(that: isA<SmsAlertsToggled>()))).called(1);
-    });
-
     testWidgets('tap langue tile ouvre le language picker modal',
         (tester) async {
       await tester.pumpWidget(_wrap());
@@ -302,25 +265,6 @@ void main() {
       await tester.pump();
 
       verify(() => mockBloc.add(any(that: isA<ThemeChanged>()))).called(1);
-    });
-
-    testWidgets('tap SMS alerts tile text dispatches SmsAlertsToggled via onTap',
-        (tester) async {
-      final mockBloc = MockAppPreferencesBloc();
-      final state = AppPreferencesState(
-        preferences: const UserPreferencesModel(),
-      );
-      when(() => mockBloc.state).thenReturn(state);
-      whenListen<AppPreferencesState>(mockBloc, const Stream.empty(),
-          initialState: state);
-
-      await tester.pumpWidget(_wrapWithBloc(mockBloc));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Alertes critiques par SMS'));
-      await tester.pump();
-
-      verify(() => mockBloc.add(any(that: isA<SmsAlertsToggled>()))).called(1);
     });
 
     testWidgets('tap Sécurité tile navigates to /settings/security',
@@ -444,7 +388,11 @@ void main() {
       await tester.pumpWidget(_wrap());
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(ListView), const Offset(0, -3000));
+      await tester.dragUntilVisible(
+        find.text('Diagnostics'),
+        find.byType(ListView),
+        const Offset(0, -500),
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Diagnostics'));

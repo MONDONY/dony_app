@@ -68,12 +68,14 @@ Future<void> _bootstrap() async {
   await Stripe.instance.applySettings();
 
   await setupDependencies(apiBaseUrl: _apiBaseUrl);
+  // Hive doit être ouvert avant runApp : AppPreferencesBloc accède à
+  // userPrefs dès le premier build() de DonyApp.
+  await getIt<HiveService>().init();
 
   // Show UI immediately — splash screen handles loading state
   runApp(const DonyApp());
 
   // Heavy async init runs after UI is displayed (no ANR risk)
-  await getIt<HiveService>().init();
   getIt<OfflineSyncService>().startListening();
   await getIt<NotificationService>().initialize();
 }

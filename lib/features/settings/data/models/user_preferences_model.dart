@@ -4,7 +4,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 class UserPreferencesModel {
   final String themeMode;
   final String languageCode;
-  final bool smsAlertsEnabled;
   final List<String> favDestinations;
   final String weightUnit;
   final String currencyCode;
@@ -19,7 +18,6 @@ class UserPreferencesModel {
   const UserPreferencesModel({
     this.themeMode = 'system',
     this.languageCode = 'fr',
-    this.smsAlertsEnabled = false,
     this.favDestinations = const [],
     this.weightUnit = 'kg',
     this.currencyCode = 'EUR',
@@ -35,7 +33,6 @@ class UserPreferencesModel {
   UserPreferencesModel copyWith({
     String? themeMode,
     String? languageCode,
-    bool? smsAlertsEnabled,
     List<String>? favDestinations,
     String? weightUnit,
     String? currencyCode,
@@ -50,7 +47,6 @@ class UserPreferencesModel {
       UserPreferencesModel(
         themeMode: themeMode ?? this.themeMode,
         languageCode: languageCode ?? this.languageCode,
-        smsAlertsEnabled: smsAlertsEnabled ?? this.smsAlertsEnabled,
         favDestinations: favDestinations ?? this.favDestinations,
         weightUnit: weightUnit ?? this.weightUnit,
         currencyCode: currencyCode ?? this.currencyCode,
@@ -68,8 +64,6 @@ class UserPreferencesModel {
             box.get(HiveService.kThemeMode, defaultValue: 'system') as String,
         languageCode:
             box.get(HiveService.kLanguageCode, defaultValue: 'fr') as String,
-        smsAlertsEnabled: box.get(HiveService.kSmsAlertsEnabled,
-            defaultValue: false) as bool,
         favDestinations: List<String>.from(box.get(HiveService.kFavDestinations,
             defaultValue: <String>[]) as List),
         weightUnit:
@@ -95,7 +89,6 @@ class UserPreferencesModel {
   void writeToHive(Box box) {
     box.put(HiveService.kThemeMode, themeMode);
     box.put(HiveService.kLanguageCode, languageCode);
-    box.put(HiveService.kSmsAlertsEnabled, smsAlertsEnabled);
     box.put(HiveService.kFavDestinations, favDestinations);
     box.put(HiveService.kWeightUnit, weightUnit);
     box.put(HiveService.kCurrencyCode, currencyCode);

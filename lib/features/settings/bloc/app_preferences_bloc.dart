@@ -16,7 +16,6 @@ class AppPreferencesBloc extends Bloc<AppPreferencesEvent, AppPreferencesState> 
         )) {
     on<ThemeChanged>(_onThemeChanged);
     on<LanguageChanged>(_onLanguageChanged);
-    on<SmsAlertsToggled>(_onSmsAlertsToggled);
     on<DestinationToggled>(_onDestinationToggled);
     on<BiometricToggled>(_onBiometricToggled);
   }
@@ -36,17 +35,6 @@ class AppPreferencesBloc extends Bloc<AppPreferencesEvent, AppPreferencesState> 
   ) {
     final updated =
         state.preferences.copyWith(languageCode: event.languageCode);
-    updated.writeToHive(_box);
-    emit(AppPreferencesState(preferences: updated));
-  }
-
-  void _onSmsAlertsToggled(
-    SmsAlertsToggled event,
-    Emitter<AppPreferencesState> emit,
-  ) {
-    final updated = state.preferences.copyWith(
-      smsAlertsEnabled: !state.preferences.smsAlertsEnabled,
-    );
     updated.writeToHive(_box);
     emit(AppPreferencesState(preferences: updated));
   }

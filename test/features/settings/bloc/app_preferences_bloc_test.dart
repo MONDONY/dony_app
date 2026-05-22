@@ -89,41 +89,6 @@ void main() {
     );
 
     blocTest<AppPreferencesBloc, AppPreferencesState>(
-      'SmsAlertsToggled active les alertes SMS quand elles sont désactivées',
-      build: () => AppPreferencesBloc(mockBox),
-      act: (bloc) => bloc.add(const SmsAlertsToggled()),
-      expect: () => [
-        isA<AppPreferencesState>().having(
-          (s) => s.preferences.smsAlertsEnabled,
-          'smsAlertsEnabled',
-          isTrue,
-        ),
-      ],
-      verify: (_) =>
-          verify(() => mockBox.put(HiveService.kSmsAlertsEnabled, true))
-              .called(1),
-    );
-
-    blocTest<AppPreferencesBloc, AppPreferencesState>(
-      'SmsAlertsToggled désactive les alertes SMS quand elles sont activées',
-      build: () {
-        when(() => mockBox.get(
-              HiveService.kSmsAlertsEnabled,
-              defaultValue: any(named: 'defaultValue'),
-            )).thenReturn(true);
-        return AppPreferencesBloc(mockBox);
-      },
-      act: (bloc) => bloc.add(const SmsAlertsToggled()),
-      expect: () => [
-        isA<AppPreferencesState>().having(
-          (s) => s.preferences.smsAlertsEnabled,
-          'smsAlertsEnabled',
-          isFalse,
-        ),
-      ],
-    );
-
-    blocTest<AppPreferencesBloc, AppPreferencesState>(
       'ThemeChanged vers light met à jour le thème',
       build: () => AppPreferencesBloc(mockBox),
       act: (bloc) => bloc.add(const ThemeChanged('light')),
@@ -189,9 +154,6 @@ void main() {
 
       const langEvent = LanguageChanged('en');
       expect(langEvent.props, equals(['en']));
-
-      const smsEvent = SmsAlertsToggled();
-      expect(smsEvent.props, equals([]));
 
       const destEvent = DestinationToggled('SN');
       expect(destEvent.props, equals(['SN']));
