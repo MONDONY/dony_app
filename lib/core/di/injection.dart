@@ -32,6 +32,8 @@ import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
 import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
 import 'package:dony/features/settings/data/account_deletion_repository.dart';
+import 'package:dony/features/settings/data/notification_prefs_datasource.dart';
+import 'package:dony/features/settings/data/notification_prefs_repository.dart';
 import 'package:dony/features/settings/data/firebase_phone_reauth.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
@@ -117,7 +119,11 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => NotificationRepository(getIt<NotificationRemoteDatasource>()),
   );
   getIt.registerLazySingleton<NotificationService>(
-    () => NotificationService(getIt<ApiClient>(), getIt<NotificationRepository>()),
+    () => NotificationService(
+      getIt<ApiClient>(),
+      getIt<NotificationRepository>(),
+      getIt<HiveService>().userPrefs,
+    ),
     dispose: (s) => s.dispose(),
   );
   getIt.registerFactory<NotificationBloc>(
@@ -328,8 +334,17 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
 
   // Settings — Notification preferences
+  getIt.registerLazySingleton<NotificationPrefsDatasource>(
+    () => NotificationPrefsDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<NotificationPrefsRepository>(
+    () => NotificationPrefsRepository(getIt<NotificationPrefsDatasource>()),
+  );
   getIt.registerFactory<NotificationPrefsBloc>(
-    () => NotificationPrefsBloc(getIt<HiveService>().userPrefs),
+    () => NotificationPrefsBloc(
+      getIt<HiveService>().userPrefs,
+      getIt<NotificationPrefsRepository>(),
+    ),
   );
 
   // Settings — Business preferences (weight unit, currency, pickup radius)

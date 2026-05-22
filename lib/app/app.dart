@@ -14,8 +14,10 @@ import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/features/settings/data/notification_prefs_repository.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -64,9 +66,21 @@ class _DonyAppState extends State<DonyApp> {
     _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
       if (user != null) {
         getIt<NotificationService>().uploadCurrentToken();
+        _syncNotificationPrefsToBackend();
       }
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _initDeepLinks());
+  }
+
+  void _syncNotificationPrefsToBackend() {
+    final box = getIt<HiveService>().userPrefs;
+    getIt<NotificationPrefsRepository>().syncPrefs({
+      'push_activity_bids':         box.get('notif_push_activity_bids', defaultValue: true) as bool,
+      'push_activity_negotiations': box.get('notif_push_activity_negotiations', defaultValue: true) as bool,
+      'push_messages':              box.get('notif_push_messages', defaultValue: true) as bool,
+      'push_trip_reminder':         box.get('notif_push_trip_reminder', defaultValue: true) as bool,
+      'push_promo':                 box.get('notif_push_promo', defaultValue: false) as bool,
+    });
   }
 
   void _initDeepLinks() {
@@ -181,7 +195,6 @@ class _DonyAppState extends State<DonyApp> {
                     theme: AppTheme.light,
                     darkTheme: AppTheme.dark,
                     themeMode: themeMode,
-                    locale: Locale(prefsState.preferences.languageCode),
                     routerConfig: appRouter,
                     debugShowCheckedModeBanner: false,
                     localizationsDelegates: const [
