@@ -137,6 +137,14 @@ class LocalAuthBloc extends Bloc<LocalAuthEvent, LocalAuthState> {
     LocalAuthBiometricRequested event,
     Emitter<LocalAuthState> emit,
   ) async {
+    final appLockEnabled = _userPrefs.get(
+      HiveService.kAppLockBiometric,
+      defaultValue: true,
+    ) as bool;
+    if (!appLockEnabled) {
+      return;
+    }
+
     final success = await _service.authenticateWithBiometric();
     if (success && !emit.isDone) {
       await _resetAttemptsAndPersist();
