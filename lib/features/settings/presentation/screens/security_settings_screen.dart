@@ -135,12 +135,14 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                   DonyListSection(tiles: [
                     DonyListTile(
                       icon: Icons.devices_rounded,
-                      iconColor: cs.onSurfaceVariant,
-                      iconBgColor: cs.surfaceContainerHighest,
+                      iconColor: cs.primary,
+                      iconBgColor: cs.primaryContainer,
                       label: 'Appareils connectés',
                       subtitle: 'Voir et révoquer les sessions actives',
                       showDivider: false,
-                      onTap: () => _showRevokeDialog(context, cs),
+                      onTap: () => context.push(
+                        '/settings/security/devices',
+                      ),
                     ),
                   ]),
                 ],
@@ -152,36 +154,6 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
     );
   }
 
-  void _showRevokeDialog(BuildContext context, ColorScheme cs) {
-    showDialog<void>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Déconnecter tous les appareils ?'),
-        content: const Text(
-          'Tu seras déconnecté de tous tes appareils et devras te reconnecter.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(foregroundColor: cs.error),
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Fonctionnalité disponible prochainement'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            child: const Text('Déconnecter'),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _SectionLabel extends StatelessWidget {

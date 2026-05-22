@@ -101,6 +101,8 @@ import 'package:dony/features/settings/presentation/screens/legal_web_view_scree
 import 'package:dony/features/settings/presentation/screens/notification_settings_screen.dart';
 import 'package:dony/features/settings/presentation/screens/privacy_settings_screen.dart';
 import 'package:dony/features/settings/presentation/screens/security_settings_screen.dart';
+import 'package:dony/features/settings/bloc/connected_devices_bloc.dart';
+import 'package:dony/features/settings/presentation/screens/connected_devices_screen.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/presentation/screens/referral_screen.dart';
@@ -660,6 +662,14 @@ final appRouter = GoRouter(
               path: 'change-pin',
               builder: (context, state) => ChangePinScreen(
                 authService: getIt<LocalAuthService>(),
+              ),
+            ),
+            GoRoute(
+              path: 'devices',
+              builder: (context, state) => BlocProvider(
+                create: (_) => getIt<ConnectedDevicesBloc>()
+                  ..add(const DevicesLoadRequested()),
+                child: const ConnectedDevicesScreen(),
               ),
             ),
           ],

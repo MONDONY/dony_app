@@ -23,6 +23,7 @@ import 'package:dony/features/profile/bloc/traveler_upgrade_bloc.dart';
 import 'package:dony/features/profile/data/pro_stats_repository.dart';
 import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/features/profile/data/traveler_upgrade_repository.dart';
+import 'package:dony/features/settings/bloc/connected_devices_bloc.dart';
 import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
@@ -31,6 +32,8 @@ import 'package:dony/features/settings/bloc/data_export_bloc.dart';
 import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
 import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
+import 'package:dony/features/settings/data/connected_devices_datasource.dart';
+import 'package:dony/features/settings/data/connected_devices_repository.dart';
 import 'package:dony/features/settings/data/account_deletion_repository.dart';
 import 'package:dony/features/settings/data/firebase_phone_reauth.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
@@ -355,6 +358,17 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Settings — Diagnostics (version app + ping API)
   getIt.registerFactory<DiagnosticsBloc>(
     () => DiagnosticsBloc(getIt<ApiClient>()),
+  );
+
+  // Settings — Connected Devices
+  getIt.registerLazySingleton<ConnectedDevicesDatasource>(
+    () => ConnectedDevicesDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<ConnectedDevicesRepository>(
+    () => ConnectedDevicesRepository(getIt<ConnectedDevicesDatasource>()),
+  );
+  getIt.registerFactory<ConnectedDevicesBloc>(
+    () => ConnectedDevicesBloc(getIt<ConnectedDevicesRepository>()),
   );
 
   // Ratings
