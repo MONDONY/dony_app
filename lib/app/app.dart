@@ -181,6 +181,7 @@ class _DonyAppState extends State<DonyApp> {
                     theme: AppTheme.light,
                     darkTheme: AppTheme.dark,
                     themeMode: themeMode,
+                    locale: Locale(prefsState.preferences.languageCode),
                     routerConfig: appRouter,
                     debugShowCheckedModeBanner: false,
                     localizationsDelegates: const [
