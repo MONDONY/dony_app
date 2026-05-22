@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:local_auth/local_auth.dart';
 
 class SecuritySettingsScreen extends StatefulWidget {
@@ -110,6 +111,21 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                               .read<AppPreferencesBloc>()
                               .add(const AppLockBiometricToggled())
                           : null,
+                    ),
+                  ]),
+                  const SizedBox(height: DonySpacing.lg),
+                  const _SectionLabel('AUTHENTIFICATION'),
+                  DonyListSection(tiles: [
+                    DonyListTile(
+                      icon: Icons.pin_rounded,
+                      iconColor: cs.primary,
+                      iconBgColor: cs.primaryContainer,
+                      label: 'Modifier le code PIN',
+                      subtitle: 'Code à 6 chiffres',
+                      showDivider: false,
+                      onTap: () => context.push(
+                        '/settings/security/change-pin',
+                      ),
                     ),
                   ]),
                   const SizedBox(height: DonySpacing.lg),

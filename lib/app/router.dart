@@ -2,6 +2,7 @@ import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/auth/presentation/screens/local_auth_screen.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
@@ -95,6 +96,7 @@ import 'package:dony/features/settings/presentation/screens/accessibility_settin
 import 'package:dony/features/settings/presentation/screens/business_prefs_screen.dart';
 import 'package:dony/features/settings/presentation/screens/data_settings_screen.dart';
 import 'package:dony/features/settings/presentation/screens/diagnostics_screen.dart';
+import 'package:dony/features/settings/presentation/screens/change_pin_screen.dart';
 import 'package:dony/features/settings/presentation/screens/legal_web_view_screen.dart';
 import 'package:dony/features/settings/presentation/screens/notification_settings_screen.dart';
 import 'package:dony/features/settings/presentation/screens/privacy_settings_screen.dart';
@@ -653,6 +655,14 @@ final appRouter = GoRouter(
         GoRoute(
           path: 'security',
           builder: (context, state) => const SecuritySettingsScreen(),
+          routes: [
+            GoRoute(
+              path: 'change-pin',
+              builder: (context, state) => ChangePinScreen(
+                authService: getIt<LocalAuthService>(),
+              ),
+            ),
+          ],
         ),
         GoRoute(
           path: 'privacy',
