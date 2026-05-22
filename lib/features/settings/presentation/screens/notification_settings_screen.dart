@@ -222,7 +222,9 @@ class NotificationSettingsScreen extends StatelessWidget {
           : cs.onSurfaceVariant.withValues(alpha: 0.12),
       label: label,
       subtitle: subtitle,
-      trailing: Switch(value: isOn, onChanged: (_) {}),
+      trailing: IgnorePointer(
+        child: Switch(value: isOn, onChanged: (_) {}),
+      ),
       onTap: () => onToggle(key),
     );
   }
