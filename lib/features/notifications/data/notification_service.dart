@@ -129,12 +129,29 @@ class NotificationService {
         return (ios.name, 'ios');
       } else {
         final android = await info.androidInfo;
-        return (android.model, 'android');
+        final name = formatAndroidName(android.manufacturer, android.model);
+        return (name, 'android');
       }
     } catch (_) {
       return ('Appareil', Platform.isIOS ? 'ios' : 'android');
     }
   }
+
+  /// Combines [manufacturer] and [model] into a friendly display name.
+  /// Avoids duplication when [model] already starts with the manufacturer name.
+  /// Exposed for unit testing via @visibleForTesting.
+  @visibleForTesting
+  static String formatAndroidName(String manufacturer, String model) {
+    final mfr = manufacturer.trim();
+    final mdl = model.trim();
+    if (mfr.isEmpty || mdl.toLowerCase().startsWith(mfr.toLowerCase())) {
+      return mdl;
+    }
+    return '${_capitalize(mfr)} $mdl';
+  }
+
+  static String _capitalize(String s) =>
+      s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 
   @visibleForTesting
   Future<(String, String)> testGetDeviceInfo() => _getDeviceInfo();

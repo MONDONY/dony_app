@@ -101,7 +101,12 @@ class _DeviceTile extends StatelessWidget {
 
   final DeviceModel device;
 
-  String get _platformIcon => device.platform == 'ios' ? '\u{1F34E}' : '\u{1F916}';
+  String get _platformIcon => switch (device.platform) {
+        'ios' => '\u{1F34E}',
+        'android' => '\u{1F916}',
+        'web' => '\u{1F4BB}',
+        _ => '\u{1F4F1}',
+      };
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();

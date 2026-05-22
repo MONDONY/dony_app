@@ -151,6 +151,50 @@ void main() {
   const _bidId = 'b1b2c3d4-e5f6-7890-abcd-ef1234567890';
   const _threadId = 'c1b2c3d4-e5f6-7890-abcd-ef1234567890';
 
+  group('NotificationService.formatAndroidName', () {
+    test('préfixe le fabricant quand le modèle ne commence pas par lui', () {
+      expect(
+        NotificationService.formatAndroidName('xiaomi', '25028RN03Y'),
+        'Xiaomi 25028RN03Y',
+      );
+    });
+
+    test('ne duplique pas le fabricant quand le modèle commence déjà par lui', () {
+      expect(
+        NotificationService.formatAndroidName('Samsung', 'Samsung Galaxy S22'),
+        'Samsung Galaxy S22',
+      );
+    });
+
+    test('retourne le modèle seul quand le fabricant est vide', () {
+      expect(
+        NotificationService.formatAndroidName('', 'Pixel 7'),
+        'Pixel 7',
+      );
+    });
+
+    test('ignore la casse pour la détection de duplication', () {
+      expect(
+        NotificationService.formatAndroidName('SAMSUNG', 'samsung galaxy a54'),
+        'samsung galaxy a54',
+      );
+    });
+
+    test('capitalise la première lettre du fabricant', () {
+      expect(
+        NotificationService.formatAndroidName('google', 'Pixel 8 Pro'),
+        'Google Pixel 8 Pro',
+      );
+    });
+
+    test('gère les espaces superflus dans manufacturer et model', () {
+      expect(
+        NotificationService.formatAndroidName('  OnePlus  ', '  Nord 3  '),
+        'OnePlus Nord 3',
+      );
+    });
+  });
+
   group('NotificationService._routeForMessage', () {
     test('BID_CREATED routes to announcement bids page', () {
       expect(

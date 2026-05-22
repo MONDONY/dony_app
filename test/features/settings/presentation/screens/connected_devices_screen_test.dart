@@ -22,6 +22,14 @@ DeviceModel _dev({bool current = false}) => DeviceModel(
       isCurrent: current,
     );
 
+DeviceModel _webDev() => DeviceModel(
+      deviceId: 'web-123',
+      deviceName: 'Chrome sur Windows',
+      platform: 'web',
+      lastSeenAt: DateTime(2026, 5, 22),
+      isCurrent: false,
+    );
+
 Widget _wrap(ConnectedDevicesBloc bloc) => MaterialApp(
       home: BlocProvider<ConnectedDevicesBloc>.value(
         value: bloc,
@@ -104,5 +112,17 @@ void main() {
     await tester.pump();
     expect(find.byType(CircularProgressIndicator), findsNothing);
     expect(find.text('Réessayer'), findsNothing);
+  });
+
+  testWidgets(
+      'Loaded avec appareil web → tile affiché avec le nom correct',
+      (tester) async {
+    when(() => bloc.state).thenReturn(
+        ConnectedDevicesLoaded([_dev(current: true), _webDev()]));
+    await tester.pumpWidget(_wrap(bloc));
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('Chrome sur Windows'), findsOneWidget);
+    // Le tile doit s'afficher sans erreur de rendu
+    expect(find.byType(ConnectedDevicesScreen), findsOneWidget);
   });
 }
