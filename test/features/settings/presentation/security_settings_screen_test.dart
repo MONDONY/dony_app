@@ -162,5 +162,39 @@ void main() {
         );
       },
     );
+
+    testWidgets(
+      'biometric switch value reflects biometricEnabled from bloc (device unavailable)',
+      (tester) async {
+        // Même si biometricEnabled=true dans le BLoC, switch=false si device indispo
+        final state = AppPreferencesState(
+          preferences: const UserPreferencesModel(biometricEnabled: true),
+        );
+        when(() => mockBloc.state).thenReturn(state);
+
+        await tester.pumpWidget(_wrap(mockBloc: mockBloc));
+        await tester.pumpAndSettle();
+
+        // FutureBuilder retourne false sur le simulateur de test (pas de plugin natif)
+        // Switch = biometricEnabled(true) && biometricAvailable(false) = false
+        final switchFinder = find.byType(Switch).first;
+        final switchWidget = tester.widget<Switch>(switchFinder);
+        expect(switchWidget.value, isFalse);
+      },
+    );
+
+    testWidgets(
+      'tapping biometric tile when unavailable does not dispatch BiometricToggled',
+      (tester) async {
+        await tester.pumpWidget(_wrap(mockBloc: mockBloc));
+        await tester.pumpAndSettle();
+
+        // La tile biométrie n'est pas tappable quand device indispo
+        await tester.tap(find.text('Biométrie avant paiement'));
+        await tester.pumpAndSettle();
+
+        verifyNever(() => mockBloc.add(const BiometricToggled()));
+      },
+    );
   });
 }

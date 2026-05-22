@@ -1,36 +1,11 @@
-import 'dart:async';
-
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:local_auth/local_auth.dart';
 
-class SecuritySettingsScreen extends StatefulWidget {
+class SecuritySettingsScreen extends StatelessWidget {
   const SecuritySettingsScreen({super.key});
-
-  @override
-  State<SecuritySettingsScreen> createState() => _SecuritySettingsScreenState();
-}
-
-class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
-  final _localAuth = LocalAuthentication();
-  bool _biometricAvailable = false;
-
-  @override
-  void initState() {
-    super.initState();
-    unawaited(
-      _checkBiometric(),
-    );
-  }
-
-  Future<void> _checkBiometric() async {
-    final available = await _localAuth.canCheckBiometrics;
-    if (mounted) {
-      setState(() => _biometricAvailable = available);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,49 +13,71 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
 
     return Scaffold(
       appBar: const DonyAppBar(title: 'Sécurité'),
-      body: BlocBuilder<AppPreferencesBloc, AppPreferencesState>(
-        builder: (context, prefsState) {
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.lg,
-              DonySpacing.lg,
-              DonySpacing.lg,
-              DonySpacing.huge,
-            ),
-            children: [
-              const _SectionLabel('PAIEMENTS'),
-              DonyListSection(tiles: [
-                DonyListTile(
-                  icon: Icons.fingerprint_rounded,
-                  iconColor: cs.primary,
-                  iconBgColor: cs.primaryContainer,
-                  label: 'Biométrie avant paiement',
-                  subtitle: _biometricAvailable
-                      ? 'Empreinte digitale ou Face ID'
-                      : 'Non disponible sur cet appareil',
-                  trailing: Switch(
-                    value: _biometricAvailable,
-                    activeThumbColor: cs.primary,
-                    onChanged: _biometricAvailable ? (_) {} : null,
-                  ),
-                  showDivider: false,
-                  onTap: _biometricAvailable ? () {} : null,
+      body: FutureBuilder<bool>(
+        future: LocalAuthentication().canCheckBiometrics,
+        builder: (context, snapshot) {
+          final biometricAvailable = snapshot.data ?? false;
+
+          return BlocBuilder<AppPreferencesBloc, AppPreferencesState>(
+            builder: (context, prefsState) {
+              final biometricEnabled =
+                  prefsState.preferences.biometricEnabled && biometricAvailable;
+
+              return ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.lg,
+                  DonySpacing.lg,
+                  DonySpacing.huge,
                 ),
-              ]),
-              const SizedBox(height: DonySpacing.lg),
-              const _SectionLabel('SESSION'),
-              DonyListSection(tiles: [
-                DonyListTile(
-                  icon: Icons.devices_rounded,
-                  iconColor: cs.onSurfaceVariant,
-                  iconBgColor: cs.surfaceContainerHighest,
-                  label: 'Appareils connectés',
-                  subtitle: 'Voir et révoquer les sessions actives',
-                  showDivider: false,
-                  onTap: () => _showRevokeDialog(context, cs),
-                ),
-              ]),
-            ],
+                children: [
+                  const _SectionLabel('PAIEMENTS'),
+                  DonyListSection(tiles: [
+                    DonyListTile(
+                      icon: Icons.fingerprint_rounded,
+                      iconColor: biometricAvailable
+                          ? cs.primary
+                          : cs.onSurfaceVariant,
+                      iconBgColor: biometricAvailable
+                          ? cs.primaryContainer
+                          : cs.surfaceContainerHighest,
+                      label: 'Biométrie avant paiement',
+                      subtitle: biometricAvailable
+                          ? 'Empreinte digitale ou Face ID'
+                          : 'Non disponible sur cet appareil',
+                      trailing: Switch(
+                        value: biometricEnabled,
+                        activeThumbColor: cs.primary,
+                        onChanged: biometricAvailable
+                            ? (_) => context
+                                .read<AppPreferencesBloc>()
+                                .add(const BiometricToggled())
+                            : null,
+                      ),
+                      showDivider: false,
+                      onTap: biometricAvailable
+                          ? () => context
+                              .read<AppPreferencesBloc>()
+                              .add(const BiometricToggled())
+                          : null,
+                    ),
+                  ]),
+                  const SizedBox(height: DonySpacing.lg),
+                  const _SectionLabel('SESSION'),
+                  DonyListSection(tiles: [
+                    DonyListTile(
+                      icon: Icons.devices_rounded,
+                      iconColor: cs.onSurfaceVariant,
+                      iconBgColor: cs.surfaceContainerHighest,
+                      label: 'Appareils connectés',
+                      subtitle: 'Voir et révoquer les sessions actives',
+                      showDivider: false,
+                      onTap: () => _showRevokeDialog(context, cs),
+                    ),
+                  ]),
+                ],
+              );
+            },
           );
         },
       ),
