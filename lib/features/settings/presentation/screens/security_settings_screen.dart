@@ -123,9 +123,11 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                       label: 'Modifier le code PIN',
                       subtitle: 'Code à 6 chiffres',
                       showDivider: false,
-                      onTap: () => context.push(
-                        '/settings/security/change-pin',
-                      ),
+                      onTap: () async {
+                        await context.push<bool>(
+                          '/settings/security/change-pin',
+                        );
+                      },
                     ),
                   ]),
                   const SizedBox(height: DonySpacing.lg),

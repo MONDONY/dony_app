@@ -85,13 +85,13 @@ class _ChangePinScreenState extends State<ChangePinScreen> {
           if (!mounted) {
             return;
           }
-          context.pop(true);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Code PIN modifié'),
               behavior: SnackBarBehavior.floating,
             ),
           );
+          context.pop(true);
         } else {
           setState(() {
             _hasError = true;
