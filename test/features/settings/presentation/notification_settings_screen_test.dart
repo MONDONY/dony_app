@@ -4,14 +4,11 @@ import 'package:dony/features/settings/presentation/screens/notification_setting
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockNotificationPrefsBloc
     extends MockBloc<NotificationPrefsEvent, NotificationPrefsState>
     implements NotificationPrefsBloc {}
-
-class MockBox extends Mock implements Box<dynamic> {}
 
 class _FakeNotifEvent extends Fake implements NotificationPrefsEvent {}
 
@@ -49,6 +46,23 @@ Widget _wrapWithBloc(MockNotificationPrefsBloc mockBloc) {
   );
 }
 
+MockNotificationPrefsBloc _buildMockBloc([Map<String, bool>? customPrefs]) {
+  final mockBloc = MockNotificationPrefsBloc();
+  final prefs = customPrefs ?? {
+    'push_activity_bids': true,
+    'push_activity_negotiations': true,
+    'push_messages': true,
+    'push_trip_reminder': true,
+    'push_promo': false,
+    'email_promo': false,
+  };
+  final state = NotificationPrefsState(prefs: prefs);
+  when(() => mockBloc.state).thenReturn(state);
+  whenListen<NotificationPrefsState>(mockBloc, const Stream.empty(),
+      initialState: state);
+  return mockBloc;
+}
+
 void main() {
   setUpAll(() {
     registerFallbackValue(_FakeNotifEvent());
@@ -79,18 +93,8 @@ void main() {
     });
 
     testWidgets('tap sur tile critique ne dispatche aucun event', (tester) async {
-      final mockBloc = MockNotificationPrefsBloc();
-      final state = NotificationPrefsState(prefs: {
-        'push_activity_bids': true,
-        'push_activity_negotiations': true,
-        'push_messages': true,
-        'push_trip_reminder': true,
-        'push_promo': false,
-        'email_promo': false,
-      });
-      when(() => mockBloc.state).thenReturn(state);
-      whenListen<NotificationPrefsState>(mockBloc, const Stream.empty(),
-          initialState: state);
+      final mockBloc = _buildMockBloc();
+      addTearDown(mockBloc.close);
 
       await tester.pumpWidget(_wrapWithBloc(mockBloc));
       await tester.pumpAndSettle();
@@ -113,18 +117,8 @@ void main() {
 
     testWidgets('tap Matchs & enchères dispatche NotifPrefToggled(push_activity_bids)',
         (tester) async {
-      final mockBloc = MockNotificationPrefsBloc();
-      final state = NotificationPrefsState(prefs: {
-        'push_activity_bids': true,
-        'push_activity_negotiations': true,
-        'push_messages': true,
-        'push_trip_reminder': true,
-        'push_promo': false,
-        'email_promo': false,
-      });
-      when(() => mockBloc.state).thenReturn(state);
-      whenListen<NotificationPrefsState>(mockBloc, const Stream.empty(),
-          initialState: state);
+      final mockBloc = _buildMockBloc();
+      addTearDown(mockBloc.close);
 
       await tester.pumpWidget(_wrapWithBloc(mockBloc));
       await tester.pumpAndSettle();
@@ -140,18 +134,8 @@ void main() {
 
     testWidgets('tap Négociations dispatche NotifPrefToggled(push_activity_negotiations)',
         (tester) async {
-      final mockBloc = MockNotificationPrefsBloc();
-      final state = NotificationPrefsState(prefs: {
-        'push_activity_bids': true,
-        'push_activity_negotiations': true,
-        'push_messages': true,
-        'push_trip_reminder': true,
-        'push_promo': false,
-        'email_promo': false,
-      });
-      when(() => mockBloc.state).thenReturn(state);
-      whenListen<NotificationPrefsState>(mockBloc, const Stream.empty(),
-          initialState: state);
+      final mockBloc = _buildMockBloc();
+      addTearDown(mockBloc.close);
 
       await tester.pumpWidget(_wrapWithBloc(mockBloc));
       await tester.pumpAndSettle();
@@ -167,26 +151,16 @@ void main() {
 
     testWidgets('tap Messages dispatche NotifPrefToggled(push_messages)',
         (tester) async {
-      final mockBloc = MockNotificationPrefsBloc();
-      final state = NotificationPrefsState(prefs: {
-        'push_activity_bids': true,
-        'push_activity_negotiations': true,
-        'push_messages': true,
-        'push_trip_reminder': true,
-        'push_promo': false,
-        'email_promo': false,
-      });
-      when(() => mockBloc.state).thenReturn(state);
-      whenListen<NotificationPrefsState>(mockBloc, const Stream.empty(),
-          initialState: state);
+      final mockBloc = _buildMockBloc();
+      addTearDown(mockBloc.close);
 
       await tester.pumpWidget(_wrapWithBloc(mockBloc));
       await tester.pumpAndSettle();
 
-      await tester.dragUntilVisible(
+      await tester.scrollUntilVisible(
         find.text('Messages'),
-        find.byType(ListView),
-        const Offset(0, -100),
+        100,
+        scrollable: find.byType(Scrollable).first,
       );
       await tester.pumpAndSettle();
 
@@ -203,10 +177,10 @@ void main() {
       await tester.pumpWidget(_wrap());
       await tester.pumpAndSettle();
 
-      await tester.dragUntilVisible(
+      await tester.scrollUntilVisible(
         find.text('ACTUS & PROMOTIONS'),
-        find.byType(ListView),
-        const Offset(0, -300),
+        300,
+        scrollable: find.byType(Scrollable).first,
       );
       await tester.pumpAndSettle();
 

@@ -7,14 +7,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class NotificationSettingsScreen extends StatelessWidget {
   const NotificationSettingsScreen({super.key});
 
+  void _toggle(BuildContext context, String key) {
+    context.read<NotificationPrefsBloc>().add(NotifPrefToggled(key));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const DonyAppBar(title: 'Notifications'),
       body: BlocBuilder<NotificationPrefsBloc, NotificationPrefsState>(
         builder: (context, state) {
-          void toggle(String key) =>
-              context.read<NotificationPrefsBloc>().add(NotifPrefToggled(key));
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(
@@ -58,28 +60,28 @@ class NotificationSettingsScreen extends StatelessWidget {
                     subtitle: 'Demandes, acceptations, remise, annulation…',
                     key: 'push_activity_bids',
                     prefs: state.prefs,
-                    onToggle: toggle,
+                    onToggle: (key) => _toggle(context, key),
                   ),
                   _buildTile(context,
                     label: 'Négociations',
                     subtitle: 'Propositions, contre-offres, paiements…',
                     key: 'push_activity_negotiations',
                     prefs: state.prefs,
-                    onToggle: toggle,
+                    onToggle: (key) => _toggle(context, key),
                   ),
                   _buildTile(context,
                     label: 'Messages',
                     subtitle: 'Nouveaux messages reçus',
                     key: 'push_messages',
                     prefs: state.prefs,
-                    onToggle: toggle,
+                    onToggle: (key) => _toggle(context, key),
                   ),
                   _buildTile(context,
                     label: 'Rappel trajet J-1',
                     subtitle: 'La veille de chaque trajet',
                     key: 'push_trip_reminder',
                     prefs: state.prefs,
-                    onToggle: toggle,
+                    onToggle: (key) => _toggle(context, key),
                   ),
                 ],
               ),
@@ -95,13 +97,13 @@ class NotificationSettingsScreen extends StatelessWidget {
                     label: 'Actus dony (Push)',
                     key: 'push_promo',
                     prefs: state.prefs,
-                    onToggle: toggle,
+                    onToggle: (key) => _toggle(context, key),
                   ),
                   _buildTile(context,
                     label: 'Actus dony (E-mail)',
                     key: 'email_promo',
                     prefs: state.prefs,
-                    onToggle: toggle,
+                    onToggle: (key) => _toggle(context, key),
                   ),
                 ],
               ),
@@ -220,7 +222,7 @@ class NotificationSettingsScreen extends StatelessWidget {
           : cs.onSurfaceVariant.withValues(alpha: 0.12),
       label: label,
       subtitle: subtitle,
-      trailing: Switch(value: isOn, onChanged: (_) => onToggle(key)),
+      trailing: Switch(value: isOn, onChanged: (_) {}),
       onTap: () => onToggle(key),
     );
   }
