@@ -185,6 +185,71 @@ void main() {
         verify(() => authService.authenticateWithBiometric()).called(1);
       },
     );
+
+    testWidgets(
+      'toggle ON + biométrie dispo + authenticateWithBiometric retourne false '
+      '(erreur hardware catchée en interne) → fallback PIN déclenché',
+      (tester) async {
+        // authenticateWithBiometric() catch toutes les PlatformException en interne
+        // et retourne false. Ce test vérifie que le helper route bien vers le PIN
+        // dans ce cas, sans propager d'exception.
+        when(() => authService.isBiometricAvailable())
+            .thenAnswer((_) async => true);
+        when(() => authService.authenticateWithBiometric())
+            .thenAnswer((_) async => false); // simule comportement après catch interne
+
+        bool? captured;
+
+        await tester.pumpWidget(
+          _buildApp(
+            authService: authService,
+            userPrefs: userPrefs,
+            pinRouteResult: true, // PIN réussit
+            onResult: (r) => captured = r,
+          ),
+        );
+        await tester.pump();
+
+        await tester.tap(find.byKey(const Key('trigger')));
+        await tester.pumpAndSettle();
+
+        // La biométrie a échoué (false) → fallback PIN → résultat final true
+        expect(captured, isTrue);
+        verify(() => authService.isBiometricAvailable()).called(1);
+        verify(() => authService.authenticateWithBiometric()).called(1);
+      },
+    );
+
+    testWidgets(
+      'toggle ON + biométrie dispo + authenticateWithBiometric retourne false '
+      '+ PIN annulé → résultat final false',
+      (tester) async {
+        // Vérifie que si la biométrie échoue ET l'utilisateur annule le PIN,
+        // requirePaymentAuth retourne false (pas d'authentification).
+        when(() => authService.isBiometricAvailable())
+            .thenAnswer((_) async => true);
+        when(() => authService.authenticateWithBiometric())
+            .thenAnswer((_) async => false);
+
+        bool? captured;
+
+        await tester.pumpWidget(
+          _buildApp(
+            authService: authService,
+            userPrefs: userPrefs,
+            pinRouteResult: false, // PIN annulé
+            onResult: (r) => captured = r,
+          ),
+        );
+        await tester.pump();
+
+        await tester.tap(find.byKey(const Key('trigger')));
+        await tester.pumpAndSettle();
+
+        expect(captured, isFalse);
+        verify(() => authService.authenticateWithBiometric()).called(1);
+      },
+    );
   });
 
   group('requirePaymentAuth — toggle OFF (biometricEnabled = false)', () {
