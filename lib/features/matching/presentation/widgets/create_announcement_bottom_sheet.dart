@@ -49,6 +49,9 @@ class CreateAnnouncementBottomSheet {
         ValueNotifier<bool>(announcement?.transportMode != null || lockContext != null);
     final currentStepNotifier = ValueNotifier<int>(0);
     final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+    // true dès que ville départ + ville arrivée + date sont renseignés (étape 0).
+    // Initialisé à true en mode édition car les champs sont pré-remplis.
+    final canContinueNotifier = ValueNotifier<bool>(announcement != null);
     VoidCallback? submit;
     // Callback de validation de l'étape 0 (Trajet) — injecté depuis le widget Content.
     // Retourne true si les champs obligatoires sont renseignés.
@@ -100,10 +103,11 @@ class CreateAnnouncementBottomSheet {
               },
             )
           : ListenableBuilder(
-              listenable: Listenable.merge([canSubmitNotifier, currentStepNotifier]),
+              listenable: Listenable.merge([canSubmitNotifier, currentStepNotifier, canContinueNotifier]),
               builder: (ctx, _) {
                 final step = currentStepNotifier.value;
                 final canSubmit = canSubmitNotifier.value;
+                final canContinue = canContinueNotifier.value;
 
                 if (step < 2) {
                   return Row(
@@ -123,14 +127,15 @@ class CreateAnnouncementBottomSheet {
                         child: DonyButton(
                           label: 'Continuer',
                           iconRight: DonyIcons.arrowRight,
-                          onPressed: () {
-                            // BUG-004 : valider l'étape 0 avant d'avancer
-                            if (step == 0) {
-                              final isValid = validateStep0?.call() ?? true;
-                              if (!isValid) return;
-                            }
-                            currentStepNotifier.value = step + 1;
-                          },
+                          onPressed: (step == 0 && !canContinue)
+                              ? null
+                              : () {
+                                  if (step == 0) {
+                                    final isValid = validateStep0?.call() ?? true;
+                                    if (!isValid) return;
+                                  }
+                                  currentStepNotifier.value = step + 1;
+                                },
                         ),
                       ),
                     ],
@@ -249,6 +254,7 @@ class CreateAnnouncementBottomSheet {
         announcement: announcement,
         lockContext: lockContext,
         canSubmitNotifier: canSubmitNotifier,
+        canContinueNotifier: canContinueNotifier,
         currentStepNotifier: currentStepNotifier,
         departureTimeNotifier: departureTimeNotifier,
         onSubmitReady: (fn) => submit = fn,
@@ -256,6 +262,7 @@ class CreateAnnouncementBottomSheet {
       ),
     ).whenComplete(() {
       canSubmitNotifier.dispose();
+      canContinueNotifier.dispose();
       currentStepNotifier.dispose();
       departureTimeNotifier.dispose();
     });
@@ -268,6 +275,7 @@ class _CreateAnnouncementContent extends StatefulWidget {
   final AnnouncementModel? announcement;
   final LockedTripContext? lockContext;
   final ValueNotifier<bool>? canSubmitNotifier;
+  final ValueNotifier<bool>? canContinueNotifier;
   final ValueNotifier<int>? currentStepNotifier;
   final ValueNotifier<TimeOfDay?>? departureTimeNotifier;
   final void Function(VoidCallback)? onSubmitReady;
@@ -279,6 +287,7 @@ class _CreateAnnouncementContent extends StatefulWidget {
     this.announcement,
     this.lockContext,
     this.canSubmitNotifier,
+    this.canContinueNotifier,
     this.currentStepNotifier,
     this.departureTimeNotifier,
     this.onSubmitReady,
@@ -428,6 +437,13 @@ class _CreateAnnouncementContentState
       widget.canSubmitNotifier?.value = _transportModeNotifier.value != null;
     }
 
+    // Désactivation du bouton Continuer tant que les 3 champs obligatoires
+    // de l'étape 0 ne sont pas renseignés.
+    _departureCityNotifier.addListener(_updateCanContinue);
+    _arrivalCityNotifier.addListener(_updateCanContinue);
+    _departureDateNotifier.addListener(_updateCanContinue);
+    _updateCanContinue(); // état initial (pré-remplissage en mode édition)
+
     // Sync form fields to AnnouncementFormBloc for preview and validation
     _departureCityNotifier.addListener(_syncCityToFormBloc);
     _arrivalCityNotifier.addListener(_syncCityToFormBloc);
@@ -442,6 +458,13 @@ class _CreateAnnouncementContentState
     _customAcceptedNotifier.addListener(_syncAcceptedTypesToFormBloc);
     _refusedTypesNotifier.addListener(_syncRejectedTypesToFormBloc);
     _departureTimeNotifier.addListener(_syncDepartureTimeToParent);
+  }
+
+  void _updateCanContinue() {
+    widget.canContinueNotifier?.value =
+        _departureCityNotifier.value != null &&
+        _arrivalCityNotifier.value != null &&
+        _departureDateNotifier.value != null;
   }
 
   void _syncCanSubmit() {
@@ -556,6 +579,9 @@ class _CreateAnnouncementContentState
 
   @override
   void dispose() {
+    _departureCityNotifier.removeListener(_updateCanContinue);
+    _arrivalCityNotifier.removeListener(_updateCanContinue);
+    _departureDateNotifier.removeListener(_updateCanContinue);
     _departureCityNotifier.removeListener(_syncCityToFormBloc);
     _arrivalCityNotifier.removeListener(_syncCityToFormBloc);
     _departureDateNotifier.removeListener(_syncDateToFormBloc);
