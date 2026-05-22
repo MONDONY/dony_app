@@ -2,13 +2,15 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
+import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
-import 'package:local_auth/local_auth.dart';
 
 class AcceptOfferBottomSheet {
   const AcceptOfferBottomSheet._();
@@ -46,22 +48,23 @@ class AcceptOfferBottomSheet {
                     : 'Confirmer (${priceEur.toStringAsFixed(0)} €)',
             isLoading: loading,
             onPressed: () async {
-              final auth = LocalAuthentication();
+              final authenticated = await requirePaymentAuth(
+                ctx,
+                authService: getIt<LocalAuthService>(),
+                userPrefs: getIt<HiveService>().userPrefs,
+              );
+              if (!ctx.mounted) return;
+              if (!authenticated) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                        'Authentification requise pour effectuer le paiement'),
+                    backgroundColor: kError,
+                  ),
+                );
+                return;
+              }
               try {
-                final canCheck = await auth.canCheckBiometrics ||
-                    await auth.isDeviceSupported();
-                if (canCheck) {
-                  final ok = await auth.authenticate(
-                    localizedReason: isCheckout
-                        ? 'Confirmez votre identité pour valider le paiement'
-                        : 'Confirmez votre identité pour accepter l\'offre',
-                    options: const AuthenticationOptions(
-                      biometricOnly: false,
-                      stickyAuth: true,
-                    ),
-                  );
-                  if (!ok) return;
-                }
                 if (isCheckout) {
                   // Stripe escrow flow:
                   //  1. Backend creates the PaymentIntent and returns clientSecret.
