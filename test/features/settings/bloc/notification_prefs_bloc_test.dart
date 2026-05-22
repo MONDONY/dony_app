@@ -189,7 +189,7 @@ void main() {
     blocTest<NotificationPrefsBloc, NotificationPrefsState>(
       'syncPrefs est appelé même si le repo lance une exception',
       build: () {
-        when(() => mockRepo.syncPrefs(any())).thenThrow(Exception('network'));
+        when(() => mockRepo.syncPrefs(any())).thenAnswer((_) async => throw Exception('network'));
         return NotificationPrefsBloc(mockBox, mockRepo);
       },
       act: (bloc) => bloc.add(const NotifPrefToggled('push_promo')),
