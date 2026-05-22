@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:flutter_skill/flutter_skill.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -29,6 +30,9 @@ const _stripePublishableKey = String.fromEnvironment('STRIPE_PUBLISHABLE_KEY');
 
 Future<void> _bootstrap() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  if (kDebugMode) {
+    FlutterSkillBinding.ensureInitialized();
+  }
   // Edge-to-edge : l'app dessine derrière la barre nav Android.
   // systemNavigationBarColor transparent supprime le scrim noir par défaut.
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);

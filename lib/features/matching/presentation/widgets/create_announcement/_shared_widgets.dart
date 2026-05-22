@@ -142,17 +142,24 @@ class CaInlineAddRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: DonySpacing.sm),
-          GestureDetector(
-            onTap: onAdd,
-            child: Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: accentColor,
-                shape: BoxShape.circle,
+          Semantics(
+            label: 'Ajouter un article',
+            button: true,
+            child: Tooltip(
+              message: 'Ajouter',
+              child: GestureDetector(
+                onTap: onAdd,
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: accentColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.add_rounded,
+                      size: 18, color: DonyColors.white),
+                ),
               ),
-              child: const Icon(Icons.add_rounded,
-                  size: 18, color: DonyColors.white),
             ),
           ),
         ],

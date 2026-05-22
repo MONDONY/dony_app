@@ -293,11 +293,16 @@ class PrixConditionsStep extends StatelessWidget {
                             ],
                             const SizedBox(height: DonySpacing.sm),
                             Text(
-                              kg == 0
-                                  ? 'Capacité illimitée — estimation selon la demande'
-                                  : 'Estimation : ${grossEstimate.toStringAsFixed(0)}€ · vous touchez ${netEstimate.toStringAsFixed(0)}€',
-                              style: tt.bodySmall
-                                  ?.copyWith(color: cs.onSurfaceVariant),
+                              selectedIdx == -1
+                                  ? 'Sélectionnez un prix pour voir l\'estimation'
+                                  : kg == 0
+                                      ? 'Capacité illimitée — estimation selon la demande'
+                                      : 'Estimation : ${grossEstimate.toStringAsFixed(0)}€ · vous touchez ${netEstimate.toStringAsFixed(0)}€',
+                              style: tt.bodySmall?.copyWith(
+                                color: selectedIdx == -1
+                                    ? cs.error.withValues(alpha: 0.7)
+                                    : cs.onSurfaceVariant,
+                              ),
                             ),
                           ],
                         );

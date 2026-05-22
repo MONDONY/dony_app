@@ -2,8 +2,8 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
 
 class SearchParams {
-  final String departureCity;
-  final String arrivalCity;
+  final String? departureCity;
+  final String? arrivalCity;
   final DateTime? date;
   final double weightKg;
   final double maxPricePerKg;
@@ -17,8 +17,8 @@ class SearchParams {
   final UrgencyFilter? urgencyFilter;
 
   const SearchParams({
-    required this.departureCity,
-    required this.arrivalCity,
+    this.departureCity,
+    this.arrivalCity,
     this.date,
     this.weightKg = 6,
     this.maxPricePerKg = 25,

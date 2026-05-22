@@ -95,6 +95,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   gal: ^2.3.2
+  flutter_skill: ^0.9.36
 
 dev_dependencies:
   flutter_test:

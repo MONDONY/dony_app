@@ -49,7 +49,17 @@ class CreateAnnouncementBottomSheet {
         ValueNotifier<bool>(announcement?.transportMode != null || lockContext != null);
     final currentStepNotifier = ValueNotifier<int>(0);
     final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+    // true dès que ville départ + ville arrivée + date sont renseignés (étape 0).
+    // Initialisé à true en mode édition car les champs sont pré-remplis.
+    final canContinueNotifier = ValueNotifier<bool>(announcement != null);
+    // true dès que lieu de remise + lieu de récupération sont renseignés (étape 1).
+    final canContinueStep1Notifier = ValueNotifier<bool>(
+      announcement?.pickupAddress != null && announcement?.deliveryAddress != null,
+    );
     VoidCallback? submit;
+    // Callback de validation de l'étape 0 (Trajet) — injecté depuis le widget Content.
+    // Retourne true si les champs obligatoires sont renseignés.
+    bool Function()? validateStep0;
     final isLocked = lockContext != null;
     return DonyBottomSheet.show(
       context,
@@ -97,10 +107,12 @@ class CreateAnnouncementBottomSheet {
               },
             )
           : ListenableBuilder(
-              listenable: Listenable.merge([canSubmitNotifier, currentStepNotifier]),
+              listenable: Listenable.merge([canSubmitNotifier, currentStepNotifier, canContinueNotifier, canContinueStep1Notifier]),
               builder: (ctx, _) {
                 final step = currentStepNotifier.value;
                 final canSubmit = canSubmitNotifier.value;
+                final canContinue = canContinueNotifier.value;
+                final canContinueStep1 = canContinueStep1Notifier.value;
 
                 if (step < 2) {
                   return Row(
@@ -120,7 +132,15 @@ class CreateAnnouncementBottomSheet {
                         child: DonyButton(
                           label: 'Continuer',
                           iconRight: DonyIcons.arrowRight,
-                          onPressed: () => currentStepNotifier.value = step + 1,
+                          onPressed: ((step == 0 && !canContinue) || (step == 1 && !canContinueStep1))
+                              ? null
+                              : () {
+                                  if (step == 0) {
+                                    final isValid = validateStep0?.call() ?? true;
+                                    if (!isValid) return;
+                                  }
+                                  currentStepNotifier.value = step + 1;
+                                },
                         ),
                       ),
                     ],
@@ -239,12 +259,17 @@ class CreateAnnouncementBottomSheet {
         announcement: announcement,
         lockContext: lockContext,
         canSubmitNotifier: canSubmitNotifier,
+        canContinueNotifier: canContinueNotifier,
+        canContinueStep1Notifier: canContinueStep1Notifier,
         currentStepNotifier: currentStepNotifier,
         departureTimeNotifier: departureTimeNotifier,
         onSubmitReady: (fn) => submit = fn,
+        onValidateStep0Ready: (fn) => validateStep0 = fn,
       ),
     ).whenComplete(() {
       canSubmitNotifier.dispose();
+      canContinueNotifier.dispose();
+      canContinueStep1Notifier.dispose();
       currentStepNotifier.dispose();
       departureTimeNotifier.dispose();
     });
@@ -257,16 +282,25 @@ class _CreateAnnouncementContent extends StatefulWidget {
   final AnnouncementModel? announcement;
   final LockedTripContext? lockContext;
   final ValueNotifier<bool>? canSubmitNotifier;
+  final ValueNotifier<bool>? canContinueNotifier;
+  final ValueNotifier<bool>? canContinueStep1Notifier;
   final ValueNotifier<int>? currentStepNotifier;
   final ValueNotifier<TimeOfDay?>? departureTimeNotifier;
   final void Function(VoidCallback)? onSubmitReady;
+  /// Injecte le callback de validation de l'étape 0 dans le parent (show()).
+  /// Le callback retourne true si tous les champs obligatoires de l'étape 0
+  /// (ville départ, ville arrivée, date) sont renseignés.
+  final void Function(bool Function())? onValidateStep0Ready;
   const _CreateAnnouncementContent({
     this.announcement,
     this.lockContext,
     this.canSubmitNotifier,
+    this.canContinueNotifier,
+    this.canContinueStep1Notifier,
     this.currentStepNotifier,
     this.departureTimeNotifier,
     this.onSubmitReady,
+    this.onValidateStep0Ready,
   });
 
   @override
@@ -285,7 +319,7 @@ class _CreateAnnouncementContentState
   AddressData? _pickupAddress;
   AddressData? _deliveryAddress;
   final _availableKgNotifier = ValueNotifier<double>(15);
-  final _priceOptionNotifier = ValueNotifier<int>(1);
+  final _priceOptionNotifier = ValueNotifier<int>(-1); // -1 = aucune sélection
   final _transportModeNotifier = ValueNotifier<TransportMode?>(null);
   final _selectedContentNotifier = ValueNotifier<Set<String>>(
     {'Vêtements', 'Médicaments', 'Documents'},
@@ -306,6 +340,22 @@ class _CreateAnnouncementContentState
   double get _pricePerKg => _isCustomPrice
       ? _customPriceNotifier.value
       : kPriceOptions[_priceOptionNotifier.value.clamp(0, kPriceOptions.length - 1)];
+
+  // Vrai si le prix est correctement renseigné :
+  // — mode verrouillé → prix fixé par la demande, toujours valide
+  // — kg toggle OFF (mode grille) → tarification via la grille, toujours valide
+  // — aucun choix effectué (idx == -1) → invalide
+  // — chip preset sélectionnée → valide
+  // — "Autre prix" sélectionné → le champ doit contenir un nombre > 0
+  bool get _isPriceValid {
+    if (_isLocked) return true;
+    if (!_kgPriceEnabledNotifier.value) return true;
+    final idx = _priceOptionNotifier.value;
+    if (idx == -1) return false;
+    if (!_isCustomPrice) return true;
+    final parsed = double.tryParse(_customPriceCtrl.text.replaceAll(',', '.'));
+    return parsed != null && parsed > 0;
+  }
 
   @override
   void initState() {
@@ -400,16 +450,25 @@ class _CreateAnnouncementContentState
       });
     }
     widget.onSubmitReady?.call(_submit);
+    widget.onValidateStep0Ready?.call(_validateStep0);
     _kgPriceEnabledNotifier = ValueNotifier<bool>(true); // KG = ON par défaut
     _kgPriceEnabledNotifier.addListener(_onKgToggleChanged);
+    _kgPriceEnabledNotifier.addListener(_syncCanSubmit);
     _transportModeNotifier.addListener(_syncCanSubmit);
+    _priceOptionNotifier.addListener(_syncCanSubmit);
+    _customPriceCtrl.addListener(_syncCanSubmit);
     // Avion sélectionné par défaut en mode création
     if (!_isEdit && !_isLocked) {
       _transportModeNotifier.value = TransportMode.plane;
-      widget.canSubmitNotifier?.value = true;
-    } else {
-      widget.canSubmitNotifier?.value = _transportModeNotifier.value != null;
     }
+    _syncCanSubmit(); // état initial — transport + prix
+
+    // Désactivation du bouton Continuer tant que les 3 champs obligatoires
+    // de l'étape 0 ne sont pas renseignés.
+    _departureCityNotifier.addListener(_updateCanContinue);
+    _arrivalCityNotifier.addListener(_updateCanContinue);
+    _departureDateNotifier.addListener(_updateCanContinue);
+    _updateCanContinue(); // état initial (pré-remplissage en mode édition)
 
     // Sync form fields to AnnouncementFormBloc for preview and validation
     _departureCityNotifier.addListener(_syncCityToFormBloc);
@@ -427,8 +486,39 @@ class _CreateAnnouncementContentState
     _departureTimeNotifier.addListener(_syncDepartureTimeToParent);
   }
 
+  void _updateCanContinue() {
+    widget.canContinueNotifier?.value =
+        _departureCityNotifier.value != null &&
+        _arrivalCityNotifier.value != null &&
+        _departureDateNotifier.value != null;
+  }
+
+  void _updateCanContinueStep1() {
+    widget.canContinueStep1Notifier?.value =
+        _pickupAddress != null && _deliveryAddress != null;
+  }
+
   void _syncCanSubmit() {
-    widget.canSubmitNotifier?.value = _transportModeNotifier.value != null;
+    widget.canSubmitNotifier?.value =
+        _transportModeNotifier.value != null && _isPriceValid;
+  }
+
+  /// Valide les champs obligatoires de l'étape 0 (Trajet).
+  /// Affiche un snackbar d'erreur si un champ manque et retourne false.
+  bool _validateStep0() {
+    if (_departureCityNotifier.value == null) {
+      _showError('Remplis tous les champs obligatoires');
+      return false;
+    }
+    if (_arrivalCityNotifier.value == null) {
+      _showError('Remplis tous les champs obligatoires');
+      return false;
+    }
+    if (_departureDateNotifier.value == null) {
+      _showError('Remplis tous les champs obligatoires');
+      return false;
+    }
+    return true;
   }
 
   void _syncCityToFormBloc() {
@@ -454,6 +544,7 @@ class _CreateAnnouncementContentState
   void _syncPriceToFormBloc() {
     if (!mounted) return;
     if (!_kgPriceEnabledNotifier.value) return; // évite d'écraser le clear
+    if (_priceOptionNotifier.value == -1) return; // pas encore de sélection
     context
         .read<AnnouncementFormBloc>()
         .add(PriceChanged(_pricePerKg));
@@ -521,6 +612,9 @@ class _CreateAnnouncementContentState
 
   @override
   void dispose() {
+    _departureCityNotifier.removeListener(_updateCanContinue);
+    _arrivalCityNotifier.removeListener(_updateCanContinue);
+    _departureDateNotifier.removeListener(_updateCanContinue);
     _departureCityNotifier.removeListener(_syncCityToFormBloc);
     _arrivalCityNotifier.removeListener(_syncCityToFormBloc);
     _departureDateNotifier.removeListener(_syncDateToFormBloc);
@@ -536,6 +630,9 @@ class _CreateAnnouncementContentState
     _refusedTypesNotifier.removeListener(_syncRejectedTypesToFormBloc);
     _departureTimeNotifier.removeListener(_syncDepartureTimeToParent);
     _kgPriceEnabledNotifier.removeListener(_onKgToggleChanged);
+    _kgPriceEnabledNotifier.removeListener(_syncCanSubmit);
+    _priceOptionNotifier.removeListener(_syncCanSubmit);
+    _customPriceCtrl.removeListener(_syncCanSubmit);
     _kgPriceEnabledNotifier.dispose();
     _cashEnabledNotifier.dispose();
     _descriptionCtrl.dispose();
@@ -869,10 +966,12 @@ class _CreateAnnouncementContentState
         onPickupSaved: (v) => _pickupAddress = v,
         onPickupChanged: (addr) {
           _pickupAddress = addr;
+          _updateCanContinueStep1();
         },
         onDeliverySaved: (v) => _deliveryAddress = v,
         onDeliveryChanged: (addr) {
           _deliveryAddress = addr;
+          _updateCanContinueStep1();
         },
       ),
     ];

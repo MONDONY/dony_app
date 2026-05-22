@@ -82,7 +82,7 @@ class SearchFormBottomSheet {
               Expanded(
                 flex: 2,
                 child: DonyButton(
-                  label: count > 0 ? 'Rechercher · $count filtres' : 'Rechercher',
+                  label: count == 1 ? 'Rechercher · 1 filtre' : count > 1 ? 'Rechercher · $count filtres' : 'Rechercher',
                   onPressed: () => submitFn?.call(),
                 ),
               ),
@@ -205,12 +205,9 @@ class _SearchFormContentState extends State<_SearchFormContent> {
   }
 
   void _submit() {
-    final departureCity = _departureCityNotifier.value;
-    final arrivalCity = _arrivalCityNotifier.value;
-    if (departureCity == null || arrivalCity == null) return;
     Navigator.of(context, rootNavigator: true).pop(SearchParams(
-      departureCity: departureCity,
-      arrivalCity: arrivalCity,
+      departureCity: _departureCityNotifier.value,
+      arrivalCity: _arrivalCityNotifier.value,
       date: _dateNotifier.value,
       weightKg: _weightKgNotifier.value,
       maxPricePerKg: _maxPricePerKgNotifier.value,
@@ -226,6 +223,8 @@ class _SearchFormContentState extends State<_SearchFormContent> {
   }
 
   void _reset() {
+    _departureCityNotifier.value = null;
+    _arrivalCityNotifier.value = null;
     _dateNotifier.value = null;
     _weightKgNotifier.value = 6;
     _maxPricePerKgNotifier.value = 25;
