@@ -4,8 +4,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:local_auth/local_auth.dart';
 
-class SecuritySettingsScreen extends StatelessWidget {
+class SecuritySettingsScreen extends StatefulWidget {
   const SecuritySettingsScreen({super.key});
+
+  @override
+  State<SecuritySettingsScreen> createState() => _SecuritySettingsScreenState();
+}
+
+class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
+  late final Future<bool> _biometricFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    final auth = LocalAuthentication();
+    _biometricFuture = Future.wait([
+      auth.canCheckBiometrics,
+      auth.isDeviceSupported(),
+    ]).then((r) => r[0] || r[1]);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +31,7 @@ class SecuritySettingsScreen extends StatelessWidget {
     return Scaffold(
       appBar: const DonyAppBar(title: 'Sécurité'),
       body: FutureBuilder<bool>(
-        future: LocalAuthentication().canCheckBiometrics,
+        future: _biometricFuture,
         builder: (context, snapshot) {
           final biometricAvailable = snapshot.data ?? false;
 
