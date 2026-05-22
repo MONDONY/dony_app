@@ -16,4 +16,16 @@ class NotificationPrefsDatasource {
       },
     );
   }
+
+  Future<Map<String, bool>> fetchPrefs() async {
+    final response = await _apiClient.dio.get('/notifications/preferences');
+    final data = response.data as Map<String, dynamic>;
+    return {
+      'push_activity_bids':         (data['pushActivityBids']         as bool?) ?? true,
+      'push_activity_negotiations': (data['pushActivityNegotiations'] as bool?) ?? true,
+      'push_messages':              (data['pushMessages']              as bool?) ?? true,
+      'push_trip_reminder':         (data['pushTripReminder']         as bool?) ?? true,
+      'push_promo':                 (data['pushPromo']                as bool?) ?? false,
+    };
+  }
 }

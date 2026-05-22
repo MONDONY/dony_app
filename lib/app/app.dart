@@ -66,21 +66,15 @@ class _DonyAppState extends State<DonyApp> {
     _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
       if (user != null) {
         getIt<NotificationService>().uploadCurrentToken();
-        _syncNotificationPrefsToBackend();
+        _fetchNotificationPrefsFromBackend();
       }
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _initDeepLinks());
   }
 
-  void _syncNotificationPrefsToBackend() {
-    final box = getIt<HiveService>().userPrefs;
-    getIt<NotificationPrefsRepository>().syncPrefs({
-      'push_activity_bids':         box.get('notif_push_activity_bids', defaultValue: true) as bool,
-      'push_activity_negotiations': box.get('notif_push_activity_negotiations', defaultValue: true) as bool,
-      'push_messages':              box.get('notif_push_messages', defaultValue: true) as bool,
-      'push_trip_reminder':         box.get('notif_push_trip_reminder', defaultValue: true) as bool,
-      'push_promo':                 box.get('notif_push_promo', defaultValue: false) as bool,
-    });
+  void _fetchNotificationPrefsFromBackend() {
+    getIt<NotificationPrefsRepository>()
+        .fetchAndApplyPrefs(getIt<HiveService>().userPrefs);
   }
 
   void _initDeepLinks() {
