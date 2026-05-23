@@ -34,8 +34,10 @@ import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
 import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
 import 'package:dony/features/settings/data/datasources/blocked_users_datasource.dart';
+import 'package:dony/features/settings/data/datasources/business_prefs_remote_datasource.dart';
 import 'package:dony/features/settings/data/datasources/privacy_settings_datasource.dart';
 import 'package:dony/features/settings/data/repositories/blocked_users_repository.dart';
+import 'package:dony/features/settings/data/repositories/business_prefs_repository.dart';
 import 'package:dony/features/settings/data/repositories/privacy_settings_repository.dart';
 import 'package:dony/features/settings/data/connected_devices_datasource.dart';
 import 'package:dony/features/settings/data/connected_devices_repository.dart';
@@ -372,9 +374,16 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => NotificationPrefsBloc(getIt<HiveService>().userPrefs),
   );
 
-  // Settings — Business preferences (weight unit, currency, pickup radius)
-  getIt.registerFactory<BusinessPrefsBloc>(
-    () => BusinessPrefsBloc(getIt<HiveService>().userPrefs),
+  // Settings — Business preferences (Hive + API sync)
+  getIt.registerLazySingleton<BusinessPrefsRemoteDatasource>(
+    () => BusinessPrefsRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<BusinessPrefsRepository>(
+    () => BusinessPrefsRepository(getIt<BusinessPrefsRemoteDatasource>()),
+  );
+  getIt.registerLazySingleton<BusinessPrefsBloc>(
+    () => BusinessPrefsBloc(getIt<BusinessPrefsRepository>(), getIt<HiveService>().userPrefs),
+    dispose: (b) => b.close(),
   );
 
   // Settings — Accessibility (text scale, high contrast, reduce animations)
