@@ -17,6 +17,7 @@ import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:dony/features/payments/cash/data/models/commission_method.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -53,7 +54,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   final _arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
   AddressData? _pickupAddress;
   AddressData? _deliveryAddress;
-  final _availableKgNotifier = ValueNotifier<double>(15);
+  late final ValueNotifier<double> _availableKgNotifier;
   final _priceOptionNotifier = ValueNotifier<int>(1);
   final _transportModeNotifier = ValueNotifier<TransportMode?>(null);
   final _selectedContentNotifier = ValueNotifier<Set<String>>(
@@ -72,6 +73,11 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   @override
   void initState() {
     super.initState();
+    // Initialize _availableKgNotifier from pref (clamped to slider bounds 1–23)
+    final defaultKg = getIt<BusinessPrefsBloc>().state.defaultPackageWeightKg;
+    _availableKgNotifier = ValueNotifier<double>(
+      defaultKg.toDouble().clamp(1.0, 23.0),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<CommissionMethodBloc>().add(CommissionMethodLoadRequested());
