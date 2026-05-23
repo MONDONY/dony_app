@@ -126,5 +126,80 @@ void main() {
       act: (b) => b.add(const ConversationsUnreadUpdated({'conv_bid-1': 2})),
       expect: () => <ConversationListState>[],
     );
+
+    blocTest<ConversationListBloc, ConversationListState>(
+      'ConversationFilterChanged met à jour filter et searchQuery dans le state',
+      build: () {
+        when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
+        when(() => firestoreRepo.perConversationUnreadStream(any()))
+            .thenAnswer((_) => const Stream.empty());
+        return ConversationListBloc(convRepo, firestoreRepo);
+      },
+      act: (b) async {
+        b.add(const ConversationsLoadRequested());
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        b.add(const ConversationFilterChanged(
+          filter: ConversationFilter.unread,
+          searchQuery: 'test',
+        ));
+      },
+      expect: () => [
+        isA<ConversationListLoading>(),
+        isA<ConversationListLoaded>()
+            .having((s) => s.filter, 'filter', ConversationFilter.all)
+            .having((s) => s.searchQuery, 'searchQuery', ''),
+        isA<ConversationListLoaded>()
+            .having((s) => s.filter, 'filter', ConversationFilter.unread)
+            .having((s) => s.searchQuery, 'searchQuery', 'test'),
+      ],
+    );
+
+    blocTest<ConversationListBloc, ConversationListState>(
+      'ConversationArchiveRequested retire la conversation localement',
+      build: () {
+        when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
+        when(() => firestoreRepo.perConversationUnreadStream(any()))
+            .thenAnswer((_) => const Stream.empty());
+        return ConversationListBloc(convRepo, firestoreRepo);
+      },
+      act: (b) async {
+        b.add(const ConversationsLoadRequested());
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        b.add(const ConversationArchiveRequested('conv-1'));
+      },
+      expect: () => [
+        isA<ConversationListLoading>(),
+        isA<ConversationListLoaded>().having((s) => s.conversations.length, 'length', 1),
+        isA<ConversationListLoaded>().having((s) => s.conversations.length, 'length', 0),
+      ],
+    );
+
+    blocTest<ConversationListBloc, ConversationListState>(
+      'filter est préservé après ConversationsUnreadUpdated',
+      build: () {
+        when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
+        when(() => firestoreRepo.perConversationUnreadStream(any()))
+            .thenAnswer((_) => const Stream.empty());
+        return ConversationListBloc(convRepo, firestoreRepo);
+      },
+      act: (b) async {
+        b.add(const ConversationsLoadRequested());
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        b.add(const ConversationFilterChanged(
+          filter: ConversationFilter.unread,
+          searchQuery: '',
+        ));
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        b.add(const ConversationsUnreadUpdated({'conv_bid-1': 2}));
+      },
+      expect: () => [
+        isA<ConversationListLoading>(),
+        isA<ConversationListLoaded>(),
+        isA<ConversationListLoaded>()
+            .having((s) => s.filter, 'filter', ConversationFilter.unread),
+        isA<ConversationListLoaded>()
+            .having((s) => s.filter, 'filter', ConversationFilter.unread),
+      ],
+    );
   });
 }
