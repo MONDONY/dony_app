@@ -3,7 +3,9 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/firebase/firebase_options.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
+import 'package:dony/features/settings/data/connected_devices_repository.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -71,6 +73,22 @@ Future<void> _bootstrap() async {
   // Hive doit être ouvert avant runApp : AppPreferencesBloc accède à
   // userPrefs dès le premier build() de DonyApp.
   await getIt<HiveService>().init();
+
+  // Détection de révocation : si la session est restaurée mais que cet appareil
+  // a été révoqué depuis un autre appareil, on déconnecte avant runApp.
+  // Avant runApp = le listener authStateChanges d'app.dart n'existe pas encore,
+  // donc aucune ré-inscription concurrente n'est possible.
+  // Un démarrage à froid avec currentUser != null est forcément une session
+  // restaurée (le login interactif se fait après) : "non enregistré" = révoqué.
+  final restoredUser = FirebaseAuth.instance.currentUser;
+  if (restoredUser != null) {
+    final stillRegistered = await getIt<ConnectedDevicesRepository>()
+        .isCurrentDeviceRegistered()
+        .timeout(const Duration(seconds: 4), onTimeout: () => true);
+    if (!stillRegistered) {
+      await FirebaseAuth.instance.signOut();
+    }
+  }
 
   // Show UI immediately — splash screen handles loading state
   runApp(const DonyApp());
