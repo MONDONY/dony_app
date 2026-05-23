@@ -257,17 +257,10 @@ class _MessagesHeader extends StatelessWidget {
                     ),
                   )
                 else
-                  TextButton(
+                  IconButton(
                     onPressed: () => context.push('/messages/archives'),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.sm,
-                      ),
-                    ),
-                    child: Text(
-                      'Archives',
-                      style: tt.labelMedium?.copyWith(color: cs.primary),
-                    ),
+                    icon: const Icon(Icons.archive_outlined),
+                    color: cs.onSurfaceVariant,
                   ),
               ],
             ),
