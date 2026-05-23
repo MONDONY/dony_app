@@ -101,7 +101,9 @@ import 'package:dony/features/settings/presentation/screens/legal_web_view_scree
 import 'package:dony/features/settings/presentation/screens/notification_settings_screen.dart';
 import 'package:dony/features/settings/presentation/screens/privacy_settings_screen.dart';
 import 'package:dony/features/settings/presentation/screens/security_settings_screen.dart';
+import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
 import 'package:dony/features/settings/bloc/connected_devices_bloc.dart';
+import 'package:dony/features/settings/presentation/screens/blocked_users_screen.dart';
 import 'package:dony/features/settings/presentation/screens/connected_devices_screen.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
@@ -677,9 +679,20 @@ final appRouter = GoRouter(
         GoRoute(
           path: 'privacy',
           builder: (context, state) => BlocProvider(
-            create: (_) => getIt<PrivacySettingsBloc>(),
+            create: (_) => getIt<PrivacySettingsBloc>()
+              ..add(const PrivacySettingsLoadRequested()),
             child: const PrivacySettingsScreen(),
           ),
+          routes: [
+            GoRoute(
+              path: 'blocked-users',
+              builder: (context, state) => BlocProvider(
+                create: (_) => getIt<BlockedUsersBloc>()
+                  ..add(const BlockedUsersLoadRequested()),
+                child: const BlockedUsersScreen(),
+              ),
+            ),
+          ],
         ),
         GoRoute(
           path: 'data',

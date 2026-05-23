@@ -31,7 +31,12 @@ import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/settings/bloc/data_export_bloc.dart';
 import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
 import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
+import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
 import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
+import 'package:dony/features/settings/data/datasources/blocked_users_datasource.dart';
+import 'package:dony/features/settings/data/datasources/privacy_settings_datasource.dart';
+import 'package:dony/features/settings/data/repositories/blocked_users_repository.dart';
+import 'package:dony/features/settings/data/repositories/privacy_settings_repository.dart';
 import 'package:dony/features/settings/data/connected_devices_datasource.dart';
 import 'package:dony/features/settings/data/connected_devices_repository.dart';
 import 'package:dony/features/settings/data/account_deletion_repository.dart';
@@ -339,9 +344,24 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => AppPreferencesBloc(getIt<HiveService>().userPrefs),
   );
 
-  // Settings — Privacy (profile visibility, hide phone)
+  // Settings — Privacy (contactKycOnly via backend)
+  getIt.registerLazySingleton<PrivacySettingsDatasource>(
+    () => PrivacySettingsDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<PrivacySettingsRepository>(
+    () => PrivacySettingsRepository(getIt<PrivacySettingsDatasource>()),
+  );
   getIt.registerFactory<PrivacySettingsBloc>(
-    () => PrivacySettingsBloc(getIt<HiveService>().userPrefs),
+    () => PrivacySettingsBloc(getIt<PrivacySettingsRepository>()),
+  );
+  getIt.registerLazySingleton<BlockedUsersDatasource>(
+    () => BlockedUsersDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<BlockedUsersRepository>(
+    () => BlockedUsersRepository(getIt<BlockedUsersDatasource>()),
+  );
+  getIt.registerFactory<BlockedUsersBloc>(
+    () => BlockedUsersBloc(getIt<BlockedUsersRepository>()),
   );
 
   // Settings — Notification preferences
