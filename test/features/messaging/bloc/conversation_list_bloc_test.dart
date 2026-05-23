@@ -34,6 +34,7 @@ void main() {
       'emits Loading → Loaded when load succeeds',
       build: () {
         when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
+        when(() => convRepo.getArchivedConversations()).thenAnswer((_) async => []);
         when(() => firestoreRepo.perConversationUnreadStream(any()))
             .thenAnswer((_) => const Stream.empty());
         return ConversationListBloc(convRepo, firestoreRepo);
@@ -64,6 +65,7 @@ void main() {
       'emits updated Loaded state with hasUnread=true when unread count > 0',
       build: () {
         when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
+        when(() => convRepo.getArchivedConversations()).thenAnswer((_) async => []);
         when(() => firestoreRepo.perConversationUnreadStream(any()))
             .thenAnswer((_) => const Stream.empty());
         return ConversationListBloc(convRepo, firestoreRepo);
@@ -88,6 +90,7 @@ void main() {
       'ConversationDeleteRequested removes the conversation locally and calls API',
       build: () {
         when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
+        when(() => convRepo.getArchivedConversations()).thenAnswer((_) async => []);
         when(() => firestoreRepo.perConversationUnreadStream(any()))
             .thenAnswer((_) => const Stream.empty());
         when(() => firestoreRepo.markConversationRead(any(), any()))
@@ -119,6 +122,7 @@ void main() {
       'ConversationsUnreadUpdated does nothing when no conversations loaded',
       build: () {
         when(() => convRepo.getConversations()).thenAnswer((_) async => []);
+        when(() => convRepo.getArchivedConversations()).thenAnswer((_) async => []);
         when(() => firestoreRepo.perConversationUnreadStream(any()))
             .thenAnswer((_) => const Stream.empty());
         return ConversationListBloc(convRepo, firestoreRepo);
@@ -131,6 +135,7 @@ void main() {
       'ConversationFilterChanged met à jour filter et searchQuery dans le state',
       build: () {
         when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
+        when(() => convRepo.getArchivedConversations()).thenAnswer((_) async => []);
         when(() => firestoreRepo.perConversationUnreadStream(any()))
             .thenAnswer((_) => const Stream.empty());
         return ConversationListBloc(convRepo, firestoreRepo);
@@ -155,9 +160,11 @@ void main() {
     );
 
     blocTest<ConversationListBloc, ConversationListState>(
-      'ConversationArchiveRequested retire la conversation localement',
+      'ConversationArchiveRequested retire la conversation localement et appelle l\'API',
       build: () {
         when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
+        when(() => convRepo.getArchivedConversations()).thenAnswer((_) async => []);
+        when(() => convRepo.archiveConversation(any())).thenAnswer((_) async {});
         when(() => firestoreRepo.perConversationUnreadStream(any()))
             .thenAnswer((_) => const Stream.empty());
         return ConversationListBloc(convRepo, firestoreRepo);
@@ -166,11 +173,17 @@ void main() {
         b.add(const ConversationsLoadRequested());
         await Future<void>.delayed(const Duration(milliseconds: 50));
         b.add(const ConversationArchiveRequested('conv-1'));
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      },
+      verify: (_) {
+        verify(() => convRepo.archiveConversation('conv-1')).called(1);
       },
       expect: () => [
         isA<ConversationListLoading>(),
         isA<ConversationListLoaded>().having((s) => s.conversations.length, 'length', 1),
-        isA<ConversationListLoaded>().having((s) => s.conversations.length, 'length', 0),
+        isA<ConversationListLoaded>()
+            .having((s) => s.conversations.length, 'conversations', 0)
+            .having((s) => s.archivedConversations.length, 'archived', 1),
       ],
     );
 
@@ -178,6 +191,8 @@ void main() {
       'filter est préservé après ConversationArchiveRequested',
       build: () {
         when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
+        when(() => convRepo.getArchivedConversations()).thenAnswer((_) async => []);
+        when(() => convRepo.archiveConversation(any())).thenAnswer((_) async {});
         when(() => firestoreRepo.perConversationUnreadStream(any()))
             .thenAnswer((_) => const Stream.empty());
         return ConversationListBloc(convRepo, firestoreRepo);
@@ -205,6 +220,7 @@ void main() {
     blocTest<ConversationListBloc, ConversationListState>(
       'ConversationFilter.active ne montre que les conversations BID_ACCEPTED',
       build: () {
+        when(() => convRepo.getArchivedConversations()).thenAnswer((_) async => []);
         final convActive = ConversationModel(
           id: _conv.id,
           bidId: _conv.bidId,
@@ -249,6 +265,7 @@ void main() {
     blocTest<ConversationListBloc, ConversationListState>(
       'ConversationFilter.done ne montre que les conversations DELIVERY_CONFIRMED',
       build: () {
+        when(() => convRepo.getArchivedConversations()).thenAnswer((_) async => []);
         final convDone = ConversationModel(
           id: _conv.id,
           bidId: _conv.bidId,
@@ -291,9 +308,45 @@ void main() {
     );
 
     blocTest<ConversationListBloc, ConversationListState>(
+      'ConversationUnarchiveRequested remet la conversation dans la liste et appelle l\'API',
+      build: () {
+        when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
+        when(() => convRepo.getArchivedConversations()).thenAnswer((_) async => []);
+        when(() => convRepo.archiveConversation(any())).thenAnswer((_) async {});
+        when(() => convRepo.unarchiveConversation(any())).thenAnswer((_) async {});
+        when(() => firestoreRepo.perConversationUnreadStream(any()))
+            .thenAnswer((_) => const Stream.empty());
+        return ConversationListBloc(convRepo, firestoreRepo);
+      },
+      act: (b) async {
+        b.add(const ConversationsLoadRequested());
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        b.add(const ConversationArchiveRequested('conv-1'));
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        b.add(const ConversationUnarchiveRequested('conv-1'));
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      },
+      verify: (_) {
+        verify(() => convRepo.unarchiveConversation('conv-1')).called(1);
+      },
+      expect: () => [
+        isA<ConversationListLoading>(),
+        isA<ConversationListLoaded>()
+            .having((s) => s.conversations.length, 'initial', 1),
+        isA<ConversationListLoaded>()
+            .having((s) => s.conversations.length, 'après archive', 0)
+            .having((s) => s.archivedConversations.length, 'archived', 1),
+        isA<ConversationListLoaded>()
+            .having((s) => s.conversations.length, 'après désarchive', 1)
+            .having((s) => s.archivedConversations.length, 'archived vide', 0),
+      ],
+    );
+
+    blocTest<ConversationListBloc, ConversationListState>(
       'filter est préservé après ConversationsUnreadUpdated',
       build: () {
         when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
+        when(() => convRepo.getArchivedConversations()).thenAnswer((_) async => []);
         when(() => firestoreRepo.perConversationUnreadStream(any()))
             .thenAnswer((_) => const Stream.empty());
         return ConversationListBloc(convRepo, firestoreRepo);

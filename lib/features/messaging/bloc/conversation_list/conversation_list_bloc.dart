@@ -40,10 +40,17 @@ class ConversationListBloc
     emit(const ConversationListLoading());
     try {
       final conversations = await _repository.getConversations();
+      List<ConversationModel> archived = [];
+      try {
+        archived = await _repository.getArchivedConversations();
+      } catch (_) {
+        // Archives non critiques — échec silencieux
+      }
       _loaded = conversations;
-      _archived = [];
+      _archived = archived;
       emit(ConversationListLoaded(
         conversations,
+        archivedConversations: archived,
         filter: _currentFilter,
         searchQuery: _currentSearchQuery,
       ));
@@ -145,10 +152,10 @@ class ConversationListBloc
     }
   }
 
-  void _onArchive(
+  Future<void> _onArchive(
     ConversationArchiveRequested event,
     Emitter<ConversationListState> emit,
-  ) {
+  ) async {
     if (_loaded == null) {
       return;
     }
@@ -157,12 +164,17 @@ class ConversationListBloc
       _archived = [..._archived, conv];
     }
     _removeFromLoaded(event.conversationId, emit);
+    try {
+      await _repository.archiveConversation(event.conversationId);
+    } catch (_) {
+      add(const ConversationsLoadRequested());
+    }
   }
 
-  void _onUnarchive(
+  Future<void> _onUnarchive(
     ConversationUnarchiveRequested event,
     Emitter<ConversationListState> emit,
-  ) {
+  ) async {
     final conv = _archived.where((c) => c.id == event.conversationId).firstOrNull;
     if (conv == null) {
       return;
@@ -175,6 +187,11 @@ class ConversationListBloc
       filter: _currentFilter,
       searchQuery: _currentSearchQuery,
     ));
+    try {
+      await _repository.unarchiveConversation(event.conversationId);
+    } catch (_) {
+      add(const ConversationsLoadRequested());
+    }
   }
 
   void _removeFromLoaded(String id, Emitter<ConversationListState> emit) {
