@@ -37,6 +37,22 @@ class ConversationRepository {
     return ConversationModel.fromJson(response.data as Map<String, dynamic>);
   }
 
+  Future<List<ConversationModel>> getArchivedConversations() async {
+    final response = await _api.dio.get('/conversations/archived');
+    final list = (response.data as List<dynamic>? ?? []);
+    return list
+        .map((e) => ConversationModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> archiveConversation(String id) async {
+    await _api.dio.post('/conversations/$id/archive');
+  }
+
+  Future<void> unarchiveConversation(String id) async {
+    await _api.dio.post('/conversations/$id/unarchive');
+  }
+
   Future<Map<String, String>> uploadImage(
       String conversationId, List<int> bytes, String filename) async {
     final formData = FormData.fromMap({

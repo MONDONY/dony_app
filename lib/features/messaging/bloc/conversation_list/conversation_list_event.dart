@@ -1,3 +1,5 @@
+import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_state.dart';
+
 abstract class ConversationListEvent {
   const ConversationListEvent();
 }
@@ -21,4 +23,23 @@ class ConversationDeleteRequested extends ConversationListEvent {
 class ConversationRemovedLocally extends ConversationListEvent {
   final String conversationId;
   const ConversationRemovedLocally(this.conversationId);
+}
+
+/// Pill de filtre ou saisie dans le champ de recherche.
+class ConversationFilterChanged extends ConversationListEvent {
+  final ConversationFilter filter;
+  final String searchQuery;
+  const ConversationFilterChanged({required this.filter, required this.searchQuery});
+}
+
+/// Swipe-to-archive : déplace vers la liste archivée sans appel API.
+class ConversationArchiveRequested extends ConversationListEvent {
+  final String conversationId;
+  const ConversationArchiveRequested(this.conversationId);
+}
+
+/// Désarchiver : remet la conversation dans la liste principale.
+class ConversationUnarchiveRequested extends ConversationListEvent {
+  final String conversationId;
+  const ConversationUnarchiveRequested(this.conversationId);
 }
