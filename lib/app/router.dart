@@ -27,6 +27,8 @@ import 'package:dony/features/matching/presentation/screens/bid_list_screen.dart
 import 'package:dony/features/matching/presentation/screens/create_announcement_screen.dart';
 import 'package:dony/features/matching/presentation/screens/matching_management_screen.dart';
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
+import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
+import 'package:dony/features/messaging/presentation/archived_conversations_screen.dart';
 import 'package:dony/features/notifications/presentation/inbox_screen.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
@@ -408,6 +410,15 @@ final appRouter = GoRouter(
       path: '/admin',
       builder: (context, state) =>
           const _PlaceholderScreen(title: 'Admin'),
+    ),
+
+    // ── Messagerie — archives (hors shell) ───────────────────────────────
+    GoRoute(
+      path: '/messages/archives',
+      builder: (context, state) => BlocProvider.value(
+        value: getIt<ConversationListBloc>(),
+        child: const ArchivedConversationsScreen(),
+      ),
     ),
 
     // ── Messagerie — conversation individuelle (hors shell) ─────────────
