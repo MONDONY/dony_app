@@ -73,8 +73,12 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize _availableKgNotifier from pref (clamped to slider bounds 1–23)
-    final defaultKg = getIt<BusinessPrefsBloc>().state.defaultPackageWeightKg;
+    // Initialize _availableKgNotifier from pref (clamped to slider bounds 1–23).
+    // BusinessPrefsBloc est toujours enregistré en prod ; absent dans certains
+    // widget tests isolés → on retombe sur la valeur par défaut DB (23 kg).
+    final defaultKg = getIt.isRegistered<BusinessPrefsBloc>()
+        ? getIt<BusinessPrefsBloc>().state.defaultPackageWeightKg
+        : 23;
     _availableKgNotifier = ValueNotifier<double>(
       defaultKg.toDouble().clamp(1.0, 23.0),
     );

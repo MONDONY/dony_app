@@ -423,58 +423,7 @@ class _BidListViewState extends State<_BidListView>
         controller: _tabController,
         children: [
           // Tab 0 — En attente (avec filtre minBidPriceEur)
-          BlocBuilder<BusinessPrefsBloc, BusinessPrefsState>(
-            bloc: getIt<BusinessPrefsBloc>(),
-            builder: (context, prefs) {
-              final minPrice = prefs.minBidPriceEur;
-              final visibleBids = minPrice == 0
-                  ? pendingBids
-                  : pendingBids
-                      .where((b) =>
-                          b.pricePerKg == null || b.pricePerKg! >= minPrice)
-                      .toList();
-              final hiddenCount = pendingBids.length - visibleBids.length;
-              return Column(
-                children: [
-                  if (hiddenCount > 0)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        DonySpacing.lg,
-                        DonySpacing.sm,
-                        DonySpacing.lg,
-                        0,
-                      ),
-                      child: _HiddenBidsBanner(
-                        count: hiddenCount,
-                        onShowAll: () => getIt<BusinessPrefsBloc>()
-                            .add(const MinBidPriceChanged(0)),
-                      ),
-                    ),
-                  Expanded(
-                    child: _PendingTab(
-                      bids: visibleBids,
-                      processingBidIds: _processingBidIds,
-                      onAccept: (bidId) {
-                        _addProcessing(bidId);
-                        final bid =
-                            pendingBids.firstWhere((b) => b.id == bidId);
-                        if (bid.paymentMethod == BidPaymentMethod.cash) {
-                          context
-                              .read<BidAcceptanceBloc>()
-                              .add(ace.BidAcceptRequested(bidId));
-                        } else {
-                          context
-                              .read<BidBloc>()
-                              .add(BidAcceptRequested(bidId));
-                        }
-                      },
-                      onReject: (bidId) => _showRejectDialog(context, bidId),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
+          _buildPendingTab(pendingBids),
           // Tab 1 — Acceptées
           _AcceptedTab(acceptedBids: acceptedBids),
         ],
@@ -498,6 +447,64 @@ class _BidListViewState extends State<_BidListView>
     if (confirmed == true && context.mounted) {
       context.read<BidBloc>().add(BidRejectRequested(bidId));
     }
+  }
+
+  // Onglet « En attente » avec filtre minBidPriceEur. Le filtre n'est appliqué
+  // que si BusinessPrefsBloc est enregistré (toujours le cas en prod ; absent
+  // dans certains widget tests isolés → liste non filtrée).
+  Widget _buildPendingTab(List<BidModel> pendingBids) {
+    Widget content(BuildContext context, int minPrice) {
+      final visibleBids = minPrice == 0
+          ? pendingBids
+          : pendingBids
+              .where((b) => b.pricePerKg == null || b.pricePerKg! >= minPrice)
+              .toList();
+      final hiddenCount = pendingBids.length - visibleBids.length;
+      return Column(
+        children: [
+          if (hiddenCount > 0)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.sm,
+                DonySpacing.lg,
+                0,
+              ),
+              child: _HiddenBidsBanner(
+                count: hiddenCount,
+                onShowAll: () => getIt<BusinessPrefsBloc>()
+                    .add(const MinBidPriceChanged(0)),
+              ),
+            ),
+          Expanded(
+            child: _PendingTab(
+              bids: visibleBids,
+              processingBidIds: _processingBidIds,
+              onAccept: (bidId) {
+                _addProcessing(bidId);
+                final bid = pendingBids.firstWhere((b) => b.id == bidId);
+                if (bid.paymentMethod == BidPaymentMethod.cash) {
+                  context
+                      .read<BidAcceptanceBloc>()
+                      .add(ace.BidAcceptRequested(bidId));
+                } else {
+                  context.read<BidBloc>().add(BidAcceptRequested(bidId));
+                }
+              },
+              onReject: (bidId) => _showRejectDialog(context, bidId),
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (!getIt.isRegistered<BusinessPrefsBloc>()) {
+      return Builder(builder: (context) => content(context, 0));
+    }
+    return BlocBuilder<BusinessPrefsBloc, BusinessPrefsState>(
+      bloc: getIt<BusinessPrefsBloc>(),
+      builder: (context, prefs) => content(context, prefs.minBidPriceEur),
+    );
   }
 }
 // ─────────────────────────────────────────────────────────────────────────────
