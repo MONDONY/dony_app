@@ -6,15 +6,16 @@ abstract class BusinessPrefsEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+// ── Existants ────────────────────────────────────────────────────────────────
 class WeightUnitChanged extends BusinessPrefsEvent {
-  final String unit; // 'kg' | 'lbs'
+  final String unit;
   const WeightUnitChanged(this.unit);
   @override
   List<Object?> get props => [unit];
 }
 
 class CurrencyChanged extends BusinessPrefsEvent {
-  final String code; // 'EUR' | 'XOF' | 'XAF'
+  final String code;
   const CurrencyChanged(this.code);
   @override
   List<Object?> get props => [code];
@@ -25,4 +26,37 @@ class PickupRadiusChanged extends BusinessPrefsEvent {
   const PickupRadiusChanged(this.km);
   @override
   List<Object?> get props => [km];
+}
+
+// ── Nouveaux ─────────────────────────────────────────────────────────────────
+class DefaultWeightChanged extends BusinessPrefsEvent {
+  final int kg;
+  const DefaultWeightChanged(this.kg);
+  @override
+  List<Object?> get props => [kg];
+}
+
+class MinBidPriceChanged extends BusinessPrefsEvent {
+  final int euros;
+  const MinBidPriceChanged(this.euros);
+  @override
+  List<Object?> get props => [euros];
+}
+
+class ContactModeChanged extends BusinessPrefsEvent {
+  final String? mode; // null = effacer la préférence
+  const ContactModeChanged(this.mode);
+  @override
+  List<Object?> get props => [mode];
+}
+
+class ResponseDelayChanged extends BusinessPrefsEvent {
+  final int? hours; // null = effacer la préférence
+  const ResponseDelayChanged(this.hours);
+  @override
+  List<Object?> get props => [hours];
+}
+
+class BusinessPrefsSyncRequested extends BusinessPrefsEvent {
+  const BusinessPrefsSyncRequested();
 }
