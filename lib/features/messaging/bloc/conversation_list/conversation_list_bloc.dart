@@ -76,7 +76,9 @@ class ConversationListBloc
     Emitter<ConversationListState> emit,
   ) {
     final conversations = _loaded;
-    if (conversations == null) return;
+    if (conversations == null) {
+      return;
+    }
     final updated = conversations.map((c) {
       final count = event.unreadMap[c.firestoreConversationId] ?? 0;
       return c.copyWith(hasUnread: count > 0, unreadCount: count);
@@ -147,7 +149,9 @@ class ConversationListBloc
   }
 
   void _removeFromLoaded(String id, Emitter<ConversationListState> emit) {
-    if (_loaded == null) return;
+    if (_loaded == null) {
+      return;
+    }
     _loaded = _loaded!.where((c) => c.id != id).toList();
     emit(ConversationListLoaded(
       _loaded!,
