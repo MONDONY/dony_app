@@ -713,8 +713,8 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: 'preferences',
-          builder: (context, state) => BlocProvider(
-            create: (_) => getIt<BusinessPrefsBloc>(),
+          builder: (context, state) => BlocProvider.value(
+            value: getIt<BusinessPrefsBloc>(),
             child: const BusinessPrefsScreen(),
           ),
         ),
