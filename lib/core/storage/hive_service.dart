@@ -35,6 +35,7 @@ class HiveService {
   // ── Confidentialité ──────────────────────────────────────────────────────
   static const String kProfileVisibility = 'profile_visibility'; // 'public' | 'limited'
   static const String kHidePhoneNumber   = 'hide_phone_number'; // bool
+  static const String kContactKycOnly    = 'contact_kyc_only';  // bool
 
   // ── Sécurité ─────────────────────────────────────────────────────────────
   static const String kBiometricEnabled   = 'biometric_enabled'; // bool

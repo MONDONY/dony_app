@@ -16,6 +16,8 @@ import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/settings/data/repositories/privacy_settings_repository.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -165,6 +167,15 @@ class _DonyAppState extends State<DonyApp> {
                 listener: (context, state) {
                   if (state is AuthAuthenticated) {
                     context.read<ActiveRoleCubit>().syncWithRoles(state.user.roles);
+                    // Réconciliation de la préférence contactKycOnly depuis le backend
+                    // vers le cache Hive local (utile en cas de changement sur un autre appareil).
+                    unawaited(
+                      getIt<PrivacySettingsRepository>()
+                          .fetchContactKycOnly()
+                          .then((v) => getIt<HiveService>().userPrefs
+                              .put(HiveService.kContactKycOnly, v))
+                          .catchError((_) {}),
+                    );
                   } else if (state is AuthProfileUpdated) {
                     context.read<ActiveRoleCubit>().syncWithRoles(state.user.roles);
                   }

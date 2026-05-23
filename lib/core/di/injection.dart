@@ -352,7 +352,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => PrivacySettingsRepository(getIt<PrivacySettingsDatasource>()),
   );
   getIt.registerFactory<PrivacySettingsBloc>(
-    () => PrivacySettingsBloc(getIt<PrivacySettingsRepository>()),
+    () => PrivacySettingsBloc(
+      getIt<PrivacySettingsRepository>(),
+      getIt<HiveService>().userPrefs,
+    ),
   );
   getIt.registerLazySingleton<BlockedUsersDatasource>(
     () => BlockedUsersDatasource(getIt<ApiClient>()),

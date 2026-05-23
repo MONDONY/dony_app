@@ -1,182 +1,195 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
+import 'package:dony/features/settings/data/repositories/privacy_settings_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mocktail/mocktail.dart';
 
+class MockPrivacySettingsRepository extends Mock
+    implements PrivacySettingsRepository {}
+
 class MockBox extends Mock implements Box<dynamic> {}
 
 void main() {
+  late MockPrivacySettingsRepository mockRepo;
   late MockBox mockBox;
 
   setUp(() {
+    mockRepo = MockPrivacySettingsRepository();
     mockBox = MockBox();
-    // Par défaut, retourne la defaultValue pour toute clé
-    when(() => mockBox.get(any(), defaultValue: any(named: 'defaultValue')))
-        .thenAnswer((inv) => inv.namedArguments[#defaultValue]);
+    // Par défaut : Hive vide (aucune valeur cachée)
+    when(() => mockBox.get(any())).thenReturn(null);
     when(() => mockBox.put(any(), any())).thenAnswer((_) async {});
   });
 
   group('PrivacySettingsBloc', () {
-    test('état initial lit les valeurs par défaut depuis Hive', () {
-      final bloc = PrivacySettingsBloc(mockBox);
+    // ── État initial ────────────────────────────────────────────────────────
 
-      expect(bloc.state.profileVisibility, equals('public'));
-      expect(bloc.state.hidePhoneNumber, isFalse);
-
+    test('état initial est PrivacySettingsInitial quand Hive est vide', () {
+      when(() => mockBox.get(HiveService.kContactKycOnly)).thenReturn(null);
+      final bloc = PrivacySettingsBloc(mockRepo, mockBox);
+      expect(bloc.state, isA<PrivacySettingsInitial>());
       bloc.close();
     });
 
-    test('état initial lit la visibilité persistée depuis Hive', () {
-      when(
-        () => mockBox.get(
-          HiveService.kProfileVisibility,
-          defaultValue: any(named: 'defaultValue'),
-        ),
-      ).thenReturn('limited');
-
-      final bloc = PrivacySettingsBloc(mockBox);
-
-      expect(bloc.state.profileVisibility, equals('limited'));
-
+    test('état initial est PrivacySettingsLoaded(true) quand Hive contient true', () {
+      when(() => mockBox.get(HiveService.kContactKycOnly)).thenReturn(true);
+      final bloc = PrivacySettingsBloc(mockRepo, mockBox);
+      expect(bloc.state,
+          isA<PrivacySettingsLoaded>()
+              .having((s) => s.contactKycOnly, 'contactKycOnly', true));
       bloc.close();
     });
 
-    test('état initial lit le masquage téléphone persisté depuis Hive', () {
-      when(
-        () => mockBox.get(
-          HiveService.kHidePhoneNumber,
-          defaultValue: any(named: 'defaultValue'),
-        ),
-      ).thenReturn(true);
-
-      final bloc = PrivacySettingsBloc(mockBox);
-
-      expect(bloc.state.hidePhoneNumber, isTrue);
-
+    test('état initial est PrivacySettingsLoaded(false) quand Hive contient false', () {
+      when(() => mockBox.get(HiveService.kContactKycOnly)).thenReturn(false);
+      final bloc = PrivacySettingsBloc(mockRepo, mockBox);
+      expect(bloc.state,
+          isA<PrivacySettingsLoaded>()
+              .having((s) => s.contactKycOnly, 'contactKycOnly', false));
       bloc.close();
     });
+
+    // ── PrivacySettingsLoadRequested — sans cache Hive ──────────────────────
 
     blocTest<PrivacySettingsBloc, PrivacySettingsState>(
-      'ProfileVisibilityChanged passe à limited et écrit dans Hive',
-      build: () => PrivacySettingsBloc(mockBox),
-      act: (bloc) =>
-          bloc.add(const ProfileVisibilityChanged('limited')),
-      expect: () => [
-        isA<PrivacySettingsState>()
-            .having((s) => s.profileVisibility, 'profileVisibility', 'limited')
-            .having((s) => s.hidePhoneNumber, 'hidePhoneNumber', false),
-      ],
-      verify: (_) => verify(
-        () => mockBox.put(HiveService.kProfileVisibility, 'limited'),
-      ).called(1),
-    );
-
-    blocTest<PrivacySettingsBloc, PrivacySettingsState>(
-      'ProfileVisibilityChanged repasse à public et écrit dans Hive',
-      build: () {
-        when(
-          () => mockBox.get(
-            HiveService.kProfileVisibility,
-            defaultValue: any(named: 'defaultValue'),
-          ),
-        ).thenReturn('limited');
-        return PrivacySettingsBloc(mockBox);
+      'LoadRequested sans cache : émet Loading puis Loaded et écrit Hive',
+      setUp: () {
+        when(() => mockBox.get(HiveService.kContactKycOnly)).thenReturn(null);
+        when(() => mockRepo.fetchContactKycOnly()).thenAnswer((_) async => true);
       },
-      act: (bloc) => bloc.add(const ProfileVisibilityChanged('public')),
+      build: () => PrivacySettingsBloc(mockRepo, mockBox),
+      act: (bloc) => bloc.add(const PrivacySettingsLoadRequested()),
       expect: () => [
-        isA<PrivacySettingsState>().having(
-          (s) => s.profileVisibility,
-          'profileVisibility',
-          'public',
-        ),
+        isA<PrivacySettingsLoading>(),
+        isA<PrivacySettingsLoaded>()
+            .having((s) => s.contactKycOnly, 'contactKycOnly', true),
       ],
-      verify: (_) => verify(
-        () => mockBox.put(HiveService.kProfileVisibility, 'public'),
-      ).called(1),
-    );
-
-    blocTest<PrivacySettingsBloc, PrivacySettingsState>(
-      'HidePhoneToggled active le masquage et écrit dans Hive',
-      build: () => PrivacySettingsBloc(mockBox),
-      act: (bloc) => bloc.add(const HidePhoneToggled()),
-      expect: () => [
-        isA<PrivacySettingsState>().having(
-          (s) => s.hidePhoneNumber,
-          'hidePhoneNumber',
-          true,
-        ),
-      ],
-      verify: (_) =>
-          verify(() => mockBox.put(HiveService.kHidePhoneNumber, true))
-              .called(1),
-    );
-
-    blocTest<PrivacySettingsBloc, PrivacySettingsState>(
-      'HidePhoneToggled désactive le masquage si déjà actif et écrit dans Hive',
-      build: () {
-        when(
-          () => mockBox.get(
-            HiveService.kHidePhoneNumber,
-            defaultValue: any(named: 'defaultValue'),
-          ),
-        ).thenReturn(true);
-        return PrivacySettingsBloc(mockBox);
+      verify: (_) {
+        verify(() => mockBox.put(HiveService.kContactKycOnly, true)).called(1);
       },
-      act: (bloc) => bloc.add(const HidePhoneToggled()),
-      expect: () => [
-        isA<PrivacySettingsState>().having(
-          (s) => s.hidePhoneNumber,
-          'hidePhoneNumber',
-          false,
-        ),
-      ],
-      verify: (_) =>
-          verify(() => mockBox.put(HiveService.kHidePhoneNumber, false))
-              .called(1),
     );
+
+    // ── PrivacySettingsLoadRequested — avec cache Hive ──────────────────────
 
     blocTest<PrivacySettingsBloc, PrivacySettingsState>(
-      'Deux toggles successifs restituent la valeur initiale',
-      build: () => PrivacySettingsBloc(mockBox),
-      act: (bloc) => bloc
-        ..add(const HidePhoneToggled())
-        ..add(const HidePhoneToggled()),
+      'LoadRequested avec cache Hive : pas de Loading, reconcilie silencieusement',
+      setUp: () {
+        when(() => mockBox.get(HiveService.kContactKycOnly)).thenReturn(false);
+        when(() => mockRepo.fetchContactKycOnly()).thenAnswer((_) async => true);
+      },
+      build: () => PrivacySettingsBloc(mockRepo, mockBox),
+      act: (bloc) => bloc.add(const PrivacySettingsLoadRequested()),
+      // Pas de PrivacySettingsLoading car Hive a déjà une valeur
       expect: () => [
-        isA<PrivacySettingsState>()
-            .having((s) => s.hidePhoneNumber, 'hidePhoneNumber', true),
-        isA<PrivacySettingsState>()
-            .having((s) => s.hidePhoneNumber, 'hidePhoneNumber', false),
+        isA<PrivacySettingsLoaded>()
+            .having((s) => s.contactKycOnly, 'contactKycOnly', true),
+      ],
+      verify: (_) {
+        verify(() => mockBox.put(HiveService.kContactKycOnly, true)).called(1);
+      },
+    );
+
+    // ── PrivacySettingsLoadRequested — erreur backend sans cache ────────────
+
+    blocTest<PrivacySettingsBloc, PrivacySettingsState>(
+      'LoadRequested erreur sans cache : émet Loading puis Error',
+      setUp: () {
+        when(() => mockBox.get(HiveService.kContactKycOnly)).thenReturn(null);
+        when(() => mockRepo.fetchContactKycOnly())
+            .thenThrow(Exception('Network error'));
+      },
+      build: () => PrivacySettingsBloc(mockRepo, mockBox),
+      act: (bloc) => bloc.add(const PrivacySettingsLoadRequested()),
+      expect: () => [
+        isA<PrivacySettingsLoading>(),
+        isA<PrivacySettingsError>().having(
+          (s) => s.message,
+          'message',
+          'Impossible de charger les préférences',
+        ),
       ],
     );
 
-    test('PrivacySettingsState copyWith préserve les champs non modifiés', () {
-      const state = PrivacySettingsState(
-        profileVisibility: 'limited',
-        hidePhoneNumber: true,
-      );
+    // ── PrivacySettingsLoadRequested — erreur backend avec cache ────────────
 
-      final updated = state.copyWith(profileVisibility: 'public');
+    blocTest<PrivacySettingsBloc, PrivacySettingsState>(
+      'LoadRequested erreur avec cache Hive : conserve la valeur Hive sans erreur',
+      setUp: () {
+        when(() => mockBox.get(HiveService.kContactKycOnly)).thenReturn(true);
+        when(() => mockRepo.fetchContactKycOnly())
+            .thenThrow(Exception('Network error'));
+      },
+      build: () => PrivacySettingsBloc(mockRepo, mockBox),
+      act: (bloc) => bloc.add(const PrivacySettingsLoadRequested()),
+      // Aucun nouvel état émis : le Loaded(true) de Hive reste affiché
+      expect: () => [],
+    );
 
-      expect(updated.profileVisibility, equals('public'));
-      expect(updated.hidePhoneNumber, isTrue); // inchangé
+    // ── ContactKycOnlyToggled — backend ok ──────────────────────────────────
+
+    blocTest<PrivacySettingsBloc, PrivacySettingsState>(
+      'Toggle(false) : update optimiste Hive + backend, pas de rollback',
+      setUp: () {
+        when(() => mockBox.get(HiveService.kContactKycOnly)).thenReturn(true);
+        when(() => mockRepo.updateContactKycOnly(false))
+            .thenAnswer((_) async {});
+      },
+      build: () => PrivacySettingsBloc(mockRepo, mockBox),
+      seed: () => const PrivacySettingsLoaded(contactKycOnly: true),
+      act: (bloc) => bloc.add(const ContactKycOnlyToggled(false)),
+      expect: () => [
+        isA<PrivacySettingsLoaded>()
+            .having((s) => s.contactKycOnly, 'contactKycOnly', false),
+      ],
+      verify: (_) {
+        verify(() => mockBox.put(HiveService.kContactKycOnly, false)).called(1);
+        verify(() => mockRepo.updateContactKycOnly(false)).called(1);
+      },
+    );
+
+    // ── ContactKycOnlyToggled — erreur backend → rollback ───────────────────
+
+    blocTest<PrivacySettingsBloc, PrivacySettingsState>(
+      'Toggle(false) erreur backend : rollback Hive + état',
+      setUp: () {
+        when(() => mockBox.get(HiveService.kContactKycOnly)).thenReturn(true);
+        when(() => mockRepo.updateContactKycOnly(false))
+            .thenAnswer((_) async => throw Exception('Server error'));
+      },
+      build: () => PrivacySettingsBloc(mockRepo, mockBox),
+      seed: () => const PrivacySettingsLoaded(contactKycOnly: true),
+      act: (bloc) => bloc.add(const ContactKycOnlyToggled(false)),
+      expect: () => [
+        isA<PrivacySettingsLoaded>()
+            .having((s) => s.contactKycOnly, 'contactKycOnly', false),
+        isA<PrivacySettingsLoaded>()
+            .having((s) => s.contactKycOnly, 'contactKycOnly', true),
+      ],
+      verify: (_) {
+        // Hive écrit false (optimiste) puis rollback à true
+        verifyInOrder([
+          () => mockBox.put(HiveService.kContactKycOnly, false),
+          () => mockBox.put(HiveService.kContactKycOnly, true),
+        ]);
+      },
+    );
+
+    // ── Equality des états ──────────────────────────────────────────────────
+
+    test('PrivacySettingsLoaded equality est correcte', () {
+      const a = PrivacySettingsLoaded(contactKycOnly: true);
+      const b = PrivacySettingsLoaded(contactKycOnly: true);
+      const c = PrivacySettingsLoaded(contactKycOnly: false);
+      expect(a, equals(b));
+      expect(a, isNot(equals(c)));
     });
 
-    test('PrivacySettingsState props sont corrects', () {
-      const a = PrivacySettingsState(
-        profileVisibility: 'public',
-        hidePhoneNumber: false,
-      );
-      const b = PrivacySettingsState(
-        profileVisibility: 'public',
-        hidePhoneNumber: false,
-      );
-      const c = PrivacySettingsState(
-        profileVisibility: 'limited',
-        hidePhoneNumber: false,
-      );
-
+    test('PrivacySettingsError equality est correcte', () {
+      const a = PrivacySettingsError('msg');
+      const b = PrivacySettingsError('msg');
+      const c = PrivacySettingsError('autre');
       expect(a, equals(b));
       expect(a, isNot(equals(c)));
     });
