@@ -233,35 +233,11 @@ class _MessagesHeader extends StatelessWidget {
               children: [
                 Text('Messages', style: tt.headlineLarge),
                 const Spacer(),
-                if (isSearching)
-                  TextButton(
-                    onPressed: () {
-                      searchController.clear();
-                      context.read<ConversationListBloc>().add(
-                            ConversationFilterChanged(
-                              filter: activeFilter,
-                              searchQuery: '',
-                            ),
-                          );
-                    },
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.sm,
-                      ),
-                    ),
-                    child: Text(
-                      'Annuler',
-                      style: tt.labelMedium?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
-                    ),
-                  )
-                else
-                  IconButton(
-                    onPressed: () => context.push('/messages/archives'),
-                    icon: const Icon(Icons.archive_outlined),
-                    color: cs.onSurfaceVariant,
-                  ),
+                IconButton(
+                  onPressed: () => context.push('/messages/archives'),
+                  icon: const Icon(Icons.archive_outlined),
+                  color: cs.onSurfaceVariant,
+                ),
               ],
             ),
           ),
