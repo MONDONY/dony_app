@@ -203,6 +203,94 @@ void main() {
     );
 
     blocTest<ConversationListBloc, ConversationListState>(
+      'ConversationFilter.active ne montre que les conversations BID_ACCEPTED',
+      build: () {
+        final convActive = ConversationModel(
+          id: _conv.id,
+          bidId: _conv.bidId,
+          firestoreConversationId: _conv.firestoreConversationId,
+          otherParticipant: _conv.otherParticipant,
+          bidStatus: 'BID_ACCEPTED',
+          hasUnread: false,
+        );
+        final convDone = ConversationModel(
+          id: 'conv-done',
+          bidId: 'bid-done',
+          firestoreConversationId: 'conv_bid-done',
+          otherParticipant: _participant,
+          bidStatus: 'DELIVERY_CONFIRMED',
+          hasUnread: false,
+        );
+        when(() => convRepo.getConversations())
+            .thenAnswer((_) async => [convActive, convDone]);
+        when(() => firestoreRepo.perConversationUnreadStream(any()))
+            .thenAnswer((_) => const Stream.empty());
+        return ConversationListBloc(convRepo, firestoreRepo);
+      },
+      act: (b) async {
+        b.add(const ConversationsLoadRequested());
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        b.add(const ConversationFilterChanged(
+          filter: ConversationFilter.active,
+          searchQuery: '',
+        ));
+      },
+      expect: () => [
+        isA<ConversationListLoading>(),
+        isA<ConversationListLoaded>()
+            .having((s) => s.displayed.length, 'all', 2),
+        isA<ConversationListLoaded>()
+            .having((s) => s.displayed.length, 'active only', 1)
+            .having((s) => s.displayed.first.bidStatus, 'bidStatus',
+                'BID_ACCEPTED'),
+      ],
+    );
+
+    blocTest<ConversationListBloc, ConversationListState>(
+      'ConversationFilter.done ne montre que les conversations DELIVERY_CONFIRMED',
+      build: () {
+        final convDone = ConversationModel(
+          id: _conv.id,
+          bidId: _conv.bidId,
+          firestoreConversationId: _conv.firestoreConversationId,
+          otherParticipant: _conv.otherParticipant,
+          bidStatus: 'DELIVERY_CONFIRMED',
+          hasUnread: false,
+        );
+        final convActive = ConversationModel(
+          id: 'conv-active',
+          bidId: 'bid-active',
+          firestoreConversationId: 'conv_bid-active',
+          otherParticipant: _participant,
+          bidStatus: 'BID_ACCEPTED',
+          hasUnread: false,
+        );
+        when(() => convRepo.getConversations())
+            .thenAnswer((_) async => [convDone, convActive]);
+        when(() => firestoreRepo.perConversationUnreadStream(any()))
+            .thenAnswer((_) => const Stream.empty());
+        return ConversationListBloc(convRepo, firestoreRepo);
+      },
+      act: (b) async {
+        b.add(const ConversationsLoadRequested());
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        b.add(const ConversationFilterChanged(
+          filter: ConversationFilter.done,
+          searchQuery: '',
+        ));
+      },
+      expect: () => [
+        isA<ConversationListLoading>(),
+        isA<ConversationListLoaded>()
+            .having((s) => s.displayed.length, 'all', 2),
+        isA<ConversationListLoaded>()
+            .having((s) => s.displayed.length, 'done only', 1)
+            .having((s) => s.displayed.first.bidStatus, 'bidStatus',
+                'DELIVERY_CONFIRMED'),
+      ],
+    );
+
+    blocTest<ConversationListBloc, ConversationListState>(
       'filter est préservé après ConversationsUnreadUpdated',
       build: () {
         when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);

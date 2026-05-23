@@ -40,7 +40,12 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<ConversationListBloc>().add(const ConversationsLoadRequested());
+    final bloc = context.read<ConversationListBloc>();
+    if (bloc.state is ConversationListLoaded) {
+      _searchController.text =
+          (bloc.state as ConversationListLoaded).searchQuery;
+    }
+    bloc.add(const ConversationsLoadRequested());
   }
 
   @override
@@ -466,18 +471,54 @@ class _SlidableTile extends StatelessWidget {
         extentRatio: 0.45,
         children: [
           SlidableAction(
-            onPressed: (_) => context
-                .read<ConversationListBloc>()
-                .add(ConversationArchiveRequested(conversation.id)),
+            onPressed: (ctx) {
+              ctx.read<ConversationListBloc>()
+                  .add(ConversationArchiveRequested(conversation.id));
+              ScaffoldMessenger.of(ctx).showSnackBar(
+                SnackBar(
+                  content: const Text('Conversation archivée'),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  action: SnackBarAction(
+                    label: 'Annuler',
+                    onPressed: () => ctx.read<ConversationListBloc>().add(
+                          const ConversationsLoadRequested(),
+                        ),
+                  ),
+                ),
+              );
+            },
             backgroundColor: cs.warning,
             foregroundColor: cs.onPrimary,
             icon: Icons.archive_outlined,
             label: 'Archiver',
           ),
           SlidableAction(
-            onPressed: (_) => context
-                .read<ConversationListBloc>()
-                .add(ConversationDeleteRequested(conversation.id)),
+            onPressed: (ctx) => showDialog<bool>(
+              context: ctx,
+              builder: (_) => AlertDialog(
+                title: const Text('Supprimer la conversation ?'),
+                content: const Text(
+                    'Cette action est irréversible.'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                    child: const Text('Annuler'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(true),
+                    child: const Text('Supprimer',
+                        style: TextStyle(color: Colors.red)),
+                  ),
+                ],
+              ),
+            ).then((confirmed) {
+              if (confirmed == true && ctx.mounted) {
+                ctx.read<ConversationListBloc>()
+                    .add(ConversationDeleteRequested(conversation.id));
+              }
+            }),
             backgroundColor: cs.error,
             foregroundColor: cs.onError,
             icon: Icons.delete_outline_rounded,
