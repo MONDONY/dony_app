@@ -132,6 +132,7 @@ class ConversationListBloc
   ) {
     _currentFilter = event.filter;
     _currentSearchQuery = event.searchQuery;
+    // Fields already updated — _onLoad will emit with the new values when ready.
     if (state is ConversationListLoaded) {
       emit((state as ConversationListLoaded)
           .copyWithFilter(filter: event.filter, searchQuery: event.searchQuery));

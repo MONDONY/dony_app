@@ -175,6 +175,34 @@ void main() {
     );
 
     blocTest<ConversationListBloc, ConversationListState>(
+      'filter est préservé après ConversationArchiveRequested',
+      build: () {
+        when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
+        when(() => firestoreRepo.perConversationUnreadStream(any()))
+            .thenAnswer((_) => const Stream.empty());
+        return ConversationListBloc(convRepo, firestoreRepo);
+      },
+      act: (b) async {
+        b.add(const ConversationsLoadRequested());
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        b.add(const ConversationFilterChanged(
+          filter: ConversationFilter.unread,
+          searchQuery: '',
+        ));
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        b.add(const ConversationArchiveRequested('conv-1'));
+      },
+      expect: () => [
+        isA<ConversationListLoading>(),
+        isA<ConversationListLoaded>(),
+        isA<ConversationListLoaded>()
+            .having((s) => s.filter, 'filter', ConversationFilter.unread),
+        isA<ConversationListLoaded>()
+            .having((s) => s.filter, 'filter', ConversationFilter.unread),
+      ],
+    );
+
+    blocTest<ConversationListBloc, ConversationListState>(
       'filter est préservé après ConversationsUnreadUpdated',
       build: () {
         when(() => convRepo.getConversations()).thenAnswer((_) async => [_conv]);
