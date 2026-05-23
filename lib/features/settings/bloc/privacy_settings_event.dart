@@ -1,21 +1,23 @@
 part of 'privacy_settings_bloc.dart';
 
-abstract class PrivacySettingsEvent extends Equatable {
+sealed class PrivacySettingsEvent {
   const PrivacySettingsEvent();
-
-  @override
-  List<Object?> get props => [];
 }
 
-class ProfileVisibilityChanged extends PrivacySettingsEvent {
-  final String visibility; // 'public' | 'limited'
-
-  const ProfileVisibilityChanged(this.visibility);
-
-  @override
-  List<Object?> get props => [visibility];
+/// Charge la préférence contactKycOnly depuis le backend.
+class PrivacySettingsLoadRequested extends PrivacySettingsEvent {
+  const PrivacySettingsLoadRequested();
 }
 
-class HidePhoneToggled extends PrivacySettingsEvent {
-  const HidePhoneToggled();
+/// Met à jour la préférence contactKycOnly côté backend (optimistic update).
+class ContactKycOnlyToggled extends PrivacySettingsEvent {
+  final bool value;
+  const ContactKycOnlyToggled(this.value);
+
+  @override
+  bool operator ==(Object other) =>
+      other is ContactKycOnlyToggled && other.value == value;
+
+  @override
+  int get hashCode => value.hashCode;
 }

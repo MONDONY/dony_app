@@ -14,11 +14,8 @@ Widget _wrap({
   required MockPrivacySettingsBloc mockBloc,
   PrivacySettingsState? state,
 }) {
-  final effectiveState = state ??
-      const PrivacySettingsState(
-        profileVisibility: 'public',
-        hidePhoneNumber: false,
-      );
+  final effectiveState =
+      state ?? const PrivacySettingsLoaded(contactKycOnly: false);
   when(() => mockBloc.state).thenReturn(effectiveState);
 
   return MaterialApp(
@@ -44,68 +41,47 @@ void main() {
       expect(find.text('Confidentialité'), findsOneWidget);
     });
 
-    testWidgets('affiche la section VISIBILITÉ', (tester) async {
+    testWidgets('affiche le bandeau de protection du numéro', (tester) async {
       await tester.pumpWidget(_wrap(mockBloc: mockBloc));
       await tester.pumpAndSettle();
 
-      expect(find.text('VISIBILITÉ'), findsOneWidget);
+      expect(find.text('Ton numéro est protégé'), findsOneWidget);
     });
 
-    testWidgets('affiche la tuile "Visibilité du profil"', (tester) async {
+    testWidgets('affiche la section QUI PEUT ME CONTACTER', (tester) async {
       await tester.pumpWidget(_wrap(mockBloc: mockBloc));
       await tester.pumpAndSettle();
 
-      expect(find.text('Visibilité du profil'), findsOneWidget);
+      expect(find.text('QUI PEUT ME CONTACTER'), findsOneWidget);
     });
 
-    testWidgets('affiche "Public" quand visibility == public', (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          mockBloc: mockBloc,
-          state: const PrivacySettingsState(profileVisibility: 'public'),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Public'), findsOneWidget);
-      expect(
-        find.text('Visible dans les résultats de matching'),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('affiche "Limité" quand visibility == limited', (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          mockBloc: mockBloc,
-          state: const PrivacySettingsState(profileVisibility: 'limited'),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Limité'), findsOneWidget);
-      expect(
-        find.text('Visible uniquement par tes partenaires actifs'),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('affiche la tuile "Masquer mon numéro"', (tester) async {
+    testWidgets('affiche la tuile "Profils vérifiés uniquement"',
+        (tester) async {
       await tester.pumpWidget(_wrap(mockBloc: mockBloc));
       await tester.pumpAndSettle();
 
-      expect(find.text('Masquer mon numéro'), findsOneWidget);
-      expect(
-        find.text('Les autres utilisateurs ne verront pas ton numéro'),
-        findsOneWidget,
-      );
+      expect(find.text('Profils vérifiés uniquement'), findsOneWidget);
     });
 
-    testWidgets('Switch est off quand hidePhoneNumber == false', (tester) async {
+    testWidgets('affiche la section BLOCAGE', (tester) async {
+      await tester.pumpWidget(_wrap(mockBloc: mockBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('BLOCAGE'), findsOneWidget);
+    });
+
+    testWidgets('affiche la tuile "Utilisateurs bloqués"', (tester) async {
+      await tester.pumpWidget(_wrap(mockBloc: mockBloc));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Utilisateurs bloqués'), findsOneWidget);
+    });
+
+    testWidgets('Switch est off quand contactKycOnly == false', (tester) async {
       await tester.pumpWidget(
         _wrap(
           mockBloc: mockBloc,
-          state: const PrivacySettingsState(hidePhoneNumber: false),
+          state: const PrivacySettingsLoaded(contactKycOnly: false),
         ),
       );
       await tester.pumpAndSettle();
@@ -116,11 +92,11 @@ void main() {
       expect(sw.value, isFalse);
     });
 
-    testWidgets('Switch est on quand hidePhoneNumber == true', (tester) async {
+    testWidgets('Switch est on quand contactKycOnly == true', (tester) async {
       await tester.pumpWidget(
         _wrap(
           mockBloc: mockBloc,
-          state: const PrivacySettingsState(hidePhoneNumber: true),
+          state: const PrivacySettingsLoaded(contactKycOnly: true),
         ),
       );
       await tester.pumpAndSettle();
@@ -129,95 +105,35 @@ void main() {
       expect(sw.value, isTrue);
     });
 
+    testWidgets('Switch désactivé pendant PrivacySettingsLoading',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          mockBloc: mockBloc,
+          state: const PrivacySettingsLoading(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final sw = tester.widget<Switch>(find.byType(Switch));
+      expect(sw.onChanged, isNull);
+    });
+
     testWidgets(
-        'tapper le Switch envoie HidePhoneToggled au BLoC', (tester) async {
-      await tester.pumpWidget(_wrap(mockBloc: mockBloc));
+        'tapper le Switch envoie ContactKycOnlyToggled(true) quand valeur false',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          mockBloc: mockBloc,
+          state: const PrivacySettingsLoaded(contactKycOnly: false),
+        ),
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.byType(Switch));
       await tester.pumpAndSettle();
 
-      verify(() => mockBloc.add(const HidePhoneToggled())).called(1);
-    });
-
-    testWidgets(
-        'tapper "Visibilité du profil" ouvre le bottom sheet picker',
-        (tester) async {
-      await tester.pumpWidget(_wrap(mockBloc: mockBloc));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Visibilité du profil'));
-      await tester.pumpAndSettle();
-
-      // Le bottom sheet doit afficher le titre
-      expect(find.text('Visibilité du profil'), findsWidgets);
-      // Les deux options doivent être présentes
-      expect(find.text('Public'), findsWidgets);
-      expect(find.text('Limité'), findsOneWidget);
-    });
-
-    testWidgets(
-        'choisir "Limité" dans le picker envoie ProfileVisibilityChanged',
-        (tester) async {
-      await tester.pumpWidget(_wrap(mockBloc: mockBloc));
-      await tester.pumpAndSettle();
-
-      // Ouvrir le picker
-      await tester.tap(find.text('Visibilité du profil'));
-      await tester.pumpAndSettle();
-
-      // Sélectionner "Limité"
-      final limitedFinder = find.text('Limité');
-      expect(limitedFinder, findsOneWidget);
-      await tester.tap(limitedFinder);
-      await tester.pumpAndSettle();
-
-      verify(
-        () => mockBloc.add(const ProfileVisibilityChanged('limited')),
-      ).called(1);
-    });
-
-    testWidgets(
-        'choisir "Public" dans le picker envoie ProfileVisibilityChanged',
-        (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          mockBloc: mockBloc,
-          state: const PrivacySettingsState(profileVisibility: 'limited'),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      // Ouvrir le picker
-      await tester.tap(find.text('Visibilité du profil'));
-      await tester.pumpAndSettle();
-
-      // Les options sont dans le sheet — "Public" apparaît dans la liste
-      final publicFinder = find.text('Public');
-      expect(publicFinder, findsWidgets);
-      await tester.tap(publicFinder.last);
-      await tester.pumpAndSettle();
-
-      verify(
-        () => mockBloc.add(const ProfileVisibilityChanged('public')),
-      ).called(1);
-    });
-
-    testWidgets('icône check visible sur option sélectionnée dans le picker',
-        (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          mockBloc: mockBloc,
-          state: const PrivacySettingsState(profileVisibility: 'public'),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Visibilité du profil'));
-      await tester.pumpAndSettle();
-
-      // L'icône check doit être visible (option public sélectionnée)
-      expect(find.byIcon(Icons.check_rounded), findsOneWidget);
+      verify(() => mockBloc.add(const ContactKycOnlyToggled(true))).called(1);
     });
   });
 }

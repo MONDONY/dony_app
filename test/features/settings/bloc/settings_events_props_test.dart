@@ -36,24 +36,22 @@ void main() {
     });
   });
 
-  group('PrivacySettingsEvent props', () {
-    test('HidePhoneToggled == HidePhoneToggled (calls props)', () {
-      const a = HidePhoneToggled();
-      const b = HidePhoneToggled();
+  group('PrivacySettingsEvent', () {
+    test('PrivacySettingsLoadRequested == PrivacySettingsLoadRequested', () {
+      const a = PrivacySettingsLoadRequested();
+      const b = PrivacySettingsLoadRequested();
       expect(a, equals(b));
-      expect(a.props, isEmpty);
     });
 
-    test('ProfileVisibilityChanged props are correct', () {
-      const a = ProfileVisibilityChanged('public');
-      const b = ProfileVisibilityChanged('public');
+    test('ContactKycOnlyToggled with same value are equal', () {
+      const a = ContactKycOnlyToggled(true);
+      const b = ContactKycOnlyToggled(true);
       expect(a, equals(b));
-      expect(a.props, equals(['public']));
     });
 
-    test('ProfileVisibilityChanged with different values are not equal', () {
-      const a = ProfileVisibilityChanged('public');
-      const b = ProfileVisibilityChanged('limited');
+    test('ContactKycOnlyToggled with different values are not equal', () {
+      const a = ContactKycOnlyToggled(true);
+      const b = ContactKycOnlyToggled(false);
       expect(a, isNot(equals(b)));
     });
   });

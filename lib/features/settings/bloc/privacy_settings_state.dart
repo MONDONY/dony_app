@@ -1,23 +1,37 @@
 part of 'privacy_settings_bloc.dart';
 
-class PrivacySettingsState extends Equatable {
-  final String profileVisibility;
-  final bool hidePhoneNumber;
+sealed class PrivacySettingsState {
+  const PrivacySettingsState();
+}
 
-  const PrivacySettingsState({
-    this.profileVisibility = 'public',
-    this.hidePhoneNumber = false,
-  });
+class PrivacySettingsInitial extends PrivacySettingsState {
+  const PrivacySettingsInitial();
+}
 
-  PrivacySettingsState copyWith({
-    String? profileVisibility,
-    bool? hidePhoneNumber,
-  }) =>
-      PrivacySettingsState(
-        profileVisibility: profileVisibility ?? this.profileVisibility,
-        hidePhoneNumber: hidePhoneNumber ?? this.hidePhoneNumber,
-      );
+class PrivacySettingsLoading extends PrivacySettingsState {
+  const PrivacySettingsLoading();
+}
+
+class PrivacySettingsLoaded extends PrivacySettingsState {
+  final bool contactKycOnly;
+  const PrivacySettingsLoaded({required this.contactKycOnly});
 
   @override
-  List<Object?> get props => [profileVisibility, hidePhoneNumber];
+  bool operator ==(Object other) =>
+      other is PrivacySettingsLoaded && other.contactKycOnly == contactKycOnly;
+
+  @override
+  int get hashCode => contactKycOnly.hashCode;
+}
+
+class PrivacySettingsError extends PrivacySettingsState {
+  final String message;
+  const PrivacySettingsError(this.message);
+
+  @override
+  bool operator ==(Object other) =>
+      other is PrivacySettingsError && other.message == message;
+
+  @override
+  int get hashCode => message.hashCode;
 }
