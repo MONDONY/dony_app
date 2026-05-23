@@ -23,9 +23,13 @@ class HiveService {
   static const String kFavDestinations   = 'fav_destinations'; // List<String> ex: ['SN','CI']
 
   // ── Préférences métier ───────────────────────────────────────────────────
-  static const String kWeightUnit        = 'weight_unit';      // 'kg' | 'lbs'
-  static const String kCurrencyCode      = 'currency_code';    // 'EUR' | 'XOF' | 'XAF'
-  static const String kPickupRadiusKm    = 'pickup_radius_km'; // int
+  static const String kWeightUnit              = 'weight_unit';               // 'kg' | 'lbs'
+  static const String kCurrencyCode            = 'currency_code';             // 'EUR' | 'XOF' | 'XAF'
+  static const String kPickupRadiusKm          = 'pickup_radius_km';          // int
+  static const String kDefaultPackageWeight    = 'default_package_weight';    // int
+  static const String kMinBidPrice             = 'min_bid_price';             // int
+  static const String kContactMode             = 'contact_mode';              // String?
+  static const String kResponseDelay           = 'response_delay';            // int?
 
   // ── Accessibilité ────────────────────────────────────────────────────────
   static const String kTextScale         = 'text_scale';       // 'small'|'normal'|'large'|'xlarge'
