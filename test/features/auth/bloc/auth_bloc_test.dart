@@ -1329,10 +1329,17 @@ void main() {
 
   group('AuthEmailOtpVerifyRequested', () {
     blocTest<AuthBloc, AuthState>(
-      'émet [AuthLoading, AuthEmailOtpVerified] en cas de succès',
+      'nouveau compte (404 sur verifyEmailOtp) → émet [AuthLoading, AuthEmailOtpVerified]',
       build: () {
-        when(() => mockRepo.verifyEmailOtp('a@b.com', '123456'))
-            .thenAnswer((_) async {});
+        when(() => mockRepo.verifyEmailOtp('a@b.com', '123456')).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/auth/email/verify'),
+            response: Response(
+              requestOptions: RequestOptions(path: '/auth/email/verify'),
+              statusCode: 404,
+            ),
+          ),
+        );
         return buildBloc();
       },
       act: (bloc) => bloc.add(const AuthEmailOtpVerifyRequested(email: 'a@b.com', code: '123456')),
@@ -1368,14 +1375,13 @@ void main() {
     blocTest<AuthBloc, AuthState>(
       'émet [AuthLoading, AuthAuthenticated] en cas de succès',
       build: () {
-        when(() => mockRepo.registerWithEmail(
-                email: 'a@b.com', roles: ['SENDER']))
+        when(() => mockRepo.registerWithEmail(email: 'a@b.com'))
             .thenAnswer((_) async => fakeUser);
         when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
         return buildBloc();
       },
       act: (bloc) => bloc.add(
-        const AuthRegisterWithEmailRequested(email: 'a@b.com', roles: ['SENDER']),
+        const AuthRegisterWithEmailRequested(email: 'a@b.com'),
       ),
       expect: () => [
         const AuthLoading(),
@@ -1389,14 +1395,13 @@ void main() {
     blocTest<AuthBloc, AuthState>(
       'émet [AuthLoading, AuthError] si register échoue',
       build: () {
-        when(() => mockRepo.registerWithEmail(
-                email: any(named: 'email'), roles: any(named: 'roles')))
+        when(() => mockRepo.registerWithEmail(email: any(named: 'email')))
             .thenThrow(Exception('email already exists'));
         when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
         return buildBloc();
       },
       act: (bloc) => bloc.add(
-        const AuthRegisterWithEmailRequested(email: 'a@b.com', roles: ['SENDER']),
+        const AuthRegisterWithEmailRequested(email: 'a@b.com'),
       ),
       expect: () => [const AuthLoading(), isA<AuthError>()],
     );
