@@ -502,7 +502,7 @@ class _ConversationTile extends StatelessWidget {
     final unread = conversation.hasUnread;
 
     return Material(
-      color: unread ? cs.primaryContainer.withValues(alpha: 0.10) : cs.surface,
+      color: unread ? const Color(0xFFF4F7FF) : cs.surface,
       child: InkWell(
         onTap: () => context.push(
           '/conversations/${conversation.id}',
