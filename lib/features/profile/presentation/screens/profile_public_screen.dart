@@ -135,6 +135,20 @@ class _LoadedView extends StatelessWidget {
             ).animate().fadeIn(delay: 160.ms, duration: 300.ms),
           ),
 
+        // Contact info chips
+        if (profile.contactMode != null || profile.responseDelayHours != null)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.xl,
+                DonySpacing.lg,
+                0,
+              ),
+              child: _ContactInfoSection(profile: profile),
+            ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
+          ),
+
         // Recent reviews section
         SliverToBoxAdapter(
           child: Padding(
@@ -529,6 +543,103 @@ class _MiniReviewCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Contact info section ─────────────────────────────────────────────────────
+
+class _ContactInfoSection extends StatelessWidget {
+  const _ContactInfoSection({required this.profile});
+
+  final ProfilePublicModel profile;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    String? contactLabel;
+    IconData? contactIcon;
+    switch (profile.contactMode) {
+      case 'call':
+        contactLabel = 'Joignable par appel';
+        contactIcon = Icons.phone_rounded;
+      case 'message':
+        contactLabel = 'Joignable par message';
+        contactIcon = Icons.message_rounded;
+      case 'both':
+        contactLabel = 'Appel & message';
+        contactIcon = Icons.forum_rounded;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'DISPONIBILITÉ',
+          style: tt.labelMedium?.copyWith(
+            color: cs.onSurfaceVariant,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        Wrap(
+          spacing: DonySpacing.sm,
+          runSpacing: DonySpacing.sm,
+          children: [
+            if (contactLabel != null)
+              _InfoChip(icon: contactIcon!, label: contactLabel, cs: cs),
+            if (profile.responseDelayHours != null)
+              _InfoChip(
+                icon: Icons.timer_rounded,
+                label: 'Répond en < ${profile.responseDelayHours}h',
+                cs: cs,
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  const _InfoChip({
+    required this.icon,
+    required this.label,
+    required this.cs,
+  });
+
+  final IconData icon;
+  final String label;
+  final ColorScheme cs;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: cs.primaryContainer,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: cs.primary),
+          const SizedBox(width: DonySpacing.xs),
+          Text(
+            label,
+            style: tt.labelMedium?.copyWith(
+              color: cs.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
