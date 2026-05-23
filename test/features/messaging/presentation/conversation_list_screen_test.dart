@@ -17,6 +17,9 @@ class MockConversationListBloc
     extends MockBloc<ConversationListEvent, ConversationListState>
     implements ConversationListBloc {}
 
+class _FakeConversationListEvent extends Fake
+    implements ConversationListEvent {}
+
 final _participant = ParticipantModel(id: 'uid-1', name: 'Aïcha Bah');
 final _conv = ConversationModel(
   id: 'conv-1',
@@ -26,6 +29,7 @@ final _conv = ConversationModel(
   lastMessagePreview: 'Bonjour !',
   lastMessageAt: DateTime.now().subtract(const Duration(minutes: 5)),
   hasUnread: true,
+  unreadCount: 2,
 );
 final _convNoUnread = ConversationModel(
   id: 'conv-2',
@@ -92,6 +96,10 @@ Future<void> _pump(WidgetTester tester, ConversationListBloc bloc) async {
 }
 
 void main() {
+  setUpAll(() {
+    registerFallbackValue(_FakeConversationListEvent());
+  });
+
   late MockConversationListBloc bloc;
 
   setUp(() {
@@ -102,6 +110,14 @@ void main() {
   tearDown(() => bloc.close());
 
   group('ConversationListScreen', () {
+    testWidgets('affiche le header Messages dans tous les états', (tester) async {
+      when(() => bloc.state).thenReturn(const ConversationListLoading());
+      await _pump(tester, bloc);
+
+      expect(find.text('Messages'), findsOneWidget);
+      expect(find.byType(TextField), findsOneWidget);
+    });
+
     testWidgets('shows loading indicator when state is Loading', (tester) async {
       when(() => bloc.state).thenReturn(const ConversationListLoading());
       await _pump(tester, bloc);
@@ -110,43 +126,13 @@ void main() {
     });
 
     testWidgets('shows empty state when no conversations', (tester) async {
-      when(() => bloc.state)
-          .thenReturn(const ConversationListLoaded([]));
+      when(() => bloc.state).thenReturn(const ConversationListLoaded([]));
       await _pump(tester, bloc);
 
       expect(find.text('Aucun message'), findsOneWidget);
     });
 
     testWidgets('renders conversation tile with participant name', (tester) async {
-      when(() => bloc.state)
-          .thenReturn(ConversationListLoaded([_conv]));
-      await _pump(tester, bloc);
-
-      expect(find.text('Aïcha Bah'), findsOneWidget);
-      expect(find.text('Bonjour !'), findsOneWidget);
-    });
-
-    testWidgets('shows error state with retry button', (tester) async {
-      when(() => bloc.state)
-          .thenReturn(ConversationListError(NetworkException('Erreur réseau')));
-      await _pump(tester, bloc);
-
-      expect(find.text('Erreur de chargement'), findsOneWidget);
-      expect(find.text('Réessayer'), findsOneWidget);
-    });
-
-    testWidgets('retry button dispatches ConversationsLoadRequested', (tester) async {
-      when(() => bloc.state)
-          .thenReturn(ConversationListError(NetworkException('Erreur réseau')));
-      await _pump(tester, bloc);
-
-      await tester.tap(find.text('Réessayer'));
-      await tester.pump();
-
-      verify(() => bloc.add(const ConversationsLoadRequested())).called(greaterThanOrEqualTo(1));
-    });
-
-    testWidgets('renders tile with lastMessageAt time and hasUnread=true', (tester) async {
       when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));
       await _pump(tester, bloc);
 
@@ -154,22 +140,86 @@ void main() {
       expect(find.text('Bonjour !'), findsOneWidget);
     });
 
-    testWidgets('renders tile with hasUnread=false (non-bold styling path)', (tester) async {
-      when(() => bloc.state).thenReturn(ConversationListLoaded([_convNoUnread]));
+    testWidgets('shows error state with retry button', (tester) async {
+      when(() => bloc.state).thenReturn(
+          ConversationListError(NetworkException('Erreur réseau')));
       await _pump(tester, bloc);
 
-      expect(find.text('Mamadou'), findsOneWidget);
-      expect(find.text('À bientôt'), findsOneWidget);
+      expect(find.text('Erreur de chargement'), findsOneWidget);
+      expect(find.text('Réessayer'), findsOneWidget);
     });
 
-    testWidgets('renders separator when two conversations present', (tester) async {
-      when(() => bloc.state)
-          .thenReturn(ConversationListLoaded([_conv, _convNoUnread]));
+    testWidgets('retry button dispatches ConversationsLoadRequested',
+        (tester) async {
+      when(() => bloc.state).thenReturn(
+          ConversationListError(NetworkException('Erreur réseau')));
       await _pump(tester, bloc);
 
-      expect(find.text('Aïcha Bah'), findsOneWidget);
-      expect(find.text('Mamadou'), findsOneWidget);
-      expect(find.byType(Divider), findsWidgets);
+      await tester.tap(find.text('Réessayer'));
+      await tester.pump();
+
+      verify(() => bloc.add(const ConversationsLoadRequested()))
+          .called(greaterThanOrEqualTo(1));
+    });
+
+    testWidgets("affiche section AUJOURD'HUI pour message récent", (tester) async {
+      when(() => bloc.state).thenReturn(ConversationListLoaded([_conv]));
+      await _pump(tester, bloc);
+
+      expect(find.text("AUJOURD'HUI"), findsOneWidget);
+    });
+
+    testWidgets('affiche section CETTE SEMAINE pour message de 3 jours',
+        (tester) async {
+      await initializeDateFormatting('fr');
+      when(() => bloc.state)
+          .thenReturn(ConversationListLoaded([_convDaysAgo]));
+      await _pump(tester, bloc);
+
+      expect(find.text('CETTE SEMAINE'), findsOneWidget);
+      expect(find.text('Fatoumata'), findsOneWidget);
+    });
+
+    testWidgets('affiche section PLUS ANCIEN pour message de 10 jours',
+        (tester) async {
+      await initializeDateFormatting('fr');
+      when(() => bloc.state)
+          .thenReturn(ConversationListLoaded([_convWeeksAgo]));
+      await _pump(tester, bloc);
+
+      expect(find.text('PLUS ANCIEN'), findsOneWidget);
+      expect(find.text('Oumar'), findsOneWidget);
+    });
+
+    testWidgets('affiche pills de filtre quand searchQuery est vide',
+        (tester) async {
+      when(() => bloc.state).thenReturn(const ConversationListLoaded([]));
+      await _pump(tester, bloc);
+
+      expect(find.text('Tous'), findsOneWidget);
+      expect(find.text('Non lus'), findsOneWidget);
+      expect(find.text('En cours'), findsOneWidget);
+      expect(find.text('Terminés'), findsOneWidget);
+    });
+
+    testWidgets('taper dans le champ dispatch ConversationFilterChanged',
+        (tester) async {
+      when(() => bloc.state)
+          .thenReturn(const ConversationListLoaded([]));
+      await _pump(tester, bloc);
+
+      await tester.enterText(find.byType(TextField), 'Dakar');
+      await tester.pump();
+
+      verify(() => bloc.add(any(
+            that: predicate<ConversationListEvent>(
+              (e) =>
+                  e is ConversationFilterChanged &&
+                  e.searchQuery == 'Dakar' &&
+                  e.filter == ConversationFilter.all,
+              'is ConversationFilterChanged(filter: all, searchQuery: Dakar)',
+            ),
+          ))).called(greaterThanOrEqualTo(1));
     });
 
     testWidgets('tapping conversation tile navigates to chat', (tester) async {
@@ -191,22 +241,13 @@ void main() {
       expect(find.text('maintenant'), findsOneWidget);
     });
 
-    testWidgets('_formatTime uses EEE format for 3-day-old message',
-        (tester) async {
-      await initializeDateFormatting('fr');
-      when(() => bloc.state).thenReturn(ConversationListLoaded([_convDaysAgo]));
+    testWidgets('empty state adapté quand searchQuery non vide', (tester) async {
+      when(() => bloc.state).thenReturn(
+        const ConversationListLoaded([], searchQuery: 'xyz'),
+      );
       await _pump(tester, bloc);
 
-      expect(find.text('Fatoumata'), findsOneWidget);
-    });
-
-    testWidgets('_formatTime uses dd/MM format for 10-day-old message',
-        (tester) async {
-      await initializeDateFormatting('fr');
-      when(() => bloc.state).thenReturn(ConversationListLoaded([_convWeeksAgo]));
-      await _pump(tester, bloc);
-
-      expect(find.text('Oumar'), findsOneWidget);
+      expect(find.text('Aucun résultat'), findsOneWidget);
     });
 
     testWidgets('pull-to-refresh dispatches ConversationsLoadRequested',
