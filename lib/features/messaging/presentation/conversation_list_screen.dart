@@ -105,14 +105,21 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
 
     if (state is ConversationListLoaded) {
       if (state.displayed.isEmpty) {
-        return DonyEmptyState(
-          mascotte: DonyMascotteType.assis,
-          title: state.searchQuery.isNotEmpty
-              ? 'Aucun résultat'
-              : 'Aucun message',
-          description: state.searchQuery.isNotEmpty
-              ? 'Aucune conversation ne correspond à « ${state.searchQuery} ».'
-              : 'Vos conversations apparaîtront ici\naprès l\'acceptation d\'une offre.',
+        return LayoutBuilder(
+          builder: (ctx, constraints) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: DonyEmptyState(
+                mascotte: DonyMascotteType.assis,
+                title: state.searchQuery.isNotEmpty
+                    ? 'Aucun résultat'
+                    : 'Aucun message',
+                description: state.searchQuery.isNotEmpty
+                    ? 'Aucune conversation ne correspond à « ${state.searchQuery} ».'
+                    : 'Vos conversations apparaîtront ici\naprès l\'acceptation d\'une offre.',
+              ),
+            ),
+          ),
         );
       }
 
