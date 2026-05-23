@@ -111,11 +111,18 @@ void main() {
 
   group('ConversationListScreen', () {
     testWidgets('affiche le header Messages dans tous les états', (tester) async {
-      when(() => bloc.state).thenReturn(const ConversationListLoading());
-      await _pump(tester, bloc);
-
-      expect(find.text('Messages'), findsOneWidget);
-      expect(find.byType(TextField), findsOneWidget);
+      for (final state in [
+        const ConversationListLoading() as ConversationListState,
+        const ConversationListLoaded([]),
+        ConversationListError(NetworkException('err')),
+      ]) {
+        when(() => bloc.state).thenReturn(state);
+        await _pump(tester, bloc);
+        expect(find.text('Messages'), findsOneWidget,
+            reason: 'header manquant pour $state');
+        expect(find.byType(TextField), findsOneWidget,
+            reason: 'search bar manquante pour $state');
+      }
     });
 
     testWidgets('shows loading indicator when state is Loading', (tester) async {
