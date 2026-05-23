@@ -128,14 +128,14 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
             return _SlidableTile(conversation: conv)
                 .animate()
                 .fadeIn(
-                  delay: Duration(milliseconds: 40 * index),
+                  delay: Duration(milliseconds: 40 * index.clamp(0, 8)),
                   duration: 260.ms,
                   curve: Curves.easeOutCubic,
                 )
                 .slideY(
                   begin: 0.03,
                   end: 0,
-                  delay: Duration(milliseconds: 40 * index),
+                  delay: Duration(milliseconds: 40 * index.clamp(0, 8)),
                   duration: 260.ms,
                   curve: Curves.easeOutCubic,
                 );
@@ -163,10 +163,12 @@ List<_ListItem> _buildGroupedItems(List<ConversationModel> convs) {
     }
     final local =
         c.lastMessageAt!.isUtc ? c.lastMessageAt!.toLocal() : c.lastMessageAt!;
-    final diff = now.difference(local);
-    if (diff.inDays == 0) {
+    final todayDate = DateTime(now.year, now.month, now.day);
+    final localDate = DateTime(local.year, local.month, local.day);
+    final dayDiff = todayDate.difference(localDate).inDays;
+    if (dayDiff == 0) {
       today.add(c);
-    } else if (diff.inDays < 7) {
+    } else if (dayDiff < 7) {
       thisWeek.add(c);
     } else {
       older.add(c);
@@ -234,7 +236,7 @@ class _MessagesHeader extends StatelessWidget {
                                 ),
                               );
                         }
-                      : () {},
+                      : null,
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: DonySpacing.sm,
@@ -586,13 +588,7 @@ class _ConversationTile extends StatelessWidget {
                           _UnreadBadge(
                               count: conversation.unreadCount,
                               cs: cs,
-                              tt: tt)
-                        else if (!unread && conversation.lastMessageAt != null)
-                          Text(
-                            '✓✓',
-                            style: tt.labelSmall
-                                ?.copyWith(color: cs.success),
-                          ),
+                              tt: tt),
                       ],
                     ),
                   ],
