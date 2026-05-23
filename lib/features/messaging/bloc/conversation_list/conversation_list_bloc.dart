@@ -16,6 +16,7 @@ class ConversationListBloc
 
   StreamSubscription<Map<String, int>>? _unreadSub;
   List<ConversationModel>? _loaded;
+  List<ConversationModel> _archived = [];
 
   // Préservés entre les rechargements pour ne pas perdre le filtre actif.
   ConversationFilter _currentFilter = ConversationFilter.all;
@@ -29,6 +30,7 @@ class ConversationListBloc
     on<ConversationRemovedLocally>(_onRemovedLocally);
     on<ConversationFilterChanged>(_onFilterChanged);
     on<ConversationArchiveRequested>(_onArchive);
+    on<ConversationUnarchiveRequested>(_onUnarchive);
   }
 
   Future<void> _onLoad(
@@ -39,6 +41,7 @@ class ConversationListBloc
     try {
       final conversations = await _repository.getConversations();
       _loaded = conversations;
+      _archived = [];
       emit(ConversationListLoaded(
         conversations,
         filter: _currentFilter,
@@ -86,6 +89,7 @@ class ConversationListBloc
     _loaded = updated;
     emit(ConversationListLoaded(
       updated,
+      archivedConversations: _archived,
       filter: _currentFilter,
       searchQuery: _currentSearchQuery,
     ));
@@ -145,7 +149,32 @@ class ConversationListBloc
     ConversationArchiveRequested event,
     Emitter<ConversationListState> emit,
   ) {
+    if (_loaded == null) {
+      return;
+    }
+    final conv = _loaded!.where((c) => c.id == event.conversationId).firstOrNull;
+    if (conv != null) {
+      _archived = [..._archived, conv];
+    }
     _removeFromLoaded(event.conversationId, emit);
+  }
+
+  void _onUnarchive(
+    ConversationUnarchiveRequested event,
+    Emitter<ConversationListState> emit,
+  ) {
+    final conv = _archived.where((c) => c.id == event.conversationId).firstOrNull;
+    if (conv == null) {
+      return;
+    }
+    _archived = _archived.where((c) => c.id != event.conversationId).toList();
+    _loaded = [conv, ...(_loaded ?? [])];
+    emit(ConversationListLoaded(
+      _loaded!,
+      archivedConversations: _archived,
+      filter: _currentFilter,
+      searchQuery: _currentSearchQuery,
+    ));
   }
 
   void _removeFromLoaded(String id, Emitter<ConversationListState> emit) {
@@ -155,6 +184,7 @@ class ConversationListBloc
     _loaded = _loaded!.where((c) => c.id != id).toList();
     emit(ConversationListLoaded(
       _loaded!,
+      archivedConversations: _archived,
       filter: _currentFilter,
       searchQuery: _currentSearchQuery,
     ));

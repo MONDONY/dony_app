@@ -17,11 +17,13 @@ class ConversationListLoading extends ConversationListState {
 
 class ConversationListLoaded extends ConversationListState {
   final List<ConversationModel> conversations;
+  final List<ConversationModel> archivedConversations;
   final ConversationFilter filter;
   final String searchQuery;
 
   const ConversationListLoaded(
     this.conversations, {
+    this.archivedConversations = const [],
     this.filter = ConversationFilter.all,
     this.searchQuery = '',
   });
@@ -46,7 +48,12 @@ class ConversationListLoaded extends ConversationListState {
     required ConversationFilter filter,
     required String searchQuery,
   }) =>
-      ConversationListLoaded(conversations, filter: filter, searchQuery: searchQuery);
+      ConversationListLoaded(
+        conversations,
+        archivedConversations: archivedConversations,
+        filter: filter,
+        searchQuery: searchQuery,
+      );
 }
 
 class ConversationListError extends ConversationListState {

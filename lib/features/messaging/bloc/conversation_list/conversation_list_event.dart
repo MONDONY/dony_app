@@ -32,8 +32,14 @@ class ConversationFilterChanged extends ConversationListEvent {
   const ConversationFilterChanged({required this.filter, required this.searchQuery});
 }
 
-/// Swipe-to-archive : retire localement sans appel API.
+/// Swipe-to-archive : déplace vers la liste archivée sans appel API.
 class ConversationArchiveRequested extends ConversationListEvent {
   final String conversationId;
   const ConversationArchiveRequested(this.conversationId);
+}
+
+/// Désarchiver : remet la conversation dans la liste principale.
+class ConversationUnarchiveRequested extends ConversationListEvent {
+  final String conversationId;
+  const ConversationUnarchiveRequested(this.conversationId);
 }
