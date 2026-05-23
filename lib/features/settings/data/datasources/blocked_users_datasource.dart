@@ -14,6 +14,13 @@ class BlockedUsersDatasource {
         .toList();
   }
 
+  Future<void> blockUser(String blockedUserId) async {
+    await _api.dio.post(
+      '/users/me/blocks',
+      data: {'blockedUserId': blockedUserId},
+    );
+  }
+
   Future<void> unblockUser(String userId) async {
     await _api.dio.delete('/users/me/blocks/$userId');
   }

@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/block_user_action.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
@@ -8,6 +9,7 @@ import 'package:dony/features/ratings/presentation/widgets/rating_list_item.dart
 import 'package:dony/features/ratings/presentation/widgets/rating_summary_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Ouvre un modal sheet (90 % écran) affichant le profil complet d'un expéditeur.
 void showSenderProfileSheet(BuildContext context, BidModel bid) {
@@ -67,17 +69,39 @@ class _SenderProfileSheet extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // ── Handle ────────────────────────────────────────────────────────
-          const SizedBox(height: DonySpacing.md),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: cs.outline,
-              borderRadius: BorderRadius.circular(DonyRadius.full),
+          // ── Handle + menu ⋯ ──────────────────────────────────────────────
+          SizedBox(
+            height: 44,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: cs.outline,
+                    borderRadius: BorderRadius.circular(DonyRadius.full),
+                  ),
+                ),
+                Positioned(
+                  right: DonySpacing.sm,
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.more_horiz_rounded,
+                      color: cs.onSurfaceVariant,
+                    ),
+                    tooltip: 'Plus d\'options',
+                    onPressed: () => showBlockMenu(
+                      context,
+                      userId: bid.senderId,
+                      displayName: _abbreviatedName,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: DonySpacing.xl),
+          const SizedBox(height: DonySpacing.md),
 
           // ── Scrollable body ────────────────────────────────────────────────
           Expanded(
@@ -107,8 +131,8 @@ class _SenderProfileSheet extends StatelessWidget {
                           letterSpacing: -0.3,
                         ),
                       ),
-                      if (bid.senderPhone != null) ...[
-                        const SizedBox(height: DonySpacing.xs),
+                      const SizedBox(height: DonySpacing.xs),
+                      if (bid.senderPhone != null)
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -124,8 +148,16 @@ class _SenderProfileSheet extends StatelessWidget {
                                   ?.copyWith(color: cs.onSurfaceVariant),
                             ),
                           ],
+                        )
+                      else
+                        Text(
+                          '📞 Numéro révélé après acceptation',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            color: cs.onSurfaceVariant,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
-                      ],
                       if (bid.senderIsProAccount ||
                           bid.senderKiloPro ||
                           bid.senderKycVerified) ...[

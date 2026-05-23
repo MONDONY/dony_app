@@ -8,5 +8,8 @@ class BlockedUsersRepository {
   Future<List<BlockedUserModel>> fetchBlockedUsers() =>
       _datasource.fetchBlockedUsers();
 
+  Future<void> blockUser(String blockedUserId) =>
+      _datasource.blockUser(blockedUserId);
+
   Future<void> unblockUser(String userId) => _datasource.unblockUser(userId);
 }
