@@ -58,24 +58,27 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: BlocBuilder<ConversationListBloc, ConversationListState>(
-        builder: (context, state) {
-          final filter =
-              state is ConversationListLoaded ? state.filter : ConversationFilter.all;
-          final searchQuery =
-              state is ConversationListLoaded ? state.searchQuery : '';
+      body: SafeArea(
+        bottom: false,
+        child: BlocBuilder<ConversationListBloc, ConversationListState>(
+          builder: (context, state) {
+            final filter =
+                state is ConversationListLoaded ? state.filter : ConversationFilter.all;
+            final searchQuery =
+                state is ConversationListLoaded ? state.searchQuery : '';
 
-          return Column(
-            children: [
-              _MessagesHeader(
-                searchController: _searchController,
-                activeFilter: filter,
-                searchQuery: searchQuery,
-              ),
-              Expanded(child: _buildBody(context, state)),
-            ],
-          );
-        },
+            return Column(
+              children: [
+                _MessagesHeader(
+                  searchController: _searchController,
+                  activeFilter: filter,
+                  searchQuery: searchQuery,
+                ),
+                Expanded(child: _buildBody(context, state)),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
