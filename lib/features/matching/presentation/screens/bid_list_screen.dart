@@ -431,7 +431,7 @@ class _BidListViewState extends State<_BidListView>
                   ? pendingBids
                   : pendingBids
                       .where((b) =>
-                          b.pricePerKg != null && b.pricePerKg! >= minPrice)
+                          b.pricePerKg == null || b.pricePerKg! >= minPrice)
                       .toList();
               final hiddenCount = pendingBids.length - visibleBids.length;
               return Column(
