@@ -23,7 +23,24 @@ import 'package:dony/features/profile/bloc/traveler_upgrade_bloc.dart';
 import 'package:dony/features/profile/data/pro_stats_repository.dart';
 import 'package:dony/features/profile/data/profile_repository.dart';
 import 'package:dony/features/profile/data/traveler_upgrade_repository.dart';
+import 'package:dony/features/settings/bloc/connected_devices_bloc.dart';
+import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
+import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
+import 'package:dony/features/settings/bloc/data_export_bloc.dart';
+import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
+import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
+import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
+import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
+import 'package:dony/features/settings/data/datasources/blocked_users_datasource.dart';
+import 'package:dony/features/settings/data/datasources/business_prefs_remote_datasource.dart';
+import 'package:dony/features/settings/data/datasources/privacy_settings_datasource.dart';
+import 'package:dony/features/settings/data/repositories/blocked_users_repository.dart';
+import 'package:dony/features/settings/data/repositories/business_prefs_repository.dart';
+import 'package:dony/features/settings/data/repositories/privacy_settings_repository.dart';
+import 'package:dony/features/settings/data/connected_devices_datasource.dart';
+import 'package:dony/features/settings/data/connected_devices_repository.dart';
 import 'package:dony/features/settings/data/account_deletion_repository.dart';
 import 'package:dony/features/settings/data/firebase_phone_reauth.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
@@ -34,6 +51,7 @@ import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
@@ -102,7 +120,13 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<ActiveRoleCubit>(
     () => ActiveRoleCubit(hiveService: getIt<HiveService>()),
   );
-  getIt.registerLazySingleton<ApiClient>(() => ApiClient(baseUrl: apiBaseUrl));
+  getIt.registerLazySingleton<DeviceIdService>(() => DeviceIdService());
+  getIt.registerLazySingleton<ApiClient>(
+    () => ApiClient(
+      baseUrl: apiBaseUrl,
+      deviceIdService: getIt<DeviceIdService>(),
+    ),
+  );
   getIt.registerLazySingleton<NotificationRemoteDatasource>(
     () => NotificationRemoteDatasource(getIt<ApiClient>()),
   );
@@ -110,7 +134,11 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => NotificationRepository(getIt<NotificationRemoteDatasource>()),
   );
   getIt.registerLazySingleton<NotificationService>(
-    () => NotificationService(getIt<ApiClient>(), getIt<NotificationRepository>()),
+    () => NotificationService(
+      getIt<ApiClient>(),
+      getIt<NotificationRepository>(),
+      getIt<DeviceIdService>(),
+    ),
     dispose: (s) => s.dispose(),
   );
   getIt.registerFactory<NotificationBloc>(
@@ -139,7 +167,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Local auth (biometric + PIN)
   getIt.registerLazySingleton<LocalAuthService>(() => LocalAuthService());
   getIt.registerFactory<LocalAuthBloc>(
-    () => LocalAuthBloc(getIt<LocalAuthService>()),
+    () => LocalAuthBloc(
+      getIt<LocalAuthService>(),
+      getIt<HiveService>().userPrefs,
+    ),
   );
 
   // KYC
@@ -303,6 +334,77 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
       getIt<AccountDeletionRepository>(),
       getIt<FirebasePhoneReauth>(),
     ),
+  );
+
+  // Settings — Data Export (RGPD)
+  getIt.registerFactory<DataExportBloc>(
+    () => DataExportBloc(getIt<ApiClient>()),
+  );
+
+  // Settings — App Preferences (theme, language, SMS, destinations)
+  getIt.registerLazySingleton<AppPreferencesBloc>(
+    () => AppPreferencesBloc(getIt<HiveService>().userPrefs),
+  );
+
+  // Settings — Privacy (contactKycOnly via backend)
+  getIt.registerLazySingleton<PrivacySettingsDatasource>(
+    () => PrivacySettingsDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<PrivacySettingsRepository>(
+    () => PrivacySettingsRepository(getIt<PrivacySettingsDatasource>()),
+  );
+  getIt.registerFactory<PrivacySettingsBloc>(
+    () => PrivacySettingsBloc(
+      getIt<PrivacySettingsRepository>(),
+      getIt<HiveService>().userPrefs,
+    ),
+  );
+  getIt.registerLazySingleton<BlockedUsersDatasource>(
+    () => BlockedUsersDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<BlockedUsersRepository>(
+    () => BlockedUsersRepository(getIt<BlockedUsersDatasource>()),
+  );
+  getIt.registerFactory<BlockedUsersBloc>(
+    () => BlockedUsersBloc(getIt<BlockedUsersRepository>()),
+  );
+
+  // Settings — Notification preferences
+  getIt.registerFactory<NotificationPrefsBloc>(
+    () => NotificationPrefsBloc(getIt<HiveService>().userPrefs),
+  );
+
+  // Settings — Business preferences (Hive + API sync)
+  getIt.registerLazySingleton<BusinessPrefsRemoteDatasource>(
+    () => BusinessPrefsRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<BusinessPrefsRepository>(
+    () => BusinessPrefsRepository(getIt<BusinessPrefsRemoteDatasource>()),
+  );
+  getIt.registerLazySingleton<BusinessPrefsBloc>(
+    () => BusinessPrefsBloc(getIt<BusinessPrefsRepository>(), getIt<HiveService>().userPrefs),
+    dispose: (b) => b.close(),
+  );
+
+  // Settings — Accessibility (text scale, high contrast, reduce animations)
+  getIt.registerFactory<AccessibilityBloc>(
+    () => AccessibilityBloc(getIt<HiveService>().userPrefs),
+  );
+
+  // Settings — Diagnostics (version app + ping API)
+  getIt.registerFactory<DiagnosticsBloc>(
+    () => DiagnosticsBloc(getIt<ApiClient>()),
+  );
+
+  // Settings — Connected Devices
+  getIt.registerLazySingleton<ConnectedDevicesDatasource>(
+    () => ConnectedDevicesDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<ConnectedDevicesRepository>(
+    () => ConnectedDevicesRepository(getIt<ConnectedDevicesDatasource>()),
+  );
+  getIt.registerFactory<ConnectedDevicesBloc>(
+    () => ConnectedDevicesBloc(getIt<ConnectedDevicesRepository>()),
   );
 
   // Ratings

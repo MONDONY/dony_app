@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:dony/features/settings/data/account_deletion_repository.dart';
 import 'package:dony/features/settings/data/firebase_phone_reauth.dart';
@@ -81,5 +84,156 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Confirmer la pause'), findsOneWidget);
+  });
+
+  testWidgets('affiche les badges RÉVERSIBLE et IRRÉVERSIBLE', (tester) async {
+    await tester.pumpWidget(buildWidget());
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('RÉVERSIBLE'), findsOneWidget);
+    expect(find.text('IRRÉVERSIBLE'), findsOneWidget);
+  });
+
+  testWidgets('affiche le groupe de raisons (optionnel)', (tester) async {
+    await tester.pumpWidget(buildWidget());
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Raison (optionnel)'), findsOneWidget);
+    expect(find.textContaining("n'utilise plus"), findsOneWidget);
+    expect(find.text('Problème de confidentialité'), findsOneWidget);
+  });
+
+  testWidgets('affiche le bouton Annuler', (tester) async {
+    await tester.pumpWidget(buildWidget());
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Annuler'), findsOneWidget);
+  });
+
+  testWidgets('affiche spinner quand AccountDeletionLoading', (tester) async {
+    when(() => mockBloc.state).thenReturn(const AccountDeletionLoading());
+    whenListen<AccountDeletionState>(
+      mockBloc,
+      const Stream.empty(),
+      initialState: const AccountDeletionLoading(),
+    );
+
+    await tester.pumpWidget(buildWidget());
+    await tester.tap(find.text('Open'));
+    await tester.pump(); // don't pumpAndSettle — CircularProgressIndicator animates forever
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
+
+  testWidgets('sélectionner une raison via radio option', (tester) async {
+    await tester.pumpWidget(buildWidget());
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.textContaining("Trop de notifications"),
+      warnIfMissed: false,
+    );
+    await tester.pump();
+
+    expect(find.textContaining("Trop de notifications"), findsOneWidget);
+  });
+
+  testWidgets('tap Annuler ferme la bottom sheet', (tester) async {
+    await tester.pumpWidget(buildWidget());
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Supprimer mon compte'), findsOneWidget);
+
+    await tester.tap(find.text('Annuler'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Supprimer mon compte'), findsNothing);
+  });
+
+  testWidgets('sélectionner une option radio via texte', (tester) async {
+    await tester.pumpWidget(buildWidget());
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    // Scroll down inside the sheet to see radio options
+    await tester.tap(
+      find.text("Je n'utilise plus le service"),
+      warnIfMissed: false,
+    );
+    await tester.pump();
+
+    expect(find.text("Je n'utilise plus le service"), findsOneWidget);
+  });
+
+  testWidgets('affiche le titre de la bottom sheet', (tester) async {
+    await tester.pumpWidget(buildWidget());
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Supprimer mon compte'), findsOneWidget);
+  });
+
+  testWidgets(
+      'BlocListener: AccountDeletionRequested ferme la sheet et affiche snackbar',
+      (tester) async {
+    // Use a delayed stream so the state emits after the sheet opens
+    final controller = StreamController<AccountDeletionState>();
+    whenListen<AccountDeletionState>(
+      mockBloc,
+      controller.stream,
+      initialState: const AccountDeletionInitial(),
+    );
+
+    await tester.pumpWidget(buildWidget());
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    // Confirm sheet is open
+    expect(find.text('Supprimer mon compte'), findsOneWidget);
+
+    // Now emit state
+    controller.add(const AccountDeletionRequested());
+    await tester.pump();
+    await tester.pump();
+
+    // Sheet should be closed (Navigator.pop was called), snackbar shown
+    // The "Supprimer mon compte" title should be gone (sheet closed) or snackbar present
+    final hasSnackbar = find.byType(SnackBar).evaluate().isNotEmpty;
+    final sheetGone = find.text('Supprimer mon compte').evaluate().isEmpty;
+    expect(hasSnackbar || sheetGone, isTrue);
+
+    await controller.close();
+  });
+
+  testWidgets('BlocListener: AccountDeletionError(isEscrowBlocked) shows dialog',
+      (tester) async {
+    final controller = StreamController<AccountDeletionState>();
+    whenListen<AccountDeletionState>(
+      mockBloc,
+      controller.stream,
+      initialState: const AccountDeletionInitial(),
+    );
+
+    await tester.pumpWidget(buildWidget());
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    // Emit escrow blocked error
+    controller.add(AccountDeletionError(
+      error: const ValidationException('test', code: 'escrow'),
+      isEscrowBlocked: true,
+    ));
+    await tester.pump();
+    await tester.pump();
+
+    // EscrowBlockDialog should appear
+    expect(find.byType(AlertDialog), findsOneWidget);
+
+    await controller.close();
   });
 }

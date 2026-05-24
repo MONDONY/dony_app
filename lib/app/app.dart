@@ -7,6 +7,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
@@ -15,6 +16,8 @@ import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/settings/data/repositories/privacy_settings_repository.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -118,73 +121,94 @@ class _DonyAppState extends State<DonyApp> {
   }
 
   @override
-  Widget build(BuildContext context) => MultiBlocProvider(
-        providers: [
-          BlocProvider<ActiveRoleCubit>(
-            create: (_) => getIt<ActiveRoleCubit>(),
-          ),
-          BlocProvider<AuthBloc>(
-            create: (_) => getIt<AuthBloc>(),
-          ),
-          BlocProvider<LocalAuthBloc>(
-            create: (_) => getIt<LocalAuthBloc>(),
-          ),
-          BlocProvider<KycBloc>(
-            create: (_) => getIt<KycBloc>(),
-          ),
-          BlocProvider<AnnouncementBloc>(
-            create: (_) => getIt<AnnouncementBloc>(),
-          ),
-          BlocProvider<BidBloc>(
-            create: (_) => getIt<BidBloc>(),
-          ),
-          BlocProvider<PaymentBloc>(
-            create: (_) => getIt<PaymentBloc>(),
-          ),
-          BlocProvider<NotificationBloc>(
-            create: (_) => getIt<NotificationBloc>(),
-          ),
-          BlocProvider<RatingBloc>(
-            create: (_) => getIt<RatingBloc>(),
-          ),
-          BlocProvider<StripeAccountBloc>(
-            create: (_) => getIt<StripeAccountBloc>(),
-          ),
-        ],
-        child: BlocListener<AuthBloc, AuthState>(
-          listener: (context, state) {
-            if (state is AuthAuthenticated) {
-              context.read<ActiveRoleCubit>().syncWithRoles(state.user.roles);
-            } else if (state is AuthProfileUpdated) {
-              context.read<ActiveRoleCubit>().syncWithRoles(state.user.roles);
-            }
+  Widget build(BuildContext context) => BlocProvider<AppPreferencesBloc>.value(
+        value: getIt<AppPreferencesBloc>(),
+        child: BlocBuilder<AppPreferencesBloc, AppPreferencesState>(
+          builder: (context, prefsState) {
+            final themeMode = switch (prefsState.preferences.themeMode) {
+              'light' => ThemeMode.light,
+              'dark' => ThemeMode.dark,
+              _ => ThemeMode.system,
+            };
+            return MultiBlocProvider(
+              providers: [
+                BlocProvider<ActiveRoleCubit>(
+                  create: (_) => getIt<ActiveRoleCubit>(),
+                ),
+                BlocProvider<AuthBloc>(
+                  create: (_) => getIt<AuthBloc>(),
+                ),
+                BlocProvider<LocalAuthBloc>(
+                  create: (_) => getIt<LocalAuthBloc>(),
+                ),
+                BlocProvider<KycBloc>(
+                  create: (_) => getIt<KycBloc>(),
+                ),
+                BlocProvider<AnnouncementBloc>(
+                  create: (_) => getIt<AnnouncementBloc>(),
+                ),
+                BlocProvider<BidBloc>(
+                  create: (_) => getIt<BidBloc>(),
+                ),
+                BlocProvider<PaymentBloc>(
+                  create: (_) => getIt<PaymentBloc>(),
+                ),
+                BlocProvider<NotificationBloc>(
+                  create: (_) => getIt<NotificationBloc>(),
+                ),
+                BlocProvider<RatingBloc>(
+                  create: (_) => getIt<RatingBloc>(),
+                ),
+                BlocProvider<StripeAccountBloc>(
+                  create: (_) => getIt<StripeAccountBloc>(),
+                ),
+              ],
+              child: BlocListener<AuthBloc, AuthState>(
+                listener: (context, state) {
+                  if (state is AuthAuthenticated) {
+                    context.read<ActiveRoleCubit>().syncWithRoles(state.user.roles);
+                    // Réconciliation de la préférence contactKycOnly depuis le backend
+                    // vers le cache Hive local (utile en cas de changement sur un autre appareil).
+                    unawaited(
+                      getIt<PrivacySettingsRepository>()
+                          .fetchContactKycOnly()
+                          .then((v) => getIt<HiveService>().userPrefs
+                              .put(HiveService.kContactKycOnly, v))
+                          .catchError((_) {}),
+                    );
+                  } else if (state is AuthProfileUpdated) {
+                    context.read<ActiveRoleCubit>().syncWithRoles(state.user.roles);
+                  }
+                },
+                child: AnnotatedRegion<SystemUiOverlayStyle>(
+                  value: const SystemUiOverlayStyle(
+                    systemNavigationBarColor: Colors.transparent,
+                    systemNavigationBarDividerColor: Colors.transparent,
+                    systemNavigationBarContrastEnforced: false,
+                    statusBarColor: Colors.transparent,
+                  ),
+                  child: MaterialApp.router(
+                    title: 'dony',
+                    theme: AppTheme.light,
+                    darkTheme: AppTheme.dark,
+                    themeMode: themeMode,
+                    locale: Locale(prefsState.preferences.languageCode),
+                    routerConfig: appRouter,
+                    debugShowCheckedModeBanner: false,
+                    localizationsDelegates: const [
+                      GlobalMaterialLocalizations.delegate,
+                      GlobalWidgetsLocalizations.delegate,
+                      GlobalCupertinoLocalizations.delegate,
+                    ],
+                    supportedLocales: const [
+                      Locale('fr', 'FR'),
+                      Locale('en', 'US'),
+                    ],
+                  ),
+                ),
+              ),
+            );
           },
-          child: AnnotatedRegion<SystemUiOverlayStyle>(
-          value: const SystemUiOverlayStyle(
-            systemNavigationBarColor: Colors.transparent,
-            systemNavigationBarDividerColor: Colors.transparent,
-            systemNavigationBarContrastEnforced: false,
-            statusBarColor: Colors.transparent,
-          ),
-          child: MaterialApp.router(
-            title: 'dony',
-            theme: AppTheme.light,
-            darkTheme: AppTheme.dark,
-            // ignore: avoid_redundant_argument_values
-            themeMode: ThemeMode.system,
-            routerConfig: appRouter,
-            debugShowCheckedModeBanner: false,
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: const [
-              Locale('fr', 'FR'),
-              Locale('en', 'US'),
-            ],
-          ),
-          ),
         ),
       );
 }

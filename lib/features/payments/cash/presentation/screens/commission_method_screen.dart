@@ -1,10 +1,14 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:dony/features/payments/cash/presentation/widgets/commission_card_empty_state.dart';
 import 'package:dony/features/payments/cash/presentation/widgets/commission_card_expiration_banner.dart';
 import 'package:dony/features/payments/cash/presentation/widgets/commission_card_preview.dart';
+import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -123,6 +127,22 @@ class _CommissionMethodScreenState extends State<CommissionMethodScreen>
   }
 
   Future<void> _runPaymentSheet(BuildContext context, String clientSecret) async {
+    final authenticated = await requirePaymentAuth(
+      context,
+      authService: getIt<LocalAuthService>(),
+      userPrefs: getIt<HiveService>().userPrefs,
+    );
+    if (!context.mounted) return;
+    if (!authenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Authentification requise pour effectuer le paiement'),
+        ),
+      );
+      context.read<CommissionMethodBloc>().add(CommissionMethodSetupCancelled());
+      return;
+    }
+
     try {
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: SetupPaymentSheetParameters(

@@ -1,4 +1,6 @@
+import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/features/notifications/data/notification_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,16 +8,72 @@ import 'package:mocktail/mocktail.dart';
 
 class MockApiClient extends Mock implements ApiClient {}
 class MockNotificationRepository extends Mock implements NotificationRepository {}
+class MockDeviceIdService extends Mock implements DeviceIdService {}
+class MockDio extends Mock implements Dio {}
 
 void main() {
   late MockApiClient apiClient;
   late MockNotificationRepository repository;
+  late MockDeviceIdService deviceIdService;
   late NotificationService service;
 
   setUp(() {
     apiClient = MockApiClient();
     repository = MockNotificationRepository();
-    service = NotificationService(apiClient, repository);
+    deviceIdService = MockDeviceIdService();
+    service = NotificationService(apiClient, repository, deviceIdService);
+  });
+
+  group('NotificationService._uploadToken', () {
+    late MockDio mockDio;
+
+    setUp(() {
+      mockDio = MockDio();
+      when(() => apiClient.dio).thenReturn(mockDio);
+      when(() => deviceIdService.getDeviceId())
+          .thenAnswer((_) async => 'test-device-id-uuid');
+    });
+
+    test('sends fcmToken, deviceId, deviceName and platform to the endpoint', () async {
+      when(
+        () => mockDio.put(
+          '/auth/me/fcm-token',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((_) async => Response(
+            requestOptions: RequestOptions(path: '/auth/me/fcm-token'),
+            statusCode: 200,
+          ));
+
+      await service.testUploadToken('test-fcm-token');
+
+      final captured = verify(
+        () => mockDio.put(
+          '/auth/me/fcm-token',
+          data: captureAny(named: 'data'),
+        ),
+      ).captured;
+
+      final body = captured.first as Map<String, dynamic>;
+      expect(body['fcmToken'], 'test-fcm-token');
+      expect(body['deviceId'], 'test-device-id-uuid');
+      expect(body.containsKey('deviceName'), isTrue);
+      expect(body['platform'], anyOf('ios', 'android'));
+    });
+
+    test('swallows errors silently when upload fails', () async {
+      when(
+        () => mockDio.put(
+          '/auth/me/fcm-token',
+          data: any(named: 'data'),
+        ),
+      ).thenThrow(Exception('network error'));
+
+      await expectLater(
+        service.testUploadToken('test-fcm-token'),
+        completes,
+      );
+    });
   });
 
   group('NotificationService._ackIfCritical', () {
@@ -92,6 +150,50 @@ void main() {
   const _annId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
   const _bidId = 'b1b2c3d4-e5f6-7890-abcd-ef1234567890';
   const _threadId = 'c1b2c3d4-e5f6-7890-abcd-ef1234567890';
+
+  group('NotificationService.formatAndroidName', () {
+    test('préfixe le fabricant quand le modèle ne commence pas par lui', () {
+      expect(
+        NotificationService.formatAndroidName('xiaomi', '25028RN03Y'),
+        'Xiaomi 25028RN03Y',
+      );
+    });
+
+    test('ne duplique pas le fabricant quand le modèle commence déjà par lui', () {
+      expect(
+        NotificationService.formatAndroidName('Samsung', 'Samsung Galaxy S22'),
+        'Samsung Galaxy S22',
+      );
+    });
+
+    test('retourne le modèle seul quand le fabricant est vide', () {
+      expect(
+        NotificationService.formatAndroidName('', 'Pixel 7'),
+        'Pixel 7',
+      );
+    });
+
+    test('ignore la casse pour la détection de duplication', () {
+      expect(
+        NotificationService.formatAndroidName('SAMSUNG', 'samsung galaxy a54'),
+        'samsung galaxy a54',
+      );
+    });
+
+    test('capitalise la première lettre du fabricant', () {
+      expect(
+        NotificationService.formatAndroidName('google', 'Pixel 8 Pro'),
+        'Google Pixel 8 Pro',
+      );
+    });
+
+    test('gère les espaces superflus dans manufacturer et model', () {
+      expect(
+        NotificationService.formatAndroidName('  OnePlus  ', '  Nord 3  '),
+        'OnePlus Nord 3',
+      );
+    });
+  });
 
   group('NotificationService._routeForMessage', () {
     test('BID_CREATED routes to announcement bids page', () {

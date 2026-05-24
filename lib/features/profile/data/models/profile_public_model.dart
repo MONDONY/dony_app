@@ -11,6 +11,8 @@ class ProfilePublicModel {
     required this.ratingCount,
     required this.memberSince,
     required this.badges,
+    this.contactMode,
+    this.responseDelayHours,
   });
 
   final String userId;
@@ -24,6 +26,8 @@ class ProfilePublicModel {
   final int ratingCount;
   final String memberSince;
   final List<String> badges;
+  final String? contactMode;
+  final int? responseDelayHours;
 
   factory ProfilePublicModel.fromJson(Map<String, dynamic> json) {
     return ProfilePublicModel(
@@ -41,6 +45,8 @@ class ProfilePublicModel {
               ?.map((e) => e as String)
               .toList() ??
           [],
+      contactMode: json['contactMode'] as String?,
+      responseDelayHours: json['responseDelayHours'] as int?,
     );
   }
 }

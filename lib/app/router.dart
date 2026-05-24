@@ -2,6 +2,7 @@ import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/auth/presentation/screens/local_auth_screen.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/data/models/conversation_model.dart';
@@ -82,8 +83,28 @@ import 'package:dony/features/profile/bloc/traveler_upgrade_bloc.dart';
 import 'package:dony/features/profile/presentation/screens/become_traveler_screen.dart';
 import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen.dart';
 import 'package:dony/features/splash/presentation/splash_screen.dart';
+import 'package:dony/features/settings/bloc/accessibility_bloc.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
+import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
+import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
+import 'package:dony/features/settings/bloc/data_export_bloc.dart';
+import 'package:dony/features/settings/bloc/diagnostics_bloc.dart';
+import 'package:dony/features/settings/bloc/notification_prefs_bloc.dart';
+import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
 import 'package:dony/features/settings/presentation/settings_screen.dart';
+import 'package:dony/features/settings/presentation/screens/accessibility_settings_screen.dart';
+import 'package:dony/features/settings/presentation/screens/business_prefs_screen.dart';
+import 'package:dony/features/settings/presentation/screens/data_settings_screen.dart';
+import 'package:dony/features/settings/presentation/screens/diagnostics_screen.dart';
+import 'package:dony/features/settings/presentation/screens/change_pin_screen.dart';
+import 'package:dony/features/settings/presentation/screens/legal_web_view_screen.dart';
+import 'package:dony/features/settings/presentation/screens/notification_settings_screen.dart';
+import 'package:dony/features/settings/presentation/screens/privacy_settings_screen.dart';
+import 'package:dony/features/settings/presentation/screens/security_settings_screen.dart';
+import 'package:dony/features/settings/bloc/blocked_users_bloc.dart';
+import 'package:dony/features/settings/bloc/connected_devices_bloc.dart';
+import 'package:dony/features/settings/presentation/screens/blocked_users_screen.dart';
+import 'package:dony/features/settings/presentation/screens/connected_devices_screen.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/presentation/screens/referral_screen.dart';
@@ -627,10 +648,105 @@ final appRouter = GoRouter(
     // ── Settings (hors shell) ──────────────────────────────────────────
     GoRoute(
       path: '/settings',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<AccountDeletionBloc>(),
+      builder: (context, state) => MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => getIt<AccountDeletionBloc>()),
+          BlocProvider.value(value: getIt<AppPreferencesBloc>()),
+        ],
         child: const SettingsScreen(),
       ),
+      routes: [
+        GoRoute(
+          path: 'security',
+          builder: (context, state) => const SecuritySettingsScreen(),
+          routes: [
+            GoRoute(
+              path: 'change-pin',
+              builder: (context, state) => ChangePinScreen(
+                authService: getIt<LocalAuthService>(),
+              ),
+            ),
+            GoRoute(
+              path: 'devices',
+              builder: (context, state) => BlocProvider(
+                create: (_) => getIt<ConnectedDevicesBloc>()
+                  ..add(const DevicesLoadRequested()),
+                child: const ConnectedDevicesScreen(),
+              ),
+            ),
+          ],
+        ),
+        GoRoute(
+          path: 'privacy',
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<PrivacySettingsBloc>()
+              ..add(const PrivacySettingsLoadRequested()),
+            child: const PrivacySettingsScreen(),
+          ),
+          routes: [
+            GoRoute(
+              path: 'blocked-users',
+              builder: (context, state) => BlocProvider(
+                create: (_) => getIt<BlockedUsersBloc>()
+                  ..add(const BlockedUsersLoadRequested()),
+                child: const BlockedUsersScreen(),
+              ),
+            ),
+          ],
+        ),
+        GoRoute(
+          path: 'data',
+          builder: (context, state) => MultiBlocProvider(
+            providers: [
+              BlocProvider(create: (_) => getIt<AccountDeletionBloc>()),
+              BlocProvider(create: (_) => getIt<DataExportBloc>()),
+            ],
+            child: const DataSettingsScreen(),
+          ),
+        ),
+        GoRoute(
+          path: 'notifications',
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<NotificationPrefsBloc>(),
+            child: const NotificationSettingsScreen(),
+          ),
+        ),
+        GoRoute(
+          path: 'preferences',
+          builder: (context, state) => BlocProvider.value(
+            value: getIt<BusinessPrefsBloc>(),
+            child: const BusinessPrefsScreen(),
+          ),
+        ),
+        GoRoute(
+          path: 'accessibility',
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<AccessibilityBloc>(),
+            child: const AccessibilitySettingsScreen(),
+          ),
+        ),
+        GoRoute(
+          path: 'diagnostics',
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<DiagnosticsBloc>(),
+            child: const DiagnosticsScreen(),
+          ),
+        ),
+        GoRoute(
+          path: 'legal/terms',
+          builder: (context, state) => const LegalWebViewScreen(
+            title: 'CGU',
+            url: 'https://dony.app/legal/terms',
+          ),
+        ),
+        GoRoute(
+          path: 'legal/privacy',
+          builder: (context, state) => const LegalWebViewScreen(
+            title: 'Politique de confidentialité',
+            url: 'https://dony.app/legal/privacy',
+          ),
+        ),
+      ],
     ),
 
     // ── Shell principal avec Bottom Navigation ───────────────────────────

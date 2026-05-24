@@ -1,25 +1,30 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/features/payments/presentation/payment_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive/hive.dart';
 
 class PaymentScreen extends StatelessWidget {
   final BidModel bid;
   final LocalAuthService? localAuthService;
+  @visibleForTesting final Box? userPrefs;
 
   const PaymentScreen({
     super.key,
     required this.bid,
     @visibleForTesting this.localAuthService,
+    @visibleForTesting this.userPrefs,
   });
 
   @override
@@ -44,6 +49,7 @@ class PaymentScreen extends StatelessWidget {
               state: state,
               commissionRate: commissionRate,
               localAuthService: localAuthService ?? getIt<LocalAuthService>(),
+              userPrefs: userPrefs ?? getIt<HiveService>().userPrefs,
             );
           },
         );
@@ -88,40 +94,32 @@ class _PaymentSummaryView extends StatelessWidget {
   final PaymentState state;
   final LocalAuthService localAuthService;
   final double commissionRate;
+  final Box userPrefs;
 
   const _PaymentSummaryView({
     required this.bid,
     required this.state,
     required this.localAuthService,
     required this.commissionRate,
+    required this.userPrefs,
   });
 
   double get _amount => bid.totalAmountEur ?? (bid.weightKg ?? 0) * (bid.pricePerKg ?? 0);
   double get _commission => _amount * commissionRate;
 
   Future<void> _pay(BuildContext context) async {
-    bool authenticated = false;
-
-    // Try biometric first if available.
-    final biometricAvailable = await localAuthService.isBiometricAvailable();
-    if (biometricAvailable) {
-      authenticated = await localAuthService.authenticateWithBiometric();
-    }
-
-    // Fall back to PIN if biometric not available or failed.
-    if (!authenticated && context.mounted) {
-      final pinResult = await context.push<bool>('/auth/local');
-      authenticated = pinResult ?? false;
-    }
-
-    if (!context.mounted || !authenticated) {
-      if (context.mounted) {
-        DonySnackbar.show(
-          context,
-          message: 'Authentification requise pour effectuer le paiement',
-          type: DonySnackbarType.error,
-        );
-      }
+    final authenticated = await requirePaymentAuth(
+      context,
+      authService: localAuthService,
+      userPrefs: userPrefs,
+    );
+    if (!context.mounted) return;
+    if (!authenticated) {
+      DonySnackbar.show(
+        context,
+        message: 'Authentification requise pour effectuer le paiement',
+        type: DonySnackbarType.error,
+      );
       return;
     }
     context.read<PaymentBloc>().add(PaymentInitiated(bid.id));
