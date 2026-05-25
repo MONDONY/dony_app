@@ -6,6 +6,9 @@ import 'package:dony/features/favorite_travelers/data/repositories/favorite_trav
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/data/datasources/pickup_address_datasource.dart';
 import 'package:dony/features/pickup_addresses/data/repositories/pickup_address_repository.dart';
+import 'package:dony/features/rebooking/bloc/past_bookings_bloc.dart';
+import 'package:dony/features/rebooking/data/rebooking_remote_datasource.dart';
+import 'package:dony/features/rebooking/data/rebooking_repository.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/datasources/recipient_datasource.dart';
 import 'package:dony/features/recipients/data/repositories/recipient_repository.dart';
@@ -480,6 +483,14 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerLazySingleton<FavoriteTravelerBloc>(
     () => FavoriteTravelerBloc(getIt<FavoriteTravelerRepository>()),
     dispose: (b) => b.close(),
+  );
+
+  // Rebooking — Réservation à nouveau d'un voyageur
+  getIt.registerLazySingleton<RebookingRepository>(
+    () => RebookingRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerFactory<PastBookingsBloc>(
+    () => PastBookingsBloc(getIt<RebookingRepository>()),
   );
 
   // Referral
