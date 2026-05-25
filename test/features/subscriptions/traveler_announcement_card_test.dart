@@ -9,16 +9,24 @@ void main() {
 
   testWidgets('affiche corridor, prix et bouton Réserver', (tester) async {
     var tapped = false;
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: TravelerAnnouncementCard(
-          announcement: TravelerAnnouncement(
-            id: 'a1', departureCity: 'Paris', arrivalCity: 'Dakar',
-            departureDate: DateTime(2026, 6, 1), pricePerKg: 8, availableKg: 5, status: 'ACTIVE'),
-          onReserve: () => tapped = true,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: TravelerAnnouncementCard(
+            announcement: TravelerAnnouncement(
+              id: 'a1',
+              departureCity: 'Paris',
+              arrivalCity: 'Dakar',
+              departureDate: DateTime(2026, 6, 1),
+              pricePerKg: 8,
+              availableKg: 5,
+              status: 'ACTIVE',
+            ),
+            onReserve: () => tapped = true,
+          ),
         ),
       ),
-    ));
+    );
     expect(find.text('Paris'), findsOneWidget);
     expect(find.text('Dakar'), findsOneWidget);
     expect(find.text('8 €'), findsOneWidget);
