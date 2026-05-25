@@ -17,6 +17,7 @@ void main() {
     double pricePerKg = 8,
     double availableKg = 5,
     DateTime? departureDate,
+    String status = 'ACTIVE',
   }) =>
       TravelerAnnouncement(
         id: 'a1',
@@ -25,12 +26,12 @@ void main() {
         departureDate: departureDate ?? DateTime(2026, 6, 1),
         pricePerKg: pricePerKg,
         availableKg: availableKg,
-        status: 'ACTIVE',
+        status: status,
       );
 
   testWidgets('affiche les villes départ et arrivée', (tester) async {
     await tester.pumpWidget(_wrap(TravelerAnnouncementCard(
-      announcement: _announcement(departureCity: 'Paris', arrivalCity: 'Dakar'),
+      announcement: _announcement(),
       onReserve: () {},
     )));
     expect(find.text('Paris'), findsOneWidget);
@@ -77,6 +78,7 @@ void main() {
       onReserve: () => tapped = true,
     )));
     await tester.tap(find.text('Réserver'));
+    await tester.pump();
     expect(tapped, isTrue);
   });
 
@@ -84,6 +86,7 @@ void main() {
     tester.view.physicalSize = const Size(320, 800);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(_wrap(TravelerAnnouncementCard(
       announcement: _announcement(
