@@ -1,14 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
-import 'package:dony/features/favorite_travelers/bloc/favorite_traveler_bloc.dart';
-import 'package:dony/features/favorite_travelers/data/datasources/favorite_traveler_datasource.dart';
-import 'package:dony/features/favorite_travelers/data/repositories/favorite_traveler_repository.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/data/datasources/pickup_address_datasource.dart';
 import 'package:dony/features/pickup_addresses/data/repositories/pickup_address_repository.dart';
-import 'package:dony/features/rebooking/bloc/past_bookings_bloc.dart';
-import 'package:dony/features/rebooking/data/rebooking_remote_datasource.dart';
-import 'package:dony/features/rebooking/data/rebooking_repository.dart';
+import 'package:dony/features/subscriptions/bloc/subscriptions_bloc.dart';
+import 'package:dony/features/subscriptions/bloc/traveler_hub_bloc.dart';
+import 'package:dony/features/subscriptions/data/subscriptions_remote_datasource.dart';
+import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/datasources/recipient_datasource.dart';
 import 'package:dony/features/recipients/data/repositories/recipient_repository.dart';
@@ -473,24 +471,15 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => RecipientBloc(getIt<RecipientRepository>()),
   );
 
-  // Address book — Favorite Travelers
-  getIt.registerLazySingleton<FavoriteTravelerDatasource>(
-    () => FavoriteTravelerDatasource(getIt<ApiClient>()),
+  // Subscriptions (abonnements voyageurs)
+  getIt.registerLazySingleton<SubscriptionsRepository>(
+    () => SubscriptionsRemoteDatasource(getIt<ApiClient>()),
   );
-  getIt.registerLazySingleton<FavoriteTravelerRepository>(
-    () => FavoriteTravelerRepository(getIt<FavoriteTravelerDatasource>()),
+  getIt.registerFactory<SubscriptionsBloc>(
+    () => SubscriptionsBloc(getIt<SubscriptionsRepository>()),
   );
-  getIt.registerLazySingleton<FavoriteTravelerBloc>(
-    () => FavoriteTravelerBloc(getIt<FavoriteTravelerRepository>()),
-    dispose: (b) => b.close(),
-  );
-
-  // Rebooking — Réservation à nouveau d'un voyageur
-  getIt.registerLazySingleton<RebookingRepository>(
-    () => RebookingRemoteDatasource(getIt<ApiClient>()),
-  );
-  getIt.registerFactory<PastBookingsBloc>(
-    () => PastBookingsBloc(getIt<RebookingRepository>()),
+  getIt.registerFactory<TravelerHubBloc>(
+    () => TravelerHubBloc(getIt<SubscriptionsRepository>()),
   );
 
   // Referral
