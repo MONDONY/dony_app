@@ -285,5 +285,30 @@ void main() {
         '/negotiations/$_threadId',
       );
     });
+
+    test('TRAVELER_NEW_ANNOUNCEMENT routes to traveler announcement detail', () {
+      const uuid = '123e4567-e89b-12d3-a456-426614174000';
+      expect(
+        service.testRouteForMessage({
+          'type': 'TRAVELER_NEW_ANNOUNCEMENT',
+          'announcementId': uuid,
+        }),
+        '/traveler/$uuid',
+      );
+    });
+
+    test('TRAVELER_NEW_ANNOUNCEMENT without valid announcementId returns null', () {
+      expect(
+        service.testRouteForMessage({'type': 'TRAVELER_NEW_ANNOUNCEMENT'}),
+        isNull,
+      );
+      expect(
+        service.testRouteForMessage({
+          'type': 'TRAVELER_NEW_ANNOUNCEMENT',
+          'announcementId': 'not-a-uuid',
+        }),
+        isNull,
+      );
+    });
   });
 }
