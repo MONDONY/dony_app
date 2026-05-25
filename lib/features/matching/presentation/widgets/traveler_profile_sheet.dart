@@ -124,7 +124,7 @@ class _TravelerProfileSheet extends StatelessWidget {
           // ── 3 stat cards ──────────────────────────────────────────────────
           BlocBuilder<RatingBloc, RatingState>(
             buildWhen: (p, c) =>
-                c is UserRatingsLoaded || c is RatingInitial || c is RatingLoading,
+                c is UserRatingsLoaded || c is RatingInitial || c is RatingLoading || c is RatingError,
             builder: (context, state) {
               final loaded = state is UserRatingsLoaded ? state : null;
               final noteValue = traveler.averageRating != null
@@ -368,7 +368,7 @@ class _ProfileHeader extends StatelessWidget {
                       ),
                     if (traveler.kiloPro)
                       _ProfileBadge(
-                        icon: Icons.star_rounded,
+                        icon: Icons.local_shipping_rounded,
                         label: 'Kilo Pro',
                         iconColor: cs.warning,
                       ),
@@ -423,7 +423,7 @@ class _ProfileBadge extends StatelessWidget {
           const SizedBox(width: DonySpacing.xs),
           Text(
             label,
-            style: tt.labelMedium?.copyWith(
+            style: tt.bodySmall?.copyWith(
               fontWeight: FontWeight.w700,
               color: cs.onSurfaceVariant,
             ),
