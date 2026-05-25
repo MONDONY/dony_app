@@ -7,6 +7,9 @@ import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_list_item.dart';
 import 'package:dony/features/ratings/presentation/widgets/rating_summary_card.dart';
+import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
+import 'package:dony/features/subscriptions/bloc/traveler_subscribe_event.dart';
+import 'package:dony/features/subscriptions/bloc/traveler_subscribe_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -18,9 +21,17 @@ void showTravelerProfileSheet(BuildContext context, TravelerProfile traveler) {
     useRootNavigator: true,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => BlocProvider(
-      create: (_) => getIt<RatingBloc>()
-        ..add(UserRatingsLoadRequested(userId: traveler.id)),
+    builder: (_) => MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => getIt<RatingBloc>()
+            ..add(UserRatingsLoadRequested(userId: traveler.id)),
+        ),
+        BlocProvider(
+          create: (_) => getIt<TravelerSubscribeBloc>()
+            ..add(LoadSubscribeStatus(traveler.id)),
+        ),
+      ],
       child: DraggableScrollableSheet(
         initialChildSize: 0.9,
         minChildSize: 0.5,
@@ -107,9 +118,8 @@ class _TravelerProfileSheet extends StatelessWidget {
           Expanded(
             child: ListView(
               controller: scrollController,
-              padding: EdgeInsets.fromLTRB(
-                DonySpacing.lg, 0, DonySpacing.lg,
-                DonySpacing.xl + MediaQuery.of(context).viewPadding.bottom,
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg, 0, DonySpacing.lg, DonySpacing.xl,
               ),
               children: [
                 // Avatar + name + phone
@@ -312,8 +322,108 @@ class _TravelerProfileSheet extends StatelessWidget {
               ],
             ),
           ),
+
+          // ── Barre d'abonnement (sticky) ────────────────────────────────────
+          const _SubscribeBar(),
         ],
       ),
+    );
+  }
+}
+
+// ─── Subscribe bar ──────────────────────────────────────────────────────────────
+
+class _SubscribeBar extends StatelessWidget {
+  const _SubscribeBar();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return BlocBuilder<TravelerSubscribeBloc, TravelerSubscribeState>(
+      builder: (context, state) {
+        // Tant que le statut n'est pas chargé (ou en erreur), on n'affiche
+        // pas la barre pour ne pas perturber le reste de la sheet.
+        if (state.status != TravelerSubscribeStatus.ready) {
+          return const SizedBox.shrink();
+        }
+        return Material(
+          color: cs.surface,
+          elevation: 8,
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.sm,
+                DonySpacing.lg,
+                DonySpacing.sm,
+              ),
+              child: state.subscribed
+                  ? _SubscribedRow(pushEnabled: state.pushEnabled)
+                  : DonyButton(
+                      label: "S'abonner à ce voyageur",
+                      icon: Icons.notifications_active_rounded,
+                      onPressed: () => context
+                          .read<TravelerSubscribeBloc>()
+                          .add(const SubscribePressed()),
+                    ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SubscribedRow extends StatelessWidget {
+  const _SubscribedRow({required this.pushEnabled});
+
+  final bool pushEnabled;
+
+  Future<void> _confirmUnsubscribe(BuildContext context) async {
+    final confirmed = await DonyDialog.show(
+      context,
+      title: 'Se désabonner ?',
+      message: 'Vous ne recevrez plus les notifications de ce voyageur.',
+      confirmLabel: 'Se désabonner',
+      variant: DonyDialogVariant.destructive,
+      icon: Icons.notifications_off_rounded,
+    );
+    if ((confirmed ?? false) && context.mounted) {
+      context.read<TravelerSubscribeBloc>().add(const UnsubscribePressed());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Expanded(
+          child: DonyButton(
+            label: 'Abonné ✓',
+            variant: DonyButtonVariant.secondary,
+            fullWidth: false,
+            onPressed: () => _confirmUnsubscribe(context),
+          ),
+        ),
+        const SizedBox(width: DonySpacing.sm),
+        IconButton(
+          tooltip: pushEnabled
+              ? 'Désactiver les notifications'
+              : 'Activer les notifications',
+          icon: Icon(
+            pushEnabled
+                ? Icons.notifications_active_rounded
+                : Icons.notifications_off_rounded,
+            color: cs.primary,
+          ),
+          onPressed: () => context
+              .read<TravelerSubscribeBloc>()
+              .add(TogglePushPressed(!pushEnabled)),
+        ),
+      ],
     );
   }
 }

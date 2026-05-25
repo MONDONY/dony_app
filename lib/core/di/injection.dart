@@ -5,6 +5,7 @@ import 'package:dony/features/pickup_addresses/data/datasources/pickup_address_d
 import 'package:dony/features/pickup_addresses/data/repositories/pickup_address_repository.dart';
 import 'package:dony/features/subscriptions/bloc/subscriptions_bloc.dart';
 import 'package:dony/features/subscriptions/bloc/traveler_hub_bloc.dart';
+import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_remote_datasource.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
@@ -480,6 +481,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<TravelerHubBloc>(
     () => TravelerHubBloc(getIt<SubscriptionsRepository>()),
+  );
+  getIt.registerFactory<TravelerSubscribeBloc>(
+    () => TravelerSubscribeBloc(getIt<SubscriptionsRepository>()),
   );
 
   // Referral
