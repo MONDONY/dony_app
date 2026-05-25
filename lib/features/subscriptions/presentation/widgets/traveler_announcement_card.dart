@@ -19,48 +19,47 @@ class TravelerAnnouncementCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     return DonyCard(
-      padding: const EdgeInsets.fromLTRB(DonySpacing.base, DonySpacing.base, DonySpacing.base - 2, DonySpacing.base),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Zone 1 — Route
           Row(
             children: [
-              Flexible(
-                flex: 1,
+              Expanded(
                 child: Text(
                   announcement.departureCity,
                   style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
                   overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xs),
+                padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      width: 5,
-                      height: 5,
+                      width: 6,
+                      height: 6,
                       decoration: BoxDecoration(
                         color: cs.primary,
                         shape: BoxShape.circle,
                       ),
                     ),
                     Container(
-                      width: 24,
-                      height: 1,
+                      width: 28,
+                      height: 1.5,
                       color: cs.primary.withValues(alpha: 0.3),
                     ),
-                    Icon(Icons.flight_takeoff_rounded, size: 14, color: cs.primary),
+                    Icon(Icons.flight_takeoff_rounded, size: 16, color: cs.primary),
                     Container(
-                      width: 24,
-                      height: 1,
+                      width: 28,
+                      height: 1.5,
                       color: cs.primary.withValues(alpha: 0.3),
                     ),
                     Container(
-                      width: 5,
-                      height: 5,
+                      width: 6,
+                      height: 6,
                       decoration: BoxDecoration(
                         color: cs.secondary,
                         shape: BoxShape.circle,
@@ -69,12 +68,12 @@ class TravelerAnnouncementCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Flexible(
-                flex: 1,
+              Expanded(
                 child: Text(
                   announcement.arrivalCity,
                   style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
                   overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                   textAlign: TextAlign.right,
                 ),
               ),
@@ -92,23 +91,31 @@ class TravelerAnnouncementCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.calendar_today_outlined,
-                        size: 13,
-                        color: cs.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: DonySpacing.xs),
-                      Text(
-                        DateFormat('dd MMM yyyy', 'fr')
-                            .format(announcement.departureDate),
-                        style: tt.bodySmall?.copyWith(
+                  Flexible(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.calendar_today_outlined,
+                          size: 13,
                           color: cs.onSurfaceVariant,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: DonySpacing.xs),
+                        Flexible(
+                          child: Text(
+                            DateFormat('dd MMM yyyy', 'fr')
+                                .format(announcement.departureDate),
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: DonySpacing.xs),
                   Text(
                     '${announcement.availableKg.toStringAsFixed(0)} kg dispo',
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
@@ -121,11 +128,9 @@ class TravelerAnnouncementCard extends StatelessWidget {
               // Ligne 2 : prix (gauche) · bouton Réserver (droite)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Flexible(
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.baseline,
                       textBaseline: TextBaseline.alphabetic,
                       children: [
@@ -146,13 +151,12 @@ class TravelerAnnouncementCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(width: DonySpacing.xs),
                   FilledButton(
                     onPressed: onReserve,
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.sm,
-                        vertical: DonySpacing.xs,
+                        horizontal: DonySpacing.base,
+                        vertical: DonySpacing.sm,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(DonyRadius.lg),
