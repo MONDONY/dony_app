@@ -58,48 +58,37 @@ class _TravelerProfileHubScreenState extends State<TravelerProfileHubScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) => [
-          SliverAppBar(
-            pinned: true,
-            expandedHeight: 280,
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            surfaceTintColor: Colors.transparent,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
-              onPressed: () => context.pop(),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              collapseMode: CollapseMode.pin,
-              background: _ProfileHeader(travelerId: widget.travelerId),
-            ),
-            bottom: TabBar(
-              controller: _tabController,
-              tabs: const [
-                Tab(text: 'Trajets'),
-                Tab(text: 'Avis'),
+      body: Column(
+        children: [
+          Expanded(
+            child: NestedScrollView(
+              headerSliverBuilder: (context, _) => [
+                SliverAppBar(
+                  pinned: true,
+                  expandedHeight: 200,
+                  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                  surfaceTintColor: Colors.transparent,
+                  elevation: 0,
+                  scrolledUnderElevation: 0,
+                  leading: IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
+                    onPressed: () => context.pop(),
+                  ),
+                  flexibleSpace: FlexibleSpaceBar(
+                    collapseMode: CollapseMode.pin,
+                    background: _ProfileHeader(travelerId: widget.travelerId),
+                  ),
+                  bottom: _StatsAndTabBar(controller: _tabController),
+                ),
               ],
-            ),
-          ),
-        ],
-        body: Column(
-          children: [
-            // Subscription bar
-            _SubscriptionBar(),
-            // Tab content
-            Expanded(
-              child: TabBarView(
+              body: TabBarView(
                 controller: _tabController,
-                children: [
-                  _TripsTab(),
-                  _ReviewsTab(),
-                ],
+                children: [_TripsTab(), _ReviewsTab()],
               ),
             ),
-          ],
-        ),
+          ),
+          _SubscriptionBar(),
+        ],
       ),
     );
   }
@@ -116,158 +105,168 @@ class _ProfileHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return BlocBuilder<ProfilePublicBloc, ProfilePublicState>(
-      builder: (context, state) {
-        return Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                cs.primary,
-                cs.primary.withValues(alpha: 0.85),
-                DonyColors.blue700,
-              ],
-            ),
-          ),
-          child: SafeArea(
-            bottom: false,
-            child: _buildHeaderContent(context, cs, state),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildHeaderContent(
-    BuildContext context,
-    ColorScheme cs,
-    ProfilePublicState state,
-  ) {
-    if (state is ProfilePublicLoading || state is ProfilePublicInitial) {
-      return const Center(
-        child: CircularProgressIndicator(color: Colors.white),
-      );
-    }
-
-    if (state is ProfilePublicError) {
-      return Center(
-        child: Text(
-          'Impossible de charger le profil',
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium
-              ?.copyWith(color: Colors.white70),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            cs.successLight,
+            Theme.of(context).scaffoldBackgroundColor,
+          ],
         ),
-      );
-    }
-
-    if (state is ProfilePublicLoaded) {
-      return _LoadedHeader(profile: state.profile);
-    }
-
-    return const SizedBox.shrink();
+      ),
+      child: BlocBuilder<ProfilePublicBloc, ProfilePublicState>(
+        builder: (context, state) {
+          if (state is ProfilePublicLoaded) {
+            return _LoadedProfileHeader(profile: state.profile);
+          }
+          if (state is ProfilePublicError) {
+            return Center(
+              child: Text(
+                'Impossible de charger le profil',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: cs.onSurfaceVariant),
+              ),
+            );
+          }
+          return const Center(child: CircularProgressIndicator());
+        },
+      ),
+    );
   }
 }
 
-class _LoadedHeader extends StatelessWidget {
-  const _LoadedHeader({required this.profile});
+class _LoadedProfileHeader extends StatelessWidget {
+  const _LoadedProfileHeader({required this.profile});
 
   final ProfilePublicModel profile;
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final responseLabel = profile.responseDelayHours != null
-        ? '<${profile.responseDelayHours}h'
-        : '—';
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        DonySpacing.lg,
-        DonySpacing.xl,
-        DonySpacing.lg,
-        DonySpacing.base,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Avatar
-          DonyAvatar(
-            name: profile.displayName,
-            imageUrl: profile.avatarUrl,
-            size: DonyAvatarSize.xl,
-            verified: profile.kycVerified,
-            pro: profile.isProAccount,
-          ),
-          const SizedBox(height: DonySpacing.sm),
-          // Name + verified check
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                profile.displayName,
-                style: tt.titleLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          DonySpacing.base,
+          DonySpacing.md,
+          DonySpacing.base,
+          DonySpacing.md,
+        ),
+        child: Row(
+          children: [
+            // Avatar avec bordure blanche et ombre verte
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: cs.surface, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: cs.success.withValues(alpha: 0.30),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              if (profile.kycVerified) ...[
-                const SizedBox(width: DonySpacing.xs),
-                const Icon(
-                  Icons.verified_rounded,
-                  size: 18,
-                  color: Colors.white,
-                ),
-              ],
-            ],
-          ),
-          // Badges row
-          if (profile.isProAccount || profile.isKiloPro) ...[
-            const SizedBox(height: DonySpacing.xs),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (profile.isProAccount)
-                  const _HeaderBadge(label: 'PRO', color: DonyColors.warning700),
-                if (profile.isProAccount && profile.isKiloPro)
-                  const SizedBox(width: DonySpacing.xs),
-                if (profile.isKiloPro)
-                  const _HeaderBadge(label: 'Kilo Pro', color: DonyColors.violet),
-              ],
+              child: DonyAvatar(
+                name: profile.displayName,
+                imageUrl: profile.avatarUrl,
+                size: DonyAvatarSize.lg,
+                verified: profile.kycVerified,
+                pro: profile.isProAccount,
+              ),
+            ),
+            const SizedBox(width: DonySpacing.md),
+            // Infos à droite
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    profile.displayName,
+                    style: tt.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: cs.onSurface,
+                      letterSpacing: -0.4,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: DonySpacing.xs),
+                  Wrap(
+                    spacing: DonySpacing.xs,
+                    runSpacing: DonySpacing.xs,
+                    children: [
+                      if (profile.isProAccount)
+                        _ProfileBadge(
+                          icon: Icons.star_rounded,
+                          label: 'Compte PRO',
+                          iconColor: cs.warning,
+                        ),
+                      if (profile.isKiloPro)
+                        _ProfileBadge(
+                          icon: Icons.local_shipping_rounded,
+                          label: 'Kilo Pro',
+                          iconColor: cs.warning,
+                        ),
+                      if (profile.kycVerified)
+                        _ProfileBadge(
+                          icon: Icons.verified_rounded,
+                          label: 'Identité vérifiée',
+                          iconColor: cs.primary,
+                        ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
-          const SizedBox(height: DonySpacing.base),
-          // 3 stats columns
-          Row(
-            children: [
-              Expanded(
-                child: _StatColumn(
-                  value: profile.averageRating > 0
-                      ? profile.averageRating.toStringAsFixed(1)
-                      : '—',
-                  label: 'Note',
-                  icon: Icons.star_rounded,
-                ),
-              ),
-              _VerticalDividerWhite(),
-              Expanded(
-                child: _StatColumn(
-                  value: '${profile.completedBidsCount}',
-                  label: 'Livraisons',
-                  icon: Icons.inventory_2_rounded,
-                ),
-              ),
-              _VerticalDividerWhite(),
-              Expanded(
-                child: _StatColumn(
-                  value: responseLabel,
-                  label: 'Réponse',
-                  icon: Icons.timer_rounded,
-                ),
-              ),
-            ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileBadge extends StatelessWidget {
+  const _ProfileBadge({
+    required this.icon,
+    required this.label,
+    required this.iconColor,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color iconColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.sm, vertical: 3),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+        border: Border.all(color: cs.outline),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: iconColor),
+          const SizedBox(width: DonySpacing.xs),
+          Text(
+            label,
+            style: tt.bodySmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: iconColor,
+            ),
           ),
         ],
       ),
@@ -275,79 +274,158 @@ class _LoadedHeader extends StatelessWidget {
   }
 }
 
-class _HeaderBadge extends StatelessWidget {
-  const _HeaderBadge({required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.sm,
-        vertical: DonySpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(DonyRadius.full),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-            ),
-      ),
-    );
-  }
-}
-
-class _StatColumn extends StatelessWidget {
-  const _StatColumn({
+class _StatCard extends StatelessWidget {
+  const _StatCard({
+    required this.icon,
+    required this.iconColor,
     required this.value,
     required this.label,
-    required this.icon,
   });
 
+  final IconData icon;
+  final Color iconColor;
   final String value;
   final String label;
-  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 16, color: Colors.white70),
-        const SizedBox(height: DonySpacing.xs),
-        Text(
-          value,
-          style: tt.titleMedium?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 14, color: iconColor),
+          Text(
+            value,
+            style: tt.titleSmall?.copyWith(
+              fontWeight: FontWeight.w900,
+              color: cs.onSurface,
+            ),
           ),
-        ),
-        Text(
-          label,
-          style: tt.bodySmall?.copyWith(color: Colors.white70),
-          textAlign: TextAlign.center,
-        ),
-      ],
+          Text(
+            label,
+            style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _VerticalDividerWhite extends StatelessWidget {
+class _StatsAndTabBar extends StatelessWidget implements PreferredSizeWidget {
+  const _StatsAndTabBar({required this.controller});
+
+  final TabController controller;
+
+  // stats (96px) + TabBar (48px)
+  @override
+  Size get preferredSize => const Size.fromHeight(144);
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 48,
-      color: Colors.white.withValues(alpha: 0.3),
+    final cs = Theme.of(context).colorScheme;
+
+    return ClipRect(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ── Stats row (96px) ──────────────────────────────────────────────
+          BlocBuilder<ProfilePublicBloc, ProfilePublicState>(
+            buildWhen: (p, c) =>
+                c is ProfilePublicLoaded ||
+                c is ProfilePublicLoading ||
+                c is ProfilePublicInitial,
+            builder: (context, state) {
+              if (state is! ProfilePublicLoaded) {
+                return SizedBox(
+                  height: 96,
+                  child: Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                );
+              }
+              final profile = state.profile;
+              return SizedBox(
+                height: 96,
+                child: Container(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  padding: const EdgeInsets.fromLTRB(
+                    DonySpacing.base,
+                    DonySpacing.sm,
+                    DonySpacing.base,
+                    DonySpacing.sm,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _StatCard(
+                          icon: Icons.star_rounded,
+                          iconColor: cs.warning,
+                          value: profile.averageRating > 0
+                              ? profile.averageRating.toStringAsFixed(1)
+                              : '–',
+                          label: 'Note',
+                        ),
+                      ),
+                      const SizedBox(width: DonySpacing.sm),
+                      Expanded(
+                        child: _StatCard(
+                          icon: Icons.inventory_2_rounded,
+                          iconColor: cs.primary,
+                          value: '${profile.completedBidsCount}',
+                          label: 'Livraisons',
+                        ),
+                      ),
+                      const SizedBox(width: DonySpacing.sm),
+                      Expanded(
+                        child: _StatCard(
+                          icon: Icons.timer_rounded,
+                          iconColor: cs.success,
+                          value: profile.responseDelayHours != null
+                              ? '<${profile.responseDelayHours}h'
+                              : '–',
+                          label: 'Réponse',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          // ── TabBar (48px) ─────────────────────────────────────────────────
+          Container(
+            decoration: BoxDecoration(
+              color: cs.surface,
+              border: Border(top: BorderSide(color: cs.outline)),
+            ),
+            child: TabBar(
+              controller: controller,
+              tabs: const [
+                Tab(text: 'Trajets'),
+                Tab(text: 'Avis'),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -361,20 +439,23 @@ class _SubscriptionBar extends StatelessWidget {
 
     return BlocBuilder<TravelerHubBloc, TravelerHubState>(
       builder: (context, state) {
-        return Container(
-          color: cs.surface,
-          padding: const EdgeInsets.symmetric(
-            horizontal: DonySpacing.lg,
-            vertical: DonySpacing.sm,
+        return SafeArea(
+          top: false,
+          child: Container(
+            color: cs.surface,
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.lg,
+              vertical: DonySpacing.sm,
+            ),
+            child: state.subscribed
+                ? _SubscribedRow(pushEnabled: state.pushEnabled)
+                : DonyButton(
+                    label: "S'abonner",
+                    onPressed: () => context
+                        .read<TravelerHubBloc>()
+                        .add(const HubSubscribePressed()),
+                  ),
           ),
-          child: state.subscribed
-              ? _SubscribedRow(pushEnabled: state.pushEnabled)
-              : DonyButton(
-                  label: "S'abonner",
-                  onPressed: () => context
-                      .read<TravelerHubBloc>()
-                      .add(const HubSubscribePressed()),
-                ),
         );
       },
     );

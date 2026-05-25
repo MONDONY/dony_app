@@ -416,7 +416,7 @@ void main() {
     await tester.pumpWidget(pump());
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('PRO'), findsOneWidget);
+    expect(find.text('Compte PRO'), findsOneWidget);
     expect(find.text('Kilo Pro'), findsOneWidget);
   });
 
@@ -520,7 +520,81 @@ void main() {
     await tester.pumpWidget(pump());
     await tester.pump(const Duration(milliseconds: 600));
 
-    // averageRating == 0 → shows '—', and responseDelayHours null → '—'
-    expect(find.text('—'), findsWidgets);
+    // averageRating == 0 → shows '–', and responseDelayHours null → '–'
+    expect(find.text('–'), findsWidgets);
+  });
+
+  // ─── Test 15: Labels des 3 stats visibles ────────────────────────────────
+  testWidgets('stats — labels Note, Livraisons, Réponse visibles', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    when(() => profileBloc.state).thenReturn(
+      ProfilePublicLoaded(
+        profile: _fakeProfile(),
+        recentRatings: _fakeRatings(),
+      ),
+    );
+    when(() => hubBloc.state).thenReturn(
+      const TravelerHubState(status: TravelerHubStatus.success),
+    );
+
+    await tester.pumpWidget(pump());
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Note'), findsOneWidget);
+    expect(find.text('Livraisons'), findsOneWidget);
+    expect(find.text('Réponse'), findsOneWidget);
+  });
+
+  // ─── Test 16: Valeurs stats correctes ────────────────────────────────────
+  testWidgets('stats — valeurs correctes pour le profil fake', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    when(() => profileBloc.state).thenReturn(
+      ProfilePublicLoaded(
+        // _fakeProfile : averageRating=4.7, completedBidsCount=12,
+        // responseDelayHours=2
+        profile: _fakeProfile(),
+        recentRatings: _fakeRatings(),
+      ),
+    );
+    when(() => hubBloc.state).thenReturn(
+      const TravelerHubState(status: TravelerHubStatus.success),
+    );
+
+    await tester.pumpWidget(pump());
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('4.7'), findsOneWidget);
+    expect(find.text('12'), findsOneWidget);
+    expect(find.text('<2h'), findsOneWidget);
+  });
+
+  // ─── Test 17: Badge KYC "Identité vérifiée" ──────────────────────────────
+  testWidgets('badge KYC "Identité vérifiée" quand kycVerified: true', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    when(() => profileBloc.state).thenReturn(
+      ProfilePublicLoaded(
+        // _fakeProfile a kycVerified: true
+        profile: _fakeProfile(),
+        recentRatings: _fakeRatings(),
+      ),
+    );
+    when(() => hubBloc.state).thenReturn(
+      const TravelerHubState(status: TravelerHubStatus.success),
+    );
+
+    await tester.pumpWidget(pump());
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Identité vérifiée'), findsOneWidget);
   });
 }
