@@ -65,7 +65,7 @@ class _TravelerProfileHubScreenState extends State<TravelerProfileHubScreen>
               headerSliverBuilder: (context, _) => [
                 SliverAppBar(
                   pinned: true,
-                  expandedHeight: 360,
+                  expandedHeight: 280,
                   backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                   surfaceTintColor: Colors.transparent,
                   elevation: 0,
@@ -149,84 +149,85 @@ class _LoadedProfileHeader extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight + DonySpacing.sm;
-
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        DonySpacing.base,
-        topPadding,
-        DonySpacing.base,
-        DonySpacing.md,
-      ),
-      child: Row(
-        children: [
-          // Avatar avec bordure blanche et ombre verte
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: cs.surface, width: 3),
-              boxShadow: [
-                BoxShadow(
-                  color: cs.success.withValues(alpha: 0.30),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: DonyAvatar(
-              name: profile.displayName,
-              imageUrl: profile.avatarUrl,
-              size: DonyAvatarSize.lg,
-              verified: profile.kycVerified,
-              pro: profile.isProAccount,
-            ),
-          ),
-          const SizedBox(width: DonySpacing.md),
-          // Infos à droite
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  profile.displayName,
-                  style: tt.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: cs.onSurface,
-                    letterSpacing: -0.4,
+    return Align(
+      alignment: Alignment.bottomLeft,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          DonySpacing.base,
+          0,
+          DonySpacing.base,
+          DonySpacing.md,
+        ),
+        child: Row(
+          children: [
+            // Avatar avec bordure blanche et ombre verte
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: cs.surface, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: cs.success.withValues(alpha: 0.30),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: DonySpacing.xs),
-                Wrap(
-                  spacing: DonySpacing.xs,
-                  runSpacing: DonySpacing.xs,
-                  children: [
-                    if (profile.isProAccount)
-                      _ProfileBadge(
-                        icon: Icons.star_rounded,
-                        label: 'Compte PRO',
-                        iconColor: cs.warning,
-                      ),
-                    if (profile.isKiloPro)
-                      _ProfileBadge(
-                        icon: Icons.local_shipping_rounded,
-                        label: 'Kilo Pro',
-                        iconColor: cs.warning,
-                      ),
-                    if (profile.kycVerified)
-                      _ProfileBadge(
-                        icon: Icons.verified_rounded,
-                        label: 'Identité vérifiée',
-                        iconColor: cs.primary,
-                      ),
-                  ],
-                ),
-              ],
+                ],
+              ),
+              child: DonyAvatar(
+                name: profile.displayName,
+                imageUrl: profile.avatarUrl,
+                size: DonyAvatarSize.lg,
+                verified: profile.kycVerified,
+                pro: profile.isProAccount,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(width: DonySpacing.md),
+            // Infos à droite
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    profile.displayName,
+                    style: tt.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: cs.onSurface,
+                      letterSpacing: -0.4,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: DonySpacing.xs),
+                  Wrap(
+                    spacing: DonySpacing.xs,
+                    runSpacing: DonySpacing.xs,
+                    children: [
+                      if (profile.isProAccount)
+                        _ProfileBadge(
+                          icon: Icons.star_rounded,
+                          label: 'Compte PRO',
+                          iconColor: cs.warning,
+                        ),
+                      if (profile.isKiloPro)
+                        _ProfileBadge(
+                          icon: Icons.local_shipping_rounded,
+                          label: 'Kilo Pro',
+                          iconColor: cs.warning,
+                        ),
+                      if (profile.kycVerified)
+                        _ProfileBadge(
+                          icon: Icons.verified_rounded,
+                          label: 'Identité vérifiée',
+                          iconColor: cs.primary,
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
