@@ -65,7 +65,7 @@ class _TravelerProfileHubScreenState extends State<TravelerProfileHubScreen>
               headerSliverBuilder: (context, _) => [
                 SliverAppBar(
                   pinned: true,
-                  expandedHeight: 200,
+                  expandedHeight: 360,
                   backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                   surfaceTintColor: Colors.transparent,
                   elevation: 0,
