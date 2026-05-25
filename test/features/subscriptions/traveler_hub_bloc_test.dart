@@ -1,0 +1,71 @@
+import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/features/subscriptions/bloc/traveler_hub_bloc.dart';
+import 'package:dony/features/subscriptions/bloc/traveler_hub_event.dart';
+import 'package:dony/features/subscriptions/bloc/traveler_hub_state.dart';
+import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+
+class MockRepo extends Mock implements SubscriptionsRepository {}
+
+TravelerAnnouncement _ann() => TravelerAnnouncement(
+    id: 'a1',
+    departureCity: 'Paris',
+    arrivalCity: 'Dakar',
+    departureDate: DateTime(2026, 6, 1),
+    pricePerKg: 8,
+    availableKg: 5,
+    status: 'ACTIVE');
+
+void main() {
+  late MockRepo repo;
+  setUp(() => repo = MockRepo());
+
+  blocTest<TravelerHubBloc, TravelerHubState>(
+    'LoadTravelerHub charge statut + annonces et markSeen si abonné',
+    build: () {
+      when(() => repo.getStatus('t1')).thenAnswer(
+          (_) async => const SubscriptionStatus(subscribed: true, pushEnabled: false));
+      when(() => repo.getTravelerAnnouncements('t1')).thenAnswer((_) async => [_ann()]);
+      when(() => repo.markSeen('t1')).thenAnswer((_) async {});
+      return TravelerHubBloc(repo);
+    },
+    act: (b) => b.add(const LoadTravelerHub('t1')),
+    expect: () => [
+      isA<TravelerHubState>().having((s) => s.status, 'status', TravelerHubStatus.loading),
+      isA<TravelerHubState>()
+          .having((s) => s.status, 'status', TravelerHubStatus.success)
+          .having((s) => s.subscribed, 'subscribed', true)
+          .having((s) => s.announcements.length, 'anns', 1),
+    ],
+    verify: (_) => verify(() => repo.markSeen('t1')).called(1),
+  );
+
+  blocTest<TravelerHubBloc, TravelerHubState>(
+    'HubSubscribePressed passe subscribed=true',
+    build: () {
+      when(() => repo.subscribe('t1')).thenAnswer((_) async {});
+      return TravelerHubBloc(repo)..travelerId = 't1';
+    },
+    seed: () => const TravelerHubState(status: TravelerHubStatus.success, subscribed: false),
+    act: (b) => b.add(const HubSubscribePressed()),
+    expect: () => [
+      isA<TravelerHubState>().having((s) => s.subscribed, 'subscribed', true),
+    ],
+  );
+
+  blocTest<TravelerHubBloc, TravelerHubState>(
+    'HubTogglePush met pushEnabled',
+    build: () {
+      when(() => repo.setPush('t1', true)).thenAnswer(
+          (_) async => const SubscriptionStatus(subscribed: true, pushEnabled: true));
+      return TravelerHubBloc(repo)..travelerId = 't1';
+    },
+    seed: () => const TravelerHubState(
+        status: TravelerHubStatus.success, subscribed: true, pushEnabled: false),
+    act: (b) => b.add(const HubTogglePush(true)),
+    expect: () => [
+      isA<TravelerHubState>().having((s) => s.pushEnabled, 'push', true),
+    ],
+  );
+}
