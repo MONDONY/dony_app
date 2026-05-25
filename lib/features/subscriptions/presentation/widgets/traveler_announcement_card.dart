@@ -141,7 +141,7 @@ class TravelerAnnouncementCard extends StatelessWidget {
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                        const SizedBox(width: 2),
+                        const SizedBox(width: DonySpacing.xxs),
                         Text(
                           '/kg',
                           style: tt.bodySmall?.copyWith(
@@ -161,10 +161,10 @@ class TravelerAnnouncementCard extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(DonyRadius.lg),
                       ),
-                      minimumSize: Size.zero,
+                      minimumSize: const Size(0, 44),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    child: Text('Réserver', style: tt.labelLarge),
+                    child: const Text('Réserver'),
                   ),
                 ],
               ),
