@@ -60,6 +60,8 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/favorite_travelers/bloc/favorite_traveler_bloc.dart';
 import 'package:dony/features/favorite_travelers/presentation/screens/favorite_travelers_screen.dart';
+import 'package:dony/features/rebooking/bloc/past_bookings_bloc.dart';
+import 'package:dony/features/rebooking/presentation/past_bookings_screen.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/presentation/screens/pickup_address_edit_screen.dart';
 import 'package:dony/features/pickup_addresses/presentation/screens/pickup_addresses_screen.dart';
@@ -587,6 +589,15 @@ final appRouter = GoRouter(
       builder: (context, state) => BlocProvider.value(
         value: getIt<FavoriteTravelerBloc>(),
         child: const FavoriteTravelersScreen(),
+      ),
+    ),
+
+    // ── Mes voyageurs / Re-booking (hors shell) ──────────────────────
+    GoRoute(
+      path: '/profile/past-bookings',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<PastBookingsBloc>(),
+        child: const PastBookingsScreen(),
       ),
     ),
 

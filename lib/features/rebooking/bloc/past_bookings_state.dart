@@ -23,24 +23,19 @@ class PastBookingsError extends PastBookingsState {
 }
 
 class RebookingInProgress extends PastBookingsState {
-  final List<PastBookingItem> bookings;
-  const RebookingInProgress({required this.bookings});
+  const RebookingInProgress();
 }
 
 class RebookSuccess extends PastBookingsState {
   final String newBidId;
-  final List<PastBookingItem> bookings;
-  const RebookSuccess({required this.newBidId, required this.bookings});
+  const RebookSuccess(this.newBidId);
 }
 
 class NoTripAvailable extends PastBookingsState {
   final String travelerId;
-  final List<PastBookingItem> bookings;
-  const NoTripAvailable({required this.travelerId, required this.bookings});
+  const NoTripAvailable(this.travelerId);
 }
 
 class TravelerSubscribed extends PastBookingsState {
-  final String travelerId;
-  final List<PastBookingItem> bookings;
-  const TravelerSubscribed({required this.travelerId, required this.bookings});
+  const TravelerSubscribed();
 }

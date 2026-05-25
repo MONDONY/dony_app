@@ -78,6 +78,45 @@ void main() {
   );
 
   blocTest<PastBookingsBloc, PastBookingsState>(
+    'LoadPastBookings emits error quand le repo échoue',
+    build: () {
+      when(() => repo.getPastBookings()).thenThrow(Exception('boom'));
+      return bloc;
+    },
+    act: (b) => b.add(const LoadPastBookings()),
+    expect: () => [
+      isA<PastBookingsLoading>(),
+      isA<PastBookingsError>(),
+    ],
+  );
+
+  blocTest<PastBookingsBloc, PastBookingsState>(
+    'RebookTraveler emits error quand le repo échoue',
+    build: () {
+      when(() => repo.rebook('bid-1')).thenThrow(Exception('boom'));
+      return PastBookingsBloc(repo)
+        ..emit(PastBookingsLoaded(bookings: [_fakeBooking]));
+    },
+    act: (b) => b.add(const RebookTraveler('bid-1')),
+    expect: () => [
+      isA<RebookingInProgress>(),
+      isA<PastBookingsError>(),
+    ],
+  );
+
+  blocTest<PastBookingsBloc, PastBookingsState>(
+    'SubscribeToTraveler emits error quand le repo échoue',
+    build: () {
+      when(() => repo.subscribeToTraveler('traveler-1'))
+          .thenThrow(Exception('boom'));
+      return PastBookingsBloc(repo)
+        ..emit(PastBookingsLoaded(bookings: [_fakeBooking]));
+    },
+    act: (b) => b.add(const SubscribeToTraveler('traveler-1')),
+    expect: () => [isA<PastBookingsError>()],
+  );
+
+  blocTest<PastBookingsBloc, PastBookingsState>(
     'SubscribeToTraveler calls repo',
     build: () {
       when(() => repo.subscribeToTraveler('traveler-1')).thenAnswer((_) async {});

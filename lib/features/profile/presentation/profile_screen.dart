@@ -583,6 +583,13 @@ class _ActivityTab extends StatelessWidget {
                 onTap: () => context.push('/profile/recipients'),
               ),
               DonyListTile(
+                icon: Icons.history_rounded,
+                iconColor: cs.tertiary,
+                iconBgColor: cs.tertiaryContainer.withValues(alpha: 0.5),
+                label: 'Mes voyageurs',
+                onTap: () => context.push('/profile/past-bookings'),
+              ),
+              DonyListTile(
                 icon: Icons.bookmark_rounded,
                 iconColor: cs.error,
                 iconBgColor: cs.errorContainer.withValues(alpha: 0.5),

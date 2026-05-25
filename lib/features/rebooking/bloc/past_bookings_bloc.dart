@@ -14,22 +14,7 @@ class PastBookingsBloc extends Bloc<PastBookingsEvent, PastBookingsState> {
 
   List<PastBookingItem> get _currentBookings {
     final s = state;
-    if (s is PastBookingsLoaded) {
-      return s.bookings;
-    }
-    if (s is RebookingInProgress) {
-      return s.bookings;
-    }
-    if (s is RebookSuccess) {
-      return s.bookings;
-    }
-    if (s is NoTripAvailable) {
-      return s.bookings;
-    }
-    if (s is TravelerSubscribed) {
-      return s.bookings;
-    }
-    return const [];
+    return s is PastBookingsLoaded ? s.bookings : const [];
   }
 
   Future<void> _onLoad(
@@ -50,7 +35,7 @@ class PastBookingsBloc extends Bloc<PastBookingsEvent, PastBookingsState> {
     Emitter<PastBookingsState> emit,
   ) async {
     final bookings = _currentBookings;
-    emit(RebookingInProgress(bookings: bookings));
+    emit(const RebookingInProgress());
     try {
       final result = await _repository.rebook(event.pastBidId);
       if (result.status == 'NO_UPCOMING_TRIP' || result.newBidId == null) {
@@ -60,9 +45,9 @@ class PastBookingsBloc extends Bloc<PastBookingsEvent, PastBookingsState> {
               orElse: () => bookings.first,
             )
             .travelerId;
-        emit(NoTripAvailable(travelerId: travelerId, bookings: bookings));
+        emit(NoTripAvailable(travelerId));
       } else {
-        emit(RebookSuccess(newBidId: result.newBidId!, bookings: bookings));
+        emit(RebookSuccess(result.newBidId!));
       }
     } catch (e) {
       emit(PastBookingsError(e.toString()));
@@ -73,10 +58,9 @@ class PastBookingsBloc extends Bloc<PastBookingsEvent, PastBookingsState> {
     SubscribeToTraveler event,
     Emitter<PastBookingsState> emit,
   ) async {
-    final bookings = _currentBookings;
     try {
       await _repository.subscribeToTraveler(event.travelerId);
-      emit(TravelerSubscribed(travelerId: event.travelerId, bookings: bookings));
+      emit(const TravelerSubscribed());
     } catch (e) {
       emit(PastBookingsError(e.toString()));
     }

@@ -52,7 +52,7 @@ class PastBookingCard extends StatelessWidget {
                   size: 14, color: cs.onSurfaceVariant),
               const SizedBox(width: DonySpacing.xs),
               Text(
-                'Dernier envoi le ${DateFormat('dd MMM yyyy', 'fr_FR').format(booking.lastTripDate)}',
+                'Dernier envoi le ${DateFormat('dd MMM yyyy', 'fr').format(booking.lastTripDate)}',
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
             ],
