@@ -156,7 +156,7 @@ class _LoadedProfileHeader extends StatelessWidget {
           DonySpacing.base,
           0,
           DonySpacing.base,
-          DonySpacing.md,
+          144 + DonySpacing.md, // 144px = preferredSize de _StatsAndTabBar
         ),
         child: Row(
           children: [
