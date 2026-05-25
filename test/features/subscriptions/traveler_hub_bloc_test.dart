@@ -68,4 +68,113 @@ void main() {
       isA<TravelerHubState>().having((s) => s.pushEnabled, 'push', true),
     ],
   );
+
+  // ─── Error paths ─────────────────────────────────────────────────────────────
+
+  blocTest<TravelerHubBloc, TravelerHubState>(
+    '_onLoad catch branch → error when getStatus throws',
+    build: () {
+      when(() => repo.getStatus('t1')).thenThrow(Exception('network'));
+      when(() => repo.getTravelerAnnouncements('t1'))
+          .thenAnswer((_) async => []);
+      return TravelerHubBloc(repo);
+    },
+    act: (b) => b.add(const LoadTravelerHub('t1')),
+    expect: () => [
+      isA<TravelerHubState>()
+          .having((s) => s.status, 'status', TravelerHubStatus.loading),
+      isA<TravelerHubState>()
+          .having((s) => s.status, 'status', TravelerHubStatus.error)
+          .having((s) => s.error, 'error', isNotNull),
+    ],
+  );
+
+  blocTest<TravelerHubBloc, TravelerHubState>(
+    '_onLoad → markSeen NOT called when not subscribed',
+    build: () {
+      when(() => repo.getStatus('t1')).thenAnswer(
+          (_) async =>
+              const SubscriptionStatus(subscribed: false, pushEnabled: false));
+      when(() => repo.getTravelerAnnouncements('t1'))
+          .thenAnswer((_) async => []);
+      return TravelerHubBloc(repo);
+    },
+    act: (b) => b.add(const LoadTravelerHub('t1')),
+    expect: () => [
+      isA<TravelerHubState>()
+          .having((s) => s.status, 'status', TravelerHubStatus.loading),
+      isA<TravelerHubState>()
+          .having((s) => s.status, 'status', TravelerHubStatus.success)
+          .having((s) => s.subscribed, 'subscribed', false),
+    ],
+    verify: (_) => verifyNever(() => repo.markSeen(any())),
+  );
+
+  blocTest<TravelerHubBloc, TravelerHubState>(
+    'HubUnsubscribePressed → subscribed false, pushEnabled false',
+    build: () {
+      when(() => repo.unsubscribe('t1')).thenAnswer((_) async {});
+      return TravelerHubBloc(repo)..travelerId = 't1';
+    },
+    seed: () => const TravelerHubState(
+        status: TravelerHubStatus.success,
+        subscribed: true,
+        pushEnabled: true),
+    act: (b) => b.add(const HubUnsubscribePressed()),
+    expect: () => [
+      isA<TravelerHubState>()
+          .having((s) => s.subscribed, 'subscribed', false)
+          .having((s) => s.pushEnabled, 'pushEnabled', false),
+    ],
+  );
+
+  blocTest<TravelerHubBloc, TravelerHubState>(
+    '_onSubscribe catch branch → error when subscribe throws',
+    build: () {
+      when(() => repo.subscribe('t1')).thenThrow(Exception('subscribe error'));
+      return TravelerHubBloc(repo)..travelerId = 't1';
+    },
+    seed: () =>
+        const TravelerHubState(status: TravelerHubStatus.success, subscribed: false),
+    act: (b) => b.add(const HubSubscribePressed()),
+    expect: () => [
+      isA<TravelerHubState>()
+          .having((s) => s.status, 'status', TravelerHubStatus.error)
+          .having((s) => s.error, 'error', isNotNull),
+    ],
+  );
+
+  blocTest<TravelerHubBloc, TravelerHubState>(
+    '_onUnsubscribe catch branch → error when unsubscribe throws',
+    build: () {
+      when(() => repo.unsubscribe('t1'))
+          .thenThrow(Exception('unsubscribe error'));
+      return TravelerHubBloc(repo)..travelerId = 't1';
+    },
+    seed: () => const TravelerHubState(
+        status: TravelerHubStatus.success, subscribed: true),
+    act: (b) => b.add(const HubUnsubscribePressed()),
+    expect: () => [
+      isA<TravelerHubState>()
+          .having((s) => s.status, 'status', TravelerHubStatus.error)
+          .having((s) => s.error, 'error', isNotNull),
+    ],
+  );
+
+  blocTest<TravelerHubBloc, TravelerHubState>(
+    '_onTogglePush catch branch → error when setPush throws',
+    build: () {
+      when(() => repo.setPush('t1', true))
+          .thenThrow(Exception('push error'));
+      return TravelerHubBloc(repo)..travelerId = 't1';
+    },
+    seed: () => const TravelerHubState(
+        status: TravelerHubStatus.success, subscribed: true, pushEnabled: false),
+    act: (b) => b.add(const HubTogglePush(true)),
+    expect: () => [
+      isA<TravelerHubState>()
+          .having((s) => s.status, 'status', TravelerHubStatus.error)
+          .having((s) => s.error, 'error', isNotNull),
+    ],
+  );
 }

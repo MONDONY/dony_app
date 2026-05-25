@@ -67,4 +67,55 @@ void main() {
           .having((s) => s.items.first.pushEnabled, 'push', true),
     ],
   );
+
+  // ─── Error paths ─────────────────────────────────────────────────────────────
+
+  blocTest<SubscriptionsBloc, SubscriptionsState>(
+    '_onLoad catch branch → status error when getMySubscriptions throws',
+    build: () {
+      when(() => repo.getMySubscriptions())
+          .thenThrow(Exception('network error'));
+      return SubscriptionsBloc(repo);
+    },
+    act: (b) => b.add(const LoadSubscriptions()),
+    expect: () => [
+      isA<SubscriptionsState>()
+          .having((s) => s.status, 'status', SubscriptionsStatus.loading),
+      isA<SubscriptionsState>()
+          .having((s) => s.status, 'status', SubscriptionsStatus.error)
+          .having((s) => s.error, 'error', isNotNull),
+    ],
+  );
+
+  blocTest<SubscriptionsBloc, SubscriptionsState>(
+    '_onUnsubscribe catch branch → status error when unsubscribe throws',
+    build: () {
+      when(() => repo.unsubscribe('t1')).thenThrow(Exception('server error'));
+      return SubscriptionsBloc(repo);
+    },
+    seed: () => SubscriptionsState(
+        status: SubscriptionsStatus.success, items: [_item('t1')]),
+    act: (b) => b.add(const UnsubscribeTraveler('t1')),
+    expect: () => [
+      isA<SubscriptionsState>()
+          .having((s) => s.status, 'status', SubscriptionsStatus.error)
+          .having((s) => s.error, 'error', isNotNull),
+    ],
+  );
+
+  blocTest<SubscriptionsBloc, SubscriptionsState>(
+    '_onTogglePush catch branch → status error when setPush throws',
+    build: () {
+      when(() => repo.setPush('t1', true)).thenThrow(Exception('toggle error'));
+      return SubscriptionsBloc(repo);
+    },
+    seed: () => SubscriptionsState(
+        status: SubscriptionsStatus.success, items: [_item('t1', push: false)]),
+    act: (b) => b.add(const ToggleSubscriptionPush('t1', true)),
+    expect: () => [
+      isA<SubscriptionsState>()
+          .having((s) => s.status, 'status', SubscriptionsStatus.error)
+          .having((s) => s.error, 'error', isNotNull),
+    ],
+  );
 }
