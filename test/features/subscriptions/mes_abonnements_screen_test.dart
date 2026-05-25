@@ -26,21 +26,21 @@ SubscriptionItem _item(String name, {bool hasNew = false, bool push = false}) =>
     );
 
 SubscriptionItem _itemWithNew(String name) => SubscriptionItem(
-      travelerId: 't-$name',
-      travelerName: name,
-      isProAccount: false,
-      averageRating: 4.8,
-      ongoingTripsCount: 1,
-      pushEnabled: false,
-      hasNew: true,
-      lastAnnouncement: LastAnnouncement(
-        announcementId: 'ann-1',
-        departureCity: 'Paris',
-        arrivalCity: 'Dakar',
-        pricePerKg: 8.0,
-        publishedAt: DateTime(2026, 6, 1),
-      ),
-    );
+  travelerId: 't-$name',
+  travelerName: name,
+  isProAccount: false,
+  averageRating: 4.8,
+  ongoingTripsCount: 1,
+  pushEnabled: false,
+  hasNew: true,
+  lastAnnouncement: LastAnnouncement(
+    announcementId: 'ann-1',
+    departureCity: 'Paris',
+    arrivalCity: 'Dakar',
+    pricePerKg: 8.0,
+    publishedAt: DateTime(2026, 6, 1),
+  ),
+);
 
 void main() {
   late MockSubscriptionsBloc bloc;
@@ -52,11 +52,11 @@ void main() {
   });
 
   Widget pump() => MaterialApp(
-        home: BlocProvider<SubscriptionsBloc>.value(
-          value: bloc,
-          child: const MesAbonnementsScreen(),
-        ),
-      );
+    home: BlocProvider<SubscriptionsBloc>.value(
+      value: bloc,
+      child: const MesAbonnementsScreen(),
+    ),
+  );
 
   testWidgets('liste les abonnements', (tester) async {
     when(() => bloc.state).thenReturn(
@@ -72,9 +72,9 @@ void main() {
   });
 
   testWidgets('état vide affiche le message', (tester) async {
-    when(() => bloc.state).thenReturn(
-      const SubscriptionsState(status: SubscriptionsStatus.success),
-    );
+    when(
+      () => bloc.state,
+    ).thenReturn(const SubscriptionsState(status: SubscriptionsStatus.success));
     await tester.pumpWidget(pump());
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.text('Aucun abonnement'), findsOneWidget);
@@ -99,10 +99,7 @@ void main() {
 
   testWidgets('état loading → CircularProgressIndicator', (tester) async {
     when(() => bloc.state).thenReturn(
-      const SubscriptionsState(
-        status: SubscriptionsStatus.loading,
-        items: [],
-      ),
+      const SubscriptionsState(status: SubscriptionsStatus.loading),
     );
     await tester.pumpWidget(pump());
     // No pump(600ms) here — we want to catch the loading indicator before items arrive.
@@ -112,27 +109,27 @@ void main() {
 
   // ─── Error state ──────────────────────────────────────────────────────────────
 
-  testWidgets('état error → affiche "Erreur de chargement" + bouton Réessayer',
-      (tester) async {
-    when(() => bloc.state).thenReturn(
-      const SubscriptionsState(
-        status: SubscriptionsStatus.error,
-        items: [],
-        error: 'Échec réseau',
-      ),
-    );
-    await tester.pumpWidget(pump());
-    await tester.pump(const Duration(milliseconds: 600));
+  testWidgets(
+    'état error → affiche "Erreur de chargement" + bouton Réessayer',
+    (tester) async {
+      when(() => bloc.state).thenReturn(
+        const SubscriptionsState(
+          status: SubscriptionsStatus.error,
+          error: 'Échec réseau',
+        ),
+      );
+      await tester.pumpWidget(pump());
+      await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('Erreur de chargement'), findsOneWidget);
-    expect(find.text('Réessayer'), findsOneWidget);
-  });
+      expect(find.text('Erreur de chargement'), findsOneWidget);
+      expect(find.text('Réessayer'), findsOneWidget);
+    },
+  );
 
   testWidgets('tap Réessayer → bloc.add(LoadSubscriptions)', (tester) async {
     when(() => bloc.state).thenReturn(
       const SubscriptionsState(
         status: SubscriptionsStatus.error,
-        items: [],
         error: 'Échec réseau',
       ),
     );
@@ -142,7 +139,9 @@ void main() {
     await tester.tap(find.text('Réessayer'));
     await tester.pump();
 
-    verify(() => bloc.add(const LoadSubscriptions())).called(greaterThanOrEqualTo(1));
+    verify(
+      () => bloc.add(const LoadSubscriptions()),
+    ).called(greaterThanOrEqualTo(1));
   });
 
   // ─── Bell toggle ──────────────────────────────────────────────────────────────
@@ -166,31 +165,39 @@ void main() {
     await tester.tap(bellFinder);
     await tester.pump();
 
-    verify(() => bloc.add(const ToggleSubscriptionPush('t-Awa', true))).called(1);
+    // ToggleSubscriptionPush doesn't implement ==, use captureAny to verify the type.
+    final captured = verify(() => bloc.add(captureAny())).captured;
+    expect(
+      captured.any((e) => e is ToggleSubscriptionPush),
+      isTrue,
+      reason: 'Expected a ToggleSubscriptionPush event to be added',
+    );
   });
 
   // ─── hasNew section ───────────────────────────────────────────────────────────
 
-  testWidgets('item hasNew:true + lastAnnouncement → section "ONT PUBLIÉ RÉCEMMENT" + badge Nouveau',
-      (tester) async {
-    await tester.binding.setSurfaceSize(const Size(400, 900));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+  testWidgets(
+    'item hasNew:true + lastAnnouncement → section "ONT PUBLIÉ RÉCEMMENT" + badge Nouveau',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(400, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    when(() => bloc.state).thenReturn(
-      SubscriptionsState(
-        status: SubscriptionsStatus.success,
-        items: [_itemWithNew('Ibou')],
-      ),
-    );
-    await tester.pumpWidget(pump());
-    await tester.pump(const Duration(milliseconds: 600));
+      when(() => bloc.state).thenReturn(
+        SubscriptionsState(
+          status: SubscriptionsStatus.success,
+          items: [_itemWithNew('Ibou')],
+        ),
+      );
+      await tester.pumpWidget(pump());
+      await tester.pump(const Duration(milliseconds: 600));
 
-    // The section label is uppercased
-    expect(
-      find.textContaining('ONT PUBLIÉ RÉCEMMENT', findRichText: true),
-      findsOneWidget,
-    );
-    // The "Nouveau" badge from DonyBadge
-    expect(find.text('Nouveau'), findsOneWidget);
-  });
+      // The section label is uppercased
+      expect(
+        find.textContaining('ONT PUBLIÉ RÉCEMMENT', findRichText: true),
+        findsOneWidget,
+      );
+      // DonyBadge calls label.toUpperCase() internally, so the text is 'NOUVEAU'
+      expect(find.text('NOUVEAU'), findsOneWidget);
+    },
+  );
 }

@@ -9,13 +9,14 @@ import 'package:mocktail/mocktail.dart';
 class MockRepo extends Mock implements SubscriptionsRepository {}
 
 TravelerAnnouncement _ann() => TravelerAnnouncement(
-    id: 'a1',
-    departureCity: 'Paris',
-    arrivalCity: 'Dakar',
-    departureDate: DateTime(2026, 6, 1),
-    pricePerKg: 8,
-    availableKg: 5,
-    status: 'ACTIVE');
+  id: 'a1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  departureDate: DateTime(2026, 6, 1),
+  pricePerKg: 8,
+  availableKg: 5,
+  status: 'ACTIVE',
+);
 
 void main() {
   late MockRepo repo;
@@ -25,14 +26,22 @@ void main() {
     'LoadTravelerHub charge statut + annonces et markSeen si abonné',
     build: () {
       when(() => repo.getStatus('t1')).thenAnswer(
-          (_) async => const SubscriptionStatus(subscribed: true, pushEnabled: false));
-      when(() => repo.getTravelerAnnouncements('t1')).thenAnswer((_) async => [_ann()]);
+        (_) async =>
+            const SubscriptionStatus(subscribed: true, pushEnabled: false),
+      );
+      when(
+        () => repo.getTravelerAnnouncements('t1'),
+      ).thenAnswer((_) async => [_ann()]);
       when(() => repo.markSeen('t1')).thenAnswer((_) async {});
       return TravelerHubBloc(repo);
     },
     act: (b) => b.add(const LoadTravelerHub('t1')),
     expect: () => [
-      isA<TravelerHubState>().having((s) => s.status, 'status', TravelerHubStatus.loading),
+      isA<TravelerHubState>().having(
+        (s) => s.status,
+        'status',
+        TravelerHubStatus.loading,
+      ),
       isA<TravelerHubState>()
           .having((s) => s.status, 'status', TravelerHubStatus.success)
           .having((s) => s.subscribed, 'subscribed', true)
@@ -47,7 +56,10 @@ void main() {
       when(() => repo.subscribe('t1')).thenAnswer((_) async {});
       return TravelerHubBloc(repo)..travelerId = 't1';
     },
-    seed: () => const TravelerHubState(status: TravelerHubStatus.success, subscribed: false),
+    seed: () => const TravelerHubState(
+      status: TravelerHubStatus.success,
+      subscribed: false,
+    ),
     act: (b) => b.add(const HubSubscribePressed()),
     expect: () => [
       isA<TravelerHubState>().having((s) => s.subscribed, 'subscribed', true),
@@ -58,11 +70,16 @@ void main() {
     'HubTogglePush met pushEnabled',
     build: () {
       when(() => repo.setPush('t1', true)).thenAnswer(
-          (_) async => const SubscriptionStatus(subscribed: true, pushEnabled: true));
+        (_) async =>
+            const SubscriptionStatus(subscribed: true, pushEnabled: true),
+      );
       return TravelerHubBloc(repo)..travelerId = 't1';
     },
     seed: () => const TravelerHubState(
-        status: TravelerHubStatus.success, subscribed: true, pushEnabled: false),
+      status: TravelerHubStatus.success,
+      subscribed: true,
+      pushEnabled: false,
+    ),
     act: (b) => b.add(const HubTogglePush(true)),
     expect: () => [
       isA<TravelerHubState>().having((s) => s.pushEnabled, 'push', true),
@@ -75,14 +92,18 @@ void main() {
     '_onLoad catch branch → error when getStatus throws',
     build: () {
       when(() => repo.getStatus('t1')).thenThrow(Exception('network'));
-      when(() => repo.getTravelerAnnouncements('t1'))
-          .thenAnswer((_) async => []);
+      when(
+        () => repo.getTravelerAnnouncements('t1'),
+      ).thenAnswer((_) async => []);
       return TravelerHubBloc(repo);
     },
     act: (b) => b.add(const LoadTravelerHub('t1')),
     expect: () => [
-      isA<TravelerHubState>()
-          .having((s) => s.status, 'status', TravelerHubStatus.loading),
+      isA<TravelerHubState>().having(
+        (s) => s.status,
+        'status',
+        TravelerHubStatus.loading,
+      ),
       isA<TravelerHubState>()
           .having((s) => s.status, 'status', TravelerHubStatus.error)
           .having((s) => s.error, 'error', isNotNull),
@@ -93,16 +114,21 @@ void main() {
     '_onLoad → markSeen NOT called when not subscribed',
     build: () {
       when(() => repo.getStatus('t1')).thenAnswer(
-          (_) async =>
-              const SubscriptionStatus(subscribed: false, pushEnabled: false));
-      when(() => repo.getTravelerAnnouncements('t1'))
-          .thenAnswer((_) async => []);
+        (_) async =>
+            const SubscriptionStatus(subscribed: false, pushEnabled: false),
+      );
+      when(
+        () => repo.getTravelerAnnouncements('t1'),
+      ).thenAnswer((_) async => []);
       return TravelerHubBloc(repo);
     },
     act: (b) => b.add(const LoadTravelerHub('t1')),
     expect: () => [
-      isA<TravelerHubState>()
-          .having((s) => s.status, 'status', TravelerHubStatus.loading),
+      isA<TravelerHubState>().having(
+        (s) => s.status,
+        'status',
+        TravelerHubStatus.loading,
+      ),
       isA<TravelerHubState>()
           .having((s) => s.status, 'status', TravelerHubStatus.success)
           .having((s) => s.subscribed, 'subscribed', false),
@@ -117,9 +143,10 @@ void main() {
       return TravelerHubBloc(repo)..travelerId = 't1';
     },
     seed: () => const TravelerHubState(
-        status: TravelerHubStatus.success,
-        subscribed: true,
-        pushEnabled: true),
+      status: TravelerHubStatus.success,
+      subscribed: true,
+      pushEnabled: true,
+    ),
     act: (b) => b.add(const HubUnsubscribePressed()),
     expect: () => [
       isA<TravelerHubState>()
@@ -134,8 +161,10 @@ void main() {
       when(() => repo.subscribe('t1')).thenThrow(Exception('subscribe error'));
       return TravelerHubBloc(repo)..travelerId = 't1';
     },
-    seed: () =>
-        const TravelerHubState(status: TravelerHubStatus.success, subscribed: false),
+    seed: () => const TravelerHubState(
+      status: TravelerHubStatus.success,
+      subscribed: false,
+    ),
     act: (b) => b.add(const HubSubscribePressed()),
     expect: () => [
       isA<TravelerHubState>()
@@ -147,12 +176,15 @@ void main() {
   blocTest<TravelerHubBloc, TravelerHubState>(
     '_onUnsubscribe catch branch → error when unsubscribe throws',
     build: () {
-      when(() => repo.unsubscribe('t1'))
-          .thenThrow(Exception('unsubscribe error'));
+      when(
+        () => repo.unsubscribe('t1'),
+      ).thenThrow(Exception('unsubscribe error'));
       return TravelerHubBloc(repo)..travelerId = 't1';
     },
     seed: () => const TravelerHubState(
-        status: TravelerHubStatus.success, subscribed: true),
+      status: TravelerHubStatus.success,
+      subscribed: true,
+    ),
     act: (b) => b.add(const HubUnsubscribePressed()),
     expect: () => [
       isA<TravelerHubState>()
@@ -164,12 +196,14 @@ void main() {
   blocTest<TravelerHubBloc, TravelerHubState>(
     '_onTogglePush catch branch → error when setPush throws',
     build: () {
-      when(() => repo.setPush('t1', true))
-          .thenThrow(Exception('push error'));
+      when(() => repo.setPush('t1', true)).thenThrow(Exception('push error'));
       return TravelerHubBloc(repo)..travelerId = 't1';
     },
     seed: () => const TravelerHubState(
-        status: TravelerHubStatus.success, subscribed: true, pushEnabled: false),
+      status: TravelerHubStatus.success,
+      subscribed: true,
+      pushEnabled: false,
+    ),
     act: (b) => b.add(const HubTogglePush(true)),
     expect: () => [
       isA<TravelerHubState>()
