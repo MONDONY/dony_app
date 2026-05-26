@@ -156,7 +156,7 @@ class _LoadedProfileHeader extends StatelessWidget {
           DonySpacing.base,
           0,
           DonySpacing.base,
-          144 + DonySpacing.md, // 144px = preferredSize de _StatsAndTabBar
+          _StatsAndTabBar.height + DonySpacing.md,
         ),
         child: Row(
           children: [
@@ -313,7 +313,7 @@ class _StatCard extends StatelessWidget {
           ),
           Text(
             label,
-            style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
         ],
@@ -327,9 +327,10 @@ class _StatsAndTabBar extends StatelessWidget implements PreferredSizeWidget {
 
   final TabController controller;
 
-  // stats (96px) + TabBar (48px)
+  static const double height = 144; // stats (96px) + TabBar (48px)
+
   @override
-  Size get preferredSize => const Size.fromHeight(144);
+  Size get preferredSize => const Size.fromHeight(height);
 
   @override
   Widget build(BuildContext context) {
@@ -644,7 +645,7 @@ class _ReviewsList extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(Icons.star_rounded, color: DonyColors.warning500, size: 28),
+              Icon(Icons.star_rounded, color: cs.warning, size: 28),
               const SizedBox(width: DonySpacing.sm),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -709,7 +710,7 @@ class _ReviewCard extends StatelessWidget {
                       : Icons.star_border_rounded,
                   size: 14,
                   color: i < item.stars
-                      ? DonyColors.warning500
+                      ? cs.warning
                       : cs.onSurfaceVariant,
                 );
               }),
