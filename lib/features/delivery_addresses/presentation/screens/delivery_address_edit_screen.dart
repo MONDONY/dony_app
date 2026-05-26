@@ -59,15 +59,6 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
     super.dispose();
   }
 
-  void _prefill(DeliveryAddress address) {
-    _labelCtrl.text = address.label;
-    _streetCtrl.text = address.street ?? '';
-    _cityCtrl.text = address.city;
-    _country = address.country;
-    _instructionsCtrl.text = address.instructions ?? '';
-    _isDefault = address.isDefault;
-  }
-
   void _submit(BuildContext context) {
     if (!_isValid) {
       return;
@@ -147,9 +138,19 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
               .where((a) => a.id == widget.addressId)
               .firstOrNull;
           if (found != null) {
-            _prefill(found);
             _initialized = true;
-            setState(() {});
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                setState(() {
+                  _labelCtrl.text = found.label;
+                  _streetCtrl.text = found.street ?? '';
+                  _cityCtrl.text = found.city;
+                  _country = found.country;
+                  _instructionsCtrl.text = found.instructions ?? '';
+                  _isDefault = found.isDefault;
+                });
+              }
+            });
           }
         }
         if (_submitted && state.status == DeliveryAddressStatus.success) {
