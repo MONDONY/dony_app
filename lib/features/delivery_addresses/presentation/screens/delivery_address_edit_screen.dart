@@ -6,6 +6,7 @@ import 'package:dony/features/delivery_addresses/data/models/delivery_address.da
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 const _kDestinationCountries = [
   ('SN', '🇸🇳', 'Sénégal'),
@@ -157,7 +158,7 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
             message: _isEditing ? 'Adresse mise à jour' : 'Adresse ajoutée',
             type: DonySnackbarType.success,
           );
-          Navigator.of(context).pop(true);
+          context.pop(true);
         }
         if (state.status == DeliveryAddressStatus.error &&
             state.error != null) {
