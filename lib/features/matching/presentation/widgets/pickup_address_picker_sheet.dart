@@ -37,6 +37,23 @@ class PickupAddressPickerSheet extends StatefulWidget {
 class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
   String? _selectedId;
 
+  String _labelOf(PickupAddress a) => [
+        a.label,
+        a.street,
+        a.postalCode,
+        a.city,
+      ].where((s) => s.isNotEmpty).join(', ');
+
+  // Sélection effective : un tap explicite ([_selectedId]) prime ; sinon on
+  // reflète l'adresse déjà choisie ([widget.current]) en la retrouvant par son
+  // libellé ; à défaut, l'adresse par défaut.
+  bool _isSelected(PickupAddress a) {
+    if (_selectedId != null) return _selectedId == a.id;
+    final current = widget.current;
+    if (current != null) return _labelOf(a) == current.label;
+    return a.isDefault;
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -113,11 +130,9 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
                                           letterSpacing: 0.08)),
                                 ),
                                 ...state.addresses.map((address) {
-                                  final isSelected = _selectedId == address.id ||
-                                      (_selectedId == null && address.isDefault);
                                   return _AddressRow(
                                     address: address,
-                                    isSelected: isSelected,
+                                    isSelected: _isSelected(address),
                                     activeColor: cs.primary,
                                     onTap: () => setState(
                                         () => _selectedId = address.id),
@@ -188,23 +203,13 @@ class _PickupAddressPickerSheetState extends State<PickupAddressPickerSheet> {
                         onPressed: state.addresses.isEmpty
                             ? null
                             : () {
-                                final address = _selectedId != null
-                                    ? state.addresses.firstWhere(
-                                        (a) => a.id == _selectedId,
-                                        orElse: () => state.addresses.first)
-                                    : state.addresses.firstWhere(
-                                        (a) => a.isDefault,
-                                        orElse: () => state.addresses.first);
+                                final address = state.addresses.firstWhere(
+                                  _isSelected,
+                                  orElse: () => state.addresses.first,
+                                );
                                 Navigator.of(context).pop(
                                   AddressData(
-                                    label: [
-                                      address.label,
-                                      address.street,
-                                      address.postalCode,
-                                      address.city,
-                                    ]
-                                        .where((s) => s.isNotEmpty)
-                                        .join(', '),
+                                    label: _labelOf(address),
                                     lat: address.latitude ?? 0.0,
                                     lng: address.longitude ?? 0.0,
                                   ),

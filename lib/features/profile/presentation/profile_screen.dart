@@ -514,6 +514,24 @@ class _ActivityTab extends StatelessWidget {
               ),
           const SizedBox(height: DonySpacing.lg),
 
+          _SectionLabel(label: 'MES ADRESSES', cs: cs),
+          DonyListSection(
+            tiles: [
+              DonyListTile(
+                icon: Icons.location_on_rounded,
+                iconColor: cs.primary,
+                iconBgColor: cs.primaryContainer,
+                label: 'Mes adresses',
+                showDivider: false,
+                onTap: () => context.push('/profile/addresses'),
+              ),
+            ],
+          ).animate().fadeIn(delay: 160.ms).slideY(
+                begin: 0.04,
+                curve: Curves.easeOutCubic,
+              ),
+          const SizedBox(height: DonySpacing.lg),
+
           _SectionLabel(label: 'LITIGES', cs: cs),
           DonyListSection(
             tiles: [
@@ -526,7 +544,7 @@ class _ActivityTab extends StatelessWidget {
                 onTap: () => context.push('/disputes'),
               ),
             ],
-          ).animate().fadeIn(delay: 180.ms).slideY(
+          ).animate().fadeIn(delay: 200.ms).slideY(
                 begin: 0.04,
                 curve: Curves.easeOutCubic,
               ),
@@ -578,24 +596,6 @@ class _ActivityTab extends StatelessWidget {
               ),
             ],
           ).animate().fadeIn(delay: 180.ms).slideY(
-                begin: 0.04,
-                curve: Curves.easeOutCubic,
-              ),
-          const SizedBox(height: DonySpacing.lg),
-
-          _SectionLabel(label: 'MON CARNET', cs: cs),
-          DonyListSection(
-            tiles: [
-              DonyListTile(
-                icon: Icons.location_on_rounded,
-                iconColor: cs.primary,
-                iconBgColor: cs.primaryContainer,
-                label: 'Mes adresses',
-                showDivider: false,
-                onTap: () => context.push('/profile/addresses'),
-              ),
-            ],
-          ).animate().fadeIn(delay: 200.ms).slideY(
                 begin: 0.04,
                 curve: Curves.easeOutCubic,
               ),

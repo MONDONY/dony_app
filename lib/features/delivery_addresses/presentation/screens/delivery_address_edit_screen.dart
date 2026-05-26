@@ -1,7 +1,10 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_bloc.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_event.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_state.dart';
+import 'package:dony/features/matching/presentation/widgets/address_suggest_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -34,6 +37,8 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
   final _cityCtrl = TextEditingController();
   final _instructionsCtrl = TextEditingController();
   String _country = 'SN';
+  double? _lat;
+  double? _lng;
   bool _isDefault = false;
   bool _submitted = false;
   bool _initialized = false;
@@ -70,6 +75,8 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
     final instructions = _instructionsCtrl.text.trim().isEmpty
         ? null
         : _instructionsCtrl.text.trim();
+    final lat = street == null ? null : _lat;
+    final lng = street == null ? null : _lng;
     if (_isEditing) {
       context.read<DeliveryAddressBloc>().add(DeliveryAddressUpdated(
             id: widget.addressId!,
@@ -78,6 +85,8 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
             city: city,
             country: _country,
             instructions: instructions,
+            latitude: lat,
+            longitude: lng,
             isDefault: _isDefault,
           ));
     } else {
@@ -87,6 +96,8 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
             city: city,
             country: _country,
             instructions: instructions,
+            latitude: lat,
+            longitude: lng,
             isDefault: _isDefault,
           ));
     }
@@ -145,6 +156,8 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
                   _streetCtrl.text = found.street ?? '';
                   _cityCtrl.text = found.city;
                   _country = found.country;
+                  _lat = found.latitude;
+                  _lng = found.longitude;
                   _instructionsCtrl.text = found.instructions ?? '';
                   _isDefault = found.isDefault;
                 });
@@ -184,13 +197,17 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const _SectionLabel('Étiquette'),
               DonyTextField(
                 controller: _labelCtrl,
-                label: 'Étiquette',
+                label: "Nom de l'adresse",
                 hint: 'Ex : Famille Dakar, Dépôt…',
+                prefixIcon: Icons.sell_outlined,
+                prefixIconColor: cs.secondary,
                 onChanged: (_) => setState(() {}),
               ).animate().fadeIn(duration: 280.ms).slideY(begin: 0.03),
-              const SizedBox(height: DonySpacing.base),
+              const SizedBox(height: DonySpacing.xl),
+              const _SectionLabel('Pays'),
               GestureDetector(
                 onTap: () => _pickCountry(context),
                 child: Container(
@@ -199,6 +216,7 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
                     vertical: DonySpacing.md,
                   ),
                   decoration: BoxDecoration(
+                    color: cs.surface,
                     border: Border.all(color: cs.outline),
                     borderRadius: BorderRadius.circular(DonyRadius.md),
                   ),
@@ -206,23 +224,11 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
                     children: [
                       Text(_countryFlag,
                           style: const TextStyle(fontSize: 22)),
-                      const SizedBox(width: DonySpacing.sm),
+                      const SizedBox(width: DonySpacing.md),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'PAYS',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelSmall
-                                  ?.copyWith(color: cs.onSurfaceVariant),
-                            ),
-                            Text(
-                              _countryName,
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ],
+                        child: Text(
+                          _countryName,
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ),
                       Icon(Icons.chevron_right_rounded,
@@ -234,30 +240,54 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
                   .animate()
                   .fadeIn(delay: 40.ms, duration: 280.ms)
                   .slideY(begin: 0.03),
-              const SizedBox(height: DonySpacing.base),
+              const SizedBox(height: DonySpacing.xl),
+              const _SectionLabel('Ville'),
               DonyTextField(
                 controller: _cityCtrl,
                 label: 'Ville',
                 hint: 'Ex : Dakar, Abidjan…',
+                prefixIcon: Icons.location_city_rounded,
+                prefixIconColor: cs.secondary,
                 onChanged: (_) => setState(() {}),
               ).animate().fadeIn(delay: 80.ms, duration: 280.ms).slideY(begin: 0.03),
-              const SizedBox(height: DonySpacing.base),
-              DonyTextField(
+              const SizedBox(height: DonySpacing.xl),
+              const _SectionLabel('Adresse'),
+              AddressSuggestField(
                 controller: _streetCtrl,
-                label: 'Adresse / Quartier',
+                service: getIt<AddressAutocompleteService>(),
+                label: 'Rue, quartier…',
                 hint: 'Optionnel — Ex : Rue 10, Almadies',
+                prefixIcon: Icons.search_rounded,
+                prefixIconColor: cs.secondary,
                 onChanged: (_) => setState(() {}),
+                onResolved: (addr) => setState(() {
+                  _lat = addr.lat;
+                  _lng = addr.lng;
+                }),
+                onCoordinatesCleared: () => setState(() {
+                  _lat = null;
+                  _lng = null;
+                }),
               ).animate().fadeIn(delay: 120.ms, duration: 280.ms).slideY(begin: 0.03),
-              const SizedBox(height: DonySpacing.base),
+              const SizedBox(height: DonySpacing.xl),
+              const _SectionLabel('Instructions'),
               TextFormField(
                 controller: _instructionsCtrl,
                 maxLines: 3,
                 onChanged: (_) => setState(() {}),
-                decoration: const InputDecoration(
-                  labelText: 'Instructions',
+                decoration: InputDecoration(
                   hintText:
                       "Optionnel — Ex : Appeler à l'arrivée, portail rouge…",
-                  contentPadding: EdgeInsets.symmetric(
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(
+                      left: DonySpacing.md,
+                      right: DonySpacing.xs,
+                    ),
+                    child: Icon(Icons.chat_bubble_outline_rounded,
+                        size: 18, color: cs.onSurfaceVariant),
+                  ),
+                  prefixIconConstraints: const BoxConstraints(minWidth: 40),
+                  contentPadding: const EdgeInsets.symmetric(
                     horizontal: DonySpacing.base,
                     vertical: DonySpacing.md,
                   ),
@@ -276,6 +306,28 @@ class _DeliveryAddressEditScreenState extends State<DeliveryAddressEditScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: DonySpacing.sm, left: DonySpacing.xs),
+      child: Text(
+        text.toUpperCase(),
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+            ),
+      ),
     );
   }
 }
