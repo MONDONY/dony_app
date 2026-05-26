@@ -1,5 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
+import 'package:dony/features/delivery_addresses/bloc/delivery_address_bloc.dart';
+import 'package:dony/features/delivery_addresses/data/datasources/delivery_address_datasource.dart';
+import 'package:dony/features/delivery_addresses/data/repositories/delivery_address_repository.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/data/datasources/pickup_address_datasource.dart';
 import 'package:dony/features/pickup_addresses/data/repositories/pickup_address_repository.dart';
@@ -459,6 +462,17 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<PickupAddressBloc>(
     () => PickupAddressBloc(getIt<PickupAddressRepository>()),
+  );
+
+  // Address book — Delivery Addresses
+  getIt.registerLazySingleton<DeliveryAddressDatasource>(
+    () => DeliveryAddressDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<DeliveryAddressRepository>(
+    () => DeliveryAddressRepository(getIt<DeliveryAddressDatasource>()),
+  );
+  getIt.registerFactory<DeliveryAddressBloc>(
+    () => DeliveryAddressBloc(getIt<DeliveryAddressRepository>()),
   );
 
   // Address book — Recipients

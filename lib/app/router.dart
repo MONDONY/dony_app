@@ -66,6 +66,9 @@ import 'package:dony/features/subscriptions/presentation/traveler_profile_hub_sc
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/presentation/screens/pickup_address_edit_screen.dart';
 import 'package:dony/features/pickup_addresses/presentation/screens/pickup_addresses_screen.dart';
+import 'package:dony/features/delivery_addresses/bloc/delivery_address_bloc.dart';
+import 'package:dony/features/delivery_addresses/bloc/delivery_address_event.dart';
+import 'package:dony/features/delivery_addresses/presentation/screens/delivery_address_edit_screen.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_event.dart';
 import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
@@ -525,11 +528,18 @@ final appRouter = GoRouter(
       ),
     ),
 
-    // ── Pickup addresses (hors shell) ────────────────────────────────────
+    // ── Pickup + Delivery addresses (hors shell) ──────────────────────────
     GoRoute(
       path: '/profile/addresses',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<PickupAddressBloc>()..add(const PickupAddressLoaded()),
+      builder: (context, state) => MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) => getIt<PickupAddressBloc>()..add(const PickupAddressLoaded()),
+          ),
+          BlocProvider(
+            create: (_) => getIt<DeliveryAddressBloc>()..add(const DeliveryAddressLoaded()),
+          ),
+        ],
         child: const PickupAddressesScreen(),
       ),
       routes: [
@@ -547,6 +557,22 @@ final appRouter = GoRouter(
             create: (_) => getIt<PickupAddressBloc>()
               ..add(const PickupAddressLoaded()),
             child: PickupAddressEditScreen(
+              addressId: state.pathParameters['id'],
+            ),
+          ),
+        ),
+        GoRoute(
+          path: 'delivery/new',
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<DeliveryAddressBloc>()..add(const DeliveryAddressLoaded()),
+            child: const DeliveryAddressEditScreen(),
+          ),
+        ),
+        GoRoute(
+          path: 'delivery/:id',
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<DeliveryAddressBloc>()..add(const DeliveryAddressLoaded()),
+            child: DeliveryAddressEditScreen(
               addressId: state.pathParameters['id'],
             ),
           ),
