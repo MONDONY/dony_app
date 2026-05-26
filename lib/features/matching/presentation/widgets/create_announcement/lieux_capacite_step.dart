@@ -2,12 +2,10 @@
 // Extrait de create_announcement_bottom_sheet.dart — refactor pur pour la partie
 // lieux ; swap CapacitySelector → CapacityControl pour la partie capacité.
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
-import 'package:dony/features/matching/presentation/widgets/address_picker_field.dart';
+import 'package:dony/features/matching/presentation/widgets/address_selector_field.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/capacity_control.dart';
 import 'package:flutter/material.dart';
@@ -66,39 +64,32 @@ class LieuxCapaciteStep extends StatelessWidget {
           style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: DonySpacing.sm),
-        AddressPickerField(
-          fieldLabel: 'Lieu de remise du colis *',
-          isRequired: true,
-          initialValue: initialPickupAddress,
-          prefixIconColor: cs.primary,
-          onSaved: onPickupSaved,
+        AddressSelectorField(
+          type: AddressSelectorType.remise,
+          value: initialPickupAddress,
           onChanged: (addr) {
             onPickupChanged(addr);
+            onPickupSaved(addr);
             if (context.mounted) {
               context
                   .read<AnnouncementFormBloc>()
                   .add(PickupAddressChanged(addr));
             }
           },
-          autocompleteService: getIt<AddressAutocompleteService>(),
         ).animate().fadeIn(delay: 80.ms),
         const SizedBox(height: DonySpacing.base),
-        AddressPickerField(
-          fieldLabel: 'Lieu de récupération *',
-          isRequired: true,
-          showGpsButton: false,
-          initialValue: initialDeliveryAddress,
-          prefixIconColor: cs.secondary,
-          onSaved: onDeliverySaved,
+        AddressSelectorField(
+          type: AddressSelectorType.livraison,
+          value: initialDeliveryAddress,
           onChanged: (addr) {
             onDeliveryChanged(addr);
+            onDeliverySaved(addr);
             if (context.mounted) {
               context
                   .read<AnnouncementFormBloc>()
                   .add(DeliveryAddressChanged(addr));
             }
           },
-          autocompleteService: getIt<AddressAutocompleteService>(),
         ).animate().fadeIn(delay: 90.ms),
         const SizedBox(height: DonySpacing.xxl),
 
