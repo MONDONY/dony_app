@@ -1,0 +1,87 @@
+name: Build Release APK/Bundle
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - release
+          - staging
+
+env:
+  FLUTTER_VERSION: 3.24.x
+
+jobs:
+  build-apk:
+    name: Build APK (${{ github.event.inputs.build_type }})
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Get dependencies
+        run: |
+          cd dony_app
+          flutter pub get
+
+      - name: Create env.prod.json from secrets
+        run: |
+          cd dony_app
+          cat > env.prod.json <<EOF
+          {
+            "API_BASE_URL": "${{ secrets.FLUTTER_API_BASE_URL }}",
+            "FIREBASE_PROJECT_ID": "${{ secrets.FLUTTER_FIREBASE_PROJECT_ID }}",
+            "STRIPE_PUBLISHABLE_KEY": "${{ secrets.FLUTTER_STRIPE_PUBLISHABLE_KEY }}",
+            "SENTRY_DSN": "${{ secrets.FLUTTER_SENTRY_DSN }}",
+            "GOOGLE_MAPS_API_KEY": "${{ secrets.FLUTTER_GOOGLE_MAPS_API_KEY }}"
+          }
+          EOF
+          echo "✅ env.prod.json créé"
+
+      - name: Build APK (${{ github.event.inputs.build_type }})
+        run: |
+          cd dony_app
+          flutter build apk \
+            --dart-define-from-file=env.prod.json \
+            --${{ github.event.inputs.build_type }} \
+            --build-number=${{ github.run_number }}
+
+      - name: Build AppBundle (${{ github.event.inputs.build_type }})
+        run: |
+          cd dony_app
+          flutter build appbundle \
+            --dart-define-from-file=env.prod.json \
+            --${{ github.event.inputs.build_type }} \
+            --build-number=${{ github.run_number }}
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dony-app-${{ github.event.inputs.build_type }}-apk
+          path: dony_app/build/app/outputs/flutter-apk/app-${{ github.event.inputs.build_type }}.apk
+          retention-days: 30
+
+      - name: Upload AppBundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dony-app-${{ github.event.inputs.build_type }}-bundle
+          path: dony_app/build/app/outputs/bundle/${{ github.event.inputs.build_type }}/app-${{ github.event.inputs.build_type }}.aab
+          retention-days: 30
+
+      - name: Create Release on GitHub
+        if: github.event.inputs.build_type == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dony_app/build/app/outputs/flutter-apk/app-release.apk
+            dony_app/build/app/outputs/bundle/release/app-release.aab
+          tag_name: v${{ github.run_number }}
+          name: Flutter Release ${{ github.run_number }}
+          draft: true
+          prerelease: false
