@@ -341,7 +341,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
                 return Scaffold(
                   backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                   appBar: DonyAppBar(
-                    title: 'Mon colis #$bidCode',
+                    title: '#$bidCode',
                     onBack: () {
                       if (widget.fromPayment) {
                         context.go('/home');
