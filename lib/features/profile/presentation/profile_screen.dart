@@ -539,6 +539,7 @@ class _ActivityTab extends StatelessWidget {
                 iconColor: cs.secondary,
                 iconBgColor: cs.secondaryContainer,
                 label: 'Mes envois en cours',
+                showDivider: false,
                 trailing: activeBids > 0
                     ? Text(
                         '$activeBids en cours',
@@ -550,14 +551,6 @@ class _ActivityTab extends StatelessWidget {
                     : null,
                 onTap: () => context.push('/announcements'),
               ),
-              DonyListTile(
-                icon: Icons.schedule_rounded,
-                iconColor: cs.tertiary,
-                iconBgColor: cs.tertiaryContainer,
-                label: 'Historique des livraisons',
-                showDivider: false,
-                onTap: () => context.push('/profile/shipments/history'),
-              ),
             ],
           ).animate().fadeIn(delay: 140.ms).slideY(
                 begin: 0.04,
@@ -568,13 +561,6 @@ class _ActivityTab extends StatelessWidget {
           _SectionLabel(label: 'MON CARNET', cs: cs),
           DonyListSection(
             tiles: [
-              DonyListTile(
-                icon: Icons.location_on_rounded,
-                iconColor: cs.primary,
-                iconBgColor: cs.primaryContainer,
-                label: 'Mes adresses de pickup',
-                onTap: () => context.push('/profile/addresses'),
-              ),
               DonyListTile(
                 icon: Icons.contacts_rounded,
                 iconColor: cs.primary,
@@ -597,6 +583,24 @@ class _ActivityTab extends StatelessWidget {
               ),
           const SizedBox(height: DonySpacing.lg),
 
+          _SectionLabel(label: 'MON CARNET', cs: cs),
+          DonyListSection(
+            tiles: [
+              DonyListTile(
+                icon: Icons.location_on_rounded,
+                iconColor: cs.primary,
+                iconBgColor: cs.primaryContainer,
+                label: 'Mes adresses',
+                showDivider: false,
+                onTap: () => context.push('/profile/addresses'),
+              ),
+            ],
+          ).animate().fadeIn(delay: 200.ms).slideY(
+                begin: 0.04,
+                curve: Curves.easeOutCubic,
+              ),
+          const SizedBox(height: DonySpacing.lg),
+
           _SectionLabel(label: 'LITIGES', cs: cs),
           DonyListSection(
             tiles: [
@@ -609,7 +613,7 @@ class _ActivityTab extends StatelessWidget {
                 onTap: () => context.push('/disputes'),
               ),
             ],
-          ).animate().fadeIn(delay: 220.ms).slideY(
+          ).animate().fadeIn(delay: 240.ms).slideY(
                 begin: 0.04,
                 curve: Curves.easeOutCubic,
               ),
