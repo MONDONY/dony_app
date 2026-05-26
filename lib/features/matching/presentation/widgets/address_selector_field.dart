@@ -59,7 +59,7 @@ class AddressSelectorField extends StatelessWidget {
     } else {
       result = await DeliveryAddressPickerSheet.show(context, current: value);
     }
-    if (result != null) {
+    if (result != null && context.mounted) {
       onChanged(result);
     }
   }
