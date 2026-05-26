@@ -22,20 +22,11 @@ class _PickupAddressesScreenState extends State<PickupAddressesScreen>
   void initState() {
     super.initState();
     _tab = TabController(length: 2, vsync: this);
-    _tab.addListener(_onTabChanged);
-  }
-
-  void _onTabChanged() {
-    if (_tab.indexIsChanging) {
-      setState(() {});
-    }
   }
 
   @override
   void dispose() {
-    _tab
-      ..removeListener(_onTabChanged)
-      ..dispose();
+    _tab.dispose();
     super.dispose();
   }
 
@@ -49,20 +40,19 @@ class _PickupAddressesScreenState extends State<PickupAddressesScreen>
       scrollable: false,
       padding: EdgeInsets.zero,
       appBarActions: [
-        if (_tab.index == 0)
-          IconButton(
-            icon: const Icon(Icons.add_rounded),
-            tooltip: 'Ajouter une adresse de remise',
-            onPressed: () async {
-              final changed =
-                  await context.push<bool>('/profile/addresses/new');
-              if ((changed ?? false) && context.mounted) {
-                context
-                    .read<PickupAddressBloc>()
-                    .add(const PickupAddressLoaded());
-              }
-            },
-          ),
+        IconButton(
+          icon: const Icon(Icons.add_rounded),
+          tooltip: 'Ajouter une adresse de remise',
+          onPressed: () async {
+            final changed =
+                await context.push<bool>('/profile/addresses/new');
+            if ((changed ?? false) && context.mounted) {
+              context
+                  .read<PickupAddressBloc>()
+                  .add(const PickupAddressLoaded());
+            }
+          },
+        ),
       ],
       appBarBottom: TabBar(
         controller: _tab,
