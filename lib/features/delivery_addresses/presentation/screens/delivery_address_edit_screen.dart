@@ -2,7 +2,6 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_bloc.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_event.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_state.dart';
-import 'package:dony/features/delivery_addresses/data/models/delivery_address.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
