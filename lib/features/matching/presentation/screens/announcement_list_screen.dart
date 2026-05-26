@@ -295,24 +295,40 @@ class _InProgressSection extends StatelessWidget {
               ],
             ),
           ),
-          ...announcements.asMap().entries.map((e) => Padding(
-                padding: EdgeInsets.fromLTRB(h, 0, h, DonySpacing.sm),
-                child: _InProgressCard(
-                  announcement: e.value,
-                  index: e.key,
-                  onDetailTap: () async {
-                    await AnnouncementDetailBottomSheet.show(context, announcementId: e.value.id);
-                    if (context.mounted) {
-                      context.read<AnnouncementBloc>().add(AnnouncementListRequested());
-                    }
-                  },
-                  onScanTap: () => context.push('/tracking/scan'),
-                  onBidsTap: () => context.push(
-                    '/announcements/${e.value.id}/bids',
-                    extra: {'initialTabIndex': 1},
+          SizedBox(
+            height: 132,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.fromLTRB(h, 0, h, DonySpacing.sm),
+              itemCount: announcements.length,
+              separatorBuilder: (_, __) =>
+                  const SizedBox(width: DonySpacing.sm),
+              itemBuilder: (context, i) {
+                final a = announcements[i];
+                return SizedBox(
+                  width: MediaQuery.sizeOf(context).width * 0.82,
+                  child: _InProgressCard(
+                    announcement: a,
+                    index: i,
+                    onDetailTap: () async {
+                      await AnnouncementDetailBottomSheet.show(context,
+                          announcementId: a.id);
+                      if (context.mounted) {
+                        context
+                            .read<AnnouncementBloc>()
+                            .add(AnnouncementListRequested());
+                      }
+                    },
+                    onScanTap: () => context.push('/tracking/scan'),
+                    onBidsTap: () => context.push(
+                      '/announcements/${a.id}/bids',
+                      extra: {'initialTabIndex': 1},
+                    ),
                   ),
-                ),
-              )),
+                );
+              },
+            ),
+          ),
           Divider(height: 1, color: cs.outlineVariant),
         ],
       ),
@@ -411,7 +427,7 @@ class _InProgressCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const Spacer(),
             if (!isKgFree) ...[
               ClipRRect(
                 borderRadius: BorderRadius.circular(DonyRadius.full),

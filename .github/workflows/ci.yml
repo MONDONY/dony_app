@@ -1,0 +1,128 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'dony_app/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'dony_app/**'
+
+env:
+  FLUTTER_VERSION: 3.24.x
+
+jobs:
+  analyze:
+    name: Analyze & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Get dependencies
+        run: |
+          cd dony_app
+          flutter pub get
+
+      - name: Analyze
+        run: |
+          cd dony_app
+          flutter analyze
+
+      - name: Check formatting
+        run: |
+          cd dony_app
+          dart format --set-exit-if-changed lib/ test/
+
+  test:
+    name: Tests & Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Get dependencies
+        run: |
+          cd dony_app
+          flutter pub get
+
+      - name: Run tests
+        run: |
+          cd dony_app
+          flutter test --coverage
+
+      - name: Check coverage (≥ 90%)
+        run: |
+          cd dony_app
+          COVERAGE=$(lcov --summary coverage/lcov.info 2>/dev/null | grep -oP 'lines\.*: \K[0-9.]+' | head -1)
+          echo "Coverage: $COVERAGE%"
+          if (( $(echo "$COVERAGE < 90" | bc -l) )); then
+            echo "❌ Coverage $COVERAGE% < 90% — add more tests!"
+            exit 1
+          fi
+          echo "✅ Coverage OK: $COVERAGE%"
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./dony_app/coverage/lcov.info
+          flags: flutter
+          fail_ci_if_error: false
+
+  build-apk:
+    name: Build APK (debug)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Get dependencies
+        run: |
+          cd dony_app
+          flutter pub get
+
+      - name: Build APK (debug)
+        run: |
+          cd dony_app
+          flutter build apk --debug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dony-app-debug.apk
+          path: dony_app/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 5
+
+  security-scan:
+    name: Dependency Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Get dependencies
+        run: |
+          cd dony_app
+          flutter pub get
+
+      - name: Check for outdated packages
+        run: |
+          cd dony_app
+          flutter pub outdated --no-dev-dependencies || true
+
+      - name: Check for vulnerabilities (pub.dev)
+        run: |
+          cd dony_app
+          flutter pub audit || true

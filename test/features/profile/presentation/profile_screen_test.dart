@@ -132,6 +132,15 @@ Widget _buildTestHarness({
 
   return MaterialApp.router(
     routerConfig: GoRouter(initialLocation: '/', routes: routes),
+    // Simule la safe-area (barre de statut) présente sur tout device réel.
+    // Sans elle, MediaQuery.padding.top vaut 0 en widget test et le header
+    // collapsible (expandedHeight = topPad + 56 + contentHeight) perd ~44px
+    // de marge, ce qui fait déborder ProfileHeader de 11px.
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(context)
+          .copyWith(padding: const EdgeInsets.only(top: 44)),
+      child: child!,
+    ),
   );
 }
 
@@ -585,8 +594,11 @@ void main() {
       await tester.scrollUntilVisible(
         find.text('Recevoir mes paiements'), 300, scrollable: _accountScrollable,
       );
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-      await tester.tap(find.text('Recevoir mes paiements'), warnIfMissed: false);
+      await tester.pump(); // stabilise avant le tap
+      // ensureVisible assure que l'item est dans la zone visible (pas seulement buildé)
+      await tester.ensureVisible(find.text('Recevoir mes paiements'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Recevoir mes paiements'));
       await tester.pumpAndSettle();
 
       expect(find.text('PaymentsOnboarding'), findsOneWidget);

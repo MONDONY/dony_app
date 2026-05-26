@@ -52,6 +52,8 @@ class PickupAddressBloc
         if (event.floorApartment != null)
           'floorApartment': event.floorApartment,
         if (event.instructions != null) 'instructions': event.instructions,
+        if (event.latitude != null) 'latitude': event.latitude,
+        if (event.longitude != null) 'longitude': event.longitude,
         'isDefault': event.isDefault,
       });
       var updatedList = List.of(state.addresses);
@@ -88,6 +90,8 @@ class PickupAddressBloc
         if (event.floorApartment != null)
           'floorApartment': event.floorApartment,
         if (event.instructions != null) 'instructions': event.instructions,
+        if (event.latitude != null) 'latitude': event.latitude,
+        if (event.longitude != null) 'longitude': event.longitude,
         'isDefault': event.isDefault,
       });
       var updatedList = List.of(state.addresses);

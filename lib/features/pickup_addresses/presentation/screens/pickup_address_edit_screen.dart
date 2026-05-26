@@ -1,4 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/address_autocomplete_service.dart';
+import 'package:dony/features/matching/presentation/widgets/address_suggest_field.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/data/models/pickup_address.dart';
 import 'package:flutter/material.dart';
@@ -21,11 +24,14 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
   final _streetCtrl = TextEditingController();
   final _postalCtrl = TextEditingController();
   final _cityCtrl = TextEditingController();
-  final _countryCtrl = TextEditingController(text: 'France');
+  final _countryCtrl = TextEditingController(text: 'FR');
   final _floorCtrl = TextEditingController();
   final _instructionsCtrl = TextEditingController();
+  double? _lat;
+  double? _lng;
   bool _isDefault = false;
   bool _initialized = false;
+  bool _hasSubmitted = false;
 
   bool get _isEditing => widget.addressId != null;
 
@@ -55,6 +61,8 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
     _countryCtrl.text = address.country;
     _floorCtrl.text = address.floorApartment ?? '';
     _instructionsCtrl.text = address.instructions ?? '';
+    _lat = address.latitude;
+    _lng = address.longitude;
     _isDefault = address.isDefault;
   }
 
@@ -62,6 +70,7 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
     if (!_isValid) {
       return;
     }
+    setState(() => _hasSubmitted = true);
     if (_isEditing) {
       context.read<PickupAddressBloc>().add(PickupAddressUpdated(
             id: widget.addressId!,
@@ -76,6 +85,8 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
             instructions: _instructionsCtrl.text.trim().isEmpty
                 ? null
                 : _instructionsCtrl.text.trim(),
+            latitude: _lat,
+            longitude: _lng,
             isDefault: _isDefault,
           ));
     } else {
@@ -91,6 +102,8 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
             instructions: _instructionsCtrl.text.trim().isEmpty
                 ? null
                 : _instructionsCtrl.text.trim(),
+            latitude: _lat,
+            longitude: _lng,
             isDefault: _isDefault,
           ));
     }
@@ -110,7 +123,8 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
           }
         }
         // On success after submit, pop back
-        if (_initialized && state.status == PickupAddressStatus.success) {
+        if (_hasSubmitted && state.status == PickupAddressStatus.success) {
+          setState(() => _hasSubmitted = false);
           DonySnackbar.show(
             context,
             message: _isEditing ? 'Adresse mise à jour' : 'Adresse ajoutée',
@@ -128,29 +142,45 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
       },
       builder: (context, state) {
         final isLoading = state.status == PickupAddressStatus.loading;
+        final cs = Theme.of(context).colorScheme;
 
         return DonyPageScaffold(
           title: _isEditing ? 'Modifier l\'adresse' : 'Nouvelle adresse',
           stickyBottom: DonyButton(
-            label: 'Enregistrer',
+            label: "Enregistrer l'adresse",
             onPressed: isLoading ? null : () => _submit(context),
             isLoading: isLoading,
           ),
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const _SectionLabel('Étiquette'),
               DonyTextField(
                 controller: _labelCtrl,
-                label: 'Libellé',
+                label: "Nom de l'adresse",
                 hint: 'Ex : Maison, Bureau…',
+                prefixIcon: Icons.sell_outlined,
+                prefixIconColor: cs.primary,
                 onChanged: (_) => setState(() {}),
               ).animate().fadeIn(duration: 280.ms).slideY(begin: 0.03),
-              const SizedBox(height: DonySpacing.base),
-              DonyTextField(
+              const SizedBox(height: DonySpacing.xl),
+              const _SectionLabel('Adresse'),
+              AddressSuggestField(
                 controller: _streetCtrl,
-                label: 'Adresse',
+                service: getIt<AddressAutocompleteService>(),
+                label: 'Rue et numéro',
                 hint: '12 rue de la Paix',
+                prefixIcon: Icons.search_rounded,
+                prefixIconColor: cs.primary,
                 onChanged: (_) => setState(() {}),
+                onResolved: (addr) => setState(() {
+                  _lat = addr.lat;
+                  _lng = addr.lng;
+                }),
+                onCoordinatesCleared: () => setState(() {
+                  _lat = null;
+                  _lng = null;
+                }),
               ).animate().fadeIn(delay: 40.ms, duration: 280.ms).slideY(begin: 0.03),
               const SizedBox(height: DonySpacing.base),
               Row(
@@ -172,27 +202,41 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
                       controller: _cityCtrl,
                       label: 'Ville',
                       hint: 'Paris',
+                      prefixIcon: Icons.location_city_rounded,
+                      prefixIconColor: cs.primary,
                       onChanged: (_) => setState(() {}),
                     ),
                   ),
                 ],
               ).animate().fadeIn(delay: 80.ms, duration: 280.ms).slideY(begin: 0.03),
-              const SizedBox(height: DonySpacing.base),
+              const SizedBox(height: DonySpacing.xl),
+              const _SectionLabel('Étage / Appartement'),
               DonyTextField(
                 controller: _floorCtrl,
                 label: 'Étage / Appartement',
                 hint: 'Optionnel — Ex : Bât. B, 3ème étage',
+                prefixIcon: Icons.meeting_room_outlined,
+                prefixIconColor: cs.primary,
                 onChanged: (_) => setState(() {}),
               ).animate().fadeIn(delay: 120.ms, duration: 280.ms).slideY(begin: 0.03),
-              const SizedBox(height: DonySpacing.base),
+              const SizedBox(height: DonySpacing.xl),
+              const _SectionLabel('Instructions'),
               TextFormField(
                 controller: _instructionsCtrl,
                 maxLines: 3,
                 onChanged: (_) => setState(() {}),
-                decoration: const InputDecoration(
-                  labelText: 'Instructions d\'accès',
+                decoration: InputDecoration(
                   hintText: 'Optionnel — digicode, horaires…',
-                  contentPadding: EdgeInsets.symmetric(
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(
+                      left: DonySpacing.md,
+                      right: DonySpacing.xs,
+                    ),
+                    child: Icon(Icons.chat_bubble_outline_rounded,
+                        size: 18, color: cs.onSurfaceVariant),
+                  ),
+                  prefixIconConstraints: const BoxConstraints(minWidth: 40),
+                  contentPadding: const EdgeInsets.symmetric(
                     horizontal: DonySpacing.base,
                     vertical: DonySpacing.md,
                   ),
@@ -207,6 +251,28 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: DonySpacing.sm, left: DonySpacing.xs),
+      child: Text(
+        text.toUpperCase(),
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+            ),
+      ),
     );
   }
 }

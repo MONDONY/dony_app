@@ -17,6 +17,8 @@ class PickupAddressCreated extends PickupAddressEvent {
     required this.country,
     this.floorApartment,
     this.instructions,
+    this.latitude,
+    this.longitude,
     this.isDefault = false,
   });
 
@@ -27,6 +29,8 @@ class PickupAddressCreated extends PickupAddressEvent {
   final String country;
   final String? floorApartment;
   final String? instructions;
+  final double? latitude;
+  final double? longitude;
   final bool isDefault;
 }
 
@@ -40,6 +44,8 @@ class PickupAddressUpdated extends PickupAddressEvent {
     required this.country,
     this.floorApartment,
     this.instructions,
+    this.latitude,
+    this.longitude,
     this.isDefault = false,
   });
 
@@ -51,6 +57,8 @@ class PickupAddressUpdated extends PickupAddressEvent {
   final String country;
   final String? floorApartment;
   final String? instructions;
+  final double? latitude;
+  final double? longitude;
   final bool isDefault;
 }
 

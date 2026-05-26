@@ -58,11 +58,17 @@ import 'package:dony/features/package_request/presentation/screens/traveler/coli
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_search_screen.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
-import 'package:dony/features/favorite_travelers/bloc/favorite_traveler_bloc.dart';
-import 'package:dony/features/favorite_travelers/presentation/screens/favorite_travelers_screen.dart';
+import 'package:dony/features/subscriptions/bloc/subscriptions_bloc.dart';
+import 'package:dony/features/subscriptions/bloc/traveler_hub_bloc.dart';
+import 'package:dony/features/subscriptions/bloc/traveler_hub_event.dart';
+import 'package:dony/features/subscriptions/presentation/mes_abonnements_screen.dart';
+import 'package:dony/features/subscriptions/presentation/traveler_profile_hub_screen.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/presentation/screens/pickup_address_edit_screen.dart';
 import 'package:dony/features/pickup_addresses/presentation/screens/pickup_addresses_screen.dart';
+import 'package:dony/features/delivery_addresses/bloc/delivery_address_bloc.dart';
+import 'package:dony/features/delivery_addresses/bloc/delivery_address_event.dart';
+import 'package:dony/features/delivery_addresses/presentation/screens/delivery_address_edit_screen.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_event.dart';
 import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
@@ -522,11 +528,18 @@ final appRouter = GoRouter(
       ),
     ),
 
-    // ── Pickup addresses (hors shell) ────────────────────────────────────
+    // ── Pickup + Delivery addresses (hors shell) ──────────────────────────
     GoRoute(
       path: '/profile/addresses',
-      builder: (context, state) => BlocProvider(
-        create: (_) => getIt<PickupAddressBloc>()..add(const PickupAddressLoaded()),
+      builder: (context, state) => MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) => getIt<PickupAddressBloc>()..add(const PickupAddressLoaded()),
+          ),
+          BlocProvider(
+            create: (_) => getIt<DeliveryAddressBloc>()..add(const DeliveryAddressLoaded()),
+          ),
+        ],
         child: const PickupAddressesScreen(),
       ),
       routes: [
@@ -544,6 +557,22 @@ final appRouter = GoRouter(
             create: (_) => getIt<PickupAddressBloc>()
               ..add(const PickupAddressLoaded()),
             child: PickupAddressEditScreen(
+              addressId: state.pathParameters['id'],
+            ),
+          ),
+        ),
+        GoRoute(
+          path: 'delivery/new',
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<DeliveryAddressBloc>()..add(const DeliveryAddressLoaded()),
+            child: const DeliveryAddressEditScreen(),
+          ),
+        ),
+        GoRoute(
+          path: 'delivery/:id',
+          builder: (context, state) => BlocProvider(
+            create: (_) => getIt<DeliveryAddressBloc>()..add(const DeliveryAddressLoaded()),
+            child: DeliveryAddressEditScreen(
               addressId: state.pathParameters['id'],
             ),
           ),
@@ -581,12 +610,33 @@ final appRouter = GoRouter(
       ],
     ),
 
-    // ── Favorite travelers (hors shell) ──────────────────────────────────
+    // ── Profil voyageur enrichi (hors shell) ─────────────────────────
     GoRoute(
-      path: '/profile/favorites',
-      builder: (context, state) => BlocProvider.value(
-        value: getIt<FavoriteTravelerBloc>(),
-        child: const FavoriteTravelersScreen(),
+      path: '/travelers/:travelerId',
+      builder: (context, state) {
+        final id = state.pathParameters['travelerId']!;
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (_) => getIt<ProfilePublicBloc>()
+                ..add(ProfilePublicRequested(id)),
+            ),
+            BlocProvider(
+              create: (_) => getIt<TravelerHubBloc>()
+                ..add(LoadTravelerHub(id)),
+            ),
+          ],
+          child: TravelerProfileHubScreen(travelerId: id),
+        );
+      },
+    ),
+
+    // ── Mes abonnements (hors shell) ─────────────────────────────────
+    GoRoute(
+      path: '/profile/subscriptions',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<SubscriptionsBloc>(),
+        child: const MesAbonnementsScreen(),
       ),
     ),
 

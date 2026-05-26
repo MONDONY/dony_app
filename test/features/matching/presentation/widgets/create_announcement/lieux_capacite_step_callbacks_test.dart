@@ -1,24 +1,23 @@
 // Tests complémentaires de couverture pour LieuxCapaciteStep :
-// couvre les callbacks onPickupChanged / onDeliveryChanged (lignes 75-80, 93-98).
-import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/services/address_autocomplete_service.dart';
+// couvre les callbacks onPickupChanged / onDeliveryChanged et la structure du widget.
+//
+// Après migration AddressPickerField → AddressSelectorField, la sélection
+// d'adresse se fait via des bottom sheets (PickupAddressPickerSheet /
+// DeliveryAddressPickerSheet) et non via un TextField avec autocomplete.
+// Les callbacks sont testés en invoquant directement onChanged sur les widgets.
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
-import 'package:dony/features/matching/data/models/address_suggestion.dart';
+import 'package:dony/features/matching/presentation/widgets/address_selector_field.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-
-class MockAddressAutocompleteService2 extends Mock
-    implements AddressAutocompleteService {}
-
-late MockAddressAutocompleteService2 _mockSvc;
 
 Widget _host({
   void Function(AddressData? addr)? onPickupChanged,
   void Function(AddressData? addr)? onDeliveryChanged,
+  void Function(AddressData? addr)? onPickupSaved,
+  void Function(AddressData? addr)? onDeliverySaved,
 }) {
   return MaterialApp(
     home: Scaffold(
@@ -27,8 +26,8 @@ Widget _host({
         child: Form(
           child: SingleChildScrollView(
             child: LieuxCapaciteStep(
-              onPickupSaved: (_) {},
-              onDeliverySaved: (_) {},
+              onPickupSaved: onPickupSaved ?? (_) {},
+              onDeliverySaved: onDeliverySaved ?? (_) {},
               onPickupChanged: onPickupChanged ?? (_) {},
               onDeliveryChanged: onDeliveryChanged ?? (_) {},
             ),
@@ -40,17 +39,6 @@ Widget _host({
 }
 
 void main() {
-  setUpAll(() {
-    _mockSvc = MockAddressAutocompleteService2();
-    when(() => _mockSvc.search(any(), any())).thenAnswer((_) async => []);
-    when(() => _mockSvc.resolvePlace(any(), any())).thenAnswer((_) async =>
-        const AddressData(label: 'Paris, France', lat: 48.85, lng: 2.35));
-
-    if (!getIt.isRegistered<AddressAutocompleteService>()) {
-      getIt.registerSingleton<AddressAutocompleteService>(_mockSvc);
-    }
-  });
-
   group('LieuxCapaciteStep callbacks', () {
     testWidgets('se construit correctement avec tous les callbacks', (tester) async {
       AddressData? capturedPickup;
@@ -69,16 +57,6 @@ void main() {
       expect(capturedDelivery, isNull);
     });
 
-    testWidgets('les champs de lieu ont le bon placeholder/label', (tester) async {
-      await tester.pumpWidget(_host());
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.pump();
-
-      // Le label de chaque champ est visible
-      expect(find.text('Lieu de remise du colis *'), findsOneWidget);
-      expect(find.text('Lieu de récupération *'), findsOneWidget);
-    });
-
     testWidgets('le texte descriptif des lieux est affiché', (tester) async {
       await tester.pumpWidget(_host());
       await tester.pump(const Duration(milliseconds: 200));
@@ -90,94 +68,82 @@ void main() {
       );
     });
 
-    testWidgets('onPickupChanged est appelé quand une suggestion est sélectionnée',
+    testWidgets('les deux AddressSelectorField sont présents et cliquables',
         (tester) async {
-      // Préparer le mock pour retourner une suggestion
-      const suggestion = AddressSuggestion(
-        placeId: 'place-1',
-        mainText: 'Paris',
-        secondaryText: 'France',
-      );
-      when(() => _mockSvc.search(any(), any()))
-          .thenAnswer((_) async => [suggestion]);
-      when(() => _mockSvc.resolvePlace('place-1', any())).thenAnswer(
-          (_) async => const AddressData(label: 'Paris, France', lat: 48.85, lng: 2.35));
-
-      AddressData? capturedPickup;
-      await tester.pumpWidget(_host(
-        onPickupChanged: (addr) => capturedPickup = addr,
-      ));
+      await tester.pumpWidget(_host());
       await tester.pump(const Duration(milliseconds: 200));
       await tester.pump();
 
-      // Trouver le premier champ de texte (Lieu de remise)
-      final textFields = find.byType(TextField);
-      await tester.tap(textFields.first);
-      await tester.pump();
-
-      // Saisir du texte pour déclencher la recherche
-      await tester.enterText(textFields.first, 'Par');
-      // Attendre le debounce (300ms) + traitement
-      await tester.pump(const Duration(milliseconds: 350));
-      await tester.pump(const Duration(milliseconds: 200));
-
-      // La suggestion apparaît dans l'overlay
-      expect(find.text('Paris'), findsOneWidget);
-
-      // Taper sur la suggestion
-      await tester.tap(find.text('Paris'));
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.pump();
-
-      // Le callback onPickupChanged a été appelé
-      expect(capturedPickup?.label, equals('Paris, France'));
-
-      // Reset mock pour les tests suivants
-      when(() => _mockSvc.search(any(), any())).thenAnswer((_) async => []);
+      final fields = find.byType(AddressSelectorField);
+      expect(fields, findsNWidgets(2));
     });
 
-    testWidgets('onDeliveryChanged est appelé quand une suggestion est sélectionnée',
+    testWidgets(
+        'AddressSelectorField remise affiche le prompt quand value est null',
         (tester) async {
-      // Préparer le mock pour retourner une suggestion
-      const suggestion = AddressSuggestion(
-        placeId: 'place-2',
-        mainText: 'Dakar',
-        secondaryText: 'Sénégal',
-      );
-      when(() => _mockSvc.search(any(), any()))
-          .thenAnswer((_) async => [suggestion]);
-      when(() => _mockSvc.resolvePlace('place-2', any())).thenAnswer(
-          (_) async => const AddressData(label: 'Dakar, Sénégal', lat: 14.69, lng: -17.44));
+      await tester.pumpWidget(_host());
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
 
-      AddressData? capturedDelivery;
+      expect(find.text('Choisir une adresse de remise'), findsOneWidget);
+    });
+
+    testWidgets(
+        'AddressSelectorField livraison affiche le prompt quand value est null',
+        (tester) async {
+      await tester.pumpWidget(_host());
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump();
+
+      expect(find.text('Choisir une adresse de livraison'), findsOneWidget);
+    });
+
+    testWidgets('onPickupChanged et onPickupSaved sont appelés via le onChanged du widget',
+        (tester) async {
+      AddressData? capturedChanged;
+      AddressData? capturedSaved;
+      const address =
+          AddressData(label: 'Paris, France', lat: 48.85, lng: 2.35);
+
       await tester.pumpWidget(_host(
-        onDeliveryChanged: (addr) => capturedDelivery = addr,
+        onPickupChanged: (addr) => capturedChanged = addr,
+        onPickupSaved: (addr) => capturedSaved = addr,
       ));
       await tester.pump(const Duration(milliseconds: 200));
       await tester.pump();
 
-      // Trouver le deuxième champ (Lieu de récupération)
-      final textFields = find.byType(TextField);
-      await tester.tap(textFields.at(1));
+      // Invoquer directement le onChanged du premier AddressSelectorField (remise)
+      final fields = tester
+          .widgetList<AddressSelectorField>(find.byType(AddressSelectorField))
+          .toList();
+      fields.first.onChanged(address);
+
+      expect(capturedChanged?.label, equals('Paris, France'));
+      expect(capturedSaved?.label, equals('Paris, France'));
+    });
+
+    testWidgets('onDeliveryChanged et onDeliverySaved sont appelés via le onChanged du widget',
+        (tester) async {
+      AddressData? capturedChanged;
+      AddressData? capturedSaved;
+      const address =
+          AddressData(label: 'Dakar, Sénégal', lat: 14.69, lng: -17.44);
+
+      await tester.pumpWidget(_host(
+        onDeliveryChanged: (addr) => capturedChanged = addr,
+        onDeliverySaved: (addr) => capturedSaved = addr,
+      ));
+      await tester.pump(const Duration(milliseconds: 200));
       await tester.pump();
 
-      await tester.enterText(textFields.at(1), 'Dak');
-      await tester.pump(const Duration(milliseconds: 350));
-      await tester.pump(const Duration(milliseconds: 200));
+      // Invoquer directement le onChanged du second AddressSelectorField (livraison)
+      final fields = tester
+          .widgetList<AddressSelectorField>(find.byType(AddressSelectorField))
+          .toList();
+      fields.last.onChanged(address);
 
-      // La suggestion apparaît
-      expect(find.text('Dakar'), findsOneWidget);
-
-      // Taper sur la suggestion
-      await tester.tap(find.text('Dakar'));
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.pump();
-
-      // Le callback onDeliveryChanged a été appelé
-      expect(capturedDelivery?.label, equals('Dakar, Sénégal'));
-
-      // Reset mock
-      when(() => _mockSvc.search(any(), any())).thenAnswer((_) async => []);
+      expect(capturedChanged?.label, equals('Dakar, Sénégal'));
+      expect(capturedSaved?.label, equals('Dakar, Sénégal'));
     });
   });
 }

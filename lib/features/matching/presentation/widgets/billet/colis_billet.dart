@@ -219,8 +219,8 @@ class _BilletDates extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     final dateStr = _formatDate(bid.departureDate);
-    final depTime = bid.departureTime ?? '—';
-    final arrTime = bid.arrivalTime ?? '—';
+    final depTime = _trimTime(bid.departureTime);
+    final arrTime = _trimTime(bid.arrivalTime);
 
     final labelStyle = tt.bodySmall?.copyWith(
       color: cs.onSurfaceVariant,
@@ -263,6 +263,12 @@ class _BilletDates extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Tronque un time string "HH:mm:ss" en "HH:mm".
+  String _trimTime(String? t) {
+    if (t == null || t.isEmpty) return '—';
+    return t.length >= 5 ? t.substring(0, 5) : t;
   }
 
   /// Formate [date] en "d MMM" avec locale 'fr'.

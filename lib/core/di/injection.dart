@@ -1,11 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
-import 'package:dony/features/favorite_travelers/bloc/favorite_traveler_bloc.dart';
-import 'package:dony/features/favorite_travelers/data/datasources/favorite_traveler_datasource.dart';
-import 'package:dony/features/favorite_travelers/data/repositories/favorite_traveler_repository.dart';
+import 'package:dony/features/delivery_addresses/bloc/delivery_address_bloc.dart';
+import 'package:dony/features/delivery_addresses/data/datasources/delivery_address_datasource.dart';
+import 'package:dony/features/delivery_addresses/data/repositories/delivery_address_repository.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/data/datasources/pickup_address_datasource.dart';
 import 'package:dony/features/pickup_addresses/data/repositories/pickup_address_repository.dart';
+import 'package:dony/features/subscriptions/bloc/subscriptions_bloc.dart';
+import 'package:dony/features/subscriptions/bloc/traveler_hub_bloc.dart';
+import 'package:dony/features/subscriptions/bloc/traveler_subscribe_bloc.dart';
+import 'package:dony/features/subscriptions/data/subscriptions_remote_datasource.dart';
+import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
 import 'package:dony/features/recipients/bloc/recipient_bloc.dart';
 import 'package:dony/features/recipients/data/datasources/recipient_datasource.dart';
 import 'package:dony/features/recipients/data/repositories/recipient_repository.dart';
@@ -459,6 +464,17 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => PickupAddressBloc(getIt<PickupAddressRepository>()),
   );
 
+  // Address book — Delivery Addresses
+  getIt.registerLazySingleton<DeliveryAddressDatasource>(
+    () => DeliveryAddressDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<DeliveryAddressRepository>(
+    () => DeliveryAddressRepository(getIt<DeliveryAddressDatasource>()),
+  );
+  getIt.registerFactory<DeliveryAddressBloc>(
+    () => DeliveryAddressBloc(getIt<DeliveryAddressRepository>()),
+  );
+
   // Address book — Recipients
   getIt.registerLazySingleton<RecipientDatasource>(
     () => RecipientDatasource(getIt<ApiClient>()),
@@ -470,16 +486,18 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => RecipientBloc(getIt<RecipientRepository>()),
   );
 
-  // Address book — Favorite Travelers
-  getIt.registerLazySingleton<FavoriteTravelerDatasource>(
-    () => FavoriteTravelerDatasource(getIt<ApiClient>()),
+  // Subscriptions (abonnements voyageurs)
+  getIt.registerLazySingleton<SubscriptionsRepository>(
+    () => SubscriptionsRemoteDatasource(getIt<ApiClient>()),
   );
-  getIt.registerLazySingleton<FavoriteTravelerRepository>(
-    () => FavoriteTravelerRepository(getIt<FavoriteTravelerDatasource>()),
+  getIt.registerFactory<SubscriptionsBloc>(
+    () => SubscriptionsBloc(getIt<SubscriptionsRepository>()),
   );
-  getIt.registerLazySingleton<FavoriteTravelerBloc>(
-    () => FavoriteTravelerBloc(getIt<FavoriteTravelerRepository>()),
-    dispose: (b) => b.close(),
+  getIt.registerFactory<TravelerHubBloc>(
+    () => TravelerHubBloc(getIt<SubscriptionsRepository>()),
+  );
+  getIt.registerFactory<TravelerSubscribeBloc>(
+    () => TravelerSubscribeBloc(getIt<SubscriptionsRepository>()),
   );
 
   // Referral
