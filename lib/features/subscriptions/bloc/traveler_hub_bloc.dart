@@ -15,6 +15,9 @@ class TravelerHubBloc extends Bloc<TravelerHubEvent, TravelerHubState> {
   }
 
   Future<void> _onLoad(LoadTravelerHub e, Emitter<TravelerHubState> emit) async {
+    if (state.status == TravelerHubStatus.loading) {
+      return;
+    }
     travelerId = e.travelerId;
     emit(state.copyWith(status: TravelerHubStatus.loading));
     try {

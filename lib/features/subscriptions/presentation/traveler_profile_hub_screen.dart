@@ -1,6 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
-import 'package:dony/features/profile/bloc/profile_public_event.dart';
 import 'package:dony/features/profile/bloc/profile_public_state.dart';
 import 'package:dony/features/profile/data/models/profile_public_model.dart';
 import 'package:dony/features/ratings/data/models/rating_summary.dart';
@@ -31,21 +30,7 @@ class _TravelerProfileHubScreenState extends State<TravelerProfileHubScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-
-    // Trigger data loads
-    final profileState = context.read<ProfilePublicBloc>().state;
-    if (profileState is ProfilePublicInitial) {
-      context
-          .read<ProfilePublicBloc>()
-          .add(ProfilePublicRequested(widget.travelerId));
-    }
-
-    final hubState = context.read<TravelerHubBloc>().state;
-    if (hubState.status == TravelerHubStatus.initial) {
-      context
-          .read<TravelerHubBloc>()
-          .add(LoadTravelerHub(widget.travelerId));
-    }
+    // Events are dispatched by the router's BlocProvider create callbacks.
   }
 
   @override
@@ -530,14 +515,18 @@ class _TripsTab extends StatelessWidget {
         }
 
         if (state.status == TravelerHubStatus.error) {
-          return DonyEmptyState(
-            type: DonyEmptyStateType.error,
-            mascotte: DonyMascotteType.assis,
-            icon: Icons.error_outline_rounded,
-            title: 'Erreur de chargement',
-            description: state.error ?? 'Une erreur est survenue.',
-            actionLabel: 'Réessayer',
-            onAction: () {},
+          return SingleChildScrollView(
+            child: DonyEmptyState(
+              type: DonyEmptyStateType.error,
+              mascotte: DonyMascotteType.assis,
+              icon: Icons.error_outline_rounded,
+              title: 'Erreur de chargement',
+              description: 'Impossible de charger les trajets. Réessayez dans un instant.',
+              actionLabel: 'Réessayer',
+              onAction: () => context
+                  .read<TravelerHubBloc>()
+                  .add(LoadTravelerHub(context.read<TravelerHubBloc>().travelerId)),
+            ),
           );
         }
 
