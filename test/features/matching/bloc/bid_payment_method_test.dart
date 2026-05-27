@@ -8,8 +8,8 @@ void main() {
       expect(BidPaymentMethod.orangeMoney, isNotNull);
     });
 
-    test('wave serializes to WAVE', () {
-      expect(BidPaymentMethod.wave.name.toUpperCase(), 'WAVE');
+    test('wave serializes to WAVE via apiValue', () {
+      expect(BidPaymentMethod.wave.apiValue, 'WAVE');
     });
 
     test('orangeMoney is distinct from wave', () {

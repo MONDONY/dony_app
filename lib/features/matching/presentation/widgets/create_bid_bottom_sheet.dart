@@ -1174,8 +1174,9 @@ class _PaymentMethodSelector extends StatelessWidget {
       ],
     ];
 
-    // If more than 2 tiles, wrap in a Wrap for better layout on small screens.
-    if (tiles.length > 3) {
+    // If more than 2 payment method tiles (Expanded), wrap for better layout on small screens.
+    final expandedCount = tiles.whereType<Expanded>().length;
+    if (expandedCount > 2) {
       return Wrap(
         spacing: DonySpacing.sm,
         runSpacing: DonySpacing.sm,

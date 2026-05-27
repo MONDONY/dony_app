@@ -365,12 +365,12 @@ class _AnnouncementDetailContent extends StatelessWidget {
             spacing: DonySpacing.xs,
             runSpacing: DonySpacing.xs,
             children: a.acceptedPaymentMethods.map((m) {
-              final label = switch (m.name.toUpperCase()) {
+              final label = switch (m.apiValue) {
                 'CASH' => '💵 Espèces',
                 'STRIPE' => '💳 Carte',
                 'WAVE' => '🌊 Wave',
                 'ORANGE_MONEY' => '🟠 Orange Money',
-                _ => m.name,
+                _ => m.apiValue,
               };
               return Container(
                 padding: const EdgeInsets.symmetric(
