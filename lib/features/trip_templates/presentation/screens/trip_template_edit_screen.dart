@@ -25,6 +25,12 @@ const _contentTypes = [
   'Cosmétiques',
 ];
 
+const _capacityOptions = [
+  ('SUITCASE_23KG', '1 valise 23 kg', 'Format standard cabine'),
+  ('SUITCASE_32KG', '1 valise 32 kg', 'Grande valise'),
+  ('KG_FREE', 'Kg libre', 'Au kilo, sans contrainte'),
+];
+
 class TripTemplateEditScreen extends StatefulWidget {
   const TripTemplateEditScreen({super.key, this.template});
 
@@ -40,6 +46,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
   String? _departureCity;
   String? _arrivalCity;
   TransportMode _transport = TransportMode.plane;
+  String _capacityUnit = 'SUITCASE_23KG';
   double _availableKg = 23;
   int _priceIdx = 3; // 8€ par défaut
   Set<String> _categories = {'Vêtements', 'Documents'};
@@ -61,6 +68,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       _departureCity = t.departureCity;
       _arrivalCity = t.arrivalCity;
       _transport = transportModeFromWire(t.transportMode) ?? TransportMode.plane;
+      _capacityUnit = t.capacityUnit;
       _availableKg = t.availableKg.toDouble().clamp(1.0, 23.0);
       _categories = Set<String>.from(t.acceptedCategories);
       int closest = 0;
@@ -92,7 +100,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       'departureCity': _departureCity!.trim(),
       'arrivalCity': _arrivalCity!.trim(),
       'transportMode': transportModeToWire(_transport),
-      'capacityUnit': 'SUITCASE_23KG',
+      'capacityUnit': _capacityUnit,
       'availableKg': _availableKg.round(),
       'pricePerKg': _priceOptions[_priceIdx],
       'acceptedCategories': _categories.toList(),
@@ -177,14 +185,67 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
               ),
               const SizedBox(height: DonySpacing.xxl),
 
-              // ── CAPACITÉ DISPONIBLE ─────────────────────────────────────
-              const _SectionLabel(label: 'CAPACITÉ DISPONIBLE', icon: Icons.luggage_rounded),
+              // ── TYPE DE CAPACITÉ ────────────────────────────────────────
+              const _SectionLabel(label: 'TYPE DE CAPACITÉ', icon: Icons.luggage_rounded),
+              const SizedBox(height: DonySpacing.sm),
+              Column(
+                children: _capacityOptions.map((opt) {
+                  final selected = _capacityUnit == opt.$1;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+                    child: GestureDetector(
+                      onTap: () => setState(() => _capacityUnit = opt.$1),
+                      child: AnimatedContainer(
+                        duration: 160.ms,
+                        padding: const EdgeInsets.all(DonySpacing.base),
+                        decoration: BoxDecoration(
+                          color: selected ? cs.primaryContainer : cs.surface,
+                          borderRadius: BorderRadius.circular(DonyRadius.lg),
+                          border: Border.all(
+                            color: selected ? cs.primary : cs.outline,
+                            width: selected ? 1.5 : 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(opt.$2,
+                                      style: tt.bodyMedium?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          color: selected ? cs.primary : cs.onSurface)),
+                                  Text(opt.$3,
+                                      style: tt.bodySmall
+                                          ?.copyWith(color: cs.onSurfaceVariant)),
+                                ],
+                              ),
+                            ),
+                            Icon(
+                              selected
+                                  ? Icons.radio_button_checked_rounded
+                                  : Icons.radio_button_unchecked_rounded,
+                              color: selected ? cs.primary : cs.outline,
+                              size: 22,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: DonySpacing.lg),
+
+              // ── POIDS DISPONIBLE ────────────────────────────────────────
+              const _SectionLabel(label: 'POIDS DISPONIBLE', icon: Icons.scale_rounded),
               const SizedBox(height: DonySpacing.base),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Expanded(child: SizedBox()),
                   Text(
                     _availableKg.toStringAsFixed(0),
                     style: tt.displayLarge?.copyWith(
@@ -194,20 +255,6 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                     ),
                   ),
                   Text(' kg', style: tt.headlineMedium?.copyWith(color: cs.onSurfaceVariant)),
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
-                        decoration: BoxDecoration(
-                          color: cs.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(DonyRadius.full),
-                        ),
-                        child: Text('VALISE', style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
-                      ),
-                    ),
-                  ),
                 ],
               ),
               const SizedBox(height: DonySpacing.xs),
@@ -261,14 +308,24 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                               width: selected ? 1.5 : 1,
                             ),
                           ),
-                          child: Center(
-                            child: Text(
-                              '${_priceOptions[i].toStringAsFixed(0)}€',
-                              style: tt.titleMedium?.copyWith(
-                                color: selected ? cs.success : cs.onSurface,
-                                fontWeight: FontWeight.w700,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '${_priceOptions[i].toStringAsFixed(0)}€',
+                                style: tt.titleMedium?.copyWith(
+                                  color: selected ? cs.success : cs.onSurface,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
-                            ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${(_priceOptions[i] * 0.88).toStringAsFixed(2)}€ nets',
+                                style: tt.labelSmall?.copyWith(
+                                  color: selected ? cs.success : cs.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -278,7 +335,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
               ),
               const SizedBox(height: DonySpacing.sm),
               Text(
-                'Vous touchez ${(_priceOptions[_priceIdx] * 0.88).toStringAsFixed(2)}€/kg (commission 12% déduite)',
+                'Commission dony (12%) déduite — vous touchez ${(_priceOptions[_priceIdx] * 0.88).toStringAsFixed(2)}€/kg',
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
               const SizedBox(height: DonySpacing.xxl),
