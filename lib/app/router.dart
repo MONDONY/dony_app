@@ -58,6 +58,8 @@ import 'package:dony/features/package_request/presentation/screens/traveler/coli
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_search_screen.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
+import 'package:dony/features/matching/presentation/screens/mobile_money_awaiting_screen.dart';
 import 'package:dony/features/favorite_travelers/bloc/favorite_traveler_bloc.dart';
 import 'package:dony/features/favorite_travelers/presentation/screens/favorite_travelers_screen.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
@@ -253,6 +255,18 @@ final appRouter = GoRouter(
             : BidModel.skeleton(state.pathParameters['bidId']!);
         final fromPayment = state.uri.queryParameters['from'] == 'payment';
         return BidDetailScreen(bid: bid, fromPayment: fromPayment);
+      },
+    ),
+
+    // ── Mobile Money — écran d'attente de paiement (hors shell) ────────
+    GoRoute(
+      path: '/bids/:bidId/mobile-money/awaiting',
+      builder: (context, state) {
+        final bidId = state.pathParameters['bidId']!;
+        return BlocProvider(
+          create: (_) => getIt<MobileMoneyPaymentBloc>(),
+          child: MobileMoneyAwaitingScreen(bidId: bidId),
+        );
       },
     ),
 
