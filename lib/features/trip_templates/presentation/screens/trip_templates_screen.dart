@@ -149,7 +149,7 @@ class _TripTemplateCard extends StatelessWidget {
       p == p.roundToDouble() ? p.toInt().toString() : p.toString();
 }
 
-enum _TemplateAction { edit, delete }
+enum _TemplateAction { edit, recurrence, delete }
 
 class _KebabMenu extends StatelessWidget {
   const _KebabMenu({required this.template, required this.onEdit});
@@ -167,6 +167,8 @@ class _KebabMenu extends StatelessWidget {
         switch (action) {
           case _TemplateAction.edit:
             onEdit();
+          case _TemplateAction.recurrence:
+            context.push('/trip-recurrences/new', extra: template);
           case _TemplateAction.delete:
             final confirmed = await DonyDialog.show(
               context,
@@ -189,6 +191,14 @@ class _KebabMenu extends StatelessWidget {
             Icon(Icons.edit_outlined, size: 18),
             SizedBox(width: DonySpacing.sm),
             Text('Modifier'),
+          ]),
+        ),
+        const PopupMenuItem(
+          value: _TemplateAction.recurrence,
+          child: Row(children: [
+            Icon(Icons.event_repeat_rounded, size: 18),
+            SizedBox(width: DonySpacing.sm),
+            Text('Programmer la récurrence'),
           ]),
         ),
         PopupMenuItem(

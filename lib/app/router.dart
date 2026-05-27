@@ -71,9 +71,11 @@ import 'package:dony/features/delivery_addresses/bloc/delivery_address_event.dar
 import 'package:dony/features/delivery_addresses/presentation/screens/delivery_address_edit_screen.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
+import 'package:dony/features/trip_templates/bloc/trip_recurrence_bloc.dart';
 import 'package:dony/features/trip_templates/data/models/trip_template.dart';
 import 'package:dony/features/trip_templates/presentation/screens/trip_template_edit_screen.dart';
 import 'package:dony/features/trip_templates/presentation/screens/trip_templates_screen.dart';
+import 'package:dony/features/trip_templates/presentation/screens/trip_recurrence_edit_screen.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_event.dart';
 import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
@@ -398,6 +400,16 @@ final appRouter = GoRouter(
         return BlocProvider(
           create: (_) => getIt<TripTemplateBloc>(),
           child: TripTemplateEditScreen(template: template),
+        );
+      },
+    ),
+    GoRoute(
+      path: '/trip-recurrences/new',
+      builder: (context, state) {
+        final template = state.extra as TripTemplate;
+        return BlocProvider(
+          create: (_) => getIt<TripRecurrenceBloc>(),
+          child: TripRecurrenceEditScreen(template: template),
         );
       },
     ),

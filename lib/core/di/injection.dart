@@ -6,6 +6,9 @@ import 'package:dony/features/delivery_addresses/data/repositories/delivery_addr
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/data/datasources/trip_template_datasource.dart';
 import 'package:dony/features/trip_templates/data/repositories/trip_template_repository.dart';
+import 'package:dony/features/trip_templates/bloc/trip_recurrence_bloc.dart';
+import 'package:dony/features/trip_templates/data/datasources/trip_recurrence_datasource.dart';
+import 'package:dony/features/trip_templates/data/repositories/trip_recurrence_repository.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/data/datasources/pickup_address_datasource.dart';
 import 'package:dony/features/pickup_addresses/data/repositories/pickup_address_repository.dart';
@@ -487,6 +490,15 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<TripTemplateBloc>(
     () => TripTemplateBloc(getIt<TripTemplateRepository>()),
+  );
+  getIt.registerLazySingleton<TripRecurrenceDatasource>(
+    () => TripRecurrenceDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<TripRecurrenceRepository>(
+    () => TripRecurrenceRepository(getIt<TripRecurrenceDatasource>()),
+  );
+  getIt.registerFactory<TripRecurrenceBloc>(
+    () => TripRecurrenceBloc(getIt<TripRecurrenceRepository>()),
   );
 
   // Address book — Recipients
