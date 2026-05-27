@@ -514,6 +514,24 @@ class _ActivityTab extends StatelessWidget {
               ),
           const SizedBox(height: DonySpacing.lg),
 
+          _SectionLabel(label: 'MES MODÈLES', cs: cs),
+          DonyListSection(
+            tiles: [
+              DonyListTile(
+                icon: Icons.bookmark_rounded,
+                iconColor: cs.primary,
+                iconBgColor: cs.primaryContainer,
+                label: 'Mes modèles de trajet',
+                showDivider: false,
+                onTap: () => context.push('/trip-templates'),
+              ),
+            ],
+          ).animate().fadeIn(delay: 170.ms).slideY(
+                begin: 0.04,
+                curve: Curves.easeOutCubic,
+              ),
+          const SizedBox(height: DonySpacing.lg),
+
           _SectionLabel(label: 'MES ADRESSES', cs: cs),
           DonyListSection(
             tiles: [
