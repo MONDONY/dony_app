@@ -43,7 +43,8 @@ class _MobileMoneyAwaitingScreenState
   }
 
   Future<void> _openLink(String url) async {
-    final uri = Uri.parse(url);
+    final uri = Uri.tryParse(url);
+    if (uri == null || uri.scheme != 'https') return;
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
@@ -79,6 +80,9 @@ class _MobileMoneyAwaitingScreenState
               type: DonySnackbarType.success,
             );
             context.go('/bids/${widget.bidId}');
+          } else if (state is MobileMoneyPaymentExpired ||
+              state is MobileMoneyPaymentError) {
+            _pollingTimer?.cancel();
           }
         },
         builder: (context, state) {

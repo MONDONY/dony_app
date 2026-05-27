@@ -74,5 +74,66 @@ void main() {
         isA<MobileMoneyPaymentError>(),
       ],
     );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'MobileMoneyStatusPolled → MobileMoneyPaymentExpired quand status=EXPIRED',
+      build: () {
+        when(() => repo.getStatus(bidId)).thenAnswer((_) async =>
+            const MobileMoneyPaymentModel(
+              id: 'id-3',
+              status: 'EXPIRED',
+              amount: 50.0,
+              currency: 'XOF',
+            ));
+        return bloc;
+      },
+      act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentExpired>(),
+      ],
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'MobileMoneyStatusPolled → MobileMoneyPaymentError quand status=FAILED',
+      build: () {
+        when(() => repo.getStatus(bidId)).thenAnswer((_) async =>
+            const MobileMoneyPaymentModel(
+              id: 'id-4',
+              status: 'FAILED',
+              amount: 50.0,
+              currency: 'XOF',
+              failureReason: 'Solde insuffisant',
+            ));
+        return bloc;
+      },
+      act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentError>()
+            .having((s) => s.message, 'message', 'Solde insuffisant'),
+      ],
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'MobileMoneyLinkRegenRequested → MobileMoneyPaymentPending avec nouveau lien',
+      build: () {
+        when(() => repo.regenerateLink(bidId)).thenAnswer((_) async =>
+            const MobileMoneyPaymentModel(
+              id: 'id-5',
+              status: 'PENDING',
+              amount: 50.0,
+              currency: 'XOF',
+              paymentLink: 'https://wave.test/pay?ref=new',
+            ));
+        return bloc;
+      },
+      act: (b) => b.add(const MobileMoneyLinkRegenRequested(bidId: bidId)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentPending>()
+            .having((s) => s.paymentLink, 'paymentLink', contains('ref=new')),
+      ],
+    );
   });
 }
