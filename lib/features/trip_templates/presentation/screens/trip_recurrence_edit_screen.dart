@@ -64,6 +64,8 @@ class _TripRecurrenceEditScreenState extends State<TripRecurrenceEditScreen> {
       'pickupAddress': {'label': _pickup!.label, 'lat': _pickup!.lat, 'lng': _pickup!.lng},
       'deliveryAddress': {'label': _delivery!.label, 'lat': _delivery!.lat, 'lng': _delivery!.lng},
       'departureTime': _timeWire,
+      'arrivalTime': t.arrivalTime,
+      'cashAccepted': t.cashAccepted,
       'weekdays': _weekdaysString,
       'horizonDays': 14,
       'active': _active,

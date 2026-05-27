@@ -28,6 +28,8 @@ class TripRecurrence {
     required this.pickupAddress,
     required this.deliveryAddress,
     this.departureTime,
+    this.arrivalTime,
+    this.cashAccepted = false,
     required this.weekdays,
     required this.horizonDays,
     required this.active,
@@ -48,6 +50,8 @@ class TripRecurrence {
 
   /// Format "HH:mm" (l'API peut renvoyer "HH:mm:ss" — tronqué à la lecture).
   final String? departureTime;
+  final String? arrivalTime;
+  final bool cashAccepted;
   final String weekdays; // 7 caractères '0'/'1', Lundi..Dimanche
   final int horizonDays;
   final bool active;
@@ -57,6 +61,10 @@ class TripRecurrence {
     String? time = json['departureTime'] as String?;
     if (time != null && time.length >= 5) {
       time = time.substring(0, 5); // "14:00:00" -> "14:00"
+    }
+    String? arrival = json['arrivalTime'] as String?;
+    if (arrival != null && arrival.length >= 5) {
+      arrival = arrival.substring(0, 5);
     }
     return TripRecurrence(
       id: json['id'] as String,
@@ -72,6 +80,8 @@ class TripRecurrence {
       pickupAddress: RecurrenceAddress.fromJson(json['pickupAddress'] as Map<String, dynamic>),
       deliveryAddress: RecurrenceAddress.fromJson(json['deliveryAddress'] as Map<String, dynamic>),
       departureTime: time,
+      arrivalTime: arrival,
+      cashAccepted: json['cashAccepted'] as bool? ?? false,
       weekdays: json['weekdays'] as String,
       horizonDays: (json['horizonDays'] as num).toInt(),
       active: json['active'] as bool,

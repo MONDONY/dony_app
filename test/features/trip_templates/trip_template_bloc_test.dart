@@ -31,6 +31,17 @@ void main() {
     expect(TripTemplateBloc(repo).state.status, TripTemplateStatus.initial);
   });
 
+  test('TripTemplate.fromJson parses cashAccepted and truncates arrivalTime', () {
+    final t = TripTemplate.fromJson({
+      'id': 't1', 'label': 'L', 'departureCity': 'Paris', 'arrivalCity': 'Dakar',
+      'transportMode': 'PLANE', 'capacityUnit': 'SUITCASE_23KG', 'availableKg': 23,
+      'pricePerKg': 8, 'acceptedCategories': ['Vêtements'],
+      'cashAccepted': true, 'arrivalTime': '18:30:00',
+    });
+    expect(t.cashAccepted, isTrue);
+    expect(t.arrivalTime, '18:30');
+  });
+
   blocTest<TripTemplateBloc, TripTemplateState>(
     'TripTemplateLoaded emits loading then success with templates',
     setUp: () => when(() => repo.getAll()).thenAnswer((_) async => [_tpl()]),

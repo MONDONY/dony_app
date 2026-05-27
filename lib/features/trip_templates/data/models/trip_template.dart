@@ -14,6 +14,8 @@ class TripTemplate {
     required this.availableKg,
     required this.pricePerKg,
     required this.acceptedCategories,
+    this.cashAccepted = false,
+    this.arrivalTime,
   });
 
   final String id;
@@ -31,7 +33,21 @@ class TripTemplate {
   final double pricePerKg;
   final List<String> acceptedCategories;
 
-  factory TripTemplate.fromJson(Map<String, dynamic> json) => TripTemplate(
+  /// true si le voyageur accepte aussi le paiement en espèces.
+  final bool cashAccepted;
+
+  /// Heure d'arrivée optionnelle "HH:mm".
+  final String? arrivalTime;
+
+  factory TripTemplate.fromJson(Map<String, dynamic> json) {
+    String? arrival = json['arrivalTime'] as String?;
+    if (arrival != null && arrival.length >= 5) {
+      arrival = arrival.substring(0, 5);
+    }
+    return _fromJson(json, arrival);
+  }
+
+  static TripTemplate _fromJson(Map<String, dynamic> json, String? arrival) => TripTemplate(
         id: json['id'] as String,
         label: json['label'] as String,
         emoji: json['emoji'] as String?,
@@ -48,6 +64,8 @@ class TripTemplate {
         acceptedCategories:
             (json['acceptedCategories'] as List?)?.map((e) => e as String).toList() ??
                 const [],
+        cashAccepted: json['cashAccepted'] as bool? ?? false,
+        arrivalTime: arrival,
       );
 
   Map<String, dynamic> toJson() => {
@@ -64,5 +82,7 @@ class TripTemplate {
         'availableKg': availableKg,
         'pricePerKg': pricePerKg,
         'acceptedCategories': acceptedCategories,
+        'cashAccepted': cashAccepted,
+        'arrivalTime': arrivalTime,
       };
 }

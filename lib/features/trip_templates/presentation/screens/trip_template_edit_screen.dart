@@ -50,7 +50,13 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
   double _availableKg = 23;
   int _priceIdx = 3; // 8€ par défaut
   Set<String> _categories = {'Vêtements', 'Documents'};
+  bool _cashAccepted = false;
+  TimeOfDay? _arrivalTime;
   bool _submitted = false;
+
+  String? get _arrivalWire => _arrivalTime == null
+      ? null
+      : '${_arrivalTime!.hour.toString().padLeft(2, '0')}:${_arrivalTime!.minute.toString().padLeft(2, '0')}';
 
   bool get _isEditing => widget.template != null;
 
@@ -71,6 +77,11 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       _capacityUnit = t.capacityUnit;
       _availableKg = t.availableKg.toDouble().clamp(1.0, 23.0);
       _categories = Set<String>.from(t.acceptedCategories);
+      _cashAccepted = t.cashAccepted;
+      if (t.arrivalTime != null && t.arrivalTime!.contains(':')) {
+        final parts = t.arrivalTime!.split(':');
+        _arrivalTime = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+      }
       int closest = 0;
       double minDiff = double.infinity;
       for (int i = 0; i < _priceOptions.length; i++) {
@@ -104,6 +115,8 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
       'availableKg': _availableKg.round(),
       'pricePerKg': _priceOptions[_priceIdx],
       'acceptedCategories': _categories.toList(),
+      'cashAccepted': _cashAccepted,
+      'arrivalTime': _arrivalWire,
     };
     final bloc = context.read<TripTemplateBloc>();
     if (_isEditing) {
@@ -403,6 +416,81 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                     ),
                   );
                 }).toList(),
+              ),
+              const SizedBox(height: DonySpacing.xxl),
+
+              // ── HEURE D'ARRIVÉE ─────────────────────────────────────────
+              const _SectionLabel(label: "HEURE D'ARRIVÉE", icon: Icons.flight_land_rounded),
+              const SizedBox(height: DonySpacing.sm),
+              GestureDetector(
+                onTap: () async {
+                  final picked = await showTimePicker(
+                    context: context,
+                    initialTime: _arrivalTime ?? const TimeOfDay(hour: 12, minute: 0),
+                  );
+                  if (picked != null) setState(() => _arrivalTime = picked);
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.base, vertical: DonySpacing.md),
+                  decoration: BoxDecoration(
+                    color: cs.surface,
+                    border: Border.all(color: cs.outline),
+                    borderRadius: BorderRadius.circular(DonyRadius.md),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.access_time_rounded, color: cs.primary, size: 20),
+                      const SizedBox(width: DonySpacing.md),
+                      Expanded(
+                        child: Text(
+                          _arrivalTime == null ? 'Optionnel — choisir une heure' : _arrivalWire!,
+                          style: tt.bodyMedium?.copyWith(
+                            color: _arrivalTime == null ? cs.onSurfaceVariant : cs.onSurface,
+                          ),
+                        ),
+                      ),
+                      if (_arrivalTime != null)
+                        GestureDetector(
+                          onTap: () => setState(() => _arrivalTime = null),
+                          child: Icon(Icons.close_rounded, size: 18, color: cs.onSurfaceVariant),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: DonySpacing.xxl),
+
+              // ── PAIEMENT ────────────────────────────────────────────────
+              const _SectionLabel(label: 'PAIEMENT', icon: Icons.payments_outlined),
+              const SizedBox(height: DonySpacing.sm),
+              GestureDetector(
+                onTap: () => setState(() => _cashAccepted = !_cashAccepted),
+                child: Container(
+                  padding: const EdgeInsets.all(DonySpacing.base),
+                  decoration: BoxDecoration(
+                    color: _cashAccepted ? cs.primary.withValues(alpha: 0.08) : cs.surface,
+                    borderRadius: BorderRadius.circular(DonyRadius.card),
+                    border: Border.all(
+                        color: _cashAccepted ? cs.primary.withValues(alpha: 0.4) : cs.outline),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Accepter le paiement en espèces',
+                                style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                            Text('La carte Stripe reste toujours activée',
+                                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                          ],
+                        ),
+                      ),
+                      Switch(value: _cashAccepted, onChanged: (v) => setState(() => _cashAccepted = v)),
+                    ],
+                  ),
+                ),
               ),
               const SizedBox(height: DonySpacing.md),
             ],
