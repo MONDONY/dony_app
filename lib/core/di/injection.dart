@@ -3,6 +3,9 @@ import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_bloc.dart';
 import 'package:dony/features/delivery_addresses/data/datasources/delivery_address_datasource.dart';
 import 'package:dony/features/delivery_addresses/data/repositories/delivery_address_repository.dart';
+import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
+import 'package:dony/features/trip_templates/data/datasources/trip_template_datasource.dart';
+import 'package:dony/features/trip_templates/data/repositories/trip_template_repository.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/data/datasources/pickup_address_datasource.dart';
 import 'package:dony/features/pickup_addresses/data/repositories/pickup_address_repository.dart';
@@ -473,6 +476,17 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<DeliveryAddressBloc>(
     () => DeliveryAddressBloc(getIt<DeliveryAddressRepository>()),
+  );
+
+  // Trip templates — modèles de trajet réutilisables
+  getIt.registerLazySingleton<TripTemplateDatasource>(
+    () => TripTemplateDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<TripTemplateRepository>(
+    () => TripTemplateRepository(getIt<TripTemplateDatasource>()),
+  );
+  getIt.registerFactory<TripTemplateBloc>(
+    () => TripTemplateBloc(getIt<TripTemplateRepository>()),
   );
 
   // Address book — Recipients

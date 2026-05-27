@@ -69,6 +69,11 @@ import 'package:dony/features/pickup_addresses/presentation/screens/pickup_addre
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_bloc.dart';
 import 'package:dony/features/delivery_addresses/bloc/delivery_address_event.dart';
 import 'package:dony/features/delivery_addresses/presentation/screens/delivery_address_edit_screen.dart';
+import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
+import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
+import 'package:dony/features/trip_templates/data/models/trip_template.dart';
+import 'package:dony/features/trip_templates/presentation/screens/trip_template_edit_screen.dart';
+import 'package:dony/features/trip_templates/presentation/screens/trip_templates_screen.dart';
 import 'package:dony/features/profile/bloc/profile_public_bloc.dart';
 import 'package:dony/features/profile/bloc/profile_public_event.dart';
 import 'package:dony/features/profile/bloc/support_contact_bloc.dart';
@@ -366,8 +371,33 @@ final appRouter = GoRouter(
               create: (_) => getIt<CommissionMethodBloc>()
                 ..add(CommissionMethodLoadRequested()),
             ),
+            BlocProvider(
+              create: (_) =>
+                  getIt<TripTemplateBloc>()..add(const TripTemplateLoaded()),
+            ),
           ],
           child: CreateAnnouncementScreen(announcement: announcement),
+        );
+      },
+    ),
+
+    // ── Modèles de trajet (hors shell) ───────────────────────────────────
+    GoRoute(
+      path: '/trip-templates',
+      builder: (context, state) => BlocProvider(
+        create: (_) =>
+            getIt<TripTemplateBloc>()..add(const TripTemplateLoaded()),
+        child: const TripTemplatesScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/trip-templates/edit',
+      builder: (context, state) {
+        final template =
+            state.extra is TripTemplate ? state.extra as TripTemplate : null;
+        return BlocProvider(
+          create: (_) => getIt<TripTemplateBloc>(),
+          child: TripTemplateEditScreen(template: template),
         );
       },
     ),
