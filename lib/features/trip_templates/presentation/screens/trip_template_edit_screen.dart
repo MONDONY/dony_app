@@ -1,16 +1,21 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/city/bloc/city_search_bloc.dart';
+import 'package:dony/features/city/data/city_model.dart';
+import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
 import 'package:dony/features/trip_templates/data/models/trip_template.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-const _categoryPresets = [
+const _priceOptions = [5.0, 6.0, 7.0, 8.0];
+
+const _contentTypes = [
   'Vêtements',
   'Médicaments',
   'Alim. sèche',
@@ -18,12 +23,6 @@ const _categoryPresets = [
   'Documents',
   'Téléphone',
   'Cosmétiques',
-];
-
-const _capacityUnits = [
-  ('SUITCASE_23KG', 'Valise 23 kg'),
-  ('SUITCASE_32KG', 'Valise 32 kg'),
-  ('KG_FREE', 'Au kilo'),
 ];
 
 class TripTemplateEditScreen extends StatefulWidget {
@@ -37,13 +36,12 @@ class TripTemplateEditScreen extends StatefulWidget {
 
 class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
   final _labelCtrl = TextEditingController();
-  final _departureCtrl = TextEditingController();
-  final _arrivalCtrl = TextEditingController();
-  final _kgCtrl = TextEditingController(text: '23');
-  final _priceCtrl = TextEditingController(text: '8');
 
+  String? _departureCity;
+  String? _arrivalCity;
   TransportMode _transport = TransportMode.plane;
-  String _capacityUnit = 'SUITCASE_23KG';
+  double _availableKg = 23;
+  int _priceIdx = 3; // 8€ par défaut
   Set<String> _categories = {'Vêtements', 'Documents'};
   bool _submitted = false;
 
@@ -51,10 +49,8 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
 
   bool get _isValid =>
       _labelCtrl.text.trim().isNotEmpty &&
-      _departureCtrl.text.trim().isNotEmpty &&
-      _arrivalCtrl.text.trim().isNotEmpty &&
-      (double.tryParse(_priceCtrl.text.replaceAll(',', '.')) ?? 0) > 0 &&
-      (int.tryParse(_kgCtrl.text) ?? 0) > 0;
+      (_departureCity?.trim().isNotEmpty ?? false) &&
+      (_arrivalCity?.trim().isNotEmpty ?? false);
 
   @override
   void initState() {
@@ -62,26 +58,27 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     final t = widget.template;
     if (t != null) {
       _labelCtrl.text = t.label;
-      _departureCtrl.text = t.departureCity;
-      _arrivalCtrl.text = t.arrivalCity;
-      _kgCtrl.text = t.availableKg.toString();
-      _priceCtrl.text = _trimPrice(t.pricePerKg);
+      _departureCity = t.departureCity;
+      _arrivalCity = t.arrivalCity;
       _transport = transportModeFromWire(t.transportMode) ?? TransportMode.plane;
-      _capacityUnit = t.capacityUnit;
+      _availableKg = t.availableKg.toDouble().clamp(1.0, 23.0);
       _categories = Set<String>.from(t.acceptedCategories);
+      int closest = 0;
+      double minDiff = double.infinity;
+      for (int i = 0; i < _priceOptions.length; i++) {
+        final diff = (t.pricePerKg - _priceOptions[i]).abs();
+        if (diff < minDiff) {
+          minDiff = diff;
+          closest = i;
+        }
+      }
+      _priceIdx = closest;
     }
   }
-
-  String _trimPrice(double p) =>
-      p == p.roundToDouble() ? p.toInt().toString() : p.toString();
 
   @override
   void dispose() {
     _labelCtrl.dispose();
-    _departureCtrl.dispose();
-    _arrivalCtrl.dispose();
-    _kgCtrl.dispose();
-    _priceCtrl.dispose();
     super.dispose();
   }
 
@@ -92,12 +89,12 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
     _submitted = true;
     final data = <String, dynamic>{
       'label': _labelCtrl.text.trim(),
-      'departureCity': _departureCtrl.text.trim(),
-      'arrivalCity': _arrivalCtrl.text.trim(),
+      'departureCity': _departureCity!.trim(),
+      'arrivalCity': _arrivalCity!.trim(),
       'transportMode': transportModeToWire(_transport),
-      'capacityUnit': _capacityUnit,
-      'availableKg': int.parse(_kgCtrl.text),
-      'pricePerKg': double.parse(_priceCtrl.text.replaceAll(',', '.')),
+      'capacityUnit': 'SUITCASE_23KG',
+      'availableKg': _availableKg.round(),
+      'pricePerKg': _priceOptions[_priceIdx],
       'acceptedCategories': _categories.toList(),
     };
     final bloc = context.read<TripTemplateBloc>();
@@ -110,6 +107,9 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return BlocConsumer<TripTemplateBloc, TripTemplateState>(
       listener: (context, state) {
         if (_submitted && state.status == TripTemplateStatus.success) {
@@ -137,7 +137,9 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _SectionLabel('Nom du modèle'),
+              // ── NOM DU MODÈLE ───────────────────────────────────────────
+              const _SectionLabel(label: 'NOM DU MODÈLE', icon: Icons.bookmark_rounded),
+              const SizedBox(height: DonySpacing.sm),
               DonyTextField(
                 controller: _labelCtrl,
                 label: 'Nom',
@@ -145,104 +147,206 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                 prefixIcon: Icons.sell_outlined,
                 onChanged: (_) => setState(() {}),
               ).animate().fadeIn(duration: 280.ms).slideY(begin: 0.03),
-              const SizedBox(height: DonySpacing.xl),
-              const _SectionLabel('Trajet'),
-              DonyTextField(
-                controller: _departureCtrl,
-                label: 'Ville de départ',
-                hint: 'Ex : Paris',
-                prefixIcon: Icons.flight_takeoff_rounded,
-                onChanged: (_) => setState(() {}),
-              ).animate().fadeIn(delay: 40.ms, duration: 280.ms).slideY(begin: 0.03),
-              const SizedBox(height: DonySpacing.md),
-              DonyTextField(
-                controller: _arrivalCtrl,
-                label: "Ville d'arrivée",
-                hint: 'Ex : Dakar',
-                prefixIcon: Icons.flight_land_rounded,
-                onChanged: (_) => setState(() {}),
-              ).animate().fadeIn(delay: 80.ms, duration: 280.ms).slideY(begin: 0.03),
-              const SizedBox(height: DonySpacing.xl),
-              const _SectionLabel('Transport'),
-              Wrap(
-                spacing: DonySpacing.sm,
-                runSpacing: DonySpacing.sm,
-                children: TransportMode.values.map((m) {
-                  final selected = m == _transport;
-                  return _ChoiceChip(
-                    label: m.label,
-                    icon: m.icon,
-                    selected: selected,
-                    onTap: () => setState(() => _transport = m),
-                  );
-                }).toList(),
-              ).animate().fadeIn(delay: 120.ms, duration: 280.ms),
-              const SizedBox(height: DonySpacing.xl),
-              const _SectionLabel('Capacité'),
-              Wrap(
-                spacing: DonySpacing.sm,
-                runSpacing: DonySpacing.sm,
-                children: _capacityUnits.map((c) {
-                  return _ChoiceChip(
-                    label: c.$2,
-                    selected: c.$1 == _capacityUnit,
-                    onTap: () => setState(() => _capacityUnit = c.$1),
-                  );
-                }).toList(),
-              ).animate().fadeIn(delay: 160.ms, duration: 280.ms),
-              const SizedBox(height: DonySpacing.xl),
+              const SizedBox(height: DonySpacing.xxl),
+
+              // ── TRAJET ──────────────────────────────────────────────────
+              const _SectionLabel(label: 'TRAJET', icon: Icons.flight_takeoff_rounded),
+              const SizedBox(height: DonySpacing.sm),
+              BlocProvider(
+                create: (_) => getIt<CitySearchBloc>(),
+                child: CityAutocompleteField(
+                  label: 'Ville de départ',
+                  requiredLabel: true,
+                  prefixIcon: Icon(Icons.flight_takeoff_rounded, color: cs.primary, size: 20),
+                  initialValue: _departureCity,
+                  onSelected: (CityModel city) =>
+                      setState(() => _departureCity = city.name),
+                ),
+              ),
+              const SizedBox(height: DonySpacing.sm),
+              BlocProvider(
+                create: (_) => getIt<CitySearchBloc>(),
+                child: CityAutocompleteField(
+                  label: "Ville d'arrivée",
+                  requiredLabel: true,
+                  prefixIcon: Icon(Icons.flight_land_rounded, color: cs.secondary, size: 20),
+                  initialValue: _arrivalCity,
+                  onSelected: (CityModel city) =>
+                      setState(() => _arrivalCity = city.name),
+                ),
+              ),
+              const SizedBox(height: DonySpacing.xxl),
+
+              // ── CAPACITÉ DISPONIBLE ─────────────────────────────────────
+              const _SectionLabel(label: 'CAPACITÉ DISPONIBLE', icon: Icons.luggage_rounded),
+              const SizedBox(height: DonySpacing.base),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const _SectionLabel('Poids dispo.'),
-                        _NumberField(
-                          controller: _kgCtrl,
-                          suffix: 'kg',
-                          onChanged: () => setState(() {}),
-                        ),
-                      ],
+                  const Expanded(child: SizedBox()),
+                  Text(
+                    _availableKg.toStringAsFixed(0),
+                    style: tt.displayLarge?.copyWith(
+                      fontSize: 56,
+                      fontWeight: FontWeight.w800,
+                      color: cs.onSurface,
                     ),
                   ),
-                  const SizedBox(width: DonySpacing.base),
+                  Text(' kg', style: tt.headlineMedium?.copyWith(color: cs.onSurfaceVariant)),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const _SectionLabel('Prix'),
-                        _NumberField(
-                          controller: _priceCtrl,
-                          suffix: '€/kg',
-                          allowDecimal: true,
-                          onChanged: () => setState(() {}),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: DonySpacing.sm, vertical: DonySpacing.xs),
+                        decoration: BoxDecoration(
+                          color: cs.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(DonyRadius.full),
                         ),
-                      ],
+                        child: Text('VALISE', style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
+                      ),
                     ),
                   ),
                 ],
-              ).animate().fadeIn(delay: 200.ms, duration: 280.ms),
-              const SizedBox(height: DonySpacing.xl),
-              const _SectionLabel('Contenu accepté'),
+              ),
+              const SizedBox(height: DonySpacing.xs),
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  activeTrackColor: cs.primary,
+                  inactiveTrackColor: cs.outline,
+                  thumbColor: cs.primary,
+                  overlayColor: cs.primary.withValues(alpha: 0.1),
+                  trackHeight: 5,
+                ),
+                child: Slider(
+                  value: _availableKg,
+                  min: 1,
+                  max: 23,
+                  divisions: 22,
+                  onChanged: (v) => setState(() => _availableKg = v),
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('1 kg', style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                  Text('max 23 kg', style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                ],
+              ),
+              const SizedBox(height: DonySpacing.xxl),
+
+              // ── PRIX PAR KG ─────────────────────────────────────────────
+              const _SectionLabel(label: 'PRIX PAR KG', icon: Icons.sell_rounded),
+              const SizedBox(height: DonySpacing.md),
+              Row(
+                children: List.generate(_priceOptions.length, (i) {
+                  final selected = _priceIdx == i;
+                  return Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        left: i == 0 ? 0 : DonySpacing.xs,
+                        right: i == _priceOptions.length - 1 ? 0 : DonySpacing.xs,
+                      ),
+                      child: GestureDetector(
+                        onTap: () => setState(() => _priceIdx = i),
+                        child: AnimatedContainer(
+                          duration: 180.ms,
+                          padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+                          decoration: BoxDecoration(
+                            color: selected ? cs.successLight : cs.surface,
+                            borderRadius: BorderRadius.circular(DonyRadius.lg),
+                            border: Border.all(
+                              color: selected ? cs.success : cs.outline,
+                              width: selected ? 1.5 : 1,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${_priceOptions[i].toStringAsFixed(0)}€',
+                              style: tt.titleMedium?.copyWith(
+                                color: selected ? cs.success : cs.onSurface,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: DonySpacing.sm),
+              Text(
+                'Vous touchez ${(_priceOptions[_priceIdx] * 0.88).toStringAsFixed(2)}€/kg (commission 12% déduite)',
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+              const SizedBox(height: DonySpacing.xxl),
+
+              // ── MODE DE TRANSPORT ───────────────────────────────────────
+              const _SectionLabel(label: 'MODE DE TRANSPORT', icon: Icons.commute_rounded),
+              const SizedBox(height: DonySpacing.sm),
               Wrap(
                 spacing: DonySpacing.sm,
                 runSpacing: DonySpacing.sm,
-                children: _categoryPresets.map((c) {
-                  final selected = _categories.contains(c);
-                  return _ChoiceChip(
-                    label: c,
-                    selected: selected,
+                children: [
+                  for (final mode in TransportMode.values)
+                    DonyChip(
+                      label: mode.label,
+                      icon: mode.icon,
+                      selected: _transport == mode,
+                      onTap: () => setState(() => _transport = mode),
+                    ),
+                ],
+              ),
+              const SizedBox(height: DonySpacing.xxl),
+
+              // ── CE QUE J'ACCEPTE ────────────────────────────────────────
+              const _SectionLabel(
+                  label: "CE QUE J'ACCEPTE", icon: Icons.check_circle_outline_rounded),
+              const SizedBox(height: DonySpacing.sm),
+              Wrap(
+                spacing: DonySpacing.xs,
+                runSpacing: DonySpacing.xs,
+                children: _contentTypes.map((type) {
+                  final isSelected = _categories.contains(type);
+                  return GestureDetector(
                     onTap: () => setState(() {
-                      if (selected) {
-                        _categories.remove(c);
+                      if (isSelected) {
+                        _categories.remove(type);
                       } else {
-                        _categories = {..._categories, c};
+                        _categories = {..._categories, type};
                       }
                     }),
+                    child: AnimatedContainer(
+                      duration: 160.ms,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: DonySpacing.md, vertical: DonySpacing.xs),
+                      decoration: BoxDecoration(
+                        color: isSelected ? cs.success : cs.surface,
+                        borderRadius: BorderRadius.circular(DonyRadius.full),
+                        border: Border.all(color: isSelected ? cs.success : cs.outline),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isSelected) ...[
+                            const Icon(Icons.check_rounded, size: 12, color: Colors.white),
+                            const SizedBox(width: DonySpacing.xs),
+                          ],
+                          Text(
+                            type,
+                            style: tt.bodySmall?.copyWith(
+                              color: isSelected ? Colors.white : cs.onSurface,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 }).toList(),
-              ).animate().fadeIn(delay: 240.ms, duration: 280.ms),
+              ),
               const SizedBox(height: DonySpacing.md),
             ],
           ),
@@ -253,110 +357,27 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
 }
 
 class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: DonySpacing.sm, left: DonySpacing.xs),
-      child: Text(
-        text.toUpperCase(),
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: cs.onSurfaceVariant,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-            ),
-      ),
-    );
-  }
-}
-
-class _ChoiceChip extends StatelessWidget {
-  const _ChoiceChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    this.icon,
-  });
+  const _SectionLabel({required this.label, required this.icon});
 
   final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  final IconData? icon;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-            horizontal: DonySpacing.base, vertical: DonySpacing.sm),
-        decoration: BoxDecoration(
-          color: selected ? cs.primary.withValues(alpha: 0.1) : cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.full),
-          border: Border.all(
-            color: selected ? cs.primary : cs.outline,
-            width: selected ? 1.5 : 1,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: 16, color: selected ? cs.primary : cs.onSurfaceVariant),
-              const SizedBox(width: DonySpacing.xs),
-            ],
-            Text(
-              label,
-              style: tt.bodySmall?.copyWith(
-                color: selected ? cs.primary : cs.onSurfaceVariant,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: cs.primary),
+        const SizedBox(width: DonySpacing.xs),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: cs.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
               ),
-            ),
-          ],
         ),
-      ),
-    );
-  }
-}
-
-class _NumberField extends StatelessWidget {
-  const _NumberField({
-    required this.controller,
-    required this.suffix,
-    required this.onChanged,
-    this.allowDecimal = false,
-  });
-
-  final TextEditingController controller;
-  final String suffix;
-  final VoidCallback onChanged;
-  final bool allowDecimal;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return TextFormField(
-      controller: controller,
-      keyboardType: TextInputType.numberWithOptions(decimal: allowDecimal),
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(
-            allowDecimal ? RegExp(r'[0-9.,]') : RegExp(r'[0-9]')),
       ],
-      onChanged: (_) => onChanged(),
-      decoration: InputDecoration(
-        suffixText: suffix,
-        contentPadding: const EdgeInsets.symmetric(
-            horizontal: DonySpacing.base, vertical: DonySpacing.md),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(DonyRadius.md),
-          borderSide: BorderSide(color: cs.outline),
-        ),
-      ),
     );
   }
 }
