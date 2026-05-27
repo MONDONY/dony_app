@@ -162,7 +162,17 @@ class _AuthInterceptor extends Interceptor {
     } else if (statusCode == 409) {
       appException = ConflictException(detail ?? 'Conflit', code: apiCode);
     } else if (statusCode == 422) {
-      appException = ValidationException(detail ?? 'Données invalides', code: apiCode);
+      // ProblemDetail RFC 7807 : `violations` = { champ: message } (backend).
+      final rawViolations = data is Map ? data['violations'] : null;
+      final Map<String, List<String>>? violations = rawViolations is Map
+          ? rawViolations.map(
+              (key, value) => MapEntry(key.toString(), [value.toString()]))
+          : null;
+      appException = ValidationException(
+        detail ?? 'Données invalides',
+        code: apiCode,
+        errors: violations,
+      );
     } else if (statusCode == 429) {
       appException = RateLimitException(detail ?? 'Trop de tentatives');
     } else if (statusCode != null && statusCode >= 500) {

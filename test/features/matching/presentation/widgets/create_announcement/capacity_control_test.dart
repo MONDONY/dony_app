@@ -65,12 +65,17 @@ void main() {
 
     // ── Mode kgFree ─────────────────────────────────────────────────────────
 
-    testWidgets('Kg libre → carte "Sans limite précise" — pas de Slider',
+    testWidgets(
+        'Kg libre → champ de saisie de poids visible (option b — pas de Slider)',
         (tester) async {
       await tester.pumpWidget(_host());
       await tester.tap(find.text('Kg libre'));
       await tester.pump();
-      expect(find.textContaining('Sans limite'), findsOneWidget);
+      // Option b : le voyageur saisit un poids — un champ kg est affiché,
+      // avec la mention « tarification au kilo ». Plus de carte « Sans limite ».
+      expect(find.byType(TextFormField), findsOneWidget);
+      expect(find.textContaining('Tarification au kilo'), findsOneWidget);
+      expect(find.textContaining('Sans limite'), findsNothing);
       expect(find.byType(Slider), findsNothing);
     });
 

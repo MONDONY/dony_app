@@ -45,9 +45,10 @@ class _CapacityControlState extends State<CapacityControl> {
     return BlocConsumer<AnnouncementFormBloc, AnnouncementFormState>(
       listenWhen: (prev, curr) => prev.capacityUnit != curr.capacityUnit,
       listener: (context, state) {
-        // Quand on passe en mode personnalisé, pré-remplir le champ avec
-        // la valeur courante du bloc (ou vider si null/invalide).
-        if (state.capacityUnit == CapacityUnit.custom) {
+        // Modes avec saisie de poids (Personnalisé + Kg libre) : pré-remplir le
+        // champ avec la valeur courante du bloc (ou vider si null/invalide).
+        if (state.capacityUnit == CapacityUnit.custom ||
+            state.capacityUnit == CapacityUnit.kgFree) {
           final kg = state.availableKg;
           final text = kg != null && kg >= 1 ? kg.toInt().toString() : '';
           if (_customKgController.text != text) {
@@ -92,10 +93,9 @@ class _CapacityControlState extends State<CapacityControl> {
       case CapacityUnit.suitcase32kg:
         return _SuitcaseStepperCard(state: state);
       case CapacityUnit.kgFree:
-        return const _InfoCard(
-          icon: DonyIcons.infinity,
-          title: 'Sans limite précise',
-          subtitle: "L'expéditeur verra « kilo disponible »",
+        return _CustomKgCard(
+          controller: _customKgController,
+          helperText: 'Tarification au kilo · indiquez le poids disponible',
         );
       case CapacityUnit.custom:
         return _CustomKgCard(controller: _customKgController);
@@ -243,9 +243,10 @@ class _StepperButton extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _CustomKgCard extends StatelessWidget {
-  const _CustomKgCard({required this.controller});
+  const _CustomKgCard({required this.controller, this.helperText});
 
   final TextEditingController controller;
+  final String? helperText;
 
   @override
   Widget build(BuildContext context) {
@@ -278,7 +279,7 @@ class _CustomKgCard extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(
-            'Indiquez la capacité totale que vous offrez',
+            helperText ?? 'Indiquez la capacité totale que vous offrez',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
@@ -287,51 +288,3 @@ class _CustomKgCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Carte info statique (kgFree)
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _InfoCard extends StatelessWidget {
-  const _InfoCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.outline),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: cs.primary, size: 24),
-          const SizedBox(width: DonySpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: tt.titleMedium),
-                Text(
-                  subtitle,
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
