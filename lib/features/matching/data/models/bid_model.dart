@@ -5,6 +5,8 @@ part 'bid_model.g.dart';
 enum BidPaymentMethod {
   @JsonValue('STRIPE') stripe,
   @JsonValue('CASH') cash,
+  @JsonValue('WAVE') wave,
+  @JsonValue('ORANGE_MONEY') orangeMoney,
 }
 
 enum CommissionStatus {

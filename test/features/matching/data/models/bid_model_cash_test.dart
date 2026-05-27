@@ -42,4 +42,24 @@ void main() {
       expect(b.commissionStatus, entry.value, reason: entry.key);
     }
   });
+
+  test('parses WAVE payment method', () {
+    final b = BidModel.fromJson(_minimalBid(pm: 'WAVE'));
+    expect(b.paymentMethod, BidPaymentMethod.wave);
+  });
+
+  test('parses ORANGE_MONEY payment method', () {
+    final b = BidModel.fromJson(_minimalBid(pm: 'ORANGE_MONEY'));
+    expect(b.paymentMethod, BidPaymentMethod.orangeMoney);
+  });
+
+  test('serializes WAVE to JSON correctly', () {
+    final b = BidModel.fromJson(_minimalBid(pm: 'WAVE'));
+    expect(b.toJson()['paymentMethod'], 'WAVE');
+  });
+
+  test('serializes ORANGE_MONEY to JSON correctly', () {
+    final b = BidModel.fromJson(_minimalBid(pm: 'ORANGE_MONEY'));
+    expect(b.toJson()['paymentMethod'], 'ORANGE_MONEY');
+  });
 }

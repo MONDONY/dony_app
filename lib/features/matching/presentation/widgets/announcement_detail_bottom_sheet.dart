@@ -368,6 +368,8 @@ class _AnnouncementDetailContent extends StatelessWidget {
               final label = switch (m.name.toUpperCase()) {
                 'CASH' => '💵 Espèces',
                 'STRIPE' => '💳 Carte',
+                'WAVE' => '🌊 Wave',
+                'ORANGE_MONEY' => '🟠 Orange Money',
                 _ => m.name,
               };
               return Container(

@@ -140,6 +140,8 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
 const _$BidPaymentMethodEnumMap = {
   BidPaymentMethod.stripe: 'STRIPE',
   BidPaymentMethod.cash: 'CASH',
+  BidPaymentMethod.wave: 'WAVE',
+  BidPaymentMethod.orangeMoney: 'ORANGE_MONEY',
 };
 
 const _$CommissionStatusEnumMap = {

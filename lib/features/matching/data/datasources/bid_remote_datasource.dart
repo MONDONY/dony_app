@@ -45,8 +45,14 @@ class BidRemoteDatasource {
     required String recipientName,
     required String recipientPhone,
     BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
+    String? phoneNumber,
+    String? countryCode,
     List<Map<String, dynamic>>? gridItems,
   }) async {
+    // Serialize enum: orangeMoney → ORANGE_MONEY
+    final paymentMethodStr = paymentMethod == BidPaymentMethod.orangeMoney
+        ? 'ORANGE_MONEY'
+        : paymentMethod.name.toUpperCase();
     final body = <String, dynamic>{
       'weightKg': weightKg,
       'declaredValueEur': declaredValueEur,
@@ -55,8 +61,10 @@ class BidRemoteDatasource {
       'recipientName': recipientName,
       'recipientPhone': recipientPhone,
       'disclaimerSigned': true,
-      'paymentMethod': paymentMethod.name.toUpperCase(),
+      'paymentMethod': paymentMethodStr,
     };
+    if (phoneNumber != null) body['phoneNumber'] = phoneNumber;
+    if (countryCode != null) body['countryCode'] = countryCode;
     if (gridItems != null && gridItems.isNotEmpty) {
       body['gridItems'] = gridItems;
     }
