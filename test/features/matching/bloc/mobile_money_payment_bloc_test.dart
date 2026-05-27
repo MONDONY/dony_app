@@ -135,5 +135,49 @@ void main() {
             .having((s) => s.paymentLink, 'paymentLink', contains('ref=new')),
       ],
     );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'MobileMoneyStatusPolled depuis état Pending → pas de Loading (pas de clignotement)',
+      build: () {
+        // Server returns COMPLETED — so a state change DOES happen, but no Loading first
+        when(() => repo.getStatus(bidId))
+            .thenAnswer((_) async => const MobileMoneyPaymentModel(
+              id: 'id-6',
+              status: 'COMPLETED',
+              amount: 50.0,
+              currency: 'XOF',
+            ));
+        return bloc;
+      },
+      seed: () => const MobileMoneyPaymentPending(
+        paymentLink: 'https://wave.test/pay?ref=abc',
+      ),
+      act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
+      expect: () => [
+        // No MobileMoneyPaymentLoading emitted — periodic poll skips spinner
+        isA<MobileMoneyPaymentConfirmed>(),
+      ],
+    );
+
+    blocTest<MobileMoneyPaymentBloc, MobileMoneyPaymentState>(
+      'MobileMoneyStatusPolled depuis état Error → Loading émis (première tentative après erreur)',
+      build: () {
+        when(() => repo.getStatus(bidId))
+            .thenAnswer((_) async => const MobileMoneyPaymentModel(
+              id: 'id-7',
+              status: 'PENDING',
+              paymentLink: 'https://wave.test/pay?ref=abc',
+              amount: 50.0,
+              currency: 'XOF',
+            ));
+        return bloc;
+      },
+      seed: () => const MobileMoneyPaymentError('previous error'),
+      act: (b) => b.add(const MobileMoneyStatusPolled(bidId: bidId)),
+      expect: () => [
+        isA<MobileMoneyPaymentLoading>(),
+        isA<MobileMoneyPaymentPending>(),
+      ],
+    );
   });
 }

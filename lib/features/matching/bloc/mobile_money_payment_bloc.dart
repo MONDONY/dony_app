@@ -17,7 +17,12 @@ class MobileMoneyPaymentBloc
     MobileMoneyStatusPolled event,
     Emitter<MobileMoneyPaymentState> emit,
   ) async {
-    emit(const MobileMoneyPaymentLoading());
+    // Emit Loading only on the first call (Initial or Error state).
+    // Periodic polls silently refresh to avoid flashing a full-screen spinner
+    // over the PENDING content + "Payer maintenant" button.
+    if (state is MobileMoneyPaymentInitial || state is MobileMoneyPaymentError) {
+      emit(const MobileMoneyPaymentLoading());
+    }
     try {
       final model = await _repository.getStatus(event.bidId);
       switch (model.status) {
