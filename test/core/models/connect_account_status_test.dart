@@ -40,8 +40,8 @@ void main() {
 
     test('fromJson parses status and reason', () {
       final json = {
-        'accountId': 'acct_123',
-        'status': 'REJECTED',
+        'stripeAccountId': 'acct_123',
+        'stripeAccountStatus': 'REJECTED',
         'country': 'FR',
         'isProAccount': false,
         'reason': 'Documents invalides',
@@ -63,13 +63,13 @@ void main() {
     });
 
     test('fromJson parses isProAccount: true', () {
-      final json = {'status': 'ONBOARDING_COMPLETE', 'isProAccount': true};
+      final json = {'stripeAccountStatus': 'ONBOARDING_COMPLETE', 'isProAccount': true};
       final s = ConnectAccountStatus.fromJson(json);
       expect(s.isProAccount, isTrue);
     });
 
     test('fromJson handles null optional fields', () {
-      final json = {'status': 'NOT_CREATED'};
+      final json = {'stripeAccountStatus': 'NOT_CREATED'};
       final s = ConnectAccountStatus.fromJson(json);
       expect(s.accountId, isNull);
       expect(s.country, isNull);
