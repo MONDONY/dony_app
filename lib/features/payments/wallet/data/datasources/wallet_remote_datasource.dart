@@ -17,7 +17,10 @@ class WalletRemoteDatasource {
   }) async {
     final response = await _client.dio.post(
       '/wallet/topup',
-      data: {'amount': amount, 'paymentMethod': paymentMethod},
+      data: {
+        'amount': double.parse(amount.toStringAsFixed(2)),
+        'paymentMethod': paymentMethod,
+      },
     );
     return response.data as Map<String, dynamic>;
   }

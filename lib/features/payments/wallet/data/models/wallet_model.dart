@@ -14,7 +14,7 @@ class WalletModel {
   factory WalletModel.fromJson(Map<String, dynamic> json) => WalletModel(
         balance: (json['balance'] as num).toDouble(),
         currency: json['currency'] as String,
-        transactions: (json['transactions'] as List<dynamic>)
+        transactions: ((json['transactions'] as List<dynamic>?) ?? [])
             .map(
               (e) => WalletTransactionModel.fromJson(
                 e as Map<String, dynamic>,
