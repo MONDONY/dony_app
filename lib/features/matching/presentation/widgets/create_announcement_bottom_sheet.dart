@@ -316,8 +316,10 @@ class _CreateAnnouncementContentState
   final _departureDateNotifier = ValueNotifier<DateTime?>(null);
   final _departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
   final _arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
-  AddressData? _pickupAddress;
-  AddressData? _deliveryAddress;
+  final _pickupAddressNotifier = ValueNotifier<AddressData?>(null);
+  final _deliveryAddressNotifier = ValueNotifier<AddressData?>(null);
+  AddressData? get _pickupAddress => _pickupAddressNotifier.value;
+  AddressData? get _deliveryAddress => _deliveryAddressNotifier.value;
   final _availableKgNotifier = ValueNotifier<double>(15);
   final _priceOptionNotifier = ValueNotifier<int>(-1); // -1 = aucune sélection
   final _transportModeNotifier = ValueNotifier<TransportMode?>(null);
@@ -394,8 +396,8 @@ class _CreateAnnouncementContentState
           minute: int.parse(parts[1]),
         );
       }
-      _pickupAddress = a.pickupAddress;
-      _deliveryAddress = a.deliveryAddress;
+      _pickupAddressNotifier.value = a.pickupAddress;
+      _deliveryAddressNotifier.value = a.deliveryAddress;
       _transportModeNotifier.value = a.transportMode;
 
       if (a.description != null) {
@@ -651,6 +653,8 @@ class _CreateAnnouncementContentState
     _customAcceptedNotifier.dispose();
     _refusedTypesNotifier.dispose();
     _transportModeNotifier.dispose();
+    _pickupAddressNotifier.dispose();
+    _deliveryAddressNotifier.dispose();
     super.dispose();
   }
 
@@ -961,16 +965,16 @@ class _CreateAnnouncementContentState
   List<Widget> _buildStep1(BuildContext context, TextTheme tt, ColorScheme cs) {
     return [
       LieuxCapaciteStep(
-        initialPickupAddress: widget.announcement?.pickupAddress,
-        initialDeliveryAddress: widget.announcement?.deliveryAddress,
-        onPickupSaved: (v) => _pickupAddress = v,
+        initialPickupAddress: _pickupAddressNotifier.value,
+        initialDeliveryAddress: _deliveryAddressNotifier.value,
+        onPickupSaved: (v) => _pickupAddressNotifier.value = v,
         onPickupChanged: (addr) {
-          _pickupAddress = addr;
+          _pickupAddressNotifier.value = addr;
           _updateCanContinueStep1();
         },
-        onDeliverySaved: (v) => _deliveryAddress = v,
+        onDeliverySaved: (v) => _deliveryAddressNotifier.value = v,
         onDeliveryChanged: (addr) {
-          _deliveryAddress = addr;
+          _deliveryAddressNotifier.value = addr;
           _updateCanContinueStep1();
         },
       ),
@@ -1150,7 +1154,7 @@ class _CreateAnnouncementContentState
               fieldLabel: 'Lieu de remise du colis *',
               isRequired: true,
               initialValue: widget.announcement?.pickupAddress,
-              onSaved: (v) => _pickupAddress = v,
+              onSaved: (v) => _pickupAddressNotifier.value = v,
               autocompleteService: getIt<AddressAutocompleteService>(),
             ).animate().fadeIn(delay: 80.ms),
             const SizedBox(height: 16),
@@ -1159,7 +1163,7 @@ class _CreateAnnouncementContentState
               isRequired: true,
               showGpsButton: false,
               initialValue: widget.announcement?.deliveryAddress,
-              onSaved: (v) => _deliveryAddress = v,
+              onSaved: (v) => _deliveryAddressNotifier.value = v,
               autocompleteService: getIt<AddressAutocompleteService>(),
             ).animate().fadeIn(delay: 90.ms),
             const SizedBox(height: DonySpacing.xxl),
@@ -1501,9 +1505,14 @@ class _CreateAnnouncementContentState
     //   soit l'étape visible
     // - contrairement à IndexedStack, Offstage n'impose pas la hauteur du
     //   plus grand enfant : le sheet se dimensionne au contenu de l'étape active
-    return ValueListenableBuilder<int>(
-      valueListenable: widget.currentStepNotifier!,
-      builder: (context, step, _) {
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        widget.currentStepNotifier!,
+        _pickupAddressNotifier,
+        _deliveryAddressNotifier,
+      ]),
+      builder: (context, _) {
+        final step = widget.currentStepNotifier!.value;
         return Form(
           key: _formKey,
           child: Column(

@@ -730,7 +730,6 @@ class TravelerProfileLoaderScreen extends StatelessWidget {
           if (state is AnnouncementDetailLoaded) {
             return TravelerProfileScreen(
               announcement: state.announcement,
-              consultOnly: true,
             );
           }
 

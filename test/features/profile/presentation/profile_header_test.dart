@@ -77,10 +77,10 @@ void main() {
       expect(find.text('Paris'), findsNothing);
     });
 
-    testWidgets('shows phone chip with "Tél." when phoneNumber provided', (tester) async {
+    testWidgets('shows phone chip with "Tél. ✓" when phoneNumber provided', (tester) async {
       await tester.pumpWidget(_buildHeader(phoneNumber: '+33612345678'));
       await tester.pump();
-      expect(find.text('Tél.'), findsOneWidget);
+      expect(find.text('Tél. ✓'), findsOneWidget);
     });
 
     testWidgets('shows "Tél. manquant" chip when phoneNumber absent', (tester) async {
@@ -132,10 +132,13 @@ void main() {
       expect(find.text('50%'), findsOneWidget);
     });
 
-    testWidgets('shows 100% ✓ when profile is complete', (tester) async {
+    testWidgets('hides completion bar when profile is complete', (tester) async {
       await tester.pumpWidget(_buildHeader(profileCompletionPercent: 1.0));
       await tester.pump();
-      expect(find.text('100% ✓'), findsOneWidget);
+      // À 100%, la barre de complétion est volontairement masquée
+      // (ProfileHeader : `if (profileCompletionPercent < 1.0)`).
+      expect(find.text('100% ✓'), findsNothing);
+      expect(find.text('100%'), findsNothing);
     });
 
     testWidgets('edit button calls onEditProfile when tapped', (tester) async {

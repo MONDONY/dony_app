@@ -1,34 +1,23 @@
 // Tests de LieuxCapaciteStep — étape 1 du formulaire "Publier un trajet".
 //
-// Structure miroir de capacity_control_test.dart (host pattern) et
-// create_announcement_cash_toggle_test.dart (GetIt registration pour
-// AddressAutocompleteService).
-//
-// Note sur la dépendance AddressPickerField :
-//   Le widget appelle getIt<AddressAutocompleteService>() dans build().
-//   La résolution est assurée en enregistrant un MockAddressAutocompleteService
-//   dans GetIt via setUpAll(), en suivant le même pattern que
-//   create_announcement_cash_toggle_test.dart.
-import 'package:dony/core/di/injection.dart';
-import 'package:dony/core/services/address_autocomplete_service.dart';
+// Après migration AddressPickerField → AddressSelectorField, les tests vérifient :
+//   - présence de deux AddressSelectorField (remise + livraison)
+//   - types corrects (AddressSelectorType.remise / .livraison)
+//   - affichage des valeurs initiales (label des AddressData)
+//   - présence du CapacityControl
+//   - libellés de section en casse normale
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
-import 'package:dony/features/matching/presentation/widgets/address_picker_field.dart';
+import 'package:dony/features/matching/presentation/widgets/address_selector_field.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/capacity_control.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/lieux_capacite_step.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 
-class MockAddressAutocompleteService extends Mock
-    implements AddressAutocompleteService {}
-
-/// Construit le widget sous test à l'intérieur d'un arbre minimal valide :
-/// MaterialApp - Scaffold - BlocProvider(AnnouncementFormBloc) - Form -
-/// SingleChildScrollView - LieuxCapaciteStep.
-///
-/// Le Form est nécessaire car AddressPickerField étend FormField.
+/// Construit le widget sous test à l'intérieur d'un arbre minimal valide.
+/// AddressSelectorField n'utilise pas getIt directement dans build() —
+/// il ouvre des sheets via GestureDetector → pas besoin de mock GetIt ici.
 Widget _host({
   AddressData? initialPickupAddress,
   AddressData? initialDeliveryAddress,
@@ -65,46 +54,38 @@ Future<void> _pumpHost(
     initialPickupAddress: initialPickupAddress,
     initialDeliveryAddress: initialDeliveryAddress,
   ));
-  // Avancer le temps pour que les animations flutter_animate (fadeIn delay ≤ 90 ms)
-  // se terminent sans laisser de timers pendants.
   await tester.pump(const Duration(milliseconds: 200));
   await tester.pump();
 }
 
 void main() {
-  setUpAll(() {
-    // Enregistre un mock pour AddressAutocompleteService dans GetIt.
-    // LieuxCapaciteStep appelle getIt<AddressAutocompleteService>() dans build()
-    // via AddressPickerField ; sans cet enregistrement le test lève une exception.
-    if (!getIt.isRegistered<AddressAutocompleteService>()) {
-      final mockService = MockAddressAutocompleteService();
-      when(() => mockService.search(any(), any())).thenAnswer((_) async => []);
-      getIt.registerSingleton<AddressAutocompleteService>(mockService);
-    }
-  });
-
   group('LieuxCapaciteStep', () {
     testWidgets('se construit sans exception', (tester) async {
       await _pumpHost(tester);
-      // Pas d'exception levée = le widget peut se construire dans le contexte
-      // BlocProvider + Form sans dépendance manquante.
       expect(find.byType(LieuxCapaciteStep), findsOneWidget);
     });
 
-    testWidgets('deux AddressPickerField sont présents', (tester) async {
+    testWidgets('deux AddressSelectorField sont présents', (tester) async {
       await _pumpHost(tester);
-      // Un champ pour le lieu de remise, un pour le lieu de récupération.
-      expect(find.byType(AddressPickerField), findsNWidgets(2));
+      expect(find.byType(AddressSelectorField), findsNWidgets(2));
     });
 
-    testWidgets('label lieu de remise affiché', (tester) async {
+    testWidgets('AddressSelectorField remise a le bon type', (tester) async {
       await _pumpHost(tester);
-      expect(find.text('Lieu de remise du colis *'), findsOneWidget);
+      final fields = tester
+          .widgetList<AddressSelectorField>(find.byType(AddressSelectorField))
+          .toList();
+      expect(fields.length, 2);
+      expect(fields.first.type, equals(AddressSelectorType.remise));
     });
 
-    testWidgets('label lieu de récupération affiché', (tester) async {
+    testWidgets('AddressSelectorField livraison a le bon type', (tester) async {
       await _pumpHost(tester);
-      expect(find.text('Lieu de récupération *'), findsOneWidget);
+      final fields = tester
+          .widgetList<AddressSelectorField>(find.byType(AddressSelectorField))
+          .toList();
+      expect(fields.length, 2);
+      expect(fields.last.type, equals(AddressSelectorType.livraison));
     });
 
     testWidgets('CapacityControl est présent', (tester) async {
@@ -126,13 +107,10 @@ void main() {
     testWidgets('les libellés de section sont en casse normale (pas en majuscules intégrales)',
         (tester) async {
       await _pumpHost(tester);
-      // Vérifie que les libellés en casse normale sont présents
       expect(find.text('Lieux de remise'), findsOneWidget,
           reason: 'Le libellé doit être en casse normale, pas en MAJUSCULES');
-      // CapacityControl affiche aussi "Capacité disponible" → findsAtLeastNWidgets
       expect(find.text('Capacité disponible'), findsAtLeastNWidgets(1),
           reason: 'Le libellé doit être en casse normale, pas en MAJUSCULES');
-      // Vérifie que les anciennes versions en majuscules ne sont plus présentes
       expect(find.text('LIEUX DE REMISE'), findsNothing,
           reason: 'Les majuscules intégrales ne doivent plus être utilisées');
       expect(find.text('CAPACITÉ DISPONIBLE'), findsNothing,
@@ -163,38 +141,34 @@ void main() {
       expect(find.text('Aéroport CDG, Roissy'), findsOneWidget);
     });
 
-    // ── P3 — Couleurs sémantiques icônes pickup (primary) / delivery (secondary) ──
-
     testWidgets(
-        'AddressPickerField lieu de remise reçoit prefixIconColor = colorScheme.primary',
+        'AddressSelectorField remise reçoit la valeur initiale pickup',
         (tester) async {
-      await _pumpHost(tester);
-      // Les deux AddressPickerField sont rendus dans l'ordre : pickup puis delivery.
+      const address = AddressData(
+        label: '12 rue Victor Hugo, Lyon',
+        lat: 45.748,
+        lng: 4.846,
+      );
+      await _pumpHost(tester, initialPickupAddress: address);
       final fields = tester
-          .widgetList<AddressPickerField>(find.byType(AddressPickerField))
+          .widgetList<AddressSelectorField>(find.byType(AddressSelectorField))
           .toList();
-      expect(fields.length, 2);
-
-      final cs =
-          Theme.of(tester.element(find.byType(MaterialApp))).colorScheme;
-      // Le premier champ (lieu de remise / pickup) doit recevoir cs.primary.
-      expect(fields.first.prefixIconColor, equals(cs.primary));
+      expect(fields.first.value, equals(address));
     });
 
     testWidgets(
-        'AddressPickerField lieu de récupération reçoit prefixIconColor = colorScheme.secondary',
+        'AddressSelectorField livraison reçoit la valeur initiale delivery',
         (tester) async {
-      await _pumpHost(tester);
-      // Les deux AddressPickerField sont rendus dans l'ordre : pickup puis delivery.
+      const address = AddressData(
+        label: 'Aéroport CDG, Roissy',
+        lat: 49.01,
+        lng: 2.55,
+      );
+      await _pumpHost(tester, initialDeliveryAddress: address);
       final fields = tester
-          .widgetList<AddressPickerField>(find.byType(AddressPickerField))
+          .widgetList<AddressSelectorField>(find.byType(AddressSelectorField))
           .toList();
-      expect(fields.length, 2);
-
-      final cs =
-          Theme.of(tester.element(find.byType(MaterialApp))).colorScheme;
-      // Le second champ (lieu de récupération / delivery) doit recevoir cs.secondary.
-      expect(fields.last.prefixIconColor, equals(cs.secondary));
+      expect(fields.last.value, equals(address));
     });
   });
 }

@@ -22,17 +22,13 @@ class ProfilePublicBloc
   ) async {
     emit(const ProfilePublicLoading());
     try {
-      final profileFuture =
-          _profileRepository.getProfilePublic(event.userId);
-      final ratingsFuture =
-          _ratingRepository.getUserRatings(event.userId);
-
-      final profile = await profileFuture;
-      final ratings = await ratingsFuture;
-
+      final results = await Future.wait([
+        _profileRepository.getProfilePublic(event.userId),
+        _ratingRepository.getUserRatings(event.userId),
+      ]);
       emit(ProfilePublicLoaded(
-        profile: profile,
-        recentRatings: ratings,
+        profile: results[0] as ProfilePublicModel,
+        recentRatings: results[1] as RatingSummary,
       ));
     } catch (e) {
       emit(ProfilePublicError(message: e.toString()));

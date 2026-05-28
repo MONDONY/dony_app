@@ -162,9 +162,10 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
                   const marginPerBox = DonySpacing.xs * 2.0;
                   final availableWidth =
                       constraints.maxWidth - (n * marginPerBox);
-                  final boxWidth = (availableWidth / n).clamp(36.0, 56.0);
+                  final boxWidth = (availableWidth / n).clamp(24.0, 56.0);
                   // Preserve original aspect ratio 56/48 ≈ 1.1667
-                  final boxHeight = (boxWidth * 56.0 / 48.0).clamp(42.0, 65.0);
+                  final boxHeight = (boxWidth * 56.0 / 48.0).clamp(28.0, 65.0);
+                  final fontSize = (boxWidth * 0.55).clamp(13.0, 22.0);
 
                   return Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -186,6 +187,7 @@ class _TalonRetraitCodeViewState extends State<TalonRetraitCodeView> {
                             color: Colors.white,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0,
+                            fontSize: fontSize,
                           ),
                         ),
                       );
