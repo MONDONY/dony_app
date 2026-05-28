@@ -37,6 +37,10 @@ import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/presentation/screens/commission_method_screen.dart';
 import 'package:dony/features/payments/presentation/screens/payment_screen.dart';
 import 'package:dony/features/payments/presentation/screens/payout_onboarding_screen.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/payments/wallet/presentation/screens/wallet_screen.dart';
+import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_amount_screen.dart';
+import 'package:dony/features/payments/wallet/presentation/screens/wallet_topup_method_screen.dart';
 import 'package:dony/features/config/bloc/config_bloc.dart';
 import 'package:dony/features/connect_onboarding/bloc/connect_onboarding_bloc.dart';
 import 'package:dony/features/connect_onboarding/presentation/screens/connect_onboarding_intro_screen.dart';
@@ -446,6 +450,28 @@ final appRouter = GoRouter(
         );
       },
     ),
+    // ── Wallet (hors shell) ──────────────────────────────────────────────
+    GoRoute(
+      path: '/payments/wallet',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<WalletBloc>()..add(WalletLoadRequested()),
+        child: const WalletScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/payments/wallet/topup/method',
+      builder: (context, state) => const WalletTopupMethodScreen(),
+    ),
+    GoRoute(
+      path: '/payments/wallet/topup/amount',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<WalletBloc>(),
+        child: WalletTopupAmountScreen(
+          paymentMethod: state.extra as String,
+        ),
+      ),
+    ),
+
     GoRoute(
       path: '/tracking/confirm',
       builder: (context, state) {

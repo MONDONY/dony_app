@@ -105,6 +105,9 @@ import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/data/datasources/commission_method_remote_datasource.dart';
 import 'package:dony/features/payments/cash/data/repositories/commission_method_repository.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
+import 'package:dony/features/payments/wallet/data/datasources/wallet_remote_datasource.dart';
+import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
@@ -254,6 +257,17 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<PaymentBloc>(
     () => PaymentBloc(getIt<PaymentRepository>()),
+  );
+
+  // Wallet
+  getIt.registerLazySingleton<WalletRemoteDatasource>(
+    () => WalletRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<WalletRepository>(
+    () => WalletRepository(getIt<WalletRemoteDatasource>()),
+  );
+  getIt.registerFactory<WalletBloc>(
+    () => WalletBloc(getIt<WalletRepository>()),
   );
 
   // Cancellation
