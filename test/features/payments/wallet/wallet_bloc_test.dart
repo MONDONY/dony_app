@@ -67,4 +67,30 @@ void main() {
       expect: () => [isA<WalletLoading>(), isA<WalletTopupRedirectReady>()],
     );
   });
+
+  group('WalletTopupRequested — ORANGE_MONEY', () {
+    blocTest<WalletBloc, WalletState>(
+      'émet WalletTopupRedirectReady avec redirectUrl',
+      build: () {
+        when(() => repo.topupOrangeMoney(amount: 30.0))
+            .thenAnswer((_) async => 'https://orange-money.com/pay?...');
+        return bloc;
+      },
+      act: (b) => b.add(WalletTopupRequested(amount: 30.0, paymentMethod: 'ORANGE_MONEY')),
+      expect: () => [isA<WalletLoading>(), isA<WalletTopupRedirectReady>()],
+    );
+  });
+
+  group('WalletTopupRequested — réponse null', () {
+    blocTest<WalletBloc, WalletState>(
+      'émet WalletError si clientSecret null',
+      build: () {
+        when(() => repo.topupStripe(amount: 10.0))
+            .thenAnswer((_) async => null);
+        return bloc;
+      },
+      act: (b) => b.add(WalletTopupRequested(amount: 10.0, paymentMethod: 'STRIPE')),
+      expect: () => [isA<WalletLoading>(), isA<WalletError>()],
+    );
+  });
 }

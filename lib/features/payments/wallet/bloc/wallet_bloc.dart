@@ -37,14 +37,20 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
         case 'STRIPE':
           final clientSecret =
               await _repository.topupStripe(amount: event.amount);
-          if (clientSecret != null) emit(WalletTopupStripeReady(clientSecret));
+          emit(clientSecret != null
+              ? WalletTopupStripeReady(clientSecret)
+              : WalletError('Réponse vide du serveur'));
         case 'WAVE':
           final url = await _repository.topupWave(amount: event.amount);
-          if (url != null) emit(WalletTopupRedirectReady(url));
+          emit(url != null
+              ? WalletTopupRedirectReady(url)
+              : WalletError('Réponse vide du serveur'));
         case 'ORANGE_MONEY':
-          final url =
+          final url2 =
               await _repository.topupOrangeMoney(amount: event.amount);
-          if (url != null) emit(WalletTopupRedirectReady(url));
+          emit(url2 != null
+              ? WalletTopupRedirectReady(url2)
+              : WalletError('Réponse vide du serveur'));
       }
     } catch (e) {
       emit(WalletError(unwrapDioError(e).message));

@@ -1,6 +1,6 @@
 part of 'wallet_bloc.dart';
 
-abstract class WalletEvent {}
+sealed class WalletEvent {}
 
 class WalletLoadRequested extends WalletEvent {}
 
