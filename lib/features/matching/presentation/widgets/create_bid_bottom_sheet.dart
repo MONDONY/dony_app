@@ -54,7 +54,6 @@ class CreateBidBottomSheet {
     // BLoCs créés explicitement pour partage cohérent child ↔ stickyBottom.
     final bidBloc = getIt<BidBloc>();
     final paymentBloc = getIt<PaymentBloc>();
-    final walletBloc = getIt<WalletBloc>()..add(WalletLoadRequested());
     return DonyBottomSheet.show(
       context,
       title: 'Envoyer un colis',
@@ -62,7 +61,9 @@ class CreateBidBottomSheet {
         providers: [
           BlocProvider<BidBloc>.value(value: bidBloc),
           BlocProvider<PaymentBloc>.value(value: paymentBloc),
-          BlocProvider<WalletBloc>.value(value: walletBloc),
+          BlocProvider<WalletBloc>(
+            create: (_) => getIt<WalletBloc>()..add(WalletLoadRequested()),
+          ),
         ],
         child: child,
       ),
@@ -110,7 +111,7 @@ class CreateBidBottomSheet {
       paymentMethodNotifier.dispose();
       bidBloc.close();
       paymentBloc.close();
-      walletBloc.close();
+      // walletBloc.close() — géré automatiquement par BlocProvider
     });
   }
 }
