@@ -128,6 +128,8 @@ Widget _buildTestHarness({
     GoRoute(path: '/profile/shipments/history', builder: (_, __) => const Scaffold(body: Text('ShipmentsHistory'))),
     GoRoute(path: '/profile/addresses', builder: (_, __) => const Scaffold(body: Text('Addresses'))),
     GoRoute(path: '/profile/recipients', builder: (_, __) => const Scaffold(body: Text('Recipients'))),
+    GoRoute(path: '/trip-templates', builder: (_, __) => const Scaffold(body: Text('TripTemplates'))),
+    GoRoute(path: '/profile/subscriptions', builder: (_, __) => const Scaffold(body: Text('Subscriptions'))),
   ];
 
   return MaterialApp.router(
@@ -500,8 +502,11 @@ void main() {
       await tester.scrollUntilVisible(
         find.text('Mes trajets'), 300, scrollable: _activityScrollable,
       );
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-      await tester.tap(find.text('Mes trajets'), warnIfMissed: false);
+      // Settle animations triggered by the widget appearing in the viewport.
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+      await tester.ensureVisible(find.text('Mes trajets'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mes trajets'));
       await tester.pumpAndSettle();
 
       expect(find.text('Announcements'), findsOneWidget);
@@ -518,8 +523,11 @@ void main() {
       await tester.scrollUntilVisible(
         find.text('Colis sur mes trajets'), 300, scrollable: _activityScrollable,
       );
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-      await tester.tap(find.text('Colis sur mes trajets'), warnIfMissed: false);
+      // Settle animations triggered by the widget appearing in the viewport.
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+      await tester.ensureVisible(find.text('Colis sur mes trajets'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Colis sur mes trajets'));
       await tester.pumpAndSettle();
 
       expect(find.text('ColisMatch'), findsOneWidget);

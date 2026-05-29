@@ -20,6 +20,7 @@ import 'package:dony/features/city/data/city_model.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/address_suggestion.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -97,6 +98,33 @@ final _kgFreeAnnouncement = AnnouncementModel(
   capacityUnit: 'KG_FREE',
   pricingMode: 'MIXED',
   transportMode: TransportMode.plane,
+);
+
+/// Annonce complète utilisée pour tester la navigation entre étapes en mode
+/// édition (canContinueNotifier = true dès l'ouverture, adresses pré-remplies).
+final _fullAnnouncement = AnnouncementModel(
+  id: 'ann-full',
+  travelerId: 'u1',
+  departureCity: 'Paris',
+  arrivalCity: 'Dakar',
+  departureDate: DateTime(2026, 8, 15),
+  availableKg: 15.0,
+  totalKg: 23.0,
+  pricePerKg: 6.0,
+  status: 'PUBLISHED',
+  createdAt: DateTime(2026, 5, 1),
+  updatedAt: DateTime(2026, 5, 1),
+  transportMode: TransportMode.plane,
+  pickupAddress: const AddressData(
+    label: 'Gare du Nord, Paris',
+    lat: 48.8809,
+    lng: 2.3553,
+  ),
+  deliveryAddress: const AddressData(
+    label: 'Aéroport Léopold Sédar Senghor, Dakar',
+    lat: 14.7397,
+    lng: -17.4902,
+  ),
 );
 
 // ── Builder ───────────────────────────────────────────────────────────────────
@@ -481,15 +509,18 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(_buildHost(
+      // En mode édition, les champs ville/date sont pré-remplis
+      // → canContinueNotifier démarre à true → bouton Continuer actif.
+      await tester.pumpWidget(_buildHostEdit(
         announcementBloc: announcementBloc,
         commissionBloc: commissionBloc,
         authBloc: authBloc,
         stripeBloc: stripeBloc,
+        announcement: _fullAnnouncement,
       ));
       await tester.pump(_settle);
 
-      await tester.tap(find.byKey(const Key('open-sheet-btn')));
+      await tester.tap(find.byKey(const Key('open-edit-sheet-btn')));
       await tester.pump(_settle);
       await tester.pump(_settle);
 
@@ -505,15 +536,19 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(_buildHost(
+      // En mode édition avec adresses pré-remplies : canContinueNotifier et
+      // canContinueStep1Notifier démarrent tous les deux à true → les deux
+      // boutons Continuer sont actifs.
+      await tester.pumpWidget(_buildHostEdit(
         announcementBloc: announcementBloc,
         commissionBloc: commissionBloc,
         authBloc: authBloc,
         stripeBloc: stripeBloc,
+        announcement: _fullAnnouncement,
       ));
       await tester.pump(_settle);
 
-      await tester.tap(find.byKey(const Key('open-sheet-btn')));
+      await tester.tap(find.byKey(const Key('open-edit-sheet-btn')));
       await tester.pump(_settle);
       await tester.pump(_settle);
 
@@ -529,7 +564,8 @@ void main() {
       // (dépend de l'état authBloc/stripeConfigured)
       expect(
         find.byKey(const Key('create-announcement-preview')).evaluate().isNotEmpty ||
-        find.byKey(const Key('configure-stripe-btn')).evaluate().isNotEmpty,
+        find.byKey(const Key('configure-stripe-btn')).evaluate().isNotEmpty ||
+        find.byKey(const Key('create-announcement-submit')).evaluate().isNotEmpty,
         isTrue,
       );
     },
@@ -542,7 +578,7 @@ void main() {
 
   group('CreateAnnouncementBottomSheet — édition (mode KG_FREE + MIXED)', () {
     testWidgets(
-        'affiche "Sans limite précise" à l\'étape capacité pour une annonce KG_FREE',
+        'affiche le mode KG_FREE (texte helper) à l\'étape capacité pour une annonce KG_FREE',
         (tester) async {
       tester.view.physicalSize = const Size(800, 2400);
       tester.view.devicePixelRatio = 1.0;
@@ -567,8 +603,11 @@ void main() {
       await tester.pump(_settle);
 
       // Le postFrameCallback a dispatché CapacityUnitChanged(kgFree)
-      // → CapacityControl doit afficher "Sans limite précise"
-      expect(find.text('Sans limite précise'), findsOneWidget);
+      // → CapacityControl doit afficher le helper de la carte KG libre
+      expect(
+        find.textContaining('Tarification au kilo'),
+        findsOneWidget,
+      );
     });
   });
 }

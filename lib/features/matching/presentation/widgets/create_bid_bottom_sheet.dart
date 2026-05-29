@@ -13,6 +13,7 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/grid_item_selection_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -104,6 +105,9 @@ class CreateBidBottomSheet {
         providers: [
           BlocProvider<BidBloc>.value(value: bidBloc),
           BlocProvider<PaymentBloc>.value(value: paymentBloc),
+          BlocProvider<WalletBloc>(
+            create: (_) => getIt<WalletBloc>()..add(WalletLoadRequested()),
+          ),
         ],
         child: child,
       ),
@@ -135,6 +139,7 @@ class CreateBidBottomSheet {
       btnConfigNotifier.dispose();
       bidBloc.close();
       paymentBloc.close();
+      // walletBloc.close() — géré automatiquement par BlocProvider
     });
   }
 }
@@ -881,6 +886,24 @@ class _CreateBidContentState extends State<_CreateBidContent> {
           },
         ),
 
+        // Compte Dony — solde disponible + accès recharge (porté de feat/wallet).
+        // Affiché sous le sélecteur de mode : informatif, non sélectionnable
+        // (wallet n'est pas un BidPaymentMethod).
+        BlocBuilder<WalletBloc, WalletState>(
+          builder: (ctx, walletState) {
+            if (walletState is! WalletLoaded) {
+              return const SizedBox.shrink();
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: DonySpacing.xl),
+                _WalletTile(balance: walletState.wallet.balance),
+              ],
+            );
+          },
+        ).animate().fadeIn(delay: 195.ms),
+
         const SizedBox(height: DonySpacing.md),
       ],
     ).animate().fadeIn(duration: 220.ms);
@@ -1385,6 +1408,82 @@ class _GridTotalRecap extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Wallet tile (Compte Dony) ────────────────────────────────────────────────
+
+class _WalletTile extends StatelessWidget {
+  const _WalletTile({required this.balance});
+
+  final double balance;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: '€');
+    final hasBalance = balance > 0;
+
+    return GestureDetector(
+      onTap: hasBalance
+          ? null
+          : () => context.push('/payments/wallet'),
+      child: AnimatedContainer(
+        duration: 150.ms,
+        width: double.infinity,
+        padding: const EdgeInsets.all(DonySpacing.md),
+        decoration: BoxDecoration(
+          color: hasBalance
+              ? cs.surfaceContainerLow
+              : cs.surfaceContainerLow.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(DonyRadius.card),
+          border: Border.all(
+            color: hasBalance ? cs.outline : cs.outlineVariant,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.account_balance_wallet_rounded,
+              color: hasBalance ? cs.primary : cs.onSurfaceVariant,
+              size: 20,
+            ),
+            const SizedBox(width: DonySpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Compte Dony',
+                    style: tt.labelMedium?.copyWith(
+                      color: cs.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    hasBalance
+                        ? 'Solde disponible : ${fmt.format(balance)}'
+                        : 'Solde insuffisant · Recharger',
+                    style: tt.bodySmall?.copyWith(
+                      color: hasBalance
+                          ? cs.primary
+                          : cs.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (!hasBalance)
+              Icon(
+                Icons.chevron_right_rounded,
+                color: cs.onSurfaceVariant,
+                size: 20,
+              ),
+          ],
+        ),
       ),
     );
   }

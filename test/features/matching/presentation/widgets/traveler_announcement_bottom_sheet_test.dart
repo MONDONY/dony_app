@@ -12,6 +12,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -31,6 +32,9 @@ class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
 class _MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
     implements PaymentBloc {}
+
+class _MockWalletBloc extends MockBloc<WalletEvent, WalletState>
+    implements WalletBloc {}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -70,10 +74,10 @@ AnnouncementModel _buildAnnouncement({
   );
 }
 
-// _harness fournit toujours un AuthBloc (par défaut : user vérifié).
+// _harness fournit toujours un AuthBloc et un BidBloc (par défaut : user vérifié).
 // Les tests existants passent authState: null → AuthAuthenticated(VERIFIED).
-// IMPORTANT: showTravelerAnnouncementSheet doit lire AuthBloc depuis le context
-// original (avant DonyBottomSheet.show), pas depuis innerCtx — sinon
+// IMPORTANT: showTravelerAnnouncementSheet doit lire AuthBloc et BidBloc depuis
+// le context original (avant DonyBottomSheet.show), pas depuis innerCtx — sinon
 // useRootNavigator:true sort du BlocProvider et provoque un ProviderNotFoundException.
 Widget _harness({
   required AnnouncementModel announcement,
@@ -120,6 +124,7 @@ Widget _harness({
 
 void main() {
   setUpAll(() => initializeDateFormatting('fr'));
+
 
   // ── Tests existants (comportement inchangé) ────────────────────────────────
 
@@ -197,6 +202,7 @@ void main() {
     late _MockKycBloc mockKycBloc;
     late _MockBidBloc mockBidBloc;
     late _MockPaymentBloc mockPaymentBloc;
+    late _MockWalletBloc mockWalletBloc;
 
     setUp(() {
       GetIt.I.reset();
@@ -216,9 +222,15 @@ void main() {
           .thenAnswer((_) => const Stream.empty());
       when(() => mockPaymentBloc.state).thenReturn(const PaymentInitial());
 
+      mockWalletBloc = _MockWalletBloc();
+      when(() => mockWalletBloc.stream)
+          .thenAnswer((_) => const Stream.empty());
+      when(() => mockWalletBloc.state).thenReturn(WalletInitial());
+
       GetIt.I.registerFactory<KycBloc>(() => mockKycBloc);
       GetIt.I.registerFactory<BidBloc>(() => mockBidBloc);
       GetIt.I.registerFactory<PaymentBloc>(() => mockPaymentBloc);
+      GetIt.I.registerFactory<WalletBloc>(() => mockWalletBloc);
     });
 
     tearDown(() => GetIt.I.reset());

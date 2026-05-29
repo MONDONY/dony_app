@@ -13,6 +13,7 @@ import 'package:dony/features/matching/data/models/bid_checkout_response_model.d
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -27,14 +28,18 @@ class _MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 class _MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
     implements PaymentBloc {}
 
+class _MockWalletBloc extends MockBloc<WalletEvent, WalletState>
+    implements WalletBloc {}
+
 // ── GetIt captures ─────────────────────────────────────────────────────────────
 //
-// CreateBidBottomSheet.show() calls getIt<BidBloc>() and getIt<PaymentBloc>().
-// We register factories that return the _current_ mock (set in setUp) so each
-// test controls its own bloc behavior.
+// CreateBidBottomSheet.show() calls getIt<BidBloc>(), getIt<PaymentBloc>() and
+// getIt<WalletBloc>(). We register factories that return the _current_ mock
+// (set in setUp) so each test controls its own bloc behavior.
 
 late _MockBidBloc _currentBidBloc;
 late _MockPaymentBloc _currentPaymentBloc;
+late _MockWalletBloc _currentWalletBloc;
 
 // ── Fixtures ───────────────────────────────────────────────────────────────────
 
@@ -232,6 +237,9 @@ void main() {
     if (!getIt.isRegistered<PaymentBloc>()) {
       getIt.registerFactory<PaymentBloc>(() => _currentPaymentBloc);
     }
+    if (!getIt.isRegistered<WalletBloc>()) {
+      getIt.registerFactory<WalletBloc>(() => _currentWalletBloc);
+    }
   });
 
   setUp(() {
@@ -246,6 +254,12 @@ void main() {
     when(() => _currentPaymentBloc.stream)
         .thenAnswer((_) => const Stream.empty());
     when(() => _currentPaymentBloc.close()).thenAnswer((_) async {});
+
+    _currentWalletBloc = _MockWalletBloc();
+    when(() => _currentWalletBloc.state).thenReturn(WalletInitial());
+    when(() => _currentWalletBloc.stream)
+        .thenAnswer((_) => const Stream.empty());
+    when(() => _currentWalletBloc.close()).thenAnswer((_) async {});
   });
 
   // ── 1. Visibilité du sélecteur ─────────────────────────────────────────────
