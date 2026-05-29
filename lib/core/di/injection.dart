@@ -77,10 +77,13 @@ import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/data/repositories/kyc_repository.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
 import 'package:dony/features/matching/data/datasources/announcement_remote_datasource.dart';
 import 'package:dony/features/matching/data/datasources/bid_remote_datasource.dart';
+import 'package:dony/features/matching/data/datasources/mobile_money_remote_datasource.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
+import 'package:dony/features/matching/data/repositories/mobile_money_repository.dart';
 import 'package:dony/features/matching/data/services/saved_trips_service.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
 import 'package:dony/features/price_grid/data/datasources/price_grid_datasource.dart';
@@ -226,6 +229,17 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<BidBloc>(
     () => BidBloc(getIt<BidRepository>()),
+  );
+
+  // Matching — Mobile Money
+  getIt.registerLazySingleton<MobileMoneyRemoteDatasource>(
+    () => MobileMoneyRemoteDatasource(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<MobileMoneyRepository>(
+    () => MobileMoneyRepository(getIt<MobileMoneyRemoteDatasource>()),
+  );
+  getIt.registerFactory<MobileMoneyPaymentBloc>(
+    () => MobileMoneyPaymentBloc(getIt<MobileMoneyRepository>()),
   );
 
   // Cash commission method

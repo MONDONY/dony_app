@@ -5,6 +5,19 @@ part 'bid_model.g.dart';
 enum BidPaymentMethod {
   @JsonValue('STRIPE') stripe,
   @JsonValue('CASH') cash,
+  @JsonValue('WAVE') wave,
+  @JsonValue('ORANGE_MONEY') orangeMoney,
+}
+
+/// Extension exposing the canonical API string value for each [BidPaymentMethod].
+///
+/// Delegates to the json_serializable-generated [_$BidPaymentMethodEnumMap] so
+/// the mapping is always in sync with the @JsonValue annotations — no manual
+/// string manipulation needed in datasources.
+extension BidPaymentMethodApi on BidPaymentMethod {
+  /// Returns the `@JsonValue` string that must be sent to the API.
+  /// e.g. [BidPaymentMethod.orangeMoney] → `'ORANGE_MONEY'`
+  String get apiValue => _$BidPaymentMethodEnumMap[this]!;
 }
 
 enum CommissionStatus {

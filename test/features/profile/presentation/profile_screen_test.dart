@@ -639,9 +639,9 @@ void main() {
       expect(find.text('Mes envois en cours'), findsOneWidget,
           reason: 'section MON ACTIVITÉ sender absente');
       await tester.scrollUntilVisible(
-        find.text('Mes adresses de pickup'), 300, scrollable: _activityScrollable,
+        find.text('Mes destinataires'), 300, scrollable: _activityScrollable,
       );
-      expect(find.text('Mes adresses de pickup'), findsOneWidget,
+      expect(find.text('Mes destinataires'), findsOneWidget,
           reason: 'section MON CARNET sender absente');
       await tester.scrollUntilVisible(
         find.text('Mes litiges'), 300, scrollable: _activityScrollable,

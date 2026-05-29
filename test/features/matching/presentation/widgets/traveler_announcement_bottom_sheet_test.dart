@@ -85,8 +85,17 @@ Widget _harness({
   );
   when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
 
-  return BlocProvider<AuthBloc>.value(
-    value: authBloc,
+  // showTravelerAnnouncementSheet lit BidBloc depuis l'arbre (context.read)
+  // pour rafraîchir la liste parente après création d'un bid.
+  final bidBloc = _MockBidBloc();
+  when(() => bidBloc.state).thenReturn(BidInitial());
+  when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
+
+  return MultiBlocProvider(
+    providers: [
+      BlocProvider<AuthBloc>.value(value: authBloc),
+      BlocProvider<BidBloc>.value(value: bidBloc),
+    ],
     child: MaterialApp(
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
