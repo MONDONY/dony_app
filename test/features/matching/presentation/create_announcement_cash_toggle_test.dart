@@ -18,6 +18,9 @@ import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:dony/features/payments/cash/data/models/commission_method.dart';
+import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
+import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
+import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -38,6 +41,19 @@ class MockCommissionMethodBloc
 
 class MockCitySearchBloc extends MockBloc<CitySearchEvent, CitySearchState>
     implements CitySearchBloc {}
+
+class MockTripTemplateBloc
+    extends MockBloc<TripTemplateEvent, TripTemplateState>
+    implements TripTemplateBloc {}
+
+/// Mock avec une liste de modèles vide → la barre de suggestions se réduit à
+/// SizedBox.shrink(), comme en l'absence de modèles enregistrés.
+MockTripTemplateBloc _stubTemplateBloc() {
+  final bloc = MockTripTemplateBloc();
+  when(() => bloc.state).thenReturn(const TripTemplateState());
+  when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+  return bloc;
+}
 
 class MockAddressAutocompleteService extends Mock
     implements AddressAutocompleteService {}
@@ -105,6 +121,7 @@ Widget _buildScreen({
           providers: [
             BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
             BlocProvider<CommissionMethodBloc>.value(value: commissionBloc),
+            BlocProvider<TripTemplateBloc>(create: (_) => _stubTemplateBloc()),
           ],
           child: CreateAnnouncementScreen(announcement: announcement),
         ),

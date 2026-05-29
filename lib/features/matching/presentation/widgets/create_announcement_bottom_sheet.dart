@@ -28,6 +28,10 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement/
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart' show NegotiationThreadStatus;
+import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
+import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
+import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
+import 'package:dony/features/trip_templates/data/models/trip_template.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -74,6 +78,9 @@ class CreateAnnouncementBottomSheet {
             create: (_) => AnnouncementFormBloc(
               priceGridRepository: getIt<PriceGridRepository>(),
             ),
+          ),
+          BlocProvider<TripTemplateBloc>(
+            create: (_) => getIt<TripTemplateBloc>()..add(const TripTemplateLoaded()),
           ),
           if (negotiationBloc != null)
             BlocProvider<NegotiationBloc>.value(value: negotiationBloc),
@@ -944,9 +951,89 @@ class _CreateAnnouncementContentState
     );
   }
 
+  /// Applique un modèle de trajet enregistré : pré-remplit corridor, transport,
+  /// capacité, poids, prix et contenu (les listeners synchronisent vers le BLoC).
+  void _applyTemplate(TripTemplate t) {
+    _departureCityNotifier.value = t.departureCity;
+    _arrivalCityNotifier.value = t.arrivalCity;
+    _transportModeNotifier.value =
+        transportModeFromWire(t.transportMode) ?? TransportMode.plane;
+    _availableKgNotifier.value = t.availableKg.toDouble();
+
+    _kgPriceEnabledNotifier.value = true;
+    final presetIdx = kPriceOptions.indexOf(t.pricePerKg);
+    if (presetIdx != -1) {
+      _priceOptionNotifier.value = presetIdx;
+    } else {
+      _priceOptionNotifier.value = kPriceOptions.length; // "Autre prix"
+      _customPriceNotifier.value = t.pricePerKg;
+      _customPriceCtrl.text = t.pricePerKg.toStringAsFixed(0);
+    }
+
+    _selectedContentNotifier.value =
+        t.acceptedCategories.where(kContentTypes.contains).toSet();
+    _customAcceptedNotifier.value =
+        t.acceptedCategories.where((c) => !kContentTypes.contains(c)).toSet();
+
+    final unit = switch (t.capacityUnit) {
+      'KG_FREE' => CapacityUnit.kgFree,
+      'SUITCASE_32KG' => CapacityUnit.suitcase32kg,
+      'KG_EXACT' => CapacityUnit.custom,
+      _ => CapacityUnit.suitcase23kg,
+    };
+    context.read<AnnouncementFormBloc>().add(CapacityUnitChanged(unit));
+
+    DonySnackbar.show(context,
+        message: 'Modèle « ${t.label} » appliqué',
+        type: DonySnackbarType.success);
+  }
+
+  Widget _buildTemplatesSuggestionBar(
+      BuildContext context, TextTheme tt, ColorScheme cs) {
+    return BlocBuilder<TripTemplateBloc, TripTemplateState>(
+      builder: (context, state) {
+        if (state.templates.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const CaSectionLabel(label: 'Mes modèles', icon: Icons.bookmark_rounded),
+            const SizedBox(height: DonySpacing.xs),
+            Text(
+              'Applique un modèle pour pré-remplir le trajet',
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: DonySpacing.sm),
+            SizedBox(
+              height: 40,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: state.templates.length,
+                separatorBuilder: (_, __) => const SizedBox(width: DonySpacing.sm),
+                itemBuilder: (context, i) {
+                  final t = state.templates[i];
+                  return ActionChip(
+                    avatar: t.emoji != null
+                        ? Text(t.emoji!)
+                        : Icon(Icons.bookmark_border_rounded, size: 16, color: cs.primary),
+                    label: Text('${t.label} · ${t.pricePerKg.toStringAsFixed(0)}€/kg'),
+                    onPressed: () => _applyTemplate(t),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: DonySpacing.xl),
+          ],
+        );
+      },
+    );
+  }
+
   // ── Step 0 — Trajet + Transport ─────────────────────────────────────────────
   List<Widget> _buildStep0(BuildContext context, TextTheme tt, ColorScheme cs) {
     return [
+      if (!_isEdit && !_isLocked) _buildTemplatesSuggestionBar(context, tt, cs),
       TrajetStep(
         departureCityNotifier: _departureCityNotifier,
         arrivalCityNotifier: _arrivalCityNotifier,

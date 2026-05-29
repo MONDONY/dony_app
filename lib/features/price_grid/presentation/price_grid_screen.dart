@@ -281,7 +281,9 @@ class _PriceGridItemTile extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     return DonyCard(
+      onTap: () => _openEditSheet(context),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Position badge
           Container(
@@ -310,60 +312,93 @@ class _PriceGridItemTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
+                const SizedBox(height: DonySpacing.sm),
+                _priceLine(
+                  context,
+                  label: 'Tu reçois',
+                  value: '${item.unitPriceNet.toStringAsFixed(2)} €',
+                  valueColor: cs.success,
+                  valueWeight: FontWeight.w700,
+                ),
                 const SizedBox(height: DonySpacing.xxs),
-                Row(
-                  children: [
-                    // Net (traveler receives)
-                    Text(
-                      '${item.unitPriceNet.toStringAsFixed(2)} €',
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.success,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      ' · ',
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
-                    ),
-                    // Display (sender sees)
-                    Text(
-                      '${item.unitPriceDisplay.toStringAsFixed(2)} € expéditeur',
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+                _priceLine(
+                  context,
+                  label: 'Expéditeur paie',
+                  value: '${item.unitPriceDisplay.toStringAsFixed(2)} €',
+                  valueColor: cs.onSurfaceVariant,
+                  valueWeight: FontWeight.w600,
                 ),
               ],
             ),
           ),
 
-          // Actions
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                onPressed: () => _openEditSheet(context),
-                icon: const Icon(Icons.edit_outlined, size: 20),
-                tooltip: 'Modifier',
-                style: IconButton.styleFrom(
-                  foregroundColor: cs.primary,
+          // Menu actions (⋮)
+          PopupMenuButton<String>(
+            icon: Icon(Icons.more_vert_rounded, color: cs.onSurfaceVariant),
+            tooltip: 'Options',
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+            ),
+            onSelected: (value) {
+              if (value == 'edit') {
+                _openEditSheet(context);
+              } else if (value == 'delete') {
+                _confirmDelete(context);
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem<String>(
+                value: 'edit',
+                child: Row(
+                  children: [
+                    Icon(Icons.edit_outlined, size: 20, color: cs.primary),
+                    const SizedBox(width: DonySpacing.md),
+                    const Text('Modifier'),
+                  ],
                 ),
               ),
-              IconButton(
-                onPressed: () => _confirmDelete(context),
-                icon: const Icon(Icons.delete_outline_rounded, size: 20),
-                tooltip: 'Supprimer',
-                style: IconButton.styleFrom(
-                  foregroundColor: cs.error,
+              PopupMenuItem<String>(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_outline_rounded,
+                        size: 20, color: cs.error),
+                    const SizedBox(width: DonySpacing.md),
+                    Text('Supprimer', style: TextStyle(color: cs.error)),
+                  ],
                 ),
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _priceLine(
+    BuildContext context, {
+    required String label,
+    required String value,
+    required Color valueColor,
+    required FontWeight valueWeight,
+  }) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Text(
+          label,
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const Spacer(),
+        Text(
+          value,
+          style: tt.bodyMedium?.copyWith(
+            color: valueColor,
+            fontWeight: valueWeight,
+          ),
+        ),
+      ],
     );
   }
 

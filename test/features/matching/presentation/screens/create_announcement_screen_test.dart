@@ -16,6 +16,9 @@ import 'package:dony/features/matching/presentation/screens/create_announcement_
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
+import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
+import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
+import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -37,6 +40,17 @@ class MockAddressAutocompleteService extends Mock
     implements AddressAutocompleteService {}
 
 class MockCityRepository extends Mock implements CityRepository {}
+
+class MockTripTemplateBloc
+    extends MockBloc<TripTemplateEvent, TripTemplateState>
+    implements TripTemplateBloc {}
+
+MockTripTemplateBloc _stubTemplateBloc() {
+  final bloc = MockTripTemplateBloc();
+  when(() => bloc.state).thenReturn(const TripTemplateState());
+  when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+  return bloc;
+}
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -82,6 +96,7 @@ Widget _buildScreen(
             BlocProvider<AnnouncementBloc>.value(value: bloc),
             if (commissionBloc != null)
               BlocProvider<CommissionMethodBloc>.value(value: commissionBloc),
+            BlocProvider<TripTemplateBloc>(create: (_) => _stubTemplateBloc()),
           ],
           child: CreateAnnouncementScreen(announcement: announcement),
         ),

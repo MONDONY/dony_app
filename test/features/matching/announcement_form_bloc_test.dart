@@ -231,13 +231,25 @@ void main() {
     );
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
-      'sélectionner kgFree met availableKg à null',
+      'sélectionner kgFree conserve un availableKg ≥ 1 (option b — défaut 1.0)',
       build: () => AnnouncementFormBloc(),
       act: (b) => b.add(const CapacityUnitChanged(CapacityUnit.kgFree)),
       expect: () => [
         isA<AnnouncementFormState>()
             .having((s) => s.capacityUnit, 'unit', CapacityUnit.kgFree)
-            .having((s) => s.availableKg, 'kg', null),
+            .having((s) => s.availableKg, 'kg', 1.0),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'kgFree conserve la valeur existante (ex. 23 d\'une valise)',
+      build: () => AnnouncementFormBloc(),
+      seed: () => const AnnouncementFormState(availableKg: 23),
+      act: (b) => b.add(const CapacityUnitChanged(CapacityUnit.kgFree)),
+      expect: () => [
+        isA<AnnouncementFormState>()
+            .having((s) => s.capacityUnit, 'unit', CapacityUnit.kgFree)
+            .having((s) => s.availableKg, 'kg', 23.0),
       ],
     );
 

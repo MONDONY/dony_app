@@ -159,12 +159,14 @@ class _DeliveryAddressPickerSheetState
                                     style: tt.bodySmall
                                         ?.copyWith(color: cs.onSurfaceVariant)),
                                 onTap: () async {
-                                  Navigator.of(context).pop();
+                                  // Ouvrir le picker AVANT de fermer cette
+                                  // feuille : sinon `context` est défunt et le
+                                  // résultat n'est jamais renvoyé à l'appelant
+                                  // (l'adresse choisie ne reste pas sélectionnée).
                                   final result =
                                       await _showGooglePickerSheet(context);
                                   if (result != null && context.mounted) {
-                                    Navigator.of(context, rootNavigator: true)
-                                        .pop(result);
+                                    Navigator.of(context).pop(result);
                                   }
                                 },
                               ),
@@ -235,10 +237,14 @@ class _DeliveryAddressPickerSheetState
       useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        height: MediaQuery.of(ctx).size.height * 0.85,
+      // Utiliser le contexte propre du builder (`sheetCtx`) et non `ctx` :
+      // la feuille appelante a déjà été pop()ée, donc `ctx` est défunt. Lire
+      // MediaQuery/Theme sur `ctx` plante (« Null check operator ») dès que le
+      // clavier s'ouvre et reconstruit la feuille.
+      builder: (sheetCtx) => Container(
+        height: MediaQuery.of(sheetCtx).size.height * 0.85,
         decoration: BoxDecoration(
-          color: Theme.of(ctx).colorScheme.surface,
+          color: Theme.of(sheetCtx).colorScheme.surface,
           borderRadius:
               const BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
         ),
@@ -246,7 +252,7 @@ class _DeliveryAddressPickerSheetState
           top: DonySpacing.md,
           left: DonySpacing.lg,
           right: DonySpacing.lg,
-          bottom: MediaQuery.paddingOf(ctx).bottom,
+          bottom: MediaQuery.paddingOf(sheetCtx).bottom,
         ),
         child: Column(
           children: [
@@ -256,7 +262,7 @@ class _DeliveryAddressPickerSheetState
                 height: 4,
                 margin: const EdgeInsets.only(bottom: DonySpacing.md),
                 decoration: BoxDecoration(
-                  color: Theme.of(ctx).colorScheme.outline,
+                  color: Theme.of(sheetCtx).colorScheme.outline,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -267,7 +273,7 @@ class _DeliveryAddressPickerSheetState
                 autocompleteService: getIt<AddressAutocompleteService>(),
                 onChanged: (address) {
                   if (address != null) {
-                    Navigator.of(ctx).pop(address);
+                    Navigator.of(sheetCtx).pop(address);
                   }
                 },
               ),

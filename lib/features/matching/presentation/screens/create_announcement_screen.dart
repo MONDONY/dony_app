@@ -18,6 +18,10 @@ import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:dony/features/payments/cash/data/models/commission_method.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
+import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
+import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
+import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
+import 'package:dony/features/trip_templates/data/models/trip_template.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -171,6 +175,98 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     final h = t.hour.toString().padLeft(2, '0');
     final m = t.minute.toString().padLeft(2, '0');
     return '$h:$m';
+  }
+
+  String _formatPrice(double p) =>
+      p == p.roundToDouble() ? p.toInt().toString() : p.toString();
+
+  void _applyTemplate(TripTemplate t) {
+    _departureCityNotifier.value = t.departureCity;
+    _arrivalCityNotifier.value = t.arrivalCity;
+    _transportModeNotifier.value = transportModeFromWire(t.transportMode);
+    _availableKgNotifier.value = t.availableKg.toDouble().clamp(1.0, 23.0);
+    int closest = 0;
+    double minDiff = double.infinity;
+    for (int i = 0; i < _priceOptions.length; i++) {
+      final diff = (t.pricePerKg - _priceOptions[i]).abs();
+      if (diff < minDiff) {
+        minDiff = diff;
+        closest = i;
+      }
+    }
+    _priceOptionNotifier.value = closest;
+    _selectedContentNotifier.value =
+        t.acceptedCategories.where(_contentTypes.contains).toSet();
+    _customAcceptedNotifier.value =
+        t.acceptedCategories.where((c) => !_contentTypes.contains(c)).toSet();
+    DonySnackbar.show(
+      context,
+      message: 'Modèle « ${t.label} » appliqué',
+      type: DonySnackbarType.success,
+    );
+  }
+
+  Widget _buildTemplatesBar(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return BlocBuilder<TripTemplateBloc, TripTemplateState>(
+      builder: (context, state) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: DonySpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.bookmark_rounded, size: 18, color: cs.primary),
+                  const SizedBox(width: DonySpacing.xs),
+                  Expanded(
+                    child: Text('Mes modèles',
+                        style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      final bloc = context.read<TripTemplateBloc>();
+                      await context.push('/trip-templates');
+                      if (context.mounted) {
+                        bloc.add(const TripTemplateLoaded());
+                      }
+                    },
+                    child: const Text('Gérer'),
+                  ),
+                ],
+              ),
+              if (state.templates.isEmpty)
+                Text(
+                  'Aucun modèle. Crée-en un pour publier en quelques secondes.',
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                )
+              else
+                SizedBox(
+                  height: 40,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: state.templates.length,
+                    separatorBuilder: (_, __) =>
+                        const SizedBox(width: DonySpacing.sm),
+                    itemBuilder: (context, i) {
+                      final t = state.templates[i];
+                      return ActionChip(
+                        avatar: t.emoji != null
+                            ? Text(t.emoji!)
+                            : Icon(Icons.bookmark_border_rounded,
+                                size: 16, color: cs.primary),
+                        label: Text('${t.label} · ${_formatPrice(t.pricePerKg)}€/kg'),
+                        onPressed: () => _applyTemplate(t),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _submit() {
@@ -418,6 +514,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                // ── Mes modèles (raccourci de pré-remplissage) ──────────────
+                if (!_isEdit) _buildTemplatesBar(context),
                 // ── Corridor preview ────────────────────────────────────────
                 ListenableBuilder(
                   listenable: Listenable.merge([

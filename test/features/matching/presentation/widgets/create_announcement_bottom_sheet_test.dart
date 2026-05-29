@@ -29,6 +29,9 @@ import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
+import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
+import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
+import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -40,6 +43,10 @@ import 'package:mocktail/mocktail.dart';
 
 class MockAnnouncementBloc extends MockBloc<AnnouncementEvent, AnnouncementState>
     implements AnnouncementBloc {}
+
+class MockTripTemplateBloc
+    extends MockBloc<TripTemplateEvent, TripTemplateState>
+    implements TripTemplateBloc {}
 
 class MockCommissionMethodBloc
     extends MockBloc<CommissionMethodEvent, CommissionMethodState>
@@ -233,6 +240,15 @@ void main() {
     // GetIt registrations requises par le bottom sheet
     if (!getIt.isRegistered<CitySearchBloc>()) {
       getIt.registerFactory<CitySearchBloc>(() => CitySearchBloc(cityRepo));
+    }
+    // Le bottom sheet résout TripTemplateBloc via getIt (barre "Mes modèles").
+    if (!getIt.isRegistered<TripTemplateBloc>()) {
+      getIt.registerFactory<TripTemplateBloc>(() {
+        final bloc = MockTripTemplateBloc();
+        when(() => bloc.state).thenReturn(const TripTemplateState());
+        when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+        return bloc;
+      });
     }
   });
 

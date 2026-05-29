@@ -62,6 +62,36 @@ void main() {
     expect(find.byIcon(Icons.close), findsOneWidget);
   });
 
+  testWidgets(
+      'changement externe d\'initialValue resynchronise le champ (application d\'un modèle)',
+      (tester) async {
+    await tester.pumpWidget(buildWidget(initialValue: null));
+    await tester.pump();
+    expect(find.text('Paris'), findsNothing);
+
+    // Simule l'application d'un modèle : le parent reconstruit le champ
+    // avec un nouvel initialValue (même position → didUpdateWidget).
+    await tester.pumpWidget(buildWidget(initialValue: 'Paris'));
+    await tester.pump();
+
+    final tf = tester.widget<TextField>(find.byType(TextField));
+    expect(tf.controller?.text, 'Paris');
+    expect(find.text('Paris'), findsOneWidget);
+  });
+
+  testWidgets(
+      'saisie en cours non écrasée si initialValue inchangé',
+      (tester) async {
+    await tester.pumpWidget(buildWidget(initialValue: null));
+    await tester.enterText(find.byType(TextField), 'Lyon');
+    await tester.pump();
+    // Rebuild avec le même initialValue (null) — ne doit pas effacer "Lyon".
+    await tester.pumpWidget(buildWidget(initialValue: null));
+    await tester.pump();
+    final tf = tester.widget<TextField>(find.byType(TextField));
+    expect(tf.controller?.text, 'Lyon');
+  });
+
   testWidgets('prefixIcon affiché si fourni', (tester) async {
     await tester.pumpWidget(buildWidget(
       prefixIcon: const Icon(Icons.flight, key: Key('prefix-icon')),

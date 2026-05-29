@@ -333,7 +333,7 @@ abstract final class ErrorCatalog {
     if (error is UnauthorizedException) return _byCode['unauthorized']!;
     if (error is ForbiddenException) return _byCode['forbidden']!;
     if (error is NotFoundException) return _notFoundGeneric;
-    if (error is ValidationException) return _validationGeneric;
+    if (error is ValidationException) return _validationPresentation(error);
     if (error is ConflictException) return _conflictGeneric;
     if (error is StorageException) return _storageGeneric;
     return _networkGeneric;
@@ -352,6 +352,26 @@ abstract final class ErrorCatalog {
     severity: ErrorSeverity.warning,
     icon: Icons.rule_rounded,
   );
+
+  /// Construit un message à partir des violations renvoyées par le backend
+  /// (ex. « La capacité doit être d'au moins 1 kg ») au lieu du générique, pour
+  /// que l'utilisateur sache exactement quel champ corriger.
+  static ErrorPresentation _validationPresentation(ValidationException error) {
+    final errs = error.errors;
+    if (errs == null || errs.isEmpty) return _validationGeneric;
+    final messages = errs.values
+        .expand((list) => list)
+        .where((m) => m.trim().isNotEmpty)
+        .toSet()
+        .toList();
+    if (messages.isEmpty) return _validationGeneric;
+    return ErrorPresentation(
+      title: 'Données invalides',
+      message: messages.join('\n'),
+      severity: ErrorSeverity.warning,
+      icon: Icons.rule_rounded,
+    );
+  }
 
   static const ErrorPresentation _conflictGeneric = ErrorPresentation(
     title: 'Action impossible',

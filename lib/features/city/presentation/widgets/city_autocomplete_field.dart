@@ -56,6 +56,18 @@ class _CityAutocompleteFieldState extends State<CityAutocompleteField> {
     _focusNode.addListener(_onFocusChanged);
   }
 
+  @override
+  void didUpdateWidget(CityAutocompleteField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Resynchronise le champ quand initialValue change depuis l'extérieur
+    // (ex. application d'un modèle de trajet). On ne touche pas au contrôleur
+    // si la valeur n'a pas changé, pour ne pas écraser la saisie en cours.
+    final value = widget.initialValue;
+    if (value != oldWidget.initialValue && value != _controller.text) {
+      _controller.text = value ?? '';
+    }
+  }
+
   void _onFocusChanged() {
     setState(() {});
     if (_focusNode.hasFocus) {
