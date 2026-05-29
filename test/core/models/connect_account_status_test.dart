@@ -40,8 +40,8 @@ void main() {
 
     test('fromJson parses status and reason', () {
       final json = {
-        'accountId': 'acct_123',
-        'status': 'REJECTED',
+        'stripeAccountId': 'acct_123',
+        'stripeAccountStatus': 'REJECTED',
         'country': 'FR',
         'isProAccount': false,
         'reason': 'Documents invalides',
