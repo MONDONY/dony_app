@@ -32,28 +32,72 @@ const _contentCategories = [
   'Autre',
 ];
 
-const _kAccentBorder = 3.0; // disclaimer card left accent border width
+const _kAccentBorder = 3.0;
+
+// ── Multi-step helpers ─────────────────────────────────────────────────────────
+
+enum _FormStep { form, paymentPicker }
+
+class _BtnConfig {
+  const _BtnConfig({
+    required this.label,
+    required this.icon,
+    this.onPressed,
+  });
+  final String label;
+  final IconData icon;
+  final VoidCallback? onPressed;
+}
+
+class _CollectedFormData {
+  const _CollectedFormData({
+    required this.weightKg,
+    required this.declaredValueEur,
+    required this.description,
+    required this.contentCategory,
+    required this.recipientName,
+    required this.recipientPhone,
+    this.gridItems,
+  });
+  final double weightKg;
+  final double declaredValueEur;
+  final String description;
+  final String contentCategory;
+  final String recipientName;
+  final String recipientPhone;
+  final List<Map<String, dynamic>>? gridItems;
+}
+
+const _mmCountries = {
+  'CI': 'Côte d\'Ivoire',
+  'SN': 'Sénégal',
+  'ML': 'Mali',
+  'GN': 'Guinée',
+  'BF': 'Burkina Faso',
+  'CM': 'Cameroun',
+};
+
+// ── Public API ─────────────────────────────────────────────────────────────────
 
 class CreateBidBottomSheet {
   static Future<void> show(
     BuildContext context, {
     required AnnouncementModel announcement,
   }) {
-    VoidCallback? submit;
-    final canSubmitNotifier = ValueNotifier<bool>(false);
-    final totalPriceNotifier = ValueNotifier<double>(
-      announcement.availableKg >= 5
-          ? 5 * announcement.pricePerKg * 1.12
-          : announcement.availableKg * announcement.pricePerKg * 1.12,
-    );
-    final paymentMethodNotifier =
-        ValueNotifier<BidPaymentMethod>(BidPaymentMethod.stripe);
+    final btnConfigNotifier = ValueNotifier<_BtnConfig?>(const _BtnConfig(
+      label: 'Envoyer',
+      icon: Icons.send_rounded,
+    ));
     final isCashAvailable =
         announcement.acceptedPaymentMethods.contains(BidPaymentMethod.cash);
+    final isWaveAvailable =
+        announcement.acceptedPaymentMethods.contains(BidPaymentMethod.wave);
+    final isOrangeMoneyAvailable = announcement.acceptedPaymentMethods
+        .contains(BidPaymentMethod.orangeMoney);
 
-    // BLoCs créés explicitement pour partage cohérent child ↔ stickyBottom.
     final bidBloc = getIt<BidBloc>();
     final paymentBloc = getIt<PaymentBloc>();
+
     return DonyBottomSheet.show(
       context,
       title: 'Envoyer un colis',
@@ -67,48 +111,32 @@ class CreateBidBottomSheet {
         ],
         child: child,
       ),
-      stickyBottom: ValueListenableBuilder<bool>(
-        valueListenable: canSubmitNotifier,
-        builder: (ctx, canSubmit, _) =>
-            ValueListenableBuilder<BidPaymentMethod>(
-          valueListenable: paymentMethodNotifier,
-          builder: (ctx, method, _) =>
-              ValueListenableBuilder<double>(
-            valueListenable: totalPriceNotifier,
-            builder: (ctx, totalPrice, _) =>
-                BlocBuilder<BidBloc, BidState>(
-              bloc: bidBloc,
-              builder: (ctx, state) {
-                final isLoading = state is BidLoading;
-                final isCash = method == BidPaymentMethod.cash;
-                return DonyButton(
-                  label: isCash
-                      ? 'Envoyer (paiement en espèces)'
-                      : 'Bloquer ${NumberFormat.currency(locale: 'fr_FR', symbol: '€').format(totalPrice)} & envoyer',
-                  isLoading: isLoading,
-                  onPressed:
-                      (canSubmit && !isLoading) ? () => submit?.call() : null,
-                  icon: isCash
-                      ? Icons.payments_rounded
-                      : Icons.lock_rounded,
-                );
-              },
-            ),
-          ),
+      stickyBottom: ValueListenableBuilder<_BtnConfig?>(
+        valueListenable: btnConfigNotifier,
+        builder: (ctx, config, _) => BlocBuilder<BidBloc, BidState>(
+          bloc: bidBloc,
+          builder: (ctx, state) {
+            final isLoading = state is BidLoading;
+            return DonyButton(
+              label: config?.label ?? 'Envoyer',
+              icon: config?.icon ?? Icons.send_rounded,
+              isLoading: isLoading,
+              onPressed: isLoading ? null : config?.onPressed,
+            );
+          },
         ),
       ),
       child: _CreateBidContent(
         announcement: announcement,
-        canSubmitNotifier: canSubmitNotifier,
-        totalPriceNotifier: totalPriceNotifier,
-        paymentMethodNotifier: paymentMethodNotifier,
+        btnConfigNotifier: btnConfigNotifier,
         isCashAvailable: isCashAvailable,
-        onSubmitReady: (fn) => submit = fn,
+        isWaveAvailable: isWaveAvailable,
+        isOrangeMoneyAvailable: isOrangeMoneyAvailable,
+        bidBloc: bidBloc,
+        paymentBloc: paymentBloc,
       ),
     ).whenComplete(() {
-      canSubmitNotifier.dispose();
-      totalPriceNotifier.dispose();
-      paymentMethodNotifier.dispose();
+      btnConfigNotifier.dispose();
       bidBloc.close();
       paymentBloc.close();
       // walletBloc.close() — géré automatiquement par BlocProvider
@@ -116,47 +144,59 @@ class CreateBidBottomSheet {
   }
 }
 
-// ─── Content widget ───────────────────────────────────────────────────────────
+// ── Content widget ─────────────────────────────────────────────────────────────
 
 class _CreateBidContent extends StatefulWidget {
   const _CreateBidContent({
     required this.announcement,
-    this.canSubmitNotifier,
-    this.totalPriceNotifier,
-    this.paymentMethodNotifier,
-    this.isCashAvailable = false,
-    this.onSubmitReady,
+    required this.btnConfigNotifier,
+    required this.isCashAvailable,
+    required this.isWaveAvailable,
+    required this.isOrangeMoneyAvailable,
+    required this.bidBloc,
+    required this.paymentBloc,
   });
 
   final AnnouncementModel announcement;
-  final ValueNotifier<bool>? canSubmitNotifier;
-  final ValueNotifier<double>? totalPriceNotifier;
-  final ValueNotifier<BidPaymentMethod>? paymentMethodNotifier;
+  final ValueNotifier<_BtnConfig?> btnConfigNotifier;
   final bool isCashAvailable;
-  final void Function(VoidCallback)? onSubmitReady;
+  final bool isWaveAvailable;
+  final bool isOrangeMoneyAvailable;
+  final BidBloc bidBloc;
+  final PaymentBloc paymentBloc;
 
   @override
   State<_CreateBidContent> createState() => _CreateBidContentState();
 }
 
 class _CreateBidContentState extends State<_CreateBidContent> {
+  // ── Form step fields ───────────────────────────────────────────────────────
   final _descCtrl = TextEditingController();
   final _valueCtrl = TextEditingController();
   final _recipientNameCtrl = TextEditingController();
   final _recipientPhoneCtrl = TextEditingController();
-
-  // ValueNotifiers replace setState for reactive UI — no setState needed
   late final ValueNotifier<double> _weightNotifier;
   final _categoriesNotifier = ValueNotifier<Set<String>>({});
   final _disclaimerNotifier = ValueNotifier<bool>(false);
-  // Local copy of payment method so the widget doesn't hold a reference to
-  // the external notifier that may be disposed during the sheet exit animation.
-  late final ValueNotifier<BidPaymentMethod> _methodNotifier;
-  // Grid quantities for MIXED pricing mode (itemId → quantity).
   final _gridQuantitiesNotifier = ValueNotifier<Map<String, int>>({});
+
+  // ── Multi-step state ───────────────────────────────────────────────────────
+  final _stepNotifier = ValueNotifier<_FormStep>(_FormStep.form);
+  _CollectedFormData? _formData;
+
+  // ── Picker step fields ─────────────────────────────────────────────────────
+  final _methodNotifier =
+      ValueNotifier<BidPaymentMethod>(BidPaymentMethod.stripe);
+  final _mmPhoneCtrl = TextEditingController();
+  final _mmCountryNotifier = ValueNotifier<String?>('CI');
 
   double get _maxKg => widget.announcement.availableKg;
   double get _pricePerKg => widget.announcement.pricePerKg;
+
+  bool get _hasAlternativePaymentMethods =>
+      widget.isCashAvailable ||
+      widget.isWaveAvailable ||
+      widget.isOrangeMoneyAvailable;
 
   @override
   void initState() {
@@ -169,81 +209,94 @@ class _CreateBidContentState extends State<_CreateBidContent> {
               : widget.announcement.availableKg)
           : 0.0,
     );
-    _methodNotifier = ValueNotifier<BidPaymentMethod>(
-      widget.paymentMethodNotifier?.value ?? BidPaymentMethod.stripe,
-    );
-    // Mirror external notifier changes into the local copy.
-    widget.paymentMethodNotifier?.addListener(_syncMethodFromExternal);
-    widget.onSubmitReady?.call(_submit);
-    _weightNotifier.addListener(_syncStickyState);
-    _categoriesNotifier.addListener(_syncStickyState);
-    _disclaimerNotifier.addListener(_syncStickyState);
-    _gridQuantitiesNotifier.addListener(_syncStickyState);
-    _methodNotifier.addListener(_syncMethodToExternal);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _syncStickyState());
+
+    // Form step listeners
+    _weightNotifier.addListener(_syncFormButtonState);
+    _categoriesNotifier.addListener(_syncFormButtonState);
+    _disclaimerNotifier.addListener(_syncFormButtonState);
+    _gridQuantitiesNotifier.addListener(_syncFormButtonState);
+
+    // Picker step listeners
+    _stepNotifier.addListener(_onStepChanged);
+    _methodNotifier.addListener(_syncPickerButtonState);
+    _mmPhoneCtrl.addListener(_syncPickerButtonState);
+    _mmCountryNotifier.addListener(_syncPickerButtonState);
+
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _syncFormButtonState());
   }
 
-  void _syncMethodFromExternal() {
-    final ext = widget.paymentMethodNotifier?.value;
-    if (ext != null && ext != _methodNotifier.value) {
-      _methodNotifier.value = ext;
+  // ── Button state sync ──────────────────────────────────────────────────────
+
+  void _onStepChanged() {
+    if (_stepNotifier.value == _FormStep.paymentPicker) {
+      _syncPickerButtonState();
+    } else {
+      _syncFormButtonState();
     }
   }
 
-  void _syncMethodToExternal() {
-    final ext = widget.paymentMethodNotifier;
-    if (ext != null && ext.value != _methodNotifier.value) {
-      ext.value = _methodNotifier.value;
-    }
-  }
-
-  void _syncStickyState() {
-    final weightKg = _weightNotifier.value;
-    final categories = _categoriesNotifier.value;
-    final disclaimerAccepted = _disclaimerNotifier.value;
-    final hasGridPricing = widget.announcement.priceGridItems.isNotEmpty;
+  void _syncFormButtonState() {
+    if (_stepNotifier.value != _FormStep.form) return;
     final hasKgPricing = widget.announcement.pricePerKg > 0;
-    final gridQuantities = _gridQuantitiesNotifier.value;
-    final hasGridItems = hasGridPricing && gridQuantities.isNotEmpty;
-    final hasWeight = hasKgPricing && weightKg > 0;
-    final canSubmit =
-        (hasGridItems || hasWeight) && categories.isNotEmpty && disclaimerAccepted;
+    final hasGridPricing = widget.announcement.priceGridItems.isNotEmpty;
+    final weightOk = hasKgPricing && _weightNotifier.value > 0;
+    final gridOk =
+        hasGridPricing && _gridQuantitiesNotifier.value.isNotEmpty;
+    final canSubmit = (weightOk || gridOk) &&
+        _categoriesNotifier.value.isNotEmpty &&
+        _disclaimerNotifier.value;
 
-    final weightTotal = hasKgPricing ? weightKg * widget.announcement.pricePerKg * 1.12 : 0.0;
-    final gridTotal = hasGridPricing
-        ? widget.announcement.priceGridItems.fold<double>(
-            0.0,
-            (sum, item) =>
-                sum + item.unitPriceDisplay * (gridQuantities[item.id] ?? 0),
-          )
-        : 0.0;
-
-    final totalPrice = weightTotal + gridTotal;
-    widget.canSubmitNotifier?.value = canSubmit;
-    widget.totalPriceNotifier?.value = totalPrice;
+    widget.btnConfigNotifier.value = _BtnConfig(
+      label: 'Envoyer',
+      icon: Icons.send_rounded,
+      onPressed: canSubmit ? _goToPicker : null,
+    );
   }
 
-  @override
-  void dispose() {
-    _descCtrl.dispose();
-    _valueCtrl.dispose();
-    _recipientNameCtrl.dispose();
-    _recipientPhoneCtrl.dispose();
-    widget.paymentMethodNotifier?.removeListener(_syncMethodFromExternal);
-    _weightNotifier.removeListener(_syncStickyState);
-    _categoriesNotifier.removeListener(_syncStickyState);
-    _disclaimerNotifier.removeListener(_syncStickyState);
-    _gridQuantitiesNotifier.removeListener(_syncStickyState);
-    _methodNotifier.removeListener(_syncMethodToExternal);
-    _weightNotifier.dispose();
-    _categoriesNotifier.dispose();
-    _disclaimerNotifier.dispose();
-    _methodNotifier.dispose();
-    _gridQuantitiesNotifier.dispose();
-    super.dispose();
+  void _syncPickerButtonState() {
+    if (_stepNotifier.value != _FormStep.paymentPicker) return;
+    final method = _methodNotifier.value;
+    final isMM = method == BidPaymentMethod.wave ||
+        method == BidPaymentMethod.orangeMoney;
+    final mmOk = !isMM ||
+        (_mmPhoneCtrl.text.trim().isNotEmpty &&
+            _mmCountryNotifier.value != null);
+
+    final String label;
+    final IconData icon;
+    if (method == BidPaymentMethod.cash) {
+      label = 'Confirmer (paiement en espèces)';
+      icon = Icons.payments_rounded;
+    } else if (method == BidPaymentMethod.wave) {
+      label = 'Payer via Wave';
+      icon = Icons.waves_rounded;
+    } else if (method == BidPaymentMethod.orangeMoney) {
+      label = 'Payer via Orange Money';
+      icon = Icons.phone_android_rounded;
+    } else {
+      final total = _computeStripeTotal();
+      label =
+          'Bloquer ${NumberFormat.currency(locale: 'fr_FR', symbol: '€').format(total)} & payer';
+      icon = Icons.lock_rounded;
+    }
+
+    widget.btnConfigNotifier.value = _BtnConfig(
+      label: label,
+      icon: icon,
+      onPressed: mmOk ? _confirmPayment : null,
+    );
   }
 
-  void _submit() {
+  double _computeStripeTotal() {
+    final data = _formData;
+    if (data == null) return 0.0;
+    return data.weightKg * _pricePerKg * 1.12;
+  }
+
+  // ── Navigation between steps ───────────────────────────────────────────────
+
+  void _goToPicker() {
     if (_descCtrl.text.trim().isEmpty) {
       _showError('Description obligatoire');
       return;
@@ -266,428 +319,597 @@ class _CreateBidContentState extends State<_CreateBidContent> {
       return;
     }
 
-    // Build grid items payload for MIXED pricing mode.
     final gridItems = widget.announcement.priceGridItems
-        .where((item) =>
-            (_gridQuantitiesNotifier.value[item.id] ?? 0) > 0)
+        .where((item) => (_gridQuantitiesNotifier.value[item.id] ?? 0) > 0)
         .map((item) => {
               'announcementGridItemId': item.id,
               'quantity': _gridQuantitiesNotifier.value[item.id]!,
             })
         .toList();
 
+    _formData = _CollectedFormData(
+      weightKg: _weightNotifier.value,
+      declaredValueEur: val,
+      description: _descCtrl.text.trim(),
+      contentCategory: _categoriesNotifier.value.join(', '),
+      recipientName: _recipientNameCtrl.text.trim(),
+      recipientPhone: _recipientPhoneCtrl.text.trim(),
+      gridItems: gridItems.isEmpty ? null : gridItems,
+    );
+
+    // If only Stripe is available, skip the picker and go straight to checkout.
+    if (!_hasAlternativePaymentMethods) {
+      _confirmPayment();
+      return;
+    }
+
+    _stepNotifier.value = _FormStep.paymentPicker;
+  }
+
+  // ── Dispatch BidBloc event ─────────────────────────────────────────────────
+
+  void _confirmPayment() {
+    final data = _formData;
+    if (data == null) return;
     final method = _methodNotifier.value;
-    if (method == BidPaymentMethod.cash) {
-      context.read<BidBloc>().add(BidCreateRequested(
+
+    if (method == BidPaymentMethod.wave ||
+        method == BidPaymentMethod.orangeMoney) {
+      final phone = _mmPhoneCtrl.text.trim();
+      if (phone.isEmpty) {
+        _showError('Numéro Mobile Money obligatoire');
+        return;
+      }
+      if (_mmCountryNotifier.value == null) {
+        _showError('Pays obligatoire');
+        return;
+      }
+      widget.bidBloc.add(BidCreateRequested(
         announcementId: widget.announcement.id,
-        weightKg: _weightNotifier.value,
-        declaredValueEur: val,
-        description: _descCtrl.text.trim(),
-        contentCategory: _categoriesNotifier.value.join(', '),
-        recipientName: _recipientNameCtrl.text.trim(),
-        recipientPhone: _recipientPhoneCtrl.text.trim(),
+        weightKg: data.weightKg,
+        declaredValueEur: data.declaredValueEur,
+        description: data.description,
+        contentCategory: data.contentCategory,
+        recipientName: data.recipientName,
+        recipientPhone: data.recipientPhone,
+        paymentMethod: method,
+        phoneNumber: phone,
+        countryCode: _mmCountryNotifier.value,
+        gridItems: data.gridItems,
+      ));
+    } else if (method == BidPaymentMethod.cash) {
+      widget.bidBloc.add(BidCreateRequested(
+        announcementId: widget.announcement.id,
+        weightKg: data.weightKg,
+        declaredValueEur: data.declaredValueEur,
+        description: data.description,
+        contentCategory: data.contentCategory,
+        recipientName: data.recipientName,
+        recipientPhone: data.recipientPhone,
         paymentMethod: BidPaymentMethod.cash,
-        gridItems: gridItems.isEmpty ? null : gridItems,
+        gridItems: data.gridItems,
       ));
     } else {
-      context.read<BidBloc>().add(BidCheckoutRequested(
+      widget.bidBloc.add(BidCheckoutRequested(
         announcementId: widget.announcement.id,
-        weightKg: _weightNotifier.value,
-        declaredValueEur: val,
-        description: _descCtrl.text.trim(),
-        contentCategory: _categoriesNotifier.value.join(', '),
-        recipientName: _recipientNameCtrl.text.trim(),
-        recipientPhone: _recipientPhoneCtrl.text.trim(),
-        gridItems: gridItems.isEmpty ? null : gridItems,
+        weightKg: data.weightKg,
+        declaredValueEur: data.declaredValueEur,
+        description: data.description,
+        contentCategory: data.contentCategory,
+        recipientName: data.recipientName,
+        recipientPhone: data.recipientPhone,
+        gridItems: data.gridItems,
       ));
     }
+  }
+
+  // ── Lifecycle ──────────────────────────────────────────────────────────────
+
+  @override
+  void dispose() {
+    _descCtrl.dispose();
+    _valueCtrl.dispose();
+    _recipientNameCtrl.dispose();
+    _recipientPhoneCtrl.dispose();
+    _mmPhoneCtrl.dispose();
+    _weightNotifier.removeListener(_syncFormButtonState);
+    _categoriesNotifier.removeListener(_syncFormButtonState);
+    _disclaimerNotifier.removeListener(_syncFormButtonState);
+    _gridQuantitiesNotifier.removeListener(_syncFormButtonState);
+    _stepNotifier.removeListener(_onStepChanged);
+    _methodNotifier.removeListener(_syncPickerButtonState);
+    _mmPhoneCtrl.removeListener(_syncPickerButtonState);
+    _mmCountryNotifier.removeListener(_syncPickerButtonState);
+    _weightNotifier.dispose();
+    _categoriesNotifier.dispose();
+    _disclaimerNotifier.dispose();
+    _gridQuantitiesNotifier.dispose();
+    _stepNotifier.dispose();
+    _methodNotifier.dispose();
+    _mmCountryNotifier.dispose();
+    super.dispose();
   }
 
   void _showError(String message) {
     DonySnackbar.show(context, message: message, type: DonySnackbarType.error);
   }
 
+  // ── BLoC event handlers ────────────────────────────────────────────────────
+
+  void _onBidState(BuildContext context, BidState state) {
+    if (state is BidCreated) {
+      Navigator.of(context, rootNavigator: true).pop();
+      if (context.mounted) {
+        unawaited(context.push('/bids/${state.bid.id}?from=payment'));
+      }
+    } else if (state is BidCheckoutReady) {
+      context.read<PaymentBloc>().add(BidCheckoutPaymentRequested(
+            clientSecret: state.response.clientSecret,
+            publishableKey: state.response.publishableKey,
+            bidId: state.response.bidId,
+          ));
+    } else if (state is BidError) {
+      ErrorPresenter.show(context, state.error);
+    }
+  }
+
+  Future<void> _onPaymentState(BuildContext context, PaymentState state) async {
+    if (state is CheckoutPaymentSheetReady) {
+      await _presentPaymentSheet(context, state);
+    }
+  }
+
+  // ── Build ──────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     return MultiBlocListener(
       listeners: [
-        BlocListener<BidBloc, BidState>(
-          listener: (context, state) {
-            if (state is BidCreated) {
-              Navigator.of(context, rootNavigator: true).pop();
-              if (context.mounted) {
-                unawaited(context.push('/bids/${state.bid.id}?from=payment'));
-              }
-            } else if (state is BidCheckoutReady) {
-              context.read<PaymentBloc>().add(BidCheckoutPaymentRequested(
-                clientSecret: state.response.clientSecret,
-                publishableKey: state.response.publishableKey,
-                bidId: state.response.bidId,
-              ));
-            } else if (state is BidError) {
-              ErrorPresenter.show(context, state.error);
-            }
-          },
-        ),
-        BlocListener<PaymentBloc, PaymentState>(
-          listener: (context, state) async {
-            if (state is CheckoutPaymentSheetReady) {
-              await _presentPaymentSheet(context, state);
-            }
-          },
-        ),
+        BlocListener<BidBloc, BidState>(listener: _onBidState),
+        BlocListener<PaymentBloc, PaymentState>(listener: _onPaymentState),
       ],
-      child: BlocBuilder<BidBloc, BidState>(
-        builder: (context, bidState) {
-          return ListenableBuilder(
-            listenable: Listenable.merge([
-              _weightNotifier,
-              _categoriesNotifier,
-              _disclaimerNotifier,
-              _methodNotifier,
-              _gridQuantitiesNotifier,
-            ]),
-            builder: (context, _) {
-              final weightKg = _weightNotifier.value;
-              final categories = _categoriesNotifier.value;
-              final disclaimerAccepted = _disclaimerNotifier.value;
-              final currentMethod = _methodNotifier.value;
-              final gridQuantities = _gridQuantitiesNotifier.value;
-              final hasGridPricing = widget.announcement.priceGridItems.isNotEmpty;
-              final hasKgPricing = widget.announcement.pricePerKg > 0;
-              final serviceFee = weightKg * _pricePerKg * 0.12;
-              final basePrice = weightKg * _pricePerKg;
-              final totalPrice = basePrice + serviceFee;
-
-              // Grid total (articles only, displayed as informational recap).
-              final gridTotal = hasGridPricing
-                  ? widget.announcement.priceGridItems.fold<double>(
-                      0,
-                      (sum, item) =>
-                          sum +
-                          item.unitPriceDisplay *
-                              (gridQuantities[item.id] ?? 0),
-                    )
-                  : 0.0;
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── SECTION: Articles de la grille ─────────────────────
-                  if (hasGridPricing) ...[
-                    const _SectionLabel(label: 'ARTICLES'),
-                    const SizedBox(height: DonySpacing.sm),
-                    ValueListenableBuilder<Map<String, int>>(
-                      valueListenable: _gridQuantitiesNotifier,
-                      builder: (context, quantities, _) {
-                        final totalSelected = quantities.values
-                            .fold<int>(0, (s, q) => s + q);
-                        final subtotal = widget.announcement.priceGridItems
-                            .fold<double>(
-                          0.0,
-                          (s, item) =>
-                              s +
-                              item.unitPriceDisplay *
-                                  (quantities[item.id] ?? 0),
-                        );
-                        final hasSelection = quantities.isNotEmpty;
-
-                        return GestureDetector(
-                          onTap: () async {
-                            final result = await GridItemSelectionSheet.show(
-                              context,
-                              items: widget.announcement.priceGridItems,
-                              initialQuantities: quantities,
-                              corridor:
-                                  '${widget.announcement.departureCity} → ${widget.announcement.arrivalCity}',
-                            );
-                            if (result != null) {
-                              _gridQuantitiesNotifier.value = result;
-                            }
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 160),
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(DonySpacing.base),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surface,
-                              borderRadius:
-                                  BorderRadius.circular(DonyRadius.card),
-                              border: hasSelection
-                                  ? Border.all(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .success,
-                                      width: 1.5,
-                                    )
-                                  : Border.all(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .warning,
-                                      width: 1.5,
-                                    ),
-                            ),
-                            child: hasSelection
-                                ? Row(
-                                    children: [
-                                      Icon(
-                                        Icons.check_circle_rounded,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .success,
-                                        size: 18,
-                                      ),
-                                      const SizedBox(width: DonySpacing.sm),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              '$totalSelected article${totalSelected > 1 ? 's' : ''} sélectionné${totalSelected > 1 ? 's' : ''}',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodyMedium
-                                                  ?.copyWith(
-                                                    fontWeight:
-                                                        FontWeight.w600,
-                                                  ),
-                                            ),
-                                            Text(
-                                              'Sous-total : ${subtotal.toStringAsFixed(2)} €',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall
-                                                  ?.copyWith(
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .success,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Text(
-                                        'Modifier',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelSmall
-                                            ?.copyWith(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .primary,
-                                            ),
-                                      ),
-                                    ],
-                                  )
-                                : Row(
-                                    children: [
-                                      Icon(
-                                        Icons.inventory_2_outlined,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .warning,
-                                        size: 18,
-                                      ),
-                                      const SizedBox(width: DonySpacing.sm),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Choisir mes articles',
-                                              key: const Key(
-                                                  'choose-articles-btn'),
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodyMedium
-                                                  ?.copyWith(
-                                                    fontWeight:
-                                                        FontWeight.w600,
-                                                  ),
-                                            ),
-                                            Text(
-                                              'Requis — au moins 1 article',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall
-                                                  ?.copyWith(
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .onSurfaceVariant,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Icon(
-                                        Icons.chevron_right_rounded,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
-                                      ),
-                                    ],
-                                  ),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: DonySpacing.xxl),
-                  ],
-
-                  // ── SECTION: Poids estimé (masqué si pas de tarif kg) ──
-                  if (hasKgPricing) ...[
-                    _WeightSection(
-                      weightKg: weightKg,
-                      maxKg: _maxKg,
-                      isMixed: hasGridPricing,
-                      onChanged: (v) => _weightNotifier.value = v,
-                    ).animate().fadeIn(duration: 250.ms),
-                    const SizedBox(height: DonySpacing.xxl),
-                  ],
-
-                  // ── SECTION: Contenu du colis ───────────────────────────
-                  const _SectionLabel(label: 'CONTENU DU COLIS'),
-                  const SizedBox(height: DonySpacing.md),
-                  Wrap(
-                    spacing: DonySpacing.sm,
-                    runSpacing: DonySpacing.sm,
-                    children: _contentCategories
-                        .map((cat) => _CategoryChip(
-                              label: cat,
-                              selected: categories.contains(cat),
-                              onTap: () {
-                                final updated = Set<String>.from(categories);
-                                if (updated.contains(cat)) {
-                                  updated.remove(cat);
-                                } else {
-                                  updated.add(cat);
-                                }
-                                _categoriesNotifier.value = updated;
-                              },
-                            ))
-                        .toList(),
-                  ).animate().fadeIn(delay: 60.ms),
-                  const SizedBox(height: DonySpacing.xxl),
-
-                  // ── SECTION: Description ────────────────────────────────
-                  const _SectionLabel(label: 'DESCRIPTION (AU VOYAGEUR)'),
-                  const SizedBox(height: DonySpacing.sm),
-                  DonyTextField(
-                    controller: _descCtrl,
-                    hint: 'Médicaments pour diabète + 2 tee-shirts enfants',
-                  ).animate().fadeIn(delay: 100.ms),
-                  const SizedBox(height: DonySpacing.xxl),
-
-                  // ── Valeur déclarée ─────────────────────────────────────
-                  const _SectionLabel(label: 'VALEUR DÉCLARÉE (€)'),
-                  const SizedBox(height: DonySpacing.sm),
-                  TextFormField(
-                    controller: _valueCtrl,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    scrollPadding: const EdgeInsets.only(bottom: 120),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(
-                          RegExp(r'^\d+\.?\d{0,2}')),
-                    ],
-                    decoration: InputDecoration(
-                      hintText: '120',
-                      helperText:
-                          'Plafond : 500 € — couvre l\'assurance en cas de sinistre',
-                      helperStyle: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.base,
-                        vertical: DonySpacing.md,
-                      ),
-                    ),
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ).animate().fadeIn(delay: 140.ms),
-                  const SizedBox(height: DonySpacing.xxl),
-
-                  // ── Destinataire ────────────────────────────────────────
-                  const _SectionLabel(label: 'DESTINATAIRE'),
-                  const SizedBox(height: DonySpacing.md),
-                  DonyTextField(
-                    controller: _recipientNameCtrl,
-                    label: 'Prénom et nom du destinataire',
-                    hint: 'ex: Amadou Diallo',
-                  ).animate().fadeIn(delay: 160.ms),
-                  const SizedBox(height: DonySpacing.md),
-                  DonyTextField(
-                    controller: _recipientPhoneCtrl,
-                    label: 'Téléphone du destinataire',
-                    hint: 'ex: +221 77 000 00 00',
-                    keyboardType: TextInputType.phone,
-                  ).animate().fadeIn(delay: 180.ms),
-                  const SizedBox(height: DonySpacing.xxl),
-
-                  // ── SECTION: Mode de paiement ────────────────────────────
-                  if (widget.isCashAvailable) ...[
-                    const _SectionLabel(label: 'MODE DE PAIEMENT'),
-                    const SizedBox(height: DonySpacing.md),
-                    _PaymentMethodSelector(
-                      selectedMethod: currentMethod,
-                      onChanged: (m) => _methodNotifier.value = m,
-                    ).animate().fadeIn(delay: 190.ms),
-                    const SizedBox(height: DonySpacing.sm),
-                  ],
-                  // Compte Dony — affiché même si cash n'est pas disponible
-                  BlocBuilder<WalletBloc, WalletState>(
-                    builder: (ctx, walletState) {
-                      if (walletState is! WalletLoaded) {
-                        return const SizedBox.shrink();
-                      }
-                      final balance = walletState.wallet.balance;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (!widget.isCashAvailable) ...[
-                            const _SectionLabel(label: 'MODE DE PAIEMENT'),
-                            const SizedBox(height: DonySpacing.md),
-                          ],
-                          _WalletTile(balance: balance),
-                          const SizedBox(height: DonySpacing.xxl),
-                        ],
-                      );
-                    },
-                  ).animate().fadeIn(delay: 195.ms),
-
-                  // ── Disclaimer card ─────────────────────────────────────
-                  _DisclaimerCard(
-                    accepted: disclaimerAccepted,
-                    onChanged: (v) => _disclaimerNotifier.value = v,
-                  ).animate().fadeIn(delay: 200.ms),
-                  const SizedBox(height: DonySpacing.xxl),
-
-                  // ── Récap articles grille (si articles sélectionnés) ─
-                  if (hasGridPricing && gridTotal > 0) ...[
-                    _GridTotalRecap(gridTotal: gridTotal),
-                    const SizedBox(height: DonySpacing.md),
-                  ],
-
-                  // ── Price breakdown (KG mode uniquement) ────────────────
-                  if (hasKgPricing)
-                    _PriceBreakdown(
-                      weightKg: weightKg,
-                      pricePerKg: _pricePerKg,
-                      basePrice: basePrice,
-                      serviceFee: serviceFee,
-                      totalPrice: totalPrice,
-                    ),
-                  const SizedBox(height: DonySpacing.md),
-                ],
-              );
-            },
+      child: ValueListenableBuilder<_FormStep>(
+        valueListenable: _stepNotifier,
+        builder: (context, step, _) {
+          return AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: child,
+            ),
+            child: step == _FormStep.paymentPicker
+                ? _buildPickerStep(context)
+                : _buildFormStep(context),
           );
         },
       ),
     );
   }
+
+  // ── Form step ──────────────────────────────────────────────────────────────
+
+  Widget _buildFormStep(BuildContext context) {
+    return ListenableBuilder(
+      key: const ValueKey('form'),
+      listenable: Listenable.merge([
+        _weightNotifier,
+        _categoriesNotifier,
+        _disclaimerNotifier,
+        _gridQuantitiesNotifier,
+      ]),
+      builder: (context, _) {
+        final weightKg = _weightNotifier.value;
+        final categories = _categoriesNotifier.value;
+        final disclaimerAccepted = _disclaimerNotifier.value;
+        final gridQuantities = _gridQuantitiesNotifier.value;
+        final hasGridPricing = widget.announcement.priceGridItems.isNotEmpty;
+        final hasKgPricing = widget.announcement.pricePerKg > 0;
+        final serviceFee = weightKg * _pricePerKg * 0.12;
+        final basePrice = weightKg * _pricePerKg;
+        final totalPrice = basePrice + serviceFee;
+
+        final gridTotal = hasGridPricing
+            ? widget.announcement.priceGridItems.fold<double>(
+                0,
+                (sum, item) =>
+                    sum + item.unitPriceDisplay * (gridQuantities[item.id] ?? 0),
+              )
+            : 0.0;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Articles grille ─────────────────────────────────────────────
+            if (hasGridPricing) ...[
+              const _SectionLabel(label: 'ARTICLES'),
+              const SizedBox(height: DonySpacing.sm),
+              ValueListenableBuilder<Map<String, int>>(
+                valueListenable: _gridQuantitiesNotifier,
+                builder: (context, quantities, _) {
+                  final totalSelected =
+                      quantities.values.fold<int>(0, (s, q) => s + q);
+                  final subtotal = widget.announcement.priceGridItems
+                      .fold<double>(
+                        0.0,
+                        (s, item) =>
+                            s +
+                            item.unitPriceDisplay *
+                                (quantities[item.id] ?? 0),
+                      );
+                  final hasSelection = quantities.isNotEmpty;
+
+                  return GestureDetector(
+                    onTap: () async {
+                      final result = await GridItemSelectionSheet.show(
+                        context,
+                        items: widget.announcement.priceGridItems,
+                        initialQuantities: quantities,
+                        corridor:
+                            '${widget.announcement.departureCity} → ${widget.announcement.arrivalCity}',
+                      );
+                      if (result != null) {
+                        _gridQuantitiesNotifier.value = result;
+                      }
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 160),
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(DonySpacing.base),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        borderRadius: BorderRadius.circular(DonyRadius.card),
+                        border: hasSelection
+                            ? Border.all(
+                                color:
+                                    Theme.of(context).colorScheme.success,
+                                width: 1.5,
+                              )
+                            : Border.all(
+                                color:
+                                    Theme.of(context).colorScheme.warning,
+                                width: 1.5,
+                              ),
+                      ),
+                      child: hasSelection
+                          ? Row(
+                              children: [
+                                Icon(
+                                  Icons.check_circle_rounded,
+                                  color:
+                                      Theme.of(context).colorScheme.success,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: DonySpacing.sm),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '$totalSelected article${totalSelected > 1 ? 's' : ''} sélectionné${totalSelected > 1 ? 's' : ''}',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                      Text(
+                                        'Sous-total : ${subtotal.toStringAsFixed(2)} €',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .success,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  'Modifier',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelSmall
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      ),
+                                ),
+                              ],
+                            )
+                          : Row(
+                              children: [
+                                Icon(
+                                  Icons.inventory_2_outlined,
+                                  color:
+                                      Theme.of(context).colorScheme.warning,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: DonySpacing.sm),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Choisir mes articles',
+                                        key: const Key('choose-articles-btn'),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                      Text(
+                                        'Requis — au moins 1 article',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.chevron_right_rounded,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
+                              ],
+                            ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: DonySpacing.xxl),
+            ],
+
+            // ── Poids ───────────────────────────────────────────────────────
+            if (hasKgPricing) ...[
+              _WeightSection(
+                weightKg: weightKg,
+                maxKg: _maxKg,
+                isMixed: hasGridPricing,
+                onChanged: (v) => _weightNotifier.value = v,
+              ).animate().fadeIn(duration: 250.ms),
+              const SizedBox(height: DonySpacing.xxl),
+            ],
+
+            // ── Contenu ─────────────────────────────────────────────────────
+            const _SectionLabel(label: 'CONTENU DU COLIS'),
+            const SizedBox(height: DonySpacing.md),
+            Wrap(
+              spacing: DonySpacing.sm,
+              runSpacing: DonySpacing.sm,
+              children: _contentCategories
+                  .map((cat) => _CategoryChip(
+                        label: cat,
+                        selected: categories.contains(cat),
+                        onTap: () {
+                          final updated = Set<String>.from(categories);
+                          if (updated.contains(cat)) {
+                            updated.remove(cat);
+                          } else {
+                            updated.add(cat);
+                          }
+                          _categoriesNotifier.value = updated;
+                        },
+                      ))
+                  .toList(),
+            ).animate().fadeIn(delay: 60.ms),
+            const SizedBox(height: DonySpacing.xxl),
+
+            // ── Description ─────────────────────────────────────────────────
+            const _SectionLabel(label: 'DESCRIPTION (AU VOYAGEUR)'),
+            const SizedBox(height: DonySpacing.sm),
+            DonyTextField(
+              controller: _descCtrl,
+              hint: 'Médicaments pour diabète + 2 tee-shirts enfants',
+            ).animate().fadeIn(delay: 100.ms),
+            const SizedBox(height: DonySpacing.xxl),
+
+            // ── Valeur déclarée ─────────────────────────────────────────────
+            const _SectionLabel(label: 'VALEUR DÉCLARÉE (€)'),
+            const SizedBox(height: DonySpacing.sm),
+            TextFormField(
+              controller: _valueCtrl,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              scrollPadding: const EdgeInsets.only(bottom: 120),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(
+                    RegExp(r'^\d+\.?\d{0,2}')),
+              ],
+              decoration: InputDecoration(
+                hintText: '120',
+                helperText:
+                    'Plafond : 500 € — couvre l\'assurance en cas de sinistre',
+                helperStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color:
+                        Theme.of(context).colorScheme.onSurfaceVariant),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.base,
+                  vertical: DonySpacing.md,
+                ),
+              ),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ).animate().fadeIn(delay: 140.ms),
+            const SizedBox(height: DonySpacing.xxl),
+
+            // ── Destinataire ────────────────────────────────────────────────
+            const _SectionLabel(label: 'DESTINATAIRE'),
+            const SizedBox(height: DonySpacing.md),
+            DonyTextField(
+              controller: _recipientNameCtrl,
+              label: 'Prénom et nom du destinataire',
+              hint: 'ex: Amadou Diallo',
+            ).animate().fadeIn(delay: 160.ms),
+            const SizedBox(height: DonySpacing.md),
+            DonyTextField(
+              controller: _recipientPhoneCtrl,
+              label: 'Téléphone du destinataire',
+              hint: 'ex: +221 77 000 00 00',
+              keyboardType: TextInputType.phone,
+            ).animate().fadeIn(delay: 180.ms),
+            const SizedBox(height: DonySpacing.xxl),
+
+            // ── Disclaimer ──────────────────────────────────────────────────
+            _DisclaimerCard(
+              accepted: disclaimerAccepted,
+              onChanged: (v) => _disclaimerNotifier.value = v,
+            ).animate().fadeIn(delay: 200.ms),
+            const SizedBox(height: DonySpacing.xxl),
+
+            // ── Récap grille ────────────────────────────────────────────────
+            if (hasGridPricing && gridTotal > 0) ...[
+              _GridTotalRecap(gridTotal: gridTotal),
+              const SizedBox(height: DonySpacing.md),
+            ],
+
+            // ── Prix ────────────────────────────────────────────────────────
+            if (hasKgPricing)
+              _PriceBreakdown(
+                weightKg: weightKg,
+                pricePerKg: _pricePerKg,
+                basePrice: basePrice,
+                serviceFee: serviceFee,
+                totalPrice: totalPrice,
+              ),
+            const SizedBox(height: DonySpacing.md),
+          ],
+        );
+      },
+    );
+  }
+
+  // ── Picker step ────────────────────────────────────────────────────────────
+
+  Widget _buildPickerStep(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Column(
+      key: const ValueKey('picker'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Back to form
+        GestureDetector(
+          onTap: () => _stepNotifier.value = _FormStep.form,
+          child: Row(
+            children: [
+              Icon(Icons.arrow_back_ios_rounded,
+                  size: 16, color: cs.primary),
+              const SizedBox(width: DonySpacing.xs),
+              Text(
+                'Retour',
+                style:
+                    tt.labelMedium?.copyWith(color: cs.primary),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: DonySpacing.xl),
+
+        Text(
+          'Comment veux-tu payer ?',
+          style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: DonySpacing.xs),
+        Text(
+          'Choisis le mode de paiement pour cette demande.',
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: DonySpacing.xl),
+
+        // Method selector
+        ValueListenableBuilder<BidPaymentMethod>(
+          valueListenable: _methodNotifier,
+          builder: (context, method, _) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _PaymentMethodSelector(
+                  selectedMethod: method,
+                  onChanged: (m) => _methodNotifier.value = m,
+                  isCashAvailable: widget.isCashAvailable,
+                  isWaveAvailable: widget.isWaveAvailable,
+                  isOrangeMoneyAvailable: widget.isOrangeMoneyAvailable,
+                ),
+
+                // Mobile Money extra fields
+                if (method == BidPaymentMethod.wave ||
+                    method == BidPaymentMethod.orangeMoney) ...[
+                  const SizedBox(height: DonySpacing.xxl),
+                  const _SectionLabel(label: 'NUMÉRO MOBILE MONEY'),
+                  const SizedBox(height: DonySpacing.sm),
+                  DonyTextField(
+                    controller: _mmPhoneCtrl,
+                    label: 'Numéro de téléphone Mobile Money',
+                    hint: 'ex: +221 77 000 00 00',
+                    keyboardType: TextInputType.phone,
+                  ).animate().fadeIn(duration: 200.ms),
+                  const SizedBox(height: DonySpacing.md),
+                  ValueListenableBuilder<String?>(
+                    valueListenable: _mmCountryNotifier,
+                    builder: (context, selectedCountry, _) =>
+                        DropdownButtonFormField<String>(
+                      initialValue: selectedCountry,
+                      decoration: const InputDecoration(
+                        labelText: 'Pays Mobile Money',
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: DonySpacing.base,
+                          vertical: DonySpacing.md,
+                        ),
+                      ),
+                      items: _mmCountries.entries
+                          .map((e) => DropdownMenuItem(
+                                value: e.key,
+                                child: Text(e.value),
+                              ))
+                          .toList(),
+                      onChanged: (v) => _mmCountryNotifier.value = v,
+                    ).animate().fadeIn(delay: 40.ms),
+                  ),
+                ],
+              ],
+            );
+          },
+        ),
+
+        // Compte Dony — solde disponible + accès recharge (porté de feat/wallet).
+        // Affiché sous le sélecteur de mode : informatif, non sélectionnable
+        // (wallet n'est pas un BidPaymentMethod).
+        BlocBuilder<WalletBloc, WalletState>(
+          builder: (ctx, walletState) {
+            if (walletState is! WalletLoaded) {
+              return const SizedBox.shrink();
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: DonySpacing.xl),
+                _WalletTile(balance: walletState.wallet.balance),
+              ],
+            );
+          },
+        ).animate().fadeIn(delay: 195.ms),
+
+        const SizedBox(height: DonySpacing.md),
+      ],
+    ).animate().fadeIn(duration: 220.ms);
+  }
+
+  // ── Stripe payment sheet ───────────────────────────────────────────────────
 
   Future<void> _presentPaymentSheet(
     BuildContext context,
@@ -715,14 +937,9 @@ class _CreateBidContentState extends State<_CreateBidContent> {
       await Stripe.instance.presentPaymentSheet();
 
       if (!context.mounted) return;
-      // Synchronously confirm the payment with the backend so the bid is
-      // promoted to PENDING immediately (does not depend on the Stripe webhook).
       context.read<BidBloc>().add(BidConfirmPaymentRequested(state.bidId));
-      // Close the bottom sheet first, then navigate to bid detail.
       Navigator.of(context, rootNavigator: true).pop();
       if (context.mounted) {
-        // ?from=payment makes the bid-detail back arrow route to /home (mes envois)
-        // instead of popping back to the just-completed checkout form.
         unawaited(context.push('/bids/${state.bidId}?from=payment'));
       }
     } on StripeException catch (e) {
@@ -770,7 +987,6 @@ class _WeightSection extends StatelessWidget {
   final double weightKg;
   final double maxKg;
   final ValueChanged<double> onChanged;
-  /// En mode MIXED, le poids est optionnel : min slider = 0.
   final bool isMixed;
 
   @override
@@ -779,8 +995,6 @@ class _WeightSection extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final sliderMin = isMixed ? 0.0 : 1.0;
 
-    // Guard: if maxKg <= sliderMin the slider range is invalid (Flutter requires
-    // min < max). Show a graceful "no capacity" message instead of crashing.
     if (maxKg <= sliderMin) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -802,7 +1016,6 @@ class _WeightSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section label with optional indicator
         Row(
           children: [
             Text(
@@ -812,7 +1025,6 @@ class _WeightSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: DonySpacing.sm),
-        // Large weight display
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -825,7 +1037,8 @@ class _WeightSection extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: DonySpacing.sm),
               child: Text(
                 'kg',
-                style: tt.headlineMedium?.copyWith(color: cs.onSurfaceVariant),
+                style:
+                    tt.headlineMedium?.copyWith(color: cs.onSurfaceVariant),
               ),
             ),
             const Spacer(),
@@ -836,7 +1049,6 @@ class _WeightSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: DonySpacing.sm),
-        // Slider
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
             activeTrackColor: cs.primary,
@@ -854,7 +1066,6 @@ class _WeightSection extends StatelessWidget {
             onChanged: onChanged,
           ),
         ),
-        // Range labels
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -943,7 +1154,8 @@ class _DisclaimerCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: cs.secondaryContainer,
-        borderRadius: const BorderRadius.all(Radius.circular(DonyRadius.card)),
+        borderRadius:
+            const BorderRadius.all(Radius.circular(DonyRadius.card)),
         border: Border(
           left: BorderSide(color: cs.secondary, width: _kAccentBorder),
         ),
@@ -955,11 +1167,8 @@ class _DisclaimerCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                Icons.warning_amber_rounded,
-                size: 20,
-                color: cs.secondary,
-              ),
+              Icon(Icons.warning_amber_rounded,
+                  size: 20, color: cs.secondary),
               const SizedBox(width: DonySpacing.sm),
               Expanded(
                 child: Column(
@@ -967,14 +1176,15 @@ class _DisclaimerCard extends StatelessWidget {
                   children: [
                     Text(
                       'Disclaimer douane.',
-                      style: tt.titleMedium?.copyWith(color: cs.onSecondaryContainer),
+                      style: tt.titleMedium
+                          ?.copyWith(color: cs.onSecondaryContainer),
                     ),
                     const SizedBox(height: DonySpacing.xxs),
                     Text(
                       'Pas d\'armes, drogues, liquides inflammables ou espèces. '
                       'Le voyageur peut refuser au contrôle douanier.',
-                      style: tt.bodySmall
-                          ?.copyWith(color: cs.onSecondaryContainer, height: 1.5),
+                      style: tt.bodySmall?.copyWith(
+                          color: cs.onSecondaryContainer, height: 1.5),
                     ),
                   ],
                 ),
@@ -1017,25 +1227,31 @@ class _PaymentMethodSelector extends StatelessWidget {
   const _PaymentMethodSelector({
     required this.selectedMethod,
     required this.onChanged,
+    this.isCashAvailable = false,
+    this.isWaveAvailable = false,
+    this.isOrangeMoneyAvailable = false,
   });
 
   final BidPaymentMethod selectedMethod;
   final ValueChanged<BidPaymentMethod> onChanged;
+  final bool isCashAvailable;
+  final bool isWaveAvailable;
+  final bool isOrangeMoneyAvailable;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _MethodTile(
-            key: const Key('payment-method-stripe'),
-            icon: Icons.lock_rounded,
-            label: 'Paiement sécurisé',
-            sublabel: 'Via Stripe',
-            selected: selectedMethod == BidPaymentMethod.stripe,
-            onTap: () => onChanged(BidPaymentMethod.stripe),
-          ),
+    final tiles = <Widget>[
+      Expanded(
+        child: _MethodTile(
+          key: const Key('payment-method-stripe'),
+          icon: Icons.lock_rounded,
+          label: 'Paiement sécurisé',
+          sublabel: 'Via Stripe',
+          selected: selectedMethod == BidPaymentMethod.stripe,
+          onTap: () => onChanged(BidPaymentMethod.stripe),
         ),
+      ),
+      if (isCashAvailable) ...[
         const SizedBox(width: DonySpacing.sm),
         Expanded(
           child: _MethodTile(
@@ -1048,7 +1264,50 @@ class _PaymentMethodSelector extends StatelessWidget {
           ),
         ),
       ],
-    );
+      if (isWaveAvailable) ...[
+        const SizedBox(width: DonySpacing.sm),
+        Expanded(
+          child: _MethodTile(
+            key: const Key('payment-method-wave'),
+            icon: Icons.waves_rounded,
+            label: 'Wave',
+            sublabel: 'Mobile Money',
+            selected: selectedMethod == BidPaymentMethod.wave,
+            onTap: () => onChanged(BidPaymentMethod.wave),
+          ),
+        ),
+      ],
+      if (isOrangeMoneyAvailable) ...[
+        const SizedBox(width: DonySpacing.sm),
+        Expanded(
+          child: _MethodTile(
+            key: const Key('payment-method-orange-money'),
+            icon: Icons.phone_android_rounded,
+            label: 'Orange Money',
+            sublabel: 'Mobile Money',
+            selected: selectedMethod == BidPaymentMethod.orangeMoney,
+            onTap: () => onChanged(BidPaymentMethod.orangeMoney),
+          ),
+        ),
+      ],
+    ];
+
+    final expandedCount = tiles.whereType<Expanded>().length;
+    if (expandedCount > 2) {
+      return Wrap(
+        spacing: DonySpacing.sm,
+        runSpacing: DonySpacing.sm,
+        children: tiles
+            .whereType<Expanded>()
+            .map((e) => SizedBox(
+                  width: (MediaQuery.of(context).size.width - 60) / 2,
+                  child: e.child,
+                ))
+            .toList(),
+      );
+    }
+
+    return Row(children: tiles);
   }
 }
 
@@ -1097,15 +1356,17 @@ class _MethodTile extends StatelessWidget {
             Text(
               label,
               style: tt.labelMedium?.copyWith(
-                color: selected ? cs.onPrimaryContainer : cs.onSurface,
+                color:
+                    selected ? cs.onPrimaryContainer : cs.onSurface,
                 fontWeight: FontWeight.w600,
               ),
             ),
             Text(
               sublabel,
               style: tt.bodySmall?.copyWith(
-                color:
-                    selected ? cs.onPrimaryContainer : cs.onSurfaceVariant,
+                color: selected
+                    ? cs.onPrimaryContainer
+                    : cs.onSurfaceVariant,
               ),
             ),
           ],
@@ -1278,7 +1539,8 @@ class _PriceBreakdown extends StatelessWidget {
             children: [
               Text(
                 'Frais de service',
-                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                style:
+                    tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               ),
               Text(fmt.format(serviceFee), style: tt.bodyMedium),
             ],

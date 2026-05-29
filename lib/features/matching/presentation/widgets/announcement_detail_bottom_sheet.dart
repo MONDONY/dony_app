@@ -6,6 +6,7 @@ import 'package:dony/features/cancellation/presentation/widgets/cancellation_bot
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -365,10 +366,12 @@ class _AnnouncementDetailContent extends StatelessWidget {
             spacing: DonySpacing.xs,
             runSpacing: DonySpacing.xs,
             children: a.acceptedPaymentMethods.map((m) {
-              final label = switch (m.name.toUpperCase()) {
+              final label = switch (m.apiValue) {
                 'CASH' => '💵 Espèces',
                 'STRIPE' => '💳 Carte',
-                _ => m.name,
+                'WAVE' => '🌊 Wave',
+                'ORANGE_MONEY' => '🟠 Orange Money',
+                _ => m.apiValue,
               };
               return Container(
                 padding: const EdgeInsets.symmetric(

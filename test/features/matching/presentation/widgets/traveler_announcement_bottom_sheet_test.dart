@@ -89,8 +89,8 @@ Widget _harness({
   );
   when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
 
-  // BidBloc is read from context in showTravelerAnnouncementSheet to refresh
-  // the parent list after CreateBidBottomSheet closes.
+  // showTravelerAnnouncementSheet lit BidBloc depuis l'arbre (context.read)
+  // pour rafraîchir la liste parente après création d'un bid.
   final bidBloc = _MockBidBloc();
   when(() => bidBloc.state).thenReturn(BidInitial());
   when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());

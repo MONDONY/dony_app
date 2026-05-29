@@ -192,6 +192,16 @@ Future<void> _fillMandatoryFields(WidgetTester tester) async {
   await tester.pump();
 }
 
+// Navigue de l'étape "form" vers l'étape "paymentPicker".
+// Nécessite une annonce avec des méthodes de paiement alternatives (cash/wave/orange) :
+// remplit les champs obligatoires puis soumet via le bouton "Envoyer".
+Future<void> _goToPaymentPicker(WidgetTester tester) async {
+  await _enableSubmitButton(tester);
+  await _fillMandatoryFields(tester);
+  await tester.tap(find.text('Envoyer'));
+  await tester.pumpAndSettle();
+}
+
 // ── Tests ──────────────────────────────────────────────────────────────────────
 
 void main() {
@@ -258,15 +268,16 @@ void main() {
     testWidgets('annonce Stripe-only → sélecteur non affiché', (tester) async {
       await _openSheet(tester, _announcement(cashEnabled: false));
 
-      expect(find.text('MODE DE PAIEMENT'), findsNothing);
+      expect(find.text('Comment veux-tu payer ?'), findsNothing);
       expect(find.byKey(const Key('payment-method-cash')), findsNothing);
     });
 
     testWidgets('annonce CASH+STRIPE → sélecteur affiché avec 2 tuiles',
         (tester) async {
       await _openSheet(tester, _announcement(cashEnabled: true));
+      await _goToPaymentPicker(tester);
 
-      expect(find.text('MODE DE PAIEMENT'), findsOneWidget);
+      expect(find.text('Comment veux-tu payer ?'), findsOneWidget);
       expect(find.byKey(const Key('payment-method-stripe')), findsOneWidget);
       expect(find.byKey(const Key('payment-method-cash')), findsOneWidget);
     });
@@ -274,12 +285,13 @@ void main() {
     testWidgets('Stripe sélectionné par défaut → bouton affiche Bloquer',
         (tester) async {
       await _openSheet(tester, _announcement(cashEnabled: true));
+      await _goToPaymentPicker(tester);
 
-      // Bouton sticky: "Bloquer X€ & envoyer" (mode Stripe par défaut).
+      // Bouton sticky du picker : "Bloquer X€ & payer" (mode Stripe par défaut).
       expect(find.textContaining('Bloquer'), findsWidgets);
       // Le bouton ne dit pas "Envoyer (paiement en espèces)".
       expect(
-          find.text('Envoyer (paiement en espèces)'), findsNothing);
+          find.text('Confirmer (paiement en espèces)'), findsNothing);
     });
   });
 
@@ -289,17 +301,19 @@ void main() {
     testWidgets('taper CASH → bouton libellé change en espèces',
         (tester) async {
       await _openSheet(tester, _announcement(cashEnabled: true));
+      await _goToPaymentPicker(tester);
 
       await tester.tap(find.byKey(const Key('payment-method-cash')));
       await tester.pump();
 
-      expect(find.text('Envoyer (paiement en espèces)'), findsOneWidget);
+      expect(find.text('Confirmer (paiement en espèces)'), findsOneWidget);
       expect(find.textContaining('Bloquer'), findsNothing);
     });
 
     testWidgets('taper STRIPE après CASH → libellé bouton revient à Bloquer',
         (tester) async {
       await _openSheet(tester, _announcement(cashEnabled: true));
+      await _goToPaymentPicker(tester);
 
       await tester.tap(find.byKey(const Key('payment-method-cash')));
       await tester.pump();
@@ -307,7 +321,7 @@ void main() {
       await tester.pump();
 
       expect(find.textContaining('Bloquer'), findsWidgets);
-      expect(find.text('Envoyer (paiement en espèces)'), findsNothing);
+      expect(find.text('Confirmer (paiement en espèces)'), findsNothing);
     });
   });
 
@@ -318,14 +332,12 @@ void main() {
         'mode CASH + formulaire complet → BidCreateRequested paymentMethod=cash',
         (tester) async {
       await _openSheet(tester, _announcement(cashEnabled: true));
+      await _goToPaymentPicker(tester);
 
       await tester.tap(find.byKey(const Key('payment-method-cash')));
       await tester.pump();
 
-      await _enableSubmitButton(tester);
-      await _fillMandatoryFields(tester);
-
-      await tester.tap(find.text('Envoyer (paiement en espèces)'));
+      await tester.tap(find.text('Confirmer (paiement en espèces)'));
       await tester.pump();
 
       verify(
@@ -347,12 +359,10 @@ void main() {
         'mode STRIPE (défaut) + formulaire complet → BidCheckoutRequested dispatché',
         (tester) async {
       await _openSheet(tester, _announcement(cashEnabled: true));
+      await _goToPaymentPicker(tester);
 
-      await _enableSubmitButton(tester);
-      await _fillMandatoryFields(tester);
-
-      // Tap the "Bloquer X€ & envoyer" button (first occurrence in the tree).
-      await tester.tap(find.textContaining('Bloquer').first);
+      // Stripe sélectionné par défaut sur le picker → bouton "Bloquer X€ & payer".
+      await tester.tap(find.textContaining('& payer'));
       await tester.pump();
 
       verify(
@@ -433,7 +443,7 @@ void main() {
 
       // canSubmit is true (hasWeight). Fill mandatory fields and tap the submit button.
       await _fillMandatoryFields(tester);
-      await tester.tap(find.textContaining('Bloquer').first);
+      await tester.tap(find.text('Envoyer'));
       await tester.pump();
 
       // BidCheckoutRequested should have been dispatched.
@@ -455,7 +465,7 @@ void main() {
 
       // canSubmit is true (hasWeight). Fill mandatory fields and tap submit.
       await _fillMandatoryFields(tester);
-      await tester.tap(find.textContaining('Bloquer').first);
+      await tester.tap(find.text('Envoyer'));
       await tester.pump();
 
       // BidCheckoutRequested should have been dispatched.
@@ -483,7 +493,7 @@ void main() {
 
       // Even at min (1 kg), KG mode should allow submission.
       await _fillMandatoryFields(tester);
-      await tester.tap(find.textContaining('Bloquer').first);
+      await tester.tap(find.text('Envoyer'));
       await tester.pump();
 
       verify(
@@ -507,7 +517,7 @@ void main() {
       await tester.enterText(find.byType(TextField).at(3), '+221770000000');
       await tester.pump();
 
-      await tester.tap(find.textContaining('Bloquer').first);
+      await tester.tap(find.text('Envoyer'));
       await tester.pump();
 
       expect(find.text('Description obligatoire'), findsOneWidget);
@@ -526,7 +536,7 @@ void main() {
       await tester.enterText(find.byType(TextField).at(3), '+221770000000');
       await tester.pump();
 
-      await tester.tap(find.textContaining('Bloquer').first);
+      await tester.tap(find.text('Envoyer'));
       await tester.pump();
 
       expect(find.text('Valeur maximum : 500 €'), findsOneWidget);
@@ -545,7 +555,7 @@ void main() {
       await tester.enterText(find.byType(TextField).at(3), '+221770000000');
       await tester.pump();
 
-      await tester.tap(find.textContaining('Bloquer').first);
+      await tester.tap(find.text('Envoyer'));
       await tester.pump();
 
       expect(find.text('Valeur déclarée invalide'), findsOneWidget);
@@ -560,7 +570,7 @@ void main() {
       await tester.enterText(find.byType(TextField).at(1), '100');
       await tester.pump();
       // Laisser nom et téléphone vides
-      await tester.tap(find.textContaining('Bloquer').first);
+      await tester.tap(find.text('Envoyer'));
       await tester.pump();
 
       expect(find.text('Nom du destinataire obligatoire'), findsOneWidget);
@@ -577,7 +587,7 @@ void main() {
       await tester.enterText(find.byType(TextField).at(2), 'Amadou');
       await tester.pump();
       // Laisser le téléphone vide
-      await tester.tap(find.textContaining('Bloquer').first);
+      await tester.tap(find.text('Envoyer'));
       await tester.pump();
 
       expect(find.text('Téléphone du destinataire obligatoire'), findsOneWidget);
@@ -751,7 +761,7 @@ void main() {
       await tester.pump();
 
       // The submit button should remain disabled (no grid items selected).
-      final submitFinder = find.textContaining('Bloquer');
+      final submitFinder = find.text('Envoyer');
       expect(submitFinder, findsOneWidget);
       final donyBtnFinder = find.ancestor(
         of: submitFinder,

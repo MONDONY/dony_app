@@ -82,6 +82,8 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         recipientName: event.recipientName,
         recipientPhone: event.recipientPhone,
         paymentMethod: event.paymentMethod,
+        phoneNumber: event.phoneNumber,
+        countryCode: event.countryCode,
         gridItems: event.gridItems,
       );
       emit(BidCreated(bid));

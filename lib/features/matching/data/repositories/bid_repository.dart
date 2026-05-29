@@ -39,6 +39,8 @@ class BidRepository {
     required String recipientName,
     required String recipientPhone,
     BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
+    String? phoneNumber,
+    String? countryCode,
     List<Map<String, dynamic>>? gridItems,
   }) =>
       _datasource.createBid(
@@ -50,6 +52,8 @@ class BidRepository {
         recipientName: recipientName,
         recipientPhone: recipientPhone,
         paymentMethod: paymentMethod,
+        phoneNumber: phoneNumber,
+        countryCode: countryCode,
         gridItems: gridItems,
       );
 

@@ -45,6 +45,8 @@ class BidRemoteDatasource {
     required String recipientName,
     required String recipientPhone,
     BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
+    String? phoneNumber,
+    String? countryCode,
     List<Map<String, dynamic>>? gridItems,
   }) async {
     final body = <String, dynamic>{
@@ -55,8 +57,10 @@ class BidRemoteDatasource {
       'recipientName': recipientName,
       'recipientPhone': recipientPhone,
       'disclaimerSigned': true,
-      'paymentMethod': paymentMethod.name.toUpperCase(),
+      'paymentMethod': paymentMethod.apiValue,
     };
+    if (phoneNumber != null) body['phoneNumber'] = phoneNumber;
+    if (countryCode != null) body['countryCode'] = countryCode;
     if (gridItems != null && gridItems.isNotEmpty) {
       body['gridItems'] = gridItems;
     }
