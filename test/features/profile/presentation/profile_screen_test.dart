@@ -130,6 +130,7 @@ Widget _buildTestHarness({
     GoRoute(path: '/profile/recipients', builder: (_, __) => const Scaffold(body: Text('Recipients'))),
     GoRoute(path: '/trip-templates', builder: (_, __) => const Scaffold(body: Text('TripTemplates'))),
     GoRoute(path: '/profile/subscriptions', builder: (_, __) => const Scaffold(body: Text('Subscriptions'))),
+    GoRoute(path: '/payments/wallet', builder: (_, __) => const Scaffold(body: Text('Wallet'))),
   ];
 
   return MaterialApp.router(
@@ -592,6 +593,12 @@ void main() {
 
     testWidgets('tapping "Recevoir mes paiements" (onglet Compte) navigates to /payments/onboarding',
         (tester) async {
+      // Viewport de test agrandi : tout l'onglet Compte tient sans scroll
+      // précaire, ce qui rend le tap déterministe quelle que soit la hauteur.
+      tester.view.devicePixelRatio = 1.0;
+      tester.view.physicalSize = const Size(1080, 2600);
+      addTearDown(tester.view.reset);
+
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
@@ -602,14 +609,52 @@ void main() {
       await tester.scrollUntilVisible(
         find.text('Recevoir mes paiements'), 300, scrollable: _accountScrollable,
       );
-      await tester.pump(); // stabilise avant le tap
-      // ensureVisible assure que l'item est dans la zone visible (pas seulement buildé)
-      await tester.ensureVisible(find.text('Recevoir mes paiements'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Recevoir mes paiements'));
       await tester.pumpAndSettle();
 
       expect(find.text('PaymentsOnboarding'), findsOneWidget);
+    });
+
+    testWidgets('onglet Compte affiche la section MON PORTEFEUILLE', (tester) async {
+      await tester.pumpWidget(_buildTestHarness(
+        authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
+        announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+      ));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await _goToCompteTab(tester);
+      await tester.scrollUntilVisible(
+        find.text('MON PORTEFEUILLE'), 300, scrollable: _accountScrollable,
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('MON PORTEFEUILLE'), findsOneWidget);
+      expect(find.text('Mon portefeuille'), findsOneWidget);
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+    });
+
+    testWidgets('tapping "Mon portefeuille" (onglet Compte) navigates to /payments/wallet',
+        (tester) async {
+      // Viewport agrandi : tout l'onglet Compte tient, tap déterministe.
+      tester.view.devicePixelRatio = 1.0;
+      tester.view.physicalSize = const Size(1080, 2600);
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(_buildTestHarness(
+        authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
+        announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+      ));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      await _goToCompteTab(tester);
+      await tester.scrollUntilVisible(
+        find.text('Mon portefeuille'), 300, scrollable: _accountScrollable,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mon portefeuille'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Wallet'), findsOneWidget);
     });
   });
 
@@ -674,6 +719,22 @@ void main() {
         );
         expect(find.text(label), findsOneWidget, reason: '$label manquant (sender Compte)');
       }
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+    });
+
+    testWidgets('tab Compte sender affiche aussi MON PORTEFEUILLE', (tester) async {
+      await tester.pumpWidget(_buildTestHarness(
+        authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
+        announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+      ));
+      await tester.pump(const Duration(milliseconds: 600));
+
+      await _goToCompteTab(tester);
+      await tester.scrollUntilVisible(
+        find.text('MON PORTEFEUILLE'), 300, scrollable: _accountScrollable,
+      );
+      expect(find.text('MON PORTEFEUILLE'), findsOneWidget,
+          reason: 'MON PORTEFEUILLE manquant (sender Compte)');
       await tester.pumpAndSettle(const Duration(seconds: 5));
     });
 
