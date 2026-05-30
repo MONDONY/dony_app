@@ -116,10 +116,17 @@ class _WalletTopupMethodScreenState extends State<WalletTopupMethodScreen> {
               label: 'Suivant → Montant',
               onPressed: _selected == null
                   ? null
-                  : () => context.push(
+                  : () async {
+                      // Propage le succès (true) jusqu'au wallet pour qu'il
+                      // recharge son solde une fois la recharge effectuée.
+                      final ok = await context.push<bool>(
                         '/payments/wallet/topup/amount',
                         extra: _selected,
-                      ),
+                      );
+                      if (ok == true && context.mounted) {
+                        context.pop(true);
+                      }
+                    },
             ),
           ),
         ],
