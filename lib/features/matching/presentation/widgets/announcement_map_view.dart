@@ -249,6 +249,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   double _currentZoom = 3.5;
   bool _locationGranted = false;
   LatLng? _myLocation;
+  bool _awaitingFirstLocation = false;
   // Cached brightness — updated in didChangeDependencies (safe to read in initState-triggered async work).
   Brightness _brightness = Brightness.light;
 
@@ -296,29 +297,46 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   }
 
   Future<void> _initLocationOnOpen() async {
+    _awaitingFirstLocation = true;
     var permission = await widget.locationService.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await widget.locationService.requestPermission();
     }
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
-      return; // pas de point bleu, pas de sheet intrusif au démarrage
+      _awaitingFirstLocation = false;
+      if (mounted) {
+        _applyInitialCamera(); // fallback annonces (pas de point bleu)
+      }
+      return;
     }
-    if (!mounted) return;
+    if (!mounted) {
+      _awaitingFirstLocation = false;
+      return;
+    }
     setState(() => _locationGranted = true);
     try {
       final pos = await widget.locationService.getCurrentPosition();
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
+      _awaitingFirstLocation = false;
       setState(() => _myLocation = LatLng(pos.latitude, pos.longitude));
       _applyInitialCamera();
     } catch (_) {
-      // GPS indisponible → on garde le point bleu, fallback annonces géré ailleurs
+      // GPS indisponible → on garde le point bleu, fallback sur les annonces
+      _awaitingFirstLocation = false;
+      if (mounted) {
+        _applyInitialCamera();
+      }
     }
   }
 
   void _applyInitialCamera() {
     final controller = _mapController;
-    if (controller == null) return; // onMapCreated rappellera
+    if (controller == null) {
+      return; // onMapCreated rappellera
+    }
     final me = _myLocation;
     if (me != null) {
       final points = _pickupPoints().map((p) => p.location).toList();
@@ -328,7 +346,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       } else {
         controller.animateCamera(CameraUpdate.newLatLngZoom(me, 12));
       }
-    } else {
+    } else if (!_awaitingFirstLocation) {
       _fitInitialBounds();
     }
   }
