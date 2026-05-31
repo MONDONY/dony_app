@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:dony/core/widgets/dony_keypad.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/local_auth_bloc.dart';
 import 'package:dony/features/auth/bloc/local_auth_event.dart';
 import 'package:dony/features/auth/bloc/local_auth_state.dart';
@@ -67,6 +69,42 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
   void _submitPin() {
     context.read<LocalAuthBloc>().add(LocalAuthPinSubmitted(_pin));
     setState(() => _pin = '');
+  }
+
+  /// Déconnecte le compte courant pour permettre la connexion à un autre compte.
+  /// Efface le PIN (via [AuthSwitchAccountRequested]) puis renvoie vers le choix
+  /// du mode de connexion.
+  Future<void> _switchAccount() async {
+    final cs = Theme.of(context).colorScheme;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Changer de compte ?'),
+        content: const Text(
+          'Vous allez être déconnecté de ce compte. Vous devrez vous '
+          'reconnecter et reconfigurer votre code PIN.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: cs.primary),
+            child: const Text('Continuer'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) {
+      return;
+    }
+    context.read<AuthBloc>().add(const AuthSwitchAccountRequested());
+    if (mounted) {
+      context.go('/auth/method');
+    }
   }
 
   void _startLockCountdown(int seconds) {
@@ -137,6 +175,22 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
                     padding: EdgeInsets.symmetric(horizontal: h),
                     child: Column(
                       children: [
+                        if (!widget.verifyMode)
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton.icon(
+                              onPressed: _switchAccount,
+                              icon: const Icon(Icons.swap_horiz_rounded,
+                                  size: 18),
+                              label: const Text('Autre compte'),
+                              style: TextButton.styleFrom(
+                                foregroundColor: cs.primary,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: DonySpacing.md,
+                                    vertical: DonySpacing.sm),
+                              ),
+                            ),
+                          ),
                         const Spacer(),
                         if (!isCompact) ...[
                           const DonyMascotteAnimated(

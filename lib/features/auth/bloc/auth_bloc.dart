@@ -43,6 +43,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthPhoneVerified>(_onPhoneVerified);
     on<AuthRegisterRequested>(_onRegisterRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
+    on<AuthSwitchAccountRequested>(_onSwitchAccountRequested);
     on<AuthDeleteAccountRequested>(_onDeleteAccountRequested);
     on<AuthUpdateProfileRequested>(_onUpdateProfileRequested);
     on<OnboardingCompleted>(_onOnboardingCompleted);
@@ -231,6 +232,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     // ⚠️ NE PAS clearPin() — le PIN doit survivre au logout
+    await _firebaseAuth.signOut();
+    _pendingPhoneNumber = null;
+    emit(const AuthInitial());
+  }
+
+  // ─── Changement de compte (depuis l'écran PIN) ────────────────────────────
+  //
+  // L'utilisateur veut se connecter à un AUTRE compte. On efface le PIN (lié à
+  // l'appareil/au compte précédent) en plus de déconnecter Firebase, pour que
+  // le compte suivant reparte sur une configuration PIN propre.
+
+  Future<void> _onSwitchAccountRequested(
+    AuthSwitchAccountRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    await _localAuthService.clearPin();
     await _firebaseAuth.signOut();
     _pendingPhoneNumber = null;
     emit(const AuthInitial());

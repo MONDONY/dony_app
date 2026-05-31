@@ -261,6 +261,27 @@ void main() {
     );
   });
 
+  // ─── AuthSwitchAccountRequested ──────────────────────────────────────────────
+
+  group('AuthSwitchAccountRequested', () {
+    blocTest<AuthBloc, AuthState>(
+      'changement de compte → efface le PIN, déconnecte, émet AuthInitial',
+      build: () {
+        when(() => mockLocalAuth.clearPin()).thenAnswer((_) async {});
+        when(() => mockFirebaseAuth.signOut()).thenAnswer((_) async {});
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(const AuthSwitchAccountRequested()),
+      expect: () => [isA<AuthInitial>()],
+      verify: (bloc) {
+        // Contrairement au logout simple, le PIN DOIT être effacé : le nouveau
+        // compte ne doit pas hériter du PIN du compte précédent.
+        verify(() => mockLocalAuth.clearPin()).called(1);
+        verify(() => mockFirebaseAuth.signOut()).called(1);
+      },
+    );
+  });
+
   // ─── AuthDeleteAccountRequested ──────────────────────────────────────────────
 
   group('AuthDeleteAccountRequested', () {
