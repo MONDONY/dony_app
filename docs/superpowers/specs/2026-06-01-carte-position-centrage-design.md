@@ -17,7 +17,7 @@ Problèmes constatés dans le code actuel :
 1. **Pas de point bleu "ma position".** `GoogleMap` n'active pas `myLocationEnabled` → la position de l'utilisateur n'apparaît jamais (contrairement à Google Maps / Plans).
 2. **Centrage aveugle.** La caméra démarre sur un point fixe `LatLng(30, -5)` zoom 3.5, puis se recadre sur les annonces (`_fitInitialBounds`). Elle ne tient jamais compte de *où est l'utilisateur*.
 3. **"Près de moi" ≠ recentrer.** Le FAB `my_location` actuel ouvre un sélecteur de rayon et filtre les annonces ; ce n'est ni un point de position vivant ni un bouton de recentrage.
-4. **Style de carte jamais appliqué.** La constante `kAnnouncementMapStyle` (beige/crème) est définie mais **jamais passée** — les deux écrans passent `mapStyle: null`. La carte affiche donc le style Google par défaut, et **aucun style dark n'existe** → en mode sombre la carte reste claire (incohérent avec le thème).
+4. **Aucun style sombre.** La carte affiche le style Google par défaut en clair, mais **aucun style sombre n'existe** → en mode sombre la carte reste claire et éblouissante (incohérent avec le thème). La constante `kAnnouncementMapStyle` (beige/crème) définie dans le fichier n'est **jamais appliquée** et sera retirée (cf. décision §2 : on garde le look Google).
 5. **Logique de localisation dupliquée** dans 3 endroits (`home_screen._activateNearMe`, `map_traveler_view._activateNearMe`, `announcement_map_view._onNearMeTapped`).
 
 Config native déjà prête : iOS a `NSLocationWhenInUseUsageDescription` (Info.plist L73), Android a `ACCESS_FINE_LOCATION` + `ACCESS_COARSE_LOCATION`. Aucun blocage pour demander la permission à l'ouverture.
@@ -32,6 +32,7 @@ Config native déjà prête : iOS a `NSLocationWhenInUseUsageDescription` (Info.
 | Centrage à l'ouverture | **Hybride intelligent** : ma position + annonces proches dans le cadre |
 | Bouton recentrer | **Fusionné** avec "Près de moi" |
 | Permission localisation | **Demandée à l'ouverture** de la carte |
+| Style de carte | **Google standard en clair + Google « nuit » en sombre** (pas de beige custom) |
 | Périmètre | Position+centrage (cœur) · Contrôles · Marqueurs · Style |
 | Architecture | **Approche A** — logique centralisée dans `AnnouncementMapView` |
 
@@ -100,12 +101,15 @@ Règle de distance : approximation équirectangulaire (cohérente avec `_fitNear
 
 ---
 
-## 7. Phase 4 — Style de la carte
+## 7. Phase 4 — Style de la carte (Google clair + Google nuit)
 
-- `AnnouncementMapView` choisit le style selon `Theme.of(context).brightness` via `resolveMapStyle` ; la prop `mapStyle` devient un **override optionnel** (rétrocompatible).
-- Appliquer `kAnnouncementMapStyle` (beige) en clair sur **les deux écrans** (corrige le bug : home ne passe aucun style aujourd'hui).
-- **Ajouter `kAnnouncementMapStyleDark`** : variante sombre cohérente avec le thème (géométrie sombre, eau, routes, labels lisibles, POI off comme en clair).
-- Réappliquer le style sur changement de thème (déjà un hook `didChangeDependencies` qui suit la `Brightness`).
+> **Mise à jour suite aux maquettes :** on garde le **look Google standard**, pas le style beige custom.
+
+- **Mode clair → style Google par défaut** (aucun JSON appliqué, `style: null`). C'est l'apparence Google standard.
+- **Mode sombre → style Google « nuit »** : nouvelle constante `kGoogleNightMapStyle` (le night style standard de Google : géométrie `#242f3e`, eau `#17263c`, routes `#38414e`, parcs `#263c3f`, labels clairs ; POI masqués pour rester épuré). Cohérent avec le thème sombre dony.
+- `resolveMapStyle(Brightness) → String?` : `null` en clair, `kGoogleNightMapStyle` en sombre. La prop `mapStyle` reste un **override optionnel** (rétrocompatible).
+- **Retirer la constante `kAnnouncementMapStyle` (beige)** devenue inutile, ainsi que le `mapStyle: null` explicite côté écrans (le widget décide selon la `Brightness`).
+- Réappliquer le style sur changement de thème (le hook `didChangeDependencies` suit déjà la `Brightness` ; il appellera `controller.setMapStyle` / passera la nouvelle valeur).
 
 ---
 
@@ -113,7 +117,7 @@ Règle de distance : approximation équirectangulaire (cohérente avec `_fitNear
 
 **Unitaires (helpers purs) :**
 - `computeHybridBounds` : position+annonces proches / position seule / annonces toutes lointaines (→ 10 plus proches) / liste vide.
-- `resolveMapStyle` : clair → beige, sombre → dark.
+- `resolveMapStyle` : clair → `null` (Google par défaut), sombre → `kGoogleNightMapStyle`.
 - Flux permission via `LocationService` mocké : accordée, `denied`→`requestPermission`, `deniedForever`.
 
 **Widget :**
@@ -129,7 +133,8 @@ Règle de distance : approximation équirectangulaire (cohérente avec `_fitNear
 | `announcement_map_view.dart` | Cœur : `myLocationEnabled`, permission init, centrage hybride, FAB recentrer, choix de style, boussole |
 | `marker_bitmap_factory.dart` | Anneau vert, pastilles dark-aware |
 | `map_camera_math.dart` *(nouveau)* | `computeHybridBounds` + distance (helpers testables) |
-| `map_styles.dart` *(nouveau)* | `kAnnouncementMapStyle` (déplacé) + `kAnnouncementMapStyleDark` + `resolveMapStyle` |
+| `map_styles.dart` *(nouveau)* | `kGoogleNightMapStyle` + `resolveMapStyle` (clair → null, sombre → night) |
+| `announcement_map_view.dart` | Retrait de la constante beige `kAnnouncementMapStyle` (inutile) |
 | `home_screen.dart` | Le chip "Près de moi" reste le point d'entrée du filtre rayon (FAB ne l'ouvre plus) — vérifier la cohérence |
 | `map_traveler_view.dart` | Idem chip ; retrait du `mapStyle: null` explicite (laisser le widget décider) |
 | Tests associés | Nouveaux fichiers de tests unitaires + widget |
