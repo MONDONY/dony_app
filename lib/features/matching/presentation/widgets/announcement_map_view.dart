@@ -4,7 +4,6 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
-// ignore: unused_import — used in Task 5 (permission + hybrid-bounds logic)
 import 'package:dony/features/matching/presentation/widgets/map_camera_math.dart';
 import 'package:dony/features/matching/presentation/widgets/map_styles.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
@@ -248,9 +247,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   final Map<int, BitmapDescriptor> _clusterIcons = {};
   bool _isLocating = false;
   double _currentZoom = 3.5;
-  // ignore: prefer_final_fields — mutated in Task 5 (permission grant flow)
   bool _locationGranted = false;
-  // ignore: unused_field — used in Task 5 (recenter camera to user location)
   LatLng? _myLocation;
   // Cached brightness — updated in didChangeDependencies (safe to read in initState-triggered async work).
   Brightness _brightness = Brightness.light;
@@ -259,6 +256,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   void initState() {
     super.initState();
     _prewarmCommonIcons();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initLocationOnOpen());
   }
 
   @override
@@ -295,6 +293,44 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   Future<void> _prewarmCommonIcons() async {
     // Price pills don't need prewarm — built lazily and cached per price
     await _rebuildMarkers();
+  }
+
+  Future<void> _initLocationOnOpen() async {
+    var permission = await widget.locationService.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await widget.locationService.requestPermission();
+    }
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      return; // pas de point bleu, pas de sheet intrusif au démarrage
+    }
+    if (!mounted) return;
+    setState(() => _locationGranted = true);
+    try {
+      final pos = await widget.locationService.getCurrentPosition();
+      if (!mounted) return;
+      setState(() => _myLocation = LatLng(pos.latitude, pos.longitude));
+      _applyInitialCamera();
+    } catch (_) {
+      // GPS indisponible → on garde le point bleu, fallback annonces géré ailleurs
+    }
+  }
+
+  void _applyInitialCamera() {
+    final controller = _mapController;
+    if (controller == null) return; // onMapCreated rappellera
+    final me = _myLocation;
+    if (me != null) {
+      final points = _pickupPoints().map((p) => p.location).toList();
+      final bounds = computeHybridBounds(me, points);
+      if (bounds != null) {
+        controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 60.0));
+      } else {
+        controller.animateCamera(CameraUpdate.newLatLngZoom(me, 12));
+      }
+    } else {
+      _fitInitialBounds();
+    }
   }
 
   List<_AnnouncementPoint> _pickupPoints() => widget.announcements
@@ -522,7 +558,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
           style: widget.mapStyle ?? resolveMapStyle(_brightness),
           onMapCreated: (controller) {
             _mapController = controller;
-            _fitInitialBounds();
+            _applyInitialCamera();
           },
           onCameraMove: (position) {
             _currentZoom = position.zoom;

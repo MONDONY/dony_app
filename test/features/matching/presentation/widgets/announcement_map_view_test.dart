@@ -62,6 +62,8 @@ void main() {
 
     testWidgets('renders the map and the Près de moi FAB', (tester) async {
       final mockLoc = MockLocationService();
+      when(() => mockLoc.checkPermission())
+          .thenAnswer((_) async => LocationPermission.deniedForever);
       await tester.pumpWidget(_wrap(AnnouncementMapView(
         announcements: announcements,
         locationService: mockLoc,
@@ -92,6 +94,8 @@ void main() {
 
     testWidgets('FAB shows active state when isNearMeActive', (tester) async {
       final mockLoc = MockLocationService();
+      when(() => mockLoc.checkPermission())
+          .thenAnswer((_) async => LocationPermission.deniedForever);
       await tester.pumpWidget(_wrap(AnnouncementMapView(
         announcements: announcements,
         locationService: mockLoc,
@@ -116,6 +120,8 @@ void main() {
         _ann('a4', 'Paris', 'Dakar'), // no pickup, no delivery
       ];
       final mockLoc = MockLocationService();
+      when(() => mockLoc.checkPermission())
+          .thenAnswer((_) async => LocationPermission.deniedForever);
       await tester.pumpWidget(_wrap(AnnouncementMapView(
         announcements: list,
         locationService: mockLoc,
