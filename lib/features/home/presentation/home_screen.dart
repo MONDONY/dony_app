@@ -643,19 +643,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
                   isNearMeActive: _isNearMeActive,
                   activeRadiusKm: _nearMeRadiusKm,
                   userPosition: _userPosition,
-                  onNearMeRequested: (lat, lng, radius) {
-                    setState(() {
-                      _isNearMeActive = true;
-                      _nearMeRadiusKm = radius;
-                      _userPosition = LatLng(lat, lng);
-                    });
-                    if (activeRole == ActiveRole.traveler) {
-                      _dispatchPackageRequestSearch();
-                    } else {
-                      _dispatchSearch();
-                    }
-                  },
-                  onNearMeDisabled: _deactivateNearMe,
                   fabBottomPadding: MediaQuery.of(context).size.height * 0.45,
                   selectedAnnouncementId: _selectedAnnouncementId,
                   onAnnouncementSelected: (id) =>

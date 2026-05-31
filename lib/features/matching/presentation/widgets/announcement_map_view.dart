@@ -8,7 +8,6 @@ import 'package:dony/features/matching/presentation/widgets/map_camera_math.dart
 import 'package:dony/features/matching/presentation/widgets/map_styles.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_urgency.dart';
-import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/same_address_announcements_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:flutter/material.dart';
@@ -205,8 +204,6 @@ class AnnouncementMapView extends StatefulWidget {
     this.searchDepartureCity,
     this.searchArrivalCity,
     this.locationService = const GeolocatorLocationService(),
-    this.onNearMeRequested,
-    this.onNearMeDisabled,
     this.isNearMeActive = false,
     this.activeRadiusKm,
     this.userPosition,
@@ -223,9 +220,6 @@ class AnnouncementMapView extends StatefulWidget {
   final String? searchDepartureCity;
   final String? searchArrivalCity;
   final LocationService locationService;
-  final void Function(double userLat, double userLng, double radiusKm)?
-      onNearMeRequested;
-  final VoidCallback? onNearMeDisabled;
   final bool isNearMeActive;
   final double? activeRadiusKm;
   final LatLng? userPosition;
@@ -487,57 +481,38 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     }
   }
 
-  // ── "Près de moi" flow ──────────────────────────────────────────────────────
+  // ── Recenter on me ──────────────────────────────────────────────────────────
 
-  Future<void> _onNearMeTapped() async {
-    if (widget.onNearMeRequested == null) {
-      return;
-    }
-
-    // 1. Check permissions FIRST (may show system dialog)
+  Future<void> _recenterOnMe() async {
     var permission = await widget.locationService.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await widget.locationService.requestPermission();
+    }
     if (permission == LocationPermission.deniedForever) {
       _showPermissionDeniedSheet(true);
       return;
     }
     if (permission == LocationPermission.denied) {
-      permission = await widget.locationService.requestPermission();
-    }
-    if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
-      _showPermissionDeniedSheet(
-          permission == LocationPermission.deniedForever);
+      _showPermissionDeniedSheet(false);
       return;
     }
-
     if (!mounted) {
       return;
     }
-
-    // 2. Start GPS lookup IN PARALLEL (no await yet)
-    final positionFuture = widget.locationService.getCurrentPosition();
-
-    // 3. Show radius bottom sheet IMMEDIATELY (user can interact)
-    final radiusKm = await NearMeRadiusSheet.show(
-      context,
-      initialRadiusKm: widget.activeRadiusKm ?? 25,
-    );
-
-    if (radiusKm == null || !mounted) {
-      return;
-    }
-
-    // 4. Now await GPS (often already done) — show spinner if still pending
-    setState(() => _isLocating = true);
+    setState(() {
+      _locationGranted = true;
+      _isLocating = true;
+    });
     try {
-      final pos = await positionFuture;
+      final pos = await widget.locationService.getCurrentPosition();
       if (!mounted) {
         return;
       }
-      // Trigger parent state update — didUpdateWidget will auto-fit the camera
-      // once the new props (userPosition, activeRadiusKm, isNearMeActive)
-      // propagate. No need to animate here.
-      widget.onNearMeRequested!(pos.latitude, pos.longitude, radiusKm);
+      final target = LatLng(pos.latitude, pos.longitude);
+      setState(() => _myLocation = target);
+      final zoom = _currentZoom < 13 ? 15.0 : _currentZoom;
+      await _mapController
+          ?.animateCamera(CameraUpdate.newLatLngZoom(target, zoom));
     } finally {
       if (mounted) {
         setState(() => _isLocating = false);
@@ -599,9 +574,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
             key: const Key('near-me-fab'),
             isActive: widget.isNearMeActive,
             isLoading: _isLocating,
-            radiusKm: widget.activeRadiusKm,
-            onTap: _onNearMeTapped,
-            onDoubleTap: widget.isNearMeActive ? widget.onNearMeDisabled : null,
+            onTap: _recenterOnMe,
           ),
         ),
       ],
@@ -683,23 +656,18 @@ class _NearMeFab extends StatelessWidget {
     super.key,
     required this.isActive,
     required this.isLoading,
-    required this.radiusKm,
     required this.onTap,
-    this.onDoubleTap,
   });
 
   final bool isActive;
   final bool isLoading;
-  final double? radiusKm;
   final VoidCallback onTap;
-  final VoidCallback? onDoubleTap;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: isLoading ? null : onTap,
-      onDoubleTap: isLoading ? null : onDoubleTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         width: 48,

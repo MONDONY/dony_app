@@ -12,6 +12,19 @@ import 'package:mocktail/mocktail.dart';
 
 class MockLocationService extends Mock implements LocationService {}
 
+Position _fakePosition() => Position(
+      latitude: 48.8566,
+      longitude: 2.3522,
+      timestamp: DateTime(2026, 6, 1),
+      accuracy: 10,
+      altitude: 0,
+      altitudeAccuracy: 0,
+      heading: 0,
+      headingAccuracy: 0,
+      speed: 0,
+      speedAccuracy: 0,
+    );
+
 AnnouncementModel _ann(
   String id,
   String dep,
@@ -73,7 +86,7 @@ void main() {
       expect(find.byKey(const Key('near-me-fab')), findsOneWidget);
     });
 
-    testWidgets('Près de moi triggers permission flow when denied',
+    testWidgets('recenter FAB shows permission sheet when denied',
         (tester) async {
       final mockLoc = MockLocationService();
       when(() => mockLoc.checkPermission())
@@ -84,12 +97,29 @@ void main() {
       await tester.pumpWidget(_wrap(AnnouncementMapView(
         announcements: announcements,
         locationService: mockLoc,
-        onNearMeRequested: (_, __, ___) {},
       )));
       await tester.pump();
       await tester.tap(find.byKey(const Key('near-me-fab')));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('permission-denied-sheet')), findsOneWidget);
+    });
+
+    testWidgets('recenter FAB requests current position when granted',
+        (tester) async {
+      final mockLoc = MockLocationService();
+      when(() => mockLoc.checkPermission())
+          .thenAnswer((_) async => LocationPermission.whileInUse);
+      when(() => mockLoc.getCurrentPosition())
+          .thenAnswer((_) async => _fakePosition());
+
+      await tester.pumpWidget(_wrap(AnnouncementMapView(
+        announcements: announcements,
+        locationService: mockLoc,
+      )));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('near-me-fab')));
+      await tester.pumpAndSettle();
+      verify(() => mockLoc.getCurrentPosition()).called(greaterThanOrEqualTo(1));
     });
 
     testWidgets('FAB shows active state when isNearMeActive', (tester) async {
