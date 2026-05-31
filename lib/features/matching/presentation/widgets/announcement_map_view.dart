@@ -4,6 +4,9 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+// ignore: unused_import — used in Task 5 (permission + hybrid-bounds logic)
+import 'package:dony/features/matching/presentation/widgets/map_camera_math.dart';
+import 'package:dony/features/matching/presentation/widgets/map_styles.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_urgency.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
@@ -193,27 +196,6 @@ double _cellDegForZoom(double zoom) {
   return 0.003;
 }
 
-// ── Map style (beige/crème, style Cocolis) ────────────────────────────────────
-
-/// Custom map style (beige/cream, Cocolis-inspired). Pass to [AnnouncementMapView.mapStyle].
-const String kAnnouncementMapStyle = '''[
-  {"elementType":"geometry","stylers":[{"color":"#f5f0e8"}]},
-  {"elementType":"labels.icon","stylers":[{"visibility":"off"}]},
-  {"elementType":"labels.text.fill","stylers":[{"color":"#746855"}]},
-  {"elementType":"labels.text.stroke","stylers":[{"color":"#f5f1e6"}]},
-  {"featureType":"administrative","elementType":"geometry","stylers":[{"visibility":"off"}]},
-  {"featureType":"administrative.land_parcel","elementType":"labels.text.fill","stylers":[{"color":"#ae9e90"}]},
-  {"featureType":"poi","stylers":[{"visibility":"off"}]},
-  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#ffffff"}]},
-  {"featureType":"road.arterial","elementType":"labels.text.fill","stylers":[{"color":"#93817c"}]},
-  {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#f8c967"}]},
-  {"featureType":"road.highway","elementType":"geometry.stroke","stylers":[{"color":"#e9bc62"}]},
-  {"featureType":"road.local","elementType":"labels.text.fill","stylers":[{"color":"#806b63"}]},
-  {"featureType":"transit","stylers":[{"visibility":"off"}]},
-  {"featureType":"water","elementType":"geometry.fill","stylers":[{"color":"#b9d3c2"}]},
-  {"featureType":"water","elementType":"labels.text.fill","stylers":[{"color":"#92998d"}]}
-]''';
-
 // ── Widget ────────────────────────────────────────────────────────────────────
 
 class AnnouncementMapView extends StatefulWidget {
@@ -266,6 +248,10 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   final Map<int, BitmapDescriptor> _clusterIcons = {};
   bool _isLocating = false;
   double _currentZoom = 3.5;
+  // ignore: prefer_final_fields — mutated in Task 5 (permission grant flow)
+  bool _locationGranted = false;
+  // ignore: unused_field — used in Task 5 (recenter camera to user location)
+  LatLng? _myLocation;
   // Cached brightness — updated in didChangeDependencies (safe to read in initState-triggered async work).
   Brightness _brightness = Brightness.light;
 
@@ -349,6 +335,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
           count: cluster.count,
           dotColor: urgencyColor,
           isSelected: isSelected,
+          brightness: _brightness,
         );
         return Marker(
           markerId: MarkerId(
@@ -382,6 +369,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       pricePerKg: item.announcement.pricePerKg,
       dotColor: urgencyColor,
       isSelected: isSelected,
+      brightness: _brightness,
     );
     return Marker(
       markerId: MarkerId('${item.side.name}_${item.announcement.id}'),
@@ -531,7 +519,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
             target: LatLng(30.0, -5.0),
             zoom: 3.5,
           ),
-          style: widget.mapStyle,
+          style: widget.mapStyle ?? resolveMapStyle(_brightness),
           onMapCreated: (controller) {
             _mapController = controller;
             _fitInitialBounds();
@@ -544,10 +532,11 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
           },
           markers: {..._markers, ...widget.extraMarkers},
           circles: _radiusCircle(),
+          myLocationEnabled: _locationGranted,
           myLocationButtonEnabled: false,
           zoomControlsEnabled: false,
           mapToolbarEnabled: false,
-          compassEnabled: false,
+          compassEnabled: true,
         ),
         Positioned(
           bottom: fabBottom,
