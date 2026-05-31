@@ -34,26 +34,12 @@ class SettingsScreen extends StatelessWidget {
 
               // ── APPARENCE ──────────────────────────────────────────────
               const _SectionLabel('APPARENCE'),
-              DonyListSection(tiles: [
-                DonyListTile(
-                  icon: Icons.dark_mode_rounded,
-                  iconColor: cs.primary,
-                  iconBgColor: cs.primaryContainer,
-                  label: 'Thème sombre',
-                  subtitle: 'Suit le système par défaut',
-                  trailing: Switch(
-                    value: prefs.themeMode == 'dark',
-                    activeThumbColor: cs.primary,
-                    onChanged: (v) => context
-                        .read<AppPreferencesBloc>()
-                        .add(ThemeChanged(v ? 'dark' : 'system')),
-                  ),
-                  onTap: () => context.read<AppPreferencesBloc>().add(
-                        ThemeChanged(
-                            prefs.themeMode == 'dark' ? 'system' : 'dark'),
-                      ),
-                ),
-              ]),
+              _ThemeSelector(
+                current: prefs.themeMode,
+                onChanged: (mode) => context
+                    .read<AppPreferencesBloc>()
+                    .add(ThemeChanged(mode)),
+              ),
               const SizedBox(height: DonySpacing.lg),
 
               // ── LANGUE & COMMUNICATION ─────────────────────────────────
@@ -263,6 +249,89 @@ class SettingsScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ThemeSelector extends StatelessWidget {
+  const _ThemeSelector({required this.current, required this.onChanged});
+
+  final String current;
+  final ValueChanged<String> onChanged;
+
+  IconData get _icon => switch (current) {
+        'light' => Icons.light_mode_rounded,
+        'dark'  => Icons.dark_mode_rounded,
+        _       => Icons.brightness_auto_rounded,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return DonyCard(
+      padding: const EdgeInsets.all(DonySpacing.base),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer,
+                  borderRadius: BorderRadius.circular(DonyRadius.sm),
+                ),
+                child: Icon(_icon, color: cs.primary, size: 22),
+              ),
+              const SizedBox(width: DonySpacing.md),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Thème', style: tt.titleMedium),
+                  Text(
+                    'Prioritaire sur le réglage système',
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: DonySpacing.md),
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<String>(
+              segments: const [
+                ButtonSegment<String>(
+                  value: 'light',
+                  label: Text('Clair'),
+                  icon: Icon(Icons.light_mode_outlined),
+                ),
+                ButtonSegment<String>(
+                  value: 'dark',
+                  label: Text('Sombre'),
+                  icon: Icon(Icons.dark_mode_outlined),
+                ),
+                ButtonSegment<String>(
+                  value: 'system',
+                  label: Text('Auto'),
+                  icon: Icon(Icons.brightness_auto_outlined),
+                ),
+              ],
+              selected: {current},
+              onSelectionChanged: (s) => onChanged(s.first),
+              style: SegmentedButton.styleFrom(
+                selectedBackgroundColor: cs.primaryContainer,
+                selectedForegroundColor: cs.primary,
+                foregroundColor: cs.onSurfaceVariant,
+              ),
+              showSelectedIcon: false,
+            ),
+          ),
+        ],
       ),
     );
   }
