@@ -80,6 +80,12 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
           merchantDisplayName: 'dony',
           paymentIntentClientSecret: clientSecret,
           style: ThemeMode.light,
+          // OBLIGATOIRE : le PaymentIntent inclut des moyens de paiement
+          // "redirect-based" (Klarna, Bancontact, EPS…) et le 3D Secure des
+          // cartes EU exigent une URL de retour vers l'app. Sans returnURL la
+          // PaymentSheet refuse de s'ouvrir. Le scheme `dony://` est déjà
+          // déclaré dans Info.plist / AndroidManifest.
+          returnURL: 'dony://stripe/payment-return',
         ),
       );
       await Stripe.instance.presentPaymentSheet();
