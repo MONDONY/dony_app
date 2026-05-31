@@ -12,7 +12,13 @@ import 'package:go_router/go_router.dart';
 
 
 class LocalAuthScreen extends StatefulWidget {
-  const LocalAuthScreen({super.key});
+  /// Mode vérification : l'écran est `push`é pour confirmer l'identité avant
+  /// une action sensible (paiement) et doit renvoyer un résultat booléen via
+  /// `context.pop(true/false)` — au lieu de naviguer vers `/home` comme lors
+  /// du déverrouillage au démarrage.
+  final bool verifyMode;
+
+  const LocalAuthScreen({super.key, this.verifyMode = false});
 
   @override
   State<LocalAuthScreen> createState() => _LocalAuthScreenState();
@@ -88,9 +94,19 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
       body: BlocConsumer<LocalAuthBloc, LocalAuthState>(
         listener: (context, state) {
           if (state is LocalAuthSuccess) {
-            context.go('/home');
+            if (widget.verifyMode) {
+              context.pop(true);
+            } else {
+              context.go('/home');
+            }
           } else if (state is LocalAuthNoPinSet) {
-            context.go('/auth/pin-setup');
+            if (widget.verifyMode) {
+              // Aucun PIN configuré : on ne peut pas vérifier ici. On renvoie
+              // un échec ; l'appelant invite l'utilisateur à créer un PIN.
+              context.pop(false);
+            } else {
+              context.go('/auth/pin-setup');
+            }
           } else if (state is LocalAuthLocked) {
             _startLockCountdown(state.secondsLeft);
           } else if (state is LocalAuthPinRequired) {

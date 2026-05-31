@@ -234,7 +234,9 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/auth/local',
-      builder: (context, state) => const LocalAuthScreen(),
+      builder: (context, state) => LocalAuthScreen(
+        verifyMode: state.uri.queryParameters['verify'] == 'true',
+      ),
     ),
 
     // ── KYC (hors shell) ─────────────────────────────────────────────────

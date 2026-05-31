@@ -28,7 +28,7 @@ Future<bool> requirePaymentAuth(
 
   // Fallback PIN si pas (encore) authentifié.
   if (!authenticated && context.mounted) {
-    final pinResult = await context.push<bool>('/auth/local');
+    final pinResult = await context.push<bool>('/auth/local?verify=true');
     authenticated = pinResult ?? false;
   }
 

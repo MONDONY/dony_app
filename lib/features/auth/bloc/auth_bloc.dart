@@ -7,6 +7,7 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:hive/hive.dart';
@@ -101,6 +102,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(const AuthLoading());
     _pendingPhoneNumber = event.phoneNumber;
+
+    // En debug, désactive la vérification d'app (APNs/reCAPTCHA) pour permettre
+    // l'usage des numéros de test Firebase sans clé APNs configurée sur le device.
+    if (kDebugMode) {
+      try {
+        await _firebaseAuth.setSettings(
+          appVerificationDisabledForTesting: true,
+        );
+      } catch (_) {}
+    }
 
     final completer = Completer<void>();
 

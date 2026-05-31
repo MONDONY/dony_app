@@ -27,7 +27,10 @@ dependencies:
   flutter_stripe: ^11.0.0
 
   # QR & Biometrics
-  mobile_scanner: ^5.0.0
+  # 7.x : Apple Vision/AVFoundation sur iOS (plus de GoogleMLKit) → résout le conflit
+  # GoogleDataTransport avec Firebase 11.15 (MLKit exigeait GDT <10, Firebase exige >=10).
+  # Compatible iOS 12+ ; supporte aussi le simulateur Apple Silicon.
+  mobile_scanner: ^7.2.0
   local_auth: ^2.3.0
 
   # Location
@@ -56,7 +59,9 @@ dependencies:
   go_router: ^14.0.0
 
   # Monitoring
-  sentry_flutter: ^8.0.0
+  # ^9.x requis : sentry_flutter 8.x ne compile pas avec sentry-cocoa résolu
+  # par SPM sous Xcode 26 (SentryBinaryImageCache.image manquant).
+  sentry_flutter: ^9.21.0
 
   # DI
   get_it: ^8.0.0
@@ -65,7 +70,9 @@ dependencies:
   flutter_animate: ^4.5.0
   flutter_slidable: ^3.1.0
   flutter_svg: ^2.0.10+1
-  phosphor_flutter: ^2.1.0
+  # phosphor_flutter retiré : étend IconData (final depuis Flutter 3.44 → erreur
+  # de compilation kernel). Les icônes passent par DonyIcons (Material Icons).
+  # Voir lib/core/design/dony_icons.dart.
   pinput: ^5.0.0
   flutter_secure_storage: ^9.2.2
   google_fonts: ^6.2.1

@@ -1,51 +1,54 @@
-import 'package:flutter/widgets.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:flutter/material.dart';
 
-/// Mapping sémantique des icônes dony → Phosphor.
-/// L'app ne référence jamais Phosphor directement : toujours via DonyIcons.
+/// Mapping sémantique des icônes dony → Material Icons.
+/// L'app ne référence jamais Material directement : toujours via DonyIcons.
+///
+/// NB : phosphor_flutter a été retiré car il étend `IconData`, devenu une
+/// classe `final` à partir de Flutter 3.44 (erreur de compilation du kernel).
+/// Pour revenir à Phosphor plus tard, restaurer l'ancien mapping avec une
+/// version compatible du package.
 class DonyIcons {
   DonyIcons._();
 
   // Trajet
-  static const IconData departureCity = PhosphorIconsRegular.airplaneTakeoff;
-  static const IconData arrivalCity = PhosphorIconsRegular.airplaneLanding;
-  static const IconData time = PhosphorIconsRegular.clock;
-  static const IconData date = PhosphorIconsRegular.calendarBlank;
+  static const IconData departureCity = Icons.flight_takeoff_rounded;
+  static const IconData arrivalCity = Icons.flight_land_rounded;
+  static const IconData time = Icons.access_time_rounded;
+  static const IconData date = Icons.calendar_today_rounded;
 
   // Lieux
-  static const IconData mapPin = PhosphorIconsRegular.mapPin;
-  static const IconData locate = PhosphorIconsRegular.crosshair;
+  static const IconData mapPin = Icons.location_on_rounded;
+  static const IconData locate = Icons.my_location_rounded;
 
   // Capacité
-  static const IconData suitcase = PhosphorIconsRegular.suitcaseRolling;
-  static const IconData infinity = PhosphorIconsRegular.infinity;
+  static const IconData suitcase = Icons.luggage_rounded;
+  static const IconData infinity = Icons.all_inclusive_rounded;
 
   // Prix & paiement
-  static const IconData editPrice = PhosphorIconsRegular.pencilSimple;
-  static const IconData card = PhosphorIconsRegular.creditCard;
-  static const IconData cash = PhosphorIconsRegular.money;
-  static const IconData escrow = PhosphorIconsRegular.lockKey;
-  static const IconData transfer = PhosphorIconsRegular.lightning;
-  static const IconData bank = PhosphorIconsRegular.bank;
-  static const IconData tip = PhosphorIconsRegular.lightbulb;
+  static const IconData editPrice = Icons.edit_rounded;
+  static const IconData card = Icons.credit_card_rounded;
+  static const IconData cash = Icons.payments_rounded;
+  static const IconData escrow = Icons.lock_rounded;
+  static const IconData transfer = Icons.bolt_rounded;
+  static const IconData bank = Icons.account_balance_rounded;
+  static const IconData tip = Icons.lightbulb_rounded;
 
   // Navigation & actions
-  static const IconData close = PhosphorIconsRegular.x;
-  static const IconData back = PhosphorIconsRegular.caretLeft;
-  static const IconData chevron = PhosphorIconsRegular.caretRight;
-  static const IconData arrowRight = PhosphorIconsRegular.arrowRight;
-  static const IconData check = PhosphorIconsRegular.check;
-  static const IconData add = PhosphorIconsRegular.plus;
-  static const IconData minus = PhosphorIconsRegular.minus;
-  static const IconData publish = PhosphorIconsRegular.rocketLaunch;
-  // Fill intentionnel — la variante outline manque de poids visuel pour un badge de vérification.
-  static const IconData confirmed = PhosphorIconsFill.sealCheck;
+  static const IconData close = Icons.close_rounded;
+  static const IconData back = Icons.chevron_left_rounded;
+  static const IconData chevron = Icons.chevron_right_rounded;
+  static const IconData arrowRight = Icons.arrow_forward_rounded;
+  static const IconData check = Icons.check_rounded;
+  static const IconData add = Icons.add_rounded;
+  static const IconData minus = Icons.remove_rounded;
+  static const IconData publish = Icons.rocket_launch_rounded;
+  static const IconData confirmed = Icons.verified_rounded;
 
   // Modes de transport
-  static const IconData transportPlane = PhosphorIconsRegular.airplaneTilt;
-  static const IconData transportCar = PhosphorIconsRegular.car;
-  static const IconData transportTrain = PhosphorIconsRegular.train;
-  static const IconData transportBus = PhosphorIconsRegular.bus;
-  static const IconData transportBoat = PhosphorIconsRegular.boat;
-  static const IconData transportOther = PhosphorIconsRegular.dotsThreeOutline;
+  static const IconData transportPlane = Icons.flight_rounded;
+  static const IconData transportCar = Icons.directions_car_rounded;
+  static const IconData transportTrain = Icons.train_rounded;
+  static const IconData transportBus = Icons.directions_bus_rounded;
+  static const IconData transportBoat = Icons.directions_boat_rounded;
+  static const IconData transportOther = Icons.more_horiz_rounded;
 }

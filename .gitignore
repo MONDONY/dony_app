@@ -53,6 +53,7 @@ app.*.map.json
 # Environment files (secrets)
 env.dev.json
 env.prod.json
+env.android.json
 
 CLAUDE.md
 .worktrees/
