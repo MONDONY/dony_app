@@ -66,48 +66,54 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _navigateNext() async {
-    // First-launch check: show onboarding once
-    final prefs = Hive.box('user_prefs');
-    final onboardingDone = prefs.get('onboarding_done', defaultValue: false) as bool;
-    if (!onboardingDone) {
-      if (mounted) {
-        context.go('/onboarding');
-      }
-      return;
-    }
-
+    // 1. Session Firebase restaurée ? → on la vérifie AVANT toute autre chose.
+    //    Si le compte existe en backend, on va directement au PIN : un
+    //    utilisateur déjà connecté ne doit JAMAIS repasser par l'onboarding ni
+    //    par l'OTP. (Le PIN seul suffit à déverrouiller la session persistée.)
     final firebaseUser = FirebaseAuth.instance.currentUser;
-    if (firebaseUser == null) {
-      if (mounted) {
-        context.go('/auth/method');
+    if (firebaseUser != null) {
+      if (!mounted) {
+        return;
       }
-      return;
+      final authBloc = context.read<AuthBloc>();
+      authBloc.add(const AuthCheckRequested());
+
+      final result = await authBloc.stream
+          .firstWhere(
+            (s) => s is AuthAuthenticated || s is AuthInitial || s is AuthError,
+          )
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => const AuthError(TimeoutException()),
+          );
+
+      if (!mounted) {
+        return;
+      }
+      if (result is AuthAuthenticated) {
+        context.go('/auth/local'); // → écran PIN, terminé
+        return;
+      }
+      if (result is AuthError) {
+        setState(() => _hasError = true);
+        return;
+      }
+      // AuthInitial : session Firebase OK mais pas (ou plus) inscrit en backend
+      // → on poursuit vers onboarding/login ci-dessous.
     }
 
+    // 2. Pas de session exploitable → onboarding (1ʳᵉ fois) puis choix du mode
+    //    de connexion.
+    final prefs = Hive.box('user_prefs');
+    final onboardingDone =
+        prefs.get('onboarding_done', defaultValue: false) as bool;
     if (!mounted) {
       return;
     }
-    final authBloc = context.read<AuthBloc>();
-    authBloc.add(const AuthCheckRequested());
-
-    final result = await authBloc.stream
-        .firstWhere(
-          (s) => s is AuthAuthenticated || s is AuthInitial || s is AuthError,
-        )
-        .timeout(
-          const Duration(seconds: 15),
-          onTimeout: () => const AuthError(TimeoutException()),
-        );
-
-    if (!mounted) {
-      return;
-    }
-    if (result is AuthAuthenticated) {
-      context.go('/auth/local');
-    } else if (result is AuthInitial) {
+    if (!onboardingDone) {
       context.go('/onboarding');
     } else {
-      setState(() => _hasError = true);
+      context.go('/auth/method');
     }
   }
 
@@ -139,7 +145,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   const DonyLogo(variant: DonyLogoVariant.onLight, fontSize: 104),
                   const SizedBox(height: DonySpacing.xxl),
                   Text(
-                    'Livrez en confiance',
+                    'Livrez vos colis en confiance',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: cs.onSurface.withValues(alpha: 0.45),
                       letterSpacing: 0.4,

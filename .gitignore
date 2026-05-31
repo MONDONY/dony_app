@@ -61,3 +61,6 @@ CLAUDE.md
 # Worktrees
 .worktrees/
 env.staging.json
+
+# Golden test failure artifacts (auto-générés quand un golden test échoue)
+failures/

@@ -44,6 +44,13 @@ class AuthLogoutRequested extends AuthEvent {
   const AuthLogoutRequested();
 }
 
+/// Déconnexion volontaire pour se connecter à un AUTRE compte (depuis l'écran
+/// PIN). Contrairement à [AuthLogoutRequested], le PIN local est effacé : le
+/// nouveau compte ne doit pas hériter du PIN du compte précédent.
+class AuthSwitchAccountRequested extends AuthEvent {
+  const AuthSwitchAccountRequested();
+}
+
 class AuthDeleteAccountRequested extends AuthEvent {
   const AuthDeleteAccountRequested();
 }
