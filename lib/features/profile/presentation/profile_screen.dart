@@ -893,6 +893,26 @@ class _AccountTab extends StatelessWidget {
                 curve: Curves.easeOutCubic,
               ),
         ],
+
+        // ── MON PORTEFEUILLE (commun aux deux rôles) ────────────────────
+        const SizedBox(height: DonySpacing.lg),
+        _SectionLabel(label: 'MON PORTEFEUILLE', cs: cs),
+        DonyListSection(
+          tiles: [
+            DonyListTile(
+              icon: Icons.account_balance_wallet_rounded,
+              iconColor: cs.primary,
+              iconBgColor: cs.primaryContainer,
+              label: 'Mon portefeuille',
+              subtitle: 'Solde & recharges',
+              showDivider: false,
+              onTap: () => context.push('/payments/wallet'),
+            ),
+          ],
+        ).animate().fadeIn(delay: 260.ms).slideY(
+              begin: 0.04,
+              curve: Curves.easeOutCubic,
+            ),
       ],
     );
   }

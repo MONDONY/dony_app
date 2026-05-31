@@ -4,6 +4,7 @@ import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -64,6 +65,57 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
     return _rawAmount;
   }
 
+  /// Présente la Payment Sheet Stripe avec le clientSecret renvoyé par le
+  /// backend. Après confirmation, le webhook Stripe `payment_intent.succeeded`
+  /// (metadata wallet_topup=true) crédite le wallet côté serveur — il suffit
+  /// donc de revenir au wallet, qui recharge son solde. Même pattern que
+  /// `PaymentScreen._presentPaymentSheet`.
+  Future<void> _presentStripePaymentSheet(
+    BuildContext context,
+    String clientSecret,
+  ) async {
+    try {
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          merchantDisplayName: 'dony',
+          paymentIntentClientSecret: clientSecret,
+          style: ThemeMode.light,
+        ),
+      );
+      await Stripe.instance.presentPaymentSheet();
+
+      if (!context.mounted) {
+        return;
+      }
+      DonySnackbar.show(
+        context,
+        message: 'Recharge réussie — votre solde sera crédité dans un instant.',
+        type: DonySnackbarType.success,
+      );
+      // pop(true) plutôt que go() : préserve la pile de navigation (le bouton
+      // retour du wallet continue de fonctionner) et signale au wallet qu'il
+      // doit recharger son solde (crédité de façon asynchrone via webhook).
+      context.pop(true);
+    } on StripeException catch (e) {
+      // L'utilisateur a annulé la feuille de paiement → pas d'erreur affichée.
+      if (context.mounted && e.error.code != FailureCode.Canceled) {
+        DonySnackbar.show(
+          context,
+          message: e.error.localizedMessage ?? 'Paiement refusé',
+          type: DonySnackbarType.error,
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        DonySnackbar.show(
+          context,
+          message: 'Erreur lors du paiement',
+          type: DonySnackbarType.error,
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
@@ -71,11 +123,7 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
     return BlocListener<WalletBloc, WalletState>(
       listener: (context, state) {
         if (state is WalletTopupStripeReady) {
-          // MVP : snackbar. En production → flutter_stripe PaymentSheet.
-          DonySnackbar.show(
-            context,
-            message: 'Paiement Stripe initié',
-          );
+          _presentStripePaymentSheet(context, state.clientSecret);
         } else if (state is WalletTopupRedirectReady) {
           launchUrl(
             Uri.parse(state.redirectUrl),

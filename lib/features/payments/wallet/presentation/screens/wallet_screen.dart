@@ -277,8 +277,23 @@ class _HeroHeader extends StatelessWidget {
                   _HeroAction(
                     icon: Icons.add_rounded,
                     label: 'Recharger',
-                    onTap: () =>
-                        context.push('/payments/wallet/topup/method'),
+                    onTap: () async {
+                      final ok = await context
+                          .push<bool>('/payments/wallet/topup/method');
+                      if (ok != true || !context.mounted) {
+                        return;
+                      }
+                      final bloc = context.read<WalletBloc>();
+                      // Recharge immédiate + une seconde différée : le crédit
+                      // Stripe arrive de façon asynchrone via webhook, donc le
+                      // solde peut n'être à jour qu'après un court instant.
+                      bloc.add(WalletLoadRequested());
+                      Future.delayed(const Duration(seconds: 3), () {
+                        if (!bloc.isClosed) {
+                          bloc.add(WalletLoadRequested());
+                        }
+                      });
+                    },
                   ),
                   const SizedBox(width: DonySpacing.sm),
                   _HeroAction(
