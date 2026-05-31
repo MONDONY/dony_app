@@ -24,7 +24,10 @@ dependencies:
   cached_network_image: ^3.4.1
 
   # Payments
-  flutter_stripe: ^11.0.0
+  # 12.x : supporte le SceneDelegate Flutter (UIScene). En 11.x, presentPaymentSheet()
+  # échouait silencieusement sur iOS car le rootViewController était introuvable
+  # sous l'architecture UIScene (window nil).
+  flutter_stripe: ^12.0.0
 
   # QR & Biometrics
   # 7.x : Apple Vision/AVFoundation sur iOS (plus de GoogleMLKit) → résout le conflit
