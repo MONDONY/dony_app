@@ -18,6 +18,15 @@ void main() {
       expect(cellDegForZoom(3), 3.0);
       expect(cellDegForZoom(15), 0.003);
     });
+    test('boundaries use strict < (the cell shrinks AT the threshold)', () {
+      // Each pair maps the exact boundary value to the SMALLER bucket.
+      expect(cellDegForZoom(4.0), 1.0);
+      expect(cellDegForZoom(6.0), 0.3);
+      expect(cellDegForZoom(8.0), 0.1);
+      expect(cellDegForZoom(10.0), 0.03);
+      expect(cellDegForZoom(12.0), 0.01);
+      expect(cellDegForZoom(14.0), 0.003);
+    });
   });
 
   group('gridCluster', () {
@@ -69,6 +78,15 @@ void main() {
       ];
       final merged = mergeSameSpotSingletons<LatLng>(singles, _id);
       expect(merged.length, 3); // nothing merged
+    });
+    test('early-returns unchanged with fewer than 2 singletons', () {
+      const a = LatLng(48.8566, 2.3522);
+      const b = LatLng(45.0, 4.0);
+      final multi = MarkerCluster<LatLng>([a, b], a, isSameSpot: false);
+      final lone = MarkerCluster<LatLng>([a], a, isSameSpot: true);
+      final merged = mergeSameSpotSingletons<LatLng>([multi, lone], _id);
+      expect(merged.length, 2); // multi passes through, lone singleton untouched
+      expect(merged, containsAll(<MarkerCluster<LatLng>>[multi, lone]));
     });
   });
 }

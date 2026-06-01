@@ -1,5 +1,10 @@
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+/// Same-spot threshold in degrees: 1e-4° ≈ 11 m at the equator — captures
+/// same-building geocoding variations. Shared by [gridCluster] and
+/// [mergeSameSpotSingletons] so their notion of "same spot" stays in sync.
+const _kSameSpot = 1e-4;
+
 /// A lightweight cluster: one or more items [T] with a centroid.
 class MarkerCluster<T> {
   MarkerCluster(this.items, this.centroid, {required this.isSameSpot});
@@ -38,12 +43,11 @@ List<MarkerCluster<T>> gridCluster<T>(
     final avgLng =
         pts.fold<double>(0, (s, p) => s + locate(p).longitude) / pts.length;
 
-    const kSameSpot = 1e-4;
     final first = locate(pts.first);
     final isSameSpot = pts.every(
       (p) =>
-          (locate(p).latitude - first.latitude).abs() < kSameSpot &&
-          (locate(p).longitude - first.longitude).abs() < kSameSpot,
+          (locate(p).latitude - first.latitude).abs() < _kSameSpot &&
+          (locate(p).longitude - first.longitude).abs() < _kSameSpot,
     );
 
     return MarkerCluster<T>(pts, LatLng(avgLat, avgLng), isSameSpot: isSameSpot);
@@ -52,12 +56,13 @@ List<MarkerCluster<T>> gridCluster<T>(
 
 /// Merges singleton clusters whose single point falls within ~10 m of another
 /// singleton's point (handles points straddling a grid-cell boundary).
+///
+/// Merging is anchored on the first singleton of each group (not transitive):
+/// three co-located points that straddle the threshold may not all merge.
 List<MarkerCluster<T>> mergeSameSpotSingletons<T>(
   List<MarkerCluster<T>> clusters,
   LatLng Function(T) locate,
 ) {
-  const kSameSpot = 1e-4;
-
   final multi = <MarkerCluster<T>>[];
   final singles = <MarkerCluster<T>>[];
 
@@ -83,8 +88,8 @@ List<MarkerCluster<T>> mergeSameSpotSingletons<T>(
     for (int j = i + 1; j < singles.length; j++) {
       if (used[j]) continue;
       final locJ = locate(singles[j].items.first);
-      if ((locI.latitude - locJ.latitude).abs() < kSameSpot &&
-          (locI.longitude - locJ.longitude).abs() < kSameSpot) {
+      if ((locI.latitude - locJ.latitude).abs() < _kSameSpot &&
+          (locI.longitude - locJ.longitude).abs() < _kSameSpot) {
         group.add(singles[j]);
         used[j] = true;
       }
