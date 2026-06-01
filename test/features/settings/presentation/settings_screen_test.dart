@@ -68,12 +68,15 @@ void main() {
       expect(find.text('Paramètres'), findsOneWidget);
     });
 
-    testWidgets('shows APPARENCE section with dark mode tile', (tester) async {
+    testWidgets('shows APPARENCE section with theme selector', (tester) async {
       await tester.pumpWidget(_wrap());
       await tester.pumpAndSettle();
 
       expect(find.text('APPARENCE'), findsOneWidget);
-      expect(find.text('Thème sombre'), findsOneWidget);
+      expect(find.byType(SegmentedButton<String>), findsOneWidget);
+      expect(find.text('Clair'), findsOneWidget);
+      expect(find.text('Sombre'), findsOneWidget);
+      expect(find.text('Auto'), findsOneWidget);
     });
 
     testWidgets('shows LANGUE & COMMUNICATION section', (tester) async {
@@ -131,8 +134,7 @@ void main() {
       expect(find.text('Diagnostics'), findsOneWidget);
     });
 
-    testWidgets('dark mode switch reflects themeMode dark state',
-        (tester) async {
+    testWidgets('theme selector reflects themeMode dark state', (tester) async {
       await tester.pumpWidget(
         _wrap(
           prefs: const UserPreferencesModel(themeMode: 'dark'),
@@ -140,13 +142,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
-      // First switch is the dark mode toggle
-      expect(switches.first.value, isTrue);
+      final btn = tester.widget<SegmentedButton<String>>(
+        find.byType(SegmentedButton<String>),
+      );
+      expect(btn.selected, equals({'dark'}));
     });
 
-    testWidgets('dark mode switch is off when themeMode is system',
-        (tester) async {
+    testWidgets('theme selector reflects themeMode system state', (tester) async {
       await tester.pumpWidget(
         _wrap(
           prefs: const UserPreferencesModel(themeMode: 'system'),
@@ -154,8 +156,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
-      expect(switches.first.value, isFalse);
+      final btn = tester.widget<SegmentedButton<String>>(
+        find.byType(SegmentedButton<String>),
+      );
+      expect(btn.selected, equals({'system'}));
+      expect(btn.selected, isNot(contains('dark')));
     });
 
     testWidgets('selected destination chip shows primary styling',
@@ -195,9 +200,10 @@ void main() {
       expect(find.text('English'), findsOneWidget);
     });
 
-    testWidgets('tap dark mode tile dispatches ThemeChanged event',
+    testWidgets('tap Sombre segment dispatches ThemeChanged(dark)',
         (tester) async {
       final mockBloc = MockAppPreferencesBloc();
+      // Initial mode is 'system' so tapping 'Sombre' is a real selection change
       final state = AppPreferencesState(
         preferences: const UserPreferencesModel(themeMode: 'system'),
       );
@@ -208,12 +214,11 @@ void main() {
       await tester.pumpWidget(_wrapWithBloc(mockBloc));
       await tester.pumpAndSettle();
 
-      // Tap the Switch widget (dark mode toggle)
-      final switchWidget = find.byType(Switch).first;
-      await tester.tap(switchWidget);
+      // Tap the 'Sombre' segment (value: 'dark')
+      await tester.tap(find.text('Sombre'));
       await tester.pump();
 
-      verify(() => mockBloc.add(any(that: isA<ThemeChanged>()))).called(1);
+      verify(() => mockBloc.add(ThemeChanged('dark'))).called(1);
     });
 
     testWidgets('tap langue tile ouvre le language picker modal',
@@ -247,11 +252,12 @@ void main() {
       verify(() => mockBloc.add(any(that: isA<DestinationToggled>()))).called(1);
     });
 
-    testWidgets('tap dark mode tile dispatches ThemeChanged via onTap',
+    testWidgets('tap Clair segment dispatches ThemeChanged(light)',
         (tester) async {
       final mockBloc = MockAppPreferencesBloc();
+      // Initial mode is 'dark' so tapping 'Clair' is a real selection change
       final state = AppPreferencesState(
-        preferences: const UserPreferencesModel(themeMode: 'system'),
+        preferences: const UserPreferencesModel(themeMode: 'dark'),
       );
       when(() => mockBloc.state).thenReturn(state);
       whenListen<AppPreferencesState>(mockBloc, const Stream.empty(),
@@ -260,11 +266,11 @@ void main() {
       await tester.pumpWidget(_wrapWithBloc(mockBloc));
       await tester.pumpAndSettle();
 
-      // Tap the dark mode tile text (onTap path)
-      await tester.tap(find.text('Thème sombre'));
+      // Tap the 'Clair' segment (value: 'light')
+      await tester.tap(find.text('Clair'));
       await tester.pump();
 
-      verify(() => mockBloc.add(any(that: isA<ThemeChanged>()))).called(1);
+      verify(() => mockBloc.add(ThemeChanged('light'))).called(1);
     });
 
     testWidgets('tap Sécurité tile navigates to /settings/security',
