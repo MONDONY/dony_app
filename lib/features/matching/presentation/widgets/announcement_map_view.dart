@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:dony/core/design/design_system.dart';
@@ -13,6 +14,7 @@ import 'package:dony/features/matching/presentation/widgets/same_address_announc
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart' show Position;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 export 'package:dony/features/matching/presentation/widgets/location_permission.dart'
@@ -223,6 +225,9 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   bool _locationGranted = false;
   LatLng? _myLocation;
   bool _awaitingFirstLocation = false;
+  bool _isFollowing = false;
+  StreamSubscription<Position>? _positionSub;
+  bool _programmaticCameraMove = false;
   // Cached brightness — updated in didChangeDependencies (safe to read in initState-triggered async work).
   Brightness _brightness = Brightness.light;
 
@@ -231,6 +236,12 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     super.initState();
     _prewarmCommonIcons();
     WidgetsBinding.instance.addPostFrameCallback((_) => _initLocationOnOpen());
+  }
+
+  @override
+  void dispose() {
+    _positionSub?.cancel();
+    super.dispose();
   }
 
   @override
@@ -455,6 +466,32 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     }
   }
 
+  // ── Follow mode ─────────────────────────────────────────────────────────────
+
+  void _startFollowing() {
+    if (!mounted) return;
+    setState(() => _isFollowing = true);
+    _positionSub?.cancel();
+    _positionSub = widget.locationService.getPositionStream().listen(
+      (pos) {
+        if (!mounted || !_isFollowing) return;
+        final target = LatLng(pos.latitude, pos.longitude);
+        _myLocation = target;
+        _programmaticCameraMove = true;
+        _mapController?.animateCamera(CameraUpdate.newLatLng(target));
+      },
+      onError: (_) {},
+    );
+  }
+
+  void _stopFollowing() {
+    _positionSub?.cancel();
+    _positionSub = null;
+    if (mounted && _isFollowing) {
+      setState(() => _isFollowing = false);
+    }
+  }
+
   // ── Recenter on me ──────────────────────────────────────────────────────────
 
   Future<void> _recenterOnMe() async {
@@ -479,8 +516,10 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       final target = LatLng(pos.latitude, pos.longitude);
       setState(() => _myLocation = target);
       final zoom = _currentZoom < 13 ? 15.0 : _currentZoom;
+      _programmaticCameraMove = true;
       await _mapController
           ?.animateCamera(CameraUpdate.newLatLngZoom(target, zoom));
+      _startFollowing();
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -512,10 +551,17 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
             _mapController = controller;
             _applyInitialCamera();
           },
+          onCameraMoveStarted: () {
+            // A move we didn't initiate = user pan/zoom → leave follow mode.
+            if (_isFollowing && !_programmaticCameraMove) {
+              _stopFollowing();
+            }
+          },
           onCameraMove: (position) {
             _currentZoom = position.zoom;
           },
           onCameraIdle: () {
+            _programmaticCameraMove = false;
             _rebuildMarkers();
           },
           markers: {..._markers, ...widget.extraMarkers},
@@ -530,7 +576,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
           right: DonySpacing.lg,
           child: _NearMeFab(
             key: const Key('near-me-fab'),
-            isActive: widget.isNearMeActive,
+            isActive: _isFollowing,
             isLoading: _isLocating,
             onTap: _recenterOnMe,
           ),
@@ -625,7 +671,7 @@ class _NearMeFab extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Tooltip(
-      message: 'Recentrer sur ma position',
+      message: 'Suivre ma position',
       child: GestureDetector(
         onTap: isLoading ? null : onTap,
         child: AnimatedContainer(

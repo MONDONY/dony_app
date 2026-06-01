@@ -8,6 +8,7 @@ abstract interface class LocationService {
   Future<LocationPermission> checkPermission();
   Future<LocationPermission> requestPermission();
   Future<Position> getCurrentPosition();
+  Stream<Position> getPositionStream();
   Future<bool> openAppSettings();
   Future<bool> openLocationSettings();
 }
@@ -25,6 +26,13 @@ class GeolocatorLocationService implements LocationService {
   @override
   Future<Position> getCurrentPosition() =>
       Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
+  @override
+  Stream<Position> getPositionStream() => Geolocator.getPositionStream(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 10,
+        ),
+      );
   @override
   Future<bool> openAppSettings() => Geolocator.openAppSettings();
   @override

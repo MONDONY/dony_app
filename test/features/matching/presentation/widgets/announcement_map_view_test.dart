@@ -118,6 +118,8 @@ void main() {
           .thenAnswer((_) async => LocationPermission.whileInUse);
       when(() => mockLoc.getCurrentPosition())
           .thenAnswer((_) async => _fakePosition());
+      when(() => mockLoc.getPositionStream())
+          .thenAnswer((_) => const Stream<Position>.empty());
 
       await tester.pumpWidget(_wrap(AnnouncementMapView(
         announcements: announcements,
@@ -131,25 +133,30 @@ void main() {
       verify(() => mockLoc.getCurrentPosition()).called(1);
     });
 
-    testWidgets('FAB shows active state when isNearMeActive', (tester) async {
+    testWidgets('FAB enters follow mode (active icon) after tap when granted',
+        (tester) async {
       final mockLoc = MockLocationService();
       when(() => mockLoc.isLocationServiceEnabled())
           .thenAnswer((_) async => true);
       when(() => mockLoc.checkPermission())
-          .thenAnswer((_) async => LocationPermission.deniedForever);
+          .thenAnswer((_) async => LocationPermission.whileInUse);
+      when(() => mockLoc.getCurrentPosition())
+          .thenAnswer((_) async => _fakePosition());
+      when(() => mockLoc.getPositionStream())
+          .thenAnswer((_) => const Stream<Position>.empty());
+
       await tester.pumpWidget(_wrap(AnnouncementMapView(
         announcements: announcements,
         locationService: mockLoc,
-        isNearMeActive: true,
-        activeRadiusKm: 30,
       )));
+      await tester.pump();
+      // before tap: not following → outlined icon
+      expect(find.byIcon(Icons.my_location_outlined), findsOneWidget);
+      await tester.tap(find.byKey(const Key('near-me-fab')));
       await tester.pumpAndSettle();
-
+      // after tap: following → filled icon + stream subscribed
       expect(find.byIcon(Icons.my_location_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.my_location_outlined), findsNothing);
-
-      final iconWidget = tester.widget<Icon>(find.byIcon(Icons.my_location_rounded));
-      expect(iconWidget.color, Colors.white);
+      verify(() => mockLoc.getPositionStream()).called(1);
     });
 
     testWidgets('legacy announcement (null pickup) is silently filtered',
