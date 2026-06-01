@@ -309,6 +309,16 @@ class _MapSenderViewState extends State<_MapSenderView> {
     ));
   }
 
+  // Near-me touche le jeu de résultats du rôle courant : annonces (expéditeur)
+  // ou demandes de colis (voyageur). Utilisé par activate/deactivate/changeRadius.
+  void _dispatchForActiveRole() {
+    if (context.read<ActiveRoleCubit>().state == ActiveRole.traveler) {
+      _dispatchPackageRequestSearch();
+    } else {
+      _dispatchSearch();
+    }
+  }
+
   void _deactivateNearMe() {
     setState(() {
       _isNearMeActive = false;
@@ -316,7 +326,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       _userPosition = null;
       _selectedAnnouncementId = null;
     });
-    _dispatchSearch();
+    _dispatchForActiveRole();
   }
 
   // Ajuste le rayon SANS couper le filtre : rouvre le slider pré-rempli au rayon
@@ -330,7 +340,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     );
     if (radiusKm == null || !mounted) return;
     setState(() => _nearMeRadiusKm = radiusKm);
-    _dispatchSearch();
+    _dispatchForActiveRole();
   }
 
   Future<void> _activateNearMe() async {
@@ -376,7 +386,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       _nearMeRadiusKm = radiusKm;
       _userPosition = LatLng(pos.latitude, pos.longitude);
     });
-    _dispatchSearch();
+    _dispatchForActiveRole();
   }
 
   Future<void> _showDatePresetSheet() async {

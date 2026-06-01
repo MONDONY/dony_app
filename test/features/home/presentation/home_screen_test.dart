@@ -298,6 +298,44 @@ void main() {
       expect(find.byType(NearMeCarousel), findsOneWidget);
       expect(find.byKey(const Key('near-me-radius-pill')), findsOneWidget);
     });
+
+    testWidgets(
+        'traveler near-me dispatches the package-request search with a radius',
+        (tester) async {
+      registerFallbackValue(const SearchFiltersChanged());
+      GeolocatorPlatform.instance = _MockGeolocatorPlatform();
+
+      // Capture the exact PackageRequestSearchBloc instance HomeScreen creates,
+      // so we can assert it receives the radius-filtered search.
+      late MockPackageRequestSearchBloc prBloc;
+      getIt.unregister<PackageRequestSearchBloc>();
+      getIt.registerFactory<PackageRequestSearchBloc>(() {
+        prBloc = MockPackageRequestSearchBloc();
+        when(() => prBloc.state)
+            .thenReturn(const PackageRequestSearchState());
+        whenListen(
+            prBloc,
+            Stream<PackageRequestSearchState>.fromIterable(
+                const [PackageRequestSearchState()]),
+            initialState: const PackageRequestSearchState());
+        return prBloc;
+      });
+
+      await tester.pumpWidget(_buildHome(role: ActiveRole.traveler));
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('near-me-fab')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Activer le filtre'));
+      await tester.pumpAndSettle();
+
+      // Traveler near-me drives the package-request search (radius applied),
+      // not the announcement search.
+      verify(() => prBloc.add(any(
+              that: isA<SearchFiltersChanged>()
+                  .having((e) => e.radiusKm, 'radiusKm', isNotNull))))
+          .called(1);
+    });
   });
 
   group('HomeScreen — Traveler view', () {
