@@ -58,6 +58,9 @@ class _MockGeolocatorPlatform extends Mock
     with MockPlatformInterfaceMixin
     implements GeolocatorPlatform {
   @override
+  Future<bool> isLocationServiceEnabled() async => true;
+
+  @override
   Future<LocationPermission> checkPermission() async =>
       LocationPermission.always;
 
@@ -245,7 +248,7 @@ void main() {
     });
 
     testWidgets(
-        'shows NearMeCarousel and hides sheet when near-me chip activated',
+        'shows NearMeCarousel and hides sheet when near-me FAB activated',
         (tester) async {
       GeolocatorPlatform.instance = _MockGeolocatorPlatform();
 
@@ -254,8 +257,7 @@ void main() {
       ));
       await tester.pump();
 
-      await tester.ensureVisible(find.byKey(const Key('chip-near-me')));
-      await tester.tap(find.byKey(const Key('chip-near-me')));
+      await tester.tap(find.byKey(const Key('near-me-fab')));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Activer le filtre'));
@@ -263,6 +265,76 @@ void main() {
 
       expect(find.byType(NearMeCarousel), findsOneWidget);
       expect(find.byType(DraggableScrollableSheet), findsNothing);
+    });
+
+    testWidgets('radius pill re-opens the slider without losing the filter',
+        (tester) async {
+      GeolocatorPlatform.instance = _MockGeolocatorPlatform();
+
+      await tester.pumpWidget(_buildHome(
+        announcementState: AnnouncementSearchLoaded([_makeAnn()]),
+      ));
+      await tester.pump();
+
+      // Activate near-me.
+      await tester.tap(find.byKey(const Key('near-me-fab')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Activer le filtre'));
+      await tester.pumpAndSettle();
+      expect(find.byType(NearMeCarousel), findsOneWidget);
+
+      // The radius pill is shown while active.
+      expect(find.byKey(const Key('near-me-radius-pill')), findsOneWidget);
+
+      // Tapping it re-opens the slider with the in-place "Appliquer" CTA.
+      await tester.tap(find.byKey(const Key('near-me-radius-pill')));
+      await tester.pumpAndSettle();
+      expect(find.text('Appliquer'), findsOneWidget);
+
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+
+      // Filter is still on — the carousel never went away.
+      expect(find.byType(NearMeCarousel), findsOneWidget);
+      expect(find.byKey(const Key('near-me-radius-pill')), findsOneWidget);
+    });
+
+    testWidgets(
+        'traveler near-me dispatches the package-request search with a radius',
+        (tester) async {
+      registerFallbackValue(const SearchFiltersChanged());
+      GeolocatorPlatform.instance = _MockGeolocatorPlatform();
+
+      // Capture the exact PackageRequestSearchBloc instance HomeScreen creates,
+      // so we can assert it receives the radius-filtered search.
+      late MockPackageRequestSearchBloc prBloc;
+      getIt.unregister<PackageRequestSearchBloc>();
+      getIt.registerFactory<PackageRequestSearchBloc>(() {
+        prBloc = MockPackageRequestSearchBloc();
+        when(() => prBloc.state)
+            .thenReturn(const PackageRequestSearchState());
+        whenListen(
+            prBloc,
+            Stream<PackageRequestSearchState>.fromIterable(
+                const [PackageRequestSearchState()]),
+            initialState: const PackageRequestSearchState());
+        return prBloc;
+      });
+
+      await tester.pumpWidget(_buildHome(role: ActiveRole.traveler));
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('near-me-fab')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Activer le filtre'));
+      await tester.pumpAndSettle();
+
+      // Traveler near-me drives the package-request search (radius applied),
+      // not the announcement search.
+      verify(() => prBloc.add(any(
+              that: isA<SearchFiltersChanged>()
+                  .having((e) => e.radiusKm, 'radiusKm', isNotNull))))
+          .called(1);
     });
   });
 

@@ -2,15 +2,24 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
+import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockLocationService extends Mock implements LocationService {}
+
+/// Short-circuits the open-flow (`_initLocationOnOpen`) so it never touches real
+/// platform GPS: a disabled service makes `requestLocationAccess` bail silently.
+MockLocationService _stubDeniedService() {
+  final mockLoc = MockLocationService();
+  when(() => mockLoc.isLocationServiceEnabled())
+      .thenAnswer((_) async => false);
+  return mockLoc;
+}
 
 AnnouncementModel _ann(
   String id,
@@ -61,50 +70,65 @@ void main() {
     ];
 
     testWidgets('renders the map and the Près de moi FAB', (tester) async {
-      final mockLoc = MockLocationService();
       await tester.pumpWidget(_wrap(AnnouncementMapView(
         announcements: announcements,
-        locationService: mockLoc,
+        locationService: _stubDeniedService(),
+        onNearMeToggle: () {},
       )));
       await tester.pump();
       expect(find.byType(AnnouncementMapView), findsOneWidget);
       expect(find.byKey(const Key('near-me-fab')), findsOneWidget);
     });
 
-    testWidgets('Près de moi triggers permission flow when denied',
-        (tester) async {
-      final mockLoc = MockLocationService();
-      when(() => mockLoc.checkPermission())
-          .thenAnswer((_) async => LocationPermission.denied);
-      when(() => mockLoc.requestPermission())
-          .thenAnswer((_) async => LocationPermission.denied);
-
+    testWidgets('hides the FAB when onNearMeToggle is null', (tester) async {
       await tester.pumpWidget(_wrap(AnnouncementMapView(
         announcements: announcements,
-        locationService: mockLoc,
-        onNearMeRequested: (_, __, ___) {},
+        locationService: _stubDeniedService(),
+      )));
+      await tester.pump();
+      expect(find.byKey(const Key('near-me-fab')), findsNothing);
+    });
+
+    testWidgets('tapping the FAB invokes onNearMeToggle', (tester) async {
+      var toggled = 0;
+      await tester.pumpWidget(_wrap(AnnouncementMapView(
+        announcements: announcements,
+        locationService: _stubDeniedService(),
+        onNearMeToggle: () => toggled++,
       )));
       await tester.pump();
       await tester.tap(find.byKey(const Key('near-me-fab')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('permission-denied-sheet')), findsOneWidget);
+      await tester.pump();
+      expect(toggled, 1);
     });
 
-    testWidgets('FAB shows active state when isNearMeActive', (tester) async {
-      final mockLoc = MockLocationService();
+    testWidgets('FAB shows the active (filled) icon when near-me is active',
+        (tester) async {
       await tester.pumpWidget(_wrap(AnnouncementMapView(
         announcements: announcements,
-        locationService: mockLoc,
+        locationService: _stubDeniedService(),
+        onNearMeToggle: () {},
         isNearMeActive: true,
-        activeRadiusKm: 30,
       )));
-      await tester.pumpAndSettle();
+      await tester.pump();
+      expect(find.byIcon(Icons.near_me_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.near_me_outlined), findsNothing);
+    });
 
-      expect(find.byIcon(Icons.my_location_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.my_location_outlined), findsNothing);
-
-      final iconWidget = tester.widget<Icon>(find.byIcon(Icons.my_location_rounded));
-      expect(iconWidget.color, Colors.white);
+    testWidgets('FAB shows a spinner while locating', (tester) async {
+      await tester.pumpWidget(_wrap(AnnouncementMapView(
+        announcements: announcements,
+        locationService: _stubDeniedService(),
+        onNearMeToggle: () {},
+        isLocating: true,
+      )));
+      await tester.pump();
+      expect(
+          find.descendant(
+            of: find.byKey(const Key('near-me-fab')),
+            matching: find.byType(CircularProgressIndicator),
+          ),
+          findsOneWidget);
     });
 
     testWidgets('legacy announcement (null pickup) is silently filtered',
@@ -115,10 +139,10 @@ void main() {
             delivery: const AddressData(label: 'D3', lat: 14.70, lng: -17.45)),
         _ann('a4', 'Paris', 'Dakar'), // no pickup, no delivery
       ];
-      final mockLoc = MockLocationService();
       await tester.pumpWidget(_wrap(AnnouncementMapView(
         announcements: list,
-        locationService: mockLoc,
+        locationService: _stubDeniedService(),
+        onNearMeToggle: () {},
       )));
       await tester.pump();
       expect(find.byType(AnnouncementMapView), findsOneWidget);
@@ -153,7 +177,10 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: AnnouncementMapView(announcements: announcements),
+            body: AnnouncementMapView(
+              announcements: announcements,
+              locationService: _stubDeniedService(),
+            ),
           ),
         ),
       );

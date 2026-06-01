@@ -1,10 +1,9 @@
 import 'dart:ui' as ui;
 
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:dony/core/design/design_system.dart';
 
 /// Side of a trip a marker represents.
 enum MarkerSide { pickup, delivery }
@@ -21,6 +20,31 @@ class MarkerBitmapFactory {
 
   static const double _kTailH = 6.0;
   static const double _kTailW = 10.0;
+
+  /// Couleurs de pastille selon le thème (tokens design system).
+  static ({Color fill, Color text, Color border, Color ghostFill, Color ghostStroke})
+      _pillPalette(Brightness b) {
+    if (b == Brightness.dark) {
+      return (
+        fill: DonyColors.neutralDark200,
+        text: DonyColors.neutralDark700,
+        border: DonyColors.neutralDark300,
+        ghostFill: DonyColors.neutralDark300,
+        ghostStroke: DonyColors.neutralDark400,
+      );
+    }
+    return (
+      fill: DonyColors.neutral0,
+      text: DonyColors.ink800,
+      border: DonyColors.neutral200,
+      ghostFill: DonyColors.neutral300,
+      ghostStroke: DonyColors.neutral400,
+    );
+  }
+
+  /// Anneau de sélection — vert `success`, distinct du point bleu « ma position ».
+  static Color _selectionRing(Brightness b) =>
+      b == Brightness.dark ? DonyColors.successDark500 : DonyColors.success;
 
   static Future<BitmapDescriptor> pin({
     required TransportMode? mode,
@@ -54,18 +78,23 @@ class MarkerBitmapFactory {
     required double pricePerKg,
     Color dotColor = Colors.transparent,
     bool isSelected = false,
+    Brightness brightness = Brightness.light,
   }) async {
     final key = _PricePillKey(
       priceCents: (pricePerKg * 100).round(),
-      colorValue: dotColor.value,
+      colorValue: dotColor.toARGB32(),
       isSelected: isSelected,
+      isDark: brightness == Brightness.dark,
     );
     final cached = _pillCache[key];
-    if (cached != null) return cached;
+    if (cached != null) {
+      return cached;
+    }
     final bitmap = await _renderPricePill(
       pricePerKg: pricePerKg,
       dotColor: dotColor,
       isSelected: isSelected,
+      brightness: brightness,
     );
     _pillCache[key] = bitmap;
     return bitmap;
@@ -78,20 +107,25 @@ class MarkerBitmapFactory {
     required int count,
     Color dotColor = Colors.transparent,
     bool isSelected = false,
+    Brightness brightness = Brightness.light,
   }) async {
     final key = _StackedPillKey(
       priceCents: (pricePerKg * 100).round(),
       count: count,
-      colorValue: dotColor.value,
+      colorValue: dotColor.toARGB32(),
       isSelected: isSelected,
+      isDark: brightness == Brightness.dark,
     );
     final cached = _stackedPillCache[key];
-    if (cached != null) return cached;
+    if (cached != null) {
+      return cached;
+    }
     final bitmap = await _renderStackedPricePill(
       pricePerKg: pricePerKg,
       count: count,
       dotColor: dotColor,
       isSelected: isSelected,
+      brightness: brightness,
     );
     _stackedPillCache[key] = bitmap;
     return bitmap;
@@ -102,7 +136,9 @@ class MarkerBitmapFactory {
     required int count,
     required Color dotColor,
     required bool isSelected,
+    required Brightness brightness,
   }) async {
+    final palette = _pillPalette(brightness);
     final label = pricePerKg <= 0
         ? 'Grille'
         : pricePerKg == pricePerKg.roundToDouble()
@@ -112,7 +148,7 @@ class MarkerBitmapFactory {
     const fontSize = 12.0;
     const paddingH = 8.0;
     const paddingV = 5.0;
-    const textColor = DonyColors.ink900;
+    final textColor = palette.text;
     const dotR = 3.0;
     const halo1R = 4.5;
     const halo2R = 6.0;
@@ -124,7 +160,7 @@ class MarkerBitmapFactory {
     final tp = TextPainter(
       text: TextSpan(
         text: label,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: fontSize,
           fontWeight: FontWeight.w700,
           color: textColor,
@@ -145,8 +181,8 @@ class MarkerBitmapFactory {
     final canvasH = shadowSpread + badgeR + pillH + _kTailH;
 
     // Main pill origin (shifted down by badgeR to leave room for badge above)
-    final mainX = shadowSpread;
-    final mainY = shadowSpread + badgeR;
+    const mainX = shadowSpread;
+    const mainY = shadowSpread + badgeR;
 
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
@@ -159,13 +195,13 @@ class MarkerBitmapFactory {
     canvas.drawRRect(
       ghostRect,
       Paint()
-        ..color = DonyColors.neutral300
+        ..color = palette.ghostFill
         ..style = PaintingStyle.fill,
     );
     canvas.drawRRect(
       ghostRect,
       Paint()
-        ..color = DonyColors.neutral400
+        ..color = palette.ghostStroke
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1,
     );
@@ -195,17 +231,17 @@ class MarkerBitmapFactory {
           Radius.circular((pillH + 5) / 2),
         ),
         Paint()
-          ..color = DonyColors.blue500
+          ..color = _selectionRing(brightness)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2.5,
       );
     }
 
-    // White fill
+    // Pill fill
     canvas.drawRRect(
       pillRect,
       Paint()
-        ..color = Colors.white
+        ..color = palette.fill
         ..style = PaintingStyle.fill,
     );
 
@@ -213,7 +249,7 @@ class MarkerBitmapFactory {
     canvas.drawRRect(
       pillRect,
       Paint()
-        ..color = DonyColors.neutral200
+        ..color = palette.border
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1,
     );
@@ -227,10 +263,10 @@ class MarkerBitmapFactory {
       ..lineTo(tailCx, canvasH)
       ..close();
     canvas.drawPath(
-        tailPath, Paint()..color = Colors.white..style = PaintingStyle.fill);
+        tailPath, Paint()..color = palette.fill..style = PaintingStyle.fill);
 
     // Urgency dot + halos
-    final dotCx = mainX + paddingH + halo2R;
+    const dotCx = mainX + paddingH + halo2R;
     final dotCy = mainY + pillH / 2;
     final dotCenter = Offset(dotCx, dotCy);
     canvas.drawCircle(
@@ -241,11 +277,11 @@ class MarkerBitmapFactory {
 
     // Price text
     tp.paint(canvas,
-        Offset(mainX + paddingH + dotSectionW + dotGap, mainY + paddingV));
+        const Offset(mainX + paddingH + dotSectionW + dotGap, mainY + paddingV));
 
     // ── Count badge (blue circle at top-right corner of main pill) ────────
     final badgeCx = mainX + pillW;
-    final badgeCy = mainY; // top edge of pill = badge center
+    const badgeCy = mainY; // top edge of pill = badge center
 
     canvas.drawCircle(
       Offset(badgeCx, badgeCy),
@@ -288,7 +324,9 @@ class MarkerBitmapFactory {
     required double pricePerKg,
     required Color dotColor,
     required bool isSelected,
+    required Brightness brightness,
   }) async {
+    final palette = _pillPalette(brightness);
     final label = pricePerKg <= 0
         ? 'Grille'
         : pricePerKg == pricePerKg.roundToDouble()
@@ -298,7 +336,7 @@ class MarkerBitmapFactory {
     const fontSize = 12.0;
     const paddingH = 8.0;
     const paddingV = 5.0;
-    const textColor = DonyColors.ink900;
+    final textColor = palette.text;
 
     // Urgency dot dimensions
     const dotR = 3.0;
@@ -310,7 +348,7 @@ class MarkerBitmapFactory {
     final tp = TextPainter(
       text: TextSpan(
         text: label,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: fontSize,
           fontWeight: FontWeight.w700,
           color: textColor,
@@ -326,8 +364,8 @@ class MarkerBitmapFactory {
     const shadowOffY = 2.0;
     final canvasW = pillW + shadowSpread * 2;
     final canvasH = shadowSpread + pillH + _kTailH;
-    final offsetX = shadowSpread;
-    final offsetY = shadowSpread;
+    const offsetX = shadowSpread;
+    const offsetY = shadowSpread;
 
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
@@ -348,7 +386,7 @@ class MarkerBitmapFactory {
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
     );
 
-    // Selected ring (blue stroke around the pill)
+    // Selected ring (green success stroke around the pill)
     if (isSelected) {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
@@ -356,30 +394,30 @@ class MarkerBitmapFactory {
           Radius.circular((pillH + 5) / 2),
         ),
         Paint()
-          ..color = DonyColors.blue500
+          ..color = _selectionRing(brightness)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2.5,
       );
     }
 
-    // White pill background
+    // Pill background
     canvas.drawRRect(
       pillRect,
       Paint()
-        ..color = Colors.white
+        ..color = palette.fill
         ..style = PaintingStyle.fill,
     );
 
-    // Pill border (neutral200)
+    // Pill border
     canvas.drawRRect(
       pillRect,
       Paint()
-        ..color = DonyColors.neutral200
+        ..color = palette.border
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1,
     );
 
-    // White tail (bottom triangle)
+    // Tail (bottom triangle)
     final tailCenterX = offsetX + pillW / 2;
     final tailTopY = offsetY + pillH;
     final tailPath = Path()
@@ -387,10 +425,10 @@ class MarkerBitmapFactory {
       ..lineTo(tailCenterX + _kTailW / 2, tailTopY)
       ..lineTo(tailCenterX, canvasH)
       ..close();
-    canvas.drawPath(tailPath, Paint()..color = Colors.white..style = PaintingStyle.fill);
+    canvas.drawPath(tailPath, Paint()..color = palette.fill..style = PaintingStyle.fill);
 
     // Urgency dot + sonar halos (left-aligned inside pill)
-    final dotCx = offsetX + paddingH + halo2R;
+    const dotCx = offsetX + paddingH + halo2R;
     final dotCy = offsetY + pillH / 2;
     final dotCenter = Offset(dotCx, dotCy);
 
@@ -402,7 +440,7 @@ class MarkerBitmapFactory {
     canvas.drawCircle(dotCenter, dotR, Paint()..color = dotColor);
 
     // Price text
-    tp.paint(canvas, Offset(offsetX + paddingH + dotSectionW + dotGap, offsetY + paddingV));
+    tp.paint(canvas, const Offset(offsetX + paddingH + dotSectionW + dotGap, offsetY + paddingV));
 
     final picture = recorder.endRecording();
     final img = await picture.toImage(canvasW.ceil(), canvasH.ceil());
@@ -527,11 +565,13 @@ class _PricePillKey {
     required this.priceCents,
     required this.colorValue,
     required this.isSelected,
+    required this.isDark,
   });
 
   final int priceCents;
   final int colorValue;
   final bool isSelected;
+  final bool isDark;
 
   @override
   bool operator ==(Object other) =>
@@ -539,10 +579,11 @@ class _PricePillKey {
       other is _PricePillKey &&
           priceCents == other.priceCents &&
           colorValue == other.colorValue &&
-          isSelected == other.isSelected;
+          isSelected == other.isSelected &&
+          isDark == other.isDark;
 
   @override
-  int get hashCode => Object.hash(priceCents, colorValue, isSelected);
+  int get hashCode => Object.hash(priceCents, colorValue, isSelected, isDark);
 }
 
 class _StackedPillKey {
@@ -551,12 +592,14 @@ class _StackedPillKey {
     required this.count,
     required this.colorValue,
     required this.isSelected,
+    required this.isDark,
   });
 
   final int priceCents;
   final int count;
   final int colorValue;
   final bool isSelected;
+  final bool isDark;
 
   @override
   bool operator ==(Object other) =>
@@ -565,8 +608,9 @@ class _StackedPillKey {
           priceCents == other.priceCents &&
           count == other.count &&
           colorValue == other.colorValue &&
-          isSelected == other.isSelected;
+          isSelected == other.isSelected &&
+          isDark == other.isDark;
 
   @override
-  int get hashCode => Object.hash(priceCents, count, colorValue, isSelected);
+  int get hashCode => Object.hash(priceCents, count, colorValue, isSelected, isDark);
 }

@@ -1,5 +1,6 @@
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -129,6 +130,49 @@ void main() {
         rating: 4.7,
       );
       expect(identical(plane, car), isFalse);
+    });
+  });
+
+  group('MarkerBitmapFactory.pricePill brightness', () {
+    test('light vs dark produce different bitmaps', () async {
+      final light = await MarkerBitmapFactory.pricePill(
+        pricePerKg: 12, brightness: Brightness.light);
+      final dark = await MarkerBitmapFactory.pricePill(
+        pricePerKg: 12, brightness: Brightness.dark);
+      expect(identical(light, dark), isFalse);
+    });
+
+    test('same brightness hits the cache', () async {
+      final a = await MarkerBitmapFactory.pricePill(
+        pricePerKg: 12, brightness: Brightness.dark);
+      final b = await MarkerBitmapFactory.pricePill(
+        pricePerKg: 12, brightness: Brightness.dark);
+      expect(identical(a, b), isTrue);
+    });
+
+    test('selected vs not produce different bitmaps', () async {
+      final plain = await MarkerBitmapFactory.pricePill(pricePerKg: 12);
+      final selected = await MarkerBitmapFactory.pricePill(
+        pricePerKg: 12, isSelected: true);
+      expect(identical(plain, selected), isFalse);
+    });
+  });
+
+  group('MarkerBitmapFactory.stackedPricePill brightness', () {
+    test('light vs dark produce different stacked bitmaps', () async {
+      final light = await MarkerBitmapFactory.stackedPricePill(
+          pricePerKg: 12, count: 3, brightness: Brightness.light);
+      final dark = await MarkerBitmapFactory.stackedPricePill(
+          pricePerKg: 12, count: 3, brightness: Brightness.dark);
+      expect(identical(light, dark), isFalse);
+    });
+
+    test('same brightness hits the stacked cache', () async {
+      final a = await MarkerBitmapFactory.stackedPricePill(
+          pricePerKg: 12, count: 3, brightness: Brightness.dark);
+      final b = await MarkerBitmapFactory.stackedPricePill(
+          pricePerKg: 12, count: 3, brightness: Brightness.dark);
+      expect(identical(a, b), isTrue);
     });
   });
 }

@@ -3,6 +3,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
+import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
@@ -66,24 +67,29 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
   }
 
   Future<void> _activateNearMe() async {
-    LocationPermission perm = await Geolocator.checkPermission();
-    if (perm == LocationPermission.denied) {
-      perm = await Geolocator.requestPermission();
-    }
-    if (perm == LocationPermission.denied ||
-        perm == LocationPermission.deniedForever) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Accès localisation refusé — active-le pour voir les demandes près de toi'),
-      ));
+    const locationService = GeolocatorLocationService();
+    final access = await requestLocationAccess(locationService);
+    if (!mounted) return;
+    if (access != LocationAccess.granted) {
+      await LocationDeniedSheet.show(context,
+          access: access, service: locationService);
       return;
     }
-    if (!mounted) return;
     final selectedRadius = await NearMeRadiusSheet.show(context);
     if (selectedRadius == null) return;
-    final position = await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.low),
-    );
+    final Position position;
+    try {
+      position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.low),
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Impossible de te localiser. Réessaie.'),
+        ));
+      }
+      return;
+    }
     if (!mounted) return;
     setState(() {
       _userPosition = LatLng(position.latitude, position.longitude);
@@ -151,17 +157,9 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
                 isNearMeActive: isNearMe,
                 activeRadiusKm: _radiusKm,
                 userPosition: _userPosition,
+                onNearMeToggle: () =>
+                    isNearMe ? _deactivateNearMe() : _activateNearMe(),
                 fabBottomPadding: MediaQuery.of(context).size.height * _sheetSize,
-                mapStyle: null,
-              ),
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 8,
-                right: 16,
-                child: _NearMeChip(
-                  active: isNearMe,
-                  onTap: () =>
-                      isNearMe ? _deactivateNearMe() : _activateNearMe(),
-                ),
               ),
               DraggableScrollableSheet(
                 controller: _sheetController,
@@ -190,50 +188,6 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
           ),
         );
       },
-    );
-  }
-}
-
-class _NearMeChip extends StatelessWidget {
-  const _NearMeChip({required this.active, required this.onTap});
-  final bool active;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final color = active ? cs.primary : cs.surfaceContainerHigh;
-    final textColor = active ? cs.onPrimary : cs.onSurfaceVariant;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(DonyRadius.full),
-        child: Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(DonyRadius.full),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(active ? Icons.my_location_rounded : Icons.location_searching_rounded,
-                  size: 14, color: textColor),
-              const SizedBox(width: 6),
-              Text(
-                'Près de moi',
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: textColor,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

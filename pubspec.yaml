@@ -124,6 +124,17 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.0
   flutter_skill: ^0.9.36
 
+# flutter_stripe 12.6 est requis pour le fix iOS (stripe_ios 12.6 contient la
+# résolution de fenêtre via UIScene `connectedScenes` → la PaymentSheet s'ouvre
+# sous le SceneDelegate Flutter). MAIS stripe_android 12.2.0+ pose
+# @SuppressLint("RestrictedApi") sur une expression, ce que TOUT compilateur
+# Kotlin (2.1/2.2/2.3) rejette en erreur dure → :stripe_android:compileDebugKotlin
+# échoue. stripe_android 12.1.0 est la dernière version sans ce code. On force
+# donc 12.1.0 côté Android uniquement (iOS reste sur stripe_ios 12.6). Le wallet
+# n'utilise que initPaymentSheet/presentPaymentSheet, présents en 12.1.0.
+dependency_overrides:
+  stripe_android: 12.1.0
+
 flutter_launcher_icons:
   android: true
   ios: true
