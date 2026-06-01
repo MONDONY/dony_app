@@ -199,11 +199,7 @@ class _AddressSuggestFieldState extends State<AddressSuggestField> {
         return;
       }
       _resolvedText = s.mainText;
-      widget.onResolved?.call(AddressData(
-        label: s.mainText,
-        lat: addr.lat,
-        lng: addr.lng,
-      ));
+      widget.onResolved?.call(addr);
     } catch (_) {
       _sessionToken = null;
       _sessionTokenCreatedAt = null;
