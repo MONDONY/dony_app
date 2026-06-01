@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:dony/core/design/design_system.dart';
@@ -15,7 +14,6 @@ import 'package:dony/features/matching/presentation/widgets/same_address_announc
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:geolocator/geolocator.dart' show Position;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 export 'package:dony/features/matching/presentation/widgets/location_permission.dart'
@@ -56,6 +54,8 @@ class AnnouncementMapView extends StatefulWidget {
     this.mapStyle,
     this.selectedAnnouncementId,
     this.onAnnouncementSelected,
+    this.onNearMeToggle,
+    this.isLocating = false,
   });
 
   final List<AnnouncementModel> announcements;
@@ -75,24 +75,25 @@ class AnnouncementMapView extends StatefulWidget {
   final String? selectedAnnouncementId;
   /// Called when user taps a single marker.
   final void Function(String id)? onAnnouncementSelected;
+  /// Called when the user taps the single "Près de moi" FAB. When null, the
+  /// FAB is hidden. The parent owns the near-me filter lifecycle (permission,
+  /// radius, search) — this widget only renders the toggle and frames the map.
+  final VoidCallback? onNearMeToggle;
+  /// True while the parent acquires the position after a FAB tap (FAB spinner).
+  final bool isLocating;
 
   @override
   State<AnnouncementMapView> createState() => _AnnouncementMapViewState();
 }
 
-class _AnnouncementMapViewState extends State<AnnouncementMapView>
-    with WidgetsBindingObserver {
+class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   GoogleMapController? _mapController;
   Set<Marker> _markers = {};
   final Map<int, BitmapDescriptor> _clusterIcons = {};
-  bool _isLocating = false;
   double _currentZoom = 3.5;
   bool _locationGranted = false;
   LatLng? _myLocation;
   bool _awaitingFirstLocation = false;
-  bool _isFollowing = false;
-  StreamSubscription<Position>? _positionSub;
-  bool _programmaticCameraMove = false;
   // Cached brightness — updated in didChangeDependencies (safe to read in initState-triggered async work).
   Brightness _brightness = Brightness.light;
   // Improvement A: signature guard to skip redundant re-clustering.
@@ -101,35 +102,8 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _prewarmCommonIcons();
     WidgetsBinding.instance.addPostFrameCallback((_) => _initLocationOnOpen());
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _positionSub?.cancel();
-    super.dispose();
-  }
-
-  // Improvement B: pause/resume GPS stream with app lifecycle.
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      // Resume following if we were following before going to background.
-      if (_isFollowing && _positionSub == null) {
-        _subscribePositionStream();
-      }
-    } else {
-      // Pause the GPS stream while not foregrounded to save battery; keep
-      // _isFollowing so following resumes automatically on return.
-      // NOTE: covers app background/foreground only. A map kept mounted-but-
-      // hidden (e.g. an IndexedStack tab switch) would keep the stream running
-      // and needs a visibility signal from the parent to also pause here.
-      _positionSub?.cancel();
-      _positionSub = null;
-    }
   }
 
   @override
@@ -159,6 +133,11 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
         widget.isNearMeActive &&
         widget.userPosition != null &&
         widget.activeRadiusKm != null) {
+      // The parent only activates near-me once it holds a granted position, so
+      // turn on the native blue dot here even if the open-flow was denied.
+      if (!_locationGranted) {
+        setState(() => _locationGranted = true);
+      }
       _fitNearMeBounds(widget.userPosition!, widget.activeRadiusKm!);
     }
   }
@@ -389,83 +368,6 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
     }
   }
 
-  // ── Follow mode ─────────────────────────────────────────────────────────────
-
-  void _startFollowing() {
-    if (!mounted) return;
-    setState(() => _isFollowing = true);
-    _subscribePositionStream();
-  }
-
-  void _subscribePositionStream() {
-    _positionSub?.cancel();
-    _positionSub = widget.locationService.getPositionStream().listen(
-      (pos) {
-        if (!mounted || !_isFollowing) return;
-        final target = LatLng(pos.latitude, pos.longitude);
-        // No setState: _myLocation feeds centering math only; the live blue dot
-        // is the native layer (myLocationEnabled), so no rebuild is needed.
-        _myLocation = target;
-        _programmaticCameraMove = true;
-        _mapController?.animateCamera(CameraUpdate.newLatLng(target));
-      },
-      onError: (_) => _stopFollowing(),
-    );
-  }
-
-  void _stopFollowing() {
-    _positionSub?.cancel();
-    _positionSub = null;
-    if (mounted && _isFollowing) {
-      setState(() => _isFollowing = false);
-    }
-  }
-
-  // ── Recenter on me ──────────────────────────────────────────────────────────
-
-  Future<void> _recenterOnMe() async {
-    if (_isLocating) {
-      return;
-    }
-    final access = await requestLocationAccess(widget.locationService);
-    if (!mounted) {
-      return;
-    }
-    if (access != LocationAccess.granted) {
-      await LocationDeniedSheet.show(context,
-          access: access, service: widget.locationService);
-      return;
-    }
-    setState(() {
-      _locationGranted = true;
-      _isLocating = true;
-    });
-    try {
-      final pos = await widget.locationService.getCurrentPosition();
-      if (!mounted) {
-        return;
-      }
-      final target = LatLng(pos.latitude, pos.longitude);
-      setState(() => _myLocation = target);
-      final zoom = _currentZoom < 13 ? 15.0 : _currentZoom;
-      _programmaticCameraMove = true;
-      await _mapController
-          ?.animateCamera(CameraUpdate.newLatLngZoom(target, zoom));
-      _startFollowing();
-    } catch (_) {
-      _programmaticCameraMove = false;
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Impossible de récupérer ta position. Réessaie.'),
-        ));
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLocating = false);
-      }
-    }
-  }
-
   // ── Build ───────────────────────────────────────────────────────────────────
 
   @override
@@ -484,36 +386,31 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
             _mapController = controller;
             _applyInitialCamera();
           },
-          onCameraMoveStarted: () {
-            // A move we didn't initiate = user pan/zoom → leave follow mode.
-            if (_isFollowing && !_programmaticCameraMove) {
-              _stopFollowing();
-            }
-          },
           onCameraMove: (position) {
             _currentZoom = position.zoom;
           },
-          onCameraIdle: () {
-            _programmaticCameraMove = false;
-            _rebuildMarkers();
-          },
+          onCameraIdle: () => _rebuildMarkers(),
           markers: {..._markers, ...widget.extraMarkers},
           circles: _radiusCircle(),
           myLocationEnabled: _locationGranted,
+          // Notre FAB est l'unique contrôle de localisation — on masque le
+          // bouton natif Google pour ne pas avoir deux boutons qui se doublent.
+          myLocationButtonEnabled: false,
           zoomControlsEnabled: false,
           mapToolbarEnabled: false,
           compassEnabled: true,
         ),
-        Positioned(
-          bottom: fabBottom,
-          right: DonySpacing.lg,
-          child: _NearMeFab(
-            key: const Key('near-me-fab'),
-            isActive: _isFollowing,
-            isLoading: _isLocating,
-            onTap: _recenterOnMe,
+        if (widget.onNearMeToggle != null)
+          Positioned(
+            bottom: fabBottom,
+            right: DonySpacing.lg,
+            child: _NearMeFab(
+              key: const Key('near-me-fab'),
+              isActive: widget.isNearMeActive,
+              isLoading: widget.isLocating,
+              onTap: widget.onNearMeToggle!,
+            ),
           ),
-        ),
       ],
     );
   }
@@ -604,46 +501,48 @@ class _NearMeFab extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Tooltip(
-      message: 'Suivre ma position',
+      message: isActive
+          ? 'Désactiver « Près de moi »'
+          : 'Voir les voyageurs près de moi',
       child: GestureDetector(
         onTap: isLoading ? null : onTap,
         child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: isActive ? cs.primary : cs.surface,
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: isActive ? cs.primary : cs.outline,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+          duration: const Duration(milliseconds: 200),
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: isActive ? cs.primary : cs.surface,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: isActive ? cs.primary : cs.outline,
             ),
-          ],
-        ),
-        child: Center(
-          child: isLoading
-              ? SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Center(
+            child: isLoading
+                ? SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: isActive ? Colors.white : cs.primary,
+                    ),
+                  )
+                : Icon(
+                    isActive
+                        ? Icons.near_me_rounded
+                        : Icons.near_me_outlined,
+                    size: 22,
                     color: isActive ? Colors.white : cs.primary,
                   ),
-                )
-              : Icon(
-                  isActive
-                      ? Icons.my_location_rounded
-                      : Icons.my_location_outlined,
-                  size: 22,
-                  color: isActive ? Colors.white : cs.primary,
-                ),
+          ),
         ),
-      ),
       ),
     );
   }

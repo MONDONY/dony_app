@@ -1762,13 +1762,13 @@ packages:
     source: hosted
     version: "1.4.1"
   stripe_android:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
       name: stripe_android
-      sha256: "596b2c2f18b6be571a99ef3dffe812ee7c99e134753234fd9110964b48e206c9"
+      sha256: f9127544327fe5bf23772a9899a46c4af1c2eccd128eb548c09b4ce9d3c99d7b
       url: "https://pub.dev"
     source: hosted
-    version: "12.6.0"
+    version: "12.1.0"
   stripe_ios:
     dependency: transitive
     description:

@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
@@ -112,6 +110,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
   bool _isNearMeActive = false;
   double? _nearMeRadiusKm;
   LatLng? _userPosition;
+  // True between the FAB tap and the position being acquired (FAB spinner).
+  bool _isLocatingNearMe = false;
 
   String? _selectedAnnouncementId;
 
@@ -341,11 +341,13 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
     if (radiusKm == null || !mounted) return;
 
+    setState(() => _isLocatingNearMe = true);
     final Position pos;
     try {
       pos = await positionFuture;
     } catch (_) {
       if (mounted) {
+        setState(() => _isLocatingNearMe = false);
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Impossible de te localiser. Réessaie.'),
         ));
@@ -355,6 +357,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     if (!mounted) return;
 
     setState(() {
+      _isLocatingNearMe = false;
       _isNearMeActive = true;
       _nearMeRadiusKm = radiusKm;
       _userPosition = LatLng(pos.latitude, pos.longitude);
@@ -653,6 +656,9 @@ class _MapSenderViewState extends State<_MapSenderView> {
                   isNearMeActive: _isNearMeActive,
                   activeRadiusKm: _nearMeRadiusKm,
                   userPosition: _userPosition,
+                  isLocating: _isLocatingNearMe,
+                  onNearMeToggle: () =>
+                      _isNearMeActive ? _deactivateNearMe() : _activateNearMe(),
                   fabBottomPadding: MediaQuery.of(context).size.height * 0.45,
                   selectedAnnouncementId: _selectedAnnouncementId,
                   onAnnouncementSelected: (id) =>
@@ -704,7 +710,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             datePreset: _datePreset,
                             customDate: _customDate,
                             kiloProOnly: _kiloProOnly,
-                            isNearMeActive: _isNearMeActive,
                             allCorridors: _allCorridors,
                             minRating: _minRating,
                             weightMin: _weightMin,
@@ -713,13 +718,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             onDateTap: _showDatePresetSheet,
                             onRatingTap: _showRatingSheet,
                             onWeightTap: _showWeightSheet,
-                            onNearMeTap: () {
-                              if (_isNearMeActive) {
-                                _deactivateNearMe();
-                              } else {
-                                _activateNearMe();
-                              }
-                            },
                             onPriceTap: _showPriceSheet,
                             onKiloProToggle: () {
                               setState(() => _kiloProOnly = !_kiloProOnly);
@@ -732,18 +730,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
                           )
                         else
                           _PackageRequestFilterChipsRow(
-                            isNearMeActive: _isNearMeActive,
                             dateFrom: _prDateFrom,
                             dateTo: _prDateTo,
                             maxWeight: _prMaxWeight,
                             parcelSize: _prParcelSize,
-                            onNearMeTap: () {
-                              if (_isNearMeActive) {
-                                _deactivateNearMe();
-                              } else {
-                                _activateNearMe();
-                              }
-                            },
                             onDateTap: () async {
                               final picked = await showDateRangePicker(
                                 context: context,
@@ -780,24 +770,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
                           ),
                       ],
                     ),
-                  ),
-                ),
-              ),
-
-              // ── Bouton retour mode Près de moi ────────────────────────────
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 260),
-                curve: Curves.easeOutCubic,
-                top: _isNearMeActive
-                    ? MediaQuery.of(context).padding.top + DonySpacing.sm
-                    : MediaQuery.of(context).padding.top - 80,
-                left: DonySpacing.md,
-                child: AnimatedOpacity(
-                  opacity: _isNearMeActive ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 220),
-                  child: IgnorePointer(
-                    ignoring: !_isNearMeActive,
-                    child: _NearMeBackButton(onTap: _deactivateNearMe),
                   ),
                 ),
               ),
@@ -1415,60 +1387,6 @@ class _HomeCarteFab extends StatelessWidget {
   }
 }
 
-// ── _NearMeBackButton ─────────────────────────────────────────────────────────
-
-class _NearMeBackButton extends StatelessWidget {
-  const _NearMeBackButton({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final isDark = cs.brightness == Brightness.dark;
-    return GestureDetector(
-      onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(DonyRadius.full),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Container(
-            height: 44,
-            padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? cs.surface.withValues(alpha: 0.85)
-                  : Colors.white.withValues(alpha: 0.82),
-              borderRadius: BorderRadius.circular(DonyRadius.full),
-              border: Border.all(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.07)
-                    : Colors.white.withValues(alpha: 0.6),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.12),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: cs.primaryContainer,
-                borderRadius: BorderRadius.circular(DonyRadius.iconBtn),
-              ),
-              child: Icon(Icons.chevron_left_rounded, size: 20, color: cs.primary),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 // ── _HomeFilterChipsRow ───────────────────────────────────────────────────────
 
 class _HomeFilterChipsRow extends StatelessWidget {
@@ -1476,12 +1394,10 @@ class _HomeFilterChipsRow extends StatelessWidget {
     required this.datePreset,
     required this.customDate,
     required this.kiloProOnly,
-    required this.isNearMeActive,
     required this.allCorridors,
     required this.onDateTap,
     required this.onRatingTap,
     required this.onWeightTap,
-    required this.onNearMeTap,
     required this.onPriceTap,
     required this.onKiloProToggle,
     required this.onAllCorridorsToggle,
@@ -1494,7 +1410,6 @@ class _HomeFilterChipsRow extends StatelessWidget {
   final _DatePreset datePreset;
   final DateTime? customDate;
   final bool kiloProOnly;
-  final bool isNearMeActive;
   final bool allCorridors;
   final double? minRating;
   final double? weightMin;
@@ -1503,7 +1418,6 @@ class _HomeFilterChipsRow extends StatelessWidget {
   final VoidCallback onDateTap;
   final VoidCallback onRatingTap;
   final VoidCallback onWeightTap;
-  final VoidCallback onNearMeTap;
   final VoidCallback onPriceTap;
   final VoidCallback onKiloProToggle;
   final VoidCallback onAllCorridorsToggle;
@@ -1586,14 +1500,6 @@ class _HomeFilterChipsRow extends StatelessWidget {
             isActive: allCorridors,
             onTap: onAllCorridorsToggle,
           ),
-          const SizedBox(width: DonySpacing.xs),
-          _SmallChip(
-            key: const Key('chip-near-me'),
-            label: 'Près de moi',
-            isActive: isNearMeActive,
-            icon: Icons.near_me_rounded,
-            onTap: onNearMeTap,
-          ),
         ],
       ),
     );
@@ -1604,7 +1510,6 @@ class _HomeFilterChipsRow extends StatelessWidget {
 
 class _SmallChip extends StatelessWidget {
   const _SmallChip({
-    super.key,
     required this.label,
     required this.isActive,
     required this.onTap,
@@ -2454,8 +2359,6 @@ class _SenderHeroCard extends StatelessWidget {
 
 class _PackageRequestFilterChipsRow extends StatelessWidget {
   const _PackageRequestFilterChipsRow({
-    required this.isNearMeActive,
-    required this.onNearMeTap,
     required this.onDateTap,
     required this.onWeightTap,
     required this.onSizeTap,
@@ -2465,12 +2368,10 @@ class _PackageRequestFilterChipsRow extends StatelessWidget {
     this.parcelSize,
   });
 
-  final bool isNearMeActive;
   final DateTime? dateFrom;
   final DateTime? dateTo;
   final double? maxWeight;
   final ParcelSize? parcelSize;
-  final VoidCallback onNearMeTap;
   final VoidCallback onDateTap;
   final VoidCallback onWeightTap;
   final VoidCallback onSizeTap;
@@ -2514,14 +2415,6 @@ class _PackageRequestFilterChipsRow extends StatelessWidget {
             isActive: parcelSize != null,
             icon: Icons.inventory_2_outlined,
             onTap: onSizeTap,
-          ),
-          const SizedBox(width: DonySpacing.xs),
-          _SmallChip(
-            key: const Key('chip-near-me'),
-            label: 'Près de moi',
-            isActive: isNearMeActive,
-            icon: Icons.near_me_rounded,
-            onTap: onNearMeTap,
           ),
         ],
       ),

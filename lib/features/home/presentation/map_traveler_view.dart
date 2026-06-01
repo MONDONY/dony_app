@@ -157,16 +157,9 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
                 isNearMeActive: isNearMe,
                 activeRadiusKm: _radiusKm,
                 userPosition: _userPosition,
+                onNearMeToggle: () =>
+                    isNearMe ? _deactivateNearMe() : _activateNearMe(),
                 fabBottomPadding: MediaQuery.of(context).size.height * _sheetSize,
-              ),
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 8,
-                right: 16,
-                child: _NearMeChip(
-                  active: isNearMe,
-                  onTap: () =>
-                      isNearMe ? _deactivateNearMe() : _activateNearMe(),
-                ),
               ),
               DraggableScrollableSheet(
                 controller: _sheetController,
@@ -195,50 +188,6 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
           ),
         );
       },
-    );
-  }
-}
-
-class _NearMeChip extends StatelessWidget {
-  const _NearMeChip({required this.active, required this.onTap});
-  final bool active;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final color = active ? cs.primary : cs.surfaceContainerHigh;
-    final textColor = active ? cs.onPrimary : cs.onSurfaceVariant;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(DonyRadius.full),
-        child: Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(DonyRadius.full),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(active ? Icons.my_location_rounded : Icons.location_searching_rounded,
-                  size: 14, color: textColor),
-              const SizedBox(width: 6),
-              Text(
-                'Près de moi',
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: textColor,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

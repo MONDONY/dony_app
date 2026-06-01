@@ -58,6 +58,9 @@ class _MockGeolocatorPlatform extends Mock
     with MockPlatformInterfaceMixin
     implements GeolocatorPlatform {
   @override
+  Future<bool> isLocationServiceEnabled() async => true;
+
+  @override
   Future<LocationPermission> checkPermission() async =>
       LocationPermission.always;
 
@@ -245,7 +248,7 @@ void main() {
     });
 
     testWidgets(
-        'shows NearMeCarousel and hides sheet when near-me chip activated',
+        'shows NearMeCarousel and hides sheet when near-me FAB activated',
         (tester) async {
       GeolocatorPlatform.instance = _MockGeolocatorPlatform();
 
@@ -254,8 +257,7 @@ void main() {
       ));
       await tester.pump();
 
-      await tester.ensureVisible(find.byKey(const Key('chip-near-me')));
-      await tester.tap(find.byKey(const Key('chip-near-me')));
+      await tester.tap(find.byKey(const Key('near-me-fab')));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Activer le filtre'));
