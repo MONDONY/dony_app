@@ -348,6 +348,27 @@ void main() {
     expect(find.textContaining('non localisée'), findsOneWidget);
   });
 
+  // ── _submit edit path (update) ──────────────────────────────────────────
+
+  testWidgets('submit calls repo.update when editing an address', (tester) async {
+    when(() => repo.update(any(), any())).thenAnswer((_) async => _makeAddress());
+
+    // addressId non-null → _isEditing = true → _submit dispatch PickupAddressUpdated
+    await tester.pumpWidget(_wrap(bloc, addressId: 'addr-1'));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    // Remplir étiquette via chip + ville pour rendre le form valide
+    await tester.tap(find.text('Maison'));
+    await tester.pump();
+    await tester.enterText(find.byType(EditableText).at(3), 'Lyon');
+    await tester.pump();
+
+    await tester.tap(find.text("Enregistrer l'adresse"));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    verify(() => repo.update(any(), any())).called(1);
+  });
+
   // ── Bloc error state after submit ────────────────────────────────────────
 
   testWidgets('form still shows after repo error', (tester) async {
