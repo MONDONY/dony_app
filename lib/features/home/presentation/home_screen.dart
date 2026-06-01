@@ -587,6 +587,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       final icon = await MarkerBitmapFactory.pricePill(
         pricePerKg: price,
         dotColor: DonyColors.terra500,
+        brightness: Theme.of(context).brightness,
       );
       markers.add(Marker(
         markerId: MarkerId('pkg-${item.id}'),

@@ -152,7 +152,6 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
                 activeRadiusKm: _radiusKm,
                 userPosition: _userPosition,
                 fabBottomPadding: MediaQuery.of(context).size.height * _sheetSize,
-                mapStyle: null,
               ),
               Positioned(
                 top: MediaQuery.of(context).padding.top + 8,
