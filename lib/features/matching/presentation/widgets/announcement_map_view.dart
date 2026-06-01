@@ -124,6 +124,9 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
     } else {
       // Pause the GPS stream while not foregrounded to save battery; keep
       // _isFollowing so following resumes automatically on return.
+      // NOTE: covers app background/foreground only. A map kept mounted-but-
+      // hidden (e.g. an IndexedStack tab switch) would keep the stream running
+      // and needs a visibility signal from the parent to also pause here.
       _positionSub?.cancel();
       _positionSub = null;
     }
@@ -225,11 +228,13 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
   String _markerSignature() {
     final buf = StringBuffer();
     for (final a in widget.announcements) {
-      if (a.pickupAddress == null) continue;
+      if (a.pickupAddress == null) {
+        continue;
+      }
       buf
         ..write(a.id)
         ..write(':')
-        ..write(a.pricePerKg)
+        ..write((a.pricePerKg * 100).round()) // cents → stable integer key
         ..write(':')
         ..write(a.departureDate.millisecondsSinceEpoch)
         ..write(';');
@@ -259,9 +264,11 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView>
         rawClusters, (p) => p.location);
     final futures = clusters.map((c) => _buildMarker(c));
     final built = await Future.wait(futures);
-    if (mounted) {
-      setState(() => _markers = built.toSet());
+    if (!mounted) {
+      _lastMarkerSignature = null; // unmounted mid-build → don't suppress a later rebuild
+      return;
     }
+    setState(() => _markers = built.toSet());
   }
 
   Future<Marker> _buildMarker(MarkerCluster<_AnnouncementPoint> cluster) async {
