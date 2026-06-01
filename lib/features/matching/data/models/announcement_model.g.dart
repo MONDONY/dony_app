@@ -72,8 +72,9 @@ AnnouncementModel _$AnnouncementModelFromJson(Map<String, dynamic> json) =>
           const {BidPaymentMethod.stripe},
       capacityUnit: json['capacityUnit'] as String?,
       pricingMode: json['pricingMode'] as String? ?? 'KG',
-      priceGridItems:
-          _gridItemsFromJson(json['priceGridItems'] as List<dynamic>?),
+      priceGridItems: json['priceGridItems'] == null
+          ? const []
+          : _gridItemsFromJson(json['priceGridItems'] as List?),
     );
 
 Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
@@ -110,4 +111,6 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
 const _$BidPaymentMethodEnumMap = {
   BidPaymentMethod.stripe: 'STRIPE',
   BidPaymentMethod.cash: 'CASH',
+  BidPaymentMethod.wave: 'WAVE',
+  BidPaymentMethod.orangeMoney: 'ORANGE_MONEY',
 };

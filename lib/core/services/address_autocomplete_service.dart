@@ -18,7 +18,9 @@ class AddressAutocompleteService {
     double? lng,
   }) async {
     final key = '${query.toLowerCase().trim()}:$sessionToken';
-    if (_cache.containsKey(key)) return _cache[key]!;
+    if (_cache.containsKey(key)) {
+      return _cache[key]!;
+    }
 
     final body = <String, dynamic>{
       'query': query,
@@ -37,7 +39,9 @@ class AddressAutocompleteService {
         .map(AddressSuggestion.fromJson)
         .toList();
 
-    if (_cache.length >= 5) _cache.remove(_cache.keys.first);
+    if (_cache.length >= 5) {
+      _cache.remove(_cache.keys.first);
+    }
     _cache[key] = suggestions;
     return suggestions;
   }
@@ -82,7 +86,9 @@ class AddressAutocompleteService {
         lng: (data['lng'] as num).toDouble(),
       );
     } on DioException catch (e) {
-      if (e.response?.statusCode == 404) return null;
+      if (e.response?.statusCode == 404) {
+        return null;
+      }
       rethrow;
     }
   }

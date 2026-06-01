@@ -78,7 +78,7 @@ BidModel _$BidModelFromJson(Map<String, dynamic> json) => BidModel(
   pricingMode:
       $enumDecodeNullable(_$BidPricingModeEnumMap, json['pricingMode']) ??
       BidPricingMode.kg,
-  totalAmountEur: (json['totalNetAmountEur'] as num?)?.toDouble(),
+  totalAmountEur: (json['totalAmountEur'] as num?)?.toDouble(),
 );
 
 Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
@@ -134,7 +134,7 @@ Map<String, dynamic> _$BidModelToJson(BidModel instance) => <String, dynamic>{
   'cancellationNoShowStatus': instance.cancellationNoShowStatus,
   'contestationDeadline': instance.contestationDeadline?.toIso8601String(),
   'pricingMode': _$BidPricingModeEnumMap[instance.pricingMode]!,
-  'totalNetAmountEur': instance.totalAmountEur,
+  'totalAmountEur': instance.totalAmountEur,
 };
 
 const _$BidPaymentMethodEnumMap = {
