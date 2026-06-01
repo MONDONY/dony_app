@@ -4,6 +4,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
 import 'package:dony/features/matching/presentation/widgets/map_camera_math.dart';
 import 'package:dony/features/matching/presentation/widgets/map_styles.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
@@ -12,32 +13,10 @@ import 'package:dony/features/matching/presentation/widgets/same_address_announc
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-// ── LocationService (unchanged) ───────────────────────────────────────────────
-
-abstract interface class LocationService {
-  Future<LocationPermission> checkPermission();
-  Future<LocationPermission> requestPermission();
-  Future<Position> getCurrentPosition();
-  Future<bool> openAppSettings();
-}
-
-class GeolocatorLocationService implements LocationService {
-  const GeolocatorLocationService();
-  @override
-  Future<LocationPermission> checkPermission() => Geolocator.checkPermission();
-  @override
-  Future<LocationPermission> requestPermission() =>
-      Geolocator.requestPermission();
-  @override
-  Future<Position> getCurrentPosition() =>
-      Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
-  @override
-  Future<bool> openAppSettings() => Geolocator.openAppSettings();
-}
+export 'package:dony/features/matching/presentation/widgets/location_permission.dart'
+    show LocationService, GeolocatorLocationService, LocationAccess;
 
 // ── Internal types ────────────────────────────────────────────────────────────
 
@@ -292,15 +271,11 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
 
   Future<void> _initLocationOnOpen() async {
     _awaitingFirstLocation = true;
-    var permission = await widget.locationService.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await widget.locationService.requestPermission();
-    }
-    if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
+    final access = await requestLocationAccess(widget.locationService);
+    if (access != LocationAccess.granted) {
       _awaitingFirstLocation = false;
       if (mounted) {
-        _applyInitialCamera(); // fallback annonces (pas de point bleu)
+        _applyInitialCamera(); // fallback annonces, silencieux (pas de point bleu)
       }
       return;
     }
@@ -318,7 +293,6 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       setState(() => _myLocation = LatLng(pos.latitude, pos.longitude));
       _applyInitialCamera();
     } catch (_) {
-      // GPS indisponible → on garde le point bleu, fallback sur les annonces
       _awaitingFirstLocation = false;
       if (mounted) {
         _applyInitialCamera();
@@ -484,22 +458,13 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   // ── Recenter on me ──────────────────────────────────────────────────────────
 
   Future<void> _recenterOnMe() async {
-    var permission = await widget.locationService.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await widget.locationService.requestPermission();
-    }
+    final access = await requestLocationAccess(widget.locationService);
     if (!mounted) {
       return;
     }
-    if (permission == LocationPermission.deniedForever) {
-      _showPermissionDeniedSheet(true);
-      return;
-    }
-    if (permission == LocationPermission.denied) {
-      _showPermissionDeniedSheet(false);
-      return;
-    }
-    if (!mounted) {
+    if (access != LocationAccess.granted) {
+      LocationDeniedSheet.show(context,
+          access: access, service: widget.locationService);
       return;
     }
     setState(() {
@@ -516,26 +481,17 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       final zoom = _currentZoom < 13 ? 15.0 : _currentZoom;
       await _mapController
           ?.animateCamera(CameraUpdate.newLatLngZoom(target, zoom));
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Impossible de récupérer ta position. Réessaie.'),
+        ));
+      }
     } finally {
       if (mounted) {
         setState(() => _isLocating = false);
       }
     }
-  }
-
-  void _showPermissionDeniedSheet(bool isPermanent) {
-    showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => _PermissionDeniedSheet(
-        key: const Key('permission-denied-sheet'),
-        onOpenSettings: () async {
-          ctx.pop();
-          await widget.locationService.openAppSettings();
-        },
-      ),
-    );
   }
 
   // ── Build ───────────────────────────────────────────────────────────────────
@@ -714,57 +670,3 @@ class _NearMeFab extends StatelessWidget {
   }
 }
 
-// ── _PermissionDeniedSheet ───────────────────────────────────────────────────
-
-class _PermissionDeniedSheet extends StatelessWidget {
-  const _PermissionDeniedSheet({super.key, required this.onOpenSettings});
-  final VoidCallback onOpenSettings;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        DonySpacing.lg,
-        0,
-        DonySpacing.lg,
-        MediaQuery.of(context).padding.bottom + DonySpacing.lg,
-      ),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Center(
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: cs.outline,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          Icon(Icons.location_off_rounded,
-              size: 48, color: cs.primary),
-          const SizedBox(height: DonySpacing.md),
-          Text('Géolocalisation désactivée',
-              style: tt.titleLarge, textAlign: TextAlign.center),
-          const SizedBox(height: DonySpacing.sm),
-          Text(
-            "Autorise l'accès à ta position dans les réglages pour utiliser \"Près de moi\".",
-            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: DonySpacing.xl),
-          DonyButton(label: 'Ouvrir les réglages', onPressed: onOpenSettings),
-        ],
-      ),
-    );
-  }
-}

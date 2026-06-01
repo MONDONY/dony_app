@@ -2,6 +2,7 @@ import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
+import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -75,6 +76,8 @@ void main() {
 
     testWidgets('renders the map and the Près de moi FAB', (tester) async {
       final mockLoc = MockLocationService();
+      when(() => mockLoc.isLocationServiceEnabled())
+          .thenAnswer((_) async => true);
       when(() => mockLoc.checkPermission())
           .thenAnswer((_) async => LocationPermission.deniedForever);
       await tester.pumpWidget(_wrap(AnnouncementMapView(
@@ -89,6 +92,8 @@ void main() {
     testWidgets('recenter FAB shows permission sheet when denied',
         (tester) async {
       final mockLoc = MockLocationService();
+      when(() => mockLoc.isLocationServiceEnabled())
+          .thenAnswer((_) async => true);
       when(() => mockLoc.checkPermission())
           .thenAnswer((_) async => LocationPermission.denied);
       when(() => mockLoc.requestPermission())
@@ -107,6 +112,8 @@ void main() {
     testWidgets('recenter FAB requests current position when granted',
         (tester) async {
       final mockLoc = MockLocationService();
+      when(() => mockLoc.isLocationServiceEnabled())
+          .thenAnswer((_) async => true);
       when(() => mockLoc.checkPermission())
           .thenAnswer((_) async => LocationPermission.whileInUse);
       when(() => mockLoc.getCurrentPosition())
@@ -126,6 +133,8 @@ void main() {
 
     testWidgets('FAB shows active state when isNearMeActive', (tester) async {
       final mockLoc = MockLocationService();
+      when(() => mockLoc.isLocationServiceEnabled())
+          .thenAnswer((_) async => true);
       when(() => mockLoc.checkPermission())
           .thenAnswer((_) async => LocationPermission.deniedForever);
       await tester.pumpWidget(_wrap(AnnouncementMapView(
@@ -152,6 +161,8 @@ void main() {
         _ann('a4', 'Paris', 'Dakar'), // no pickup, no delivery
       ];
       final mockLoc = MockLocationService();
+      when(() => mockLoc.isLocationServiceEnabled())
+          .thenAnswer((_) async => true);
       when(() => mockLoc.checkPermission())
           .thenAnswer((_) async => LocationPermission.deniedForever);
       await tester.pumpWidget(_wrap(AnnouncementMapView(
@@ -167,6 +178,11 @@ void main() {
     'builds markers for announcements with each transport mode',
     (tester) async {
       MarkerBitmapFactory.clearCache();
+
+      final mockLoc = MockLocationService();
+      // Short-circuit the open-flow so it never calls real platform GPS.
+      when(() => mockLoc.isLocationServiceEnabled())
+          .thenAnswer((_) async => false);
 
       final announcements = [
         for (final mode in TransportMode.values)
@@ -191,7 +207,10 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: AnnouncementMapView(announcements: announcements),
+            body: AnnouncementMapView(
+              announcements: announcements,
+              locationService: mockLoc,
+            ),
           ),
         ),
       );

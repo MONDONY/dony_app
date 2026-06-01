@@ -18,6 +18,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
+import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
 import 'package:dony/features/matching/data/models/search_params.dart';
 import 'package:dony/features/matching/data/models/urgency_filter.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_carousel.dart';
@@ -319,16 +320,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
   }
 
   Future<void> _activateNearMe() async {
-    var permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.deniedForever) return;
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
-    if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
+    const locationService = GeolocatorLocationService();
+    final access = await requestLocationAccess(locationService);
+    if (!mounted) return;
+    if (access != LocationAccess.granted) {
+      await LocationDeniedSheet.show(context,
+          access: access, service: locationService);
       return;
     }
-    if (!mounted) return;
 
     final positionFuture = Geolocator.getCurrentPosition(
       locationSettings:

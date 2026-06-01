@@ -3,6 +3,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_map_view.dart';
+import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
 import 'package:dony/features/matching/presentation/widgets/near_me_radius_sheet.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
@@ -66,19 +67,14 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
   }
 
   Future<void> _activateNearMe() async {
-    LocationPermission perm = await Geolocator.checkPermission();
-    if (perm == LocationPermission.denied) {
-      perm = await Geolocator.requestPermission();
-    }
-    if (perm == LocationPermission.denied ||
-        perm == LocationPermission.deniedForever) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Accès localisation refusé — active-le pour voir les demandes près de toi'),
-      ));
+    const locationService = GeolocatorLocationService();
+    final access = await requestLocationAccess(locationService);
+    if (!mounted) return;
+    if (access != LocationAccess.granted) {
+      await LocationDeniedSheet.show(context,
+          access: access, service: locationService);
       return;
     }
-    if (!mounted) return;
     final selectedRadius = await NearMeRadiusSheet.show(context);
     if (selectedRadius == null) return;
     final position = await Geolocator.getCurrentPosition(
