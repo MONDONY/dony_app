@@ -488,6 +488,9 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     if (permission == LocationPermission.denied) {
       permission = await widget.locationService.requestPermission();
     }
+    if (!mounted) {
+      return;
+    }
     if (permission == LocationPermission.deniedForever) {
       _showPermissionDeniedSheet(true);
       return;
@@ -562,7 +565,6 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
           markers: {..._markers, ...widget.extraMarkers},
           circles: _radiusCircle(),
           myLocationEnabled: _locationGranted,
-          myLocationButtonEnabled: false,
           zoomControlsEnabled: false,
           mapToolbarEnabled: false,
           compassEnabled: true,
@@ -666,9 +668,11 @@ class _NearMeFab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return GestureDetector(
-      onTap: isLoading ? null : onTap,
-      child: AnimatedContainer(
+    return Tooltip(
+      message: 'Recentrer sur ma position',
+      child: GestureDetector(
+        onTap: isLoading ? null : onTap,
+        child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         width: 48,
         height: 48,
@@ -704,6 +708,7 @@ class _NearMeFab extends StatelessWidget {
                   color: isActive ? Colors.white : cs.primary,
                 ),
         ),
+      ),
       ),
     );
   }

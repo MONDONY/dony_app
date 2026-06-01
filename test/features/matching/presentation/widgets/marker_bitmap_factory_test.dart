@@ -157,4 +157,22 @@ void main() {
       expect(identical(plain, selected), isFalse);
     });
   });
+
+  group('MarkerBitmapFactory.stackedPricePill brightness', () {
+    test('light vs dark produce different stacked bitmaps', () async {
+      final light = await MarkerBitmapFactory.stackedPricePill(
+          pricePerKg: 12, count: 3, brightness: Brightness.light);
+      final dark = await MarkerBitmapFactory.stackedPricePill(
+          pricePerKg: 12, count: 3, brightness: Brightness.dark);
+      expect(identical(light, dark), isFalse);
+    });
+
+    test('same brightness hits the stacked cache', () async {
+      final a = await MarkerBitmapFactory.stackedPricePill(
+          pricePerKg: 12, count: 3, brightness: Brightness.dark);
+      final b = await MarkerBitmapFactory.stackedPricePill(
+          pricePerKg: 12, count: 3, brightness: Brightness.dark);
+      expect(identical(a, b), isTrue);
+    });
+  });
 }

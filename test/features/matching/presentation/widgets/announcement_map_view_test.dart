@@ -116,10 +116,12 @@ void main() {
         announcements: announcements,
         locationService: mockLoc,
       )));
-      await tester.pump();
+      // Let the open-flow (_initLocationOnOpen) fully resolve before counting.
+      await tester.pumpAndSettle();
+      clearInteractions(mockLoc);
       await tester.tap(find.byKey(const Key('near-me-fab')));
       await tester.pumpAndSettle();
-      verify(() => mockLoc.getCurrentPosition()).called(greaterThanOrEqualTo(1));
+      verify(() => mockLoc.getCurrentPosition()).called(1);
     });
 
     testWidgets('FAB shows active state when isNearMeActive', (tester) async {
