@@ -9,6 +9,7 @@ import 'package:dony/features/matching/presentation/widgets/location_permission.
 import 'package:dony/features/matching/presentation/widgets/map_camera_math.dart';
 import 'package:dony/features/matching/presentation/widgets/map_styles.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
+import 'package:dony/features/matching/presentation/widgets/marker_clustering.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_urgency.dart';
 import 'package:dony/features/matching/presentation/widgets/same_address_announcements_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
@@ -36,143 +37,6 @@ class _AnnouncementPoint {
         : announcement.deliveryAddress;
     return LatLng(addr!.lat, addr.lng); // ! safe: callers filter null
   }
-}
-
-/// A lightweight cluster: one or more [_AnnouncementPoint]s with a centroid.
-class _Cluster {
-  _Cluster(this.items, this.centroid, {required this.isSameSpot});
-
-  final List<_AnnouncementPoint> items;
-  final LatLng centroid;
-  /// True when all items are within ~10 m of each other (same building/address).
-  /// Pre-computed at cluster-build time so tap handlers don't need to recheck.
-  final bool isSameSpot;
-
-  bool get isMultiple => items.length > 1;
-  int get count => items.length;
-}
-
-// ── Lightweight grid clustering ───────────────────────────────────────────────
-//
-// Groups points whose lat/lng are within `cellDeg` degrees of each other.
-// At zoom 3 we use ~5° cells; at zoom 10 we use 0.1° cells.
-
-List<_Cluster> _gridCluster(
-    List<_AnnouncementPoint> points, double zoom) {
-  if (points.isEmpty) {
-    return [];
-  }
-  final double cellDeg = _cellDegForZoom(zoom);
-  final Map<String, List<_AnnouncementPoint>> grid = {};
-  for (final p in points) {
-    final lat = p.location.latitude;
-    final lng = p.location.longitude;
-    final key =
-        '${(lat / cellDeg).floor()}_${(lng / cellDeg).floor()}';
-    grid.putIfAbsent(key, () => []).add(p);
-  }
-  return grid.values.map((pts) {
-    final avgLat =
-        pts.fold<double>(0, (s, p) => s + p.location.latitude) / pts.length;
-    final avgLng =
-        pts.fold<double>(0, (s, p) => s + p.location.longitude) / pts.length;
-
-    // Pre-compute whether all items share the same physical address (~10 m).
-    // 1e-4° ≈ 11 m at equator — captures same-building geocoding variations.
-    const kSameSpot = 1e-4;
-    final first = pts.first.location;
-    final isSameSpot = pts.every(
-      (p) =>
-          (p.location.latitude - first.latitude).abs() < kSameSpot &&
-          (p.location.longitude - first.longitude).abs() < kSameSpot,
-    );
-
-    return _Cluster(pts, LatLng(avgLat, avgLng), isSameSpot: isSameSpot);
-  }).toList();
-}
-
-/// Merges singleton clusters whose single point falls within [kSameSpot]
-/// degrees of another singleton's point.
-///
-/// This is needed because two addresses at the same physical location can
-/// straddle a grid-cell boundary (especially at high zoom where cellDeg is
-/// small), producing two separate 1-item clusters instead of one 2-item
-/// same-spot cluster.
-List<_Cluster> _mergeSameSpotSingletons(List<_Cluster> clusters) {
-  const kSameSpot = 1e-4;
-
-  final multi = <_Cluster>[];
-  final singles = <_Cluster>[];
-
-  for (final c in clusters) {
-    if (c.isMultiple) {
-      multi.add(c);
-    } else {
-      singles.add(c);
-    }
-  }
-
-  if (singles.length < 2) return [...multi, ...singles];
-
-  final used = List.filled(singles.length, false);
-  final merged = <_Cluster>[];
-
-  for (int i = 0; i < singles.length; i++) {
-    if (used[i]) continue;
-    final group = [singles[i]];
-    used[i] = true;
-    final locI = singles[i].items.first.location;
-
-    for (int j = i + 1; j < singles.length; j++) {
-      if (used[j]) continue;
-      final locJ = singles[j].items.first.location;
-      if ((locI.latitude - locJ.latitude).abs() < kSameSpot &&
-          (locI.longitude - locJ.longitude).abs() < kSameSpot) {
-        group.add(singles[j]);
-        used[j] = true;
-      }
-    }
-
-    if (group.length == 1) {
-      merged.add(singles[i]);
-    } else {
-      final allItems = group.expand((c) => c.items).toList();
-      final avgLat =
-          allItems.fold<double>(0, (s, p) => s + p.location.latitude) /
-              allItems.length;
-      final avgLng =
-          allItems.fold<double>(0, (s, p) => s + p.location.longitude) /
-              allItems.length;
-      merged.add(_Cluster(allItems, LatLng(avgLat, avgLng), isSameSpot: true));
-    }
-  }
-
-  return [...multi, ...merged];
-}
-
-double _cellDegForZoom(double zoom) {
-  // Smaller cells than before so individual points stay distinct sooner
-  // when zooming in. Markers are 56px wide → ~0.7° at zoom 4 still groups
-  // visually overlapping pins, but separates Paris/Lyon (≈3.5° apart).
-  if (zoom < 4) {
-    return 3.0;
-  }
-  if (zoom < 6) {
-    return 1.0;
-  }
-  if (zoom < 8) {
-    return 0.3;
-  }
-  if (zoom < 10) {
-    return 0.1;
-  }
-  if (zoom < 12) {
-    return 0.03;
-  }
-  if (zoom < 14) {
-    return 0.01;
-  }
-  return 0.003;
 }
 
 // ── Widget ────────────────────────────────────────────────────────────────────
@@ -337,10 +201,12 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
 
   Future<void> _rebuildMarkers() async {
     final allPoints = [..._pickupPoints()];
-    final rawClusters = _gridCluster(allPoints, _currentZoom);
+    final rawClusters = gridCluster<_AnnouncementPoint>(
+        allPoints, _currentZoom, (p) => p.location);
     // Merge singleton clusters that straddle a grid-cell boundary but share
     // the same physical address (within the kSameSpot threshold).
-    final clusters = _mergeSameSpotSingletons(rawClusters);
+    final clusters = mergeSameSpotSingletons<_AnnouncementPoint>(
+        rawClusters, (p) => p.location);
     final futures = clusters.map((c) => _buildMarker(c));
     final built = await Future.wait(futures);
     if (mounted) {
@@ -348,7 +214,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     }
   }
 
-  Future<Marker> _buildMarker(_Cluster cluster) async {
+  Future<Marker> _buildMarker(MarkerCluster<_AnnouncementPoint> cluster) async {
     if (cluster.isMultiple) {
       if (cluster.isSameSpot) {
         // Same address: stacked pill with count badge.
@@ -432,7 +298,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
     showTravelerAnnouncementSheet(context, announcement: a);
   }
 
-  void _onClusterTapped(_Cluster cluster) {
+  void _onClusterTapped(MarkerCluster<_AnnouncementPoint> cluster) {
     if (cluster.isSameSpot) {
       // Same address → list sheet (type known at build time, no recheck needed).
       final firstItem = cluster.items.first;
