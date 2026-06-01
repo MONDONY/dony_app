@@ -1,6 +1,11 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
+import 'package:dony/core/widgets/address/address_default_toggle.dart';
+import 'package:dony/core/widgets/address/address_label_chips.dart';
+import 'package:dony/core/widgets/address/address_location_status.dart';
+import 'package:dony/core/widgets/address/address_section_label.dart';
+import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/presentation/widgets/address_suggest_field.dart';
 import 'package:dony/features/pickup_addresses/bloc/pickup_address_bloc.dart';
 import 'package:dony/features/pickup_addresses/data/models/pickup_address.dart';
@@ -8,6 +13,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+const _kLabelChips = ['Maison', 'Bureau', 'Atelier'];
 
 class PickupAddressEditScreen extends StatefulWidget {
   const PickupAddressEditScreen({super.key, this.addressId});
@@ -33,13 +40,20 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
   bool _initialized = false;
   bool _hasSubmitted = false;
 
-  bool get _isEditing => widget.addressId != null;
+  bool get _isEditing {
+    return widget.addressId != null;
+  }
 
+  /// Spec §3: étiquette + ville requis seulement (rue + CP optionnels).
   bool get _isValid =>
-      _labelCtrl.text.trim().isNotEmpty &&
-      _streetCtrl.text.trim().isNotEmpty &&
-      _postalCtrl.text.trim().isNotEmpty &&
-      _cityCtrl.text.trim().isNotEmpty;
+      _labelCtrl.text.trim().isNotEmpty && _cityCtrl.text.trim().isNotEmpty;
+
+  AddressLocationState get _locationState {
+    if (_streetCtrl.text.trim().isEmpty) {
+      return AddressLocationState.hidden;
+    }
+    return _lat != null ? AddressLocationState.localized : AddressLocationState.manual;
+  }
 
   @override
   void dispose() {
@@ -64,6 +78,20 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
     _lat = address.latitude;
     _lng = address.longitude;
     _isDefault = address.isDefault;
+  }
+
+  /// Pré-remplissage depuis la suggestion résolue — ne remplace pas si null.
+  void _onResolved(AddressData addr) {
+    setState(() {
+      _lat = addr.lat;
+      _lng = addr.lng;
+      if (addr.city != null && addr.city!.isNotEmpty) {
+        _cityCtrl.text = addr.city!;
+      }
+      if (addr.postalCode != null && addr.postalCode!.isNotEmpty) {
+        _postalCtrl.text = addr.postalCode!;
+      }
+    });
   }
 
   void _submit(BuildContext context) {
@@ -113,16 +141,18 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
   Widget build(BuildContext context) {
     return BlocConsumer<PickupAddressBloc, PickupAddressState>(
       listener: (context, state) {
-        if (!_initialized && _isEditing && state.status == PickupAddressStatus.success) {
-          final found = state.addresses
-              .where((a) => a.id == widget.addressId)
-              .firstOrNull;
+        // Pré-remplissage en mode édition
+        if (!_initialized &&
+            _isEditing &&
+            state.status == PickupAddressStatus.success) {
+          final found =
+              state.addresses.where((a) => a.id == widget.addressId).firstOrNull;
           if (found != null) {
             _prefill(found);
             _initialized = true;
           }
         }
-        // On success after submit, pop back
+        // Succès après submit → snackbar + retour
         if (_hasSubmitted && state.status == PickupAddressStatus.success) {
           setState(() => _hasSubmitted = false);
           DonySnackbar.show(
@@ -132,7 +162,10 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
           );
           context.pop(true);
         }
-        if (state.status == PickupAddressStatus.error && state.error != null) {
+        if (state.status == PickupAddressStatus.error &&
+            state.error != null &&
+            _hasSubmitted) {
+          setState(() => _hasSubmitted = false);
           DonySnackbar.show(
             context,
             message: state.error!,
@@ -145,16 +178,19 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
         final cs = Theme.of(context).colorScheme;
 
         return DonyPageScaffold(
-          title: _isEditing ? 'Modifier l\'adresse' : 'Nouvelle adresse',
+          title: _isEditing
+              ? "Modifier l'adresse"
+              : 'Nouvelle adresse de remise',
           stickyBottom: DonyButton(
             label: "Enregistrer l'adresse",
-            onPressed: isLoading ? null : () => _submit(context),
+            onPressed: (_isValid && !isLoading) ? () => _submit(context) : null,
             isLoading: isLoading,
           ),
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _SectionLabel('Étiquette'),
+              // ── Étiquette ──────────────────────────────────────
+              const AddressSectionLabel('Étiquette'),
               DonyTextField(
                 controller: _labelCtrl,
                 label: "Nom de l'adresse",
@@ -162,9 +198,18 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
                 prefixIcon: Icons.sell_outlined,
                 prefixIconColor: cs.primary,
                 onChanged: (_) => setState(() {}),
-              ).animate().fadeIn(duration: 280.ms).slideY(begin: 0.03),
+              ),
+              const SizedBox(height: DonySpacing.sm),
+              AddressLabelChips(
+                controller: _labelCtrl,
+                chips: _kLabelChips,
+                accentColor: cs.primary,
+                onSelected: () => setState(() {}),
+              ),
               const SizedBox(height: DonySpacing.xl),
-              const _SectionLabel('Adresse'),
+
+              // ── Adresse ────────────────────────────────────────
+              const AddressSectionLabel('Adresse'),
               AddressSuggestField(
                 controller: _streetCtrl,
                 service: getIt<AddressAutocompleteService>(),
@@ -173,15 +218,13 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
                 prefixIcon: Icons.search_rounded,
                 prefixIconColor: cs.primary,
                 onChanged: (_) => setState(() {}),
-                onResolved: (addr) => setState(() {
-                  _lat = addr.lat;
-                  _lng = addr.lng;
-                }),
+                onResolved: _onResolved,
                 onCoordinatesCleared: () => setState(() {
                   _lat = null;
                   _lng = null;
                 }),
-              ).animate().fadeIn(delay: 40.ms, duration: 280.ms).slideY(begin: 0.03),
+              ),
+              AddressLocationStatus(state: _locationState),
               const SizedBox(height: DonySpacing.base),
               Row(
                 children: [
@@ -208,9 +251,11 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
                     ),
                   ),
                 ],
-              ).animate().fadeIn(delay: 80.ms, duration: 280.ms).slideY(begin: 0.03),
+              ),
               const SizedBox(height: DonySpacing.xl),
-              const _SectionLabel('Étage / Appartement'),
+
+              // ── Étage ──────────────────────────────────────────
+              const AddressSectionLabel('Étage / Appartement'),
               DonyTextField(
                 controller: _floorCtrl,
                 label: 'Étage / Appartement',
@@ -218,9 +263,11 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
                 prefixIcon: Icons.meeting_room_outlined,
                 prefixIconColor: cs.primary,
                 onChanged: (_) => setState(() {}),
-              ).animate().fadeIn(delay: 120.ms, duration: 280.ms).slideY(begin: 0.03),
+              ),
               const SizedBox(height: DonySpacing.xl),
-              const _SectionLabel('Instructions'),
+
+              // ── Instructions ───────────────────────────────────
+              const AddressSectionLabel('Instructions'),
               TextFormField(
                 controller: _instructionsCtrl,
                 maxLines: 3,
@@ -241,95 +288,23 @@ class _PickupAddressEditScreenState extends State<PickupAddressEditScreen> {
                     vertical: DonySpacing.md,
                   ),
                 ),
-              ).animate().fadeIn(delay: 160.ms, duration: 280.ms).slideY(begin: 0.03),
+              ),
               const SizedBox(height: DonySpacing.xl),
-              _DefaultToggle(
+
+              // ── Par défaut ─────────────────────────────────────
+              AddressDefaultToggle(
                 value: _isDefault,
                 onChanged: (v) => setState(() => _isDefault = v),
-              ).animate().fadeIn(delay: 200.ms, duration: 280.ms),
-            ],
+                activeColor: cs.primary,
+                subtitle: 'Pré-remplie lors de tes prochaines demandes',
+              ),
+            ]
+                .animate(interval: 40.ms)
+                .fadeIn(duration: 280.ms)
+                .slideY(begin: 0.03, curve: Curves.easeOutCubic),
           ),
         );
       },
-    );
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: DonySpacing.sm, left: DonySpacing.xs),
-      child: Text(
-        text.toUpperCase(),
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: cs.onSurfaceVariant,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-            ),
-      ),
-    );
-  }
-}
-
-class _DefaultToggle extends StatelessWidget {
-  const _DefaultToggle({required this.value, required this.onChanged});
-
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-
-    return GestureDetector(
-      onTap: () => onChanged(!value),
-      child: Container(
-        padding: const EdgeInsets.all(DonySpacing.base),
-        decoration: BoxDecoration(
-          color: value ? cs.primaryContainer : cs.surface,
-          borderRadius: BorderRadius.circular(DonyRadius.card),
-          border: Border.all(
-            color: value ? cs.primary.withValues(alpha: 0.4) : cs.outline,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.star_rounded,
-              color: value ? cs.primary : cs.onSurfaceVariant,
-              size: 20,
-            ),
-            const SizedBox(width: DonySpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Adresse par défaut',
-                    style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                  Text(
-                    'Pré-sélectionnée lors de tes prochaines demandes',
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                ],
-              ),
-            ),
-            Switch(
-              value: value,
-              onChanged: onChanged,
-              activeThumbColor: cs.primary,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
