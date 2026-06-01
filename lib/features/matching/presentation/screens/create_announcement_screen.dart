@@ -1280,7 +1280,9 @@ class _SectionCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(DonyRadius.card),
       child: Container(
         color: cs.surface,
-        child: child,
+        // Material ancestor so the section's ListTiles paint ink above the
+        // colored Container (Flutter 3.44 ListTile-in-ColoredBox assertion).
+        child: Material(type: MaterialType.transparency, child: child),
       ),
     );
   }

@@ -347,15 +347,18 @@ class _EtapePickerSheet extends StatelessWidget {
           Text('Quelle étape ?', style: tt.headlineMedium),
           const SizedBox(height: DonySpacing.base),
           for (final entry in _etapeLabels.entries)
-            ListTile(
-              leading: Icon(entry.value.$2, color: cs.primary),
-              title: Text(
-                entry.value.$1,
-                style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              onTap: () => context.pop(entry.key),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(DonyRadius.md),
+            Material(
+              type: MaterialType.transparency,
+              child: ListTile(
+                leading: Icon(entry.value.$2, color: cs.primary),
+                title: Text(
+                  entry.value.$1,
+                  style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                onTap: () => context.pop(entry.key),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
+                ),
               ),
             ),
         ],

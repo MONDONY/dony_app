@@ -16,7 +16,12 @@ class CaFieldCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return ClipRRect(
       borderRadius: BorderRadius.circular(DonyRadius.card),
-      child: Container(color: cs.surface, child: child),
+      // Material ancestor so any ListTile in the card paints ink above the
+      // colored Container (Flutter 3.44 ListTile-in-ColoredBox assertion).
+      child: Container(
+        color: cs.surface,
+        child: Material(type: MaterialType.transparency, child: child),
+      ),
     );
   }
 }
@@ -47,7 +52,7 @@ class CaSectionCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(DonyRadius.card),
       child: Container(
         color: cs.surface,
-        child: child,
+        child: Material(type: MaterialType.transparency, child: child),
       ),
     );
   }

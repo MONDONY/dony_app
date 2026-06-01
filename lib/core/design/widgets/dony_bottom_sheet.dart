@@ -162,7 +162,9 @@ class _DonyBottomSheetContent extends StatelessWidget {
                 DonySpacing.lg,
                 stickyBottom != null ? DonySpacing.xl : DonySpacing.xl + bottomInset,
               ),
-              child: child,
+              // Material ancestor so ListTiles in sheet content paint ink above
+              // the sheet's colored Container (Flutter 3.44 ListTile assertion).
+              child: Material(type: MaterialType.transparency, child: child),
             ),
           ),
           if (stickyBottom != null)
