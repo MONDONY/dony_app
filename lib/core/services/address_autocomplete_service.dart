@@ -60,6 +60,10 @@ class AddressAutocompleteService {
       label: raw['label'] as String,
       lat: (raw['lat'] as num).toDouble(),
       lng: (raw['lng'] as num).toDouble(),
+      street: raw['street'] as String?,
+      city: raw['city'] as String?,
+      postalCode: raw['postalCode'] as String?,
+      country: raw['country'] as String?,
     );
   }
 

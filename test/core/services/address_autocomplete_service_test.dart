@@ -114,6 +114,48 @@ void main() {
       expect(result.lat, 45.7484);
       expect(result.lng, 4.8467);
     });
+
+    test('resolvePlace_propagatesStructuredFields', () async {
+      when(() => mockDio.post<dynamic>(
+        '/addresses/details',
+        data: any(named: 'data'),
+      )).thenAnswer((_) async => Response(
+        requestOptions: RequestOptions(path: '/addresses/details'),
+        statusCode: 200,
+        data: {
+          'label': '12 Rue Victor Hugo, 69002 Lyon, France',
+          'lat': 45.7484,
+          'lng': 4.8467,
+          'street': '12 Rue Victor Hugo',
+          'city': 'Lyon',
+          'postalCode': '69002',
+          'country': 'FR',
+        },
+      ));
+
+      final r = await service.resolvePlace('ChIJi...', 'tok-abc');
+
+      expect(r.city, 'Lyon');
+      expect(r.postalCode, '69002');
+      expect(r.street, '12 Rue Victor Hugo');
+      expect(r.country, 'FR');
+    });
+
+    test('resolvePlace_missingStructuredFields_nulls', () async {
+      when(() => mockDio.post<dynamic>(
+        '/addresses/details',
+        data: any(named: 'data'),
+      )).thenAnswer((_) async => Response(
+        requestOptions: RequestOptions(path: '/addresses/details'),
+        statusCode: 200,
+        data: {'label': 'Dakar', 'lat': 14.693, 'lng': -17.447},
+      ));
+
+      final r = await service.resolvePlace('ChIJx', 'tok');
+
+      expect(r.city, isNull);
+      expect(r.postalCode, isNull);
+    });
   });
 
   group('reverseGeocode', () {
