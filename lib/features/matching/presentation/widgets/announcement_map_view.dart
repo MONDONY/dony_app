@@ -476,11 +476,13 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       (pos) {
         if (!mounted || !_isFollowing) return;
         final target = LatLng(pos.latitude, pos.longitude);
+        // No setState: _myLocation feeds centering math only; the live blue dot
+        // is the native layer (myLocationEnabled), so no rebuild is needed.
         _myLocation = target;
         _programmaticCameraMove = true;
         _mapController?.animateCamera(CameraUpdate.newLatLng(target));
       },
-      onError: (_) {},
+      onError: (_) => _stopFollowing(),
     );
   }
 
@@ -495,6 +497,9 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   // ── Recenter on me ──────────────────────────────────────────────────────────
 
   Future<void> _recenterOnMe() async {
+    if (_isLocating) {
+      return;
+    }
     final access = await requestLocationAccess(widget.locationService);
     if (!mounted) {
       return;
@@ -521,6 +526,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
           ?.animateCamera(CameraUpdate.newLatLngZoom(target, zoom));
       _startFollowing();
     } catch (_) {
+      _programmaticCameraMove = false;
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Impossible de récupérer ta position. Réessaie.'),

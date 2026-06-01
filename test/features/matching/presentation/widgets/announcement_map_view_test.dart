@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
@@ -198,6 +200,68 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('permission-denied-sheet')), findsOneWidget);
+    });
+
+    testWidgets('cancels the position stream on dispose', (tester) async {
+      final controller = StreamController<Position>();
+      final mockLoc = MockLocationService();
+      when(() => mockLoc.isLocationServiceEnabled()).thenAnswer((_) async => true);
+      when(() => mockLoc.checkPermission())
+          .thenAnswer((_) async => LocationPermission.whileInUse);
+      when(() => mockLoc.getCurrentPosition())
+          .thenAnswer((_) async => _fakePosition());
+      when(() => mockLoc.getPositionStream())
+          .thenAnswer((_) => controller.stream);
+
+      // Use an empty announcement list so _rebuildMarkers() has no markers to
+      // build — Future.wait([]) resolves immediately, avoiding the toImage()
+      // async raster work that would otherwise interfere with pumpAndSettle.
+      await tester.pumpWidget(_wrap(AnnouncementMapView(
+        announcements: const [],
+        locationService: mockLoc,
+      )));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('near-me-fab')));
+      // Use finite pumps instead of pumpAndSettle: an active stream subscription
+      // on a never-closing StreamController keeps the FakeAsync zone "busy",
+      // causing pumpAndSettle to loop until the 10-minute test timeout.
+      // 500 ms covers the async chain + AnimatedContainer(200ms) animation.
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(controller.hasListener, isTrue); // following → subscribed
+
+      await tester.pumpWidget(const SizedBox()); // dispose the map
+      await tester.pump();
+      expect(controller.hasListener, isFalse); // subscription cancelled
+      controller.close(); // ignore: unawaited_futures
+    });
+
+    testWidgets('stays in follow mode when a position is emitted',
+        (tester) async {
+      final controller = StreamController<Position>();
+      final mockLoc = MockLocationService();
+      when(() => mockLoc.isLocationServiceEnabled()).thenAnswer((_) async => true);
+      when(() => mockLoc.checkPermission())
+          .thenAnswer((_) async => LocationPermission.whileInUse);
+      when(() => mockLoc.getCurrentPosition())
+          .thenAnswer((_) async => _fakePosition());
+      when(() => mockLoc.getPositionStream())
+          .thenAnswer((_) => controller.stream);
+
+      // Empty announcements → no marker-building raster work during pumps.
+      await tester.pumpWidget(_wrap(AnnouncementMapView(
+        announcements: const [],
+        locationService: mockLoc,
+      )));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('near-me-fab')));
+      // Same reasoning: avoid pumpAndSettle with an open StreamController.
+      await tester.pump(const Duration(milliseconds: 500));
+
+      controller.add(_fakePosition()); // emit a live position
+      await tester.pump();
+      // still following (no crash, icon stays filled)
+      expect(find.byIcon(Icons.my_location_rounded), findsOneWidget);
+      controller.close(); // ignore: unawaited_futures
     });
   });
 
