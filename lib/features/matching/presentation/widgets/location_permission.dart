@@ -1,7 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:go_router/go_router.dart';
 
 /// Abstraction over device location APIs (injectable for tests).
 abstract interface class LocationService {
@@ -57,38 +56,37 @@ Future<LocationAccess> requestLocationAccess(LocationService service) async {
   }
 }
 
-/// Bottom sheet shown when location can't be used, with a CTA to open the
-/// relevant settings (app permission, or OS location services).
+/// Content of the "location unavailable" sheet (icon + title + body).
+/// Shown via [show], which pins the CTA in `stickyBottom` per the design rules.
 class LocationDeniedSheet extends StatelessWidget {
-  const LocationDeniedSheet({
-    super.key,
-    required this.access,
-    required this.onOpenSettings,
-  });
+  const LocationDeniedSheet({super.key, required this.access});
 
   final LocationAccess access;
-  final VoidCallback onOpenSettings;
 
   static Future<void> show(
     BuildContext context, {
     required LocationAccess access,
     LocationService service = const GeolocatorLocationService(),
   }) {
-    return showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => LocationDeniedSheet(
+    final isServiceOff = access == LocationAccess.serviceDisabled;
+    return DonyBottomSheet.show<void>(
+      context,
+      child: LocationDeniedSheet(
         key: const Key('permission-denied-sheet'),
         access: access,
-        onOpenSettings: () async {
-          ctx.pop();
-          if (access == LocationAccess.serviceDisabled) {
-            await service.openLocationSettings();
-          } else {
-            await service.openAppSettings();
-          }
-        },
+      ),
+      stickyBottom: Builder(
+        builder: (ctx) => DonyButton(
+          label: 'Ouvrir les réglages',
+          onPressed: () async {
+            Navigator.of(ctx, rootNavigator: true).pop();
+            if (isServiceOff) {
+              await service.openLocationSettings();
+            } else {
+              await service.openAppSettings();
+            }
+          },
+        ),
       ),
     );
   }
@@ -105,32 +103,12 @@ class LocationDeniedSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        DonySpacing.lg,
-        0,
-        DonySpacing.lg,
-        MediaQuery.of(context).padding.bottom + DonySpacing.lg,
-      ),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+          DonySpacing.lg, DonySpacing.sm, DonySpacing.lg, DonySpacing.lg),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Center(
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: DonySpacing.md),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: cs.outline,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
           Icon(Icons.location_off_rounded, size: 48, color: cs.primary),
           const SizedBox(height: DonySpacing.md),
           Text(_title, style: tt.titleLarge, textAlign: TextAlign.center),
@@ -140,8 +118,6 @@ class LocationDeniedSheet extends StatelessWidget {
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: DonySpacing.xl),
-          DonyButton(label: 'Ouvrir les réglages', onPressed: onOpenSettings),
         ],
       ),
     );

@@ -1,3 +1,4 @@
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/presentation/widgets/location_permission.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -5,19 +6,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockLocationService extends Mock implements LocationService {}
-
-Position _fakePosition() => Position(
-      latitude: 48.8566,
-      longitude: 2.3522,
-      timestamp: DateTime(2026, 6, 1),
-      accuracy: 10,
-      altitude: 0,
-      altitudeAccuracy: 0,
-      heading: 0,
-      headingAccuracy: 0,
-      speed: 0,
-      speedAccuracy: 0,
-    );
 
 void main() {
   group('requestLocationAccess', () {
@@ -109,7 +97,7 @@ void main() {
   });
 
   group('LocationDeniedSheet widget', () {
-    testWidgets('renders serviceDisabled title when access=serviceDisabled',
+    testWidgets('renders serviceDisabled title and key when access=serviceDisabled',
         (tester) async {
       await tester.pumpWidget(
         MaterialApp(
@@ -117,7 +105,6 @@ void main() {
             body: LocationDeniedSheet(
               key: const Key('permission-denied-sheet'),
               access: LocationAccess.serviceDisabled,
-              onOpenSettings: () {},
             ),
           ),
         ),
@@ -125,7 +112,8 @@ void main() {
 
       expect(find.byKey(const Key('permission-denied-sheet')), findsOneWidget);
       expect(find.text('Localisation désactivée'), findsOneWidget);
-      expect(find.text('Ouvrir les réglages'), findsOneWidget);
+      // Button is in stickyBottom, NOT in the content widget
+      expect(find.text('Ouvrir les réglages'), findsNothing);
     });
 
     testWidgets('renders denied title when access=deniedForever',
@@ -135,14 +123,13 @@ void main() {
           home: Scaffold(
             body: LocationDeniedSheet(
               access: LocationAccess.deniedForever,
-              onOpenSettings: () {},
             ),
           ),
         ),
       );
 
       expect(find.text('Accès à la position refusé'), findsOneWidget);
-      expect(find.text('Ouvrir les réglages'), findsOneWidget);
+      expect(find.text('Ouvrir les réglages'), findsNothing);
     });
 
     testWidgets('renders denied title when access=denied', (tester) async {
@@ -151,7 +138,6 @@ void main() {
           home: Scaffold(
             body: LocationDeniedSheet(
               access: LocationAccess.denied,
-              onOpenSettings: () {},
             ),
           ),
         ),
@@ -160,23 +146,75 @@ void main() {
       expect(find.text('Accès à la position refusé'), findsOneWidget);
     });
 
-    testWidgets('calls onOpenSettings when button is tapped', (tester) async {
-      var called = false;
+    testWidgets(
+        'show() — serviceDisabled: sheet appears and calls openLocationSettings on tap',
+        (tester) async {
+      final mockSvc = MockLocationService();
+      when(() => mockSvc.openLocationSettings())
+          .thenAnswer((_) async => true);
+
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: LocationDeniedSheet(
-              access: LocationAccess.denied,
-              onOpenSettings: () => called = true,
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () => LocationDeniedSheet.show(
+                  ctx,
+                  access: LocationAccess.serviceDisabled,
+                  service: mockSvc,
+                ),
+                child: const Text('open'),
+              ),
             ),
           ),
         ),
       );
 
-      await tester.tap(find.text('Ouvrir les réglages'));
-      await tester.pump();
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
 
-      expect(called, isTrue);
+      expect(find.byKey(const Key('permission-denied-sheet')), findsOneWidget);
+      expect(find.text('Ouvrir les réglages'), findsOneWidget);
+
+      await tester.tap(find.text('Ouvrir les réglages'));
+      await tester.pumpAndSettle();
+
+      verify(() => mockSvc.openLocationSettings()).called(1);
+    });
+
+    testWidgets(
+        'show() — denied: sheet appears and calls openAppSettings on tap',
+        (tester) async {
+      final mockSvc = MockLocationService();
+      when(() => mockSvc.openAppSettings()).thenAnswer((_) async => true);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () => LocationDeniedSheet.show(
+                  ctx,
+                  access: LocationAccess.denied,
+                  service: mockSvc,
+                ),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('permission-denied-sheet')), findsOneWidget);
+      expect(find.text('Ouvrir les réglages'), findsOneWidget);
+
+      await tester.tap(find.text('Ouvrir les réglages'));
+      await tester.pumpAndSettle();
+
+      verify(() => mockSvc.openAppSettings()).called(1);
     });
   });
 }

@@ -77,9 +77,19 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
     }
     final selectedRadius = await NearMeRadiusSheet.show(context);
     if (selectedRadius == null) return;
-    final position = await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.low),
-    );
+    final Position position;
+    try {
+      position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.low),
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Impossible de te localiser. Réessaie.'),
+        ));
+      }
+      return;
+    }
     if (!mounted) return;
     setState(() {
       _userPosition = LatLng(position.latitude, position.longitude);

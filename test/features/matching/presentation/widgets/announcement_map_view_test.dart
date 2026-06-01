@@ -172,6 +172,26 @@ void main() {
       await tester.pump();
       expect(find.byType(AnnouncementMapView), findsOneWidget);
     });
+
+    testWidgets(
+        'FAB shows permission-denied-sheet when location service is disabled',
+        (tester) async {
+      final mockLoc = MockLocationService();
+      // Service is off — requestLocationAccess short-circuits with serviceDisabled.
+      when(() => mockLoc.isLocationServiceEnabled())
+          .thenAnswer((_) async => false);
+
+      await tester.pumpWidget(_wrap(AnnouncementMapView(
+        announcements: announcements,
+        locationService: mockLoc,
+      )));
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('near-me-fab')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('permission-denied-sheet')), findsOneWidget);
+    });
   });
 
   testWidgets(

@@ -341,7 +341,17 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
     if (radiusKm == null || !mounted) return;
 
-    final pos = await positionFuture;
+    final Position pos;
+    try {
+      pos = await positionFuture;
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Impossible de te localiser. Réessaie.'),
+        ));
+      }
+      return;
+    }
     if (!mounted) return;
 
     setState(() {
