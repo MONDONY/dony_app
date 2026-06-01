@@ -463,7 +463,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       return;
     }
     if (access != LocationAccess.granted) {
-      LocationDeniedSheet.show(context,
+      await LocationDeniedSheet.show(context,
           access: access, service: widget.locationService);
       return;
     }

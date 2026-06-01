@@ -96,6 +96,16 @@ void main() {
 
       expect(result, LocationAccess.deniedForever);
     });
+
+    test('maps unableToDetermine to denied', () async {
+      when(() => svc.isLocationServiceEnabled()).thenAnswer((_) async => true);
+      when(() => svc.checkPermission())
+          .thenAnswer((_) async => LocationPermission.unableToDetermine);
+
+      final result = await requestLocationAccess(svc);
+
+      expect(result, LocationAccess.denied);
+    });
   });
 
   group('LocationDeniedSheet widget', () {
