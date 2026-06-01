@@ -10,6 +10,7 @@ class NearMeRadiusSheet {
   static Future<double?> show(
     BuildContext context, {
     double initialRadiusKm = 25,
+    String confirmLabel = 'Activer le filtre',
   }) {
     final radiusNotifier = ValueNotifier<double>(
       initialRadiusKm.clamp(minRadiusKm, maxRadiusKm),
@@ -21,7 +22,7 @@ class NearMeRadiusSheet {
       stickyBottom: ValueListenableBuilder<double>(
         valueListenable: radiusNotifier,
         builder: (_, radius, __) => DonyButton(
-          label: 'Activer le filtre',
+          label: confirmLabel,
           onPressed: () => Navigator.of(context, rootNavigator: true).pop(radius),
         ),
       ),

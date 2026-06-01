@@ -319,6 +319,20 @@ class _MapSenderViewState extends State<_MapSenderView> {
     _dispatchSearch();
   }
 
+  // Ajuste le rayon SANS couper le filtre : rouvre le slider pré-rempli au rayon
+  // courant, puis met à jour et relance la recherche. `_isNearMeActive` et
+  // `_userPosition` restent intacts ; la carte se recadre via didUpdateWidget.
+  Future<void> _changeNearMeRadius() async {
+    final radiusKm = await NearMeRadiusSheet.show(
+      context,
+      initialRadiusKm: _nearMeRadiusKm ?? 25,
+      confirmLabel: 'Appliquer',
+    );
+    if (radiusKm == null || !mounted) return;
+    setState(() => _nearMeRadiusKm = radiusKm);
+    _dispatchSearch();
+  }
+
   Future<void> _activateNearMe() async {
     const locationService = GeolocatorLocationService();
     final access = await requestLocationAccess(locationService);
@@ -769,6 +783,29 @@ class _MapSenderViewState extends State<_MapSenderView> {
                             },
                           ),
                       ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // ── Pastille rayon (mode Près de moi actif) : change le rayon ──
+              //    sans couper le filtre.
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutCubic,
+                top: _isNearMeActive
+                    ? MediaQuery.of(context).padding.top + DonySpacing.sm
+                    : MediaQuery.of(context).padding.top - 80,
+                left: DonySpacing.md,
+                child: AnimatedOpacity(
+                  opacity: _isNearMeActive ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 220),
+                  child: IgnorePointer(
+                    ignoring: !_isNearMeActive,
+                    child: _NearMeRadiusPill(
+                      key: const Key('near-me-radius-pill'),
+                      radiusKm: _nearMeRadiusKm ?? 25,
+                      onTap: _changeNearMeRadius,
                     ),
                   ),
                 ),
@@ -1381,6 +1418,61 @@ class _HomeCarteFab extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── _NearMeRadiusPill ─────────────────────────────────────────────────────────
+
+/// Affichée quand « Près de moi » est actif. Montre le rayon courant et rouvre
+/// le slider au tap — pour ajuster le rayon sans désactiver le filtre.
+class _NearMeRadiusPill extends StatelessWidget {
+  const _NearMeRadiusPill({super.key, required this.radiusKm, required this.onTap});
+
+  final double radiusKm;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+        child: Container(
+          height: 44,
+          padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(DonyRadius.full),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.10),
+                blurRadius: 12,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.adjust_rounded, size: 16, color: cs.primary),
+              const SizedBox(width: DonySpacing.xs),
+              Text(
+                'Rayon · ${radiusKm.round()} km',
+                style: tt.labelLarge?.copyWith(
+                  color: cs.onSurface,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(width: DonySpacing.xs),
+              Icon(Icons.tune_rounded, size: 15, color: cs.onSurfaceVariant),
+            ],
+          ),
         ),
       ),
     );

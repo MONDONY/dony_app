@@ -266,6 +266,38 @@ void main() {
       expect(find.byType(NearMeCarousel), findsOneWidget);
       expect(find.byType(DraggableScrollableSheet), findsNothing);
     });
+
+    testWidgets('radius pill re-opens the slider without losing the filter',
+        (tester) async {
+      GeolocatorPlatform.instance = _MockGeolocatorPlatform();
+
+      await tester.pumpWidget(_buildHome(
+        announcementState: AnnouncementSearchLoaded([_makeAnn()]),
+      ));
+      await tester.pump();
+
+      // Activate near-me.
+      await tester.tap(find.byKey(const Key('near-me-fab')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Activer le filtre'));
+      await tester.pumpAndSettle();
+      expect(find.byType(NearMeCarousel), findsOneWidget);
+
+      // The radius pill is shown while active.
+      expect(find.byKey(const Key('near-me-radius-pill')), findsOneWidget);
+
+      // Tapping it re-opens the slider with the in-place "Appliquer" CTA.
+      await tester.tap(find.byKey(const Key('near-me-radius-pill')));
+      await tester.pumpAndSettle();
+      expect(find.text('Appliquer'), findsOneWidget);
+
+      await tester.tap(find.text('Appliquer'));
+      await tester.pumpAndSettle();
+
+      // Filter is still on — the carousel never went away.
+      expect(find.byType(NearMeCarousel), findsOneWidget);
+      expect(find.byKey(const Key('near-me-radius-pill')), findsOneWidget);
+    });
   });
 
   group('HomeScreen — Traveler view', () {
