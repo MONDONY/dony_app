@@ -235,6 +235,59 @@ void main() {
       controller.close(); // ignore: unawaited_futures
     });
 
+    testWidgets('pauses GPS on background and re-subscribes on foreground',
+        (tester) async {
+      final controllers = <StreamController<Position>>[];
+      final mockLoc = MockLocationService();
+      when(() => mockLoc.isLocationServiceEnabled()).thenAnswer((_) async => true);
+      when(() => mockLoc.checkPermission())
+          .thenAnswer((_) async => LocationPermission.whileInUse);
+      when(() => mockLoc.getCurrentPosition())
+          .thenAnswer((_) async => _fakePosition());
+      when(() => mockLoc.getPositionStream()).thenAnswer((_) {
+        final c = StreamController<Position>();
+        controllers.add(c);
+        return c.stream;
+      });
+
+      // Empty announcements: no async marker-building raster work, so bounded
+      // pumps are safe (same pattern as dispose/follow-mode tests).
+      await tester.pumpWidget(_wrap(AnnouncementMapView(
+        announcements: const [],
+        locationService: mockLoc,
+      )));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('near-me-fab')));
+      // 500 ms covers the async chain + AnimatedContainer(200 ms) animation.
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(controllers.length, 1);
+      expect(controllers[0].hasListener, isTrue); // following → subscribed
+
+      // Background → GPS paused (subscription cancelled).
+      tester.binding
+          .handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      await tester.pump();
+      expect(controllers[0].hasListener, isFalse);
+
+      // Foreground → re-subscribes (getPositionStream called again).
+      tester.binding
+          .handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+      expect(controllers.length, 2);
+      expect(controllers[1].hasListener, isTrue);
+      // still in follow mode throughout
+      expect(find.byIcon(Icons.my_location_rounded), findsOneWidget);
+
+      // Dispose the widget first (cancels the active subscription), then close
+      // the controllers.  Without disposal the open subscription keeps the
+      // FakeAsync zone busy and the test runner hangs waiting for it to drain.
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+      for (final c in controllers) {
+        c.close(); // ignore: unawaited_futures
+      }
+    });
+
     testWidgets('stays in follow mode when a position is emitted',
         (tester) async {
       final controller = StreamController<Position>();

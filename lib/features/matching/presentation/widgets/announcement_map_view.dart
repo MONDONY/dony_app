@@ -80,7 +80,8 @@ class AnnouncementMapView extends StatefulWidget {
   State<AnnouncementMapView> createState() => _AnnouncementMapViewState();
 }
 
-class _AnnouncementMapViewState extends State<AnnouncementMapView> {
+class _AnnouncementMapViewState extends State<AnnouncementMapView>
+    with WidgetsBindingObserver {
   GoogleMapController? _mapController;
   Set<Marker> _markers = {};
   final Map<int, BitmapDescriptor> _clusterIcons = {};
@@ -94,18 +95,38 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   bool _programmaticCameraMove = false;
   // Cached brightness — updated in didChangeDependencies (safe to read in initState-triggered async work).
   Brightness _brightness = Brightness.light;
+  // Improvement A: signature guard to skip redundant re-clustering.
+  String? _lastMarkerSignature;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _prewarmCommonIcons();
     WidgetsBinding.instance.addPostFrameCallback((_) => _initLocationOnOpen());
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _positionSub?.cancel();
     super.dispose();
+  }
+
+  // Improvement B: pause/resume GPS stream with app lifecycle.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Resume following if we were following before going to background.
+      if (_isFollowing && _positionSub == null) {
+        _subscribePositionStream();
+      }
+    } else {
+      // Pause the GPS stream while not foregrounded to save battery; keep
+      // _isFollowing so following resumes automatically on return.
+      _positionSub?.cancel();
+      _positionSub = null;
+    }
   }
 
   @override
@@ -199,7 +220,36 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       .map((a) => _AnnouncementPoint(a, _MarkerSide.pickup))
       .toList();
 
-  Future<void> _rebuildMarkers() async {
+  /// Everything that affects the rendered marker set. Panning within the same
+  /// zoom bucket leaves this unchanged, so `_rebuildMarkers` can skip the work.
+  String _markerSignature() {
+    final buf = StringBuffer();
+    for (final a in widget.announcements) {
+      if (a.pickupAddress == null) continue;
+      buf
+        ..write(a.id)
+        ..write(':')
+        ..write(a.pricePerKg)
+        ..write(':')
+        ..write(a.departureDate.millisecondsSinceEpoch)
+        ..write(';');
+    }
+    buf
+      ..write('|sel=')
+      ..write(widget.selectedAnnouncementId)
+      ..write('|b=')
+      ..write(_brightness.index)
+      ..write('|c=')
+      ..write(cellDegForZoom(_currentZoom));
+    return buf.toString();
+  }
+
+  Future<void> _rebuildMarkers({bool force = false}) async {
+    final signature = _markerSignature();
+    if (!force && signature == _lastMarkerSignature) {
+      return;
+    }
+    _lastMarkerSignature = signature;
     final allPoints = [..._pickupPoints()];
     final rawClusters = gridCluster<_AnnouncementPoint>(
         allPoints, _currentZoom, (p) => p.location);
@@ -337,6 +387,10 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
   void _startFollowing() {
     if (!mounted) return;
     setState(() => _isFollowing = true);
+    _subscribePositionStream();
+  }
+
+  void _subscribePositionStream() {
     _positionSub?.cancel();
     _positionSub = widget.locationService.getPositionStream().listen(
       (pos) {
