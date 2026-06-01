@@ -230,29 +230,32 @@ class _ResultList extends StatelessWidget {
               Divider(height: 1, color: cs.outline),
           itemBuilder: (ctx, i) {
             final city = cities[i];
-            return ListTile(
-              dense: true,
-              leading: Icon(
-                DonyIcons.mapPin,
-                color: cs.primary,
-                size: 20,
-              ),
-              title: Text(
-                city.name,
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: cs.onSurface,
+            return Material(
+              type: MaterialType.transparency,
+              child: ListTile(
+                dense: true,
+                leading: Icon(
+                  DonyIcons.mapPin,
+                  color: cs.primary,
+                  size: 20,
                 ),
-              ),
-              subtitle: Text(
-                city.countryName,
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  fontSize: 12,
-                  color: cs.onSurfaceVariant,
+                title: Text(
+                  city.name,
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: cs.onSurface,
+                  ),
                 ),
+                subtitle: Text(
+                  city.countryName,
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    fontSize: 12,
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+                onTap: () => onTap(city),
               ),
-              onTap: () => onTap(city),
             ).animate().fadeIn(duration: 200.ms).slideY(begin: 0.05);
           },
         ),

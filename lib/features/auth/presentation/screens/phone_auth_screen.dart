@@ -63,18 +63,21 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: _codes
-              .map((c) => ListTile(
-                    leading:
-                        Text(c.$2, style: const TextStyle(fontSize: 22)),
-                    title: Text('${c.$3} (${c.$1})', style: tt.titleMedium),
-                    trailing: selectedCode == c.$1
-                        ? Icon(Icons.check_rounded, color: cs.primary)
-                        : null,
-                    onTap: () {
-                      authBloc
-                          .add(AuthDialCodeChanged(code: c.$1, flag: c.$2));
-                      innerContext.pop();
-                    },
+              .map((c) => Material(
+                    type: MaterialType.transparency,
+                    child: ListTile(
+                      leading:
+                          Text(c.$2, style: const TextStyle(fontSize: 22)),
+                      title: Text('${c.$3} (${c.$1})', style: tt.titleMedium),
+                      trailing: selectedCode == c.$1
+                          ? Icon(Icons.check_rounded, color: cs.primary)
+                          : null,
+                      onTap: () {
+                        authBloc
+                            .add(AuthDialCodeChanged(code: c.$1, flag: c.$2));
+                        innerContext.pop();
+                      },
+                    ),
                   ))
               .toList(),
         );

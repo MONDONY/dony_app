@@ -206,7 +206,9 @@ class _FaqTile extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
 
-    return Theme(
+    return Material(
+      type: MaterialType.transparency,
+      child: Theme(
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(
@@ -236,7 +238,7 @@ class _FaqTile extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ));
   }
 }
 
