@@ -294,6 +294,27 @@ abstract final class ErrorCatalog {
       icon: Icons.do_not_disturb_alt_rounded,
     ),
 
+    // ─── Parrainage ──────────────────────────────────────────────────
+    'referral-code-not-found': ErrorPresentation(
+      title: 'Code introuvable',
+      message:
+          'Ce code de parrainage n\'existe pas. Vérifie la saisie et réessaie.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.person_search_rounded,
+    ),
+    'self-referral': ErrorPresentation(
+      title: 'Auto-parrainage interdit',
+      message: 'Tu ne peux pas utiliser ton propre code de parrainage.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.block_rounded,
+    ),
+    'already-referred': ErrorPresentation(
+      title: 'Code déjà utilisé',
+      message: 'Tu as déjà utilisé un code de parrainage.',
+      severity: ErrorSeverity.info,
+      icon: Icons.check_circle_outline_rounded,
+    ),
+
     // ─── Utilisateur ─────────────────────────────────────────────────
     'user-not-found': ErrorPresentation(
       title: 'Utilisateur introuvable',
