@@ -136,11 +136,37 @@ void main() {
       );
       await tester.pump();
 
-      await tester.tap(find.text('Payer 30.00 €'));
+      await tester.tap(find.text('Payer 33.60 €'));
       await tester.pumpAndSettle();
 
       verify(() => mockLocalAuth.authenticateWithBiometric()).called(1);
       verifyNever(() => mockBloc.add(any()));
+    });
+
+    testWidgets(
+        'récap : l\'expéditeur paie le net + commission (net × 1,12), commission AJOUTÉE',
+        (tester) async {
+      // bid = 5 kg × 6 €/kg = 30 € net. L'expéditeur paie 30 × 1,12 = 33,60 € ;
+      // la commission Dony (3,60 €) est ajoutée, jamais déduite (cf. backend).
+      await tester.pumpWidget(
+        _wrap(
+          PaymentScreen(
+            bid: _testBid,
+            localAuthService: mockLocalAuth,
+            userPrefs: _mockUserPrefs(biometricEnabled: true),
+          ),
+          mockBloc,
+          configBloc: mockConfigBloc,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Bouton + ligne « Vous payez » = total commission incluse.
+      expect(find.text('Payer 33.60 €'), findsOneWidget);
+      expect(find.text('33.60 €'), findsOneWidget);
+      // Commission présentée comme un AJOUT (+), pas une déduction (−).
+      expect(find.text('+ 3.60 €'), findsOneWidget);
+      expect(find.textContaining('− 3.60'), findsNothing);
     });
 
     testWidgets('dispatches PaymentInitiated after successful biometric',
@@ -161,7 +187,7 @@ void main() {
       );
       await tester.pump();
 
-      await tester.tap(find.text('Payer 30.00 €'));
+      await tester.tap(find.text('Payer 33.60 €'));
       await tester.pumpAndSettle();
 
       verify(() => mockLocalAuth.authenticateWithBiometric()).called(1);
@@ -188,7 +214,7 @@ void main() {
       );
       await tester.pump();
 
-      await tester.tap(find.text('Payer 30.00 €'));
+      await tester.tap(find.text('Payer 33.60 €'));
       await tester.pumpAndSettle();
 
       verify(() => mockLocalAuth.authenticateWithBiometric()).called(1);
@@ -214,7 +240,7 @@ void main() {
       );
       await tester.pump();
 
-      await tester.tap(find.text('Payer 30.00 €'));
+      await tester.tap(find.text('Payer 33.60 €'));
       await tester.pumpAndSettle();
 
       expect(
@@ -241,7 +267,7 @@ void main() {
       );
       await tester.pump();
 
-      await tester.tap(find.text('Payer 30.00 €'));
+      await tester.tap(find.text('Payer 33.60 €'));
       await tester.pumpAndSettle();
 
       verifyNever(() => mockLocalAuth.isBiometricAvailable());
@@ -271,7 +297,7 @@ void main() {
       );
       await tester.pump();
 
-      await tester.tap(find.text('Payer 30.00 €'));
+      await tester.tap(find.text('Payer 33.60 €'));
       await tester.pumpAndSettle();
 
       verifyNever(() => mockLocalAuth.isBiometricAvailable());

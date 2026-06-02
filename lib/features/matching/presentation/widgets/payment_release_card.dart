@@ -2,16 +2,16 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:flutter/material.dart';
 
-// 1 − 12% de commission dony
-const _kTravelerShareRate = 0.88;
-
 String _travelerEarnings(BidModel bid) {
+  // Le voyageur reçoit l'intégralité du net : en paiement Stripe escrow, la
+  // commission Dony est payée EN SUS par l'expéditeur (montant facturé = net × 1,12,
+  // transfert = montant − commission = net). `totalAmountEur` porte ce net.
   final total = bid.totalAmountEur ??
       (bid.pricePerKg != null && bid.weightKg != null
           ? bid.pricePerKg! * bid.weightKg!
           : null);
   if (total == null) return '—';
-  return (total * _kTravelerShareRate).toStringAsFixed(2);
+  return total.toStringAsFixed(2);
 }
 
 /// Carte affichant la libération des fonds au voyageur (statut COMPLETED).

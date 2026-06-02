@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -130,7 +131,7 @@ class TravelerCard extends StatelessWidget {
                 Text(
                   announcement.pricingMode == 'MIXED'
                       ? 'Grille tarifaire'
-                      : '${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
+                      : '${formatKgPrice(announcement.senderPricePerKg)} €/kg',
                   style: tt.titleLarge?.copyWith(color: cs.success, fontWeight: FontWeight.w700),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,

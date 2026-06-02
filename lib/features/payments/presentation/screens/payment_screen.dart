@@ -104,8 +104,12 @@ class _PaymentSummaryView extends StatelessWidget {
     required this.userPrefs,
   });
 
+  // _amount = NET du voyageur (totalNetAmountEur côté backend). L'expéditeur paie
+  // ce net + la commission Dony : _total = net × (1 + taux), aligné sur le montant
+  // réellement facturé par le backend (PaymentService : amount = net × 1,12).
   double get _amount => bid.totalAmountEur ?? (bid.weightKg ?? 0) * (bid.pricePerKg ?? 0);
   double get _commission => _amount * commissionRate;
+  double get _total => _amount + _commission;
 
   Future<void> _pay(BuildContext context) async {
     final authenticated = await requirePaymentAuth(
@@ -147,6 +151,7 @@ class _PaymentSummaryView extends StatelessWidget {
                   bid: bid,
                   amount: _amount,
                   commission: _commission,
+                  total: _total,
                   commissionRate: commissionRate,
                 ),
                 const SizedBox(height: DonySpacing.lg),
@@ -165,7 +170,7 @@ class _PaymentSummaryView extends StatelessWidget {
                   const SizedBox(height: DonySpacing.lg),
                 ],
                 DonyButton(
-                  label: 'Payer ${_amount.toStringAsFixed(2)} €',
+                  label: 'Payer ${_total.toStringAsFixed(2)} €',
                   onPressed: isLoading ? null : () => _pay(context),
                   isLoading: isLoading,
                   icon: Icons.lock_rounded,
@@ -186,12 +191,14 @@ class _SummaryCard extends StatelessWidget {
   final BidModel bid;
   final double amount;
   final double commission;
+  final double total;
   final double commissionRate;
 
   const _SummaryCard({
     required this.bid,
     required this.amount,
     required this.commission,
+    required this.total,
     required this.commissionRate,
   });
 
@@ -247,7 +254,7 @@ class _SummaryCard extends StatelessWidget {
                 const DonyInfoRow.divider(),
                 DonyInfoRow(
                   label: 'Commission dony (${(commissionRate * 100).toStringAsFixed(0)}%)',
-                  value: '− ${commission.toStringAsFixed(2)} €',
+                  value: '+ ${commission.toStringAsFixed(2)} €',
                   valueStyle: DonyInfoRowValueStyle.muted,
                 ),
               ],
@@ -264,7 +271,7 @@ class _SummaryCard extends StatelessWidget {
                   style: tt.titleMedium,
                 ),
                 Text(
-                  '${amount.toStringAsFixed(2)} €',
+                  '${total.toStringAsFixed(2)} €',
                   style: tt.headlineMedium?.copyWith(color: cs.primary),
                 ),
               ],
@@ -314,7 +321,7 @@ class _EscrowConfirmedView extends StatelessWidget {
                 ),
                 const SizedBox(height: DonySpacing.md),
                 Text(
-                  '${amount.toStringAsFixed(2)} € sont retenus en escrow et seront versés au voyageur après confirmation de livraison par le destinataire.',
+                  '${amount.toStringAsFixed(2)} € sont bloqués en escrow et seront libérés après confirmation de livraison par le destinataire.',
                   textAlign: TextAlign.center,
                   style: tt.bodyLarge?.copyWith(
                     color: cs.onSurfaceVariant,

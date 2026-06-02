@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -213,7 +214,7 @@ class _TravelerAnnouncementContent extends StatelessWidget {
           icon: Icons.euro_rounded,
           label: announcement.pricingMode == 'MIXED'
               ? 'Grille tarifaire'
-              : '${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
+              : '${formatKgPrice(announcement.senderPricePerKg)} €/kg',
           labelStyle: TextStyle(color: cs.primary, fontWeight: FontWeight.w700),
         ),
 

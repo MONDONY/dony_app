@@ -102,6 +102,12 @@ class AnnouncementModel {
   final double availableKg;
   final double totalKg;
   final double pricePerKg;
+
+  /// Prix au kilo affiché à l'EXPÉDITEUR = `pricePerKg` (net voyageur) + commission Dony.
+  /// Fourni par le backend (symétrique de `unitPriceDisplay` du mode MIXED) ; null si
+  /// absent (anciens payloads / mode MIXED). Utiliser l'extension `senderPricePerKg`
+  /// qui retombe sur un calcul net×multiplicateur le cas échéant.
+  final double? pricePerKgDisplay;
   @JsonKey(fromJson: transportModeFromWire, toJson: _transportModeToWireOrNull)
   final TransportMode? transportMode;
   final String status;
@@ -136,6 +142,7 @@ class AnnouncementModel {
     required this.availableKg,
     required this.totalKg,
     required this.pricePerKg,
+    this.pricePerKgDisplay,
     this.transportMode,
     required this.status,
     this.bidsCount,

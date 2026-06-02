@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_model.dart';
@@ -333,7 +334,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                '${(_priceOptions[i] * 0.88).toStringAsFixed(2)}€ nets',
+                                '${formatKgPrice(netToSenderPrice(_priceOptions[i]))}€ exp.',
                                 style: tt.labelSmall?.copyWith(
                                   color: selected ? cs.success : cs.onSurfaceVariant,
                                 ),
@@ -348,7 +349,7 @@ class _TripTemplateEditScreenState extends State<TripTemplateEditScreen> {
               ),
               const SizedBox(height: DonySpacing.sm),
               Text(
-                'Commission dony (12%) déduite — vous touchez ${(_priceOptions[_priceIdx] * 0.88).toStringAsFixed(2)}€/kg',
+                'Vous touchez ${formatKgPrice(_priceOptions[_priceIdx])}€/kg · l\'expéditeur paie ${formatKgPrice(netToSenderPrice(_priceOptions[_priceIdx]))}€/kg (commission Dony 12% incluse)',
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
               ),
               const SizedBox(height: DonySpacing.xxl),

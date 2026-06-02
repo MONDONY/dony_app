@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/detail_card.dart';
 import 'package:flutter/material.dart';
@@ -65,8 +66,10 @@ class TrajetCard extends StatelessWidget {
           if (bid.pricePerKg != null && bid.pricePerKg! > 0) ...[
             const SizedBox(height: DonySpacing.sm),
             InfoRow(
+              // Carte visible uniquement par l'expéditeur (bid_detail_screen) :
+              // on affiche le prix au kilo commission incluse (net × 1,12).
               label: 'Tarif par kg',
-              value: '${bid.pricePerKg!.toStringAsFixed(2)} €',
+              value: '${formatKgPrice(netToSenderPrice(bid.pricePerKg!))} €',
             ),
           ],
         ],

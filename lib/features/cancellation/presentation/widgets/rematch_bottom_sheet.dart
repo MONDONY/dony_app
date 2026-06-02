@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -99,7 +100,7 @@ class RematchBottomSheet extends StatelessWidget {
                               Text('·', style: tt.labelSmall),
                               const SizedBox(width: DonySpacing.xs),
                               Text(
-                                '${suggestion.pricePerKg.toStringAsFixed(0)} €/kg',
+                                '${formatKgPrice(netToSenderPrice(suggestion.pricePerKg))} €/kg',
                                 style: tt.labelSmall?.copyWith(
                                   color: cs.primary,
                                   fontWeight: FontWeight.w600,

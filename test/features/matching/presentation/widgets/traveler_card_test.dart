@@ -50,7 +50,9 @@ void main() {
       )));
       await tester.pumpAndSettle();
       expect(find.text('Mamadou Diallo'), findsOneWidget);
-      expect(find.text('12 €/kg'), findsOneWidget);
+      // Carte vue par l'expéditeur : prix au kilo affiché = net × 1,12
+      // (12 €/kg net → 13,44 €/kg commission Dony incluse).
+      expect(find.text('13.44 €/kg'), findsOneWidget);
     });
 
     testWidgets('shows KYC badge when kiloPro is true', (tester) async {

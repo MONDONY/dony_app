@@ -56,9 +56,11 @@ class AnnouncementPreviewSheet extends StatelessWidget {
         ? DateFormat('dd MMM yyyy', 'fr_FR').format(formState.departureDate!)
         : '—';
 
+    // Le voyageur touche le prix net qu'il fixe ; la commission Dony est en sus
+    // (payée par l'expéditeur). Pas de décote ×0,88 sur ce qu'il reçoit.
     final netEstimate = (formState.pricePerKg != null &&
             formState.availableKg != null)
-        ? (formState.pricePerKg! * formState.availableKg! * 0.88)
+        ? (formState.pricePerKg! * formState.availableKg!)
         : null;
 
     final prixStr = formState.pricePerKg != null

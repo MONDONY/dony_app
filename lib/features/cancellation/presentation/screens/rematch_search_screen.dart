@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:flutter/material.dart';
@@ -171,7 +172,7 @@ class _SuggestionCard extends StatelessWidget {
               const SizedBox(width: DonySpacing.md),
               _Chip(
                 icon: Icons.euro_rounded,
-                label: '${suggestion.pricePerKg.toStringAsFixed(0)} €/kg',
+                label: '${formatKgPrice(netToSenderPrice(suggestion.pricePerKg))} €/kg',
                 cs: cs,
                 tt: tt,
               ),
