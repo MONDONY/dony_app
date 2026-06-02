@@ -4,6 +4,7 @@ import 'package:dony/app/app.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/firebase/firebase_options.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/config/data/config_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
@@ -16,6 +17,7 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_skill/flutter_skill.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 const _apiBaseUrl = String.fromEnvironment(
@@ -31,6 +33,13 @@ const _environment = String.fromEnvironment(
 );
 
 const _stripePublishableKey = String.fromEnvironment('STRIPE_PUBLISHABLE_KEY');
+
+const _posthogApiKey = String.fromEnvironment('POSTHOG_API_KEY');
+
+const _posthogHost = String.fromEnvironment(
+  'POSTHOG_HOST',
+  defaultValue: 'https://eu.i.posthog.com',
+);
 
 Future<void> _bootstrap() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -75,6 +84,22 @@ Future<void> _bootstrap() async {
   // Hive doit être ouvert avant runApp : AppPreferencesBloc accède à
   // userPrefs dès le premier build() de DonyApp.
   await getIt<HiveService>().init();
+
+  // PostHog : init manuelle (clé via --dart-define-from-file).
+  // Clé absente (ex: build dev sans variable) → service reste no-op, pas de crash.
+  if (_posthogApiKey.isNotEmpty) {
+    final config = PostHogConfig(_posthogApiKey)
+      ..host = _posthogHost
+      ..debug = kDebugMode
+      // Opt-out par défaut : on bascule en opt-in uniquement après consentement.
+      ..optOut = true
+      ..sessionReplay = true
+      ..sessionReplayConfig.maskAllTexts = true
+      ..sessionReplayConfig.maskAllImages = true;
+    await Posthog().setup(config);
+    // Rétablit l'état opt-in/out selon le consentement déjà stocké dans Hive.
+    await getIt<AnalyticsService>().onConfigured();
+  }
 
   // NB : on ne déconnecte plus au démarrage sur un « appareil non enregistré ».
   // Ce contrôle était fail-dangerous : l'enregistrement d'appareil dépend d'un

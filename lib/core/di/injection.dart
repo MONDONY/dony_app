@@ -62,6 +62,7 @@ import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
@@ -134,6 +135,9 @@ final getIt = GetIt.instance;
 Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Core
   getIt.registerLazySingleton<HiveService>(() => HiveService());
+  getIt.registerLazySingleton<AnalyticsService>(
+    () => AnalyticsService(getIt<HiveService>()),
+  );
   getIt.registerLazySingleton<ActiveRoleCubit>(
     () => ActiveRoleCubit(hiveService: getIt<HiveService>()),
   );

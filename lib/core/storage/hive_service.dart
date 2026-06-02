@@ -45,6 +45,10 @@ class HiveService {
   static const String kBiometricEnabled   = 'biometric_enabled'; // bool
   static const String kAppLockBiometric   = 'app_lock_biometric'; // bool
 
+  // ── Analytics (consentement RGPD opt-in) ─────────────────────────────────
+  // null = pas encore demandé · true = accepté · false = refusé.
+  static const String kAnalyticsConsent   = 'analytics_consent';  // bool?
+
   Future<void> init() async {
     await Hive.initFlutter();
     await Hive.openBox<Map>(offlineQueueBox);

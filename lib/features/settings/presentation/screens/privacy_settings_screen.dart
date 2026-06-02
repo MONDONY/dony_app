@@ -1,9 +1,13 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class PrivacySettingsScreen extends StatelessWidget {
   const PrivacySettingsScreen({super.key});
@@ -59,7 +63,13 @@ class PrivacySettingsScreen extends StatelessWidget {
                 _BlockedUsersCard(),
                 const SizedBox(height: DonySpacing.xxl),
 
-                // ── 4. Lien textuel vers Données ──────────────────────────
+                // ── 4. Section "AMÉLIORATION DE L'APP" ────────────────────
+                _SectionLabel("AMÉLIORATION DE L'APP"),
+                const SizedBox(height: DonySpacing.sm),
+                const _AnalyticsConsentCard(),
+                const SizedBox(height: DonySpacing.xxl),
+
+                // ── 5. Lien textuel vers Données ──────────────────────────
                 Text(
                   'Pour télécharger tes données ou supprimer ton compte, va dans Paramètres › Données.',
                   style: tt.bodySmall?.copyWith(
@@ -213,6 +223,87 @@ class _KycToggleCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── Card consentement analytics (révocable RGPD) ──────────────────────────────
+
+class _AnalyticsConsentCard extends StatelessWidget {
+  const _AnalyticsConsentCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final hive = getIt<HiveService>();
+
+    return ValueListenableBuilder<Box>(
+      valueListenable:
+          hive.listenUserPrefs(keys: const [HiveService.kAnalyticsConsent]),
+      builder: (context, box, _) {
+        final enabled = box.get(HiveService.kAnalyticsConsent) == true;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(DonyRadius.card),
+            border: Border.all(color: cs.outline),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DonySpacing.base,
+              vertical: DonySpacing.md,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEAF1FF),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Center(
+                    child: Text('📊', style: TextStyle(fontSize: 16)),
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.base),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Statistiques d'utilisation",
+                        style: tt.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        "Mesure anonyme de l'usage pour améliorer l'app. "
+                        "Jamais tes paiements ni ton identité.",
+                        style: tt.bodySmall?.copyWith(
+                          fontSize: 11,
+                          color: cs.onSurfaceVariant,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: DonySpacing.sm),
+                Switch(
+                  value: enabled,
+                  onChanged: (v) =>
+                      getIt<AnalyticsService>().setConsent(granted: v),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

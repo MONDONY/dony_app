@@ -144,6 +144,7 @@ import 'package:dony/features/tracking/presentation/screens/tracking_timeline_sc
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 const _publicRoutes = {
@@ -161,7 +162,9 @@ const _publicRoutes = {
 
 final appRouter = GoRouter(
   initialLocation: '/splash',
-  observers: [SentryNavigatorObserver()],
+  // PosthogObserver : auto-capture des vues d'écran ($screen) à chaque
+  // changement de route (no-op tant que le consentement n'est pas accordé).
+  observers: [SentryNavigatorObserver(), PosthogObserver()],
   redirect: (context, state) {
     final user = FirebaseAuth.instance.currentUser;
     final isAuthenticated = user != null;

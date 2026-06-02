@@ -66,6 +66,10 @@ dependencies:
   # par SPM sous Xcode 26 (SentryBinaryImageCache.image manquant).
   sentry_flutter: ^9.21.0
 
+  # Product analytics + session replay (gestes utilisateur).
+  # Init manuelle en Dart (clé via --dart-define) → AUTO_INIT=false côté natif.
+  posthog_flutter: ^5.25.2
+
   # DI
   get_it: ^8.0.0
 
