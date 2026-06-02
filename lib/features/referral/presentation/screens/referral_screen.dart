@@ -30,7 +30,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
       return const Center(child: CircularProgressIndicator());
     }
     if (state is ReferralError) {
-      return _ErrorView(message: state.message);
+      return _ErrorView(message: state.error.message);
     }
     if (state is ReferralLoaded) {
       return _LoadedBody(info: state.info);

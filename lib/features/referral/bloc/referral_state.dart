@@ -19,8 +19,8 @@ class ReferralLoaded extends ReferralState {
 }
 
 class ReferralError extends ReferralState {
-  const ReferralError(this.message);
-  final String message;
+  const ReferralError(this.error);
+  final AppException error;
 }
 
 class ReferralRedeemLoading extends ReferralState {

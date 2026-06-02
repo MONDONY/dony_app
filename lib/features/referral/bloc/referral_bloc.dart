@@ -28,7 +28,7 @@ class ReferralBloc extends Bloc<ReferralEvent, ReferralState> {
       final info = await _repository.getMyReferral();
       emit(ReferralLoaded(info));
     } catch (e) {
-      emit(ReferralError(e.toString()));
+      emit(ReferralError(unwrapDioError(e)));
     }
   }
 

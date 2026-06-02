@@ -115,7 +115,7 @@ void main() {
     expect: () => [
       isA<ReferralLoading>(),
       predicate<ReferralState>(
-        (s) => s is ReferralError && s.message.isNotEmpty,
+        (s) => s is ReferralError && s.error.message.isNotEmpty,
       ),
     ],
   );
