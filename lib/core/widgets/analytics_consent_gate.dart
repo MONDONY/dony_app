@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dony/app/router.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/analytics_consent_sheet.dart';
@@ -15,8 +16,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// - **logout** (`AuthAuthenticated` → `AuthInitial`) → `reset()` pour
 ///   dissocier la session de l'utilisateur.
 ///
-/// Doit être monté **sous** le `Navigator` de `MaterialApp` (via son `builder`)
-/// pour pouvoir présenter le bottom sheet de consentement.
+/// Placé dans `MaterialApp.builder` (au-dessus du Navigator), il utilise le
+/// `navigatorKey` de GoRouter pour présenter le sheet avec un contexte valide.
 class AnalyticsConsentGate extends StatefulWidget {
   const AnalyticsConsentGate({required this.child, super.key});
 
@@ -55,8 +56,12 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
       return;
     }
     _prompted = true;
-    if (!mounted) return;
-    final granted = await AnalyticsConsentSheet.show(context);
+    // On est dans MaterialApp.builder → au-dessus du Navigator.
+    // On passe par le navigatorKey de GoRouter pour obtenir un contexte
+    // qui a bien un Navigator ancestor (requis par showModalBottomSheet).
+    final navContext = appRouter.routerDelegate.navigatorKey.currentContext;
+    if (navContext == null) return;
+    final granted = await AnalyticsConsentSheet.show(navContext);
     // Consentement accordé après le login → (re)lier l'identité.
     if (granted) {
       await _analytics.identify(userId);

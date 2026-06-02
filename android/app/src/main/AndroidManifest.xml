@@ -15,8 +15,6 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${GOOGLE_MAPS_API_KEY}" />
-        <!-- PostHog : init manuelle en Dart (clé via --dart-define), donc on
-             désactive l'auto-init natif qui chercherait com.posthog.posthog.API_KEY. -->
         <meta-data
             android:name="com.posthog.posthog.AUTO_INIT"
             android:value="false" />
