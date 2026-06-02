@@ -267,6 +267,33 @@ abstract final class ErrorCatalog {
       icon: Icons.speed_rounded,
     ),
 
+    // ─── Codes promo ─────────────────────────────────────────────────
+    'promo-not-found': ErrorPresentation(
+      title: 'Code promo introuvable',
+      message: 'Ce code promo n\'existe pas. Vérifie la saisie et réessaie.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.discount_outlined,
+    ),
+    'promo-expired': ErrorPresentation(
+      title: 'Code promo expiré',
+      message: 'Ce code promo n\'est plus valide (expiré ou pas encore actif).',
+      severity: ErrorSeverity.warning,
+      icon: Icons.timer_off_rounded,
+    ),
+    'promo-limit-reached': ErrorPresentation(
+      title: 'Code promo épuisé',
+      message:
+          'Ce code promo a atteint sa limite d\'utilisation (globale ou par utilisateur).',
+      severity: ErrorSeverity.warning,
+      icon: Icons.block_rounded,
+    ),
+    'promo-not-eligible': ErrorPresentation(
+      title: 'Code promo non applicable',
+      message: 'Ce code promo n\'est pas disponible pour ton profil.',
+      severity: ErrorSeverity.warning,
+      icon: Icons.do_not_disturb_alt_rounded,
+    ),
+
     // ─── Utilisateur ─────────────────────────────────────────────────
     'user-not-found': ErrorPresentation(
       title: 'Utilisateur introuvable',

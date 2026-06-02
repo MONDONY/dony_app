@@ -6,6 +6,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/bid_quote_response.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -1144,5 +1145,92 @@ void main() {
       );
       expect(bid.resolvedSenderName, '+33612345678');
     });
+  });
+
+  // ─── BidQuoteRequested ───────────────────────────────────────────────────────
+
+  group('BidQuoteRequested', () {
+    final quote = BidQuoteResponse(
+      netEur: 100.0,
+      rate: 0.06,
+      commissionEur: 6.0,
+      totalEur: 106.0,
+      promoApplied: true,
+      promoLabel: 'Code PROMO6 : 6 % de commission',
+    );
+
+    blocTest<BidBloc, BidState>(
+      'devis réussi avec promo → BidQuoteLoading puis BidQuoteLoaded',
+      build: () {
+        when(() => mockRepo.quoteBid(
+          announcementId: any(named: 'announcementId'),
+          weightKg: any(named: 'weightKg'),
+          promoCode: any(named: 'promoCode'),
+        )).thenAnswer((_) async => quote);
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidQuoteRequested(
+        announcementId: 'ann-001',
+        weightKg: 5.0,
+        promoCode: 'PROMO6',
+      )),
+      expect: () => [isA<BidQuoteLoading>(), isA<BidQuoteLoaded>()],
+      verify: (_) {
+        verify(() => mockRepo.quoteBid(
+          announcementId: 'ann-001',
+          weightKg: 5.0,
+          promoCode: 'PROMO6',
+        )).called(1);
+      },
+    );
+
+    blocTest<BidBloc, BidState>(
+      'code promo invalide → BidQuoteLoading puis BidPromoError',
+      build: () {
+        // Le DioException.error contient un AppException avec le code promo —
+        // c'est ce que l'intercepteur Dio injecte après parsing du ProblemDetail.
+        when(() => mockRepo.quoteBid(
+          announcementId: any(named: 'announcementId'),
+          weightKg: any(named: 'weightKg'),
+          promoCode: any(named: 'promoCode'),
+        )).thenThrow(DioException(
+          requestOptions: RequestOptions(path: '/bids/quote'),
+          error: const NetworkException(
+            'Ce code promo a expiré',
+            code: 'promo-expired',
+          ),
+        ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidQuoteRequested(
+        announcementId: 'ann-001',
+        weightKg: 5.0,
+        promoCode: 'EXPIRED',
+      )),
+      expect: () => [isA<BidQuoteLoading>(), isA<BidPromoError>()],
+    );
+
+    blocTest<BidBloc, BidState>(
+      'sans promoCode → BidQuoteLoading puis BidQuoteLoaded (taux global)',
+      build: () {
+        when(() => mockRepo.quoteBid(
+          announcementId: any(named: 'announcementId'),
+          weightKg: any(named: 'weightKg'),
+          promoCode: any(named: 'promoCode'),
+        )).thenAnswer((_) async => BidQuoteResponse(
+          netEur: 100.0,
+          rate: 0.12,
+          commissionEur: 12.0,
+          totalEur: 112.0,
+          promoApplied: false,
+        ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidQuoteRequested(
+        announcementId: 'ann-001',
+        weightKg: 5.0,
+      )),
+      expect: () => [isA<BidQuoteLoading>(), isA<BidQuoteLoaded>()],
+    );
   });
 }

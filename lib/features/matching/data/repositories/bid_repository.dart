@@ -2,6 +2,7 @@ import 'package:dony/features/matching/data/datasources/bid_remote_datasource.da
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/bid_quote_response.dart';
 
 
 class BidRepository {
@@ -30,6 +31,17 @@ class BidRepository {
         gridItems: gridItems,
       );
 
+  Future<BidQuoteResponse> quoteBid({
+    required String announcementId,
+    required double weightKg,
+    String? promoCode,
+  }) =>
+      _datasource.quoteBid(
+        announcementId: announcementId,
+        weightKg: weightKg,
+        promoCode: promoCode,
+      );
+
   Future<BidModel> createBid({
     required String announcementId,
     required double weightKg,
@@ -41,6 +53,7 @@ class BidRepository {
     BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
     String? phoneNumber,
     String? countryCode,
+    String? promoCode,
     List<Map<String, dynamic>>? gridItems,
   }) =>
       _datasource.createBid(
@@ -54,6 +67,7 @@ class BidRepository {
         paymentMethod: paymentMethod,
         phoneNumber: phoneNumber,
         countryCode: countryCode,
+        promoCode: promoCode,
         gridItems: gridItems,
       );
 

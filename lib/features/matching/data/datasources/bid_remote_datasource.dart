@@ -3,6 +3,7 @@ import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/models/acceptance_response.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/bid_quote_response.dart';
 
 class BidRemoteDatasource {
   final ApiClient _apiClient;
@@ -36,6 +37,24 @@ class BidRemoteDatasource {
     return BidCheckoutResponseModel.fromJson(response.data as Map<String, dynamic>);
   }
 
+  /// Devis : calcule net/commission/total avec promo éventuel.
+  /// Lève une [DioException] avec le code promo-* si le code est invalide.
+  Future<BidQuoteResponse> quoteBid({
+    required String announcementId,
+    required double weightKg,
+    String? promoCode,
+  }) async {
+    final body = <String, dynamic>{
+      'announcementId': announcementId,
+      'weightKg': weightKg,
+    };
+    if (promoCode != null && promoCode.isNotEmpty) {
+      body['promoCode'] = promoCode.trim().toUpperCase();
+    }
+    final response = await _apiClient.dio.post('/bids/quote', data: body);
+    return BidQuoteResponse.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Future<BidModel> createBid({
     required String announcementId,
     required double weightKg,
@@ -47,6 +66,7 @@ class BidRemoteDatasource {
     BidPaymentMethod paymentMethod = BidPaymentMethod.stripe,
     String? phoneNumber,
     String? countryCode,
+    String? promoCode,
     List<Map<String, dynamic>>? gridItems,
   }) async {
     final body = <String, dynamic>{
@@ -61,6 +81,9 @@ class BidRemoteDatasource {
     };
     if (phoneNumber != null) body['phoneNumber'] = phoneNumber;
     if (countryCode != null) body['countryCode'] = countryCode;
+    if (promoCode != null && promoCode.isNotEmpty) {
+      body['promoCode'] = promoCode.trim().toUpperCase();
+    }
     if (gridItems != null && gridItems.isNotEmpty) {
       body['gridItems'] = gridItems;
     }

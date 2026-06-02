@@ -27,6 +27,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     on<BidDeleteRequested>(_onDeleteRequested);
     on<BidTravelerDismissRequested>(_onTravelerDismissRequested);
     on<BidConfirmPaymentRequested>(_onConfirmPaymentRequested);
+    on<BidQuoteRequested>(_onQuoteRequested);
   }
 
   Future<void> _onConfirmPaymentRequested(
@@ -84,6 +85,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         paymentMethod: event.paymentMethod,
         phoneNumber: event.phoneNumber,
         countryCode: event.countryCode,
+        promoCode: event.promoCode,
         gridItems: event.gridItems,
       );
       emit(BidCreated(bid));
@@ -281,6 +283,34 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     try {
       await _repository.dismissBidAsTraveler(event.bidId);
       emit(BidDeleted());
+    } catch (e) {
+      emit(BidError(unwrapDioError(e)));
+    }
+  }
+
+  /// Calcule le devis (net/commission/total) avec promo éventuel.
+  /// Émet [BidQuoteLoaded] si OK, [BidPromoError] si le promo est invalide.
+  Future<void> _onQuoteRequested(
+    BidQuoteRequested event,
+    Emitter<BidState> emit,
+  ) async {
+    emit(BidQuoteLoading());
+    try {
+      final quote = await _repository.quoteBid(
+        announcementId: event.announcementId,
+        weightKg: event.weightKg,
+        promoCode: event.promoCode,
+      );
+      emit(BidQuoteLoaded(quote));
+    } on DioException catch (e) {
+      final wrapped = unwrapDioError(e);
+      // Erreurs promo → BidPromoError (ne polluent pas les autres états du BLoC).
+      const promoCodes = {'promo-not-found', 'promo-expired', 'promo-limit-reached', 'promo-not-eligible'};
+      if (promoCodes.contains(wrapped.code)) {
+        emit(BidPromoError(wrapped));
+      } else {
+        emit(BidError(wrapped));
+      }
     } catch (e) {
       emit(BidError(unwrapDioError(e)));
     }

@@ -91,6 +91,13 @@ class BidModel {
   final BidPricingMode pricingMode;
   final double? totalAmountEur;
 
+  /// Code promo entré par l'expéditeur à la création du bid (nullable).
+  final String? promoCode;
+
+  /// ID du code promo figé au moment du paiement (nullable, UUID string).
+  @JsonKey(name: 'promoCodeId')
+  final String? promoCodeId;
+
   const BidModel({
     required this.id,
     required this.announcementId,
@@ -143,6 +150,8 @@ class BidModel {
     this.contestationDeadline,
     this.pricingMode = BidPricingMode.kg,
     this.totalAmountEur,
+    this.promoCode,
+    this.promoCodeId,
   });
 
   factory BidModel.fromJson(Map<String, dynamic> json) =>

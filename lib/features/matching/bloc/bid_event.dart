@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/bid_quote_response.dart';
 
 abstract class BidEvent {
   const BidEvent();
@@ -46,6 +47,9 @@ class BidCreateRequested extends BidEvent {
   /// Format: [{'announcementGridItemId': String, 'quantity': int}]
   final List<Map<String, dynamic>>? gridItems;
 
+  /// Code promo optionnel — stocké sur le bid, validé au paiement.
+  final String? promoCode;
+
   BidCreateRequested({
     required this.announcementId,
     required this.weightKg,
@@ -57,7 +61,21 @@ class BidCreateRequested extends BidEvent {
     this.paymentMethod = BidPaymentMethod.stripe,
     this.phoneNumber,
     this.countryCode,
+    this.promoCode,
     this.gridItems,
+  });
+}
+
+/// Calcule le devis pour un bid (net, commission, total) avec promo éventuel.
+class BidQuoteRequested extends BidEvent {
+  final String announcementId;
+  final double weightKg;
+  final String? promoCode;
+
+  BidQuoteRequested({
+    required this.announcementId,
+    required this.weightKg,
+    this.promoCode,
   });
 }
 

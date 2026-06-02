@@ -1,6 +1,7 @@
 import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/bid_quote_response.dart';
 
 abstract class BidState {}
 
@@ -95,4 +96,19 @@ class BidNotFound extends BidState {}
 class BidPaymentConfirmed extends BidState {
   final BidModel bid;
   BidPaymentConfirmed(this.bid);
+}
+
+/// Devis calculé avec succès — affichage total + promo.
+class BidQuoteLoaded extends BidState {
+  final BidQuoteResponse quote;
+  BidQuoteLoaded(this.quote);
+}
+
+/// Calcul du devis en cours (spinner dans le champ promo).
+class BidQuoteLoading extends BidState {}
+
+/// Promo invalide (expiré, introuvable, limite atteinte).
+class BidPromoError extends BidState {
+  final AppException error;
+  BidPromoError(this.error);
 }
