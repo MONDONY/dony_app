@@ -1,28 +1,23 @@
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
 
-class _MockBackend extends Mock implements AnalyticsBackend {}
-
-class _MockHive extends Mock implements HiveService {}
-
-class _MockBox extends Mock implements Box<dynamic> {}
+import '../../helpers/mock_analytics_backend.dart';
 
 void main() {
-  late _MockBackend backend;
-  late _MockHive hive;
-  late _MockBox box;
+  late MockAnalyticsBackend backend;
+  late MockHiveService hive;
+  late MockBox box;
   late AnalyticsService service;
 
   // Valeur de consentement « stockée » en mémoire, pilotée par les tests.
   Object? storedConsent;
 
   setUp(() {
-    backend = _MockBackend();
-    hive = _MockHive();
-    box = _MockBox();
+    backend = MockAnalyticsBackend();
+    hive = MockHiveService();
+    box = MockBox();
     storedConsent = null;
 
     when(() => hive.userPrefs).thenReturn(box);
