@@ -217,6 +217,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => AnnouncementBloc(
       getIt<AnnouncementRepository>(),
       getIt<HiveService>(),
+      getIt<AnalyticsService>(),
     ),
   );
 

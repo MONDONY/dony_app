@@ -12,6 +12,7 @@ import 'package:dony/features/matching/data/repositories/announcement_repository
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/mock_analytics_backend.dart';
 
 class MockAnnouncementRepository extends Mock implements AnnouncementRepository {}
 
@@ -62,7 +63,11 @@ void main() {
     when(() => mockHive.userPrefs).thenReturn(_FakeBox());
   });
 
-  AnnouncementBloc buildBloc() => AnnouncementBloc(mockRepo, mockHive);
+  AnnouncementBloc buildBloc() {
+    final analytics = makeDisabledAnalytics(MockAnalyticsBackend());
+    analytics.onConfigured();
+    return AnnouncementBloc(mockRepo, mockHive, analytics);
+  }
 
   // ─── État initial ────────────────────────────────────────────────────────────
 

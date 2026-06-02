@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -10,8 +14,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
   final AnnouncementRepository _repository;
   final HiveService _hive;
+  final AnalyticsService _analytics;
 
-  AnnouncementBloc(this._repository, this._hive) : super(AnnouncementInitial()) {
+  AnnouncementBloc(this._repository, this._hive, this._analytics) : super(AnnouncementInitial()) {
     on<AnnouncementCreateRequested>(_onCreateRequested);
     on<AnnouncementListRequested>(_onListRequested);
     on<AnnouncementDetailRequested>(_onDetailRequested);
@@ -52,6 +57,14 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       await _hive.userPrefs
           .put(HiveService.kHasPublishedAsTraveler, true);
       emit(AnnouncementCreated(announcement));
+      unawaited(_analytics.logEvent(
+        AnalyticsEvents.announcementCreated,
+        properties: {
+          'corridor': '${event.departureCity}→${event.arrivalCity}',
+          'available_kg': event.availableKg,
+          'price_per_kg': event.pricePerKg,
+        },
+      ));
     } catch (e) {
       // Le datasource laisse remonter le DioException brut (dont `.error` porte la
       // ForbiddenException posée par l'interceptor). On déballe AVANT de router :
