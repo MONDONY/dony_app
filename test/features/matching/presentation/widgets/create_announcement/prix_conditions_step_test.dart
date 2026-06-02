@@ -220,7 +220,7 @@ void main() {
     });
 
     testWidgets(
-        'switch Espèces désactivé quand aucune carte commission configurée',
+        'switch Espèces activé même sans carte commission (vérif. reportée à l\'acceptation)',
         (tester) async {
       await _pump(
         tester,
@@ -232,9 +232,13 @@ void main() {
       final sw = tester.widget<Switch>(
         find.descendant(of: cashSwitch, matching: find.byType(Switch)).last,
       );
-      expect(sw.onChanged, isNull,
+      // La carte de commission n'est plus requise à la publication :
+      // la capacité de prélèvement (wallet/carte) est vérifiée à l'acceptation du bid.
+      expect(sw.onChanged, isNotNull,
           reason:
-              'CASH switch doit être désactivé sans carte commission');
+              'CASH switch doit rester activable sans carte commission configurée');
+      // L'ancien lien "Ajouter une carte commission →" ne doit plus exister.
+      expect(find.byKey(const Key('add-commission-card-link')), findsNothing);
     });
 
     testWidgets(

@@ -343,7 +343,8 @@ void main() {
   group('acceptBidWithCommission', () {
     test('returns AcceptanceResponse on success', () async {
       final acceptedJson = {'status': 'ACCEPTED', 'clientSecret': null};
-      when(() => mockDio.post('/bids/bid-001/accept-with-commission'))
+      when(() => mockDio.post('/bids/bid-001/accept-with-commission',
+              queryParameters: any(named: 'queryParameters')))
           .thenAnswer((_) async =>
               _ok(acceptedJson, '/bids/bid-001/accept-with-commission'));
 
@@ -351,12 +352,41 @@ void main() {
       expect(result.status, AcceptanceStatus.accepted);
     });
 
+    test('sends WALLET_FIRST commissionSource by default', () async {
+      dynamic capturedQuery;
+      when(() => mockDio.post('/bids/bid-001/accept-with-commission',
+              queryParameters: any(named: 'queryParameters')))
+          .thenAnswer((inv) async {
+        capturedQuery = inv.namedArguments[const Symbol('queryParameters')];
+        return _ok({'status': 'ACCEPTED'}, '/bids/bid-001/accept-with-commission');
+      });
+
+      await datasource.acceptBidWithCommission('bid-001');
+
+      expect((capturedQuery as Map)['commissionSource'], 'WALLET_FIRST');
+    });
+
+    test('forwards CARD commissionSource when specified', () async {
+      dynamic capturedQuery;
+      when(() => mockDio.post('/bids/bid-001/accept-with-commission',
+              queryParameters: any(named: 'queryParameters')))
+          .thenAnswer((inv) async {
+        capturedQuery = inv.namedArguments[const Symbol('queryParameters')];
+        return _ok({'status': 'ACCEPTED'}, '/bids/bid-001/accept-with-commission');
+      });
+
+      await datasource.acceptBidWithCommission('bid-001', commissionSource: 'CARD');
+
+      expect((capturedQuery as Map)['commissionSource'], 'CARD');
+    });
+
     test('returns requires3ds response when status is REQUIRES_3DS', () async {
       final json3ds = {
         'status': 'REQUIRES_3DS',
         'clientSecret': 'pi_xxx_secret',
       };
-      when(() => mockDio.post('/bids/bid-001/accept-with-commission'))
+      when(() => mockDio.post('/bids/bid-001/accept-with-commission',
+              queryParameters: any(named: 'queryParameters')))
           .thenAnswer((_) async =>
               _ok(json3ds, '/bids/bid-001/accept-with-commission'));
 
@@ -365,12 +395,41 @@ void main() {
       expect(result.clientSecret, 'pi_xxx_secret');
     });
 
+    test('parses 409 DioException body as insufficientWallet AcceptanceResponse',
+        () async {
+      final insufficientJson = {
+        'status': 'INSUFFICIENT_WALLET',
+        'availableBalance': 3.0,
+        'requiredCommission': 12.0,
+        'hasCard': true,
+      };
+      when(() => mockDio.post('/bids/bid-001/accept-with-commission',
+              queryParameters: any(named: 'queryParameters')))
+          .thenThrow(DioException(
+        requestOptions:
+            RequestOptions(path: '/bids/bid-001/accept-with-commission'),
+        response: Response(
+          requestOptions:
+              RequestOptions(path: '/bids/bid-001/accept-with-commission'),
+          statusCode: 409,
+          data: insufficientJson,
+        ),
+      ));
+
+      final result = await datasource.acceptBidWithCommission('bid-001');
+      expect(result.status, AcceptanceStatus.insufficientWallet);
+      expect(result.availableBalance, 3.0);
+      expect(result.requiredCommission, 12.0);
+      expect(result.hasCard, isTrue);
+    });
+
     test('parses 422 DioException body as failed AcceptanceResponse', () async {
       final failedJson = {
         'status': 'FAILED',
         'error': 'Carte refusée',
       };
-      when(() => mockDio.post('/bids/bid-001/accept-with-commission'))
+      when(() => mockDio.post('/bids/bid-001/accept-with-commission',
+              queryParameters: any(named: 'queryParameters')))
           .thenThrow(DioException(
         requestOptions:
             RequestOptions(path: '/bids/bid-001/accept-with-commission'),
@@ -387,8 +446,9 @@ void main() {
       expect(result.error, 'Carte refusée');
     });
 
-    test('rethrows DioException non-422', () async {
-      when(() => mockDio.post('/bids/bid-001/accept-with-commission'))
+    test('rethrows DioException non-409-422', () async {
+      when(() => mockDio.post('/bids/bid-001/accept-with-commission',
+              queryParameters: any(named: 'queryParameters')))
           .thenThrow(DioException(
         requestOptions:
             RequestOptions(path: '/bids/bid-001/accept-with-commission'),

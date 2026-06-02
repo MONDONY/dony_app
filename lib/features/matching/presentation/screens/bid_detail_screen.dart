@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:share_plus/share_plus.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/bloc/bid_acceptance_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
 import 'package:dony/features/matching/bloc/bid_acceptance_state.dart' as acs;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
@@ -163,6 +164,80 @@ class _BidDetailViewState extends State<_BidDetailView> {
     );
   }
 
+  void _showWalletInsufficientSheet(
+      BuildContext context, acs.BidWalletInsufficient state) {
+    DonyBottomSheet.show<void>(
+      context,
+      title: 'Solde insuffisant',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Commission requise : ${state.requiredCommission.toStringAsFixed(2)} €',
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: DonyColors.textPrimary),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Solde wallet : ${state.availableBalance.toStringAsFixed(2)} €',
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: DonyColors.textMuted),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Rechargez votre wallet ou payez la commission directement par carte.',
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: DonyColors.textMuted),
+          ),
+        ],
+      ),
+      stickyBottom: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DonyButton(
+            label: 'Recharger mon wallet',
+            onPressed: () async {
+              context.pop();
+              // /topup/method est le point d'entrée correct : sélectionne la méthode
+              // avant de pousser /topup/amount avec extra (String), qui crasherait si null.
+              final recharged = await context.push<bool>('/payments/wallet/topup/method');
+              if ((recharged ?? false) && context.mounted) {
+                context.read<BidAcceptanceBloc>().add(ace.BidAcceptRequested(state.bidId));
+              }
+            },
+          ),
+          if (state.hasCard) ...[
+            const SizedBox(height: 8),
+            DonyButton(
+              label: 'Payer par carte',
+              variant: DonyButtonVariant.secondary,
+              onPressed: () {
+                context.pop();
+                context.read<BidAcceptanceBloc>().add(ace.BidAcceptWithCardRequested(state.bidId));
+              },
+            ),
+          ] else ...[
+            const SizedBox(height: 8),
+            DonyButton(
+              label: 'Ajouter une carte',
+              variant: DonyButtonVariant.secondary,
+              onPressed: () async {
+                context.pop();
+                await context.push('/payments/commission-method');
+              },
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -177,6 +252,8 @@ class _BidDetailViewState extends State<_BidDetailView> {
             type: DonySnackbarType.success,
           );
           context.read<BidBloc>().add(BidDetailRequested(_bid.id));
+        } else if (state is acs.BidWalletInsufficient) {
+          _showWalletInsufficientSheet(context, state);
         } else if (state is acs.BidFailed) {
           if (state.cardDeclined) {
             _showCardDeclinedSheet(context, state.message);

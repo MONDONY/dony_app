@@ -100,4 +100,59 @@ void main() {
     act: (b) => b.add(BidAcceptRequested('bid_x')),
     expect: () => [isA<BidAccepting>(), isA<BidFailed>()],
   );
+
+  blocTest<BidAcceptanceBloc, BidAcceptanceState>(
+    'insufficientWallet emits BidWalletInsufficient with details',
+    build: () {
+      when(() => repo.acceptBidWithCommission('bid_x')).thenAnswer((_) async =>
+          const AcceptanceResponse(
+            status: AcceptanceStatus.insufficientWallet,
+            availableBalance: 3.0,
+            requiredCommission: 12.0,
+            hasCard: true,
+          ));
+      return BidAcceptanceBloc(repo, stripe);
+    },
+    act: (b) => b.add(BidAcceptRequested('bid_x')),
+    expect: () => [
+      isA<BidAccepting>(),
+      predicate<BidWalletInsufficient>((s) =>
+          s.availableBalance == 3.0 &&
+          s.requiredCommission == 12.0 &&
+          s.hasCard == true &&
+          s.bidId == 'bid_x'),
+    ],
+  );
+
+  blocTest<BidAcceptanceBloc, BidAcceptanceState>(
+    'BidAcceptWithCardRequested forwards CARD source and accepts',
+    build: () {
+      when(() => repo.acceptBidWithCommission('bid_x', commissionSource: 'CARD'))
+          .thenAnswer((_) async =>
+              const AcceptanceResponse(status: AcceptanceStatus.accepted));
+      return BidAcceptanceBloc(repo, stripe);
+    },
+    act: (b) => b.add(BidAcceptWithCardRequested('bid_x')),
+    expect: () => [isA<BidAccepting>(), isA<BidAccepted>()],
+    verify: (_) {
+      verify(() =>
+          repo.acceptBidWithCommission('bid_x', commissionSource: 'CARD')).called(1);
+    },
+  );
+
+  blocTest<BidAcceptanceBloc, BidAcceptanceState>(
+    'BidAcceptWithCardRequested with 3DS then confirm success → BidAccepted',
+    build: () {
+      when(() => repo.acceptBidWithCommission('bid_x', commissionSource: 'CARD'))
+          .thenAnswer((_) async => const AcceptanceResponse(
+              status: AcceptanceStatus.requires3ds, clientSecret: 'pi_x'));
+      when(() => stripe.handleNextAction('pi_x'))
+          .thenAnswer((_) async => _fakePaymentIntent());
+      when(() => repo.confirmCommissionAcceptance('bid_x'))
+          .thenAnswer((_) async => const ConfirmResponse(accepted: true));
+      return BidAcceptanceBloc(repo, stripe);
+    },
+    act: (b) => b.add(BidAcceptWithCardRequested('bid_x')),
+    expect: () => [isA<BidAccepting>(), isA<BidAccepted>()],
+  );
 }
