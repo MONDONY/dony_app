@@ -4,6 +4,8 @@ import 'package:dony/app/app.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/firebase/firebase_options.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
+import 'package:bloc/bloc.dart';
+import 'package:dony/core/services/analytics_bloc_observer.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/config/data/config_repository.dart';
@@ -99,6 +101,7 @@ Future<void> _bootstrap() async {
     await Posthog().setup(config);
     // Rétablit l'état opt-in/out selon le consentement déjà stocké dans Hive.
     await getIt<AnalyticsService>().onConfigured();
+    Bloc.observer = AnalyticsBlocObserver(getIt<AnalyticsService>());
   }
 
   // NB : on ne déconnecte plus au démarrage sur un « appareil non enregistré ».
