@@ -11,6 +11,7 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
 
   BidAcceptanceBloc(this._repo, this._stripe) : super(BidAcceptanceInitial()) {
     on<BidAcceptRequested>(_accept);
+    on<BidAcceptWithCardRequested>(_acceptWithCard);
   }
 
   Future<void> _accept(
@@ -18,27 +19,57 @@ class BidAcceptanceBloc extends Bloc<BidAcceptanceEvent, BidAcceptanceState> {
     emit(BidAccepting());
     try {
       final r = await _repo.acceptBidWithCommission(e.bidId);
-      switch (r.status) {
-        case AcceptanceStatus.accepted:
-          emit(BidAccepted());
-          return;
-        case AcceptanceStatus.requires3ds:
-          try {
-            await _stripe.handleNextAction(r.clientSecret!);
-            final c = await _repo.confirmCommissionAcceptance(e.bidId);
-            emit(c.accepted
-                ? BidAccepted()
-                : BidFailed(c.error ?? 'Confirmation échouée', cardDeclined: true));
-          } on StripeException {
-            emit(BidFailed('Authentification bancaire interrompue', cardDeclined: true));
-          }
-          return;
-        case AcceptanceStatus.failed:
-          emit(BidFailed(r.error ?? 'Acceptation refusée', cardDeclined: true));
-          return;
-      }
+      await _handleResponse(r, e.bidId, emit);
     } catch (err) {
       emit(BidFailed(err.toString()));
+    }
+  }
+
+  Future<void> _acceptWithCard(
+      BidAcceptWithCardRequested e, Emitter<BidAcceptanceState> emit) async {
+    emit(BidAccepting());
+    try {
+      final r = await _repo.acceptBidWithCommission(
+        e.bidId,
+        commissionSource: 'CARD',
+      );
+      await _handleResponse(r, e.bidId, emit);
+    } catch (err) {
+      emit(BidFailed(err.toString()));
+    }
+  }
+
+  Future<void> _handleResponse(
+    AcceptanceResponse r,
+    String bidId,
+    Emitter<BidAcceptanceState> emit,
+  ) async {
+    switch (r.status) {
+      case AcceptanceStatus.accepted:
+        emit(BidAccepted());
+        return;
+      case AcceptanceStatus.requires3ds:
+        try {
+          await _stripe.handleNextAction(r.clientSecret!);
+          final c = await _repo.confirmCommissionAcceptance(bidId);
+          emit(c.accepted
+              ? BidAccepted()
+              : BidFailed(c.error ?? 'Confirmation échouée', cardDeclined: true));
+        } on StripeException {
+          emit(BidFailed('Authentification bancaire interrompue', cardDeclined: true));
+        }
+        return;
+      case AcceptanceStatus.insufficientWallet:
+        emit(BidWalletInsufficient(
+          availableBalance: r.availableBalance ?? 0,
+          requiredCommission: r.requiredCommission ?? 0,
+          hasCard: r.hasCard ?? false,
+          bidId: bidId,
+        ));
+        return;
+      case AcceptanceStatus.failed:
+        emit(BidFailed(r.error ?? 'Acceptation refusée', cardDeclined: true));
+        return;
     }
   }
 }

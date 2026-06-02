@@ -11,3 +11,17 @@ class BidFailed extends BidAcceptanceState {
   final bool cardDeclined;
   BidFailed(this.message, {this.cardDeclined = false});
 }
+
+class BidWalletInsufficient extends BidAcceptanceState {
+  final double availableBalance;
+  final double requiredCommission;
+  final bool hasCard;
+  final String bidId;
+
+  BidWalletInsufficient({
+    required this.availableBalance,
+    required this.requiredCommission,
+    required this.hasCard,
+    required this.bidId,
+  });
+}

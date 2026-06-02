@@ -203,6 +203,79 @@ class _BidListViewState extends State<_BidListView>
     );
   }
 
+  void _showWalletInsufficientSheet(
+      BuildContext context, acs.BidWalletInsufficient state) {
+    DonyBottomSheet.show<void>(
+      context,
+      title: 'Solde insuffisant',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Commission requise : ${state.requiredCommission.toStringAsFixed(2)} €',
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: DonyColors.textPrimary),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Solde wallet : ${state.availableBalance.toStringAsFixed(2)} €',
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: DonyColors.textMuted),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Rechargez votre wallet ou payez la commission directement par carte.',
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: DonyColors.textMuted),
+          ),
+        ],
+      ),
+      stickyBottom: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DonyButton(
+            label: 'Recharger mon wallet',
+            onPressed: () async {
+              context.pop();
+              // /topup/method est le point d'entrée correct (passe extra: méthode à /topup/amount).
+              final recharged = await context.push<bool>('/payments/wallet/topup/method');
+              if ((recharged ?? false) && context.mounted) {
+                context.read<BidAcceptanceBloc>().add(ace.BidAcceptRequested(state.bidId));
+              }
+            },
+          ),
+          if (state.hasCard) ...[
+            const SizedBox(height: 8),
+            DonyButton(
+              label: 'Payer par carte',
+              variant: DonyButtonVariant.secondary,
+              onPressed: () {
+                context.pop();
+                context.read<BidAcceptanceBloc>().add(ace.BidAcceptWithCardRequested(state.bidId));
+              },
+            ),
+          ] else ...[
+            const SizedBox(height: 8),
+            DonyButton(
+              label: 'Ajouter une carte',
+              variant: DonyButtonVariant.secondary,
+              onPressed: () async {
+                context.pop();
+                await context.push('/payments/commission-method');
+              },
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   // ── BLoC listeners ─────────────────────────────────────────────────────────
 
   void _onCashAcceptanceStateChange(
@@ -212,6 +285,11 @@ class _BidListViewState extends State<_BidListView>
       DonySnackbar.show(context,
           message: 'Demande acceptée !', type: DonySnackbarType.success);
       context.read<BidBloc>().add(BidListRequested(widget.announcementId));
+    } else if (state is acs.BidWalletInsufficient) {
+      // Ne pas clear _processingBidIds ici — garder le bid « en cours » tant que
+      // la sheet est ouverte pour éviter un double-submit si l'user la ferme par
+      // l'extérieur et retape Accept. Le clear se fait à la résolution terminale.
+      _showWalletInsufficientSheet(context, state);
     } else if (state is acs.BidFailed) {
       setState(() => _processingBidIds.clear());
       if (state.cardDeclined) {

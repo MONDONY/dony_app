@@ -371,6 +371,7 @@ void main() {
         find.descendant(of: cashSwitchFinder, matching: find.byType(Switch)).last,
       );
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300)); // settle notice fadeIn
 
       expect(cashEnabled.value, isTrue);
     });

@@ -14,6 +14,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/screens/create_announcement_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
@@ -66,14 +67,6 @@ const _validCard = CommissionMethod(
   expMonth: 12,
   expYear: 2028,
   expirationStatus: ExpirationStatus.valid,
-);
-
-const _expiredCard = CommissionMethod(
-  brand: 'visa',
-  last4: '1234',
-  expMonth: 1,
-  expYear: 2020,
-  expirationStatus: ExpirationStatus.expired,
 );
 
 final _testPickupAddress = AddressData(
@@ -231,10 +224,10 @@ void main() {
     commissionBloc = MockCommissionMethodBloc();
   });
 
-  // ── 1. cashToggle_disabledWhenNotConfigured ───────────────────────────────
+  // ── 1. cashToggle_alwaysEnabled (carte de commission non requise) ──────────
 
   testWidgets(
-    'cashToggle_disabledWhenNotConfigured: switch disabled + link visible',
+    'cashToggle_alwaysEnabled: switch enabled even when commission method not configured',
     (tester) async {
       when(() => commissionBloc.state)
           .thenReturn(CommissionMethodNotConfigured());
@@ -246,30 +239,28 @@ void main() {
         commissionBloc: commissionBloc,
       );
 
-      // Very tall viewport — widget is in tree without scrolling needed
       expect(find.byKey(const Key('payment-method-cash')), findsOneWidget);
 
       final cashSwitch = find.byKey(const Key('payment-method-cash'));
-
-      // The Switch widget inside should be disabled (onChanged == null)
       final switchWidget = tester.widget<Switch>(
         find.descendant(of: cashSwitch, matching: find.byType(Switch)).last,
       );
-      expect(switchWidget.onChanged, isNull,
-          reason: 'CASH switch must be disabled when not configured');
-
-      // "Ajouter une carte commission →" link must be visible
-      expect(find.byKey(const Key('add-commission-card-link')), findsOneWidget);
+      // La carte n'est plus requise à la création : vérification reportée à l'acceptation.
+      expect(switchWidget.onChanged, isNotNull,
+          reason:
+              'CASH switch must be enabled regardless of commission method state');
+      // L'ancien lien "Ajouter une carte commission →" ne doit plus exister.
+      expect(find.byKey(const Key('add-commission-card-link')), findsNothing);
     },
   );
 
-  // ── 2. cashToggle_disabledWhenExpired ────────────────────────────────────
+  // ── 2. cashToggle_revealsNoticeWhenEnabled ────────────────────────────────
 
   testWidgets(
-    'cashToggle_disabledWhenExpired: switch disabled when card is expired',
+    'cashToggle_revealsNoticeWhenEnabled: info notice appears only when CASH is on',
     (tester) async {
       when(() => commissionBloc.state)
-          .thenReturn(CommissionMethodLoaded(_expiredCard));
+          .thenReturn(CommissionMethodNotConfigured());
       when(() => commissionBloc.stream).thenAnswer((_) => const Stream.empty());
 
       await _pumpScreen(
@@ -278,14 +269,17 @@ void main() {
         commissionBloc: commissionBloc,
       );
 
-      expect(find.byKey(const Key('payment-method-cash')), findsOneWidget);
+      // En création le toggle démarre OFF → l'encart est masqué.
+      expect(find.byType(CashCommissionNotice), findsNothing);
 
-      final cashSwitch = find.byKey(const Key('payment-method-cash'));
-      final switchWidget = tester.widget<Switch>(
-        find.descendant(of: cashSwitch, matching: find.byType(Switch)).last,
-      );
-      expect(switchWidget.onChanged, isNull,
-          reason: 'CASH switch must be disabled when card is expired');
+      // Activer le toggle Espèces.
+      await tester.tap(find.byKey(const Key('payment-method-cash')));
+      await tester.pump(); // rebuild
+      await tester.pump(const Duration(milliseconds: 300)); // AnimatedSize + fadeIn
+
+      expect(find.byType(CashCommissionNotice), findsOneWidget,
+          reason:
+              'L\'encart commission Dony doit apparaître quand Espèces est activé');
     },
   );
 
@@ -320,6 +314,7 @@ void main() {
       // Tap to enable CASH
       await tester.tap(cashSwitch);
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300)); // settle notice fadeIn
 
       final switchWidgetAfter = tester.widget<Switch>(
         find.descendant(of: cashSwitch, matching: find.byType(Switch)).last,
@@ -402,6 +397,8 @@ void main() {
       expect(switchWidget.value, isTrue,
           reason:
               'CASH switch must start ON when editing an announcement with CASH');
+      // Toggle ON dès l'ouverture → l'encart commission est visible.
+      expect(find.byType(CashCommissionNotice), findsOneWidget);
     },
   );
 }

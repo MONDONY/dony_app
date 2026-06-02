@@ -100,8 +100,11 @@ class BidRepository {
   Future<BidModel> confirmPayment(String bidId) =>
       _datasource.confirmPayment(bidId);
 
-  Future<AcceptanceResponse> acceptBidWithCommission(String bidId) =>
-      _datasource.acceptBidWithCommission(bidId);
+  Future<AcceptanceResponse> acceptBidWithCommission(
+    String bidId, {
+    String commissionSource = 'WALLET_FIRST',
+  }) =>
+      _datasource.acceptBidWithCommission(bidId, commissionSource: commissionSource);
 
   Future<ConfirmResponse> confirmCommissionAcceptance(String bidId) =>
       _datasource.confirmCommissionAcceptance(bidId);

@@ -8,10 +8,8 @@ import 'package:dony/features/matching/bloc/announcement_form_event.dart';
 import 'package:dony/features/matching/bloc/announcement_form_state.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_create_announcement_constants.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
+import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
 import 'package:dony/features/matching/presentation/widgets/price_hint_widget.dart';
-import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
-import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
-import 'package:dony/features/payments/cash/data/models/commission_method.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -451,12 +449,7 @@ class PrixConditionsStep extends StatelessWidget {
               return _buildStripeNotConfiguredPaymentSection(tt, cs, ctx);
             }
 
-            return BlocBuilder<CommissionMethodBloc, CommissionMethodState>(
-              builder: (context, cmState) {
-                final isLoaded = cmState is CommissionMethodLoaded &&
-                    cmState.card.expirationStatus !=
-                        ExpirationStatus.expired;
-                return CaSectionCard(
+            return CaSectionCard(
                   child: Column(
                     children: [
                       SwitchListTile(
@@ -491,74 +484,68 @@ class PrixConditionsStep extends StatelessWidget {
                         ),
                       ),
                       const CaRowDivider(),
+                      // La carte de commission n'est plus requise à la création d'annonce.
+                      // La vérification (wallet ou carte) est reportée à l'acceptation du bid.
                       ValueListenableBuilder<bool>(
                         valueListenable: cashEnabledNotifier,
                         builder: (context, cashEnabled, _) {
-                          return SwitchListTile(
-                            key: const Key('payment-method-cash'),
-                            value: isLoaded ? cashEnabled : false,
-                            onChanged: isLoaded
-                                ? (val) => cashEnabledNotifier.value = val
-                                : null,
-                            activeThumbColor: cs.primary,
-                            title: Row(
-                              children: [
-                                const Icon(Icons.payments_rounded, size: 18),
-                                const SizedBox(width: DonySpacing.sm),
-                                Text(
-                                  'Espèces',
-                                  style: tt.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: isLoaded
-                                        ? cs.onSurface
-                                        : cs.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            subtitle: isLoaded
-                                ? Text(
-                                    'Le voyageur perçoit la commission à la remise',
-                                    style: tt.bodySmall?.copyWith(
-                                        color: cs.onSurfaceVariant),
-                                  )
-                                : GestureDetector(
-                                    onTap: () => context
-                                        .push('/payments/commission-method'),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          'Ajouter une carte commission',
-                                          key: const Key(
-                                              'add-commission-card-link'),
-                                          style: tt.bodySmall?.copyWith(
-                                            color: cs.primary,
-                                            decoration:
-                                                TextDecoration.underline,
-                                          ),
-                                        ),
-                                        const SizedBox(width: DonySpacing.xs),
-                                        Icon(
-                                          DonyIcons.arrowRight,
-                                          size: 14,
-                                          color: cs.primary,
-                                        ),
-                                      ],
+                          return Column(
+                            children: [
+                              SwitchListTile(
+                                key: const Key('payment-method-cash'),
+                                value: cashEnabled,
+                                onChanged: (val) =>
+                                    cashEnabledNotifier.value = val,
+                                activeThumbColor: cs.primary,
+                                title: Row(
+                                  children: [
+                                    const Icon(Icons.payments_rounded,
+                                        size: 18),
+                                    const SizedBox(width: DonySpacing.sm),
+                                    Text(
+                                      'Espèces',
+                                      style: tt.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: cs.onSurface,
+                                      ),
                                     ),
-                                  ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: DonySpacing.base,
-                              vertical: DonySpacing.xs,
-                            ),
+                                  ],
+                                ),
+                                subtitle: Text(
+                                  'Commission prélevée au voyageur à la remise',
+                                  style: tt.bodySmall?.copyWith(
+                                      color: cs.onSurfaceVariant),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: DonySpacing.base,
+                                  vertical: DonySpacing.xs,
+                                ),
+                              ),
+                              AnimatedSize(
+                                duration: 200.ms,
+                                curve: Curves.easeOutCubic,
+                                alignment: Alignment.topCenter,
+                                child: cashEnabled
+                                    ? Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                          DonySpacing.base,
+                                          0,
+                                          DonySpacing.base,
+                                          DonySpacing.md,
+                                        ),
+                                        child: const CashCommissionNotice()
+                                            .animate()
+                                            .fadeIn(duration: 200.ms),
+                                      )
+                                    : const SizedBox(width: double.infinity),
+                              ),
+                            ],
                           );
                         },
                       ),
                     ],
                   ),
                 );
-              },
-            );
           },
         ).animate().fadeIn(delay: 180.ms),
         const SizedBox(height: DonySpacing.xxl),

@@ -146,14 +146,21 @@ class BidRemoteDatasource {
     return BidModel.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<AcceptanceResponse> acceptBidWithCommission(String bidId) async {
+  Future<AcceptanceResponse> acceptBidWithCommission(
+    String bidId, {
+    String commissionSource = 'WALLET_FIRST',
+  }) async {
     try {
-      final response = await _apiClient.dio.post('/bids/$bidId/accept-with-commission');
+      final response = await _apiClient.dio.post(
+        '/bids/$bidId/accept-with-commission',
+        queryParameters: {'commissionSource': commissionSource},
+      );
       return AcceptanceResponse.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
-      // Le backend retourne 422 pour FAILED (carte refusée, etc.)
-      // On parse le body comme AcceptanceResponse pour afficher la raison précise
-      if (e.response?.statusCode == 422 && e.response?.data != null) {
+      // Le backend retourne 409 pour INSUFFICIENT_WALLET et 422 pour FAILED.
+      // On parse le body comme AcceptanceResponse pour obtenir les détails (solde dispo, etc.)
+      final code = e.response?.statusCode;
+      if ((code == 409 || code == 422) && e.response?.data != null) {
         return AcceptanceResponse.fromJson(e.response!.data as Map<String, dynamic>);
       }
       rethrow;
@@ -161,7 +168,17 @@ class BidRemoteDatasource {
   }
 
   Future<ConfirmResponse> confirmCommissionAcceptance(String bidId) async {
-    final response = await _apiClient.dio.post('/bids/$bidId/confirm-acceptance');
-    return ConfirmResponse.fromJson(response.data as Map<String, dynamic>);
+    try {
+      final response = await _apiClient.dio.post('/bids/$bidId/confirm-acceptance');
+      return ConfirmResponse.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      // Le backend retourne 422 avec ConfirmAcceptanceResponse(accepted:false, error:...)
+      // quand la confirmation échoue après 3DS. Sans ce catch Dio lèverait une exception
+      // au lieu de retourner le ConfirmResponse, rendant le chemin cardDeclined mort.
+      if (e.response?.statusCode == 422 && e.response?.data != null) {
+        return ConfirmResponse.fromJson(e.response!.data as Map<String, dynamic>);
+      }
+      rethrow;
+    }
   }
 }

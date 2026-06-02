@@ -37,34 +37,12 @@ class SavedTripsService {
     await _hive.userPrefs.put(_key, _encode(trips));
   }
 
+  // Round-trip complet via le sérialiseur généré : préserve TOUS les champs
+  // (acceptedPaymentMethods, pricingMode, priceGridItems, transportMode, ...).
+  // L'ancien _toMap manuel omettait acceptedPaymentMethods → un trajet rouvert
+  // depuis les favoris retombait sur {stripe} et ne proposait plus le cash.
+  // jsonEncode appelle automatiquement .toJson() sur les objets imbriqués
+  // (AddressData, TravelerProfile) via son toEncodable par défaut.
   String _encode(List<AnnouncementModel> trips) =>
-      jsonEncode(trips.map(_toMap).toList());
-
-  Map<String, dynamic> _toMap(AnnouncementModel a) => {
-        'id': a.id,
-        'travelerId': a.travelerId,
-        'departureCity': a.departureCity,
-        'arrivalCity': a.arrivalCity,
-        'departureDate': a.departureDate.toUtc().toIso8601String(),
-        'departureTime': a.departureTime,
-        'arrivalTime': a.arrivalTime,
-        'pickupAddress': a.pickupAddress?.toJson(),
-        'deliveryAddress': a.deliveryAddress?.toJson(),
-        'availableKg': a.availableKg,
-        'totalKg': a.totalKg,
-        'pricePerKg': a.pricePerKg,
-        'status': a.status,
-        'bidsCount': a.bidsCount,
-        'traveler': a.traveler != null
-            ? {
-                'id': a.traveler!.id,
-                'displayName': a.traveler!.displayName,
-                'averageRating': a.traveler!.averageRating,
-                'totalTrips': a.traveler!.totalTrips,
-                'kiloPro': a.traveler!.kiloPro,
-              }
-            : null,
-        'createdAt': a.createdAt.toUtc().toIso8601String(),
-        'updatedAt': a.updatedAt.toUtc().toIso8601String(),
-      };
+      jsonEncode(trips.map((a) => a.toJson()).toList());
 }

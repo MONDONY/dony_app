@@ -30,8 +30,38 @@ void main() {
     expect(r.error, 'Carte refusée');
   });
 
+  test('parses INSUFFICIENT_WALLET with balance details', () {
+    final r = AcceptanceResponse.fromJson({
+      'status': 'INSUFFICIENT_WALLET',
+      'availableBalance': 3.5,
+      'requiredCommission': 12.0,
+      'hasCard': true,
+    });
+    expect(r.status, AcceptanceStatus.insufficientWallet);
+    expect(r.availableBalance, 3.5);
+    expect(r.requiredCommission, 12.0);
+    expect(r.hasCard, isTrue);
+  });
+
+  test('INSUFFICIENT_WALLET tolerates integer numeric fields', () {
+    final r = AcceptanceResponse.fromJson({
+      'status': 'INSUFFICIENT_WALLET',
+      'availableBalance': 0,
+      'requiredCommission': 12,
+      'hasCard': false,
+    });
+    expect(r.availableBalance, 0.0);
+    expect(r.requiredCommission, 12.0);
+    expect(r.hasCard, isFalse);
+  });
+
   test('unknown status defaults to failed', () {
     final r = AcceptanceResponse.fromJson({'status': 'UNKNOWN'});
+    expect(r.status, AcceptanceStatus.failed);
+  });
+
+  test('missing status defaults to failed', () {
+    final r = AcceptanceResponse.fromJson({});
     expect(r.status, AcceptanceStatus.failed);
   });
 

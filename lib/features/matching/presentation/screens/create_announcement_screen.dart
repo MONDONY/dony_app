@@ -13,10 +13,9 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/matching/presentation/widgets/address_picker_field.dart';
+import 'package:dony/features/matching/presentation/widgets/cash_commission_notice.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
-import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
-import 'package:dony/features/payments/cash/data/models/commission_method.dart';
 import 'package:dony/features/settings/bloc/business_prefs_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_bloc.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
@@ -1131,54 +1130,50 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                   icon: Icons.payments_rounded,
                 ),
                 const SizedBox(height: DonySpacing.sm),
-                BlocBuilder<CommissionMethodBloc, CommissionMethodState>(
-                  builder: (context, cmState) {
-                    final isLoaded = cmState is CommissionMethodLoaded &&
-                        cmState.card.expirationStatus != ExpirationStatus.expired;
-                    return _SectionCard(
-                      child: Column(
-                        children: [
-                          // STRIPE — always enabled, always on
-                          SwitchListTile(
-                            key: const Key('payment-method-stripe'),
-                            value: true,
-                            onChanged: null,
-                            activeColor: cs.primary,
-                            title: Row(
-                              children: [
-                                const Icon(Icons.credit_card_rounded, size: 18),
-                                const SizedBox(width: DonySpacing.sm),
-                                Text(
-                                  'Carte bancaire (Stripe)',
-                                  style: tt.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: cs.onSurface,
-                                  ),
-                                ),
-                              ],
+                // La carte de commission n'est plus requise à la création d'annonce.
+                // La vérification (wallet ou carte) est reportée à l'acceptation du bid.
+                _SectionCard(
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        key: const Key('payment-method-stripe'),
+                        value: true,
+                        onChanged: null,
+                        activeColor: cs.primary,
+                        title: Row(
+                          children: [
+                            const Icon(Icons.credit_card_rounded, size: 18),
+                            const SizedBox(width: DonySpacing.sm),
+                            Text(
+                              'Carte bancaire (Stripe)',
+                              style: tt.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: cs.onSurface,
+                              ),
                             ),
-                            subtitle: Text(
-                              'Paiement sécurisé par défaut',
-                              style: tt.bodySmall
-                                  ?.copyWith(color: cs.onSurfaceVariant),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: DonySpacing.base,
-                              vertical: DonySpacing.xs,
-                            ),
-                          ),
-                          const _RowDivider(),
-                          // CASH — conditional on commission method state
-                          ValueListenableBuilder<bool>(
-                            valueListenable: _cashEnabledNotifier,
-                            builder: (context, cashEnabled, _) {
-                              return SwitchListTile(
+                          ],
+                        ),
+                        subtitle: Text(
+                          'Paiement sécurisé par défaut',
+                          style: tt.bodySmall
+                              ?.copyWith(color: cs.onSurfaceVariant),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: DonySpacing.base,
+                          vertical: DonySpacing.xs,
+                        ),
+                      ),
+                      const _RowDivider(),
+                      ValueListenableBuilder<bool>(
+                        valueListenable: _cashEnabledNotifier,
+                        builder: (context, cashEnabled, _) {
+                          return Column(
+                            children: [
+                              SwitchListTile(
                                 key: const Key('payment-method-cash'),
-                                value: isLoaded ? cashEnabled : false,
-                                onChanged: isLoaded
-                                    ? (val) =>
-                                        _cashEnabledNotifier.value = val
-                                    : null,
+                                value: cashEnabled,
+                                onChanged: (val) =>
+                                    _cashEnabledNotifier.value = val,
                                 activeColor: cs.primary,
                                 title: Row(
                                   children: [
@@ -1189,44 +1184,45 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                                       'Espèces',
                                       style: tt.bodyMedium?.copyWith(
                                         fontWeight: FontWeight.w600,
-                                        color: isLoaded
-                                            ? cs.onSurface
-                                            : cs.onSurfaceVariant,
+                                        color: cs.onSurface,
                                       ),
                                     ),
                                   ],
                                 ),
-                                subtitle: isLoaded
-                                    ? Text(
-                                        'Le voyageur perçoit la commission à la remise',
-                                        style: tt.bodySmall?.copyWith(
-                                            color: cs.onSurfaceVariant),
-                                      )
-                                    : GestureDetector(
-                                        onTap: () => context
-                                            .push('/payments/commission-method'),
-                                        child: Text(
-                                          'Ajouter une carte commission →',
-                                          key: const Key(
-                                              'add-commission-card-link'),
-                                          style: tt.bodySmall?.copyWith(
-                                            color: cs.primary,
-                                            decoration:
-                                                TextDecoration.underline,
-                                          ),
-                                        ),
-                                      ),
+                                subtitle: Text(
+                                  'Commission prélevée au voyageur à la remise',
+                                  style: tt.bodySmall?.copyWith(
+                                      color: cs.onSurfaceVariant),
+                                ),
                                 contentPadding: const EdgeInsets.symmetric(
                                   horizontal: DonySpacing.base,
                                   vertical: DonySpacing.xs,
                                 ),
-                              );
-                            },
-                          ),
-                        ],
+                              ),
+                              AnimatedSize(
+                                duration: 200.ms,
+                                curve: Curves.easeOutCubic,
+                                alignment: Alignment.topCenter,
+                                child: cashEnabled
+                                    ? Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                          DonySpacing.base,
+                                          0,
+                                          DonySpacing.base,
+                                          DonySpacing.md,
+                                        ),
+                                        child: const CashCommissionNotice()
+                                            .animate()
+                                            .fadeIn(duration: 200.ms),
+                                      )
+                                    : const SizedBox(width: double.infinity),
+                              ),
+                            ],
+                          );
+                        },
                       ),
-                    );
-                  },
+                    ],
+                  ),
                 ).animate().fadeIn(delay: 180.ms),
               ],
             ),
