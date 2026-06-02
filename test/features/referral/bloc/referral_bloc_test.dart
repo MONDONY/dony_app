@@ -1,9 +1,11 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/bloc/referral_event.dart';
 import 'package:dony/features/referral/bloc/referral_state.dart';
 import 'package:dony/features/referral/data/models/referral_info.dart';
 import 'package:dony/features/referral/data/referral_repository.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -116,6 +118,96 @@ void main() {
       isA<ReferralLoading>(),
       predicate<ReferralState>(
         (s) => s is ReferralError && s.error.message.isNotEmpty,
+      ),
+    ],
+  );
+
+  // ── ReferralRedeemRequested tests ─────────────────────────────────────────
+
+  // 8. Redeem success → [ReferralRedeemLoading, ReferralRedeemed]
+  blocTest<ReferralBloc, ReferralState>(
+    'emits [ReferralRedeemLoading, ReferralRedeemed] when redeem succeeds',
+    setUp: () {
+      when(() => mockRepo.redeemCode(any())).thenAnswer((_) async {});
+    },
+    build: buildBloc,
+    act: (bloc) => bloc.add(const ReferralRedeemRequested('AISSA0012')),
+    expect: () => [
+      isA<ReferralRedeemLoading>(),
+      isA<ReferralRedeemed>(),
+    ],
+  );
+
+  // 9. referral-code-not-found → [ReferralRedeemLoading, ReferralRedeemError]
+  blocTest<ReferralBloc, ReferralState>(
+    'emits [ReferralRedeemLoading, ReferralRedeemError] on referral-code-not-found',
+    setUp: () {
+      when(() => mockRepo.redeemCode(any())).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(),
+          error: const NetworkException(
+            'Code introuvable',
+            code: 'referral-code-not-found',
+          ),
+        ),
+      );
+    },
+    build: buildBloc,
+    act: (bloc) => bloc.add(const ReferralRedeemRequested('INVALID')),
+    expect: () => [
+      isA<ReferralRedeemLoading>(),
+      predicate<ReferralState>(
+        (s) =>
+            s is ReferralRedeemError &&
+            s.error.code == 'referral-code-not-found',
+      ),
+    ],
+  );
+
+  // 10. self-referral → [ReferralRedeemLoading, ReferralRedeemError]
+  blocTest<ReferralBloc, ReferralState>(
+    'emits [ReferralRedeemLoading, ReferralRedeemError] on self-referral',
+    setUp: () {
+      when(() => mockRepo.redeemCode(any())).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(),
+          error: const NetworkException(
+            'Auto-parrainage',
+            code: 'self-referral',
+          ),
+        ),
+      );
+    },
+    build: buildBloc,
+    act: (bloc) => bloc.add(const ReferralRedeemRequested('MYOWNCODE')),
+    expect: () => [
+      isA<ReferralRedeemLoading>(),
+      predicate<ReferralState>(
+        (s) => s is ReferralRedeemError && s.error.code == 'self-referral',
+      ),
+    ],
+  );
+
+  // 11. already-referred → [ReferralRedeemLoading, ReferralRedeemError]
+  blocTest<ReferralBloc, ReferralState>(
+    'emits [ReferralRedeemLoading, ReferralRedeemError] on already-referred',
+    setUp: () {
+      when(() => mockRepo.redeemCode(any())).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(),
+          error: const NetworkException(
+            'Déjà parrainé',
+            code: 'already-referred',
+          ),
+        ),
+      );
+    },
+    build: buildBloc,
+    act: (bloc) => bloc.add(const ReferralRedeemRequested('JEAN0234')),
+    expect: () => [
+      isA<ReferralRedeemLoading>(),
+      predicate<ReferralState>(
+        (s) => s is ReferralRedeemError && s.error.code == 'already-referred',
       ),
     ],
   );
