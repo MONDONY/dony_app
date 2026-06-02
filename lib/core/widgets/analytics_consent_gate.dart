@@ -36,11 +36,12 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
     // authStateChanges() est un broadcast stream : si l'utilisateur est déjà
     // connecté au moment du mount, le stream ne rejoue pas l'état courant.
     // On vérifie currentUser directement après le premier frame.
+    // authStateChanges() est un broadcast stream : si l'utilisateur est déjà
+    // connecté au mount, le stream ne rejoue pas l'état courant. On vérifie
+    // currentUser directement après le premier frame.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final user = FirebaseAuth.instance.currentUser;
-      // ignore: avoid_print
-      print('[Analytics] postFrame currentUser=${user?.uid ?? 'null'}');
       if (user != null) _onAuthChanged(user);
     });
   }
@@ -52,8 +53,6 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
   }
 
   void _onAuthChanged(User? user) {
-    // ignore: avoid_print
-    print('[Analytics] authStateChanged: user=${user?.uid ?? 'null'}');
     if (user != null) {
       unawaited(_analytics.identify(user.uid));
       unawaited(_maybePrompt(user.uid));
@@ -63,9 +62,6 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
   }
 
   Future<void> _maybePrompt(String userId) async {
-    // ignore: avoid_print
-    print('[Analytics] _maybePrompt: prompted=$_prompted prompting=$_prompting '
-        'configured=${_analytics.isConfigured} hasAnswered=${_analytics.hasAnswered}');
     if (_prompted || _prompting || !_analytics.isConfigured || _analytics.hasAnswered) {
       return;
     }
@@ -76,25 +72,15 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
     BuildContext? navContext;
     for (var i = 0; i < 40; i++) {
       navContext = appRouter.routerDelegate.navigatorKey.currentContext;
-      // ignore: avoid_print
-      if (i == 0) print('[Analytics] navContext check #$i: ${navContext != null ? 'ready' : 'null'}');
       if (navContext != null) break;
       await Future.delayed(const Duration(milliseconds: 50));
     }
 
     _prompting = false;
-    if (navContext == null) {
-      // ignore: avoid_print
-      print('[Analytics] navContext still null after 2s → aborting');
-      return;
-    }
+    if (navContext == null) return;
 
-    // ignore: avoid_print
-    print('[Analytics] showing consent sheet…');
     _prompted = true;
     final granted = await AnalyticsConsentSheet.show(navContext);
-    // ignore: avoid_print
-    print('[Analytics] consent sheet closed: granted=$granted');
     if (granted) {
       await _analytics.identify(userId);
     }
