@@ -174,19 +174,29 @@ Si l'appareil ne supporte pas la biométrie → afficher `DonyKeypad` pour le PI
 
 ---
 
+## Git Workflow — OBLIGATOIRE
+
+- Ne jamais commit directement sur `main` — toujours créer une branche dédiée
+- Nommage : `feature/<nom>`, `fix/<nom>`, `chore/<nom>`
+- Ne jamais inclure `Co-Authored-By: Claude` dans les messages de commit — les commits sont au nom du développeur uniquement
+
+---
+
 ## Critical Rules
 
 ### NEVER
-1. `setState` → BLoC
-2. `Navigator.push()` → GoRouter
-3. Package `http` → Dio
-4. Instancier services dans widgets/BLoCs → GetIt
-5. Données sensibles dans Hive en clair
-6. Tokens Firebase dans Hive → `FirebaseAuth.instance.currentUser`
-7. Photos > 10 MB
-8. Paiement sans biométrie/PIN
-9. GPS oublié dans les métadonnées EXIF
-10. URLs/clés hardcodées → `--dart-define-from-file`
+1. Commit directly on `main` — always use a feature branch
+2. Add `Co-Authored-By: Claude` in commit messages
+3. `setState` → BLoC
+4. `Navigator.push()` → GoRouter
+5. Package `http` → Dio
+6. Instancier services dans widgets/BLoCs → GetIt
+7. Données sensibles dans Hive en clair
+8. Tokens Firebase dans Hive → `FirebaseAuth.instance.currentUser`
+9. Photos > 10 MB
+10. Paiement sans biométrie/PIN
+11. GPS oublié dans les métadonnées EXIF
+12. URLs/clés hardcodées → `--dart-define-from-file`
 
 ### ALWAYS
 1. BLoC pour tout état de feature
