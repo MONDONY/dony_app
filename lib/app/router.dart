@@ -127,6 +127,8 @@ import 'package:dony/features/settings/presentation/screens/connected_devices_sc
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/presentation/screens/referral_screen.dart';
+import 'package:dony/features/auth/presentation/screens/referral_code_screen.dart';
+import 'package:dony/features/referral/data/referral_repository.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/presentation/screens/offline_scan_queue_screen.dart';
 import 'package:dony/features/tracking/presentation/screens/qr_scanner_screen.dart';
@@ -152,6 +154,7 @@ const _publicRoutes = {
   '/auth/email',
   '/auth/email-otp',
   '/auth/pin-setup',
+  '/auth/referral-code',
   '/auth/local',
 };
 
@@ -231,6 +234,13 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/auth/pin-setup',
       builder: (context, state) => const PinSetupScreen(),
+    ),
+    GoRoute(
+      path: '/auth/referral-code',
+      builder: (context, state) => BlocProvider(
+        create: (_) => ReferralBloc(getIt<ReferralRepository>()),
+        child: const ReferralCodeScreen(),
+      ),
     ),
     GoRoute(
       path: '/auth/local',

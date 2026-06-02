@@ -54,7 +54,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
       if (_pin == _firstPin) {
         await getIt<LocalAuthService>().savePin(_pin);
         if (mounted) {
-          context.go('/home');
+          context.go('/auth/referral-code');
         }
       } else {
         setState(() {
