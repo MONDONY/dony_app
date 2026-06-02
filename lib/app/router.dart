@@ -12,6 +12,7 @@ import 'package:dony/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:dony/features/auth/presentation/screens/otp_verification_screen.dart';
 import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:dony/features/auth/presentation/screens/auth_method_screen.dart';
+import 'package:dony/features/auth/presentation/screens/analytics_consent_screen.dart';
 import 'package:dony/features/auth/presentation/screens/pin_setup_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
@@ -157,6 +158,7 @@ const _publicRoutes = {
   '/auth/email-otp',
   '/auth/pin-setup',
   '/auth/referral-code',
+  '/auth/analytics-consent',
   '/auth/local',
 };
 
@@ -245,6 +247,10 @@ final appRouter = GoRouter(
         create: (_) => ReferralBloc(getIt<ReferralRepository>()),
         child: const ReferralCodeScreen(),
       ),
+    ),
+    GoRoute(
+      path: '/auth/analytics-consent',
+      builder: (context, state) => const AnalyticsConsentScreen(),
     ),
     GoRoute(
       path: '/auth/local',
