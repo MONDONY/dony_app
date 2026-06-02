@@ -21,6 +21,7 @@ import 'package:dony/features/profile/presentation/widgets/edit_profile_bottom_s
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
 import 'package:dony/features/profile/presentation/widgets/upgrade_pro_bottom_sheet.dart';
+import 'package:dony/features/referral/presentation/widgets/redeem_code_bottom_sheet.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -799,8 +800,18 @@ class _AccountTab extends StatelessWidget {
                   style: tt.labelMedium
                       ?.copyWith(color: cs.onSurfaceVariant),
                 ),
-                showDivider: false,
+                showDivider: true,
                 onTap: () => context.push('/profile/referral'),
+              ),
+              DonyListTile(
+                icon: Icons.card_giftcard_rounded,
+                iconColor: cs.primary,
+                iconBgColor: cs.primaryContainer,
+                label: 'J\'ai un code parrain',
+                showDivider: false,
+                onTap: () async {
+                  await RedeemCodeBottomSheet.show(context);
+                },
               ),
             ],
           ).animate().fadeIn(delay: 240.ms).slideY(
@@ -861,8 +872,18 @@ class _AccountTab extends StatelessWidget {
                   style: tt.labelMedium
                       ?.copyWith(color: cs.onSurfaceVariant),
                 ),
-                showDivider: false,
+                showDivider: true,
                 onTap: () => context.push('/profile/referral'),
+              ),
+              DonyListTile(
+                icon: Icons.card_giftcard_rounded,
+                iconColor: cs.primary,
+                iconBgColor: cs.primaryContainer,
+                label: 'J\'ai un code parrain',
+                showDivider: false,
+                onTap: () async {
+                  await RedeemCodeBottomSheet.show(context);
+                },
               ),
             ],
           ).animate().fadeIn(delay: 160.ms).slideY(
