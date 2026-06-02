@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/services/saved_trips_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
@@ -114,6 +115,39 @@ void main() {
       await _service.saveTrip(withTraveler);
       final saved = _service.getSavedTrips();
       expect(saved.first.traveler?.displayName, 'Ibrahima Diallo');
+    });
+
+    test('getSavedTrips preserves acceptedPaymentMethods (le cash n\'est pas perdu)',
+        () async {
+      // Régression : l'ancien _toMap omettait acceptedPaymentMethods → un trajet
+      // rouvert depuis les favoris retombait sur {stripe} et ne proposait plus le cash.
+      final withCash = AnnouncementModel(
+        id: 'ann-cash',
+        travelerId: 'trav-3',
+        departureCity: 'Marseille',
+        arrivalCity: 'Bamako',
+        departureDate: DateTime(2024, 8, 1),
+        availableKg: 8.0,
+        totalKg: 8.0,
+        pricePerKg: 10.0,
+        status: 'OPEN',
+        bidsCount: 0,
+        createdAt: DateTime(2024, 5, 1),
+        updatedAt: DateTime(2024, 5, 1),
+        acceptedPaymentMethods: const {
+          BidPaymentMethod.stripe,
+          BidPaymentMethod.cash,
+        },
+      );
+      await _service.saveTrip(withCash);
+      final saved = _service.getSavedTrips();
+      expect(
+        saved.first.acceptedPaymentMethods,
+        containsAll(<BidPaymentMethod>[
+          BidPaymentMethod.stripe,
+          BidPaymentMethod.cash,
+        ]),
+      );
     });
   });
 }
