@@ -4,20 +4,14 @@ import 'package:dony/app/router.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/analytics_consent_sheet.dart';
-import 'package:dony/features/auth/bloc/auth_bloc.dart';
-import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Branche le tracking sur le cycle de vie d'authentification :
+/// Branche le tracking sur le cycle de vie d'authentification.
 ///
-/// - **login** (`AuthAuthenticated`) → `identify(userId)` + demande de
-///   consentement la première fois ;
-/// - **logout** (`AuthAuthenticated` → `AuthInitial`) → `reset()` pour
-///   dissocier la session de l'utilisateur.
-///
-/// Placé dans `MaterialApp.builder` (au-dessus du Navigator), il utilise le
-/// `navigatorKey` de GoRouter pour présenter le sheet avec un contexte valide.
+/// Utilise directement [FirebaseAuth.instance.authStateChanges()] pour éviter
+/// toute dépendance au context/BlocProvider (AuthBloc est un factory GetIt,
+/// non accessible depuis MaterialApp.builder de façon fiable).
 class AnalyticsConsentGate extends StatefulWidget {
   const AnalyticsConsentGate({required this.child, super.key});
 
@@ -28,6 +22,7 @@ class AnalyticsConsentGate extends StatefulWidget {
 }
 
 class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
+  StreamSubscription<User?>? _authSub;
   bool _prompted = false;
   bool _prompting = false;
 
@@ -36,20 +31,22 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
   @override
   void initState() {
     super.initState();
-    // Cas « déjà connecté au démarrage » (session restaurée) : la transition
-    // n'est pas captée par le listener, on traite l'état courant après le 1er frame.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final state = context.read<AuthBloc>().state;
-      if (state is AuthAuthenticated) {
-        _onAuthenticated(state.user.id);
-      }
-    });
+    _authSub = FirebaseAuth.instance.authStateChanges().listen(_onAuthChanged);
   }
 
-  void _onAuthenticated(String userId) {
-    unawaited(_analytics.identify(userId));
-    unawaited(_maybePrompt(userId));
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
+  }
+
+  void _onAuthChanged(User? user) {
+    if (user != null) {
+      unawaited(_analytics.identify(user.uid));
+      unawaited(_maybePrompt(user.uid));
+    } else {
+      unawaited(_analytics.reset());
+    }
   }
 
   Future<void> _maybePrompt(String userId) async {
@@ -58,10 +55,10 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
     }
     _prompting = true;
 
-    // Au premier frame GoRouter n'a pas encore créé le Navigator.
-    // On attend jusqu'à 1 s que le navigatorKey soit prêt.
+    // GoRouter n'a pas encore créé son Navigator au premier frame.
+    // On attend jusqu'à 2 s que le navigatorKey soit prêt.
     BuildContext? navContext;
-    for (var i = 0; i < 20; i++) {
+    for (var i = 0; i < 40; i++) {
       navContext = appRouter.routerDelegate.navigatorKey.currentContext;
       if (navContext != null) break;
       await Future.delayed(const Duration(milliseconds: 50));
@@ -78,19 +75,5 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return BlocListener<AuthBloc, AuthState>(
-      listenWhen: (prev, curr) =>
-          curr is AuthAuthenticated ||
-          (prev is AuthAuthenticated && curr is AuthInitial),
-      listener: (context, state) {
-        if (state is AuthAuthenticated) {
-          _onAuthenticated(state.user.id);
-        } else {
-          unawaited(_analytics.reset());
-        }
-      },
-      child: widget.child,
-    );
-  }
+  Widget build(BuildContext context) => widget.child;
 }
