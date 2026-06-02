@@ -9,9 +9,11 @@ import 'package:flutter/widgets.dart';
 
 /// Branche le tracking sur le cycle de vie d'authentification.
 ///
-/// Utilise directement [FirebaseAuth.instance.authStateChanges()] pour éviter
-/// toute dépendance au context/BlocProvider (AuthBloc est un factory GetIt,
-/// non accessible depuis MaterialApp.builder de façon fiable).
+/// Utilise [FirebaseAuth.instance.authStateChanges()] pour éviter toute
+/// dépendance au context/BlocProvider (AuthBloc est un factory GetIt).
+///
+/// Le sheet de consentement n'est montré qu'une fois l'utilisateur arrivé
+/// sur `/home`, pour ne pas interférer avec les écrans de setup (PIN, KYC…).
 class AnalyticsConsentGate extends StatefulWidget {
   const AnalyticsConsentGate({required this.child, super.key});
 
@@ -33,9 +35,6 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
     super.initState();
     _authSub = FirebaseAuth.instance.authStateChanges().listen(_onAuthChanged);
 
-    // authStateChanges() est un broadcast stream : si l'utilisateur est déjà
-    // connecté au moment du mount, le stream ne rejoue pas l'état courant.
-    // On vérifie currentUser directement après le premier frame.
     // authStateChanges() est un broadcast stream : si l'utilisateur est déjà
     // connecté au mount, le stream ne rejoue pas l'état courant. On vérifie
     // currentUser directement après le premier frame.
@@ -67,18 +66,34 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
     }
     _prompting = true;
 
-    // GoRouter n'a pas encore créé son Navigator au premier frame.
-    // On attend jusqu'à 2 s que le navigatorKey soit prêt.
+    // 1. Attendre que le Navigator GoRouter soit prêt (max 2 s).
     BuildContext? navContext;
     for (var i = 0; i < 40; i++) {
       navContext = appRouter.routerDelegate.navigatorKey.currentContext;
       if (navContext != null) break;
       await Future.delayed(const Duration(milliseconds: 50));
     }
+    if (navContext == null) {
+      _prompting = false;
+      return;
+    }
+
+    // 2. Attendre que la navigation se stabilise sur /home (max 10 s).
+    // Évite d'interrompre les écrans de setup post-login (PIN, KYC, onboarding).
+    for (var i = 0; i < 100; i++) {
+      final location = appRouter.routerDelegate.currentConfiguration.uri.path;
+      if (location.startsWith('/home')) break;
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+
+    // Vérification finale : on est bien sur /home.
+    final location = appRouter.routerDelegate.currentConfiguration.uri.path;
+    if (!location.startsWith('/home')) {
+      _prompting = false;
+      return;
+    }
 
     _prompting = false;
-    if (navContext == null) return;
-
     _prompted = true;
     final granted = await AnalyticsConsentSheet.show(navContext);
     if (granted) {
