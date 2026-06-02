@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
@@ -375,7 +376,7 @@ class _CorridorBanner extends StatelessWidget {
               _StatPill(
                 icon: Icons.euro_rounded,
                 label:
-                    '${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
+                    '${formatKgPrice(announcement.senderPricePerKg)} €/kg',
                 cs: cs,
               ),
             ],

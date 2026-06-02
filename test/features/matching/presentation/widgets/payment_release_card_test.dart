@@ -52,18 +52,19 @@ void main() {
     },
   );
 
-  testWidgets('pricePerKg renseigné → montant calculé avec taux 0.88 (88%)', (
+  testWidgets('pricePerKg renseigné → le voyageur touche le net entier (pas de décote)', (
     tester,
   ) async {
-    // 10 €/kg × 5 kg × 0.88 = 44.00 €
+    // Le voyageur reçoit l'intégralité du net : 10 €/kg × 5 kg = 50.00 €.
+    // (La commission Dony est payée EN SUS par l'expéditeur, jamais déduite ici.)
     await _pump(tester, _bid(pricePerKg: 10, weightKg: 5));
-    expect(find.textContaining('44.00'), findsOneWidget);
+    expect(find.textContaining('50.00'), findsOneWidget);
   });
 
   testWidgets('pricePerKg null → "—" affiché', (tester) async {
     await _pump(tester, _bid(pricePerKg: null));
     expect(find.textContaining('—'), findsOneWidget);
     // Should not show a numeric amount
-    expect(find.textContaining('44'), findsNothing);
+    expect(find.textContaining('50'), findsNothing);
   });
 }

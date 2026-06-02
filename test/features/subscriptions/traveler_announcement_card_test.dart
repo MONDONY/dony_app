@@ -67,7 +67,8 @@ void main() {
       announcement: _announcement(pricePerKg: 8),
       onReserve: () {},
     )));
-    expect(find.text('8 €'), findsOneWidget);
+    // Fiche publique vue par l'expéditeur : prix = net × 1,12 (8 → 8,96 €).
+    expect(find.text('8.96 €'), findsOneWidget);
     expect(find.text('/kg'), findsOneWidget);
   });
 

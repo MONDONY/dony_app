@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
@@ -255,8 +256,9 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
       if (cluster.isSameSpot) {
         // Same address: stacked pill with count badge.
         // Show cheapest price and most urgent (earliest) departure.
+        // Prix affiché à l'expéditeur (net + commission) — cohérent avec les cartes/sheets.
         final cheapest = cluster.items
-            .map((it) => it.announcement.pricePerKg)
+            .map((it) => it.announcement.senderPricePerKg)
             .reduce(math.min);
         final earliest = cluster.items
             .map((it) => it.announcement.departureDate)
@@ -301,7 +303,7 @@ class _AnnouncementMapViewState extends State<AnnouncementMapView> {
         brightness: _brightness);
     final isSelected = item.announcement.id == widget.selectedAnnouncementId;
     final icon = await MarkerBitmapFactory.pricePill(
-      pricePerKg: item.announcement.pricePerKg,
+      pricePerKg: item.announcement.senderPricePerKg,
       dotColor: urgencyColor,
       isSelected: isSelected,
       brightness: _brightness,

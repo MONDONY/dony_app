@@ -181,12 +181,12 @@ void main() {
       expect(find.text('Autre prix'), findsOneWidget);
     });
 
-    testWidgets('ligne estimation brute/nette est affichée', (tester) async {
+    testWidgets('ligne « vous touchez / l\'expéditeur paie » est affichée', (tester) async {
       await _pump(tester);
-      // availableKg=10, prix sélectionné index 0 → 5€/kg
-      // estimation = 50€ brut, 44€ net (×0.88)
+      // availableKg=10, prix index 0 → 5€/kg : vous touchez 50€ (net entier),
+      // l'expéditeur paie 56€ (net × 1,12).
       expect(
-        find.textContaining('Estimation'),
+        find.textContaining('Vous touchez'),
         findsOneWidget,
       );
     });

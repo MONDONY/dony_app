@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
@@ -811,8 +812,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                   builder: (context, selectedIdx, _) {
                     final kg = _availableKgNotifier.value;
                     final pricePerKg = _priceOptions[selectedIdx];
-                    final grossEstimate = kg * pricePerKg;
-                    final netEstimate = grossEstimate * 0.88;
+                    final travelerNet = kg * pricePerKg;
+                    final senderTotal = netToSenderPrice(travelerNet);
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -868,7 +869,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                         ),
                         const SizedBox(height: DonySpacing.sm),
                         Text(
-                          'Estimation : ${grossEstimate.toStringAsFixed(0)}€ · vous touchez ${netEstimate.toStringAsFixed(0)}€',
+                          'Vous touchez ${travelerNet.toStringAsFixed(0)}€ · l\'expéditeur paie ${senderTotal.toStringAsFixed(0)}€',
                           style: tt.bodySmall
                               ?.copyWith(color: cs.onSurfaceVariant),
                         ),

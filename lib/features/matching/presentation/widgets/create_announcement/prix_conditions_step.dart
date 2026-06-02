@@ -2,6 +2,7 @@
 // Extrait de create_announcement_bottom_sheet.dart — refactor pur, zéro changement
 // de comportement.
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_form_event.dart';
@@ -156,8 +157,8 @@ class PrixConditionsStep extends StatelessWidget {
                         final isCustom = _isCustomPrice;
                         final pricePerKg = _pricePerKg;
                         final kg = availableKgNotifier.value;
-                        final grossEstimate = kg * pricePerKg;
-                        final netEstimate = grossEstimate * 0.88;
+                        final travelerNet = kg * pricePerKg;
+                        final senderTotal = netToSenderPrice(travelerNet);
 
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,7 +296,7 @@ class PrixConditionsStep extends StatelessWidget {
                                   ? 'Sélectionnez un prix pour voir l\'estimation'
                                   : kg == 0
                                       ? 'Capacité illimitée — estimation selon la demande'
-                                      : 'Estimation : ${grossEstimate.toStringAsFixed(0)}€ · vous touchez ${netEstimate.toStringAsFixed(0)}€',
+                                      : 'Vous touchez ${travelerNet.toStringAsFixed(0)}€ · l\'expéditeur paie ${senderTotal.toStringAsFixed(0)}€',
                               style: tt.bodySmall?.copyWith(
                                 color: selectedIdx == -1
                                     ? cs.error.withValues(alpha: 0.7)

@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/subscriptions/data/subscriptions_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -134,11 +135,15 @@ class TravelerAnnouncementCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.baseline,
                       textBaseline: TextBaseline.alphabetic,
                       children: [
-                        Text(
-                          '${announcement.pricePerKg.toStringAsFixed(0)} €',
-                          style: tt.titleLarge?.copyWith(
-                            color: cs.primary,
-                            fontWeight: FontWeight.w800,
+                        Flexible(
+                          child: Text(
+                            '${formatKgPrice(netToSenderPrice(announcement.pricePerKg))} €',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: tt.titleLarge?.copyWith(
+                              color: cs.primary,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                         ),
                         const SizedBox(width: DonySpacing.xxs),
