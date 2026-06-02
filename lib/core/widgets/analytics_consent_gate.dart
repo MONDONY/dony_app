@@ -29,6 +29,7 @@ class AnalyticsConsentGate extends StatefulWidget {
 
 class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
   bool _prompted = false;
+  bool _prompting = false;
 
   AnalyticsService get _analytics => getIt<AnalyticsService>();
 
@@ -52,17 +53,25 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
   }
 
   Future<void> _maybePrompt(String userId) async {
-    if (_prompted || !_analytics.isConfigured || _analytics.hasAnswered) {
+    if (_prompted || _prompting || !_analytics.isConfigured || _analytics.hasAnswered) {
       return;
     }
-    _prompted = true;
-    // On est dans MaterialApp.builder → au-dessus du Navigator.
-    // On passe par le navigatorKey de GoRouter pour obtenir un contexte
-    // qui a bien un Navigator ancestor (requis par showModalBottomSheet).
-    final navContext = appRouter.routerDelegate.navigatorKey.currentContext;
+    _prompting = true;
+
+    // Au premier frame GoRouter n'a pas encore créé le Navigator.
+    // On attend jusqu'à 1 s que le navigatorKey soit prêt.
+    BuildContext? navContext;
+    for (var i = 0; i < 20; i++) {
+      navContext = appRouter.routerDelegate.navigatorKey.currentContext;
+      if (navContext != null) break;
+      await Future.delayed(const Duration(milliseconds: 50));
+    }
+
+    _prompting = false;
     if (navContext == null) return;
+
+    _prompted = true;
     final granted = await AnalyticsConsentSheet.show(navContext);
-    // Consentement accordé après le login → (re)lier l'identité.
     if (granted) {
       await _analytics.identify(userId);
     }
