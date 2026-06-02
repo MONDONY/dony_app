@@ -144,8 +144,57 @@ void main() {
       ],
     );
 
+    // RÉGRESSION : en prod, le datasource laisse remonter un DioException brut
+    // (dont .error porte la ForbiddenException posée par l'interceptor), PAS une
+    // ForbiddenException nue. L'ancien `on ForbiddenException catch` ne matchait
+    // donc jamais → l'invite « Passer en PRO » était du code mort et l'utilisateur
+    // ne voyait qu'un vague « Action non autorisée ». Ce test reproduit le wrapping
+    // réel et garantit que le quota mensuel route bien vers AnnouncementProLimitReached.
     blocTest<AnnouncementBloc, AnnouncementState>(
-      'ForbiddenException pro-limit-reached → [Loading, AnnouncementProLimitReached]',
+      'DioException(pro-limit-reached) → [Loading, AnnouncementProLimitReached]',
+      build: () {
+        when(() => mockRepo.createAnnouncement(
+              departureCity: any(named: 'departureCity'),
+              arrivalCity: any(named: 'arrivalCity'),
+              departureDate: any(named: 'departureDate'),
+              departureTime: any(named: 'departureTime'),
+              arrivalTime: any(named: 'arrivalTime'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
+              availableKg: any(named: 'availableKg'),
+              pricePerKg: any(named: 'pricePerKg'),
+              transportMode: any(named: 'transportMode'),
+            )).thenThrow(DioException(
+              requestOptions: RequestOptions(path: '/announcements'),
+              error: ForbiddenException(
+                  'Vous avez atteint votre limite de 2 annonces ce mois-ci. '
+                  'Passez en PRO pour continuer.',
+                  'pro-limit-reached'),
+            ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementCreateRequested(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime.now().add(const Duration(days: 10)),
+        pickupAddress: kTestPickupAddress,
+        deliveryAddress: kTestDeliveryAddress,
+        availableKg: 20.0,
+        pricePerKg: 5.0,
+        transportMode: TransportMode.plane,
+      )),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        predicate<AnnouncementState>((s) =>
+            s is AnnouncementProLimitReached &&
+            s.message.contains('limite de 2 annonces')),
+      ],
+    );
+
+    // Le cas « ForbiddenException nue » doit lui aussi router vers la limite PRO
+    // (unwrapDioError est idempotent sur une AppException déjà déballée).
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'ForbiddenException nue pro-limit-reached → [Loading, AnnouncementProLimitReached]',
       build: () {
         when(() => mockRepo.createAnnouncement(
               departureCity: any(named: 'departureCity'),
@@ -178,6 +227,68 @@ void main() {
             s is AnnouncementProLimitReached &&
             s.message.contains('quota mensuel')),
       ],
+    );
+
+    // RÉGRESSION : 3 « Publier » en rafale (avant que le bouton ne se désactive)
+    // ne doivent déclencher qu'UN seul POST /announcements. La garde
+    // `if (state is AnnouncementLoading) return;` ignore les events empilés.
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'triple AnnouncementCreateRequested en rafale → 1 seul createAnnouncement',
+      build: () {
+        when(() => mockRepo.createAnnouncement(
+              departureCity: any(named: 'departureCity'),
+              arrivalCity: any(named: 'arrivalCity'),
+              departureDate: any(named: 'departureDate'),
+              departureTime: any(named: 'departureTime'),
+              arrivalTime: any(named: 'arrivalTime'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
+              availableKg: any(named: 'availableKg'),
+              pricePerKg: any(named: 'pricePerKg'),
+              transportMode: any(named: 'transportMode'),
+            )).thenAnswer((_) async {
+          // Délai → le 1er event reste en AnnouncementLoading le temps que les
+          // 2 suivants soient dépilés et rejetés par la garde.
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          return ann;
+        });
+        return buildBloc();
+      },
+      act: (bloc) {
+        final event = AnnouncementCreateRequested(
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+          departureDate: DateTime.now().add(const Duration(days: 10)),
+          pickupAddress: kTestPickupAddress,
+          deliveryAddress: kTestDeliveryAddress,
+          availableKg: 20.0,
+          pricePerKg: 5.0,
+          transportMode: TransportMode.plane,
+        );
+        bloc.add(event);
+        bloc.add(event);
+        bloc.add(event);
+      },
+      // Laisse le 1er event finir son Future.delayed(50ms) → AnnouncementCreated.
+      wait: const Duration(milliseconds: 100),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementCreated>(),
+      ],
+      verify: (_) {
+        verify(() => mockRepo.createAnnouncement(
+              departureCity: any(named: 'departureCity'),
+              arrivalCity: any(named: 'arrivalCity'),
+              departureDate: any(named: 'departureDate'),
+              departureTime: any(named: 'departureTime'),
+              arrivalTime: any(named: 'arrivalTime'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
+              availableKg: any(named: 'availableKg'),
+              pricePerKg: any(named: 'pricePerKg'),
+              transportMode: any(named: 'transportMode'),
+            )).called(1);
+      },
     );
 
     blocTest<AnnouncementBloc, AnnouncementState>(
