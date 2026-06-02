@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -138,6 +140,10 @@ class _Buttons extends StatelessWidget {
 
   Future<void> _respond(BuildContext context, {required bool granted}) async {
     await getIt<AnalyticsService>().setConsent(granted: granted);
+    unawaited(getIt<AnalyticsService>().logEvent(
+      AnalyticsEvents.analyticsConsentAnswered,
+      properties: {'granted': granted},
+    ));
     if (context.mounted) context.go('/home');
   }
 

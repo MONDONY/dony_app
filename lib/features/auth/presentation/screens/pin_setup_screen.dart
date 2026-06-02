@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
@@ -54,6 +56,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     } else {
       if (_pin == _firstPin) {
         await getIt<LocalAuthService>().savePin(_pin);
+        unawaited(getIt<AnalyticsService>().logEvent(AnalyticsEvents.signupCompleted));
         if (mounted) {
           // Nouveau user → consentement analytics (une seule fois).
           // User existant (hasAnswered=true) → referral-code directement.
