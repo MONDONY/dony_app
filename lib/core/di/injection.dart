@@ -203,7 +203,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => KycRepository(getIt<ApiClient>()),
   );
   getIt.registerFactory<KycBloc>(
-    () => KycBloc(getIt<KycRepository>()),
+    () => KycBloc(getIt<KycRepository>(), getIt<AnalyticsService>()),
   );
 
   // Matching — Announcements
