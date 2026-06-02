@@ -4,6 +4,7 @@ import 'package:dony/features/referral/bloc/referral_event.dart';
 import 'package:dony/features/referral/bloc/referral_state.dart';
 import 'package:dony/features/referral/data/referral_repository.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:dony/core/error/app_exception.dart';
 
 export 'referral_event.dart';
 export 'referral_state.dart';
@@ -13,6 +14,7 @@ class ReferralBloc extends Bloc<ReferralEvent, ReferralState> {
     on<ReferralLoadRequested>(_onLoadRequested);
     on<ReferralCodeCopied>(_onCodeCopied);
     on<ReferralShared>(_onShared);
+    on<ReferralRedeemRequested>(_onRedeemRequested);
   }
 
   final ReferralRepository _repository;
@@ -51,6 +53,19 @@ class ReferralBloc extends Bloc<ReferralEvent, ReferralState> {
       await Share.share(
         'Salut ! Utilise mon code dony : ${current.info.code} et reçois ton 1er envoi avec 5€ de réduction. ${current.info.shareUrl}',
       );
+    }
+  }
+
+  Future<void> _onRedeemRequested(
+    ReferralRedeemRequested event,
+    Emitter<ReferralState> emit,
+  ) async {
+    emit(const ReferralRedeemLoading());
+    try {
+      await _repository.redeemCode(event.code);
+      emit(const ReferralRedeemed());
+    } catch (e) {
+      emit(ReferralRedeemError(unwrapDioError(e)));
     }
   }
 }

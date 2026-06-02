@@ -13,3 +13,8 @@ class ReferralCodeCopied extends ReferralEvent {
 class ReferralShared extends ReferralEvent {
   const ReferralShared();
 }
+
+class ReferralRedeemRequested extends ReferralEvent {
+  const ReferralRedeemRequested(this.code);
+  final String code;
+}
