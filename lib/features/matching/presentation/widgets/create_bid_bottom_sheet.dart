@@ -11,6 +11,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/data/models/bid_quote_response.dart';
 import 'package:dony/features/matching/presentation/widgets/grid_item_selection_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
@@ -59,6 +60,7 @@ class _CollectedFormData {
     required this.recipientName,
     required this.recipientPhone,
     this.gridItems,
+    this.promoCode,
   });
   final double weightKg;
   final double declaredValueEur;
@@ -67,6 +69,7 @@ class _CollectedFormData {
   final String recipientName;
   final String recipientPhone;
   final List<Map<String, dynamic>>? gridItems;
+  final String? promoCode;
 }
 
 const _mmCountries = {
@@ -185,6 +188,11 @@ class _CreateBidContentState extends State<_CreateBidContent> {
   final _stepNotifier = ValueNotifier<_FormStep>(_FormStep.form);
   _CollectedFormData? _formData;
 
+  // ── Code promo ─────────────────────────────────────────────────────────────
+  final _promoCtrl = TextEditingController();
+  // null = pas de devis ; BidQuoteResponse = promo valide ; String = erreur
+  final _quoteNotifier = ValueNotifier<Object?>(null);
+
   // ── Picker step fields ─────────────────────────────────────────────────────
   final _methodNotifier =
       ValueNotifier<BidPaymentMethod>(BidPaymentMethod.stripe);
@@ -193,6 +201,16 @@ class _CreateBidContentState extends State<_CreateBidContent> {
 
   double get _maxKg => widget.announcement.availableKg;
   double get _pricePerKg => widget.announcement.pricePerKg;
+
+  void _applyPromoCode() {
+    final code = _promoCtrl.text.trim();
+    if (code.isEmpty) { _quoteNotifier.value = null; return; }
+    widget.bidBloc.add(BidQuoteRequested(
+      announcementId: widget.announcement.id,
+      weightKg: _weightNotifier.value,
+      promoCode: code,
+    ));
+  }
 
   bool get _hasAlternativePaymentMethods =>
       widget.isCashAvailable ||
@@ -290,6 +308,8 @@ class _CreateBidContentState extends State<_CreateBidContent> {
   }
 
   double _computeStripeTotal() {
+    final quote = _quoteNotifier.value;
+    if (quote is BidQuoteResponse && quote.promoApplied) return quote.totalEur;
     final data = _formData;
     if (data == null) return 0.0;
     return netToSenderPrice(data.weightKg * _pricePerKg);
@@ -328,6 +348,9 @@ class _CreateBidContentState extends State<_CreateBidContent> {
             })
         .toList();
 
+    final promoCode = _promoCtrl.text.trim().isNotEmpty
+        ? _promoCtrl.text.trim()
+        : null;
     _formData = _CollectedFormData(
       weightKg: _weightNotifier.value,
       declaredValueEur: val,
@@ -336,6 +359,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
       recipientName: _recipientNameCtrl.text.trim(),
       recipientPhone: _recipientPhoneCtrl.text.trim(),
       gridItems: gridItems.isEmpty ? null : gridItems,
+      promoCode: promoCode,
     );
 
     // If only Stripe is available, skip the picker and go straight to checkout.
@@ -376,6 +400,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
         paymentMethod: method,
         phoneNumber: phone,
         countryCode: _mmCountryNotifier.value,
+        promoCode: data.promoCode,
         gridItems: data.gridItems,
       ));
     } else if (method == BidPaymentMethod.cash) {
@@ -388,6 +413,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
         recipientName: data.recipientName,
         recipientPhone: data.recipientPhone,
         paymentMethod: BidPaymentMethod.cash,
+        promoCode: data.promoCode,
         gridItems: data.gridItems,
       ));
     } else {
@@ -421,6 +447,8 @@ class _CreateBidContentState extends State<_CreateBidContent> {
     _methodNotifier.removeListener(_syncPickerButtonState);
     _mmPhoneCtrl.removeListener(_syncPickerButtonState);
     _mmCountryNotifier.removeListener(_syncPickerButtonState);
+    _promoCtrl.dispose();
+    _quoteNotifier.dispose();
     _weightNotifier.dispose();
     _categoriesNotifier.dispose();
     _disclaimerNotifier.dispose();
@@ -449,6 +477,11 @@ class _CreateBidContentState extends State<_CreateBidContent> {
             publishableKey: state.response.publishableKey,
             bidId: state.response.bidId,
           ));
+    } else if (state is BidQuoteLoaded) {
+      _quoteNotifier.value = state.quote;
+    } else if (state is BidPromoError) {
+      _quoteNotifier.value = state.error.message;
+      ErrorPresenter.show(context, state.error);
     } else if (state is BidError) {
       ErrorPresenter.show(context, state.error);
     }
@@ -771,20 +804,123 @@ class _CreateBidContentState extends State<_CreateBidContent> {
             ).animate().fadeIn(delay: 200.ms),
             const SizedBox(height: DonySpacing.xxl),
 
+            // ── Code promo ──────────────────────────────────────────────────
+            const _SectionLabel(label: 'CODE PROMO (OPTIONNEL)'),
+            const SizedBox(height: DonySpacing.sm),
+            BlocBuilder<BidBloc, BidState>(
+              bloc: widget.bidBloc,
+              builder: (context, bidState) {
+                final isQuoteLoading = bidState is BidQuoteLoading;
+                return ValueListenableBuilder<Object?>(
+                  valueListenable: _quoteNotifier,
+                  builder: (_, quoteVal, __) {
+                    final quote = quoteVal is BidQuoteResponse ? quoteVal : null;
+                    final promoError = quoteVal is String ? quoteVal : null;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _promoCtrl,
+                                textCapitalization: TextCapitalization.characters,
+                                decoration: InputDecoration(
+                                  hintText: 'Ex: WELCOME10',
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: DonySpacing.base,
+                                    vertical: DonySpacing.md,
+                                  ),
+                                  suffixIcon: isQuoteLoading
+                                      ? const Padding(
+                                          padding: EdgeInsets.all(12),
+                                          child: SizedBox(
+                                            width: 20, height: 20,
+                                            child: CircularProgressIndicator(strokeWidth: 2),
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                                onFieldSubmitted: (_) => _applyPromoCode(),
+                              ),
+                            ),
+                            const SizedBox(width: DonySpacing.sm),
+                            SizedBox(
+                              height: 52,
+                              width: 110,
+                              child: FilledButton(
+                                onPressed: isQuoteLoading ? null : _applyPromoCode,
+                                child: const Text('Appliquer'),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (quote != null && quote.promoApplied) ...[
+                          const SizedBox(height: DonySpacing.xs),
+                          Row(
+                            children: [
+                              const Icon(Icons.check_circle_rounded,
+                                  size: 16, color: Color(0xFF16A34A)),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  quote.promoLabel ?? 'Code appliqué',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: const Color(0xFF16A34A),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                        if (promoError != null) ...[
+                          const SizedBox(height: DonySpacing.xs),
+                          Row(
+                            children: [
+                              const Icon(Icons.error_outline_rounded,
+                                  size: 16, color: Color(0xFFE53935)),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  promoError,
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: const Color(0xFFE53935),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    );
+                  },
+                );
+              },
+            ).animate().fadeIn(delay: 220.ms),
+            const SizedBox(height: DonySpacing.xxl),
+
             // ── Récap grille ────────────────────────────────────────────────
             if (hasGridPricing && gridTotal > 0) ...[
               _GridTotalRecap(gridTotal: gridTotal),
               const SizedBox(height: DonySpacing.md),
             ],
 
-            // ── Prix ────────────────────────────────────────────────────────
+            // ── Prix (mis à jour depuis le devis si promo) ───────────────────
             if (hasKgPricing)
-              _PriceBreakdown(
-                weightKg: weightKg,
-                pricePerKg: _pricePerKg,
-                basePrice: basePrice,
-                serviceFee: serviceFee,
-                totalPrice: totalPrice,
+              ValueListenableBuilder<Object?>(
+                valueListenable: _quoteNotifier,
+                builder: (_, quoteVal, __) {
+                  final quote = quoteVal is BidQuoteResponse ? quoteVal : null;
+                  return _PriceBreakdown(
+                    weightKg: weightKg,
+                    pricePerKg: _pricePerKg,
+                    basePrice: basePrice,
+                    serviceFee: quote?.commissionEur ?? serviceFee,
+                    totalPrice: quote?.totalEur ?? totalPrice,
+                    promoApplied: quote?.promoApplied ?? false,
+                  );
+                },
               ),
             const SizedBox(height: DonySpacing.md),
           ],
@@ -1499,6 +1635,7 @@ class _PriceBreakdown extends StatelessWidget {
     required this.basePrice,
     required this.serviceFee,
     required this.totalPrice,
+    this.promoApplied = false,
   });
 
   final double weightKg;
@@ -1506,6 +1643,7 @@ class _PriceBreakdown extends StatelessWidget {
   final double basePrice;
   final double serviceFee;
   final double totalPrice;
+  final bool promoApplied;
 
   @override
   Widget build(BuildContext context) {
@@ -1538,10 +1676,28 @@ class _PriceBreakdown extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Frais de service',
-                style:
-                    tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              Row(
+                children: [
+                  Text('Frais de service',
+                      style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+                  if (promoApplied) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F5EE),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Promo',
+                        style: tt.labelSmall?.copyWith(
+                          color: const Color(0xFF16A34A),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
               Text(fmt.format(serviceFee), style: tt.bodyMedium),
             ],
