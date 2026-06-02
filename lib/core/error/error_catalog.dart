@@ -83,6 +83,13 @@ abstract final class ErrorCatalog {
       severity: ErrorSeverity.critical,
       icon: Icons.event_busy_rounded,
     ),
+    'pro-limit-reached': ErrorPresentation(
+      title: 'Limite mensuelle atteinte',
+      message:
+          "Tu as atteint ta limite d'annonces ce mois-ci. Passe en PRO pour publier sans limite.",
+      severity: ErrorSeverity.warning,
+      icon: Icons.workspace_premium_outlined,
+    ),
 
     // ─── Colis / Bids ────────────────────────────────────────────────
     'bid-not-found': ErrorPresentation(

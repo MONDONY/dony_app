@@ -24,6 +24,11 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     AnnouncementCreateRequested event,
     Emitter<AnnouncementState> emit,
   ) async {
+    // Anti double-soumission : on ignore les events empilés tant qu'une création
+    // est déjà en cours. Sans cette garde, taper « Publier » plusieurs fois avant
+    // que le bouton ne se désactive (le state Loading n'arrive qu'à la frame
+    // suivante) envoyait 2-3 POST /announcements en rafale.
+    if (state is AnnouncementLoading) return;
     emit(AnnouncementLoading());
     try {
       final announcement = await _repository.createAnnouncement(
@@ -47,14 +52,17 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       await _hive.userPrefs
           .put(HiveService.kHasPublishedAsTraveler, true);
       emit(AnnouncementCreated(announcement));
-    } on ForbiddenException catch (e) {
-      if (e.code == 'pro-limit-reached') {
-        emit(AnnouncementProLimitReached(e.message));
-      } else {
-        emit(AnnouncementError(e));
-      }
     } catch (e) {
-      emit(AnnouncementError(unwrapDioError(e)));
+      // Le datasource laisse remonter le DioException brut (dont `.error` porte la
+      // ForbiddenException posée par l'interceptor). On déballe AVANT de router :
+      // sinon `pro-limit-reached` tombait dans le cas générique et l'utilisateur
+      // ne voyait qu'un vague « Action non autorisée » au lieu de l'invite PRO.
+      final error = unwrapDioError(e);
+      if (error is ForbiddenException && error.code == 'pro-limit-reached') {
+        emit(AnnouncementProLimitReached(error.message));
+      } else {
+        emit(AnnouncementError(error));
+      }
     }
   }
 
@@ -156,6 +164,8 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
     AnnouncementUpdateRequested event,
     Emitter<AnnouncementState> emit,
   ) async {
+    // Anti double-soumission (cf. _onCreateRequested) : même bouton, même risque.
+    if (state is AnnouncementLoading) return;
     emit(AnnouncementLoading());
     try {
       final announcement = await _repository.updateAnnouncement(

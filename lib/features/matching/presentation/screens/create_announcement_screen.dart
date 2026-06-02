@@ -452,6 +452,19 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
             backgroundColor: cs.success,
           ));
           context.go('/announcements');
+        } else if (state is AnnouncementProLimitReached) {
+          DonyDialog.show(
+            context,
+            title: 'Limite mensuelle atteinte',
+            message: state.message,
+            confirmLabel: 'Passer en PRO',
+            cancelLabel: 'Plus tard',
+            variant: DonyDialogVariant.info,
+          ).then((confirmed) {
+            if (confirmed == true && context.mounted) {
+              context.push('/profile/upgrade-to-pro');
+            }
+          });
         } else if (state is AnnouncementError) {
           ErrorPresenter.show(context, state.error);
         }
