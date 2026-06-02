@@ -19,10 +19,30 @@ AnnouncementModel _ann({required double pricePerKg, double? pricePerKgDisplay}) 
     );
 
 void main() {
-  group('dony_pricing — constantes', () {
-    test('taux et multiplicateur alignés sur le backend (12 %)', () {
-      expect(kDonyCommissionRate, 0.12);
-      expect(kDonyCommissionMultiplier, closeTo(1.12, 1e-9));
+  // Le taux est un état module-level ajustable : on remet le défaut après chaque
+  // test pour éviter toute pollution entre tests.
+  tearDown(() => setDonyCommissionRate(kDonyCommissionRateDefault));
+
+  group('dony_pricing — défaut', () {
+    test('taux et multiplicateur par défaut alignés sur le backend (12 %)', () {
+      expect(donyCommissionRate, 0.12);
+      expect(donyCommissionMultiplier, closeTo(1.12, 1e-9));
+    });
+  });
+
+  group('setDonyCommissionRate (source unique ajustable)', () {
+    test('met à jour taux, multiplicateur et conversion', () {
+      setDonyCommissionRate(0.20);
+      expect(donyCommissionRate, 0.20);
+      expect(donyCommissionMultiplier, closeTo(1.20, 1e-9));
+      expect(netToSenderPrice(10), closeTo(12.0, 1e-9));
+    });
+
+    test('ignore les valeurs aberrantes (reste sur le repli)', () {
+      setDonyCommissionRate(1.5);
+      expect(donyCommissionRate, kDonyCommissionRateDefault);
+      setDonyCommissionRate(-0.1);
+      expect(donyCommissionRate, kDonyCommissionRateDefault);
     });
   });
 

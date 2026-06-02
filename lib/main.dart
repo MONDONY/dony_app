@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:dony/app/app.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/firebase/firebase_options.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/config/data/config_repository.dart';
 import 'package:dony/features/notifications/data/notification_service.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -86,6 +90,19 @@ Future<void> _bootstrap() async {
   // Heavy async init runs after UI is displayed (no ANR risk)
   getIt<OfflineSyncService>().startListening();
   await getIt<NotificationService>().initialize();
+
+  // Taux de commission Dony (SOURCE UNIQUE : dony.commission.rate côté backend) :
+  // chargé une fois pour que les prix calculés côté app (aperçu checkout, repli des
+  // surfaces sans champ *Display) suivent automatiquement. Non bloquant.
+  unawaited(_loadDonyCommissionRate());
+}
+
+Future<void> _loadDonyCommissionRate() async {
+  try {
+    setDonyCommissionRate(await getIt<IConfigRepository>().getCommissionRate());
+  } catch (_) {
+    // Repli 12 % conservé — non bloquant.
+  }
 }
 
 Future<void> main() async {

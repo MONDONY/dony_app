@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
@@ -291,7 +292,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
   double _computeStripeTotal() {
     final data = _formData;
     if (data == null) return 0.0;
-    return data.weightKg * _pricePerKg * 1.12;
+    return netToSenderPrice(data.weightKg * _pricePerKg);
   }
 
   // ── Navigation between steps ───────────────────────────────────────────────
@@ -504,7 +505,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
         final gridQuantities = _gridQuantitiesNotifier.value;
         final hasGridPricing = widget.announcement.priceGridItems.isNotEmpty;
         final hasKgPricing = widget.announcement.pricePerKg > 0;
-        final serviceFee = weightKg * _pricePerKg * 0.12;
+        final serviceFee = (weightKg * _pricePerKg) * donyCommissionRate;
         final basePrice = weightKg * _pricePerKg;
         final totalPrice = basePrice + serviceFee;
 

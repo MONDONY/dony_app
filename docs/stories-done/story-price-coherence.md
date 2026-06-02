@@ -89,3 +89,16 @@ commission est payée EN SUS par l'expéditeur, cf. backend).
 - **`trajet_card` rendu net×1,12** (et non role-aware) car prouvé sender-only dans
   `bid_detail_screen` (`if (isSender) … TrajetCard(bid)`).
 - `bid_list` (demandes reçues) laissé en **net** : surface voyageur → correct tel quel.
+
+## Mise à jour — taux de commission piloté par le backend
+Le taux n'est plus une constante figée côté app. `dony_pricing` expose désormais
+`donyCommissionRate` / `donyCommissionMultiplier` (repli 12 % via `kDonyCommissionRateDefault`)
+et `setDonyCommissionRate(rate)`. Au démarrage, `main.dart` charge le taux réel
+(`GET /config/commission-rate` via `IConfigRepository`) et le pousse dans le helper
+(best-effort, non bloquant). Les calculs locaux de l'aperçu checkout
+(`create_bid_bottom_sheet`, `create_bid_screen`) et le hint grille
+(`price_grid_item_form_sheet`) passent par le helper → suivent le taux. Les surfaces
+d'affichage suivent déjà via les champs backend `*Display`. **Résultat : changer
+`dony.commission.rate` côté backend ajuste la commission partout, app comprise.**
+Test `dony_pricing_test` : `setDonyCommissionRate(0.20)` → `netToSenderPrice(10) == 12,0`,
+valeurs aberrantes ignorées.

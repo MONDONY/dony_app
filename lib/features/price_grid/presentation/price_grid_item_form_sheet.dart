@@ -1,4 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_bloc.dart';
 import 'package:dony/features/price_grid/bloc/price_grid_event.dart';
 import 'package:dony/features/price_grid/data/models/price_grid_item_model.dart';
@@ -222,8 +223,8 @@ class _PriceGridItemFormContentState
                         Expanded(
                           child: Text(
                             'L\'expéditeur verra '
-                            '${(_parsedPrice! * 1.12).toStringAsFixed(2)} € '
-                            '(+12 % Dony)',
+                            '${netToSenderPrice(_parsedPrice!).toStringAsFixed(2)} € '
+                            '(+${(donyCommissionRate * 100).toStringAsFixed(0)} % Dony)',
                             style: tt.bodySmall?.copyWith(color: cs.primary),
                           ),
                         ),

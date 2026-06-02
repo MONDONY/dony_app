@@ -3,6 +3,7 @@ import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/storage/hive_service.dart';
@@ -154,7 +155,7 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
                   final weightKg = _weightNotifier.value;
                   final categories = _categoriesNotifier.value;
                   final disclaimerAccepted = _disclaimerNotifier.value;
-                  final serviceFee = weightKg * _pricePerKg * 0.12;
+                  final serviceFee = (weightKg * _pricePerKg) * donyCommissionRate;
                   final basePrice = weightKg * _pricePerKg;
                   final totalPrice = basePrice + serviceFee;
                   final canSubmit =
