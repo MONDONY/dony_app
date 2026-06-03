@@ -265,7 +265,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => CommissionMethodBloc(getIt<CommissionMethodRepository>()),
   );
   getIt.registerFactory<BidAcceptanceBloc>(
-    () => BidAcceptanceBloc(getIt<BidRepository>(), Stripe.instance),
+    () => BidAcceptanceBloc(getIt<BidRepository>(), Stripe.instance, getIt<AnalyticsService>()),
   );
   getIt.registerFactory<BidListFilterCubit>(
     () => BidListFilterCubit(),
