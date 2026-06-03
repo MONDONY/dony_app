@@ -482,7 +482,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     dispose: (s) => s.dispose(),
   );
   getIt.registerFactory<TrackingBloc>(
-    () => TrackingBloc(getIt<TrackingRepository>(), getIt<OfflineSyncService>()),
+    () => TrackingBloc(getIt<TrackingRepository>(), getIt<OfflineSyncService>(), getIt<AnalyticsService>()),
   );
 
   // City autocomplete

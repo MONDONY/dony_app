@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
@@ -10,8 +14,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
   final TrackingRepository _repository;
   final OfflineSyncService _offlineSync;
+  final AnalyticsService _analytics;
 
-  TrackingBloc(this._repository, this._offlineSync) : super(TrackingInitial()) {
+  TrackingBloc(this._repository, this._offlineSync, this._analytics) : super(TrackingInitial()) {
     on<TrackingQrCodeRequested>(_onQrCodeRequested);
     on<TrackingSearchRequested>(_onSearchRequested);
     on<TrackingEventsRequested>(_onEventsRequested);
@@ -124,6 +129,10 @@ class TrackingBloc extends Bloc<TrackingEvent, TrackingState> {
         photoUrl: photoKey,
       );
       emit(QrScanSuccess(result));
+      unawaited(_analytics.logEvent(
+        AnalyticsEvents.qrScanSuccess,
+        properties: {'scan_type': event.eventType, 'bid_id': event.bidId},
+      ));
     } catch (e) {
       emit(QrScanError(unwrapDioError(e)));
     }

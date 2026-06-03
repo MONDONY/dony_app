@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
@@ -69,6 +72,10 @@ class _ReceptionConfirmScreenState extends State<ReceptionConfirmScreen> {
   }
 
   void _confirm(BuildContext context) {
+    unawaited(getIt<AnalyticsService>().logEvent(
+      AnalyticsEvents.deliveryConfirmed,
+      properties: {'bid_id': widget.bidId},
+    ));
     context.push('/bids/${widget.bidId}');
   }
 

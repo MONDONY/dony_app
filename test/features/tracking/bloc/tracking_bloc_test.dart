@@ -11,6 +11,7 @@ import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/mock_analytics_backend.dart';
 
 class MockTrackingRepository extends Mock implements TrackingRepository {}
 
@@ -51,7 +52,12 @@ void main() {
     when(() => mockSync.syncAll()).thenAnswer((_) async {});
   });
 
-  TrackingBloc buildBloc() => TrackingBloc(mockRepo, mockSync);
+  TrackingBloc buildBloc() {
+    final backend = MockAnalyticsBackend();
+    final analytics = makeDisabledAnalytics(backend);
+    analytics.onConfigured();
+    return TrackingBloc(mockRepo, mockSync, analytics);
+  }
 
   // ── TrackingQrCodeRequested ──────────────────────────────────────────────────
 
