@@ -1,4 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -8,8 +10,10 @@ import 'package:dony/features/profile/presentation/screens/become_traveler_scree
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../../helpers/mock_analytics_backend.dart';
 
 class MockTravelerUpgradeBloc
     extends MockBloc<TravelerUpgradeEvent, TravelerUpgradeState>
@@ -64,6 +68,14 @@ void main() {
     registerFallbackValue(const TravelerUpgradeActivateRequested());
     registerFallbackValue(const TravelerUpgradeDeactivateRequested());
     registerFallbackValue(AuthUserSynced(_userWith()));
+    if (!getIt.isRegistered<AnalyticsService>()) {
+      final analytics = makeEnabledAnalytics(MockAnalyticsBackend());
+      getIt.registerSingleton<AnalyticsService>(analytics);
+    }
+  });
+
+  tearDownAll(() {
+    GetIt.instance.reset();
   });
 
   late MockTravelerUpgradeBloc upgradeBloc;

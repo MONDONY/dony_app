@@ -1,5 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -7,8 +9,10 @@ import 'package:dony/features/auth/presentation/screens/phone_auth_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../../helpers/mock_analytics_backend.dart';
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
@@ -40,6 +44,17 @@ Future<void> _pump(WidgetTester tester, AuthBloc authBloc) async {
 
 void main() {
   late MockAuthBloc mockAuthBloc;
+
+  setUpAll(() {
+    if (!getIt.isRegistered<AnalyticsService>()) {
+      final analytics = makeEnabledAnalytics(MockAnalyticsBackend());
+      getIt.registerSingleton<AnalyticsService>(analytics);
+    }
+  });
+
+  tearDownAll(() {
+    GetIt.instance.reset();
+  });
 
   setUp(() {
     mockAuthBloc = MockAuthBloc();
