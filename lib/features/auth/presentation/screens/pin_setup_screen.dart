@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/services/gdpr_helper.dart';
 import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -58,13 +59,20 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
         await getIt<LocalAuthService>().savePin(_pin);
         unawaited(getIt<AnalyticsService>().logEvent(AnalyticsEvents.signupCompleted));
         if (mounted) {
-          // Nouveau user → consentement analytics (une seule fois).
-          // User existant (hasAnswered=true) → referral-code directement.
-          final destination = getIt<AnalyticsService>().isConfigured &&
-                  !getIt<AnalyticsService>().hasAnswered
-              ? '/auth/analytics-consent'
-              : '/auth/referral-code';
-          context.go(destination);
+          final analytics = getIt<AnalyticsService>();
+          if (analytics.isConfigured && !analytics.hasAnswered) {
+            if (GdprHelper.requiresConsent()) {
+              // Pays RGPD (UE/EEE/UK/CH) → écran de consentement explicite.
+              context.go('/auth/analytics-consent');
+            } else {
+              // Pays hors RGPD (ex: Sénégal, Côte d'Ivoire, Mali, Cameroun)
+              // → consentement auto, pas d'écran intermédiaire.
+              await analytics.setConsent(granted: true);
+              context.go('/auth/referral-code');
+            }
+          } else {
+            context.go('/auth/referral-code');
+          }
         }
       } else {
         setState(() {
