@@ -381,6 +381,7 @@ class _TxTile extends StatelessWidget {
         'BID_PAYMENT' => 'Paiement bid',
         'COMMISSION_DEDUCTED' => 'Commission',
         'REFUND' => 'Remboursement',
+        'REFERRAL_REWARD' => 'Parrainage',
         _ => tx.type,
       };
 
