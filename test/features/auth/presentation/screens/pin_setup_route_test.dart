@@ -54,7 +54,7 @@ void main() {
 
   group('resolvePostPinSetupRoute — réinstall (Hive vide, backend renseigné)', () {
     test(
-        'backend granted=true → /home, PAS de re-prompt (régression corrigée)',
+        'backend granted=true → /auth/referral-code, PAS de re-prompt (régression corrigée)',
         () async {
       // Réinstall dans un pays RGPD : sans le sync backend, hasAnswered serait
       // faux → l'utilisateur verrait à tort /auth/analytics-consent.
@@ -65,11 +65,11 @@ void main() {
 
       final route = await resolvePostPinSetupRoute(service, box);
 
-      expect(route, '/home');
+      expect(route, '/auth/referral-code');
       verify(() => remote.fetch()).called(1);
     });
 
-    test('backend granted=false → /home (révocation respectée, pas de re-prompt)',
+    test('backend granted=false → /auth/referral-code (révocation respectée, pas de re-prompt)',
         () async {
       storedConsent = null;
       detectedCountry = 'FR';
@@ -78,7 +78,7 @@ void main() {
 
       final route = await resolvePostPinSetupRoute(service, box);
 
-      expect(route, '/home');
+      expect(route, '/auth/referral-code');
       verify(() => remote.fetch()).called(1);
     });
   });
@@ -101,7 +101,7 @@ void main() {
           ));
     });
 
-    test('pays hors RGPD (SN) → consentement auto-accordé puis /home', () async {
+    test('pays hors RGPD (SN) → consentement auto-accordé puis /auth/referral-code', () async {
       storedConsent = null;
       detectedCountry = 'SN';
       when(() => remote.fetch()).thenAnswer((_) async => null);
@@ -109,7 +109,7 @@ void main() {
 
       final route = await resolvePostPinSetupRoute(service, box);
 
-      expect(route, '/home');
+      expect(route, '/auth/referral-code');
       // setConsent(granted: true) pousse au backend avec la source auto.
       verify(() => remote.push(
             granted: true,
@@ -120,22 +120,22 @@ void main() {
   });
 
   group('resolvePostPinSetupRoute — pas de sync inutile', () {
-    test('non configuré (analytics off) → /home sans appel backend', () async {
+    test('non configuré (analytics off) → /auth/referral-code sans appel backend', () async {
       // onConfigured non appelé → isConfigured=false.
       final route = await resolvePostPinSetupRoute(service, box);
 
-      expect(route, '/home');
+      expect(route, '/auth/referral-code');
       verifyNever(() => remote.fetch());
     });
 
-    test('déjà répondu localement → /home sans re-sync', () async {
+    test('déjà répondu localement → /auth/referral-code sans re-sync', () async {
       storedConsent = true;
       detectedCountry = 'FR';
       await service.onConfigured();
 
       final route = await resolvePostPinSetupRoute(service, box);
 
-      expect(route, '/home');
+      expect(route, '/auth/referral-code');
       verifyNever(() => remote.fetch());
     });
   });

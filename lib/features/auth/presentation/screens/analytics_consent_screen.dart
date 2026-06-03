@@ -144,7 +144,7 @@ class _Buttons extends StatelessWidget {
       AnalyticsEvents.analyticsConsentAnswered,
       properties: {'granted': granted},
     ));
-    if (context.mounted) context.go('/home');
+    if (context.mounted) context.go('/auth/referral-code');
   }
 
   @override
