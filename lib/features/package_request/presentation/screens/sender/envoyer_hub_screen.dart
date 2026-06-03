@@ -13,6 +13,7 @@ import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/presentation/screens/shipment_list_screen.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
+import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
@@ -71,10 +72,18 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
     AnalyticsEvents.envoyerNegosScreen,
   ];
 
-  // Derniers comptes de badge vus par onglet.
-  // Le badge ne s'affiche que si le compte courant > dernière valeur vue.
-  // Initialisé à -1 pour que la première visite marque tout comme vu.
-  final _lastSeen = [-1, -1, -1];
+  // Derniers comptes de badge vus par onglet (index 0=Envois, 1=Demandes).
+  // Initialisé à -1 : la première visite marque tout comme vu sans afficher de badge.
+  final _lastSeen = [-1, -1];
+
+  // Pour les Négos on suit à la fois le nombre de threads et la somme des
+  // roundsCount afin de détecter aussi les nouvelles contre-propositions.
+  int _lastSeenNegoThreads = -1;
+  int _lastSeenNegoRounds = -1;
+
+  // Snapshot du dernier état connu des négos (pour détecter les changements
+  // et afficher les notifications in-app).
+  NegotiationListState? _prevNegoState;
 
   @override
   void initState() {
@@ -83,16 +92,27 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
       ..addListener(_onTab);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(getIt<AnalyticsService>().logScreen(_screens.first));
-      // Marque l'onglet 0 comme vu dès l'ouverture.
       _markSeen(0);
     });
   }
 
   void _markSeen(int index) {
-    // Récupère le compte badge courant depuis les blocs et le mémorise.
-    final badge = _currentBadge(index);
-    if (_lastSeen[index] != badge) {
-      setState(() => _lastSeen[index] = badge);
+    if (index == 2) {
+      final s = context.read<NegotiationListBloc>().state;
+      final threads = s.threads;
+      final rounds = threads.fold(0, (sum, t) => sum + t.roundsCount);
+      if (_lastSeenNegoThreads != threads.length ||
+          _lastSeenNegoRounds != rounds) {
+        setState(() {
+          _lastSeenNegoThreads = threads.length;
+          _lastSeenNegoRounds = rounds;
+        });
+      }
+    } else {
+      final badge = _currentBadge(index);
+      if (_lastSeen[index] != badge) {
+        setState(() => _lastSeen[index] = badge);
+      }
     }
   }
 
@@ -110,25 +130,110 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
             .requests
             .where((r) => r.status == PackageRequestStatus.negotiating)
             .length;
-      case 2:
-        return context.read<NegotiationListBloc>().state.activeCount;
       default:
         return 0;
     }
   }
 
-  /// Retourne le nombre de nouveaux éléments à afficher sur le badge de l'onglet [index].
-  /// Vaut 0 si l'onglet est actif ou si rien de nouveau depuis la dernière visite.
+  /// Badge Négos = nouvelles négos + nouvelles contre-propositions depuis la dernière visite.
+  int get _negoBadge {
+    if (_controller.index == 2) {
+      return 0;
+    }
+    if (_lastSeenNegoThreads < 0) {
+      return 0;
+    }
+    final s = context.read<NegotiationListBloc>().state;
+    final threads = s.threads;
+    final rounds = threads.fold(0, (sum, t) => sum + t.roundsCount);
+    final newThreads = (threads.length - _lastSeenNegoThreads).clamp(0, 999);
+    final newRounds = (rounds - _lastSeenNegoRounds).clamp(0, 999);
+    return newThreads + newRounds;
+  }
+
+  /// Badge pour onglets 0 et 1.
   int badgeFor(int index, int currentCount) {
     if (_controller.index == index) {
       return 0;
     }
     final last = _lastSeen[index];
     if (last < 0) {
-      return 0; // premier chargement, pas encore de données
+      return 0;
     }
-    return currentCount > last ? currentCount - last : 0;
+    return (currentCount - last).clamp(0, 999);
   }
+
+  // ── Notifications in-app négociations ────────────────────────────────────────
+
+  void _onNegoStateChanged(
+    BuildContext context,
+    NegotiationListState next,
+  ) {
+    final prev = _prevNegoState;
+    _prevNegoState = next;
+
+    // Pas de notification au premier chargement.
+    if (prev == null || prev.threads.isEmpty) {
+      return;
+    }
+    // On est sur l'onglet Négos : l'utilisateur voit déjà les changements.
+    if (_controller.index == 2) {
+      return;
+    }
+
+    final prevById = {for (final t in prev.threads) t.id: t};
+
+    for (final t in next.threads) {
+      final p = prevById[t.id];
+
+      if (p == null) {
+        // Nouvelle négociation (nouveau thread).
+        final name = t.travelerName ?? 'Un voyageur';
+        _showNegoNotification(
+          context,
+          message: '$name t\'a fait une offre à ${t.currentPriceEur.toStringAsFixed(0)} €',
+          type: DonySnackbarType.info,
+        );
+        continue;
+      }
+
+      // Contre-proposition : roundsCount a augmenté.
+      if (t.roundsCount > p.roundsCount &&
+          t.status == NegotiationThreadStatus.open) {
+        final name = t.travelerName ?? 'Un voyageur';
+        _showNegoNotification(
+          context,
+          message: '$name a fait une contre-proposition : ${t.currentPriceEur.toStringAsFixed(0)} €',
+          type: DonySnackbarType.warning,
+        );
+        continue;
+      }
+
+      // Proposition acceptée.
+      if (p.status != NegotiationThreadStatus.accepted &&
+          t.status == NegotiationThreadStatus.accepted) {
+        final name = t.travelerName ?? 'Le voyageur';
+        _showNegoNotification(
+          context,
+          message: '$name a accepté ta proposition ! 🎉',
+          type: DonySnackbarType.success,
+        );
+      }
+    }
+  }
+
+  void _showNegoNotification(
+    BuildContext context, {
+    required String message,
+    required DonySnackbarType type,
+  }) {
+    if (!mounted) {
+      return;
+    }
+    DonySnackbar.show(context, message: message, type: type);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
 
   void _onTab() {
     if (_controller.indexIsChanging) {
@@ -136,7 +241,6 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
     }
     final index = _controller.index;
     unawaited(getIt<AnalyticsService>().logScreen(_screens[index]));
-    // Refresh le bloc de l'onglet qui devient visible.
     switch (index) {
       case 0:
         context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
@@ -147,8 +251,6 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
             .read<NegotiationListBloc>()
             .add(const NegotiationListRefreshRequested());
     }
-    // Marque l'onglet comme vu après le refresh (post-frame pour lire
-    // l'état mis à jour).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _markSeen(index);
@@ -186,29 +288,36 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF0F2F6),
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            _EnvoyerHeader(onNew: _onNew),
-            _EnvoyerSegmented(
-              controller: _controller,
-              badgeForIndex: badgeFor,
-            ),
-            Expanded(
-              child: TabBarView(
+    return BlocListener<NegotiationListBloc, NegotiationListState>(
+      listener: _onNegoStateChanged,
+      listenWhen: (prev, next) =>
+          next.status == NegotiationListStatus.loaded && prev != next,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF0F2F6),
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              _EnvoyerHeader(onNew: _onNew),
+              _EnvoyerSegmented(
                 controller: _controller,
-                children: const [
-                  ShipmentListBody(),
-                  MyPackageRequestsBody(),
-                  MyNegotiationsBody(),
-                ],
+                badgeForIndex: badgeFor,
+                negoBadge: _negoBadge,
               ),
-            ),
-          ],
+              Expanded(
+                child: TabBarView(
+                  controller: _controller,
+                  children: const [
+                    ShipmentListBody(),
+                    MyPackageRequestsBody(),
+                    MyNegotiationsBody(),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -290,12 +399,16 @@ class _EnvoyerSegmented extends StatelessWidget {
   const _EnvoyerSegmented({
     required this.controller,
     required this.badgeForIndex,
+    required this.negoBadge,
   });
 
   final TabController controller;
 
-  /// Retourne le nombre de nouveaux éléments à afficher pour l'onglet [index].
+  /// Badge pour onglets 0 (Envois) et 1 (Demandes).
   final int Function(int index, int currentCount) badgeForIndex;
+
+  /// Badge précalculé pour l'onglet 2 (Négos) — inclut nouvelles négos + contre-propositions.
+  final int negoBadge;
 
   @override
   Widget build(BuildContext context) {
@@ -314,7 +427,6 @@ class _EnvoyerSegmented extends StatelessWidget {
             final demandesRaw = reqState.requests
                 .where((r) => r.status == PackageRequestStatus.negotiating)
                 .length;
-            final negosRaw = negoState.activeCount;
 
             return AnimatedBuilder(
               animation: controller,
@@ -343,7 +455,7 @@ class _EnvoyerSegmented extends StatelessWidget {
                     const SizedBox(width: DonySpacing.xs),
                     _Seg(
                       label: 'Négos',
-                      badge: badgeForIndex(2, negosRaw),
+                      badge: negoBadge,
                       active: controller.index == 2,
                       onTap: () => controller.animateTo(2),
                     ),
