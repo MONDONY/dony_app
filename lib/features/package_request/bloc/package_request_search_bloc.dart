@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import '../../../core/services/analytics_events.dart';
+import '../../../core/services/analytics_service.dart';
 import '../data/models/package_request_search_item.dart';
 import '../data/models/parcel_size.dart';
 import '../data/package_request_repository.dart';
@@ -116,13 +120,15 @@ class PackageRequestSearchState extends Equatable {
 }
 
 class PackageRequestSearchBloc extends Bloc<PackageRequestSearchEvent, PackageRequestSearchState> {
-  PackageRequestSearchBloc(this._repository) : super(const PackageRequestSearchState()) {
+  PackageRequestSearchBloc(this._repository, [this._analytics])
+      : super(const PackageRequestSearchState()) {
     on<SearchFiltersChanged>(_onFiltersChanged);
     on<SearchLoadMore>(_onLoadMore);
     on<SearchRefresh>(_onRefresh);
   }
 
   final PackageRequestRepository _repository;
+  final AnalyticsService? _analytics;
 
   Future<void> _onFiltersChanged(SearchFiltersChanged e, Emitter<PackageRequestSearchState> emit) async {
     emit(PackageRequestSearchState(
@@ -155,6 +161,13 @@ class PackageRequestSearchBloc extends Bloc<PackageRequestSearchEvent, PackageRe
         results: page.content,
         page: 0,
         hasMore: page.content.length >= page.size,
+      ));
+      unawaited(_analytics?.logEvent(
+        AnalyticsEvents.packageRequestSearched,
+        properties: {
+          if (e.departure != null) 'departure': e.departure!,
+          if (e.arrival != null) 'arrival': e.arrival!,
+        },
       ));
     } catch (err) {
       emit(state.copyWith(status: SearchStatus.error, errorMessage: err.toString()));

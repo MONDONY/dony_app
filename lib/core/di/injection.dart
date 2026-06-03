@@ -586,17 +586,17 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => PriceEstimationRepository(getIt<ApiClient>()),
   );
   getIt.registerFactory<PackageRequestFormBloc>(
-    () => PackageRequestFormBloc(getIt<PackageRequestRepository>()),
+    () => PackageRequestFormBloc(getIt<PackageRequestRepository>(), getIt<AnalyticsService>()),
   );
   getIt.registerFactory<PackageRequestSearchBloc>(
-    () => PackageRequestSearchBloc(getIt<PackageRequestRepository>()),
+    () => PackageRequestSearchBloc(getIt<PackageRequestRepository>(), getIt<AnalyticsService>()),
   );
   getIt.registerLazySingleton<PackageRequestBloc>(
     () => PackageRequestBloc(getIt<PackageRequestRepository>()),
     dispose: (b) => b.close(),
   );
   getIt.registerFactory<NegotiationBloc>(
-    () => NegotiationBloc(getIt<NegotiationRepository>()),
+    () => NegotiationBloc(getIt<NegotiationRepository>(), getIt<AnalyticsService>()),
   );
   getIt.registerLazySingleton<NegotiationListBloc>(
     () => NegotiationListBloc(getIt<NegotiationRepository>()),

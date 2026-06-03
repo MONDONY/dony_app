@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/services/analytics_events.dart';
+import '../../../core/services/analytics_service.dart';
 import '../data/package_request_repository.dart';
 import 'package_request_form_event.dart';
 import 'package_request_form_state.dart';
 
 class PackageRequestFormBloc extends Bloc<PackageRequestFormEvent, PackageRequestFormState> {
-  PackageRequestFormBloc(this._repository) : super(const PackageRequestFormState()) {
+  PackageRequestFormBloc(this._repository, [this._analytics])
+      : super(const PackageRequestFormState()) {
     on<FormStep1Submitted>(_onStep1);
     on<FormStep2Submitted>(_onStep2);
     on<FormStep3Submitted>(_onStep3);
@@ -13,6 +18,7 @@ class PackageRequestFormBloc extends Bloc<PackageRequestFormEvent, PackageReques
   }
 
   final PackageRequestRepository _repository;
+  final AnalyticsService? _analytics;
 
   void _onStep1(FormStep1Submitted e, Emitter<PackageRequestFormState> emit) {
     emit(state.copyWith(
@@ -72,6 +78,10 @@ class PackageRequestFormBloc extends Bloc<PackageRequestFormEvent, PackageReques
       emit(state.copyWith(
         submissionStatus: FormSubmissionStatus.success,
         createdRequest: created,
+      ));
+      unawaited(_analytics?.logEvent(
+        AnalyticsEvents.packageRequestCreated,
+        properties: {'corridor': '${state.departureCity}→${state.arrivalCity}'},
       ));
     } catch (err) {
       emit(state.copyWith(
