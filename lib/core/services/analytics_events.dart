@@ -63,6 +63,9 @@ abstract final class AnalyticsEvents {
   static const analyticsConsentChanged  = 'analytics_consent_changed';
   static const accountDeletionRequested = 'account_deletion_requested';
 
+  // Envois
+  static const shipmentFilterApplied = 'shipment_filter_applied';
+
   // Errors (BlocObserver)
   static const blocError = 'bloc_error';
 }
