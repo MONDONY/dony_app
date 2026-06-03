@@ -16,6 +16,7 @@ import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
 import 'package:dony/features/package_request/data/models/content_category.dart';
+import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/envoyer_hub_screen.dart';
@@ -53,6 +54,20 @@ void _unregisterIfPresent<T extends Object>() {
     getIt.unregister<T>();
   }
 }
+
+NegotiationThread _stubThread(NegotiationThreadStatus status) => NegotiationThread(
+      id: 't-${status.name}',
+      packageRequestId: 'pr-1',
+      travelerId: 'traveler-001',
+      currentPriceEur: 15,
+      roundsCount: 1,
+      travelerAvailableKg: 10,
+      travelerTravelDate: DateTime(2026, 8, 1),
+      lastActivityAt: DateTime(2026, 6, 1),
+      createdAt: DateTime(2026, 6, 1),
+      status: status,
+      messages: const [],
+    );
 
 PackageRequest _sampleRequest() => PackageRequest(
       id: 'pr-test',
@@ -235,6 +250,33 @@ void main() {
       await tester.tap(find.textContaining('Envois').first);
       await tester.pumpAndSettle();
       verify(() => bidBloc.add(const BidMyListAutoRefreshRequested())).called(greaterThanOrEqualTo(1));
+    });
+
+    testWidgets(
+        'badge rouge affiché sur Négos quand activeCount > 0 (onglet inactif)',
+        (tester) async {
+      // Override negoListBloc state to have 2 active threads.
+      when(() => negoListBloc.state).thenReturn(
+        NegotiationListState(
+          status: NegotiationListStatus.loaded,
+          threads: [
+            _stubThread(NegotiationThreadStatus.open),
+            _stubThread(NegotiationThreadStatus.awaitingTrip),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(wrap());
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // On est sur l'onglet Envois (index 0), Négos est inactif → badge visible.
+      expect(find.text('2'), findsOneWidget);
+
+      // Tap sur Négos → l'onglet devient actif → badge disparaît.
+      await tester.tap(find.textContaining('Négos').first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('2'), findsNothing);
     });
 
     testWidgets('le bouton "+ Nouveau" est présent', (tester) async {

@@ -240,7 +240,8 @@ class _EnvoyerSegmented extends StatelessWidget {
         builder: (context, negoState) =>
             BlocBuilder<BidBloc, BidState>(
           builder: (context, bidState) {
-            final envois = bidState is BidListLoaded
+            // Counts globaux affichés dans le libellé du segment.
+            final envoisTotal = bidState is BidListLoaded
                 ? bidState.bids
                     .where(
                       (b) =>
@@ -251,7 +252,7 @@ class _EnvoyerSegmented extends StatelessWidget {
                     .length
                 : 0;
 
-            final demandes = reqState.requests
+            final demandesTotal = reqState.requests
                 .where(
                   (r) =>
                       r.status == PackageRequestStatus.open ||
@@ -260,7 +261,18 @@ class _EnvoyerSegmented extends StatelessWidget {
                 )
                 .length;
 
-            final negos = negoState.activeCount;
+            final negosTotal = negoState.activeCount;
+
+            // Badges rouges = éléments qui demandent une action immédiate.
+            final envoisBadge = bidState is BidListLoaded
+                ? bidState.bids
+                    .where((b) => b.status == 'AWAITING_PAYMENT')
+                    .length
+                : 0;
+            final demandesBadge = reqState.requests
+                .where((r) => r.status == PackageRequestStatus.negotiating)
+                .length;
+            final negosBadge = negoState.activeCount;
 
             return AnimatedBuilder(
               animation: controller,
@@ -275,21 +287,24 @@ class _EnvoyerSegmented extends StatelessWidget {
                   children: [
                     _Seg(
                       label: 'Envois',
-                      count: envois,
+                      count: envoisTotal,
+                      badge: envoisBadge,
                       active: controller.index == 0,
                       onTap: () => controller.animateTo(0),
                     ),
                     const SizedBox(width: DonySpacing.xs),
                     _Seg(
                       label: 'Demandes',
-                      count: demandes,
+                      count: demandesTotal,
+                      badge: demandesBadge,
                       active: controller.index == 1,
                       onTap: () => controller.animateTo(1),
                     ),
                     const SizedBox(width: DonySpacing.xs),
                     _Seg(
                       label: 'Négos',
-                      count: negos,
+                      count: negosTotal,
+                      badge: negosBadge,
                       active: controller.index == 2,
                       onTap: () => controller.animateTo(2),
                     ),
@@ -308,41 +323,87 @@ class _Seg extends StatelessWidget {
   const _Seg({
     required this.label,
     required this.count,
+    required this.badge,
     required this.active,
     required this.onTap,
   });
 
   final String label;
   final int count;
+
+  /// Nombre d'éléments demandant une action immédiate (badge rouge).
+  /// Masqué quand l'onglet est actif (l'utilisateur est déjà là).
+  final int badge;
   final bool active;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final showBadge = !active && badge > 0;
+
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
-          decoration: BoxDecoration(
-            color: active ? DonyColors.primary : cs.surface,
-            borderRadius: BorderRadius.circular(DonyRadius.full),
-            border: Border.all(
-              color: active ? DonyColors.primary : cs.outlineVariant,
-            ),
-          ),
-          child: Center(
-            child: Text(
-              count > 0 ? '$label $count' : label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: active ? Colors.white : cs.onSurfaceVariant,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
+              decoration: BoxDecoration(
+                color: active ? DonyColors.primary : cs.surface,
+                borderRadius: BorderRadius.circular(DonyRadius.full),
+                border: Border.all(
+                  color: active ? DonyColors.primary : cs.outlineVariant,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  count > 0 ? '$label $count' : label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: active ? Colors.white : cs.onSurfaceVariant,
+                  ),
+                ),
               ),
             ),
-          ),
+            if (showBadge)
+              Positioned(
+                top: -6,
+                right: -4,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: Container(
+                    key: ValueKey(badge),
+                    constraints: const BoxConstraints(minWidth: 18),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: DonyColors.danger500,
+                      borderRadius: BorderRadius.circular(DonyRadius.full),
+                      border: Border.all(
+                        color: const Color(0xFFF0F2F6),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Text(
+                      badge > 99 ? '99+' : '$badge',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        height: 1,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
