@@ -1,8 +1,12 @@
+import 'dart:async';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -46,6 +50,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     final dialCode = state is AuthInitial ? state.dialCode : '+33';
     String local = _phoneController.text.trim();
     if (local.startsWith('0')) local = local.substring(1);
+    unawaited(getIt<AnalyticsService>().logEvent(
+      AnalyticsEvents.signupStarted,
+      properties: {'method': 'phone'},
+    ));
     context.read<AuthBloc>().add(AuthSendOtpRequested('$dialCode$local'));
   }
 

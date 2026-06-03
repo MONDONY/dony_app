@@ -7,6 +7,7 @@ import 'package:dony/features/payments/data/models/payment_status.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/mock_analytics_backend.dart';
 
 class MockPaymentRepository extends Mock implements PaymentRepository {}
 
@@ -17,7 +18,11 @@ void main() {
     mockRepo = MockPaymentRepository();
   });
 
-  PaymentBloc buildBloc() => PaymentBloc(mockRepo);
+  PaymentBloc buildBloc() {
+    final backend = MockAnalyticsBackend();
+    final analytics = makeDisabledAnalytics(backend);
+    return PaymentBloc(mockRepo, analytics);
+  }
 
   // ── PaymentConnectAccountRequested ──────────────────────────────────────────
 

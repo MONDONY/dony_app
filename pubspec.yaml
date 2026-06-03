@@ -38,6 +38,7 @@ dependencies:
 
   # Location
   geolocator: ^13.0.0
+  geocoding: ^3.0.0
 
   # Map
   google_maps_flutter: ^2.9.0
@@ -65,6 +66,10 @@ dependencies:
   # ^9.x requis : sentry_flutter 8.x ne compile pas avec sentry-cocoa résolu
   # par SPM sous Xcode 26 (SentryBinaryImageCache.image manquant).
   sentry_flutter: ^9.21.0
+
+  # Product analytics + session replay (gestes utilisateur).
+  # Init manuelle en Dart (clé via --dart-define) → AUTO_INIT=false côté natif.
+  posthog_flutter: ^5.25.2
 
   # DI
   get_it: ^8.0.0

@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/ratings/bloc/rating_event.dart';
 import 'package:dony/features/ratings/bloc/rating_state.dart';
 import 'package:dony/features/ratings/data/rating_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class RatingBloc extends Bloc<RatingEvent, RatingState> {
-  RatingBloc(this._repository) : super(const RatingInitial()) {
+  RatingBloc(this._repository, this._analytics) : super(const RatingInitial()) {
     on<RatingSubmitRequested>(_onSubmit);
     on<TravelerRatingSubmitRequested>(_onTravelerSubmit);
     on<PendingRatingChecked>(_onPendingChecked);
@@ -13,12 +17,17 @@ class RatingBloc extends Bloc<RatingEvent, RatingState> {
   }
 
   final RatingRepository _repository;
+  final AnalyticsService _analytics;
 
   Future<void> _onSubmit(RatingSubmitRequested event, Emitter<RatingState> emit) async {
     emit(const RatingLoading());
     try {
       await _repository.submitRating(bidId: event.bidId, stars: event.stars, comment: event.comment);
       emit(const RatingSuccess());
+      unawaited(_analytics.logEvent(
+        AnalyticsEvents.ratingSubmitted,
+        properties: {'score': event.stars, 'role_rated': 'traveler'},
+      ));
     } catch (e) {
       emit(RatingError(unwrapDioError(e)));
     }
@@ -29,6 +38,10 @@ class RatingBloc extends Bloc<RatingEvent, RatingState> {
     try {
       await _repository.submitTravelerRating(bidId: event.bidId, stars: event.stars, comment: event.comment);
       emit(const RatingSuccess());
+      unawaited(_analytics.logEvent(
+        AnalyticsEvents.ratingSubmitted,
+        properties: {'score': event.stars, 'role_rated': 'sender'},
+      ));
     } catch (e) {
       emit(RatingError(unwrapDioError(e)));
     }
@@ -67,5 +80,4 @@ class RatingBloc extends Bloc<RatingEvent, RatingState> {
       emit(RatingError(unwrapDioError(e)));
     }
   }
-
 }

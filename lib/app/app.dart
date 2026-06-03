@@ -4,6 +4,7 @@ import 'package:app_links/app_links.dart';
 import 'package:dony/app/router.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/widgets/analytics_consent_gate.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -195,6 +196,12 @@ class _DonyAppState extends State<DonyApp> {
                     locale: Locale(prefsState.preferences.languageCode),
                     routerConfig: appRouter,
                     debugShowCheckedModeBanner: false,
+                    // Monté sous le Navigator de MaterialApp → peut présenter
+                    // le bottom sheet de consentement analytics + brancher
+                    // identify/reset sur le cycle d'authentification.
+                    builder: (context, child) => AnalyticsConsentGate(
+                      child: child ?? const SizedBox.shrink(),
+                    ),
                     localizationsDelegates: const [
                       GlobalMaterialLocalizations.delegate,
                       GlobalWidgetsLocalizations.delegate,

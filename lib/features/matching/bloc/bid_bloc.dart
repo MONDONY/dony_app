@@ -1,5 +1,8 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
@@ -7,11 +10,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class BidBloc extends Bloc<BidEvent, BidState> {
   final BidRepository _repository;
+  final AnalyticsService _analytics;
   bool _checkoutInProgress = false;
 
   static const _myBidsTtl = Duration(minutes: 3);
 
-  BidBloc(this._repository) : super(BidInitial()) {
+  BidBloc(this._repository, this._analytics) : super(BidInitial()) {
     on<BidCheckoutRequested>(_onCheckoutRequested);
     on<BidCreateRequested>(_onCreateRequested);
     on<BidListRequested>(_onListRequested);
@@ -89,6 +93,14 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         gridItems: event.gridItems,
       );
       emit(BidCreated(bid));
+      unawaited(_analytics.logEvent(
+        AnalyticsEvents.bidSubmitted,
+        properties: {
+          'announcement_id': bid.announcementId,
+          'weight_kg': bid.weightKg ?? 0.0,
+          'price_per_kg': bid.pricePerKg ?? 0.0,
+        },
+      ));
     } catch (e) {
       emit(BidError(unwrapDioError(e)));
     }
@@ -150,6 +162,10 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     try {
       final bid = await _repository.rejectBid(event.bidId, reason: event.reason);
       emit(BidRejected(bid));
+      unawaited(_analytics.logEvent(
+        AnalyticsEvents.bidRejected,
+        properties: {'bid_id': bid.id},
+      ));
     } catch (e) {
       emit(BidError(unwrapDioError(e)));
     }

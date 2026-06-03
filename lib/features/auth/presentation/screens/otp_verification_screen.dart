@@ -1,8 +1,12 @@
+import 'dart:async';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,6 +34,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   final List<TextEditingController> _controllers =
       List.generate(6, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
+  int _attemptCount = 0;
 
   @override
   void dispose() {
@@ -47,6 +52,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           type: DonySnackbarType.error);
       return;
     }
+    _attemptCount++;
+    unawaited(getIt<AnalyticsService>().logEvent(
+      AnalyticsEvents.otpSubmitted,
+      properties: {'attempt_count': _attemptCount},
+    ));
     if (widget.mode == OtpMode.email) {
       context.read<AuthBloc>().add(AuthEmailOtpVerifyRequested(
             email: widget.contact,

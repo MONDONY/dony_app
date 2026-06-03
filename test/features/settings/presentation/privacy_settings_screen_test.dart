@@ -1,14 +1,31 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
 import 'package:dony/features/settings/presentation/screens/privacy_settings_screen.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_it/get_it.dart';
+import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/mock_analytics_backend.dart';
 
 class MockPrivacySettingsBloc
     extends MockBloc<PrivacySettingsEvent, PrivacySettingsState>
     implements PrivacySettingsBloc {}
+
+class _MockHiveService extends Mock implements HiveService {}
+
+class _MockBox extends Mock implements Box<dynamic> {}
+
+/// Minimal ValueListenable<Box> that does nothing — satisfies
+/// `_AnalyticsConsentCard` which calls `ValueListenableBuilder` on it.
+class _StubBoxListenable extends ValueNotifier<Box<dynamic>> {
+  _StubBoxListenable(super.value);
+}
 
 Widget _wrap({
   required MockPrivacySettingsBloc mockBloc,
@@ -29,6 +46,28 @@ Widget _wrap({
 void main() {
   group('PrivacySettingsScreen', () {
     late MockPrivacySettingsBloc mockBloc;
+
+    setUpAll(() {
+      // Register HiveService and AnalyticsService in GetIt for _AnalyticsConsentCard
+      if (!getIt.isRegistered<HiveService>()) {
+        final hive = _MockHiveService();
+        final box = _MockBox();
+        final stubListenable = _StubBoxListenable(box);
+        when(() => hive.userPrefs).thenReturn(box);
+        when(() => hive.listenUserPrefs(keys: any(named: 'keys')))
+            .thenReturn(stubListenable);
+        when(() => box.get(HiveService.kAnalyticsConsent)).thenReturn(false);
+        getIt.registerSingleton<HiveService>(hive);
+        final backend = MockAnalyticsBackend();
+        final analytics = makeDisabledAnalytics(backend);
+        analytics.onConfigured();
+        getIt.registerSingleton<AnalyticsService>(analytics);
+      }
+    });
+
+    tearDownAll(() {
+      GetIt.instance.reset();
+    });
 
     setUp(() {
       mockBloc = MockPrivacySettingsBloc();
@@ -86,9 +125,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final switchFinder = find.byType(Switch);
-      expect(switchFinder, findsOneWidget);
-      final sw = tester.widget<Switch>(switchFinder);
+      // First Switch is the KYC toggle; second is the analytics consent toggle.
+      expect(find.byType(Switch), findsWidgets);
+      final sw = tester.widgetList<Switch>(find.byType(Switch)).first;
       expect(sw.value, isFalse);
     });
 
@@ -101,7 +140,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final sw = tester.widget<Switch>(find.byType(Switch));
+      final sw = tester.widgetList<Switch>(find.byType(Switch)).first;
       expect(sw.value, isTrue);
     });
 
@@ -115,7 +154,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final sw = tester.widget<Switch>(find.byType(Switch));
+      final sw = tester.widgetList<Switch>(find.byType(Switch)).first;
       expect(sw.onChanged, isNull);
     });
 
@@ -130,7 +169,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(Switch));
+      // Tap the first Switch (KYC toggle)
+      await tester.tap(find.byType(Switch).first);
       await tester.pumpAndSettle();
 
       verify(() => mockBloc.add(const ContactKycOnlyToggled(true))).called(1);

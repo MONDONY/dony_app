@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -10,8 +11,10 @@ import 'package:dony/features/profile/presentation/screens/upgrade_to_pro_screen
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/mock_analytics_backend.dart';
 
 class MockUpgradeToProBloc
     extends MockBloc<UpgradeToProEvent, UpgradeToProState>
@@ -60,6 +63,14 @@ void main() {
       const UpgradeToProSubmitted(companyName: '', siret: ''),
     );
     registerFallbackValue(const AuthCheckRequested());
+    if (!getIt.isRegistered<AnalyticsService>()) {
+      final analytics = makeEnabledAnalytics(MockAnalyticsBackend());
+      getIt.registerSingleton<AnalyticsService>(analytics);
+    }
+  });
+
+  tearDownAll(() {
+    GetIt.instance.reset();
   });
 
   tearDown(() {

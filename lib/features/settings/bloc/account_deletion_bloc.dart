@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/settings/data/account_deletion_repository.dart';
 import 'package:dony/features/settings/data/firebase_phone_reauth.dart';
@@ -12,8 +16,9 @@ class AccountDeletionBloc
     extends Bloc<AccountDeletionEvent, AccountDeletionState> {
   final AccountDeletionRepository _repository;
   final FirebasePhoneReauth _reauth;
+  final AnalyticsService _analytics;
 
-  AccountDeletionBloc(this._repository, this._reauth)
+  AccountDeletionBloc(this._repository, this._reauth, this._analytics)
       : super(const AccountDeletionInitial()) {
     on<RequestDeletion>(_onRequestDeletion);
     on<ReactivateAccount>(_onReactivateAccount);
@@ -29,6 +34,7 @@ class AccountDeletionBloc
     try {
       await _repository.requestDeletion();
       emit(const AccountDeletionRequested());
+      unawaited(_analytics.logEvent(AnalyticsEvents.accountDeletionRequested));
     } on ValidationException catch (e) {
       emit(AccountDeletionError(
         error: ValidationException(

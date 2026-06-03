@@ -45,6 +45,12 @@ class HiveService {
   static const String kBiometricEnabled   = 'biometric_enabled'; // bool
   static const String kAppLockBiometric   = 'app_lock_biometric'; // bool
 
+  // ── Analytics (consentement RGPD opt-in) ─────────────────────────────────
+  // null = pas encore demandé · true = accepté · false = refusé.
+  static const String kAnalyticsConsent      = 'analytics_consent';       // bool?
+  // Code ISO-3166-1 alpha-2 détecté par GPS (ex: 'FR', 'SN'). Absent = non détecté.
+  static const String kDetectedCountryCode   = 'detected_country_code';   // String?
+
   Future<void> init() async {
     await Hive.initFlutter();
     await Hive.openBox<Map>(offlineQueueBox);

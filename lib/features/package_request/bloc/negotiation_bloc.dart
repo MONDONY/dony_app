@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:equatable/equatable.dart';
 
 import '../data/models/negotiation_thread.dart';
@@ -187,7 +191,8 @@ class NegotiationError extends NegotiationState {
 }
 
 class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
-  NegotiationBloc(this._repository) : super(const NegotiationInitial()) {
+  NegotiationBloc(this._repository, [this._analytics])
+      : super(const NegotiationInitial()) {
     on<NegotiationFetchRequested>(_onFetch);
     on<NegotiationStartRequested>(_onStart);
     on<NegotiationCounterRequested>(_onCounter);
@@ -200,6 +205,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
   }
 
   final NegotiationRepository _repository;
+  final AnalyticsService? _analytics;
 
   Future<void> _onFetch(
     NegotiationFetchRequested e,
@@ -229,6 +235,10 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         body: e.body,
       );
       emit(NegotiationLoaded(thread));
+      unawaited(_analytics?.logEvent(
+        AnalyticsEvents.negotiationOfferMade,
+        properties: {'amount': e.proposedPriceEur.round(), 'context': 'sender'},
+      ));
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
     }
@@ -251,6 +261,10 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         body: e.body,
       );
       emit(NegotiationLoaded(thread));
+      unawaited(_analytics?.logEvent(
+        AnalyticsEvents.negotiationOfferMade,
+        properties: {'amount': e.proposedPriceEur.round(), 'context': 'counter'},
+      ));
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
     }
@@ -269,6 +283,10 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     try {
       final thread = await _repository.accept(e.threadId, body: e.body);
       emit(NegotiationLoaded(thread));
+      unawaited(_analytics?.logEvent(
+        AnalyticsEvents.negotiationOfferAccepted,
+        properties: {'amount': thread.currentPriceEur.round()},
+      ));
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
     }

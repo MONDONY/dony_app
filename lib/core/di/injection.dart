@@ -62,6 +62,8 @@ import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/core/services/analytics_consent_remote.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/device_id_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
@@ -134,6 +136,15 @@ final getIt = GetIt.instance;
 Future<void> setupDependencies({required String apiBaseUrl}) async {
   // Core
   getIt.registerLazySingleton<HiveService>(() => HiveService());
+  getIt.registerLazySingleton<AnalyticsConsentRemote>(
+    () => ApiAnalyticsConsentRemote(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<AnalyticsService>(
+    () => AnalyticsService(
+      getIt<HiveService>(),
+      remote: getIt<AnalyticsConsentRemote>(),
+    ),
+  );
   getIt.registerLazySingleton<ActiveRoleCubit>(
     () => ActiveRoleCubit(hiveService: getIt<HiveService>()),
   );
@@ -178,7 +189,11 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => AuthRepository(getIt<AuthRemoteDatasource>()),
   );
   getIt.registerFactory<AuthBloc>(
-    () => AuthBloc(getIt<AuthRepository>(), getIt<LocalAuthService>()),
+    () => AuthBloc(
+      getIt<AuthRepository>(),
+      getIt<LocalAuthService>(),
+      analytics: getIt<AnalyticsService>(),
+    ),
   );
 
   // Local auth (biometric + PIN)
@@ -195,7 +210,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => KycRepository(getIt<ApiClient>()),
   );
   getIt.registerFactory<KycBloc>(
-    () => KycBloc(getIt<KycRepository>()),
+    () => KycBloc(getIt<KycRepository>(), getIt<AnalyticsService>()),
   );
 
   // Matching — Announcements
@@ -209,6 +224,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => AnnouncementBloc(
       getIt<AnnouncementRepository>(),
       getIt<HiveService>(),
+      getIt<AnalyticsService>(),
     ),
   );
 
@@ -231,7 +247,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => BidRepository(getIt<BidRemoteDatasource>()),
   );
   getIt.registerFactory<BidBloc>(
-    () => BidBloc(getIt<BidRepository>()),
+    () => BidBloc(getIt<BidRepository>(), getIt<AnalyticsService>()),
   );
 
   // Matching — Mobile Money
@@ -256,7 +272,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => CommissionMethodBloc(getIt<CommissionMethodRepository>()),
   );
   getIt.registerFactory<BidAcceptanceBloc>(
-    () => BidAcceptanceBloc(getIt<BidRepository>(), Stripe.instance),
+    () => BidAcceptanceBloc(getIt<BidRepository>(), Stripe.instance, getIt<AnalyticsService>()),
   );
   getIt.registerFactory<BidListFilterCubit>(
     () => BidListFilterCubit(),
@@ -270,7 +286,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => PaymentRepository(getIt<PaymentRemoteDatasource>()),
   );
   getIt.registerFactory<PaymentBloc>(
-    () => PaymentBloc(getIt<PaymentRepository>()),
+    () => PaymentBloc(getIt<PaymentRepository>(), getIt<AnalyticsService>()),
   );
 
   // Wallet
@@ -281,7 +297,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => WalletRepository(getIt<WalletRemoteDatasource>()),
   );
   getIt.registerFactory<WalletBloc>(
-    () => WalletBloc(getIt<WalletRepository>()),
+    () => WalletBloc(getIt<WalletRepository>(), getIt<AnalyticsService>()),
   );
 
   // Cancellation
@@ -292,7 +308,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => CancellationRepository(getIt<CancellationRemoteDatasource>()),
   );
   getIt.registerFactory<CancellationBloc>(
-    () => CancellationBloc(getIt<CancellationRepository>()),
+    () => CancellationBloc(getIt<CancellationRepository>(), getIt<AnalyticsService>()),
   );
 
   // Messaging
@@ -313,6 +329,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => ChatBloc(
       getIt<FirestoreChatRepository>(),
       getIt<ConversationRepository>(),
+      getIt<AnalyticsService>(),
     ),
   );
   getIt.registerFactory<ConversationOpenBloc>(
@@ -372,6 +389,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => AccountDeletionBloc(
       getIt<AccountDeletionRepository>(),
       getIt<FirebasePhoneReauth>(),
+      getIt<AnalyticsService>(),
     ),
   );
 
@@ -451,7 +469,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => RatingRepository(getIt<ApiClient>()),
   );
   getIt.registerFactory<RatingBloc>(
-    () => RatingBloc(getIt<RatingRepository>()),
+    () => RatingBloc(getIt<RatingRepository>(), getIt<AnalyticsService>()),
   );
   getIt.registerLazySingleton<MyReviewsBloc>(
     () => MyReviewsBloc(getIt<RatingRepository>()),
@@ -473,7 +491,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     dispose: (s) => s.dispose(),
   );
   getIt.registerFactory<TrackingBloc>(
-    () => TrackingBloc(getIt<TrackingRepository>(), getIt<OfflineSyncService>()),
+    () => TrackingBloc(getIt<TrackingRepository>(), getIt<OfflineSyncService>(), getIt<AnalyticsService>()),
   );
 
   // City autocomplete
@@ -562,7 +580,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => ReferralRepository(getIt<ReferralDatasource>()),
   );
   getIt.registerLazySingleton<ReferralBloc>(
-    () => ReferralBloc(getIt<ReferralRepository>()),
+    () => ReferralBloc(getIt<ReferralRepository>(), getIt<AnalyticsService>()),
     dispose: (b) => b.close(),
   );
 
@@ -577,17 +595,17 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => PriceEstimationRepository(getIt<ApiClient>()),
   );
   getIt.registerFactory<PackageRequestFormBloc>(
-    () => PackageRequestFormBloc(getIt<PackageRequestRepository>()),
+    () => PackageRequestFormBloc(getIt<PackageRequestRepository>(), getIt<AnalyticsService>()),
   );
   getIt.registerFactory<PackageRequestSearchBloc>(
-    () => PackageRequestSearchBloc(getIt<PackageRequestRepository>()),
+    () => PackageRequestSearchBloc(getIt<PackageRequestRepository>(), getIt<AnalyticsService>()),
   );
   getIt.registerLazySingleton<PackageRequestBloc>(
     () => PackageRequestBloc(getIt<PackageRequestRepository>()),
     dispose: (b) => b.close(),
   );
   getIt.registerFactory<NegotiationBloc>(
-    () => NegotiationBloc(getIt<NegotiationRepository>()),
+    () => NegotiationBloc(getIt<NegotiationRepository>(), getIt<AnalyticsService>()),
   );
   getIt.registerLazySingleton<NegotiationListBloc>(
     () => NegotiationListBloc(getIt<NegotiationRepository>()),

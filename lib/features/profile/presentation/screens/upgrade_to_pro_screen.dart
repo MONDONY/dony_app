@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/profile/bloc/upgrade_to_pro_bloc.dart';
@@ -36,6 +40,15 @@ class _UpgradeToProViewState extends State<_UpgradeToProView> {
   final _formKey = GlobalKey<FormState>();
   final _companyNameCtrl = TextEditingController();
   final _siretCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(getIt<AnalyticsService>().logEvent(AnalyticsEvents.upgradeToProStarted));
+    });
+  }
 
   @override
   void dispose() {

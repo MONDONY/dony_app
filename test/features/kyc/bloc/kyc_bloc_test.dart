@@ -7,6 +7,7 @@ import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/kyc/data/repositories/kyc_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/mock_analytics_backend.dart';
 
 class MockKycRepository extends Mock implements KycRepository {}
 
@@ -17,7 +18,12 @@ void main() {
     mockRepo = MockKycRepository();
   });
 
-  KycBloc buildBloc() => KycBloc(mockRepo);
+  KycBloc buildBloc() {
+    final backend = MockAnalyticsBackend();
+    final analytics = makeDisabledAnalytics(backend);
+    analytics.onConfigured();
+    return KycBloc(mockRepo, analytics);
+  }
 
   // ── KycSessionRequested ──────────────────────────────────────────────────────
 

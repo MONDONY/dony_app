@@ -1,5 +1,10 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/cancellation/presentation/widgets/cancellation_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
@@ -68,6 +73,14 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
             }
           } else if (state is AnnouncementError) {
             ErrorPresenter.show(context, state.error);
+          } else if (state is AnnouncementDetailLoaded) {
+            unawaited(getIt<AnalyticsService>().logEvent(
+              AnalyticsEvents.announcementViewed,
+              properties: {
+                'announcement_id': state.announcement.id,
+                'corridor': '${state.announcement.departureCity}→${state.announcement.arrivalCity}',
+              },
+            ));
           }
         },
         builder: (context, state) {

@@ -9,6 +9,7 @@ import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/features/messaging/data/models/message_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/mock_analytics_backend.dart';
 
 class MockFirestoreChatRepository extends Mock implements FirestoreChatRepository {}
 class MockConversationRepository extends Mock implements ConversationRepository {}
@@ -21,6 +22,13 @@ void main() {
     firestoreRepo = MockFirestoreChatRepository();
     convRepo = MockConversationRepository();
   });
+
+  ChatBloc makeBloc() {
+    final backend = MockAnalyticsBackend();
+    final analytics = makeDisabledAnalytics(backend);
+    analytics.onConfigured();
+    return ChatBloc(firestoreRepo, convRepo, analytics);
+  }
 
   final msg = MessageModel(
     id: 'msg1',
@@ -38,7 +46,7 @@ void main() {
             .thenAnswer((_) => Stream.value([msg]));
         when(() => firestoreRepo.conversationDeletedStream(any()))
             .thenAnswer((_) => const Stream.empty());
-        return ChatBloc(firestoreRepo, convRepo);
+        return makeBloc();
       },
       act: (b) => b.add(const ChatSubscribeRequested('conv_bid1')),
       expect: () => [
@@ -60,7 +68,7 @@ void main() {
             )).thenAnswer((_) async {});
         when(() => firestoreRepo.conversationDeletedStream(any()))
             .thenAnswer((_) => const Stream.empty());
-        return ChatBloc(firestoreRepo, convRepo);
+        return makeBloc();
       },
       act: (b) => b.add(
         const ChatSubscribeRequested('conv_bid1', currentUserUid: 'uid-me'),
@@ -82,7 +90,7 @@ void main() {
             .thenAnswer((_) => Stream.value([]));
         when(() => firestoreRepo.conversationDeletedStream(any()))
             .thenAnswer((_) => const Stream.empty());
-        return ChatBloc(firestoreRepo, convRepo);
+        return makeBloc();
       },
       act: (b) => b.add(
         const ChatSubscribeRequested('conv_bid1'),
@@ -106,7 +114,7 @@ void main() {
             )).thenAnswer((_) async {});
         when(() => convRepo.updateLastMessage(any(), any()))
             .thenAnswer((_) async {});
-        return ChatBloc(firestoreRepo, convRepo);
+        return makeBloc();
       },
       act: (b) => b.add(const ChatTextSendRequested(
         firestoreConversationId: 'conv_bid1',
@@ -136,7 +144,7 @@ void main() {
             )).thenAnswer((_) async {});
         when(() => convRepo.updateLastMessage(any(), any()))
             .thenAnswer((_) async {});
-        return ChatBloc(firestoreRepo, convRepo);
+        return makeBloc();
       },
       act: (b) => b.add(const ChatTextSendRequested(
         firestoreConversationId: 'conv_bid1',
@@ -166,7 +174,7 @@ void main() {
             )).thenAnswer((_) async {});
         when(() => convRepo.updateLastMessage(any(), any()))
             .thenAnswer((_) async {});
-        return ChatBloc(firestoreRepo, convRepo);
+        return makeBloc();
       },
       act: (b) => b.add(ChatImageSendRequested(
         conversationId: 'conv-id-1',

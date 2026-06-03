@@ -4,6 +4,9 @@
 	<dict>
 		<key>GMSApiKey</key>
 		<string>$(GOOGLE_MAPS_API_KEY)</string>
+		<!-- PostHog : init manuelle en Dart → désactive l'auto-init natif. -->
+		<key>com.posthog.posthog.AUTO_INIT</key>
+		<false/>
 		<key>CADisableMinimumFrameDurationOnPhone</key>
 		<true/>
 		<key>CFBundleDevelopmentRegion</key>

@@ -1,6 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
@@ -10,8 +12,10 @@ import 'package:dony/features/messaging/presentation/chat_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_it/get_it.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/mock_analytics_backend.dart';
 
 class MockChatBloc extends MockBloc<ChatEvent, ChatState> implements ChatBloc {}
 
@@ -55,6 +59,14 @@ void main() {
 
   setUpAll(() async {
     await initializeDateFormatting('fr');
+    if (!getIt.isRegistered<AnalyticsService>()) {
+      final analytics = makeEnabledAnalytics(MockAnalyticsBackend());
+      getIt.registerSingleton<AnalyticsService>(analytics);
+    }
+  });
+
+  tearDownAll(() {
+    GetIt.instance.reset();
   });
 
   setUp(() {

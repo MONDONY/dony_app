@@ -9,17 +9,23 @@ import 'package:dony/features/ratings/data/models/rating_summary.dart';
 import 'package:dony/features/ratings/data/rating_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/mock_analytics_backend.dart';
 
 class MockRatingRepository extends Mock implements RatingRepository {}
 
 void main() {
   late MockRatingRepository mockRepo;
+  late MockAnalyticsBackend backend;
 
   setUp(() {
     mockRepo = MockRatingRepository();
+    backend = MockAnalyticsBackend();
   });
 
-  RatingBloc buildBloc() => RatingBloc(mockRepo);
+  RatingBloc buildBloc() {
+    final analytics = makeDisabledAnalytics(backend);
+    return RatingBloc(mockRepo, analytics);
+  }
 
   group('RatingSubmitRequested', () {
     blocTest<RatingBloc, RatingState>(

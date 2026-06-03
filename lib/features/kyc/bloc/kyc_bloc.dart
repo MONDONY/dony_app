@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/kyc/bloc/kyc_event.dart';
 import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/kyc/data/repositories/kyc_repository.dart';
@@ -6,8 +9,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class KycBloc extends Bloc<KycEvent, KycState> {
   final KycRepository _repository;
+  final AnalyticsService _analytics;
 
-  KycBloc(this._repository) : super(const KycInitial()) {
+  KycBloc(this._repository, this._analytics) : super(const KycInitial()) {
     on<KycSessionRequested>(_onSessionRequested);
     on<KycStatusRefreshed>(_onStatusRefreshed);
     on<KycReset>((_, emit) => emit(const KycInitial()));
@@ -25,8 +29,10 @@ class KycBloc extends Bloc<KycEvent, KycState> {
         stripeUrl: data['stripeUrl'] as String,
         sessionId: data['sessionId'] as String,
       ));
+      unawaited(_analytics.logEvent(AnalyticsEvents.kycStarted));
     } catch (e) {
       emit(KycError(unwrapDioError(e)));
+      unawaited(_analytics.logEvent(AnalyticsEvents.kycFailed, properties: {'reason': e.toString()}));
     }
   }
 
@@ -40,6 +46,9 @@ class KycBloc extends Bloc<KycEvent, KycState> {
         kycStatus: data['kycStatus'] as String,
         verificationStatus: data['verificationStatus'] as String,
       ));
+      if ((data['kycStatus'] as String) == 'VERIFIED') {
+        unawaited(_analytics.logEvent(AnalyticsEvents.kycCompleted));
+      }
     } catch (e) {
       emit(KycError(unwrapDioError(e)));
     }

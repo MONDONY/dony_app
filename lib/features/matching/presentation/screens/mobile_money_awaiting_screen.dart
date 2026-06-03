@@ -4,6 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_bloc.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_event.dart';
 import 'package:dony/features/matching/bloc/mobile_money_payment_state.dart';
@@ -24,6 +27,13 @@ class _MobileMoneyAwaitingScreenState
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.mobileMoneyAwaiting,
+        properties: {'provider': 'mobile_money'},
+      ));
+    });
     _poll();
     _pollingTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       if (mounted) _poll();

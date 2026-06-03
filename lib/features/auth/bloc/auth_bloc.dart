@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/repositories/auth_repository.dart';
@@ -23,6 +25,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final FirebaseAuth _firebaseAuth;
   final GoogleSignIn _googleSignIn;
   final AppleSignInCallback _appleSignIn;
+  final AnalyticsService? _analytics;
 
   String? _pendingPhoneNumber;
   Timer? _otpTimer;
@@ -33,10 +36,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     FirebaseAuth? firebaseAuth,
     GoogleSignIn? googleSignIn,
     AppleSignInCallback? appleSignIn,
+    AnalyticsService? analytics,
   })  : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
         _googleSignIn = googleSignIn ?? GoogleSignIn(),
         _appleSignIn = appleSignIn ??
             ((scopes) => SignInWithApple.getAppleIDCredential(scopes: scopes)),
+        _analytics = analytics,
         super(const AuthInitial()) {
     on<AuthCheckRequested>(_onCheckRequested);
     on<AuthSendOtpRequested>(_onSendOtpRequested);
@@ -80,6 +85,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final user = await _authRepository.getProfile();
       emit(AuthAuthenticated(user));
+      unawaited(_analytics?.logEvent(AnalyticsEvents.loginSuccess, properties: {'method': 'check'}));
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
         // Firebase OK mais pas encore inscrit en backend
@@ -88,6 +94,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } else {
         // Erreur réseau/serveur → ne pas forcer la re-inscription
         emit(AuthError(unwrapDioError(e)));
+        unawaited(_analytics?.logEvent(AnalyticsEvents.loginFailed, properties: {'error_type': e.response?.statusCode?.toString() ?? 'network'}));
       }
     } catch (_) {
       _pendingPhoneNumber = firebaseUser.phoneNumber;
@@ -182,6 +189,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         final user = await _authRepository.getProfile();
         // Compte existant → déjà authentifié, écran PIN suffira
         emit(AuthAuthenticated(user));
+        unawaited(_analytics?.logEvent(AnalyticsEvents.loginSuccess, properties: {'method': 'phone'}));
       } on DioException catch (e) {
         if (e.response?.statusCode == 404) {
           // Nouveau numéro → flux de création de compte
@@ -351,6 +359,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       // User existant → Home directement ; nouveau → RoleSelection
       final user = await _authRepository.getProfile();
       emit(AuthAuthenticated(user));
+      unawaited(_analytics?.logEvent(AnalyticsEvents.loginSuccess, properties: {'method': 'email'}));
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
         emit(AuthEmailOtpVerified(event.email));
@@ -493,6 +502,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final user = await _authRepository.getProfile();
       emit(AuthAuthenticated(user));
+      unawaited(_analytics?.logEvent(AnalyticsEvents.loginSuccess, properties: {'method': 'social'}));
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
         final email = _firebaseAuth.currentUser?.email ?? '';

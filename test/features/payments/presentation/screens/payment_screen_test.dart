@@ -1,4 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/config/bloc/config_bloc.dart';
@@ -8,9 +10,11 @@ import 'package:dony/features/payments/presentation/screens/payment_screen.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../../helpers/mock_analytics_backend.dart';
 
 class MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
     implements PaymentBloc {}
@@ -96,6 +100,14 @@ void main() {
   setUpAll(() {
     registerFallbackValue(const PaymentInitiated('fallback'));
     registerFallbackValue(const ConfigCommissionRateRequested());
+    if (!getIt.isRegistered<AnalyticsService>()) {
+      final analytics = makeEnabledAnalytics(MockAnalyticsBackend());
+      getIt.registerSingleton<AnalyticsService>(analytics);
+    }
+  });
+
+  tearDownAll(() {
+    GetIt.instance.reset();
   });
 
   setUp(() {

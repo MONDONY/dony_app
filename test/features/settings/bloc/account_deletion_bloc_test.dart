@@ -6,6 +6,7 @@ import 'package:dony/features/settings/data/account_deletion_repository.dart';
 import 'package:dony/features/settings/data/firebase_phone_reauth.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/mock_analytics_backend.dart';
 
 class MockAccountDeletionRepository extends Mock
     implements AccountDeletionRepository {}
@@ -27,7 +28,9 @@ void main() {
   setUp(() {
     mockRepo = MockAccountDeletionRepository();
     mockReauth = MockFirebasePhoneReauth();
-    bloc = AccountDeletionBloc(mockRepo, mockReauth);
+    final analytics = makeDisabledAnalytics(MockAnalyticsBackend());
+    analytics.onConfigured();
+    bloc = AccountDeletionBloc(mockRepo, mockReauth, analytics);
   });
 
   tearDown(() => bloc.close());

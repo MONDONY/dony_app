@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/payments/data/repositories/payment_repository.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,8 +11,9 @@ part 'payment_state.dart';
 
 class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
   final PaymentRepository _repository;
+  final AnalyticsService _analytics;
 
-  PaymentBloc(this._repository) : super(const PaymentInitial()) {
+  PaymentBloc(this._repository, this._analytics) : super(const PaymentInitial()) {
     on<BidCheckoutPaymentRequested>(_onBidCheckoutPaymentRequested);
     on<PaymentConnectAccountRequested>(_onConnectAccountRequested);
     on<PaymentOnboardingStatusChecked>(_onOnboardingStatusChecked);
@@ -121,6 +125,14 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
     final current = state;
     if (current is PaymentSheetReady) {
       emit(PaymentEscrowPending(current.amount));
+      unawaited(_analytics.logEvent(
+        AnalyticsEvents.paymentSucceeded,
+        properties: {
+          'method': 'card',
+          'amount': current.amount,
+          'payment_id': current.paymentId,
+        },
+      ));
     }
   }
 
@@ -129,5 +141,9 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
     Emitter<PaymentState> emit,
   ) async {
     emit(PaymentError(NetworkException(event.message, code: 'payment-failed')));
+    unawaited(_analytics.logEvent(
+      AnalyticsEvents.paymentFailed,
+      properties: {'method': 'card', 'error_code': 'payment-failed'},
+    ));
   }
 }
