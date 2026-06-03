@@ -279,7 +279,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => PaymentRepository(getIt<PaymentRemoteDatasource>()),
   );
   getIt.registerFactory<PaymentBloc>(
-    () => PaymentBloc(getIt<PaymentRepository>()),
+    () => PaymentBloc(getIt<PaymentRepository>(), getIt<AnalyticsService>()),
   );
 
   // Wallet
