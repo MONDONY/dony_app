@@ -382,6 +382,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => AccountDeletionBloc(
       getIt<AccountDeletionRepository>(),
       getIt<FirebasePhoneReauth>(),
+      getIt<AnalyticsService>(),
     ),
   );
 
@@ -572,7 +573,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => ReferralRepository(getIt<ReferralDatasource>()),
   );
   getIt.registerLazySingleton<ReferralBloc>(
-    () => ReferralBloc(getIt<ReferralRepository>()),
+    () => ReferralBloc(getIt<ReferralRepository>(), getIt<AnalyticsService>()),
     dispose: (b) => b.close(),
   );
 

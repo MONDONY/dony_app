@@ -1,5 +1,10 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
@@ -12,8 +17,22 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-class BecomeATravelerScreen extends StatelessWidget {
+class BecomeATravelerScreen extends StatefulWidget {
   const BecomeATravelerScreen({super.key});
+
+  @override
+  State<BecomeATravelerScreen> createState() => _BecomeATravelerScreenState();
+}
+
+class _BecomeATravelerScreenState extends State<BecomeATravelerScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(getIt<AnalyticsService>().logEvent(AnalyticsEvents.becomeTravelerStarted));
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

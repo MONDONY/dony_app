@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/settings/bloc/privacy_settings_bloc.dart';
@@ -296,8 +299,13 @@ class _AnalyticsConsentCard extends StatelessWidget {
                 const SizedBox(width: DonySpacing.sm),
                 Switch(
                   value: enabled,
-                  onChanged: (v) =>
-                      getIt<AnalyticsService>().setConsent(granted: v),
+                  onChanged: (v) {
+                    getIt<AnalyticsService>().setConsent(granted: v);
+                    unawaited(getIt<AnalyticsService>().logEvent(
+                      AnalyticsEvents.analyticsConsentChanged,
+                      properties: {'granted': v},
+                    ));
+                  },
                 ),
               ],
             ),

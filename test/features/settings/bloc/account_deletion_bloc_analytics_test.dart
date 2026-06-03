@@ -1,0 +1,38 @@
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
+import 'package:dony/features/settings/data/account_deletion_repository.dart';
+import 'package:dony/features/settings/data/firebase_phone_reauth.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import '../../../helpers/mock_analytics_backend.dart';
+
+class _MockDeletionRepo extends Mock implements AccountDeletionRepository {}
+
+class _MockReauth extends Mock implements FirebasePhoneReauth {}
+
+void main() {
+  late _MockDeletionRepo repo;
+  late _MockReauth reauth;
+  late MockAnalyticsBackend backend;
+
+  setUp(() {
+    repo = _MockDeletionRepo();
+    reauth = _MockReauth();
+    backend = MockAnalyticsBackend();
+  });
+
+  AccountDeletionBloc makeBloc({bool enabled = true}) {
+    final a = enabled ? makeEnabledAnalytics(backend) : makeDisabledAnalytics(backend);
+    a.onConfigured();
+    return AccountDeletionBloc(repo, reauth, a);
+  }
+
+  test('account_deletion_requested fires on RequestDeletion success', () async {
+    when(() => repo.requestDeletion()).thenAnswer((_) async {});
+    final bloc = makeBloc();
+    bloc.add(RequestDeletion());
+    await bloc.stream.firstWhere((s) => s is AccountDeletionRequested);
+    await Future<void>.delayed(Duration.zero);
+    verify(() => backend.capture(AnalyticsEvents.accountDeletionRequested, any())).called(1);
+  });
+}

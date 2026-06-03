@@ -9,6 +9,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/mock_analytics_backend.dart';
 
 class MockReferralRepository extends Mock implements ReferralRepository {}
 
@@ -22,7 +23,11 @@ void main() {
     mockRepo = MockReferralRepository();
   });
 
-  ReferralBloc buildBloc() => ReferralBloc(mockRepo);
+  ReferralBloc buildBloc() {
+    final analytics = makeDisabledAnalytics(MockAnalyticsBackend());
+    analytics.onConfigured();
+    return ReferralBloc(mockRepo, analytics);
+  }
 
   const testInfo = ReferralInfo(
     code: 'DONY-ABC123',
