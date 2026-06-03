@@ -182,6 +182,144 @@ Si l'appareil ne supporte pas la biométrie → afficher `DonyKeypad` pour le PI
 
 ---
 
+## Analytics — PostHog (OBLIGATOIRE)
+
+> **Règle absolue :** tout nouvel écran et toute nouvelle action métier doivent être trackés. Toute modification d'un écran existant doit vérifier et mettre à jour le tracking associé.
+
+### Architecture
+
+```
+PostHog SDK (posthog_flutter)
+    └── AnalyticsService          lib/core/services/analytics_service.dart
+            ├── isEnabled gate    (configuré ET consentement = true)
+            ├── AnalyticsBackend  abstraction mockable en test
+            └── logEvent / logScreen / identify / reset
+
+AnalyticsEvents                   lib/core/services/analytics_events.dart
+    └── static const String       tous les noms d'events, snake_case
+
+AnalyticsBlocObserver             lib/core/services/analytics_bloc_observer.dart
+    └── onError → bloc_error      capture globale des erreurs BLoC
+```
+
+### Screen tracking — automatique
+
+Le `PosthogObserver` est attaché au GoRouter dans `lib/app/router.dart`. Chaque navigation vers une route envoie automatiquement un `$screen`. **Pas besoin d'appeler `logScreen()` manuellement** pour le suivi de navigation de base.
+
+Exception : si un écran a plusieurs états visuels distincts qui valent la peine d'être distingués (ex: step 1 / step 2 d'un wizard), utiliser `logScreen()` manuellement au changement d'état.
+
+### Custom events — règles
+
+**1. Tout nom d'event doit d'abord être déclaré dans `AnalyticsEvents` :**
+```dart
+// lib/core/services/analytics_events.dart
+abstract final class AnalyticsEvents {
+  static const myNewEvent = 'my_new_event';  // ajouter ici
+}
+```
+
+**2. Les events métier se tirent dans le BLoC, jamais dans le widget :**
+```dart
+// ✅ CORRECT — dans le handler BLoC
+unawaited(_analytics.logEvent(
+  AnalyticsEvents.bidSubmitted,
+  properties: {'corridor': '${e.from}→${e.to}', 'weight_kg': e.weightKg},
+));
+
+// ❌ INTERDIT — dans un widget
+getIt<AnalyticsService>().logEvent('bid_submitted');
+```
+
+Exception acceptée : events de vue/intention déclenchés à l'ouverture d'un écran (`become_traveler_started`, `wallet_topup_started`) — via `addPostFrameCallback` dans `initState`.
+
+**3. Tout nouveau BLoC doit recevoir `AnalyticsService` en paramètre :**
+```dart
+class MyBloc extends Bloc<MyEvent, MyState> {
+  MyBloc(this._repository, this._analytics) : super(MyInitial()) { ... }
+  final MyRepository _repository;
+  final AnalyticsService _analytics;
+}
+```
+Et enregistré dans `lib/core/di/injection.dart` :
+```dart
+getIt.registerFactory(() => MyBloc(getIt(), getIt<AnalyticsService>()));
+```
+
+**4. Toujours `unawaited()` — le tracking ne doit jamais bloquer le flux :**
+```dart
+unawaited(_analytics.logEvent(AnalyticsEvents.paymentSucceeded));
+```
+
+### PII — interdit dans les properties
+
+| ❌ Jamais | ✅ À la place |
+|-----------|--------------|
+| Numéro de téléphone | UID backend (UUID) |
+| Email | — |
+| Nom / prénom | — |
+| Adresse exacte | Ville seulement |
+| Valeur déclarée exacte | Tranche (ex: `'<100€'`) |
+| Token / clé | — |
+
+### Checklist tracking — nouvel écran
+
+- [ ] La route est dans `router.dart` → screen tracking automatique ✅
+- [ ] Si l'écran a un état d'intention (ouverture = début d'un funnel) → `addPostFrameCallback` + `logEvent` dans `initState`
+- [ ] Si l'écran contient un formulaire de soumission → event dans le BLoC après succès
+- [ ] Si l'écran contient des actions secondaires (filtres, tri, partage) → event dans le BLoC ou widget selon le cas
+- [ ] Nom d'event ajouté dans `AnalyticsEvents`
+- [ ] Aucune PII dans les properties
+
+### Checklist tracking — modification d'écran existant
+
+- [ ] Les actions modifiées/ajoutées ont leurs events mis à jour
+- [ ] Les actions supprimées ont leurs events retirés du code (pas de `AnalyticsEvents`)
+- [ ] Si le BLoC change de signature, vérifier `injection.dart`
+
+### Events actuellement implémentés
+
+| Event | Déclencheur |
+|-------|-------------|
+| `signup_started` | PhoneAuthScreen._submit() |
+| `otp_submitted` | OtpVerificationScreen._verify() |
+| `signup_completed` | PinSetupScreen._handleComplete() |
+| `analytics_consent_answered` | AnalyticsConsentScreen._respond() |
+| `login_success` | AuthBloc (check / phone / social / email) |
+| `login_failed` | AuthBloc._onCheckRequested() |
+| `kyc_started` | KycBloc._onSessionRequested() |
+| `kyc_completed` | KycBloc._onStatusRefreshed() |
+| `kyc_failed` | KycBloc._onSessionRequested() |
+| `announcement_created` | AnnouncementBloc._onCreateRequested() |
+| `announcement_viewed` | AnnouncementDetailScreen (BlocListener) |
+| `bid_submitted` | BidBloc._onCreateRequested() |
+| `bid_accepted` | BidAcceptanceBloc._handleResponse() |
+| `bid_rejected` | BidBloc._onRejectRequested() |
+| `payment_initiated` | PaymentScreen._pay() |
+| `payment_succeeded` | PaymentBloc._onPaymentSheetCompleted() |
+| `payment_failed` | PaymentBloc._onPaymentFailed() |
+| `mobile_money_awaiting` | MobileMoneyAwaitingScreen.initState |
+| `qr_scan_success` | TrackingBloc._onScanSubmit() |
+| `delivery_confirmed` | ReceptionConfirmScreen._confirm() |
+| `package_request_created` | PackageRequestFormBloc |
+| `package_request_searched` | PackageRequestSearchBloc |
+| `negotiation_offer_made` | NegotiationBloc._onStart()/_onCounter() |
+| `negotiation_offer_accepted` | NegotiationBloc._onAccept() |
+| `conversation_opened` | ChatScreen.initState |
+| `message_sent` | ChatBloc._onSendText() |
+| `wallet_topup_started` | WalletTopupAmountScreen.initState |
+| `wallet_topup_completed` | WalletBloc (après topup réussi) |
+| `rating_submitted` | RatingBloc._onSubmit()/_onTravelerSubmit() |
+| `cancellation_initiated` | CancellationBloc._onTripCancellationRequested() |
+| `rematch_accepted` | *(à implémenter)* |
+| `become_traveler_started` | BecomeTravelerScreen.initState |
+| `upgrade_to_pro_started` | UpgradeToProScreen.initState |
+| `referral_shared` | ReferralBloc._onShared() |
+| `analytics_consent_changed` | PrivacySettingsScreen.onChanged |
+| `account_deletion_requested` | AccountDeletionBloc._onRequestDeletion() |
+| `bloc_error` | AnalyticsBlocObserver.onError() — global |
+
+---
+
 ## Critical Rules
 
 ### NEVER
@@ -197,6 +335,10 @@ Si l'appareil ne supporte pas la biométrie → afficher `DonyKeypad` pour le PI
 10. Paiement sans biométrie/PIN
 11. GPS oublié dans les métadonnées EXIF
 12. URLs/clés hardcodées → `--dart-define-from-file`
+13. PII dans les properties analytics (téléphone, email, nom, adresse exacte)
+14. Appeler `Posthog()` directement → passer par `AnalyticsService`
+15. Créer un BLoC sans injecter `AnalyticsService` en paramètre
+16. Ajouter un nom d'event inline → toujours passer par `AnalyticsEvents.xxx`
 
 ### ALWAYS
 1. BLoC pour tout état de feature
@@ -209,6 +351,9 @@ Si l'appareil ne supporte pas la biométrie → afficher `DonyKeypad` pour le PI
 8. ACK FCM pour notifications critiques
 9. FCM token mis à jour sur `onTokenRefresh`
 10. Validation côté client (backend = source de vérité)
+11. Tracking sur tout nouvel écran (screen auto + events métier si applicable)
+12. Mettre à jour le tracking lors de toute modification d'écran existant
+13. `unawaited()` sur tous les appels `_analytics.logEvent()`
 
 ---
 
@@ -294,6 +439,8 @@ Avant de naviguer vers un écran fils, se poser ces questions :
 - [ ] Support offline si requis · Biométrie/PIN si paiement · ACK FCM si notifications
 - [ ] Tests unitaires BLoC + widget tests écrans critiques
 - [ ] Couverture ≥ 90 % (`flutter test --coverage`)
+- [ ] **Analytics** : nouveaux events ajoutés dans `AnalyticsEvents`, tirés dans le BLoC, `AnalyticsService` injecté, aucune PII
+- [ ] **Analytics** : table des events dans `CLAUDE.md` mise à jour
 
 ---
 
