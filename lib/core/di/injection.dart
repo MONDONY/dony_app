@@ -101,6 +101,7 @@ import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_search_bloc.dart';
+import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
@@ -617,6 +618,9 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   );
   getIt.registerFactory<CompleteDetailsBloc>(
     () => CompleteDetailsBloc(getIt<PackageRequestRepository>()),
+  );
+  getIt.registerFactory<RequestFilterCubit>(
+    () => RequestFilterCubit(),
   );
 
   // Stripe account status (global singleton)

@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/design/widgets/dony_button.dart';
+import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
+import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/package_request_detail_screen.dart';
@@ -8,8 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-
-enum _StatusFilter { all, open, accepted }
 
 class MyPackageRequestsScreen extends StatefulWidget {
   const MyPackageRequestsScreen({super.key});
@@ -58,113 +59,139 @@ class _ListContent extends StatefulWidget {
 }
 
 class _ListContentState extends State<_ListContent> {
-  _StatusFilter _filter = _StatusFilter.all;
+  final _searchController = TextEditingController();
+  Timer? _debounce;
+  late final RequestFilterCubit _filterCubit;
 
-  List<PackageRequest> _applyFilter(List<PackageRequest> all) {
-    return switch (_filter) {
-      _StatusFilter.all => all,
-      _StatusFilter.open => all
-          .where((r) =>
-              r.status == PackageRequestStatus.open ||
-              r.status == PackageRequestStatus.negotiating)
-          .toList(),
-      _StatusFilter.accepted => all
-          .where((r) =>
-              r.status == PackageRequestStatus.accepted ||
-              r.status == PackageRequestStatus.completed)
-          .toList(),
-    };
+  @override
+  void initState() {
+    super.initState();
+    _filterCubit = getIt<RequestFilterCubit>();
+  }
+
+  void _onQuery(String q) {
+    _debounce?.cancel();
+    _debounce = Timer(
+        const Duration(milliseconds: 250), () => _filterCubit.setQuery(q));
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    _filterCubit.close();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final body = BlocBuilder<PackageRequestBloc, PackageRequestState>(
-      builder: (context, state) {
-        if (state.status == PackageRequestListStatus.loading) {
-          return Center(
-            child: CircularProgressIndicator(
-                color: Theme.of(context).colorScheme.primary),
-          );
-        }
-        if (state.status == PackageRequestListStatus.error) {
-          return _ErrorView(
-            message: state.errorMessage ?? 'Erreur',
-            onRetry: () =>
-                context.read<PackageRequestBloc>().add(const FetchMyRequests()),
-          );
-        }
-        if (state.requests.isEmpty) {
-          return DonyEmptyState(
-            title: 'Tu n\'as encore rien envoyé',
-            description:
-                'Publie ta première demande et reçois des offres de voyageurs en quelques heures.',
-            mascotte: DonyMascotteType.assis,
-            actionLabel: '+ Publier ma première demande',
-            onAction: () async {
-              await PackageRequestCreateWizard.show(context);
-              if (context.mounted) {
-                context
-                    .read<PackageRequestBloc>()
-                    .add(const RefreshMyRequests());
-              }
-            },
-          );
-        }
+    final body = BlocProvider.value(
+      value: _filterCubit,
+      child: BlocBuilder<RequestFilterCubit, RequestFilterState>(
+        builder: (context, filter) =>
+            BlocBuilder<PackageRequestBloc, PackageRequestState>(
+          builder: (context, state) {
+            if (state.status == PackageRequestListStatus.loading) {
+              return Center(
+                child: CircularProgressIndicator(
+                    color: Theme.of(context).colorScheme.primary),
+              );
+            }
+            if (state.status == PackageRequestListStatus.error) {
+              return _ErrorView(
+                message: state.errorMessage ?? 'Erreur',
+                onRetry: () =>
+                    context.read<PackageRequestBloc>().add(const FetchMyRequests()),
+              );
+            }
+            if (state.requests.isEmpty) {
+              return DonyEmptyState(
+                title: 'Tu n\'as encore rien envoyé',
+                description:
+                    'Publie ta première demande et reçois des offres de voyageurs en quelques heures.',
+                mascotte: DonyMascotteType.assis,
+                actionLabel: '+ Publier ma première demande',
+                onAction: () async {
+                  await PackageRequestCreateWizard.show(context);
+                  if (context.mounted) {
+                    context
+                        .read<PackageRequestBloc>()
+                        .add(const RefreshMyRequests());
+                  }
+                },
+              );
+            }
 
-        final openCount = state.requests
-            .where((r) =>
-                r.status == PackageRequestStatus.open ||
-                r.status == PackageRequestStatus.negotiating)
-            .length;
-        final acceptedCount = state.requests
-            .where((r) =>
-                r.status == PackageRequestStatus.accepted ||
-                r.status == PackageRequestStatus.completed)
-            .length;
-        final filtered = _applyFilter(state.requests);
+            final openCount = state.requests
+                .where((r) =>
+                    r.status == PackageRequestStatus.open ||
+                    r.status == PackageRequestStatus.negotiating)
+                .length;
+            final acceptedCount = state.requests
+                .where((r) =>
+                    r.status == PackageRequestStatus.accepted ||
+                    r.status == PackageRequestStatus.completed)
+                .length;
+            final filtered = applyRequestFilters(state.requests, filter);
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _FilterRow(
-              current: _filter,
-              total: state.requests.length,
-              openCount: openCount,
-              acceptedCount: acceptedCount,
-              onChanged: (f) => setState(() => _filter = f),
-            ),
-            Expanded(
-              child: filtered.isEmpty
-                  ? _FilterEmptyState(filter: _filter)
-                  : RefreshIndicator(
-                      color: Theme.of(context).colorScheme.primary,
-                      onRefresh: () async {
-                        context
-                            .read<PackageRequestBloc>()
-                            .add(const RefreshMyRequests());
-                      },
-                      child: ListView.separated(
-                        padding: EdgeInsets.fromLTRB(
-                          DonySpacing.lg,
-                          DonySpacing.base,
-                          DonySpacing.lg,
-                          MediaQuery.of(context).padding.bottom + 100,
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                      DonySpacing.lg, DonySpacing.sm, DonySpacing.lg, 0),
+                  child: DonySearchField(
+                    hint: 'Ville, catégorie…',
+                    controller: _searchController,
+                    onChanged: _onQuery,
+                    onClear: () {
+                      _searchController.clear();
+                      context.read<RequestFilterCubit>().setQuery('');
+                    },
+                  ),
+                ),
+                _FilterRow(
+                  current: filter.preset,
+                  total: state.requests.length,
+                  openCount: openCount,
+                  acceptedCount: acceptedCount,
+                  onChanged: (p) => context.read<RequestFilterCubit>().setPreset(p),
+                ),
+                Expanded(
+                  child: filtered.isEmpty
+                      ? _FilterEmptyState(
+                          preset: filter.preset, hasQuery: filter.query.isNotEmpty)
+                      : RefreshIndicator(
+                          color: Theme.of(context).colorScheme.primary,
+                          onRefresh: () async {
+                            context
+                                .read<PackageRequestBloc>()
+                                .add(const RefreshMyRequests());
+                          },
+                          child: ListView.separated(
+                            padding: EdgeInsets.fromLTRB(
+                              DonySpacing.lg,
+                              DonySpacing.base,
+                              DonySpacing.lg,
+                              MediaQuery.of(context).padding.bottom + 100,
+                            ),
+                            itemCount: filtered.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: DonySpacing.sm),
+                            itemBuilder: (context, i) {
+                              return _RequestCard(request: filtered[i])
+                                  .animate()
+                                  .fadeIn(duration: 200.ms, delay: (50 * i).ms)
+                                  .slideY(begin: 0.03, curve: Curves.easeOutCubic);
+                            },
+                          ),
                         ),
-                        itemCount: filtered.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: DonySpacing.sm),
-                        itemBuilder: (context, i) {
-                          return _RequestCard(request: filtered[i])
-                              .animate()
-                              .fadeIn(duration: 200.ms, delay: (50 * i).ms)
-                              .slideY(begin: 0.03, curve: Curves.easeOutCubic);
-                        },
-                      ),
-                    ),
-            ),
-          ],
-        );
-      },
+                ),
+              ],
+            );
+          },
+        ),
+      ),
     );
 
     if (!widget.showFab) return body;
@@ -207,9 +234,9 @@ class _FilterRow extends StatelessWidget {
     required this.onChanged,
   });
 
-  final _StatusFilter current;
+  final RequestQuickFilter current;
   final int total, openCount, acceptedCount;
-  final ValueChanged<_StatusFilter> onChanged;
+  final ValueChanged<RequestQuickFilter> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -227,24 +254,24 @@ class _FilterRow extends StatelessWidget {
           Expanded(
             child: _FilterChip(
               label: 'Toutes ($total)',
-              active: current == _StatusFilter.all,
-              onTap: () => onChanged(_StatusFilter.all),
+              active: current == RequestQuickFilter.all,
+              onTap: () => onChanged(RequestQuickFilter.all),
             ),
           ),
           const SizedBox(width: DonySpacing.xs + 2),
           Expanded(
             child: _FilterChip(
               label: 'Ouvertes ($openCount)',
-              active: current == _StatusFilter.open,
-              onTap: () => onChanged(_StatusFilter.open),
+              active: current == RequestQuickFilter.open,
+              onTap: () => onChanged(RequestQuickFilter.open),
             ),
           ),
           const SizedBox(width: DonySpacing.xs + 2),
           Expanded(
             child: _FilterChip(
               label: 'Acceptées ($acceptedCount)',
-              active: current == _StatusFilter.accepted,
-              onTap: () => onChanged(_StatusFilter.accepted),
+              active: current == RequestQuickFilter.accepted,
+              onTap: () => onChanged(RequestQuickFilter.accepted),
             ),
           ),
         ],
@@ -296,14 +323,22 @@ class _FilterChip extends StatelessWidget {
 }
 
 class _FilterEmptyState extends StatelessWidget {
-  const _FilterEmptyState({required this.filter});
-  final _StatusFilter filter;
+  const _FilterEmptyState({required this.preset, required this.hasQuery});
+  final RequestQuickFilter preset;
+  final bool hasQuery;
 
   @override
   Widget build(BuildContext context) {
-    final label = filter == _StatusFilter.open
-        ? 'Aucune demande ouverte'
-        : 'Aucune demande acceptée';
+    final String label;
+    if (hasQuery) {
+      label = 'Aucun résultat pour cette recherche';
+    } else {
+      label = switch (preset) {
+        RequestQuickFilter.open => 'Aucune demande ouverte',
+        RequestQuickFilter.accepted => 'Aucune demande acceptée',
+        RequestQuickFilter.all => 'Aucune demande',
+      };
+    }
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(DonySpacing.xl + 8),
