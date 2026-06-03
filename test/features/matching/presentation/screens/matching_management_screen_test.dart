@@ -1,6 +1,12 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/active_role_cubit.dart';
+import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
+import 'package:dony/features/package_request/bloc/negotiation_filter_cubit.dart';
+import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
+import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -38,12 +44,19 @@ class _MockNegotiationListBloc
 class _MockNegotiationRepository extends Mock implements NegotiationRepository {
 }
 
+class _MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
+    implements PaymentBloc {}
+
+class _MockAnalytics extends Mock implements AnalyticsService {}
+
 void main() {
   late _MockAnnouncementBloc announcementBloc;
   late _MockBidBloc bidBloc;
   late _MockPackageRequestBloc packageBloc;
   late _MockNegotiationListBloc negoListBloc;
   late _MockNegotiationRepository negoRepo;
+  late _MockPaymentBloc paymentBloc;
+  late _MockAnalytics analytics;
 
   setUp(() {
     announcementBloc = _MockAnnouncementBloc();
@@ -51,6 +64,15 @@ void main() {
     packageBloc = _MockPackageRequestBloc();
     negoListBloc = _MockNegotiationListBloc();
     negoRepo = _MockNegotiationRepository();
+    paymentBloc = _MockPaymentBloc();
+    analytics = _MockAnalytics();
+    when(() => paymentBloc.state).thenReturn(PaymentInitial());
+    when(() => paymentBloc.stream)
+        .thenAnswer((_) => const Stream<PaymentState>.empty());
+    when(() => analytics.logScreen(any(), properties: any(named: 'properties')))
+        .thenAnswer((_) async {});
+    when(() => analytics.logEvent(any(), properties: any(named: 'properties')))
+        .thenAnswer((_) async {});
 
     when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
     when(() => announcementBloc.stream)
@@ -84,6 +106,31 @@ void main() {
     getIt.registerFactory<PackageRequestBloc>(() => packageBloc);
     getIt.registerFactory<NegotiationListBloc>(() => negoListBloc);
     getIt.registerLazySingleton<NegotiationRepository>(() => negoRepo);
+
+    // Dépendances tirées par les onglets du nouveau EnvoyerHubScreen.
+    if (getIt.isRegistered<AnalyticsService>()) {
+      getIt.unregister<AnalyticsService>();
+    }
+    if (getIt.isRegistered<ShipmentFilterCubit>()) {
+      getIt.unregister<ShipmentFilterCubit>();
+    }
+    if (getIt.isRegistered<RequestFilterCubit>()) {
+      getIt.unregister<RequestFilterCubit>();
+    }
+    if (getIt.isRegistered<NegotiationFilterCubit>()) {
+      getIt.unregister<NegotiationFilterCubit>();
+    }
+    if (getIt.isRegistered<EnvoisRefreshNotifier>()) {
+      getIt.unregister<EnvoisRefreshNotifier>();
+    }
+    getIt.registerLazySingleton<AnalyticsService>(() => analytics);
+    getIt.registerFactory<ShipmentFilterCubit>(
+        () => ShipmentFilterCubit(analytics));
+    getIt.registerFactory<RequestFilterCubit>(() => RequestFilterCubit());
+    getIt.registerFactory<NegotiationFilterCubit>(
+        () => NegotiationFilterCubit());
+    getIt.registerLazySingleton<EnvoisRefreshNotifier>(
+        () => EnvoisRefreshNotifier());
   });
 
   tearDown(() {
@@ -100,6 +147,21 @@ void main() {
     if (getIt.isRegistered<NegotiationRepository>()) {
       getIt.unregister<NegotiationRepository>();
     }
+    if (getIt.isRegistered<AnalyticsService>()) {
+      getIt.unregister<AnalyticsService>();
+    }
+    if (getIt.isRegistered<ShipmentFilterCubit>()) {
+      getIt.unregister<ShipmentFilterCubit>();
+    }
+    if (getIt.isRegistered<RequestFilterCubit>()) {
+      getIt.unregister<RequestFilterCubit>();
+    }
+    if (getIt.isRegistered<NegotiationFilterCubit>()) {
+      getIt.unregister<NegotiationFilterCubit>();
+    }
+    if (getIt.isRegistered<EnvoisRefreshNotifier>()) {
+      getIt.unregister<EnvoisRefreshNotifier>();
+    }
   });
 
   Widget wrap(ActiveRole role) {
@@ -108,8 +170,13 @@ void main() {
     when(() => cubit.stream)
         .thenAnswer((_) => const Stream<ActiveRole>.empty());
     return MaterialApp(
-      home: BlocProvider<ActiveRoleCubit>.value(
-        value: cubit,
+      home: MultiBlocProvider(
+        providers: [
+          BlocProvider<ActiveRoleCubit>.value(value: cubit),
+          // Fourni globalement par app.dart en prod ; requis ici car l'onglet
+          // Envois (ShipmentListBody) écoute PaymentBloc.
+          BlocProvider<PaymentBloc>.value(value: paymentBloc),
+        ],
         child: const MatchingManagementScreen(),
       ),
     );
@@ -118,8 +185,10 @@ void main() {
   group('MatchingManagementScreen dispatch rôle-aware', () {
     testWidgets('sender → EnvoyerHubScreen rendu', (tester) async {
       await tester.pumpWidget(wrap(ActiveRole.sender));
-      // Drain les animations `flutter_animate` du header (220ms fadeIn).
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+      // pas de pumpAndSettle : l'onglet Envois affiche un spinner (BidInitial)
+      // qui ne se stabilise jamais ; un pump suffit pour monter le hub.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
       expect(find.byType(EnvoyerHubScreen), findsOneWidget);
       expect(find.byType(AnnouncementListScreen), findsNothing);
     });
