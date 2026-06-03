@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_bloc.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
@@ -49,6 +52,13 @@ class _ChatScreenState extends State<ChatScreen> {
             isReadOnly: widget.conversation.readOnly,
           ),
         );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.conversationOpened,
+        properties: {'context': 'conversation'},
+      ));
+    });
   }
 
   @override

@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_event.dart';
 import 'package:dony/features/messaging/bloc/chat/chat_state.dart';
 import 'package:dony/features/messaging/data/conversation_repository.dart';
@@ -15,10 +17,11 @@ class _DeletedByOtherParty extends ChatEvent {
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final FirestoreChatRepository _firestoreRepo;
   final ConversationRepository _conversationRepo;
+  final AnalyticsService _analytics;
   StreamSubscription<dynamic>? _messageSub;
   StreamSubscription<bool>? _deletedSub;
 
-  ChatBloc(this._firestoreRepo, this._conversationRepo)
+  ChatBloc(this._firestoreRepo, this._conversationRepo, this._analytics)
       : super(const ChatInitial()) {
     on<ChatSubscribeRequested>(_onSubscribe);
     on<ChatTextSendRequested>(_onSendText);
@@ -85,6 +88,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         ? '${event.body.substring(0, 77)}...'
         : event.body;
     await _conversationRepo.updateLastMessage(event.conversationId, preview);
+    unawaited(_analytics.logEvent(AnalyticsEvents.messageSent));
   }
 
   Future<void> _onSendImage(

@@ -322,6 +322,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => ChatBloc(
       getIt<FirestoreChatRepository>(),
       getIt<ConversationRepository>(),
+      getIt<AnalyticsService>(),
     ),
   );
   getIt.registerFactory<ConversationOpenBloc>(
