@@ -1,6 +1,8 @@
+import 'package:dony/core/utils/text_search.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+export 'package:dony/core/utils/text_search.dart' show normalizeSearch;
 
 // ── Groupes de statuts ────────────────────────────────────────────────────────
 
@@ -39,31 +41,6 @@ bool isActiveBid(BidModel bid) => kActiveBidStatuses.contains(bid.status);
 /// `CANCELLED` auto-annulé n'est pas considéré comme clôturé.
 bool isClosedBid(BidModel bid) =>
     kClosedBidStatuses.contains(bid.status) && !_isAutoCancelled(bid);
-
-// ── Normalisation de recherche ────────────────────────────────────────────────
-
-const _diacriticsMap = {
-  'à': 'a', 'â': 'a', 'ä': 'a', 'á': 'a', 'ã': 'a', 'å': 'a',
-  'ç': 'c',
-  'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
-  'î': 'i', 'ï': 'i', 'í': 'i', 'ì': 'i',
-  'ô': 'o', 'ö': 'o', 'ó': 'o', 'ò': 'o', 'õ': 'o',
-  'ù': 'u', 'û': 'u', 'ü': 'u', 'ú': 'u',
-  'ñ': 'n',
-  'ÿ': 'y',
-};
-
-/// Minuscule + suppression des diacritiques. Préserve la longueur (1 char → 1 char),
-/// ce qui garantit que les index de correspondance restent valides sur la chaîne
-/// d'origine (utilisé pour le surlignage).
-String normalizeSearch(String input) {
-  final lower = input.toLowerCase();
-  final buffer = StringBuffer();
-  for (final ch in lower.split('')) {
-    buffer.write(_diacriticsMap[ch] ?? ch);
-  }
-  return buffer.toString();
-}
 
 /// `true` si le bid correspond à la requête (nom de l'expéditeur ou n° de suivi).
 bool bidMatchesQuery(BidModel bid, String query) {
