@@ -61,7 +61,11 @@ abstract final class RedeemCodeBottomSheet {
           ),
         ),
       ),
-    ).whenComplete(() {
+    ).whenComplete(() async {
+      // showModalBottomSheet résout sa Future dès que pop() est appelé, mais
+      // l'animation de fermeture tourne encore ~300ms. On diffère le dispose
+      // pour éviter un TextEditingController used-after-dispose.
+      await Future.delayed(const Duration(milliseconds: 350));
       ctrl.dispose();
       notifier.dispose();
       bloc.close();
