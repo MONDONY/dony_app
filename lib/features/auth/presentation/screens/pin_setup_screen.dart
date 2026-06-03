@@ -7,9 +7,42 @@ import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive/hive.dart';
+
+/// Détermine la route à suivre après la création du PIN, selon l'état du
+/// consentement analytics.
+///
+/// Réconcilie d'abord avec le backend (source de vérité) si l'utilisateur n'a
+/// pas de réponse locale : sans ce sync, un utilisateur réinstallé (Hive vide,
+/// donc `hasAnswered` faux à tort) qui a déjà consenti côté backend serait
+/// redemandé — exactement la régression que la persistance backend élimine.
+///
+/// - Déjà répondu (local ou après sync) → `/auth/referral-code`.
+/// - Pays RGPD, jamais répondu → `/auth/analytics-consent`.
+/// - Pays hors RGPD, jamais répondu → consentement auto-accordé puis `/auth/referral-code`.
+@visibleForTesting
+Future<String> resolvePostPinSetupRoute(
+  AnalyticsService analytics,
+  Box<dynamic> prefs,
+) async {
+  if (analytics.isConfigured && !analytics.hasAnswered) {
+    await analytics.syncFromBackend();
+  }
+  if (analytics.isConfigured && !analytics.hasAnswered) {
+    if (GdprHelper.requiresConsent(prefs: prefs)) {
+      // Pays RGPD (UE/EEE/UK/CH) → écran de consentement explicite.
+      return '/auth/analytics-consent';
+    }
+    // Pays hors RGPD (ex: Sénégal, Côte d'Ivoire, Mali, Cameroun)
+    // → consentement auto, pas d'écran intermédiaire.
+    await analytics.setConsent(granted: true, source: 'auto_non_gdpr');
+  }
+  return '/auth/referral-code';
+}
 
 class PinSetupScreen extends StatefulWidget {
   const PinSetupScreen({super.key});
@@ -59,22 +92,11 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
       if (_pin == _firstPin) {
         await getIt<LocalAuthService>().savePin(_pin);
         unawaited(getIt<AnalyticsService>().logEvent(AnalyticsEvents.signupCompleted));
-        if (mounted) {
-          final analytics = getIt<AnalyticsService>();
-          if (analytics.isConfigured && !analytics.hasAnswered) {
-            if (GdprHelper.requiresConsent(prefs: getIt<HiveService>().userPrefs)) {
-              // Pays RGPD (UE/EEE/UK/CH) → écran de consentement explicite.
-              context.go('/auth/analytics-consent');
-            } else {
-              // Pays hors RGPD (ex: Sénégal, Côte d'Ivoire, Mali, Cameroun)
-              // → consentement auto, pas d'écran intermédiaire.
-              await analytics.setConsent(granted: true);
-              context.go('/auth/referral-code');
-            }
-          } else {
-            context.go('/auth/referral-code');
-          }
-        }
+        final route = await resolvePostPinSetupRoute(
+          getIt<AnalyticsService>(),
+          getIt<HiveService>().userPrefs,
+        );
+        if (mounted) context.go(route);
       } else {
         setState(() {
           _hasError = true;

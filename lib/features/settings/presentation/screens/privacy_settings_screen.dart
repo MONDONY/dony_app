@@ -300,7 +300,8 @@ class _AnalyticsConsentCard extends StatelessWidget {
                 Switch(
                   value: enabled,
                   onChanged: (v) {
-                    getIt<AnalyticsService>().setConsent(granted: v);
+                    getIt<AnalyticsService>()
+                        .setConsent(granted: v, source: 'settings');
                     unawaited(getIt<AnalyticsService>().logEvent(
                       AnalyticsEvents.analyticsConsentChanged,
                       properties: {'granted': v},

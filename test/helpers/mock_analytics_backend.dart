@@ -5,6 +5,9 @@ import 'package:mocktail/mocktail.dart';
 
 class MockAnalyticsBackend extends Mock implements AnalyticsBackend {}
 
+class MockAnalyticsConsentRemote extends Mock
+    implements AnalyticsConsentRemote {}
+
 class MockHiveService extends Mock implements HiveService {}
 
 class MockBox extends Mock implements Box<dynamic> {}

@@ -7,6 +7,7 @@ import '../../helpers/mock_analytics_backend.dart';
 
 void main() {
   late MockAnalyticsBackend backend;
+  late MockAnalyticsConsentRemote remote;
   late MockHiveService hive;
   late MockBox box;
   late AnalyticsService service;
@@ -16,6 +17,7 @@ void main() {
 
   setUp(() {
     backend = MockAnalyticsBackend();
+    remote = MockAnalyticsConsentRemote();
     hive = MockHiveService();
     box = MockBox();
     storedConsent = null;
@@ -35,7 +37,14 @@ void main() {
     when(() => backend.screen(any(), any())).thenAnswer((_) async {});
     when(() => backend.identify(any(), any())).thenAnswer((_) async {});
 
-    service = AnalyticsService(hive, backend: backend);
+    when(() => remote.fetch()).thenAnswer((_) async => null);
+    when(() => remote.push(
+          granted: any(named: 'granted'),
+          policyVersion: any(named: 'policyVersion'),
+          source: any(named: 'source'),
+        )).thenAnswer((_) async {});
+
+    service = AnalyticsService(hive, backend: backend, remote: remote);
   });
 
   group('consent reading', () {
@@ -123,6 +132,165 @@ void main() {
       clearInteractions(backend);
       await service.setConsent(granted: false);
       verify(() => backend.optOut()).called(1);
+    });
+
+    test('pushes the decision to the remote with default source manual',
+        () async {
+      await service.setConsent(granted: true);
+      verify(() => remote.push(
+            granted: true,
+            policyVersion: kAnalyticsPolicyVersion,
+            source: 'manual',
+          )).called(1);
+    });
+
+    test('forwards a custom source to the remote', () async {
+      await service.setConsent(granted: false, source: 'settings');
+      verify(() => remote.push(
+            granted: false,
+            policyVersion: kAnalyticsPolicyVersion,
+            source: 'settings',
+          )).called(1);
+    });
+
+    test('a failing remote push never blocks/breaks setConsent', () async {
+      // Cas réaliste : push() async dont la Future est rejetée (erreur réseau).
+      // `unawaited` → l'échec ne doit pas faire échouer setConsent ni bloquer
+      // l'écriture Hive / l'application du consentement.
+      when(() => remote.push(
+            granted: any(named: 'granted'),
+            policyVersion: any(named: 'policyVersion'),
+            source: any(named: 'source'),
+          )).thenAnswer((_) async => throw Exception('network down'));
+      await service.setConsent(granted: true);
+      expect(storedConsent, isTrue);
+      verify(() => box.put(HiveService.kAnalyticsConsent, true)).called(1);
+    });
+  });
+
+  group('syncFromBackend — backend has an answer (wins over local)', () {
+    test('aligns local Hive when backend differs (revoked elsewhere)',
+        () async {
+      storedConsent = true;
+      when(() => remote.fetch()).thenAnswer((_) async => false);
+
+      await service.syncFromBackend();
+
+      expect(storedConsent, isFalse);
+      verify(() => box.put(HiveService.kAnalyticsConsent, false)).called(1);
+    });
+
+    test('does not rewrite Hive when backend matches local', () async {
+      storedConsent = true;
+      when(() => remote.fetch()).thenAnswer((_) async => true);
+
+      await service.syncFromBackend();
+
+      verifyNever(() => box.put(HiveService.kAnalyticsConsent, any()));
+    });
+
+    test('applies the backend value to PostHog when configured', () async {
+      storedConsent = false;
+      await service.onConfigured(); // optOut
+      clearInteractions(backend);
+      when(() => remote.fetch()).thenAnswer((_) async => true);
+
+      await service.syncFromBackend();
+
+      expect(storedConsent, isTrue);
+      verify(() => backend.optIn()).called(1);
+    });
+
+    test('opts out locally when backend granted=false and configured',
+        () async {
+      storedConsent = true;
+      await service.onConfigured(); // optIn
+      clearInteractions(backend);
+      when(() => remote.fetch()).thenAnswer((_) async => false);
+
+      await service.syncFromBackend();
+
+      verify(() => backend.optOut()).called(1);
+    });
+
+    test('does not touch PostHog when not configured', () async {
+      when(() => remote.fetch()).thenAnswer((_) async => true);
+
+      await service.syncFromBackend();
+
+      verifyNever(() => backend.optIn());
+      verifyNever(() => backend.optOut());
+    });
+
+    test('never pushes back when backend already has an answer', () async {
+      storedConsent = false;
+      when(() => remote.fetch()).thenAnswer((_) async => true);
+
+      await service.syncFromBackend();
+
+      verifyNever(() => remote.push(
+            granted: any(named: 'granted'),
+            policyVersion: any(named: 'policyVersion'),
+            source: any(named: 'source'),
+          ));
+    });
+  });
+
+  group('syncFromBackend — backend has no answer (null)', () {
+    test('pushes local answer up with source=sync when user has answered',
+        () async {
+      storedConsent = true;
+      when(() => remote.fetch()).thenAnswer((_) async => null);
+
+      await service.syncFromBackend();
+
+      verify(() => remote.push(
+            granted: true,
+            policyVersion: kAnalyticsPolicyVersion,
+            source: 'sync',
+          )).called(1);
+      // Hive inchangé : pas de réponse backend à appliquer.
+      verifyNever(() => box.put(HiveService.kAnalyticsConsent, any()));
+    });
+
+    test('pushes a local refusal up too', () async {
+      storedConsent = false;
+      when(() => remote.fetch()).thenAnswer((_) async => null);
+
+      await service.syncFromBackend();
+
+      verify(() => remote.push(
+            granted: false,
+            policyVersion: kAnalyticsPolicyVersion,
+            source: 'sync',
+          )).called(1);
+    });
+
+    test('does nothing when neither backend nor local has an answer',
+        () async {
+      storedConsent = null;
+      when(() => remote.fetch()).thenAnswer((_) async => null);
+
+      await service.syncFromBackend();
+
+      verifyNever(() => remote.push(
+            granted: any(named: 'granted'),
+            policyVersion: any(named: 'policyVersion'),
+            source: any(named: 'source'),
+          ));
+      verifyNever(() => box.put(HiveService.kAnalyticsConsent, any()));
+    });
+  });
+
+  group('syncFromBackend — network error tolerance', () {
+    test('keeps local state when fetch throws', () async {
+      storedConsent = true;
+      when(() => remote.fetch()).thenThrow(Exception('offline'));
+
+      await service.syncFromBackend(); // ne doit pas lever
+
+      expect(storedConsent, isTrue);
+      verifyNever(() => box.put(HiveService.kAnalyticsConsent, any()));
     });
   });
 

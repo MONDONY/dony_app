@@ -1,0 +1,142 @@
+import 'package:dony/core/services/analytics_service.dart';
+import 'package:dony/core/storage/hive_service.dart';
+import 'package:dony/features/auth/presentation/screens/pin_setup_screen.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+
+import '../../../../helpers/mock_analytics_backend.dart';
+
+/// Couvre `resolvePostPinSetupRoute` — la décision de routing post-création de
+/// PIN selon le consentement analytics. Le cas critique : un utilisateur
+/// réinstallé (Hive local vide) qui a déjà consenti côté backend ne doit PAS
+/// être redemandé.
+void main() {
+  late MockAnalyticsBackend backend;
+  late MockAnalyticsConsentRemote remote;
+  late MockHiveService hive;
+  late MockBox box;
+  late AnalyticsService service;
+
+  // État Hive piloté par chaque test.
+  Object? storedConsent;
+  String? detectedCountry;
+
+  setUp(() {
+    backend = MockAnalyticsBackend();
+    remote = MockAnalyticsConsentRemote();
+    hive = MockHiveService();
+    box = MockBox();
+    storedConsent = null;
+    detectedCountry = null;
+
+    when(() => hive.userPrefs).thenReturn(box);
+    when(() => box.get(HiveService.kAnalyticsConsent))
+        .thenAnswer((_) => storedConsent);
+    when(() => box.get(HiveService.kDetectedCountryCode))
+        .thenAnswer((_) => detectedCountry);
+    when(() => box.put(HiveService.kAnalyticsConsent, any()))
+        .thenAnswer((invocation) async {
+      storedConsent = invocation.positionalArguments[1];
+    });
+
+    when(() => backend.optIn()).thenAnswer((_) async {});
+    when(() => backend.optOut()).thenAnswer((_) async {});
+
+    when(() => remote.fetch()).thenAnswer((_) async => null);
+    when(() => remote.push(
+          granted: any(named: 'granted'),
+          policyVersion: any(named: 'policyVersion'),
+          source: any(named: 'source'),
+        )).thenAnswer((_) async {});
+
+    service = AnalyticsService(hive, backend: backend, remote: remote);
+  });
+
+  group('resolvePostPinSetupRoute — réinstall (Hive vide, backend renseigné)', () {
+    test(
+        'backend granted=true → /home, PAS de re-prompt (régression corrigée)',
+        () async {
+      // Réinstall dans un pays RGPD : sans le sync backend, hasAnswered serait
+      // faux → l'utilisateur verrait à tort /auth/analytics-consent.
+      storedConsent = null;
+      detectedCountry = 'FR';
+      when(() => remote.fetch()).thenAnswer((_) async => true);
+      await service.onConfigured();
+
+      final route = await resolvePostPinSetupRoute(service, box);
+
+      expect(route, '/home');
+      verify(() => remote.fetch()).called(1);
+    });
+
+    test('backend granted=false → /home (révocation respectée, pas de re-prompt)',
+        () async {
+      storedConsent = null;
+      detectedCountry = 'FR';
+      when(() => remote.fetch()).thenAnswer((_) async => false);
+      await service.onConfigured();
+
+      final route = await resolvePostPinSetupRoute(service, box);
+
+      expect(route, '/home');
+      verify(() => remote.fetch()).called(1);
+    });
+  });
+
+  group('resolvePostPinSetupRoute — jamais répondu (backend null)', () {
+    test('pays RGPD (FR) → /auth/analytics-consent, aucun consentement poussé',
+        () async {
+      storedConsent = null;
+      detectedCountry = 'FR';
+      when(() => remote.fetch()).thenAnswer((_) async => null);
+      await service.onConfigured();
+
+      final route = await resolvePostPinSetupRoute(service, box);
+
+      expect(route, '/auth/analytics-consent');
+      verifyNever(() => remote.push(
+            granted: any(named: 'granted'),
+            policyVersion: any(named: 'policyVersion'),
+            source: any(named: 'source'),
+          ));
+    });
+
+    test('pays hors RGPD (SN) → consentement auto-accordé puis /home', () async {
+      storedConsent = null;
+      detectedCountry = 'SN';
+      when(() => remote.fetch()).thenAnswer((_) async => null);
+      await service.onConfigured();
+
+      final route = await resolvePostPinSetupRoute(service, box);
+
+      expect(route, '/home');
+      // setConsent(granted: true) pousse au backend avec la source auto.
+      verify(() => remote.push(
+            granted: true,
+            policyVersion: any(named: 'policyVersion'),
+            source: 'auto_non_gdpr',
+          )).called(1);
+    });
+  });
+
+  group('resolvePostPinSetupRoute — pas de sync inutile', () {
+    test('non configuré (analytics off) → /home sans appel backend', () async {
+      // onConfigured non appelé → isConfigured=false.
+      final route = await resolvePostPinSetupRoute(service, box);
+
+      expect(route, '/home');
+      verifyNever(() => remote.fetch());
+    });
+
+    test('déjà répondu localement → /home sans re-sync', () async {
+      storedConsent = true;
+      detectedCountry = 'FR';
+      await service.onConfigured();
+
+      final route = await resolvePostPinSetupRoute(service, box);
+
+      expect(route, '/home');
+      verifyNever(() => remote.fetch());
+    });
+  });
+}

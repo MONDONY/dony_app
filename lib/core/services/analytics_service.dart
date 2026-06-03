@@ -1,5 +1,47 @@
+import 'dart:async';
+
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
+
+/// Version de la politique de confidentialité affichée à l'utilisateur au
+/// moment où il donne (ou retire) son consentement analytics. Envoyée au
+/// backend comme preuve légale (RGPD/CNIL) de ce qui a été présenté.
+const kAnalyticsPolicyVersion = '1.0';
+
+/// Persistance distante du consentement analytics (source de vérité backend).
+///
+/// L'implémentation par défaut ([NoopAnalyticsConsentRemote]) ne fait rien :
+/// elle garde le service utilisable sans réseau (tests, builds sans backend).
+/// En production on injecte `ApiAnalyticsConsentRemote` (cf.
+/// `analytics_consent_remote.dart`).
+abstract interface class AnalyticsConsentRemote {
+  /// `null` = le backend n'a pas de réponse pour cet utilisateur.
+  Future<bool?> fetch();
+
+  /// Pousse la décision de l'utilisateur vers le backend (PUT). Non bloquant
+  /// côté appelant (toujours `unawaited`).
+  Future<void> push({
+    required bool granted,
+    required String policyVersion,
+    required String source,
+  });
+}
+
+/// Implémentation no-op : aucun appel réseau. Sert de défaut pour garder les
+/// instanciations `AnalyticsService(hive)` existantes compilables.
+class NoopAnalyticsConsentRemote implements AnalyticsConsentRemote {
+  const NoopAnalyticsConsentRemote();
+
+  @override
+  Future<bool?> fetch() async => null;
+
+  @override
+  Future<void> push({
+    required bool granted,
+    required String policyVersion,
+    required String source,
+  }) async {}
+}
 
 /// Abstraction minimale du backend analytics.
 ///
@@ -51,10 +93,13 @@ class AnalyticsService {
   AnalyticsService(
     this._hive, {
     AnalyticsBackend backend = const PosthogBackend(),
-  }) : _backend = backend;
+    AnalyticsConsentRemote remote = const NoopAnalyticsConsentRemote(),
+  })  : _backend = backend,
+        _remote = remote;
 
   final HiveService _hive;
   final AnalyticsBackend _backend;
+  final AnalyticsConsentRemote _remote;
 
   bool _configured = false;
 
@@ -84,12 +129,63 @@ class AnalyticsService {
   Future<void> _applyConsent() =>
       consent == true ? _backend.optIn() : _backend.optOut();
 
+  /// Pousse la décision vers le backend sans jamais lever : la persistance
+  /// distante est best-effort (toujours `unawaited`). Un échec réseau ne doit
+  /// ni bloquer l'UX/tracking, ni produire une erreur async non gérée.
+  Future<void> _safePush(bool granted, String source) async {
+    try {
+      await _remote.push(
+        granted: granted,
+        policyVersion: kAnalyticsPolicyVersion,
+        source: source,
+      );
+    } catch (_) {
+      // Best-effort : le backend sera resynchronisé au prochain login.
+    }
+  }
+
   /// Enregistre la réponse de l'utilisateur et (dés)active le tracking.
   /// Révocable à tout moment (Réglages › Confidentialité).
-  Future<void> setConsent({required bool granted}) async {
+  ///
+  /// [source] identifie l'origine de la décision (`manual`, `auto_non_gdpr`,
+  /// `settings`, `sync`) — stocké côté backend pour la preuve légale.
+  /// La poussée vers le backend est `unawaited` : le réseau ne doit jamais
+  /// bloquer l'UX ni le tracking.
+  Future<void> setConsent({
+    required bool granted,
+    String source = 'manual',
+  }) async {
     await _hive.userPrefs.put(HiveService.kAnalyticsConsent, granted);
     if (_configured) {
       await _applyConsent();
+    }
+    unawaited(_safePush(granted, source));
+  }
+
+  /// Réconcilie le consentement local (Hive) avec le backend (source de
+  /// vérité) — à appeler au login. Permet à un utilisateur réinstallé ou
+  /// multi-appareils de retrouver son choix sans être redemandé.
+  ///
+  /// - Backend a une réponse → elle prime : on aligne Hive (et PostHog si
+  ///   déjà configuré). Une révocation faite ailleurs (`granted=false`)
+  ///   désactive donc le tracking ici aussi.
+  /// - Backend n'a rien mais on a un choix local → on le pousse (réinstall où
+  ///   le PUT initial n'était jamais parti, ou offline).
+  /// - Erreur réseau → on garde l'état local (no-op).
+  Future<void> syncFromBackend() async {
+    try {
+      final backendGranted = await _remote.fetch();
+      if (backendGranted != null) {
+        if (consent != backendGranted) {
+          await _hive.userPrefs
+              .put(HiveService.kAnalyticsConsent, backendGranted);
+        }
+        if (_configured) await _applyConsent();
+      } else if (hasAnswered) {
+        unawaited(_safePush(consent!, 'sync'));
+      }
+    } catch (_) {
+      // Réseau indisponible / backend en erreur → on conserve l'état local.
     }
   }
 

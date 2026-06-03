@@ -54,11 +54,21 @@ class _AnalyticsConsentGateState extends State<AnalyticsConsentGate> {
 
   void _onAuthChanged(User? user) {
     if (user != null) {
-      unawaited(_analytics.identify(user.uid));
-      unawaited(_updateCountryFromGps());
+      unawaited(_onLogin(user));
     } else {
       unawaited(_analytics.reset());
     }
+  }
+
+  /// Sur login : identifie l'utilisateur, réconcilie le consentement avec le
+  /// backend (source de vérité) PUIS lance la détection pays GPS. La sync doit
+  /// précéder le GPS : un utilisateur réinstallé ayant déjà consenti côté
+  /// backend voit `hasAnswered` redevenir `true` et n'est donc pas redemandé.
+  Future<void> _onLogin(User user) async {
+    unawaited(_analytics.identify(user.uid));
+    await _analytics.syncFromBackend();
+    if (!mounted) return;
+    await _updateCountryFromGps();
   }
 
   /// Tente de raffiner le pays de l'utilisateur via GPS.

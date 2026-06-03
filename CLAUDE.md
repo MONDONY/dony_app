@@ -261,6 +261,14 @@ unawaited(_analytics.logEvent(AnalyticsEvents.paymentSucceeded));
 | Valeur déclarée exacte | Tranche (ex: `'<100€'`) |
 | Token / clé | — |
 
+### Consentement RGPD — persistance backend (source de vérité)
+
+Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité, Hive = cache, `audit_log` = preuve légale.**
+- `AnalyticsService.setConsent({required granted, source})` → écrit Hive + pousse au backend (`PUT /auth/me/analytics-consent`, fire-and-forget tolérant aux pannes).
+- `AnalyticsService.syncFromBackend()` → au login (via `AnalyticsConsentGate`) réconcilie : le backend prime, et un utilisateur réinstallé ayant déjà répondu n'est pas redemandé.
+- **Toujours passer `source`** à `setConsent` : `manual` (écran), `auto_non_gdpr` (auto hors RGPD), `settings` (réglages). Jamais de PII dans le payload — uniquement `granted` / `policyVersion` / `source`.
+- Toute nouvelle décision de consentement doit d'abord `syncFromBackend()` avant de tester `hasAnswered` (cf. `resolvePostPinSetupRoute`).
+
 ### Checklist tracking — nouvel écran
 
 - [ ] La route est dans `router.dart` → screen tracking automatique ✅
