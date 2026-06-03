@@ -6,6 +6,7 @@ class ReferralInfo {
     required this.signedUp,
     required this.rewarded,
     required this.totalEarnedCents,
+    required this.hasBeenReferred,
   });
 
   final String code;
@@ -14,6 +15,7 @@ class ReferralInfo {
   final int signedUp;
   final int rewarded;
   final int totalEarnedCents;
+  final bool hasBeenReferred;
 
   factory ReferralInfo.fromJson(Map<String, dynamic> json) => ReferralInfo(
         code: json['code'] as String,
@@ -22,5 +24,6 @@ class ReferralInfo {
         signedUp: json['signedUp'] as int? ?? 0,
         rewarded: json['rewarded'] as int? ?? 0,
         totalEarnedCents: json['totalEarnedCents'] as int? ?? 0,
+        hasBeenReferred: json['hasBeenReferred'] as bool? ?? false,
       );
 }

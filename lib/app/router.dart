@@ -126,6 +126,7 @@ import 'package:dony/features/settings/presentation/screens/blocked_users_screen
 import 'package:dony/features/settings/presentation/screens/connected_devices_screen.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
+import 'package:dony/features/referral/bloc/referral_event.dart';
 import 'package:dony/features/referral/presentation/screens/referral_screen.dart';
 import 'package:dony/features/auth/presentation/screens/referral_code_screen.dart';
 import 'package:dony/features/referral/data/referral_repository.dart';
@@ -947,8 +948,14 @@ final appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/profile',
-              builder: (context, state) => BlocProvider(
-                create: (_) => getIt<AccountDeletionBloc>(),
+              builder: (context, state) => MultiBlocProvider(
+                providers: [
+                  BlocProvider(create: (_) => getIt<AccountDeletionBloc>()),
+                  BlocProvider(
+                    create: (_) => ReferralBloc(getIt<ReferralRepository>())
+                      ..add(const ReferralLoadRequested()),
+                  ),
+                ],
                 child: const ProfileScreen(),
               ),
             ),

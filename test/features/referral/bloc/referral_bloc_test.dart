@@ -31,6 +31,7 @@ void main() {
     signedUp: 3,
     rewarded: 2,
     totalEarnedCents: 1000,
+    hasBeenReferred: false,
   );
 
   // 1. État initial = ReferralInitial

@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
 import 'package:dony/features/referral/bloc/referral_event.dart';
 import 'package:dony/features/referral/bloc/referral_state.dart';
@@ -36,6 +37,7 @@ const _testInfo = ReferralInfo(
   signedUp: 2,
   rewarded: 1,
   totalEarnedCents: 500,
+  hasBeenReferred: false,
 );
 
 void main() {
@@ -105,7 +107,7 @@ void main() {
   // 6. Affiche "Réessayer" quand ReferralError
   testWidgets('shows Réessayer button when ReferralError', (tester) async {
     when(() => bloc.state)
-        .thenReturn(const ReferralError('Erreur réseau'));
+        .thenReturn(const ReferralError(NetworkException('Erreur réseau')));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -150,7 +152,7 @@ void main() {
   // 10. Message d'erreur affiché dans l'error view
   testWidgets('shows error message text when ReferralError', (tester) async {
     when(() => bloc.state)
-        .thenReturn(const ReferralError('Erreur réseau'));
+        .thenReturn(const ReferralError(NetworkException('Erreur réseau')));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));

@@ -21,6 +21,9 @@ import 'package:dony/features/profile/presentation/widgets/edit_profile_bottom_s
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
 import 'package:dony/features/profile/presentation/widgets/profile_header.dart';
 import 'package:dony/features/profile/presentation/widgets/upgrade_pro_bottom_sheet.dart';
+import 'package:dony/features/referral/bloc/referral_bloc.dart';
+import 'package:dony/features/referral/bloc/referral_event.dart';
+import 'package:dony/features/referral/bloc/referral_state.dart';
 import 'package:dony/features/referral/presentation/widgets/redeem_code_bottom_sheet.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:flutter/material.dart';
@@ -803,14 +806,27 @@ class _AccountTab extends StatelessWidget {
                 showDivider: true,
                 onTap: () => context.push('/profile/referral'),
               ),
-              DonyListTile(
-                icon: Icons.card_giftcard_rounded,
-                iconColor: cs.primary,
-                iconBgColor: cs.primaryContainer,
-                label: 'J\'ai un code parrain',
-                showDivider: false,
-                onTap: () async {
-                  await RedeemCodeBottomSheet.show(context);
+              BlocBuilder<ReferralBloc, ReferralState>(
+                builder: (context, referralState) {
+                  final alreadyReferred = referralState is ReferralLoaded &&
+                      referralState.info.hasBeenReferred;
+                  if (alreadyReferred) return const SizedBox.shrink();
+                  return DonyListTile(
+                    icon: Icons.card_giftcard_rounded,
+                    iconColor: cs.primary,
+                    iconBgColor: cs.primaryContainer,
+                    label: 'J\'ai un code parrain',
+                    showDivider: false,
+                    onTap: () async {
+                      final redeemed =
+                          await RedeemCodeBottomSheet.show(context);
+                      if ((redeemed ?? false) && context.mounted) {
+                        context
+                            .read<ReferralBloc>()
+                            .add(const ReferralLoadRequested());
+                      }
+                    },
+                  );
                 },
               ),
             ],
@@ -875,14 +891,27 @@ class _AccountTab extends StatelessWidget {
                 showDivider: true,
                 onTap: () => context.push('/profile/referral'),
               ),
-              DonyListTile(
-                icon: Icons.card_giftcard_rounded,
-                iconColor: cs.primary,
-                iconBgColor: cs.primaryContainer,
-                label: 'J\'ai un code parrain',
-                showDivider: false,
-                onTap: () async {
-                  await RedeemCodeBottomSheet.show(context);
+              BlocBuilder<ReferralBloc, ReferralState>(
+                builder: (context, referralState) {
+                  final alreadyReferred = referralState is ReferralLoaded &&
+                      referralState.info.hasBeenReferred;
+                  if (alreadyReferred) return const SizedBox.shrink();
+                  return DonyListTile(
+                    icon: Icons.card_giftcard_rounded,
+                    iconColor: cs.primary,
+                    iconBgColor: cs.primaryContainer,
+                    label: 'J\'ai un code parrain',
+                    showDivider: false,
+                    onTap: () async {
+                      final redeemed =
+                          await RedeemCodeBottomSheet.show(context);
+                      if ((redeemed ?? false) && context.mounted) {
+                        context
+                            .read<ReferralBloc>()
+                            .add(const ReferralLoadRequested());
+                      }
+                    },
+                  );
                 },
               ),
             ],
