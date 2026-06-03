@@ -1,5 +1,6 @@
 import 'package:dony/app/main_shell.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
@@ -244,7 +245,7 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/auth/referral-code',
       builder: (context, state) => BlocProvider(
-        create: (_) => ReferralBloc(getIt<ReferralRepository>()),
+        create: (_) => ReferralBloc(getIt<ReferralRepository>(), getIt<AnalyticsService>()),
         child: const ReferralCodeScreen(),
       ),
     ),
@@ -961,7 +962,7 @@ final appRouter = GoRouter(
                 providers: [
                   BlocProvider(create: (_) => getIt<AccountDeletionBloc>()),
                   BlocProvider(
-                    create: (_) => ReferralBloc(getIt<ReferralRepository>())
+                    create: (_) => ReferralBloc(getIt<ReferralRepository>(), getIt<AnalyticsService>())
                       ..add(const ReferralLoadRequested()),
                   ),
                 ],
