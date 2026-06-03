@@ -65,7 +65,7 @@ void main() {
 
   setUp(() {
     bloc = _MockNegotiationListBloc();
-    when(() => bloc.state).thenReturn(const NegotiationListState());
+    when(() => bloc.state).thenReturn(NegotiationListState());
     when(() => bloc.stream)
         .thenAnswer((_) => const Stream<NegotiationListState>.empty());
 
@@ -91,7 +91,7 @@ void main() {
   group('MyNegotiationsBody', () {
     testWidgets('affiche CircularProgressIndicator en état loading',
         (tester) async {
-      when(() => bloc.state).thenReturn(const NegotiationListState(
+      when(() => bloc.state).thenReturn(NegotiationListState(
         status: NegotiationListStatus.loading,
         threads: [],
       ));
@@ -101,7 +101,7 @@ void main() {
     });
 
     testWidgets('affiche _EmptyState quand la liste est vide', (tester) async {
-      when(() => bloc.state).thenReturn(const NegotiationListState(
+      when(() => bloc.state).thenReturn(NegotiationListState(
         status: NegotiationListStatus.loaded,
         threads: [],
       ));
@@ -111,7 +111,7 @@ void main() {
     });
 
     testWidgets('affiche l\'état erreur avec un message', (tester) async {
-      when(() => bloc.state).thenReturn(const NegotiationListState(
+      when(() => bloc.state).thenReturn(NegotiationListState(
         status: NegotiationListStatus.error,
         errorMessage: 'Connexion impossible',
       ));

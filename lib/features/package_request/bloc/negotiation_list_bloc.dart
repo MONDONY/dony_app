@@ -32,15 +32,19 @@ class NegotiationListRefreshRequested extends NegotiationListEvent {
 enum NegotiationListStatus { initial, loading, loaded, error }
 
 class NegotiationListState extends Equatable {
-  const NegotiationListState({
+  NegotiationListState({
     this.status = NegotiationListStatus.initial,
     this.threads = const [],
     this.errorMessage,
-  });
+    DateTime? fetchedAt,
+  }) : fetchedAt = fetchedAt ?? DateTime(2000);
 
   final NegotiationListStatus status;
   final List<NegotiationThread> threads;
   final String? errorMessage;
+
+  /// Horodatage du dernier chargement réussi.
+  final DateTime fetchedAt;
 
   /// Threads still requiring attention (used for the tab badge counter).
   int get activeCount => threads.where((t) =>
@@ -52,20 +56,22 @@ class NegotiationListState extends Equatable {
     NegotiationListStatus? status,
     List<NegotiationThread>? threads,
     String? errorMessage,
+    DateTime? fetchedAt,
   }) =>
       NegotiationListState(
         status: status ?? this.status,
         threads: threads ?? this.threads,
         errorMessage: errorMessage ?? this.errorMessage,
+        fetchedAt: fetchedAt ?? this.fetchedAt,
       );
 
   @override
-  List<Object?> get props => [status, threads, errorMessage];
+  List<Object?> get props => [status, threads, errorMessage, fetchedAt];
 }
 
 class NegotiationListBloc
     extends Bloc<NegotiationListEvent, NegotiationListState> {
-  NegotiationListBloc(this._repository) : super(const NegotiationListState()) {
+  NegotiationListBloc(this._repository) : super(NegotiationListState()) {
     on<NegotiationListFetchRequested>(_onFetch);
     on<NegotiationListRefreshRequested>(_onFetch);
   }
@@ -82,6 +88,7 @@ class NegotiationListBloc
       emit(state.copyWith(
         status: NegotiationListStatus.loaded,
         threads: threads,
+        fetchedAt: DateTime.now(),
       ));
     } catch (err) {
       emit(state.copyWith(

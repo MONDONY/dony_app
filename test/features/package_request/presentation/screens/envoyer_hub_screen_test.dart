@@ -76,7 +76,7 @@ void main() {
     paymentBloc = _MockPaymentBloc();
     analytics = _MockAnalyticsService();
 
-    when(() => packageBloc.state).thenReturn(const PackageRequestState());
+    when(() => packageBloc.state).thenReturn(PackageRequestState());
     when(() => packageBloc.stream)
         .thenAnswer((_) => const Stream<PackageRequestState>.empty());
     whenListen<BidState>(
@@ -84,7 +84,7 @@ void main() {
       const Stream<BidState>.empty(),
       initialState: BidInitial(),
     );
-    when(() => negoListBloc.state).thenReturn(const NegotiationListState());
+    when(() => negoListBloc.state).thenReturn(NegotiationListState());
     when(() => negoListBloc.stream)
         .thenAnswer((_) => const Stream<NegotiationListState>.empty());
     whenListen<PaymentState>(

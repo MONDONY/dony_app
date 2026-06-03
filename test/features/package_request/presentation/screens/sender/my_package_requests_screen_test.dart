@@ -52,7 +52,7 @@ void main() {
 
   setUp(() {
     bloc = _MockPackageRequestBloc();
-    when(() => bloc.state).thenReturn(const PackageRequestState());
+    when(() => bloc.state).thenReturn(PackageRequestState());
     when(() => bloc.stream)
         .thenAnswer((_) => const Stream<PackageRequestState>.empty());
 
@@ -78,7 +78,7 @@ void main() {
   group('MyPackageRequestsBody', () {
     testWidgets('affiche CircularProgressIndicator en état loading',
         (tester) async {
-      when(() => bloc.state).thenReturn(const PackageRequestState(
+      when(() => bloc.state).thenReturn(PackageRequestState(
         status: PackageRequestListStatus.loading,
       ));
       await tester.pumpWidget(wrap());
@@ -87,7 +87,7 @@ void main() {
     });
 
     testWidgets('affiche _EmptyView quand la liste est vide', (tester) async {
-      when(() => bloc.state).thenReturn(const PackageRequestState(
+      when(() => bloc.state).thenReturn(PackageRequestState(
         status: PackageRequestListStatus.loaded,
         requests: [],
       ));
@@ -98,7 +98,7 @@ void main() {
 
     testWidgets('affiche le texte d\'erreur quand status = error',
         (tester) async {
-      when(() => bloc.state).thenReturn(const PackageRequestState(
+      when(() => bloc.state).thenReturn(PackageRequestState(
         status: PackageRequestListStatus.error,
         errorMessage: 'Erreur réseau',
       ));
@@ -377,7 +377,7 @@ void main() {
 
   group('État vide global', () {
     testWidgets('affiche le CTA de création quand aucune demande', (tester) async {
-      when(() => bloc.state).thenReturn(const PackageRequestState(
+      when(() => bloc.state).thenReturn(PackageRequestState(
         status: PackageRequestListStatus.loaded,
         requests: [],
       ));
@@ -449,7 +449,7 @@ void main() {
 
   group('MyPackageRequestsScreen (écran complet)', () {
     testWidgets('rend le Scaffold avec appBar « Mes demandes »', (tester) async {
-      when(() => bloc.state).thenReturn(const PackageRequestState(
+      when(() => bloc.state).thenReturn(PackageRequestState(
         status: PackageRequestListStatus.loading,
       ));
       await tester.pumpWidget(MaterialApp(
@@ -467,7 +467,7 @@ void main() {
   group('onRetry et CardAction snackbar', () {
     testWidgets('taper Réessayer dans _ErrorView déclenche FetchMyRequests',
         (tester) async {
-      when(() => bloc.state).thenReturn(const PackageRequestState(
+      when(() => bloc.state).thenReturn(PackageRequestState(
         status: PackageRequestListStatus.error,
         errorMessage: 'Erreur réseau',
       ));

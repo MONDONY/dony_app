@@ -235,21 +235,36 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
 
   // ─────────────────────────────────────────────────────────────────────────────
 
+  static const _staleDuration = Duration(seconds: 60);
+
+  bool _isStale(DateTime fetchedAt) =>
+      DateTime.now().difference(fetchedAt) > _staleDuration;
+
   void _onTab() {
     if (_controller.indexIsChanging) {
       return;
     }
     final index = _controller.index;
     unawaited(getIt<AnalyticsService>().logScreen(_screens[index]));
+    // Refresh uniquement si les données sont périmées (> 60 s).
     switch (index) {
       case 0:
-        context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
+        final bidState = context.read<BidBloc>().state;
+        final bidFetchedAt =
+            bidState is BidListLoaded ? bidState.fetchedAt : DateTime(2000);
+        if (_isStale(bidFetchedAt)) {
+          context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
+        }
       case 1:
-        context.read<PackageRequestBloc>().add(const RefreshMyRequests());
+        if (_isStale(context.read<PackageRequestBloc>().state.fetchedAt)) {
+          context.read<PackageRequestBloc>().add(const RefreshMyRequests());
+        }
       case 2:
-        context
-            .read<NegotiationListBloc>()
-            .add(const NegotiationListRefreshRequested());
+        if (_isStale(context.read<NegotiationListBloc>().state.fetchedAt)) {
+          context
+              .read<NegotiationListBloc>()
+              .add(const NegotiationListRefreshRequested());
+        }
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {

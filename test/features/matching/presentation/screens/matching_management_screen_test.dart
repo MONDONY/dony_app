@@ -80,10 +80,10 @@ void main() {
     when(() => bidBloc.state).thenReturn(BidInitial());
     when(() => bidBloc.stream)
         .thenAnswer((_) => const Stream<BidState>.empty());
-    when(() => packageBloc.state).thenReturn(const PackageRequestState());
+    when(() => packageBloc.state).thenReturn(PackageRequestState());
     when(() => packageBloc.stream)
         .thenAnswer((_) => const Stream<PackageRequestState>.empty());
-    when(() => negoListBloc.state).thenReturn(const NegotiationListState());
+    when(() => negoListBloc.state).thenReturn(NegotiationListState());
     when(() => negoListBloc.stream)
         .thenAnswer((_) => const Stream<NegotiationListState>.empty());
     when(() => negoRepo.findMine()).thenAnswer((_) async => []);

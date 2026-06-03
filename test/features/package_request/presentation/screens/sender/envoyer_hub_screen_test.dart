@@ -122,7 +122,7 @@ void main() {
       initialState: BidListLoaded([]),
     );
 
-    when(() => negoListBloc.state).thenReturn(const NegotiationListState());
+    when(() => negoListBloc.state).thenReturn(NegotiationListState());
     when(() => negoListBloc.stream)
         .thenAnswer((_) => const Stream<NegotiationListState>.empty());
 
