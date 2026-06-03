@@ -184,5 +184,131 @@ void main() {
       act: (c) => c.reset(),
       expect: () => [const ShipmentFilterState()],
     );
+
+    blocTest<ShipmentFilterCubit, ShipmentFilterState>(
+      'setStatuses émet le nouvel ensemble ET déclenche analytics',
+      build: () => ShipmentFilterCubit(analytics),
+      act: (c) => c.setStatuses({'COMPLETED', 'CANCELLED'}),
+      expect: () => [
+        const ShipmentFilterState(statuses: {'COMPLETED', 'CANCELLED'}),
+      ],
+      verify: (_) => verify(() => analytics.logEvent(
+            AnalyticsEvents.shipmentFilterApplied,
+            properties: any(named: 'properties'),
+          )).called(1),
+    );
+
+    blocTest<ShipmentFilterCubit, ShipmentFilterState>(
+      'setPeriod avec preset non-custom annule customRange',
+      build: () => ShipmentFilterCubit(analytics),
+      seed: () => ShipmentFilterState(
+        periodPreset: ShipmentPeriodPreset.custom,
+        customRange: DateTimeRange(
+            start: DateTime(2026, 5, 1), end: DateTime(2026, 5, 31)),
+      ),
+      act: (c) => c.setPeriod(
+        basis: ShipmentPeriodBasis.departure,
+        preset: ShipmentPeriodPreset.thisMonth,
+      ),
+      expect: () => [
+        const ShipmentFilterState(
+          periodBasis: ShipmentPeriodBasis.departure,
+          periodPreset: ShipmentPeriodPreset.thisMonth,
+          // customRange doit être null
+        ),
+      ],
+      verify: (_) => verify(() => analytics.logEvent(
+            AnalyticsEvents.shipmentFilterApplied,
+            properties: any(named: 'properties'),
+          )).called(1),
+    );
+
+    blocTest<ShipmentFilterCubit, ShipmentFilterState>(
+      'setPeriod avec preset custom conserve la plage',
+      build: () => ShipmentFilterCubit(analytics),
+      act: (c) {
+        final range = DateTimeRange(
+            start: DateTime(2026, 4, 1), end: DateTime(2026, 4, 30));
+        c.setPeriod(
+          basis: ShipmentPeriodBasis.creation,
+          preset: ShipmentPeriodPreset.custom,
+          range: range,
+        );
+      },
+      expect: () => [
+        isA<ShipmentFilterState>()
+            .having((s) => s.periodPreset, 'preset', ShipmentPeriodPreset.custom)
+            .having((s) => s.periodBasis, 'basis', ShipmentPeriodBasis.creation)
+            .having((s) => s.customRange, 'customRange', isNotNull),
+      ],
+      verify: (_) => verify(() => analytics.logEvent(
+            AnalyticsEvents.shipmentFilterApplied,
+            properties: any(named: 'properties'),
+          )).called(1),
+    );
+
+    blocTest<ShipmentFilterCubit, ShipmentFilterState>(
+      'setPeriod avec basis = creation déclenche analytics avec bon period_basis',
+      build: () => ShipmentFilterCubit(analytics),
+      act: (c) => c.setPeriod(
+        basis: ShipmentPeriodBasis.creation,
+        preset: ShipmentPeriodPreset.thisYear,
+      ),
+      expect: () => [
+        const ShipmentFilterState(
+          periodBasis: ShipmentPeriodBasis.creation,
+          periodPreset: ShipmentPeriodPreset.thisYear,
+        ),
+      ],
+      verify: (_) => verify(() => analytics.logEvent(
+            AnalyticsEvents.shipmentFilterApplied,
+            properties: any(
+              named: 'properties',
+              that: isA<Map>().having(
+                (m) => m['period_basis'],
+                'period_basis',
+                'creation',
+              ),
+            ),
+          )).called(1),
+    );
+  });
+
+  group('applyShipmentFilters avec periodBasis = creation', () {
+    final bids = [
+      _bid(
+        status: 'ACCEPTED',
+        arrivee: 'Dakar',
+        departureDate: DateTime(2026, 6, 2),
+        createdAt: DateTime(2026, 6, 1),
+      ),
+      _bid(
+        status: 'COMPLETED',
+        arrivee: 'Abidjan',
+        departureDate: DateTime(2026, 6, 2),
+        createdAt: DateTime(2026, 4, 1), // créé en avril
+      ),
+    ];
+
+    final now = DateTime(2026, 6, 3, 12);
+
+    test('filtre par date de création (ce mois) exclut créé en avril', () {
+      final filter = const ShipmentFilterState(
+        periodBasis: ShipmentPeriodBasis.creation,
+        periodPreset: ShipmentPeriodPreset.thisMonth,
+      );
+      final r = applyShipmentFilters(bids, filter, now);
+      expect(r.every((b) => b.arrivalCity != 'Abidjan'), isTrue);
+      expect(r.length, 1);
+    });
+
+    test('filtre par date de création (last3Months) inclut les deux', () {
+      final filter = const ShipmentFilterState(
+        periodBasis: ShipmentPeriodBasis.creation,
+        periodPreset: ShipmentPeriodPreset.last3Months,
+      );
+      final r = applyShipmentFilters(bids, filter, now);
+      expect(r.length, 2);
+    });
   });
 }

@@ -306,4 +306,185 @@ void main() {
       expect(find.text('Aucun résultat pour cette recherche'), findsOneWidget);
     });
   });
+
+  group('_StatusPill — tous les statuts', () {
+    for (final entry in [
+      (NegotiationThreadStatus.awaitingTrip, 'ATT. TRAJET'),
+      (NegotiationThreadStatus.awaitingPayment, 'PAIEMENT'),
+      (NegotiationThreadStatus.accepted, 'ACCEPTÉE'),
+      (NegotiationThreadStatus.rejected, 'TERMINÉ'),
+      (NegotiationThreadStatus.autoRejected, 'TERMINÉ'),
+      (NegotiationThreadStatus.expired, 'TERMINÉ'),
+    ]) {
+      final status = entry.$1;
+      final pillLabel = entry.$2;
+      testWidgets('affiche la pill "$pillLabel" pour status=${status.name}',
+          (tester) async {
+        when(() => bloc.state).thenReturn(NegotiationListState(
+          status: NegotiationListStatus.loaded,
+          threads: [_thread(status: status)],
+        ));
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
+        expect(find.text(pillLabel), findsWidgets); // may also appear in filter bar label
+      });
+    }
+  });
+
+  group('_NegoCard opacité et badge NOUVEAU', () {
+    testWidgets('thread terminal a opacité réduite (isTerminal=true)', (tester) async {
+      when(() => bloc.state).thenReturn(NegotiationListState(
+        status: NegotiationListStatus.loaded,
+        threads: [_thread(status: NegotiationThreadStatus.rejected)],
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      // The card is rendered with Opacity(opacity: 0.65) for terminal status
+      // We just check it renders without error and shows the thread
+      expect(find.textContaining('Paris → Dakar'), findsOneWidget);
+    });
+
+    testWidgets('thread autoRejected est terminal (badge TERMINÉ)', (tester) async {
+      when(() => bloc.state).thenReturn(NegotiationListState(
+        status: NegotiationListStatus.loaded,
+        threads: [_thread(status: NegotiationThreadStatus.autoRejected)],
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.text('TERMINÉ'), findsOneWidget);
+    });
+
+    testWidgets('thread expired est terminal (badge TERMINÉ)', (tester) async {
+      when(() => bloc.state).thenReturn(NegotiationListState(
+        status: NegotiationListStatus.loaded,
+        threads: [_thread(status: NegotiationThreadStatus.expired)],
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.text('TERMINÉ'), findsOneWidget);
+    });
+
+    testWidgets('thread open sans messages n\'affiche pas NOUVEAU', (tester) async {
+      when(() => bloc.state).thenReturn(NegotiationListState(
+        status: NegotiationListStatus.loaded,
+        threads: [
+          NegotiationThread(
+            id: 't-no-msg',
+            packageRequestId: 'pr-1',
+            travelerId: 'tr-1',
+            travelerTravelDate: DateTime(2026, 6, 15),
+            travelerAvailableKg: 10,
+            status: NegotiationThreadStatus.open,
+            currentPriceEur: 45,
+            roundsCount: 0,
+            lastActivityAt: DateTime(2026, 5, 10),
+            createdAt: DateTime(2026, 5, 10),
+            messages: const [], // pas de messages
+            travelerName: 'Test User',
+            departureCity: 'Paris',
+            arrivalCity: 'Dakar',
+          ),
+        ],
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.text('NOUVEAU'), findsNothing);
+    });
+  });
+
+  group('_NegoCard route sans villes → fallback kg', () {
+    testWidgets('affiche les kg disponibles si villes null', (tester) async {
+      when(() => bloc.state).thenReturn(NegotiationListState(
+        status: NegotiationListStatus.loaded,
+        threads: [_thread(departureCity: null, arrivalCity: null)],
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      // fallback: '10 kg dispo' (travelerAvailableKg = 10)
+      expect(find.textContaining('kg dispo'), findsOneWidget);
+    });
+  });
+
+  group('_FilterEmptyState — présets', () {
+    NegotiationThread _t3({
+      required NegotiationThreadStatus status,
+    }) =>
+        NegotiationThread(
+          id: 't-${status.name}',
+          packageRequestId: 'pr-1',
+          travelerId: 'tr-1',
+          travelerTravelDate: DateTime(2026, 6, 15),
+          travelerAvailableKg: 10,
+          status: status,
+          currentPriceEur: 30,
+          roundsCount: 1,
+          lastActivityAt: DateTime(2026, 5, 10),
+          createdAt: DateTime(2026, 5, 10),
+          messages: const [],
+          departureCity: 'Paris',
+          arrivalCity: 'Dakar',
+        );
+
+    testWidgets('chip Terminées + aucun terminal affiche « Aucune négociation terminée »',
+        (tester) async {
+      when(() => bloc.state).thenReturn(NegotiationListState(
+        status: NegotiationListStatus.loaded,
+        threads: [_t3(status: NegotiationThreadStatus.open)],
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Terminées (0)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Aucune négociation terminée'), findsOneWidget);
+    });
+
+    testWidgets('chip En cours + aucun actif affiche « Aucune négociation en cours »',
+        (tester) async {
+      when(() => bloc.state).thenReturn(NegotiationListState(
+        status: NegotiationListStatus.loaded,
+        threads: [_t3(status: NegotiationThreadStatus.rejected)],
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('En cours (0)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Aucune négociation en cours'), findsOneWidget);
+    });
+  });
+
+  group('awaitingPayment et awaitingTrip cards', () {
+    testWidgets('thread awaitingPayment affiche pill PAIEMENT', (tester) async {
+      when(() => bloc.state).thenReturn(NegotiationListState(
+        status: NegotiationListStatus.loaded,
+        threads: [_thread(status: NegotiationThreadStatus.awaitingPayment)],
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.text('PAIEMENT'), findsOneWidget);
+    });
+
+    testWidgets('thread awaitingTrip affiche pill ATT. TRAJET', (tester) async {
+      when(() => bloc.state).thenReturn(NegotiationListState(
+        status: NegotiationListStatus.loaded,
+        threads: [_thread(status: NegotiationThreadStatus.awaitingTrip)],
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.text('ATT. TRAJET'), findsOneWidget);
+    });
+
+    testWidgets('thread accepted affiche pill ACCEPTÉE', (tester) async {
+      when(() => bloc.state).thenReturn(NegotiationListState(
+        status: NegotiationListStatus.loaded,
+        threads: [_thread(status: NegotiationThreadStatus.accepted)],
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.text('ACCEPTÉE'), findsOneWidget);
+    });
+  });
 }

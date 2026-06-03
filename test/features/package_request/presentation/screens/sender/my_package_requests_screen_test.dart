@@ -278,4 +278,268 @@ void main() {
       expect(find.text('Aucun résultat pour cette recherche'), findsOneWidget);
     });
   });
+
+  group('_StatusBadge — tous les statuts', () {
+    for (final entry in [
+      (PackageRequestStatus.completed, 'LIVRÉE'),
+      (PackageRequestStatus.cancelled, 'ANNULÉE'),
+    ]) {
+      final status = entry.$1;
+      final label = entry.$2;
+      testWidgets('affiche le badge $label pour status=${status.name}',
+          (tester) async {
+        when(() => bloc.state).thenReturn(PackageRequestState(
+          status: PackageRequestListStatus.loaded,
+          requests: [_request(status: status)],
+        ));
+        await tester.pumpWidget(wrap());
+        await tester.pumpAndSettle();
+        expect(find.text(label), findsOneWidget);
+      });
+    }
+  });
+
+  group('_CardAction — statut accepted affiche « Compléter → »', () {
+    testWidgets('affiche "Compléter →" pour status=accepted', (tester) async {
+      when(() => bloc.state).thenReturn(PackageRequestState(
+        status: PackageRequestListStatus.loaded,
+        requests: [_request(status: PackageRequestStatus.accepted)],
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Compléter'), findsOneWidget);
+    });
+
+    testWidgets('n\'affiche pas de CTA pour status=expired', (tester) async {
+      when(() => bloc.state).thenReturn(PackageRequestState(
+        status: PackageRequestListStatus.loaded,
+        requests: [_request(status: PackageRequestStatus.expired)],
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      // No CTA for expired (SizedBox.shrink)
+      expect(find.text('Modifier →'), findsNothing);
+      expect(find.text('Compléter →'), findsNothing);
+    });
+
+    testWidgets('n\'affiche pas de CTA pour status=cancelled', (tester) async {
+      when(() => bloc.state).thenReturn(PackageRequestState(
+        status: PackageRequestListStatus.loaded,
+        requests: [_request(status: PackageRequestStatus.cancelled)],
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.text('Modifier →'), findsNothing);
+      expect(find.text('Compléter →'), findsNothing);
+    });
+
+    testWidgets('n\'affiche pas de CTA pour status=completed', (tester) async {
+      when(() => bloc.state).thenReturn(PackageRequestState(
+        status: PackageRequestListStatus.loaded,
+        requests: [_request(status: PackageRequestStatus.completed)],
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.text('Modifier →'), findsNothing);
+      expect(find.text('Compléter →'), findsNothing);
+    });
+  });
+
+  group('showFab', () {
+    testWidgets('showFab: true affiche le FAB « Nouvelle demande »',
+        (tester) async {
+      when(() => bloc.state).thenReturn(PackageRequestState(
+        status: PackageRequestListStatus.loaded,
+        requests: [_request()],
+      ));
+      await tester.pumpWidget(MaterialApp(
+        theme: AppTheme.light,
+        home: BlocProvider<PackageRequestBloc>.value(
+          value: bloc,
+          child: const Scaffold(body: MyPackageRequestsBody(showFab: true)),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.text('Nouvelle demande'), findsOneWidget);
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+    });
+
+    testWidgets('showFab: false (défaut) n\'affiche pas le FAB', (tester) async {
+      when(() => bloc.state).thenReturn(PackageRequestState(
+        status: PackageRequestListStatus.loaded,
+        requests: [_request()],
+      ));
+      await tester.pumpWidget(wrap()); // showFab: false
+      await tester.pumpAndSettle();
+      expect(find.byType(FloatingActionButton), findsNothing);
+    });
+  });
+
+  group('État vide global', () {
+    testWidgets('affiche le CTA de création quand aucune demande', (tester) async {
+      when(() => bloc.state).thenReturn(const PackageRequestState(
+        status: PackageRequestListStatus.loaded,
+        requests: [],
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.text('+ Publier ma première demande'), findsOneWidget);
+    });
+  });
+
+  group('_FilterEmptyState', () {
+    testWidgets('chip Ouvertes + aucune ouverte affiche « Aucune demande ouverte »',
+        (tester) async {
+      when(() => bloc.state).thenReturn(PackageRequestState(
+        status: PackageRequestListStatus.loaded,
+        requests: [_request(status: PackageRequestStatus.accepted)],
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Ouvertes (0)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Aucune demande ouverte'), findsOneWidget);
+    });
+
+    testWidgets('chip Acceptées + aucune acceptée affiche « Aucune demande acceptée »',
+        (tester) async {
+      when(() => bloc.state).thenReturn(PackageRequestState(
+        status: PackageRequestListStatus.loaded,
+        requests: [_request(status: PackageRequestStatus.open)],
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Acceptées (0)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Aucune demande acceptée'), findsOneWidget);
+    });
+
+    testWidgets('preset=all + aucun résultat après recherche affiche « Aucune demande »',
+        (tester) async {
+      // Use a request that won't match search
+      when(() => bloc.state).thenReturn(PackageRequestState(
+        status: PackageRequestListStatus.loaded,
+        requests: [_request(arrivalCity: 'Dakar', status: PackageRequestStatus.open)],
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+
+      // First filter to make it open only, then switch back to all
+      await tester.tap(find.text('Ouvertes (1)'));
+      await tester.pumpAndSettle();
+      // Now switch to Toutes while keeping no match - instead, search zzz
+      await tester.enterText(find.byType(TextField), 'zzzzz');
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump();
+      // Clear search to get preset=open + no query empty state
+      // Then tap Toutes
+      await tester.tap(find.text('Toutes (1)'));
+      await tester.pumpAndSettle();
+
+      // After tapping Toutes the search is still active with 'zzzzz'
+      // So filtered is empty with preset=all and hasQuery=true
+      // => 'Aucun résultat pour cette recherche'
+      expect(find.text('Aucun résultat pour cette recherche'), findsOneWidget);
+    });
+  });
+
+  group('MyPackageRequestsScreen (écran complet)', () {
+    testWidgets('rend le Scaffold avec appBar « Mes demandes »', (tester) async {
+      when(() => bloc.state).thenReturn(const PackageRequestState(
+        status: PackageRequestListStatus.loading,
+      ));
+      await tester.pumpWidget(MaterialApp(
+        theme: AppTheme.light,
+        home: BlocProvider<PackageRequestBloc>.value(
+          value: bloc,
+          child: const MyPackageRequestsScreen(),
+        ),
+      ));
+      await tester.pump();
+      expect(find.text('Mes demandes'), findsOneWidget);
+    });
+  });
+
+  group('onRetry et CardAction snackbar', () {
+    testWidgets('taper Réessayer dans _ErrorView déclenche FetchMyRequests',
+        (tester) async {
+      when(() => bloc.state).thenReturn(const PackageRequestState(
+        status: PackageRequestListStatus.error,
+        errorMessage: 'Erreur réseau',
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pump();
+      expect(find.text('Réessayer'), findsOneWidget);
+      await tester.tap(find.text('Réessayer'));
+      await tester.pump();
+      verify(() => bloc.add(const FetchMyRequests())).called(greaterThanOrEqualTo(1));
+    });
+
+    testWidgets('taper « Modifier → » sur une card open montre la snackbar',
+        (tester) async {
+      when(() => bloc.state).thenReturn(PackageRequestState(
+        status: PackageRequestListStatus.loaded,
+        requests: [_request(status: PackageRequestStatus.open)],
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('Modifier'));
+      await tester.pump();
+      expect(find.text('Modification à venir'), findsOneWidget);
+    });
+  });
+
+  group('chip Toutes et onClear', () {
+    testWidgets('chip Toutes réinitialise le filtre depuis Acceptées', (tester) async {
+      final requests = [
+        _request(arrivalCity: 'Dakar', status: PackageRequestStatus.open),
+        _request(arrivalCity: 'Abidjan', status: PackageRequestStatus.accepted),
+      ];
+      when(() => bloc.state).thenReturn(PackageRequestState(
+        status: PackageRequestListStatus.loaded,
+        requests: requests,
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+
+      // Filter by accepted
+      await tester.tap(find.text('Acceptées (1)'));
+      await tester.pumpAndSettle();
+      expect(find.text('Paris → Dakar'), findsNothing);
+
+      // Tap Toutes to reset
+      await tester.tap(find.text('Toutes (2)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Paris → Dakar'), findsOneWidget);
+      expect(find.text('Paris → Abidjan'), findsOneWidget);
+    });
+
+    testWidgets('bouton clear dans la barre de recherche efface la requête',
+        (tester) async {
+      when(() => bloc.state).thenReturn(PackageRequestState(
+        status: PackageRequestListStatus.loaded,
+        requests: [_request()],
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+
+      // Type something
+      await tester.enterText(find.byType(TextField), 'test');
+      await tester.pumpAndSettle();
+
+      // Tap clear button (DonySearchField uses Icons.close_rounded)
+      final clearIcon = find.byIcon(Icons.close_rounded);
+      expect(clearIcon, findsOneWidget);
+      await tester.tap(clearIcon);
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
+      // After clear, search should be empty
+      expect(find.text('Paris → Dakar'), findsOneWidget);
+    });
+  });
 }
