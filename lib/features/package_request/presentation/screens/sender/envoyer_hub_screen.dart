@@ -305,29 +305,6 @@ class _EnvoyerSegmented extends StatelessWidget {
         builder: (context, negoState) =>
             BlocBuilder<BidBloc, BidState>(
           builder: (context, bidState) {
-            // Counts globaux affichés dans le libellé du segment.
-            final envoisTotal = bidState is BidListLoaded
-                ? bidState.bids
-                    .where(
-                      (b) =>
-                          b.status == 'ACCEPTED' ||
-                          b.status == 'PENDING' ||
-                          b.status == 'AWAITING_PAYMENT',
-                    )
-                    .length
-                : 0;
-
-            final demandesTotal = reqState.requests
-                .where(
-                  (r) =>
-                      r.status == PackageRequestStatus.open ||
-                      r.status == PackageRequestStatus.negotiating ||
-                      r.status == PackageRequestStatus.accepted,
-                )
-                .length;
-
-            final negosTotal = negoState.activeCount;
-
             // Comptes bruts pour le badge (action immédiate demandée).
             final envoisRaw = bidState is BidListLoaded
                 ? bidState.bids
@@ -352,7 +329,6 @@ class _EnvoyerSegmented extends StatelessWidget {
                   children: [
                     _Seg(
                       label: 'Envois',
-                      count: envoisTotal,
                       badge: badgeForIndex(0, envoisRaw),
                       active: controller.index == 0,
                       onTap: () => controller.animateTo(0),
@@ -360,7 +336,6 @@ class _EnvoyerSegmented extends StatelessWidget {
                     const SizedBox(width: DonySpacing.xs),
                     _Seg(
                       label: 'Demandes',
-                      count: demandesTotal,
                       badge: badgeForIndex(1, demandesRaw),
                       active: controller.index == 1,
                       onTap: () => controller.animateTo(1),
@@ -368,7 +343,6 @@ class _EnvoyerSegmented extends StatelessWidget {
                     const SizedBox(width: DonySpacing.xs),
                     _Seg(
                       label: 'Négos',
-                      count: negosTotal,
                       badge: badgeForIndex(2, negosRaw),
                       active: controller.index == 2,
                       onTap: () => controller.animateTo(2),
@@ -387,14 +361,12 @@ class _EnvoyerSegmented extends StatelessWidget {
 class _Seg extends StatelessWidget {
   const _Seg({
     required this.label,
-    required this.count,
     required this.badge,
     required this.active,
     required this.onTap,
   });
 
   final String label;
-  final int count;
 
   /// Nombre d'éléments demandant une action immédiate (badge rouge).
   /// Masqué quand l'onglet est actif (l'utilisateur est déjà là).
@@ -426,7 +398,7 @@ class _Seg extends StatelessWidget {
               ),
               child: Center(
                 child: Text(
-                  count > 0 ? '$label $count' : label,
+                  label,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
