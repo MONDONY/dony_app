@@ -3,6 +3,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/services/gdpr_helper.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/core/design/design_system.dart';
@@ -61,7 +62,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
         if (mounted) {
           final analytics = getIt<AnalyticsService>();
           if (analytics.isConfigured && !analytics.hasAnswered) {
-            if (GdprHelper.requiresConsent()) {
+            if (GdprHelper.requiresConsent(prefs: getIt<HiveService>().userPrefs)) {
               // Pays RGPD (UE/EEE/UK/CH) → écran de consentement explicite.
               context.go('/auth/analytics-consent');
             } else {

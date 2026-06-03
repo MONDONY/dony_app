@@ -38,6 +38,7 @@ dependencies:
 
   # Location
   geolocator: ^13.0.0
+  geocoding: ^3.0.0
 
   # Map
   google_maps_flutter: ^2.9.0

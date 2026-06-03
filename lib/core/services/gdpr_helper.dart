@@ -1,12 +1,18 @@
 import 'dart:ui';
 
-/// Détermine si le pays détecté sur l'appareil est soumis au RGPD
+import 'package:dony/core/storage/hive_service.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:hive/hive.dart';
+
+/// Détermine si le pays de l'utilisateur est soumis au RGPD
 /// (UE + EEE + Royaume-Uni + Suisse).
 ///
-/// Utilisé pour décider si l'écran de consentement analytics doit
-/// être affiché. Pour les pays hors périmètre RGPD (ex: Sénégal,
-/// Côte d'Ivoire, Mali, Cameroun), le consentement est accordé
-/// automatiquement sans interaction utilisateur.
+/// **Ordre de priorité pour le pays détecté :**
+/// 1. Code pays stocké dans Hive via GPS (mis à jour à chaque connexion
+///    si la permission est accordée) — le plus précis.
+/// 2. Locale du device (langue/région système) — fallback sans GPS.
+/// 3. Inconnu → `true` par défaut (approche conservative).
 abstract final class GdprHelper {
   static const _gdprCountries = {
     // États membres de l'UE
@@ -17,23 +23,45 @@ abstract final class GdprHelper {
     'IS', 'LI', 'NO',
     // Royaume-Uni (UK GDPR)
     'GB',
-    // Suisse (nFADP, exigences similaires)
+    // Suisse (nFADP, exigences similaires au RGPD)
     'CH',
   };
 
-  /// Retourne `true` si le pays du device exige un consentement RGPD explicite.
+  /// `true` si le pays de l'utilisateur exige un consentement explicite.
   ///
-  /// [countryCode] permet d'injecter un code pays en test sans mocker
-  /// [PlatformDispatcher]. En production, laisser `null` pour utiliser
-  /// la locale du device.
-  ///
-  /// Par défaut `true` si le code pays est indisponible (approche conservative).
-  static bool requiresConsent({String? countryCode}) {
-    final code = (countryCode ??
+  /// [countryCode] : code pays à forcer (utilisé en test).
+  /// [prefs] : box Hive contenant le pays détecté par GPS.
+  ///   Si absent, utilise uniquement la locale du device.
+  static bool requiresConsent({String? countryCode, Box? prefs}) {
+    final storedCode = prefs?.get(HiveService.kDetectedCountryCode) as String?;
+    final code = (countryCode ?? storedCode ??
             PlatformDispatcher.instance.locale.countryCode ??
             '')
         .toUpperCase();
     if (code.isEmpty) return true;
     return _gdprCountries.contains(code);
+  }
+
+  /// Détermine le pays à partir d'une position GPS et le stocke dans Hive.
+  ///
+  /// Appelé à chaque ouverture de l'app si la permission de localisation
+  /// est déjà accordée. Échoue silencieusement si le géocodage inverse
+  /// est indisponible (pas de réseau, service iOS/Android down).
+  static Future<void> updateFromPosition(Position position, Box prefs) async {
+    try {
+      final placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+      final countryCode = placemarks.firstOrNull?.isoCountryCode;
+      if (countryCode != null && countryCode.isNotEmpty) {
+        await prefs.put(
+          HiveService.kDetectedCountryCode,
+          countryCode.toUpperCase(),
+        );
+      }
+    } catch (_) {
+      // Géocodage non-fatal : on garde le pays précédemment stocké ou la locale.
+    }
   }
 }

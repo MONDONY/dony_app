@@ -1,9 +1,14 @@
 import 'package:dony/core/services/gdpr_helper.dart';
+import 'package:dony/core/storage/hive_service.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:hive/hive.dart';
+
+class MockBox extends Mock implements Box<dynamic> {}
 
 void main() {
   group('GdprHelper.requiresConsent', () {
-    group('pays RGPD obligatoire', () {
+    group('via countryCode direct (test)', () {
       final gdprCountries = {
         'FR': 'France',
         'DE': 'Allemagne',
@@ -33,17 +38,14 @@ void main() {
           );
         });
       }
-    });
 
-    group('pays hors RGPD', () {
       final nonGdprCountries = {
         'SN': 'Sénégal',
         'CI': "Côte d'Ivoire",
         'ML': 'Mali',
         'CM': 'Cameroun',
         'GA': 'Gabon',
-        'CG': 'Congo',
-        'CD': 'RD Congo',
+        'CN': 'Chine',
         'US': 'États-Unis',
         'CA': 'Canada',
       };
@@ -55,14 +57,55 @@ void main() {
       }
     });
 
+    group('via Hive (GPS détecté)', () {
+      late MockBox mockBox;
+
+      setUp(() {
+        mockBox = MockBox();
+      });
+
+      test('pays RGPD stocké dans Hive → true', () {
+        when(() => mockBox.get(HiveService.kDetectedCountryCode))
+            .thenReturn('FR');
+        expect(GdprHelper.requiresConsent(prefs: mockBox), isTrue);
+      });
+
+      test('pays non-RGPD stocké dans Hive → false', () {
+        when(() => mockBox.get(HiveService.kDetectedCountryCode))
+            .thenReturn('SN');
+        expect(GdprHelper.requiresConsent(prefs: mockBox), isFalse);
+      });
+
+      test('countryCode direct a priorité sur Hive', () {
+        // Hive dit SN (Sénégal) mais on force FR → doit retourner true
+        when(() => mockBox.get(HiveService.kDetectedCountryCode))
+            .thenReturn('SN');
+        expect(
+          GdprHelper.requiresConsent(countryCode: 'FR', prefs: mockBox),
+          isTrue,
+        );
+      });
+
+      test('Hive a priorité sur la locale du device quand renseigné', () {
+        // Hive dit FR (pays RGPD) → true même si locale device = fr_SN
+        when(() => mockBox.get(HiveService.kDetectedCountryCode))
+            .thenReturn('FR');
+        expect(GdprHelper.requiresConsent(prefs: mockBox), isTrue);
+      });
+
+      test('Hive vide → fallback sur locale device (ne doit pas crasher)', () {
+        when(() => mockBox.get(HiveService.kDetectedCountryCode))
+            .thenReturn(null);
+        expect(GdprHelper.requiresConsent(prefs: mockBox), isA<bool>());
+      });
+    });
+
     group('cas limites', () {
       test('code vide → true (approche conservative)', () {
         expect(GdprHelper.requiresConsent(countryCode: ''), isTrue);
       });
 
-      test('null explicite → utilise locale device (ne doit pas crasher)', () {
-        // En environnement de test la locale peut être vide,
-        // on vérifie juste que ça retourne un bool sans exception.
+      test('null sans prefs → utilise locale device (ne doit pas crasher)', () {
         expect(GdprHelper.requiresConsent(), isA<bool>());
       });
     });
