@@ -4,6 +4,7 @@ import 'package:dony/features/payments/wallet/data/models/wallet_model.dart';
 import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/mock_analytics_backend.dart';
 
 class MockWalletRepository extends Mock implements WalletRepository {}
 
@@ -13,7 +14,10 @@ void main() {
 
   setUp(() {
     repo = MockWalletRepository();
-    bloc = WalletBloc(repo);
+    final backend = MockAnalyticsBackend();
+    final analytics = makeDisabledAnalytics(backend);
+    analytics.onConfigured();
+    bloc = WalletBloc(repo, analytics);
   });
 
   tearDown(() => bloc.close());

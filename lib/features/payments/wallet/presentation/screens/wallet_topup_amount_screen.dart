@@ -1,4 +1,9 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/core/widgets/dony_keypad.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +28,17 @@ class _WalletTopupAmountScreenState extends State<WalletTopupAmountScreen> {
   String _rawAmount = '';
 
   static const _quickAmounts = [10, 20, 50, 100];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      unawaited(getIt<AnalyticsService>().logEvent(AnalyticsEvents.walletTopupStarted));
+    });
+  }
 
   double get _amount =>
       _rawAmount.isEmpty ? 0.0 : (double.tryParse(_rawAmount) ?? 0.0);

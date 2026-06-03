@@ -290,7 +290,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => WalletRepository(getIt<WalletRemoteDatasource>()),
   );
   getIt.registerFactory<WalletBloc>(
-    () => WalletBloc(getIt<WalletRepository>()),
+    () => WalletBloc(getIt<WalletRepository>(), getIt<AnalyticsService>()),
   );
 
   // Cancellation
