@@ -10,6 +10,7 @@ import 'package:dony/features/matching/data/models/bid_quote_response.dart';
 import 'package:dony/features/matching/data/repositories/bid_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/mock_analytics_backend.dart';
 
 class MockBidRepository extends Mock implements BidRepository {}
 
@@ -32,7 +33,11 @@ void main() {
     mockRepo = MockBidRepository();
   });
 
-  BidBloc buildBloc() => BidBloc(mockRepo);
+  BidBloc buildBloc() {
+    final backend = MockAnalyticsBackend();
+    final analytics = makeDisabledAnalytics(backend);
+    return BidBloc(mockRepo, analytics);
+  }
 
   // ─── État initial ────────────────────────────────────────────────────────────
 

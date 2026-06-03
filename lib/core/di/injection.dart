@@ -240,7 +240,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => BidRepository(getIt<BidRemoteDatasource>()),
   );
   getIt.registerFactory<BidBloc>(
-    () => BidBloc(getIt<BidRepository>()),
+    () => BidBloc(getIt<BidRepository>(), getIt<AnalyticsService>()),
   );
 
   // Matching — Mobile Money
