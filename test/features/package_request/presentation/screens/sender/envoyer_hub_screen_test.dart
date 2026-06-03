@@ -253,9 +253,9 @@ void main() {
     });
 
     testWidgets(
-        'badge rouge affiché sur Négos quand activeCount > 0 (onglet inactif)',
+        'pas de badge sur Négos avant la première visite (lastSeen=-1)',
         (tester) async {
-      // Override negoListBloc state to have 2 active threads.
+      // 2 active negotiations, but Négos never visited yet.
       when(() => negoListBloc.state).thenReturn(
         NegotiationListState(
           status: NegotiationListStatus.loaded,
@@ -269,13 +269,7 @@ void main() {
       await tester.pumpWidget(wrap());
       await tester.pump(const Duration(milliseconds: 400));
 
-      // On est sur l'onglet Envois (index 0), Négos est inactif → badge visible.
-      expect(find.text('2'), findsOneWidget);
-
-      // Tap sur Négos → l'onglet devient actif → badge disparaît.
-      await tester.tap(find.textContaining('Négos').first);
-      await tester.pumpAndSettle();
-
+      // lastSeen[2] == -1 → badge = 0, aucun badge rouge visible.
       expect(find.text('2'), findsNothing);
     });
 

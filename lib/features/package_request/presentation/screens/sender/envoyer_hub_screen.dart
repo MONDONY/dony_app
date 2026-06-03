@@ -71,6 +71,11 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
     AnalyticsEvents.envoyerNegosScreen,
   ];
 
+  // Derniers comptes de badge vus par onglet.
+  // Le badge ne s'affiche que si le compte courant > dernière valeur vue.
+  // Initialisé à -1 pour que la première visite marque tout comme vu.
+  final _lastSeen = [-1, -1, -1];
+
   @override
   void initState() {
     super.initState();
@@ -78,7 +83,51 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
       ..addListener(_onTab);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(getIt<AnalyticsService>().logScreen(_screens.first));
+      // Marque l'onglet 0 comme vu dès l'ouverture.
+      _markSeen(0);
     });
+  }
+
+  void _markSeen(int index) {
+    // Récupère le compte badge courant depuis les blocs et le mémorise.
+    final badge = _currentBadge(index);
+    if (_lastSeen[index] != badge) {
+      setState(() => _lastSeen[index] = badge);
+    }
+  }
+
+  int _currentBadge(int index) {
+    switch (index) {
+      case 0:
+        final s = context.read<BidBloc>().state;
+        return s is BidListLoaded
+            ? s.bids.where((b) => b.status == 'AWAITING_PAYMENT').length
+            : 0;
+      case 1:
+        return context
+            .read<PackageRequestBloc>()
+            .state
+            .requests
+            .where((r) => r.status == PackageRequestStatus.negotiating)
+            .length;
+      case 2:
+        return context.read<NegotiationListBloc>().state.activeCount;
+      default:
+        return 0;
+    }
+  }
+
+  /// Retourne le nombre de nouveaux éléments à afficher sur le badge de l'onglet [index].
+  /// Vaut 0 si l'onglet est actif ou si rien de nouveau depuis la dernière visite.
+  int badgeFor(int index, int currentCount) {
+    if (_controller.index == index) {
+      return 0;
+    }
+    final last = _lastSeen[index];
+    if (last < 0) {
+      return 0; // premier chargement, pas encore de données
+    }
+    return currentCount > last ? currentCount - last : 0;
   }
 
   void _onTab() {
@@ -98,6 +147,13 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
             .read<NegotiationListBloc>()
             .add(const NegotiationListRefreshRequested());
     }
+    // Marque l'onglet comme vu après le refresh (post-frame pour lire
+    // l'état mis à jour).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _markSeen(index);
+      }
+    });
   }
 
   @override
@@ -138,7 +194,10 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
         child: Column(
           children: [
             _EnvoyerHeader(onNew: _onNew),
-            _EnvoyerSegmented(controller: _controller),
+            _EnvoyerSegmented(
+              controller: _controller,
+              badgeForIndex: badgeFor,
+            ),
             Expanded(
               child: TabBarView(
                 controller: _controller,
@@ -228,9 +287,15 @@ class _EnvoyerHeader extends StatelessWidget {
 // ── Segmented control ─────────────────────────────────────────────────────────
 
 class _EnvoyerSegmented extends StatelessWidget {
-  const _EnvoyerSegmented({required this.controller});
+  const _EnvoyerSegmented({
+    required this.controller,
+    required this.badgeForIndex,
+  });
 
   final TabController controller;
+
+  /// Retourne le nombre de nouveaux éléments à afficher pour l'onglet [index].
+  final int Function(int index, int currentCount) badgeForIndex;
 
   @override
   Widget build(BuildContext context) {
@@ -263,16 +328,16 @@ class _EnvoyerSegmented extends StatelessWidget {
 
             final negosTotal = negoState.activeCount;
 
-            // Badges rouges = éléments qui demandent une action immédiate.
-            final envoisBadge = bidState is BidListLoaded
+            // Comptes bruts pour le badge (action immédiate demandée).
+            final envoisRaw = bidState is BidListLoaded
                 ? bidState.bids
                     .where((b) => b.status == 'AWAITING_PAYMENT')
                     .length
                 : 0;
-            final demandesBadge = reqState.requests
+            final demandesRaw = reqState.requests
                 .where((r) => r.status == PackageRequestStatus.negotiating)
                 .length;
-            final negosBadge = negoState.activeCount;
+            final negosRaw = negoState.activeCount;
 
             return AnimatedBuilder(
               animation: controller,
@@ -288,7 +353,7 @@ class _EnvoyerSegmented extends StatelessWidget {
                     _Seg(
                       label: 'Envois',
                       count: envoisTotal,
-                      badge: envoisBadge,
+                      badge: badgeForIndex(0, envoisRaw),
                       active: controller.index == 0,
                       onTap: () => controller.animateTo(0),
                     ),
@@ -296,7 +361,7 @@ class _EnvoyerSegmented extends StatelessWidget {
                     _Seg(
                       label: 'Demandes',
                       count: demandesTotal,
-                      badge: demandesBadge,
+                      badge: badgeForIndex(1, demandesRaw),
                       active: controller.index == 1,
                       onTap: () => controller.animateTo(1),
                     ),
@@ -304,7 +369,7 @@ class _EnvoyerSegmented extends StatelessWidget {
                     _Seg(
                       label: 'Négos',
                       count: negosTotal,
-                      badge: negosBadge,
+                      badge: badgeForIndex(2, negosRaw),
                       active: controller.index == 2,
                       onTap: () => controller.animateTo(2),
                     ),
@@ -340,7 +405,8 @@ class _Seg extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final showBadge = !active && badge > 0;
+    // badge est déjà 0 quand l'onglet est actif (calculé par badgeFor dans le parent).
+    final showBadge = badge > 0;
 
     return Expanded(
       child: GestureDetector(
