@@ -124,6 +124,33 @@ void main() {
     expect(find.text('Historique'), findsOneWidget);
   });
 
+  testWidgets('affiche le label Parrainage pour une transaction REFERRAL_REWARD',
+      (tester) async {
+    final tx = WalletTransactionModel(
+      type: 'REFERRAL_REWARD',
+      amount: 5.0,
+      balanceAfter: 5.0,
+      createdAt: DateTime(2026, 5, 1, 10, 30),
+    );
+    final wallet = WalletModel(
+      balance: 5.0,
+      currency: 'EUR',
+      transactions: [tx],
+    );
+    whenListen(
+      bloc,
+      Stream.value(WalletLoaded(wallet)),
+      initialState: WalletInitial(),
+    );
+
+    await tester.pumpWidget(buildSubject(bloc));
+    await tester.pumpAndSettle();
+
+    // Le type brut ne doit jamais s'afficher — toujours le label FR
+    expect(find.text('Parrainage'), findsOneWidget);
+    expect(find.text('REFERRAL_REWARD'), findsNothing);
+  });
+
   testWidgets('affiche message vide quand liste transactions vide',
       (tester) async {
     final wallet = WalletModel(
