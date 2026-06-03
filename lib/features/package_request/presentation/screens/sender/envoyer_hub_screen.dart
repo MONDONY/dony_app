@@ -82,10 +82,21 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
   }
 
   void _onTab() {
-    if (!_controller.indexIsChanging) {
-      unawaited(
-        getIt<AnalyticsService>().logScreen(_screens[_controller.index]),
-      );
+    if (_controller.indexIsChanging) {
+      return;
+    }
+    final index = _controller.index;
+    unawaited(getIt<AnalyticsService>().logScreen(_screens[index]));
+    // Refresh le bloc de l'onglet qui devient visible.
+    switch (index) {
+      case 0:
+        context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
+      case 1:
+        context.read<PackageRequestBloc>().add(const RefreshMyRequests());
+      case 2:
+        context
+            .read<NegotiationListBloc>()
+            .add(const NegotiationListRefreshRequested());
     }
   }
 

@@ -79,8 +79,10 @@ void main() {
   setUpAll(() async {
     await initializeDateFormatting('fr', null);
     registerFallbackValue(const FetchMyRequests());
+    registerFallbackValue(const RefreshMyRequests());
     registerFallbackValue(const BidMyListAutoRefreshRequested());
     registerFallbackValue(const NegotiationListFetchRequested());
+    registerFallbackValue(const NegotiationListRefreshRequested());
   });
 
   setUp(() {
@@ -211,6 +213,28 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Ville, catégorie…'), findsOneWidget);
+    });
+
+    testWidgets(
+        'changer d\'onglet déclenche le refresh du bloc correspondant',
+        (tester) async {
+      await tester.pumpWidget(wrap());
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // → onglet Demandes (index 1) : RefreshMyRequests envoyé à PackageRequestBloc
+      await tester.tap(find.textContaining('Demandes').first);
+      await tester.pumpAndSettle();
+      verify(() => packageBloc.add(const RefreshMyRequests())).called(1);
+
+      // → onglet Négos (index 2) : NegotiationListRefreshRequested envoyé
+      await tester.tap(find.textContaining('Négos').first);
+      await tester.pumpAndSettle();
+      verify(() => negoListBloc.add(const NegotiationListRefreshRequested())).called(1);
+
+      // → retour onglet Envois (index 0) : BidMyListAutoRefreshRequested envoyé
+      await tester.tap(find.textContaining('Envois').first);
+      await tester.pumpAndSettle();
+      verify(() => bidBloc.add(const BidMyListAutoRefreshRequested())).called(greaterThanOrEqualTo(1));
     });
 
     testWidgets('le bouton "+ Nouveau" est présent', (tester) async {
