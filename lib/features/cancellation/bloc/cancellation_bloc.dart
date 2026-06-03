@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:dony/core/error/app_exception.dart';
+import 'package:dony/core/services/analytics_events.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_event.dart';
 import 'package:dony/features/cancellation/bloc/cancellation_state.dart';
 import 'package:dony/features/cancellation/data/repositories/cancellation_repository.dart';
@@ -6,8 +10,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
   final CancellationRepository _repository;
+  final AnalyticsService _analytics;
 
-  CancellationBloc(this._repository) : super(CancellationInitial()) {
+  CancellationBloc(this._repository, this._analytics) : super(CancellationInitial()) {
     on<CancellationTripRequested>(_onTripCancellationRequested);
     on<RematchSuggestionsRequested>(_onRematchRequested);
     on<NoShowReportRequested>(_onNoShowReport);
@@ -25,6 +30,10 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
         reason: event.reason,
       );
       emit(CancellationSuccess(result));
+      unawaited(_analytics.logEvent(
+        AnalyticsEvents.cancellationInitiated,
+        properties: {'reason': event.reason},
+      ));
     } catch (e) {
       emit(CancellationError(unwrapDioError(e)));
     }

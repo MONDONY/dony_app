@@ -301,7 +301,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => CancellationRepository(getIt<CancellationRemoteDatasource>()),
   );
   getIt.registerFactory<CancellationBloc>(
-    () => CancellationBloc(getIt<CancellationRepository>()),
+    () => CancellationBloc(getIt<CancellationRepository>(), getIt<AnalyticsService>()),
   );
 
   // Messaging
@@ -461,7 +461,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => RatingRepository(getIt<ApiClient>()),
   );
   getIt.registerFactory<RatingBloc>(
-    () => RatingBloc(getIt<RatingRepository>()),
+    () => RatingBloc(getIt<RatingRepository>(), getIt<AnalyticsService>()),
   );
   getIt.registerLazySingleton<MyReviewsBloc>(
     () => MyReviewsBloc(getIt<RatingRepository>()),

@@ -8,6 +8,7 @@ import 'package:dony/features/cancellation/data/models/cancellation_model.dart';
 import 'package:dony/features/cancellation/data/repositories/cancellation_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/mock_analytics_backend.dart';
 
 class MockCancellationRepository extends Mock
     implements CancellationRepository {}
@@ -34,12 +35,17 @@ final _suggestions = [
 
 void main() {
   late MockCancellationRepository mockRepo;
+  late MockAnalyticsBackend backend;
 
   setUp(() {
     mockRepo = MockCancellationRepository();
+    backend = MockAnalyticsBackend();
   });
 
-  CancellationBloc buildBloc() => CancellationBloc(mockRepo);
+  CancellationBloc buildBloc() {
+    final analytics = makeDisabledAnalytics(backend);
+    return CancellationBloc(mockRepo, analytics);
+  }
 
   // ── CancellationTripRequested ───────────────────────────────────────────────
 
