@@ -16,6 +16,9 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/core/design/widgets/dony_avatar.dart';
 import 'package:dony/features/profile/presentation/profile_screen.dart';
 import 'package:dony/features/profile/presentation/widgets/pending_deletion_banner.dart';
+import 'package:dony/features/referral/bloc/referral_bloc.dart';
+import 'package:dony/features/referral/bloc/referral_event.dart';
+import 'package:dony/features/referral/bloc/referral_state.dart';
 import 'package:dony/features/settings/bloc/account_deletion_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -40,12 +43,16 @@ class MockAnnouncementBloc
 class MockActiveRoleCubit extends MockCubit<ActiveRole>
     implements ActiveRoleCubit {}
 
+class MockReferralBloc extends MockBloc<ReferralEvent, ReferralState>
+    implements ReferralBloc {}
+
 // ── Fallback values ───────────────────────────────────────────────────────────
 
 class FakeAuthEvent extends Fake implements AuthEvent {}
 class FakeAccountDeletionEvent extends Fake implements RequestDeletion {}
 class FakeBidEvent extends Fake implements BidEvent {}
 class FakeAnnouncementEvent extends Fake implements AnnouncementEvent {}
+class FakeReferralEvent extends Fake implements ReferralEvent {}
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -95,6 +102,7 @@ Widget _buildTestHarness({
   required MockBidBloc bidBloc,
   required MockAnnouncementBloc announcementBloc,
   required MockActiveRoleCubit activeRoleCubit,
+  required MockReferralBloc referralBloc,
 }) {
   final routes = <RouteBase>[
     GoRoute(
@@ -106,6 +114,7 @@ Widget _buildTestHarness({
           BlocProvider<BidBloc>.value(value: bidBloc),
           BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
           BlocProvider<ActiveRoleCubit>.value(value: activeRoleCubit),
+          BlocProvider<ReferralBloc>.value(value: referralBloc),
         ],
         child: const ProfileScreen(),
       ),
@@ -181,6 +190,7 @@ void main() {
     registerFallbackValue(const ReactivateAccount());
     registerFallbackValue(FakeBidEvent());
     registerFallbackValue(FakeAnnouncementEvent());
+    registerFallbackValue(FakeReferralEvent());
   });
 
   late MockAuthBloc authBloc;
@@ -188,6 +198,7 @@ void main() {
   late MockBidBloc bidBloc;
   late MockAnnouncementBloc announcementBloc;
   late MockActiveRoleCubit activeRoleCubit;
+  late MockReferralBloc referralBloc;
 
   setUp(() {
     authBloc         = MockAuthBloc();
@@ -195,9 +206,11 @@ void main() {
     bidBloc          = MockBidBloc();
     announcementBloc = MockAnnouncementBloc();
     activeRoleCubit  = MockActiveRoleCubit();
+    referralBloc     = MockReferralBloc();
 
     whenListen<BidState>(bidBloc, const Stream.empty(), initialState: BidInitial());
     whenListen<AnnouncementState>(announcementBloc, const Stream.empty(), initialState: AnnouncementInitial());
+    whenListen<ReferralState>(referralBloc, const Stream.empty(), initialState: const ReferralInitial());
     when(() => activeRoleCubit.state).thenReturn(ActiveRole.sender);
   });
 
@@ -211,6 +224,7 @@ void main() {
     await tester.pumpWidget(_buildTestHarness(
       authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
       announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+      referralBloc: referralBloc,
     ));
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -225,6 +239,7 @@ void main() {
     await tester.pumpWidget(_buildTestHarness(
       authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
       announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+      referralBloc: referralBloc,
     ));
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -243,6 +258,7 @@ void main() {
     await tester.pumpWidget(_buildTestHarness(
       authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
       announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+      referralBloc: referralBloc,
     ));
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pump();
@@ -261,6 +277,7 @@ void main() {
     await tester.pumpWidget(_buildTestHarness(
       authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
       announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+      referralBloc: referralBloc,
     ));
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pump();
@@ -279,6 +296,7 @@ void main() {
     await tester.pumpWidget(_buildTestHarness(
       authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
       announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+      referralBloc: referralBloc,
     ));
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -309,6 +327,7 @@ void main() {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+        referralBloc: referralBloc,
       ));
       await tester.pump(const Duration(milliseconds: 600));
 
@@ -326,6 +345,7 @@ void main() {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+        referralBloc: referralBloc,
       ));
       await tester.pump(const Duration(milliseconds: 600));
 
@@ -352,6 +372,7 @@ void main() {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+        referralBloc: referralBloc,
       ));
       await tester.pump(const Duration(milliseconds: 600));
 
@@ -372,6 +393,7 @@ void main() {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+        referralBloc: referralBloc,
       ));
       await tester.pump(const Duration(milliseconds: 600));
 
@@ -387,6 +409,7 @@ void main() {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+        referralBloc: referralBloc,
       ));
       await tester.pump(const Duration(milliseconds: 600));
 
@@ -403,6 +426,7 @@ void main() {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+        referralBloc: referralBloc,
       ));
       await tester.pump(const Duration(milliseconds: 600));
 
@@ -433,6 +457,7 @@ void main() {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+        referralBloc: referralBloc,
       ));
       await tester.pump(const Duration(milliseconds: 600));
 
@@ -450,6 +475,7 @@ void main() {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+        referralBloc: referralBloc,
       ));
       await tester.pump(const Duration(milliseconds: 600));
 
@@ -461,6 +487,7 @@ void main() {
         await tester.pumpWidget(_buildTestHarness(
           authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
           announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+          referralBloc: referralBloc,
         ));
         await tester.pump(const Duration(milliseconds: 600));
 
@@ -472,6 +499,7 @@ void main() {
         await tester.pumpWidget(_buildTestHarness(
           authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
           announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+          referralBloc: referralBloc,
         ));
         await tester.pump(const Duration(milliseconds: 600));
 
@@ -484,6 +512,7 @@ void main() {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+        referralBloc: referralBloc,
       ));
       await tester.pump(const Duration(milliseconds: 600));
 
@@ -497,6 +526,7 @@ void main() {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+        referralBloc: referralBloc,
       ));
       await tester.pumpAndSettle(const Duration(seconds: 2));
 
@@ -518,6 +548,7 @@ void main() {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+        referralBloc: referralBloc,
       ));
       await tester.pumpAndSettle(const Duration(seconds: 2));
 
@@ -538,6 +569,7 @@ void main() {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+        referralBloc: referralBloc,
       ));
       await tester.pumpAndSettle(const Duration(seconds: 2));
 
@@ -555,6 +587,7 @@ void main() {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+        referralBloc: referralBloc,
       ));
       await tester.pumpAndSettle(const Duration(seconds: 2));
 
@@ -574,6 +607,7 @@ void main() {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+        referralBloc: referralBloc,
       ));
       await tester.pump(const Duration(milliseconds: 600));
 
@@ -602,6 +636,7 @@ void main() {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+        referralBloc: referralBloc,
       ));
       await tester.pumpAndSettle(const Duration(seconds: 2));
 
@@ -620,6 +655,7 @@ void main() {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+        referralBloc: referralBloc,
       ));
       await tester.pump(const Duration(milliseconds: 600));
 
@@ -643,6 +679,7 @@ void main() {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+        referralBloc: referralBloc,
       ));
       await tester.pumpAndSettle(const Duration(seconds: 2));
 
@@ -671,6 +708,7 @@ void main() {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+        referralBloc: referralBloc,
       ));
       await tester.pump(const Duration(milliseconds: 600));
 
@@ -684,6 +722,7 @@ void main() {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+        referralBloc: referralBloc,
       ));
       await tester.pump(const Duration(milliseconds: 600));
 
@@ -709,6 +748,7 @@ void main() {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+        referralBloc: referralBloc,
       ));
       await tester.pump(const Duration(milliseconds: 600));
 
@@ -726,6 +766,7 @@ void main() {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+        referralBloc: referralBloc,
       ));
       await tester.pump(const Duration(milliseconds: 600));
 
@@ -755,6 +796,7 @@ void main() {
       await tester.pumpWidget(_buildTestHarness(
         authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
         announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+        referralBloc: referralBloc,
       ));
       await tester.pump(const Duration(milliseconds: 600));
 
@@ -779,6 +821,7 @@ void main() {
     await tester.pumpWidget(_buildTestHarness(
       authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
       announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+      referralBloc: referralBloc,
     ));
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -803,6 +846,7 @@ void main() {
     await tester.pumpWidget(_buildTestHarness(
       authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
       announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+      referralBloc: referralBloc,
     ));
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -829,6 +873,7 @@ void main() {
     await tester.pumpWidget(_buildTestHarness(
       authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
       announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+      referralBloc: referralBloc,
     ));
     await tester.pump();
     await tester.pump();
@@ -848,6 +893,7 @@ void main() {
     await tester.pumpWidget(_buildTestHarness(
       authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
       announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+      referralBloc: referralBloc,
     ));
     await tester.pump();
     await tester.pump();
@@ -871,6 +917,7 @@ void main() {
     await tester.pumpWidget(_buildTestHarness(
       authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
       announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+      referralBloc: referralBloc,
     ));
     await tester.pump();
     await tester.pump();
@@ -889,6 +936,7 @@ void main() {
     await tester.pumpWidget(_buildTestHarness(
       authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
       announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+      referralBloc: referralBloc,
     ));
     await tester.pump(const Duration(milliseconds: 600));
 
@@ -908,6 +956,7 @@ void main() {
     await tester.pumpWidget(_buildTestHarness(
       authBloc: authBloc, deletionBloc: deletionBloc, bidBloc: bidBloc,
       announcementBloc: announcementBloc, activeRoleCubit: activeRoleCubit,
+      referralBloc: referralBloc,
     ));
     await tester.pump(const Duration(milliseconds: 600));
 
