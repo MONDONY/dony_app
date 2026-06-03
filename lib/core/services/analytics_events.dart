@@ -66,6 +66,11 @@ abstract final class AnalyticsEvents {
   // Envois
   static const shipmentFilterApplied = 'shipment_filter_applied';
 
+  // Onglet « Envoyer » — noms d'écran (logScreen par onglet)
+  static const envoyerEnvoisScreen = 'envoyer_envois';
+  static const envoyerDemandesScreen = 'envoyer_demandes';
+  static const envoyerNegosScreen = 'envoyer_negos';
+
   // Errors (BlocObserver)
   static const blocError = 'bloc_error';
 }

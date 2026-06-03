@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -65,9 +66,9 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
   late final TabController _controller;
 
   static const _screens = [
-    'envoyer_envois',
-    'envoyer_demandes',
-    'envoyer_negos',
+    AnalyticsEvents.envoyerEnvoisScreen,
+    AnalyticsEvents.envoyerDemandesScreen,
+    AnalyticsEvents.envoyerNegosScreen,
   ];
 
   @override
