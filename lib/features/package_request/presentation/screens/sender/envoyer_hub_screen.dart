@@ -303,12 +303,37 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
-    return BlocListener<NegotiationListBloc, NegotiationListState>(
-      listener: _onNegoStateChanged,
-      listenWhen: (prev, next) =>
-          next.status == NegotiationListStatus.loaded && prev != next,
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<NegotiationListBloc, NegotiationListState>(
+          listenWhen: (prev, next) =>
+              next.status == NegotiationListStatus.loaded && prev != next,
+          listener: (ctx, next) {
+            _onNegoStateChanged(ctx, next);
+            if (_controller.index == 2 && mounted) {
+              _markSeen(2);
+            }
+          },
+        ),
+        BlocListener<PackageRequestBloc, PackageRequestState>(
+          listenWhen: (_, next) =>
+              next.status == PackageRequestListStatus.loaded,
+          listener: (_, _) {
+            if (_controller.index == 1 && mounted) {
+              _markSeen(1);
+            }
+          },
+        ),
+        BlocListener<BidBloc, BidState>(
+          listenWhen: (_, next) => next is BidListLoaded,
+          listener: (_, _) {
+            if (_controller.index == 0 && mounted) {
+              _markSeen(0);
+            }
+          },
+        ),
+      ],
       child: Scaffold(
         backgroundColor: const Color(0xFFF0F2F6),
         body: SafeArea(

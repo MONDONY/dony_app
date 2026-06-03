@@ -118,6 +118,7 @@ class PackageRequestBloc extends Bloc<PackageRequestEvent, PackageRequestState> 
       emit(state.copyWith(
         status: PackageRequestListStatus.loaded,
         requests: page.content,
+        fetchedAt: DateTime.now(),
       ));
     } catch (err) {
       emit(state.copyWith(

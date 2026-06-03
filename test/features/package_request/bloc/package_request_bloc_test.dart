@@ -95,7 +95,8 @@ void main() {
           .having((s) => s.status, 'status', PackageRequestListStatus.cancelling),
       isA<PackageRequestState>()
           .having((s) => s.status, 'status', PackageRequestListStatus.loaded)
-          .having((s) => s.requests.length, 'requests.length', 1),
+          .having((s) => s.requests.length, 'requests.length', 1)
+          .having((s) => s.fetchedAt.isAfter(DateTime(2000)), 'fetchedAt fresh', true),
     ],
     verify: (_) {
       verify(() => repo.cancel('r-1')).called(1);

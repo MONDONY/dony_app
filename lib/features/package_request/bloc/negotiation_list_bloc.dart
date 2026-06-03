@@ -73,16 +73,36 @@ class NegotiationListBloc
     extends Bloc<NegotiationListEvent, NegotiationListState> {
   NegotiationListBloc(this._repository) : super(NegotiationListState()) {
     on<NegotiationListFetchRequested>(_onFetch);
-    on<NegotiationListRefreshRequested>(_onFetch);
+    on<NegotiationListRefreshRequested>(_onRefresh);
   }
 
   final NegotiationRepository _repository;
 
   Future<void> _onFetch(
-    NegotiationListEvent event,
+    NegotiationListFetchRequested event,
     Emitter<NegotiationListState> emit,
   ) async {
     emit(state.copyWith(status: NegotiationListStatus.loading));
+    try {
+      final threads = await _repository.findMine();
+      emit(state.copyWith(
+        status: NegotiationListStatus.loaded,
+        threads: threads,
+        fetchedAt: DateTime.now(),
+      ));
+    } catch (err) {
+      emit(state.copyWith(
+        status: NegotiationListStatus.error,
+        errorMessage: err.toString(),
+      ));
+    }
+  }
+
+  /// Refresh silencieux : garde les données existantes visibles pendant l'appel.
+  Future<void> _onRefresh(
+    NegotiationListRefreshRequested event,
+    Emitter<NegotiationListState> emit,
+  ) async {
     try {
       final threads = await _repository.findMine();
       emit(state.copyWith(
