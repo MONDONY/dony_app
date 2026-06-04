@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
+import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_1_trajet_colis.dart'
@@ -12,7 +13,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 /// Étape 2 / 3 — Détails du colis (match maquette `v3/expéditeur_publie`).
 ///
 /// Layout : titre "Décris ton colis" · poids (big input) · taille (3 cards
-/// S/M/L) · catégorie principale (boutons option).
+/// S/M/L) · catégorie principale (boutons option) · champ libre "Autre…".
 class Step2Details extends StatefulWidget {
   const Step2Details({super.key});
 
@@ -23,12 +24,27 @@ class Step2Details extends StatefulWidget {
 class Step2DetailsState extends State<Step2Details> {
   final _formKey = GlobalKey<FormState>();
   final _weightCtrl = TextEditingController();
+  final _customCategoryCtrl = TextEditingController();
+
+  /// Tracks whether the "Autre…" free-text field is visible.
+  /// A [ValueNotifier] is used here (not setState) to toggle visibility
+  /// without triggering a full rebuild unnecessarily.
+  final _showCustomField = ValueNotifier<bool>(false);
+
   ParcelSize _size = ParcelSize.medium;
   ContentCategory _category = ContentCategory.vetements;
+
+  /// The set of predefined categories shown as chips (excludes `autre`
+  /// because "Autre…" gets its own special chip at the end of the row).
+  static final _predefined = ContentCategory.values
+      .where((c) => c != ContentCategory.autre)
+      .toList(growable: false);
 
   @override
   void dispose() {
     _weightCtrl.dispose();
+    _customCategoryCtrl.dispose();
+    _showCustomField.dispose();
     super.dispose();
   }
 
@@ -42,6 +58,21 @@ class Step2DetailsState extends State<Step2Details> {
             contentCategory: _category,
           ),
         );
+  }
+
+  void _selectPredefined(ContentCategory c) {
+    _category = c;
+    _showCustomField.value = false;
+    _customCategoryCtrl.clear();
+    // Clear custom label in BLoC state by dispatching empty change.
+    context
+        .read<PackageRequestFormBloc>()
+        .add(const FormStep2CategoryChanged(null));
+  }
+
+  void _selectCustom() {
+    _category = ContentCategory.autre;
+    _showCustomField.value = true;
   }
 
   @override
@@ -109,17 +140,84 @@ class Step2DetailsState extends State<Step2Details> {
             // ── Catégorie ──────────────────────────────────────────────────
             _FieldLabel('Catégorie principale'),
             const SizedBox(height: DonySpacing.sm),
-            Wrap(
-              spacing: DonySpacing.sm,
-              runSpacing: DonySpacing.sm,
-              children: ContentCategory.values.map((c) {
-                return OptionButton(
-                  label: c.label,
-                  emoji: c.emoji,
-                  selected: c == _category,
-                  onTap: () => setState(() => _category = c),
+            BlocBuilder<PackageRequestFormBloc, PackageRequestFormState>(
+              builder: (context, state) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Wrap(
+                      spacing: DonySpacing.sm,
+                      runSpacing: DonySpacing.sm,
+                      children: [
+                        // Predefined category chips
+                        ..._predefined.map((c) {
+                          return OptionButton(
+                            label: c.label,
+                            emoji: c.emoji,
+                            selected: _category == c,
+                            onTap: () => _selectPredefined(c),
+                          );
+                        }),
+                        // "Autre…" free-text chip
+                        ValueListenableBuilder<bool>(
+                          valueListenable: _showCustomField,
+                          builder: (context, showCustom, _) {
+                            return OptionButton(
+                              label: 'Autre…',
+                              emoji: ContentCategory.autre.emoji,
+                              selected: showCustom,
+                              onTap: _selectCustom,
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    // Free-text input — only visible when "Autre…" is selected
+                    ValueListenableBuilder<bool>(
+                      valueListenable: _showCustomField,
+                      builder: (context, showCustom, _) {
+                        if (!showCustom) return const SizedBox.shrink();
+                        return Padding(
+                          padding: const EdgeInsets.only(top: DonySpacing.sm),
+                          child: TextField(
+                            key: const Key('custom-category-input'),
+                            controller: _customCategoryCtrl,
+                            maxLength: 60,
+                            textCapitalization: TextCapitalization.sentences,
+                            decoration: InputDecoration(
+                              hintText: 'Décrivez le contenu…',
+                              filled: true,
+                              fillColor: Colors.white,
+                              counterText: '',
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: DonySpacing.base,
+                                vertical: DonySpacing.md,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.circular(DonyRadius.md),
+                                borderSide: const BorderSide(
+                                    color: DonyColors.neutral200),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.circular(DonyRadius.md),
+                                borderSide: const BorderSide(
+                                    color: DonyColors.primary, width: 2),
+                              ),
+                            ),
+                            onChanged: (value) {
+                              context
+                                  .read<PackageRequestFormBloc>()
+                                  .add(FormStep2CategoryChanged(value));
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 );
-              }).toList(),
+              },
             ),
           ],
         ),

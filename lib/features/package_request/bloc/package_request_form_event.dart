@@ -62,6 +62,18 @@ class FormStep3Submitted extends PackageRequestFormEvent {
   List<Object?> get props => [targetPriceEur, pickupNeighborhood, deliveryNeighborhood];
 }
 
+/// Dispatched in real-time as the user types a free-text category label.
+/// [label] is the raw string from the text field.
+/// When [label] is null or empty, it means the user cleared the custom field
+/// or switched back to a predefined category.
+class FormStep2CategoryChanged extends PackageRequestFormEvent {
+  const FormStep2CategoryChanged(this.label);
+  final String? label;
+
+  @override
+  List<Object?> get props => [label];
+}
+
 class FormStepBack extends PackageRequestFormEvent {
   const FormStepBack();
 }

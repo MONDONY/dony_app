@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/services/analytics_events.dart';
 import '../../../core/services/analytics_service.dart';
+import '../data/models/content_category.dart';
 import '../data/models/payment_method.dart';
 import '../data/package_request_repository.dart';
 import 'package_request_form_event.dart';
@@ -13,6 +14,7 @@ class PackageRequestFormBloc extends Bloc<PackageRequestFormEvent, PackageReques
       : super(const PackageRequestFormState()) {
     on<FormStep1Submitted>(_onStep1);
     on<FormStep2Submitted>(_onStep2);
+    on<FormStep2CategoryChanged>(_onStep2CategoryChanged);
     on<FormStep3Submitted>(_onStep3);
     on<FormStepBack>(_onStepBack);
     on<FormReset>((_, emit) => emit(const PackageRequestFormState()));
@@ -47,6 +49,25 @@ class PackageRequestFormBloc extends Bloc<PackageRequestFormEvent, PackageReques
       contentCategory: e.contentCategory,
       description: e.description,
     ));
+  }
+
+  void _onStep2CategoryChanged(
+    FormStep2CategoryChanged e,
+    Emitter<PackageRequestFormState> emit,
+  ) {
+    final label = e.label;
+    if (label == null || label.isEmpty) {
+      // User cleared the custom field; keep ContentCategory.autre but clear label.
+      emit(state.copyWith(
+        contentCategory: ContentCategory.autre,
+        customCategoryLabel: null,
+      ));
+    } else {
+      emit(state.copyWith(
+        contentCategory: ContentCategory.autre,
+        customCategoryLabel: label,
+      ));
+    }
   }
 
   Future<void> _onStep3(FormStep3Submitted e, Emitter<PackageRequestFormState> emit) async {

@@ -7,6 +7,10 @@ import '../data/models/payment_method.dart';
 
 enum FormSubmissionStatus { idle, submitting, success, error }
 
+/// Sentinel used by [PackageRequestFormState.copyWith] to distinguish
+/// "not provided" from an explicitly-passed `null` for [customCategoryLabel].
+const Object _keep = Object();
+
 class PackageRequestFormState extends Equatable {
   const PackageRequestFormState({
     this.currentStep = 0,
@@ -18,6 +22,7 @@ class PackageRequestFormState extends Equatable {
     this.weightKg,
     this.parcelSize,
     this.contentCategory,
+    this.customCategoryLabel,
     this.description,
     this.targetPriceEur,
     this.photoUrl,
@@ -40,6 +45,12 @@ class PackageRequestFormState extends Equatable {
   final double? weightKg;
   final ParcelSize? parcelSize;
   final ContentCategory? contentCategory;
+
+  /// Free-text label when the user selects "Autre…" and types a custom value.
+  /// Non-null only when [contentCategory] == [ContentCategory.autre] and the
+  /// user has typed something.
+  final String? customCategoryLabel;
+
   final String? description;
   final double? targetPriceEur;
   final String? photoUrl;
@@ -62,6 +73,8 @@ class PackageRequestFormState extends Equatable {
     double? weightKg,
     ParcelSize? parcelSize,
     ContentCategory? contentCategory,
+    // Use a sentinel to allow explicitly clearing customCategoryLabel.
+    Object? customCategoryLabel = _keep,
     String? description,
     double? targetPriceEur,
     String? photoUrl,
@@ -84,6 +97,9 @@ class PackageRequestFormState extends Equatable {
         weightKg: weightKg ?? this.weightKg,
         parcelSize: parcelSize ?? this.parcelSize,
         contentCategory: contentCategory ?? this.contentCategory,
+        customCategoryLabel: customCategoryLabel == _keep
+            ? this.customCategoryLabel
+            : customCategoryLabel as String?,
         description: description ?? this.description,
         targetPriceEur: targetPriceEur ?? this.targetPriceEur,
         photoUrl: photoUrl ?? this.photoUrl,
@@ -101,9 +117,9 @@ class PackageRequestFormState extends Equatable {
   @override
   List<Object?> get props => [
         currentStep, departureCity, arrivalCity, desiredDate, dateToleranceDays,
-        transportMode, weightKg, parcelSize, contentCategory, description,
-        targetPriceEur, photoUrl, pickupNeighborhood, deliveryNeighborhood,
-        negotiable, acceptedPaymentMethods, totalBudgetEur,
+        transportMode, weightKg, parcelSize, contentCategory, customCategoryLabel,
+        description, targetPriceEur, photoUrl, pickupNeighborhood,
+        deliveryNeighborhood, negotiable, acceptedPaymentMethods, totalBudgetEur,
         submissionStatus, errorMessage, createdRequest,
       ];
 }
