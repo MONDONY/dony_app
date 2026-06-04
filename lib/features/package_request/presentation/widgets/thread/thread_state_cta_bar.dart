@@ -4,6 +4,7 @@ import 'package:dony/features/package_request/data/models/negotiation_thread.dar
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/package_request/presentation/widgets/accept_offer_bottom_sheet.dart';
 import 'package:dony/features/package_request/presentation/widgets/counter_offer_bottom_sheet.dart';
+import 'package:dony/features/package_request/presentation/widgets/payment_recap_bottom_sheet.dart';
 import 'package:dony/features/package_request/presentation/widgets/reject_bottom_sheet.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_state_banner.dart';
 import 'package:flutter/material.dart';
@@ -105,19 +106,13 @@ class ThreadStateCtaBar extends StatelessWidget {
       case NegotiationThreadStatus.awaitingPayment:
         return _isSender
             ? DonyButton(
-                label: _isSender
-                    ? 'Payer ${(thread.grossPriceEur ?? thread.currentPriceEur * 1.12).toStringAsFixed(0)} €'
-                    : 'Accepter ${thread.currentPriceEur.toStringAsFixed(0)} €',
+                label: 'Payer ${(thread.grossPriceEur ?? thread.currentPriceEur * 1.12).toStringAsFixed(0)} €',
                 onPressed: actionInProgress
                     ? null
-                    : () => AcceptOfferBottomSheet.show(
+                    : () => PaymentRecapBottomSheet.show(
                           context,
                           bloc: context.read<NegotiationBloc>(),
-                          threadId: thread.id,
-                          priceEur: thread.currentPriceEur,
-                          grossPriceEur: thread.grossPriceEur,
-                          isTraveler: !_isSender,
-                          isCheckout: true,
+                          thread: thread,
                         ),
               )
             : const ThreadStateBanner(
