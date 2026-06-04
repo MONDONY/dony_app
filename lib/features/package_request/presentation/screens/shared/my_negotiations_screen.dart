@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/package_request/bloc/negotiation_filter_cubit.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -323,6 +326,20 @@ class _NegoCard extends StatelessWidget {
     final name = thread.travelerName ?? 'Voyageur ${thread.travelerId.substring(0, 4)}';
     final rounds = thread.roundsCount.clamp(0, 5);
 
+    // L'expéditeur voit TOUJOURS le prix qu'il paie (net + commission = gross),
+    // cash comme stripe ; le voyageur voit son net.
+    final authState = context.read<AuthBloc>().state;
+    final currentUserId = authState is AuthAuthenticated
+        ? authState.user.id
+        : authState is AuthProfileUpdated
+            ? authState.user.id
+            : '';
+    final isTraveler = currentUserId == thread.travelerId;
+    final displayPrice = isTraveler
+        ? thread.currentPriceEur
+        : (thread.grossPriceEur ??
+            PriceDisplay.grossFromNet(thread.currentPriceEur));
+
     return Opacity(
       opacity: _isTerminal ? 0.65 : 1.0,
       child: Material(
@@ -380,7 +397,7 @@ class _NegoCard extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
-                                  '${thread.currentPriceEur.toStringAsFixed(0)} €',
+                                  '${displayPrice.toStringAsFixed(0)} €',
                                   style: tt.headlineMedium?.copyWith(
                                     fontSize: 20,
                                     fontWeight: FontWeight.w800,
