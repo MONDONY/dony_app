@@ -77,7 +77,7 @@ void main() {
 
   group('ThreadStateCtaBar matrix', () {
     testWidgets(
-        'OPEN · sender · !lastFromMe → 3 boutons (Accepter / Contre / Rejeter)',
+        'OPEN · sender · !lastFromMe → 3 boutons (Accepter — Tu paies / Contre / Rejeter)',
         (tester) async {
       await tester.pumpWidget(wrap(
         _thread(
@@ -86,7 +86,8 @@ void main() {
             canCounter: true),
         _viewerSender,
       ));
-      expect(find.text('Accepter 38 €'), findsOneWidget);
+      // Sender sees gross: 38 * 1.12 = 42.56 → "43" (toStringAsFixed(0) rounds)
+      expect(find.text('Accepter — Tu paies 43 €'), findsOneWidget);
       expect(find.text('Contre-offre'), findsOneWidget);
       expect(find.text('Rejeter'), findsOneWidget);
     });
@@ -101,7 +102,7 @@ void main() {
             canCounter: true),
         _viewerTraveler,
       ));
-      expect(find.text('Accepter 38 €'), findsNothing);
+      expect(find.textContaining('Accepter — Tu reçois'), findsNothing);
       expect(find.text('Contre-offre'), findsOneWidget);
       expect(find.text('Rejeter'), findsOneWidget);
     });
@@ -116,7 +117,8 @@ void main() {
             canCounter: true),
         _viewerTraveler,
       ));
-      expect(find.text('Accepter 38 €'), findsOneWidget);
+      // Traveler sees net: "Accepter — Tu reçois 38 €"
+      expect(find.text('Accepter — Tu reçois 38 €'), findsOneWidget);
       expect(find.text('Contre-offre'), findsOneWidget);
       expect(find.text('Rejeter'), findsOneWidget);
     });
@@ -131,7 +133,7 @@ void main() {
             canCounter: false),
         _viewerTraveler,
       ));
-      expect(find.text('Accepter 38 €'), findsOneWidget);
+      expect(find.text('Accepter — Tu reçois 38 €'), findsOneWidget);
       expect(find.text('Contre-offre'), findsNothing);
       expect(find.text('Rejeter'), findsOneWidget);
     });
@@ -147,7 +149,7 @@ void main() {
       ));
       expect(find.byType(ThreadStateBanner), findsOneWidget);
       expect(find.text('En attente de la réponse'), findsOneWidget);
-      expect(find.text('Accepter 38 €'), findsNothing);
+      expect(find.textContaining('Accepter'), findsNothing);
     });
 
     testWidgets(
@@ -172,13 +174,14 @@ void main() {
       expect(find.text('Créer un trajet dédié'), findsOneWidget);
     });
 
-    testWidgets('AWAITING_PAYMENT · sender → bouton "Payer X €"',
+    testWidgets('AWAITING_PAYMENT · sender → bouton "Payer X €" avec gross',
         (tester) async {
       await tester.pumpWidget(wrap(
         _thread(status: NegotiationThreadStatus.awaitingPayment),
         _viewerSender,
       ));
-      expect(find.text('Payer 38 €'), findsOneWidget);
+      // Sender sees gross: 38 * 1.12 = 42.56 → "43" (toStringAsFixed(0) rounds)
+      expect(find.text('Payer 43 €'), findsOneWidget);
     });
 
     testWidgets('AWAITING_PAYMENT · traveler → banner "En attente du paiement"',
@@ -208,7 +211,7 @@ void main() {
         _viewerSender,
       ));
       expect(find.byType(ThreadStateBanner), findsNothing);
-      expect(find.text('Accepter 38 €'), findsNothing);
+      expect(find.textContaining('Accepter'), findsNothing);
       expect(find.text('Contre-offre'), findsNothing);
     });
   });

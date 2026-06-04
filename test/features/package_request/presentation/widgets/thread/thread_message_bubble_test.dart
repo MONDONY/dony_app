@@ -27,33 +27,40 @@ void main() {
       );
 
   group('ThreadMessageBubble', () {
-    testWidgets('mine=true → bulle primary solide avec prix + label CAPS',
+    testWidgets(
+        'mine=true, isTraveler=true → bulle primary solide avec prix net + label CAPS',
         (tester) async {
       await tester.pumpWidget(wrap(ThreadMessageBubble(
         message: _msg(kind: NegotiationMessageKind.proposal),
         mine: true,
+        isTraveler: true,
       )));
       expect(find.text('PROPOSITION'), findsOneWidget);
-      expect(find.text('35 €'), findsOneWidget);
+      // Traveler sees net: "Tu reçois 35,00 €"
+      expect(find.text('Tu reçois 35,00 €'), findsOneWidget);
       expect(find.text('09:51'), findsOneWidget);
     });
 
-    testWidgets('mine=false → bulle surface avec border', (tester) async {
+    testWidgets('mine=false, isTraveler=false → bulle surface avec prix gross',
+        (tester) async {
       await tester.pumpWidget(wrap(ThreadMessageBubble(
         message: _msg(kind: NegotiationMessageKind.counter, price: 30),
         mine: false,
+        isTraveler: false,
+        // gross = 30 * 1.12 = 33.60
       )));
       expect(find.text('CONTRE-OFFRE'), findsOneWidget);
-      expect(find.text('30 €'), findsOneWidget);
+      expect(find.text('Tu paies 33,60 €'), findsOneWidget);
     });
 
-    testWidgets('rend body en italique si fourni', (tester) async {
+    testWidgets('rend body si fourni', (tester) async {
       await tester.pumpWidget(wrap(ThreadMessageBubble(
         message: _msg(
           kind: NegotiationMessageKind.counter,
           body: 'Je peux pas plus, c\'est urgent',
         ),
         mine: false,
+        isTraveler: false,
       )));
       expect(find.text('Je peux pas plus, c\'est urgent'), findsOneWidget);
     });
@@ -68,6 +75,7 @@ void main() {
         await tester.pumpWidget(wrap(ThreadMessageBubble(
           message: _msg(kind: pair.$1, price: null),
           mine: false,
+          isTraveler: false,
         )));
         expect(find.text(pair.$2), findsOneWidget,
             reason: 'Label attendu pour ${pair.$1}');
@@ -80,6 +88,7 @@ void main() {
         message: _msg(kind: NegotiationMessageKind.counter, price: 38),
         mine: false,
         highlight: true,
+        isTraveler: false,
       )));
       expect(find.text('NOUVEAU'), findsOneWidget);
     });
@@ -90,6 +99,7 @@ void main() {
         message: _msg(kind: NegotiationMessageKind.counter, price: 30),
         mine: true,
         highlight: true,
+        isTraveler: true,
       )));
       expect(find.text('NOUVEAU'), findsNothing);
     });
@@ -98,6 +108,7 @@ void main() {
       await tester.pumpWidget(wrap(ThreadMessageBubble(
         message: _msg(kind: NegotiationMessageKind.reject, price: null),
         mine: false,
+        isTraveler: false,
       )));
       expect(find.textContaining('€'), findsNothing);
       expect(find.text('REJETÉE'), findsOneWidget);

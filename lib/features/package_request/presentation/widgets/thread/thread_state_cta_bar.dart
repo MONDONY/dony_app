@@ -105,8 +105,9 @@ class ThreadStateCtaBar extends StatelessWidget {
       case NegotiationThreadStatus.awaitingPayment:
         return _isSender
             ? DonyButton(
-                label:
-                    'Payer ${thread.currentPriceEur.toStringAsFixed(0)} €',
+                label: _isSender
+                    ? 'Payer ${(thread.grossPriceEur ?? thread.currentPriceEur * 1.12).toStringAsFixed(0)} €'
+                    : 'Accepter ${thread.currentPriceEur.toStringAsFixed(0)} €',
                 onPressed: actionInProgress
                     ? null
                     : () => AcceptOfferBottomSheet.show(
@@ -114,6 +115,8 @@ class ThreadStateCtaBar extends StatelessWidget {
                           bloc: context.read<NegotiationBloc>(),
                           threadId: thread.id,
                           priceEur: thread.currentPriceEur,
+                          grossPriceEur: thread.grossPriceEur,
+                          isTraveler: !_isSender,
                           isCheckout: true,
                         ),
               )
@@ -164,7 +167,7 @@ class _SenderOpenActions extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         DonyButton(
-          label: 'Accepter ${thread.currentPriceEur.toStringAsFixed(0)} €',
+          label: 'Accepter — Tu paies ${(thread.grossPriceEur ?? thread.currentPriceEur * 1.12).toStringAsFixed(0)} €',
           onPressed: actionInProgress
               ? null
               : () => AcceptOfferBottomSheet.show(
@@ -172,6 +175,8 @@ class _SenderOpenActions extends StatelessWidget {
                     bloc: context.read<NegotiationBloc>(),
                     threadId: thread.id,
                     priceEur: thread.currentPriceEur,
+                    grossPriceEur: thread.grossPriceEur,
+                    isTraveler: false,
                   ),
         ),
         const SizedBox(height: 10),
@@ -188,6 +193,8 @@ class _SenderOpenActions extends StatelessWidget {
                           bloc: context.read<NegotiationBloc>(),
                           threadId: thread.id,
                           currentPriceEur: thread.currentPriceEur,
+                          grossPriceEur: thread.grossPriceEur,
+                          isTraveler: false,
                           roundsCount: thread.roundsCount,
                         ),
               ),
@@ -230,7 +237,7 @@ class _TravelerOpenActions extends StatelessWidget {
         // Accept button — visible only when backend says canAccept
         if (thread.canAccept) ...[
           DonyButton(
-            label: 'Accepter ${thread.currentPriceEur.toStringAsFixed(0)} €',
+            label: 'Accepter — Tu reçois ${thread.currentPriceEur.toStringAsFixed(0)} €',
             onPressed: actionInProgress
                 ? null
                 : () => AcceptOfferBottomSheet.show(
@@ -238,6 +245,8 @@ class _TravelerOpenActions extends StatelessWidget {
                       bloc: context.read<NegotiationBloc>(),
                       threadId: thread.id,
                       priceEur: thread.currentPriceEur,
+                      grossPriceEur: thread.grossPriceEur,
+                      isTraveler: true,
                     ),
           ),
           const SizedBox(height: 10),
@@ -269,6 +278,8 @@ class _TravelerOpenActions extends StatelessWidget {
                             bloc: context.read<NegotiationBloc>(),
                             threadId: thread.id,
                             currentPriceEur: thread.currentPriceEur,
+                            grossPriceEur: thread.grossPriceEur,
+                            isTraveler: true,
                             roundsCount: thread.roundsCount,
                           ),
                 ),
