@@ -6,11 +6,14 @@ import 'package:dony/features/package_request/bloc/package_request_form_state.da
 import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockRepo extends Mock implements PackageRequestRepository {}
+
+PackageRequestFormBloc makeBloc(_MockRepo repo) => PackageRequestFormBloc(repo);
 
 void main() {
   late _MockRepo repo;
@@ -38,7 +41,7 @@ void main() {
 
   blocTest<PackageRequestFormBloc, PackageRequestFormState>(
     'step 1 → step 2 transitions update currentStep',
-    build: () => PackageRequestFormBloc(repo),
+    build: () => makeBloc(repo),
     act: (bloc) => bloc
       ..add(FormStep1Submitted(
           departureCity: 'Paris',
@@ -74,7 +77,7 @@ void main() {
             pickupNeighborhood: any(named: 'pickupNeighborhood'),
             deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
           )).thenAnswer((_) async => fakeRequest);
-      return PackageRequestFormBloc(repo);
+      return makeBloc(repo);
     },
     act: (bloc) => bloc
       ..add(FormStep1Submitted(
@@ -137,7 +140,7 @@ void main() {
             pickupNeighborhood: any(named: 'pickupNeighborhood'),
             deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
           )).thenThrow(Exception('boom'));
-      return PackageRequestFormBloc(repo);
+      return makeBloc(repo);
     },
     act: (bloc) => bloc
       ..add(FormStep1Submitted(
@@ -160,7 +163,7 @@ void main() {
 
   blocTest<PackageRequestFormBloc, PackageRequestFormState>(
     'FormReset → empty state',
-    build: () => PackageRequestFormBloc(repo),
+    build: () => makeBloc(repo),
     seed: () => const PackageRequestFormState(currentStep: 2, departureCity: 'X'),
     act: (bloc) => bloc.add(const FormReset()),
     expect: () => [const PackageRequestFormState()],
@@ -168,7 +171,7 @@ void main() {
 
   blocTest<PackageRequestFormBloc, PackageRequestFormState>(
     'FormStepBack on step 1 → step 0',
-    build: () => PackageRequestFormBloc(repo),
+    build: () => makeBloc(repo),
     seed: () => const PackageRequestFormState(currentStep: 1),
     act: (bloc) => bloc.add(const FormStepBack()),
     expect: () => [
@@ -178,8 +181,59 @@ void main() {
 
   blocTest<PackageRequestFormBloc, PackageRequestFormState>(
     'FormStepBack on step 0 → no state change',
-    build: () => PackageRequestFormBloc(repo),
+    build: () => makeBloc(repo),
     act: (bloc) => bloc.add(const FormStepBack()),
     expect: () => [],
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'toggle negotiable off updates state',
+    build: () => makeBloc(repo),
+    act: (b) => b.add(const PackageRequestNegotiableToggled(false)),
+    expect: () => [
+      isA<PackageRequestFormState>()
+          .having((s) => s.negotiable, 'negotiable', false),
+    ],
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'toggle CASH adds it to acceptedPaymentMethods',
+    build: () => makeBloc(repo),
+    act: (b) => b.add(const PackageRequestPaymentMethodToggled(PaymentMethod.cash)),
+    expect: () => [
+      isA<PackageRequestFormState>().having(
+        (s) => s.acceptedPaymentMethods.contains(PaymentMethod.cash),
+        'has CASH',
+        true,
+      ),
+    ],
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'toggle STRIPE when it is the only method keeps STRIPE (cannot empty) — no emission',
+    build: () => makeBloc(repo),
+    seed: () => const PackageRequestFormState(
+      acceptedPaymentMethods: {PaymentMethod.stripe},
+    ),
+    act: (b) => b.add(const PackageRequestPaymentMethodToggled(PaymentMethod.stripe)),
+    // BLoC does not emit when the resulting set equals the current state.
+    expect: () => [],
+    verify: (b) => expect(
+      b.state.acceptedPaymentMethods,
+      {PaymentMethod.stripe},
+    ),
+  );
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'total budget changed updates state',
+    build: () => makeBloc(repo),
+    act: (b) => b.add(const PackageRequestTotalBudgetChanged(39.20)),
+    expect: () => [
+      isA<PackageRequestFormState>().having(
+        (s) => s.totalBudgetEur,
+        'totalBudgetEur',
+        closeTo(39.20, 0.001),
+      ),
+    ],
   );
 }

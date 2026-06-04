@@ -4,6 +4,7 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:equatable/equatable.dart';
 import '../data/models/content_category.dart';
 import '../data/models/parcel_size.dart';
+import '../data/models/payment_method.dart';
 
 sealed class PackageRequestFormEvent extends Equatable {
   const PackageRequestFormEvent();
@@ -67,4 +68,28 @@ class FormStepBack extends PackageRequestFormEvent {
 
 class FormReset extends PackageRequestFormEvent {
   const FormReset();
+}
+
+class PackageRequestNegotiableToggled extends PackageRequestFormEvent {
+  const PackageRequestNegotiableToggled(this.value);
+  final bool value;
+
+  @override
+  List<Object?> get props => [value];
+}
+
+class PackageRequestPaymentMethodToggled extends PackageRequestFormEvent {
+  const PackageRequestPaymentMethodToggled(this.method);
+  final PaymentMethod method;
+
+  @override
+  List<Object?> get props => [method];
+}
+
+class PackageRequestTotalBudgetChanged extends PackageRequestFormEvent {
+  const PackageRequestTotalBudgetChanged(this.value);
+  final double? value;
+
+  @override
+  List<Object?> get props => [value];
 }

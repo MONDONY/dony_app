@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/services/analytics_events.dart';
 import '../../../core/services/analytics_service.dart';
+import '../data/models/payment_method.dart';
 import '../data/package_request_repository.dart';
 import 'package_request_form_event.dart';
 import 'package_request_form_state.dart';
@@ -15,6 +16,13 @@ class PackageRequestFormBloc extends Bloc<PackageRequestFormEvent, PackageReques
     on<FormStep3Submitted>(_onStep3);
     on<FormStepBack>(_onStepBack);
     on<FormReset>((_, emit) => emit(const PackageRequestFormState()));
+    on<PackageRequestNegotiableToggled>(
+      (e, emit) => emit(state.copyWith(negotiable: e.value)),
+    );
+    on<PackageRequestPaymentMethodToggled>(_onPaymentMethodToggled);
+    on<PackageRequestTotalBudgetChanged>(
+      (e, emit) => emit(state.copyWith(totalBudgetEur: e.value)),
+    );
   }
 
   final PackageRequestRepository _repository;
@@ -70,7 +78,7 @@ class PackageRequestFormBloc extends Bloc<PackageRequestFormEvent, PackageReques
         transportMode: state.transportMode!,
         contentCategory: state.contentCategory!,
         description: state.description,
-        targetPriceEur: e.targetPriceEur,
+        targetPriceEur: state.totalBudgetEur ?? e.targetPriceEur,
         photoUrl: photoUrl,
         pickupNeighborhood: e.pickupNeighborhood,
         deliveryNeighborhood: e.deliveryNeighborhood,
@@ -81,7 +89,12 @@ class PackageRequestFormBloc extends Bloc<PackageRequestFormEvent, PackageReques
       ));
       unawaited(_analytics?.logEvent(
         AnalyticsEvents.packageRequestCreated,
-        properties: {'corridor': '${state.departureCity}→${state.arrivalCity}'},
+        properties: {
+          'corridor': '${state.departureCity}→${state.arrivalCity}',
+          'negotiable': state.negotiable,
+          'payment_methods':
+              state.acceptedPaymentMethods.map((m) => m.wireName).toList(),
+        },
       ));
     } catch (err) {
       emit(state.copyWith(
@@ -95,5 +108,20 @@ class PackageRequestFormBloc extends Bloc<PackageRequestFormEvent, PackageReques
     if (state.currentStep > 0) {
       emit(state.copyWith(currentStep: state.currentStep - 1));
     }
+  }
+
+  void _onPaymentMethodToggled(
+    PackageRequestPaymentMethodToggled e,
+    Emitter<PackageRequestFormState> emit,
+  ) {
+    final next = {...state.acceptedPaymentMethods};
+    if (next.contains(e.method)) {
+      next.remove(e.method);
+    } else {
+      next.add(e.method);
+    }
+    // Guarantee at least one payment method is always selected.
+    if (next.isEmpty) next.add(PaymentMethod.stripe);
+    emit(state.copyWith(acceptedPaymentMethods: next));
   }
 }

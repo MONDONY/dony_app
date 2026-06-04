@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import '../data/models/content_category.dart';
 import '../data/models/package_request.dart';
 import '../data/models/parcel_size.dart';
+import '../data/models/payment_method.dart';
 
 enum FormSubmissionStatus { idle, submitting, success, error }
 
@@ -22,6 +23,9 @@ class PackageRequestFormState extends Equatable {
     this.photoUrl,
     this.pickupNeighborhood,
     this.deliveryNeighborhood,
+    this.negotiable = true,
+    this.acceptedPaymentMethods = const {PaymentMethod.stripe},
+    this.totalBudgetEur,
     this.submissionStatus = FormSubmissionStatus.idle,
     this.errorMessage,
     this.createdRequest,
@@ -41,6 +45,9 @@ class PackageRequestFormState extends Equatable {
   final String? photoUrl;
   final String? pickupNeighborhood;
   final String? deliveryNeighborhood;
+  final bool negotiable;
+  final Set<PaymentMethod> acceptedPaymentMethods;
+  final double? totalBudgetEur;
   final FormSubmissionStatus submissionStatus;
   final String? errorMessage;
   final PackageRequest? createdRequest;
@@ -60,6 +67,9 @@ class PackageRequestFormState extends Equatable {
     String? photoUrl,
     String? pickupNeighborhood,
     String? deliveryNeighborhood,
+    bool? negotiable,
+    Set<PaymentMethod>? acceptedPaymentMethods,
+    double? totalBudgetEur,
     FormSubmissionStatus? submissionStatus,
     String? errorMessage,
     PackageRequest? createdRequest,
@@ -79,6 +89,10 @@ class PackageRequestFormState extends Equatable {
         photoUrl: photoUrl ?? this.photoUrl,
         pickupNeighborhood: pickupNeighborhood ?? this.pickupNeighborhood,
         deliveryNeighborhood: deliveryNeighborhood ?? this.deliveryNeighborhood,
+        negotiable: negotiable ?? this.negotiable,
+        acceptedPaymentMethods:
+            acceptedPaymentMethods ?? this.acceptedPaymentMethods,
+        totalBudgetEur: totalBudgetEur ?? this.totalBudgetEur,
         submissionStatus: submissionStatus ?? this.submissionStatus,
         errorMessage: errorMessage ?? this.errorMessage,
         createdRequest: createdRequest ?? this.createdRequest,
@@ -89,6 +103,7 @@ class PackageRequestFormState extends Equatable {
         currentStep, departureCity, arrivalCity, desiredDate, dateToleranceDays,
         transportMode, weightKg, parcelSize, contentCategory, description,
         targetPriceEur, photoUrl, pickupNeighborhood, deliveryNeighborhood,
+        negotiable, acceptedPaymentMethods, totalBudgetEur,
         submissionStatus, errorMessage, createdRequest,
       ];
 }

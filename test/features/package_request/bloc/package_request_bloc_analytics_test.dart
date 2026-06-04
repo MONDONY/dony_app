@@ -88,7 +88,11 @@ void main() {
 
     verify(() => backend.capture(
           AnalyticsEvents.packageRequestCreated,
-          {'corridor': 'Paris→Dakar'},
+          {
+            'corridor': 'Paris→Dakar',
+            'negotiable': true,
+            'payment_methods': ['STRIPE'],
+          },
         )).called(1);
   });
 
