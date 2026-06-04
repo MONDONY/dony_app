@@ -39,6 +39,18 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
+    // Prix ferme (non négociable) → un budget est obligatoire. Cette garde était
+    // portée par le bouton inline (désormais retiré) ; la CTA sticky du wizard ne
+    // la vérifie pas, donc on la rejoue ici.
+    final state = context.read<PackageRequestFormBloc>().state;
+    if (!state.negotiable && state.totalBudgetEur == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Indique un budget pour continuer (prix ferme requis).'),
+        ),
+      );
+      return;
+    }
     context.read<PackageRequestFormBloc>().add(
           FormStep3Submitted(photoFile: _photo),
         );
@@ -51,8 +63,6 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
 
     return BlocBuilder<PackageRequestFormBloc, PackageRequestFormState>(
       builder: (context, state) {
-        final bool canSubmit = state.negotiable || state.totalBudgetEur != null;
-
         return SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(
             DonySpacing.lg,
@@ -132,47 +142,8 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
                 _PaymentMethodChips(
                   selected: state.acceptedPaymentMethods,
                 ),
-                const SizedBox(height: DonySpacing.xl),
-
-                // ── Mention CGU ────────────────────────────────────────────
-                Text(
-                  'En publiant, tu acceptes les Conditions Générales d\'Utilisation de dony.',
-                  style: tt.bodySmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                    height: 1.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: DonySpacing.base),
-
-                // ── CTA Publier ────────────────────────────────────────────
-                SizedBox(
-                  height: 52,
-                  child: FilledButton(
-                    onPressed: (canSubmit &&
-                            state.submissionStatus !=
-                                FormSubmissionStatus.submitting)
-                        ? submit
-                        : null,
-                    child: state.submissionStatus ==
-                            FormSubmissionStatus.submitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            'Publier ma demande',
-                            style: tt.labelLarge?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                  ),
-                ),
+                // Le CTA « Publier ma demande » + la mention CGU sont portés par
+                // la barre sticky du wizard (_StickyCta) — pas de bouton inline ici.
               ],
             ),
           ),
