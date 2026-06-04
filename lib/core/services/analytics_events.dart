@@ -36,6 +36,8 @@ abstract final class AnalyticsEvents {
   static const packageRequestSearched   = 'package_request_searched';
   static const negotiationOfferMade     = 'negotiation_offer_made';
   static const negotiationOfferAccepted = 'negotiation_offer_accepted';
+  static const firmPriceTaken           = 'firm_price_taken';
+  static const paymentMethodSelected    = 'payment_method_selected';
 
   // Messaging
   static const conversationOpened = 'conversation_opened';

@@ -326,6 +326,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `account_deletion_requested` | AccountDeletionBloc._onRequestDeletion() |
 | `shipment_filter_applied` | ShipmentFilterCubit (statut/période/preset, sans PII) |
 | `envoyer_envois` / `envoyer_demandes` / `envoyer_negos` | EnvoyerHubScreen `logScreen` au changement d'onglet |
+| `firm_price_taken` | NegotiationBloc._onStart() — voyageur prend un prix ferme |
+| `payment_method_selected` | NegotiationBloc._onSubmitTrip()/_onCreateDedicatedTrip() — mode de paiement sélectionné au trip-linking |
 | `bloc_error` | AnalyticsBlocObserver.onError() — global |
 
 ---

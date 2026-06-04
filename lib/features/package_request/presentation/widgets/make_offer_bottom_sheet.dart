@@ -24,6 +24,7 @@ class MakeOfferBottomSheet {
     required String departureCity,
     required String arrivalCity,
     DateTime? initialDate,
+    bool isFirmPrice = false,
   }) async {
     PriceEstimate? estimate;
     try {
@@ -59,6 +60,7 @@ class MakeOfferBottomSheet {
         rootRouter: rootRouter,
         onSubmitReady: (fn) => submitFn = fn,
         initialDate: initialDate,
+        isFirmPrice: isFirmPrice,
       ),
       stickyBottom: BlocBuilder<NegotiationBloc, NegotiationState>(
         builder: (ctx, state) {
@@ -83,6 +85,7 @@ class _MakeOfferContent extends StatefulWidget {
     required this.rootRouter,
     required this.onSubmitReady,
     this.initialDate,
+    this.isFirmPrice = false,
   });
 
   final String packageRequestId;
@@ -92,6 +95,7 @@ class _MakeOfferContent extends StatefulWidget {
   final GoRouter rootRouter;
   final void Function(VoidCallback) onSubmitReady;
   final DateTime? initialDate;
+  final bool isFirmPrice;
 
   @override
   State<_MakeOfferContent> createState() => _MakeOfferContentState();
@@ -151,6 +155,7 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
           travelerAvailableKg:
               double.parse(_kgCtrl.text.replaceAll(',', '.')),
           body: _bodyCtrl.text.trim().isEmpty ? null : _bodyCtrl.text.trim(),
+          isFirmPrice: widget.isFirmPrice,
         ));
   }
 

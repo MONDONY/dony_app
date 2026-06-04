@@ -31,6 +31,7 @@ class NegotiationStartRequested extends NegotiationEvent {
     required this.travelerAvailableKg,
     this.travelerAnnouncementId,
     this.body,
+    this.isFirmPrice = false,
   });
   final String packageRequestId;
   final double proposedPriceEur;
@@ -38,6 +39,8 @@ class NegotiationStartRequested extends NegotiationEvent {
   final double travelerAvailableKg;
   final String? travelerAnnouncementId;
   final String? body;
+  /// True when the traveler accepted a firm (non-negotiable) price.
+  final bool isFirmPrice;
 
   @override
   List<Object?> get props => [
@@ -47,6 +50,7 @@ class NegotiationStartRequested extends NegotiationEvent {
         travelerAvailableKg,
         travelerAnnouncementId,
         body,
+        isFirmPrice,
       ];
 }
 
@@ -240,10 +244,17 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         body: e.body,
       );
       emit(NegotiationLoaded(thread));
-      unawaited(_analytics?.logEvent(
-        AnalyticsEvents.negotiationOfferMade,
-        properties: {'amount': e.proposedPriceEur.round(), 'context': 'sender'},
-      ));
+      if (e.isFirmPrice) {
+        unawaited(_analytics?.logEvent(
+          AnalyticsEvents.firmPriceTaken,
+          properties: {'request_id': e.packageRequestId},
+        ));
+      } else {
+        unawaited(_analytics?.logEvent(
+          AnalyticsEvents.negotiationOfferMade,
+          properties: {'amount': e.proposedPriceEur.round(), 'context': 'sender'},
+        ));
+      }
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
     }
@@ -332,6 +343,10 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         paymentMethod: e.paymentMethod,
       );
       emit(NegotiationLoaded(thread));
+      unawaited(_analytics?.logEvent(
+        AnalyticsEvents.paymentMethodSelected,
+        properties: {'method': e.paymentMethod.wireName},
+      ));
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
     }
@@ -361,6 +376,10 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         paymentMethod: e.paymentMethod,
       );
       emit(NegotiationLoaded(thread));
+      unawaited(_analytics?.logEvent(
+        AnalyticsEvents.paymentMethodSelected,
+        properties: {'method': e.paymentMethod.wireName},
+      ));
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
     }

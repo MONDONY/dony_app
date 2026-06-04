@@ -371,6 +371,7 @@ class _FirmPriceCta extends StatelessWidget {
                         departureCity: request.departureCity,
                         arrivalCity: request.arrivalCity,
                         initialDate: announcement?.departureDate,
+                        isFirmPrice: true,
                       );
                     },
             );
