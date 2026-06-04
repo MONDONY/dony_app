@@ -1,5 +1,6 @@
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Map<String, dynamic> _baseJson({
@@ -99,5 +100,24 @@ void main() {
       _baseJson(overrides: {'status': 'REJECTED'}),
     );
     expect(t.status, NegotiationThreadStatus.rejected);
+  });
+
+  test('fromJson parses grossPriceEur + paymentMethod', () {
+    final t = NegotiationThread.fromJson(_baseJson(overrides: {
+      'status': 'AWAITING_PAYMENT',
+      'currentPriceEur': 35,
+      'grossPriceEur': 39.20,
+      'roundsCount': 2,
+      'paymentMethod': 'CASH',
+    }));
+    expect(t.currentPriceEur, 35);
+    expect(t.grossPriceEur, 39.20);
+    expect(t.paymentMethod, PaymentMethod.cash);
+  });
+
+  test('fromJson returns null grossPriceEur and paymentMethod when absent', () {
+    final t = NegotiationThread.fromJson(_baseJson());
+    expect(t.grossPriceEur, isNull);
+    expect(t.paymentMethod, isNull);
   });
 }
