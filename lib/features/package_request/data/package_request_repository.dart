@@ -145,30 +145,17 @@ class PackageRequestRepository {
 
   Future<PackageRequest> completeDetails(
     String id, {
-    required String pickupAddressLabel,
-    required double pickupLat,
-    required double pickupLng,
-    required String deliveryAddressLabel,
-    required double deliveryLat,
-    required double deliveryLng,
     required String recipientName,
     required String recipientPhone,
-    required double declaredValueEur,
-    required bool disclaimerSigned,
+    String? recipientCity,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/package-requests/$id/complete-details',
       data: {
-        'pickupAddressLabel': pickupAddressLabel,
-        'pickupLat': pickupLat,
-        'pickupLng': pickupLng,
-        'deliveryAddressLabel': deliveryAddressLabel,
-        'deliveryLat': deliveryLat,
-        'deliveryLng': deliveryLng,
         'recipientName': recipientName,
         'recipientPhone': recipientPhone,
-        'declaredValueEur': declaredValueEur,
-        'disclaimerSigned': disclaimerSigned,
+        if (recipientCity != null && recipientCity.isNotEmpty)
+          'recipientCity': recipientCity,
       },
     );
     return PackageRequest.fromJson(response.data!);

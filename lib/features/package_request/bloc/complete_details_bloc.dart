@@ -4,7 +4,7 @@ import 'package:equatable/equatable.dart';
 import '../data/package_request_repository.dart';
 
 /// Manages the "Complete delivery details" form submission for an accepted
-/// package request (addresses, recipient, declared value, disclaimer).
+/// package request (recipient name, phone, optional city).
 ///
 /// Replaces the previous setState/getIt-direct anti-pattern in
 /// `CompleteDetailsScreen`. The screen keeps its TextEditingControllers for
@@ -20,40 +20,22 @@ sealed class CompleteDetailsEvent extends Equatable {
 class CompleteDetailsSubmitted extends CompleteDetailsEvent {
   const CompleteDetailsSubmitted({
     required this.requestId,
-    required this.pickupAddressLabel,
-    required this.pickupLat,
-    required this.pickupLng,
-    required this.deliveryAddressLabel,
-    required this.deliveryLat,
-    required this.deliveryLng,
     required this.recipientName,
     required this.recipientPhone,
-    required this.declaredValueEur,
+    this.recipientCity,
   });
 
   final String requestId;
-  final String pickupAddressLabel;
-  final double pickupLat;
-  final double pickupLng;
-  final String deliveryAddressLabel;
-  final double deliveryLat;
-  final double deliveryLng;
   final String recipientName;
   final String recipientPhone;
-  final double declaredValueEur;
+  final String? recipientCity;
 
   @override
   List<Object?> get props => [
         requestId,
-        pickupAddressLabel,
-        pickupLat,
-        pickupLng,
-        deliveryAddressLabel,
-        deliveryLat,
-        deliveryLng,
         recipientName,
         recipientPhone,
-        declaredValueEur,
+        recipientCity,
       ];
 }
 
@@ -100,16 +82,9 @@ class CompleteDetailsBloc
     try {
       await _repository.completeDetails(
         event.requestId,
-        pickupAddressLabel: event.pickupAddressLabel,
-        pickupLat: event.pickupLat,
-        pickupLng: event.pickupLng,
-        deliveryAddressLabel: event.deliveryAddressLabel,
-        deliveryLat: event.deliveryLat,
-        deliveryLng: event.deliveryLng,
         recipientName: event.recipientName,
         recipientPhone: event.recipientPhone,
-        declaredValueEur: event.declaredValueEur,
-        disclaimerSigned: true,
+        recipientCity: event.recipientCity,
       );
       emit(state.copyWith(status: CompleteDetailsStatus.success));
     } catch (err) {

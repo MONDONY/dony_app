@@ -13,15 +13,9 @@ class _MockPackageRequestRepository extends Mock
 
 const _event = CompleteDetailsSubmitted(
   requestId: 'pr-1',
-  pickupAddressLabel: '10 rue Rivoli',
-  pickupLat: 48.86,
-  pickupLng: 2.35,
-  deliveryAddressLabel: 'Aéroport DSS',
-  deliveryLat: 14.74,
-  deliveryLng: -17.49,
   recipientName: 'Ibrahima Diallo',
   recipientPhone: '+221771234567',
-  declaredValueEur: 50.0,
+  recipientCity: 'Dakar',
 );
 
 void main() {
@@ -60,16 +54,9 @@ void main() {
         when(
           () => repo.completeDetails(
             any(),
-            pickupAddressLabel: any(named: 'pickupAddressLabel'),
-            pickupLat: any(named: 'pickupLat'),
-            pickupLng: any(named: 'pickupLng'),
-            deliveryAddressLabel: any(named: 'deliveryAddressLabel'),
-            deliveryLat: any(named: 'deliveryLat'),
-            deliveryLng: any(named: 'deliveryLng'),
             recipientName: any(named: 'recipientName'),
             recipientPhone: any(named: 'recipientPhone'),
-            declaredValueEur: any(named: 'declaredValueEur'),
-            disclaimerSigned: any(named: 'disclaimerSigned'),
+            recipientCity: any(named: 'recipientCity'),
           ),
         ).thenAnswer((_) async => fakeRequest);
         return CompleteDetailsBloc(repo);
@@ -87,16 +74,9 @@ void main() {
         when(
           () => repo.completeDetails(
             any(),
-            pickupAddressLabel: any(named: 'pickupAddressLabel'),
-            pickupLat: any(named: 'pickupLat'),
-            pickupLng: any(named: 'pickupLng'),
-            deliveryAddressLabel: any(named: 'deliveryAddressLabel'),
-            deliveryLat: any(named: 'deliveryLat'),
-            deliveryLng: any(named: 'deliveryLng'),
             recipientName: any(named: 'recipientName'),
             recipientPhone: any(named: 'recipientPhone'),
-            declaredValueEur: any(named: 'declaredValueEur'),
-            disclaimerSigned: any(named: 'disclaimerSigned'),
+            recipientCity: any(named: 'recipientCity'),
           ),
         ).thenThrow(Exception('Server error'));
         return CompleteDetailsBloc(repo);
@@ -139,29 +119,27 @@ void main() {
     test('CompleteDetailsSubmitted Equatable props work', () {
       const e1 = CompleteDetailsSubmitted(
         requestId: 'pr-1',
-        pickupAddressLabel: 'A',
-        pickupLat: 1.0,
-        pickupLng: 2.0,
-        deliveryAddressLabel: 'B',
-        deliveryLat: 3.0,
-        deliveryLng: 4.0,
         recipientName: 'John',
-        recipientPhone: '+33',
-        declaredValueEur: 10.0,
+        recipientPhone: '+33612345678',
+        recipientCity: 'Dakar',
       );
       const e2 = CompleteDetailsSubmitted(
         requestId: 'pr-1',
-        pickupAddressLabel: 'A',
-        pickupLat: 1.0,
-        pickupLng: 2.0,
-        deliveryAddressLabel: 'B',
-        deliveryLat: 3.0,
-        deliveryLng: 4.0,
         recipientName: 'John',
-        recipientPhone: '+33',
-        declaredValueEur: 10.0,
+        recipientPhone: '+33612345678',
+        recipientCity: 'Dakar',
       );
       expect(e1, equals(e2));
+    });
+
+    test('CompleteDetailsSubmitted allows null recipientCity', () {
+      const e = CompleteDetailsSubmitted(
+        requestId: 'pr-1',
+        recipientName: 'John',
+        recipientPhone: '+33612345678',
+      );
+      expect(e.recipientCity, isNull);
+      expect(e.props, contains(null));
     });
   });
 }

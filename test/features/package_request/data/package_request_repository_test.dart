@@ -157,6 +157,86 @@ void main() {
     });
   });
 
+  group('completeDetails', () {
+    test('POSTs recipientName, recipientPhone and recipientCity', () async {
+      Map<String, dynamic>? capturedBody;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/package-requests/pr-1/complete-details',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedBody = invocation.namedArguments[#data] as Map<String, dynamic>;
+        return _ok(_prJson, '/package-requests/pr-1/complete-details');
+      });
+
+      final result = await repo.completeDetails(
+        'pr-1',
+        recipientName: 'Fatou Diop',
+        recipientPhone: '+221771234567',
+        recipientCity: 'Dakar',
+      );
+
+      expect(result.id, 'pr-1');
+      expect(capturedBody, isNotNull);
+      expect(capturedBody!['recipientName'], 'Fatou Diop');
+      expect(capturedBody!['recipientPhone'], '+221771234567');
+      expect(capturedBody!['recipientCity'], 'Dakar');
+      // Removed legacy fields must not be sent.
+      expect(capturedBody!.containsKey('pickupAddressLabel'), false);
+      expect(capturedBody!.containsKey('pickupLat'), false);
+      expect(capturedBody!.containsKey('pickupLng'), false);
+      expect(capturedBody!.containsKey('deliveryAddressLabel'), false);
+      expect(capturedBody!.containsKey('deliveryLat'), false);
+      expect(capturedBody!.containsKey('deliveryLng'), false);
+      expect(capturedBody!.containsKey('declaredValueEur'), false);
+      expect(capturedBody!.containsKey('disclaimerSigned'), false);
+    });
+
+    test('omits recipientCity when null', () async {
+      Map<String, dynamic>? capturedBody;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/package-requests/pr-1/complete-details',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedBody = invocation.namedArguments[#data] as Map<String, dynamic>;
+        return _ok(_prJson, '/package-requests/pr-1/complete-details');
+      });
+
+      await repo.completeDetails(
+        'pr-1',
+        recipientName: 'Fatou Diop',
+        recipientPhone: '+221771234567',
+      );
+
+      expect(capturedBody!.containsKey('recipientCity'), false);
+    });
+
+    test('omits recipientCity when empty string', () async {
+      Map<String, dynamic>? capturedBody;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/package-requests/pr-1/complete-details',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedBody = invocation.namedArguments[#data] as Map<String, dynamic>;
+        return _ok(_prJson, '/package-requests/pr-1/complete-details');
+      });
+
+      await repo.completeDetails(
+        'pr-1',
+        recipientName: 'Fatou Diop',
+        recipientPhone: '+221771234567',
+        recipientCity: '',
+      );
+
+      expect(capturedBody!.containsKey('recipientCity'), false);
+    });
+  });
+
   group('search', () {
     final searchItemJson = <String, dynamic>{
       'id': 'pr-1',

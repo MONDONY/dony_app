@@ -31,60 +31,31 @@ class _CompleteDetailsView extends StatefulWidget {
 
 class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
   final _form = GlobalKey<FormState>();
-  final _pickupAddrCtrl = TextEditingController();
-  final _pickupLatCtrl = TextEditingController();
-  final _pickupLngCtrl = TextEditingController();
-  final _deliveryAddrCtrl = TextEditingController();
-  final _deliveryLatCtrl = TextEditingController();
-  final _deliveryLngCtrl = TextEditingController();
   final _recipientNameCtrl = TextEditingController();
   final _recipientPhoneCtrl = TextEditingController();
-  final _declaredCtrl = TextEditingController();
-  bool _disclaimer = false;
+  final _recipientCityCtrl = TextEditingController();
 
   @override
   void dispose() {
-    _pickupAddrCtrl.dispose();
-    _pickupLatCtrl.dispose();
-    _pickupLngCtrl.dispose();
-    _deliveryAddrCtrl.dispose();
-    _deliveryLatCtrl.dispose();
-    _deliveryLngCtrl.dispose();
     _recipientNameCtrl.dispose();
     _recipientPhoneCtrl.dispose();
-    _declaredCtrl.dispose();
+    _recipientCityCtrl.dispose();
     super.dispose();
   }
 
   void _submit() {
     if (!_form.currentState!.validate()) return;
-    if (!_disclaimer) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vous devez accepter les conditions'),
-          backgroundColor: kError,
-        ),
-      );
-      return;
-    }
+    final city = _recipientCityCtrl.text.trim();
     context.read<CompleteDetailsBloc>().add(CompleteDetailsSubmitted(
           requestId: widget.requestId,
-          pickupAddressLabel: _pickupAddrCtrl.text.trim(),
-          pickupLat: double.parse(_pickupLatCtrl.text.replaceAll(',', '.')),
-          pickupLng: double.parse(_pickupLngCtrl.text.replaceAll(',', '.')),
-          deliveryAddressLabel: _deliveryAddrCtrl.text.trim(),
-          deliveryLat: double.parse(_deliveryLatCtrl.text.replaceAll(',', '.')),
-          deliveryLng: double.parse(_deliveryLngCtrl.text.replaceAll(',', '.')),
           recipientName: _recipientNameCtrl.text.trim(),
           recipientPhone: _recipientPhoneCtrl.text.trim(),
-          declaredValueEur:
-              double.parse(_declaredCtrl.text.replaceAll(',', '.')),
+          recipientCity: city.isEmpty ? null : city,
         ));
   }
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return BlocListener<CompleteDetailsBloc, CompleteDetailsState>(
       listener: (context, state) {
         if (state.status == CompleteDetailsStatus.success) {
@@ -117,74 +88,6 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _section('Pickup'),
-                    TextFormField(
-                      controller: _pickupAddrCtrl,
-                      decoration: const InputDecoration(
-                          labelText: 'Adresse de récupération'),
-                      validator: _required,
-                    ),
-                    const SizedBox(height: DonySpacing.md),
-                    Row(children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _pickupLatCtrl,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(
-                                  decimal: true, signed: true),
-                          decoration:
-                              const InputDecoration(labelText: 'Lat'),
-                          validator: _coord,
-                        ),
-                      ),
-                      const SizedBox(width: DonySpacing.md),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _pickupLngCtrl,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(
-                                  decimal: true, signed: true),
-                          decoration:
-                              const InputDecoration(labelText: 'Lng'),
-                          validator: _coord,
-                        ),
-                      ),
-                    ]),
-                    const SizedBox(height: DonySpacing.xl),
-                    _section('Livraison'),
-                    TextFormField(
-                      controller: _deliveryAddrCtrl,
-                      decoration: const InputDecoration(
-                          labelText: 'Adresse de livraison'),
-                      validator: _required,
-                    ),
-                    const SizedBox(height: DonySpacing.md),
-                    Row(children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _deliveryLatCtrl,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(
-                                  decimal: true, signed: true),
-                          decoration:
-                              const InputDecoration(labelText: 'Lat'),
-                          validator: _coord,
-                        ),
-                      ),
-                      const SizedBox(width: DonySpacing.md),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _deliveryLngCtrl,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(
-                                  decimal: true, signed: true),
-                          decoration:
-                              const InputDecoration(labelText: 'Lng'),
-                          validator: _coord,
-                        ),
-                      ),
-                    ]),
-                    const SizedBox(height: DonySpacing.xl),
                     _section('Destinataire'),
                     TextFormField(
                       controller: _recipientNameCtrl,
@@ -209,40 +112,12 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: DonySpacing.xl),
-                    _section('Valeur déclarée'),
+                    const SizedBox(height: DonySpacing.md),
                     TextFormField(
-                      controller: _declaredCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true),
+                      controller: _recipientCityCtrl,
                       decoration: const InputDecoration(
-                        labelText: 'Valeur du contenu',
-                        suffixText: '€',
-                      ),
-                      validator: (v) {
-                        final d = double.tryParse(
-                            (v ?? '').replaceAll(',', '.'));
-                        if (d == null) return 'Valeur invalide';
-                        if (d < 0 || d > 500) return 'Entre 0 et 500€';
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: DonySpacing.xl),
-                    _section('Déclaration'),
-                    CheckboxListTile(
-                      value: _disclaimer,
-                      onChanged: (v) =>
-                          setState(() => _disclaimer = v ?? false),
-                      activeColor: cs.primary,
-                      contentPadding: EdgeInsets.zero,
-                      controlAffinity: ListTileControlAffinity.leading,
-                      title: Text(
-                        'Je certifie que le contenu est légal et conforme à la valeur déclarée.',
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          fontSize: 13,
-                          color: kTextSecondary,
-                          height: 1.4,
-                        ),
+                        labelText: 'Ville / commune',
+                        hintText: 'Ex. Dakar (optionnel)',
                       ),
                     ),
                   ],
@@ -282,11 +157,4 @@ class _CompleteDetailsViewState extends State<_CompleteDetailsView> {
 
   String? _required(String? v) =>
       (v == null || v.trim().isEmpty) ? 'Requis' : null;
-
-  String? _coord(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Requis';
-    final d = double.tryParse(v.replaceAll(',', '.'));
-    if (d == null) return 'Invalide';
-    return null;
-  }
 }
