@@ -23,6 +23,7 @@ class PackageRequestSearchItem extends Equatable {
     this.photoUrl,
     this.pickupNeighborhood,
     this.deliveryNeighborhood,
+    this.negotiable = true,
     required this.sender,
   });
 
@@ -42,6 +43,7 @@ class PackageRequestSearchItem extends Equatable {
   final String? photoUrl;
   final String? pickupNeighborhood;
   final String? deliveryNeighborhood;
+  final bool negotiable;
   final SenderPublicProfile sender;
 
   factory PackageRequestSearchItem.fromJson(Map<String, dynamic> json) =>
@@ -63,6 +65,7 @@ class PackageRequestSearchItem extends Equatable {
         photoUrl: json['photoUrl'] as String?,
         pickupNeighborhood: json['pickupNeighborhood'] as String?,
         deliveryNeighborhood: json['deliveryNeighborhood'] as String?,
+        negotiable: json['negotiable'] as bool? ?? true,
         sender: SenderPublicProfile.fromJson(
             json['sender'] as Map<String, dynamic>),
       );
@@ -75,6 +78,7 @@ class PackageRequestSearchItem extends Equatable {
         weightKg, parcelSize, contentCategory,
         targetPriceEur, photoUrl,
         pickupNeighborhood, deliveryNeighborhood,
+        negotiable,
         sender,
       ];
 }

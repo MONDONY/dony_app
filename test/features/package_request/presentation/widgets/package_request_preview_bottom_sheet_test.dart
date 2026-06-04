@@ -13,6 +13,7 @@ PackageRequestSearchItem _item({
   String? deliveryNeighborhood,
   bool kycVerified = true,
   int tolerance = 2,
+  bool negotiable = true,
 }) =>
     PackageRequestSearchItem(
       id: 'pr-1',
@@ -26,6 +27,7 @@ PackageRequestSearchItem _item({
       targetPriceEur: targetPriceEur,
       pickupNeighborhood: pickupNeighborhood,
       deliveryNeighborhood: deliveryNeighborhood,
+      negotiable: negotiable,
       sender: SenderPublicProfile(
         id: 'sender-1',
         displayName: 'Fatou Diallo',
@@ -139,6 +141,45 @@ void main() {
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
       expect(find.text('Faire une offre'), findsNothing);
+    });
+
+    testWidgets(
+        'shows "Prendre à …" CTA (not "Faire une offre") for firm price',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+          _buildApp(_item(negotiable: false, targetPriceEur: 50.0)));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+      expect(find.text('Faire une offre'), findsNothing);
+      expect(find.text('Prendre à 50,00 €'), findsOneWidget);
+    });
+
+    testWidgets('shows "Faire une offre" CTA when negotiable', (tester) async {
+      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+          _buildApp(_item(negotiable: true, targetPriceEur: 50.0)));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+      expect(find.text('Faire une offre'), findsOneWidget);
+      expect(find.textContaining('Prendre à'), findsNothing);
+    });
+
+    testWidgets('shows "Faire une offre" CTA when firm but no target price',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+          _buildApp(_item(negotiable: false, targetPriceEur: null)));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+      expect(find.text('Faire une offre'), findsOneWidget);
+      expect(find.textContaining('Prendre à'), findsNothing);
     });
 
     testWidgets('shows pickupNeighborhood label "Remise" when provided',

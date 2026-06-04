@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/presentation/widgets/make_offer_bottom_sheet.dart';
 import 'package:dony/features/package_request/presentation/widgets/sender_public_profile_sheet.dart';
 import 'package:flutter/material.dart';
@@ -15,12 +16,15 @@ class PackageRequestPreviewBottomSheet {
     required PackageRequestSearchItem item,
     bool isOwnRequest = false,
   }) async {
+    final isFirm = !item.negotiable && item.targetPriceEur != null;
     await DonyBottomSheet.show<void>(
       context,
       stickyBottom: isOwnRequest
           ? null
           : DonyButton(
-              label: 'Faire une offre',
+              label: isFirm
+                  ? 'Prendre à ${PriceDisplay.eur(item.targetPriceEur!)}'
+                  : 'Faire une offre',
               onPressed: () {
                 Navigator.of(context, rootNavigator: true).pop();
                 MakeOfferBottomSheet.show(
@@ -30,6 +34,7 @@ class PackageRequestPreviewBottomSheet {
                   weightKg: item.weightKg,
                   departureCity: item.departureCity,
                   arrivalCity: item.arrivalCity,
+                  isFirmPrice: isFirm,
                 );
               },
             ),
