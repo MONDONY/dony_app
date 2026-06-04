@@ -6,6 +6,7 @@ import 'package:dony/features/package_request/data/models/negotiation_thread.dar
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/mock_analytics_backend.dart';
 
 class _MockRepo extends Mock implements NegotiationRepository {}
 
@@ -32,6 +33,11 @@ NegotiationThread _fakeThread({
       linkedTrip: linkedTrip,
     );
 
+NegotiationBloc _makeBloc(_MockRepo repo) => NegotiationBloc(
+      repo,
+      analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+    );
+
 void main() {
   late _MockRepo repo;
 
@@ -48,7 +54,7 @@ void main() {
             travelerAnnouncementId: any(named: 'travelerAnnouncementId'),
             body: any(named: 'body'),
           )).thenAnswer((_) async => _fakeThread());
-      return NegotiationBloc(repo);
+      return _makeBloc(repo);
     },
     act: (bloc) => bloc.add(NegotiationStartRequested(
       packageRequestId: 'pr-1',
@@ -73,7 +79,7 @@ void main() {
               proposedPriceEur: any(named: 'proposedPriceEur'),
               body: any(named: 'body')))
           .thenAnswer((_) async => _fakeThread(id: 't-1'));
-      return NegotiationBloc(repo);
+      return _makeBloc(repo);
     },
     seed: () => NegotiationLoaded(_fakeThread()),
     act: (bloc) => bloc.add(const NegotiationCounterRequested(
@@ -94,7 +100,7 @@ void main() {
                 status: NegotiationThreadStatus.accepted,
                 clientSecret: 'pi_test_secret_xxx',
               ));
-      return NegotiationBloc(repo);
+      return _makeBloc(repo);
     },
     seed: () => NegotiationLoaded(_fakeThread()),
     act: (bloc) =>
@@ -114,7 +120,7 @@ void main() {
     build: () {
       when(() => repo.reject(any(), reason: any(named: 'reason')))
           .thenAnswer((_) async {});
-      return NegotiationBloc(repo);
+      return _makeBloc(repo);
     },
     seed: () => NegotiationLoaded(_fakeThread()),
     act: (bloc) => bloc.add(const NegotiationRejectRequested(
@@ -132,7 +138,7 @@ void main() {
               proposedPriceEur: any(named: 'proposedPriceEur'),
               body: any(named: 'body')))
           .thenThrow(Exception('not your turn'));
-      return NegotiationBloc(repo);
+      return _makeBloc(repo);
     },
     seed: () => NegotiationLoaded(_fakeThread()),
     act: (bloc) => bloc.add(const NegotiationCounterRequested(
@@ -147,7 +153,7 @@ void main() {
     'fetch emits Loading then Loaded',
     build: () {
       when(() => repo.getById(any())).thenAnswer((_) async => _fakeThread());
-      return NegotiationBloc(repo);
+      return _makeBloc(repo);
     },
     act: (bloc) => bloc.add(const NegotiationFetchRequested('t-1')),
     expect: () => [
@@ -172,7 +178,7 @@ void main() {
         when(() => repo.refuseTrip('t-1', reason: any(named: 'reason'))).thenAnswer(
           (_) async => _fakeThread(status: NegotiationThreadStatus.awaitingTrip),
         );
-        return NegotiationBloc(repo);
+        return _makeBloc(repo);
       },
       seed: () => NegotiationLoaded(_fakeThread(
         status: NegotiationThreadStatus.awaitingPayment,
@@ -200,7 +206,7 @@ void main() {
         when(() => repo.refuseTrip('t-1', reason: any(named: 'reason'))).thenAnswer(
           (_) async => _fakeThread(status: NegotiationThreadStatus.awaitingTrip),
         );
-        return NegotiationBloc(repo);
+        return _makeBloc(repo);
       },
       act: (bloc) =>
           bloc.add(const NegotiationRefuseTripRequested(threadId: 't-1')),
@@ -219,7 +225,7 @@ void main() {
       build: () {
         when(() => repo.refuseTrip(any(), reason: any(named: 'reason')))
             .thenThrow(Exception('server error'));
-        return NegotiationBloc(repo);
+        return _makeBloc(repo);
       },
       seed: () => NegotiationLoaded(_fakeThread(
         status: NegotiationThreadStatus.awaitingPayment,

@@ -58,7 +58,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
 
   double get _maxKg => widget.announcement.availableKg;
   double get _pricePerKg => widget.announcement.pricePerKg;
-  String? _pendingPromoCode;
 
   void _applyPromoCode() {
     final code = _promoCtrl.text.trim();
@@ -117,7 +116,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       _showError('Téléphone du destinataire obligatoire');
       return;
     }
-    final promoCode = _promoCtrl.text.trim().isNotEmpty ? _promoCtrl.text.trim() : null;
     context.read<BidBloc>().add(BidCheckoutRequested(
       announcementId: widget.announcement.id,
       weightKg: _weightNotifier.value,
@@ -127,8 +125,6 @@ class _CreateBidScreenState extends State<CreateBidScreen> {
       recipientName: _recipientNameCtrl.text.trim(),
       recipientPhone: _recipientPhoneCtrl.text.trim(),
     ));
-    // promoCode stocké sur le bid via BidCreateRequested si le flux passe en CASH
-    _pendingPromoCode = promoCode;
   }
 
   void _showError(String message) {

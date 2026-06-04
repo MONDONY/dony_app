@@ -10,10 +10,14 @@ import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/mock_analytics_backend.dart';
 
 class _MockRepo extends Mock implements PackageRequestRepository {}
 
-PackageRequestFormBloc makeBloc(_MockRepo repo) => PackageRequestFormBloc(repo);
+PackageRequestFormBloc makeBloc(_MockRepo repo) => PackageRequestFormBloc(
+      repo,
+      analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+    );
 
 void main() {
   late _MockRepo repo;

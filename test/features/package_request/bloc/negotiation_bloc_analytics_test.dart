@@ -49,7 +49,7 @@ void main() {
     final analytics =
         enabled ? makeEnabledAnalytics(backend) : makeDisabledAnalytics(backend);
     analytics.onConfigured();
-    return NegotiationBloc(repo, analytics);
+    return NegotiationBloc(repo, analytics: analytics);
   }
 
   // ── firm_price_taken ────────────────────────────────────────────────────────

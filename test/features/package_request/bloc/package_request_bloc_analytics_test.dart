@@ -31,7 +31,7 @@ void main() {
   PackageRequestFormBloc makeBloc({bool enabled = true}) {
     final a = enabled ? makeEnabledAnalytics(backend) : makeDisabledAnalytics(backend);
     a.onConfigured();
-    return PackageRequestFormBloc(repo, a);
+    return PackageRequestFormBloc(repo, analytics: a);
   }
 
   final fakeRequest = PackageRequest(

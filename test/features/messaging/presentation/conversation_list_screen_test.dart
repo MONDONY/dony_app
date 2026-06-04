@@ -31,15 +31,6 @@ final _conv = ConversationModel(
   hasUnread: true,
   unreadCount: 2,
 );
-final _convNoUnread = ConversationModel(
-  id: 'conv-2',
-  bidId: 'bid-2',
-  firestoreConversationId: 'conv_bid-2',
-  otherParticipant: ParticipantModel(id: 'uid-2', name: 'Mamadou'),
-  lastMessagePreview: 'À bientôt',
-  lastMessageAt: DateTime.now().subtract(const Duration(hours: 2)),
-  hasUnread: false,
-);
 final _convNow = ConversationModel(
   id: 'conv-5',
   bidId: 'bid-5',

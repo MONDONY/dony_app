@@ -9,6 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../../../../../helpers/mock_analytics_backend.dart';
 
 class _MockPackageRepo extends Mock implements PackageRequestRepository {}
 
@@ -36,7 +37,10 @@ void main() {
   Widget wrap(Widget child) => MaterialApp(
         theme: AppTheme.light,
         home: BlocProvider(
-          create: (_) => PackageRequestFormBloc(packageRepo),
+          create: (_) => PackageRequestFormBloc(
+            packageRepo,
+            analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+          ),
           child: Scaffold(body: child),
         ),
       );
@@ -61,8 +65,9 @@ void main() {
       // 'Date' apparaît 2 fois : label + placeholder du DatePickerField (date == null).
       expect(find.text('Date'), findsNWidgets(2));
       expect(find.text('Tolérance'), findsOneWidget);
-      // "Mode de transport" supprimé — remplacé par bloc avion verrouillé + champ poids
-      expect(find.text('Poids du colis'), findsOneWidget);
+      // "Mode de transport" supprimé — remplacé par le bloc avion verrouillé.
+      // Le poids du colis a été retiré de l'étape 1 (il est saisi à l'étape 2).
+      expect(find.text('Poids du colis'), findsNothing);
     });
 
     testWidgets('snackbar si date manquante au submit', (tester) async {

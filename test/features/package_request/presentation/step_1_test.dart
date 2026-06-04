@@ -1,7 +1,7 @@
-// Step 1 widget test — avion verrouillé, saisie poids directe + presets, S/M/L retiré.
+// Step 1 widget test — avion verrouillé, trajet (villes + date + tolérance).
 //
-// Ce fichier est placé dans test/features/package_request/presentation/
-// conformément à la spec tâche 6.
+// Le poids du colis a été retiré de l'étape 1 : il est saisi à l'étape 2
+// (FormStep2Submitted). L'étape 1 ne traite que le trajet + le mode (avion).
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/city/bloc/city_search_bloc.dart';
 import 'package:dony/features/city/data/city_repository.dart';
@@ -13,6 +13,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/mock_analytics_backend.dart';
 
 class _MockPackageRepo extends Mock implements PackageRequestRepository {}
 
@@ -40,78 +41,65 @@ void main() {
   Widget wrap(Widget child) => MaterialApp(
         theme: AppTheme.light,
         home: BlocProvider(
-          create: (_) => PackageRequestFormBloc(packageRepo),
+          create: (_) => PackageRequestFormBloc(
+            packageRepo,
+            analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+          ),
           child: Scaffold(body: child),
         ),
       );
 
-  group('Step1TrajetColis — avion lock + weight input + presets', () {
-    // 1. Weight input field
-    testWidgets('weight input field exists with key weight-input', (tester) async {
+  group('Step1TrajetColis — avion lock + trajet (poids retiré)', () {
+    // 1. Weight input field is NO LONGER in step 1 (moved to step 2)
+    testWidgets('weight input is removed from step 1', (tester) async {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
-      expect(find.byKey(const Key('weight-input')), findsOneWidget);
+      expect(find.byKey(const Key('weight-input')), findsNothing);
     });
 
-    // 2. Preset chips 23 and 32
-    testWidgets('preset chips 23 and 32 are present', (tester) async {
+    // 2. No weight preset chips remain in step 1
+    testWidgets('weight preset chips are removed from step 1', (tester) async {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
-      expect(find.text('23'), findsOneWidget);
-      expect(find.text('32'), findsOneWidget);
+      expect(find.text('23'), findsNothing);
+      expect(find.text('32'), findsNothing);
     });
 
-    // 3. No S/M/L size selector (no interactive size chip labelled 'M')
-    testWidgets('no S/M/L size selector — M is not a visible chip', (tester) async {
+    // 3. No "Poids du colis" label / kg helper text remains in step 1
+    testWidgets('no weight label or helper text in step 1', (tester) async {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
-      // "M" should not appear as a standalone size-chip label
+      expect(find.text('Poids du colis'), findsNothing);
+      expect(find.textContaining('23 kg'), findsNothing);
+    });
+
+    // 4. No S/M/L size selector (no interactive size chip labelled 'M')
+    testWidgets('no S/M/L size selector — M is not a visible chip',
+        (tester) async {
+      await tester.pumpWidget(wrap(const Step1TrajetColis()));
       expect(find.text('M'), findsNothing);
       expect(find.text('S'), findsNothing);
       expect(find.text('L'), findsNothing);
     });
 
-    // 4. Airplane lock indicator is visible
+    // 5. Airplane lock indicator is visible
     testWidgets('airplane lock indicator is visible', (tester) async {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
       expect(find.byIcon(Icons.flight_rounded), findsOneWidget);
       expect(find.text('Avion'), findsOneWidget);
     });
 
-    // 5. Section label and title are still present
+    // 6. Section label and title are still present
     testWidgets('section label and title are present', (tester) async {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
       expect(find.text('TRAJET & COLIS'), findsOneWidget);
       expect(find.text("D'où vers où ?"), findsOneWidget);
     });
 
-    // 6. No editable transport mode picker (no OptionButton widgets)
+    // 7. No editable transport mode picker (no OptionButton widgets)
     testWidgets('no interactive transport mode picker', (tester) async {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
       expect(find.byType(OptionButton), findsNothing);
     });
 
-    // 7. Tapping a preset chip updates the weight field
-    testWidgets('tapping preset 23 fills weight input', (tester) async {
-      await tester.pumpWidget(wrap(const Step1TrajetColis()));
-      // Scroll down so the chip is visible
-      await tester.ensureVisible(find.text('23'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('23'), warnIfMissed: false);
-      await tester.pump();
-      final field = tester.widget<EditableText>(
-        find.descendant(
-          of: find.byKey(const Key('weight-input')),
-          matching: find.byType(EditableText),
-        ),
-      );
-      expect(field.controller.text, '23');
-    });
-
-    // 8. Hint text shows 23 kg / 32 kg info
-    testWidgets('hint text shows 23 kg = standard luggage info', (tester) async {
-      await tester.pumpWidget(wrap(const Step1TrajetColis()));
-      expect(find.textContaining('23 kg'), findsWidgets);
-    });
-
-    // 9. Submit still works with snackbar when date is missing
+    // 8. Submit still works with snackbar when date is missing
     testWidgets('snackbar if date is missing at submit', (tester) async {
       final key = GlobalKey<Step1TrajetColisState>();
       await tester.pumpWidget(wrap(Step1TrajetColis(key: key)));

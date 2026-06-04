@@ -14,6 +14,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 
+/// Placeholder paymentIntentId sent to the backend when the sender confirms a
+/// CASH agreement. There is no online PaymentIntent for cash — the backend
+/// `/checkout` endpoint only requires a non-blank marker (the commission is
+/// collected from the traveler separately).
+const String kCashPaymentSentinel = 'CASH';
+
 /// Detailed payment recap bottom sheet for the AWAITING_PAYMENT step.
 ///
 /// Shows an itemized fee breakdown:
@@ -101,18 +107,27 @@ class PaymentRecapBottomSheet {
                             backgroundColor: kError,
                           ));
                         }
-                      } catch (e) {
+                      } catch (_) {
                         if (ctx.mounted) {
                           ScaffoldMessenger.of(ctx).showSnackBar(
-                            SnackBar(
-                                content: Text(e.toString()),
-                                backgroundColor: kError),
+                            const SnackBar(
+                              content: Text('Une erreur est survenue. Veuillez réessayer.'),
+                              backgroundColor: kError,
+                            ),
                           );
                         }
                       }
                     } else {
-                      // Cash: accept the agreement
-                      bloc.add(NegotiationAcceptRequested(threadId: thread.id));
+                      // Cash: no online payment. The agreement is settled in
+                      // person and dony collects its commission from the
+                      // traveler separately. We finalize the AWAITING_PAYMENT
+                      // thread via /checkout (idempotent placeholder), NOT
+                      // /accept — the thread is already past OPEN, so calling
+                      // accept here returns `thread/already-finalized`.
+                      bloc.add(NegotiationCheckoutRequested(
+                        threadId: thread.id,
+                        paymentIntentId: kCashPaymentSentinel,
+                      ));
                       if (ctx.mounted) {
                         Navigator.of(ctx, rootNavigator: true).pop();
                       }

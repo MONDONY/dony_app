@@ -10,8 +10,9 @@ import 'package_request_form_event.dart';
 import 'package_request_form_state.dart';
 
 class PackageRequestFormBloc extends Bloc<PackageRequestFormEvent, PackageRequestFormState> {
-  PackageRequestFormBloc(this._repository, [this._analytics])
-      : super(const PackageRequestFormState()) {
+  PackageRequestFormBloc(this._repository, {required AnalyticsService analytics})
+      : _analytics = analytics,
+        super(const PackageRequestFormState()) {
     on<FormStep1Submitted>(_onStep1);
     on<FormStep2Submitted>(_onStep2);
     on<FormStep2CategoryChanged>(_onStep2CategoryChanged);
@@ -28,7 +29,7 @@ class PackageRequestFormBloc extends Bloc<PackageRequestFormEvent, PackageReques
   }
 
   final PackageRequestRepository _repository;
-  final AnalyticsService? _analytics;
+  final AnalyticsService _analytics;
 
   void _onStep1(FormStep1Submitted e, Emitter<PackageRequestFormState> emit) {
     emit(state.copyWith(
@@ -108,7 +109,7 @@ class PackageRequestFormBloc extends Bloc<PackageRequestFormEvent, PackageReques
         submissionStatus: FormSubmissionStatus.success,
         createdRequest: created,
       ));
-      unawaited(_analytics?.logEvent(
+      unawaited(_analytics.logEvent(
         AnalyticsEvents.packageRequestCreated,
         properties: {
           'corridor': '${state.departureCity}→${state.arrivalCity}',

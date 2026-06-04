@@ -284,7 +284,7 @@ class _NetPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final net = totalBudgetEur / 1.12;
+    final net = PriceDisplay.netFromGross(totalBudgetEur);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: DonySpacing.base,
@@ -380,14 +380,6 @@ class _NegotiableToggle extends StatelessWidget {
 
 // ─── Payment method chips ─────────────────────────────────────────────────────
 
-/// Labels displayed to the user for each payment method.
-const _kPaymentLabels = {
-  PaymentMethod.stripe: 'Carte',
-  PaymentMethod.cash: 'Cash',
-  PaymentMethod.wave: 'Wave',
-  PaymentMethod.orangeMoney: 'Orange Money',
-};
-
 class _PaymentMethodChips extends StatelessWidget {
   const _PaymentMethodChips({required this.selected});
   final Set<PaymentMethod> selected;
@@ -401,7 +393,7 @@ class _PaymentMethodChips extends StatelessWidget {
       runSpacing: DonySpacing.sm,
       children: PaymentMethod.values.map((method) {
         final isSelected = selected.contains(method);
-        final label = _kPaymentLabels[method] ?? method.wireName;
+        final label = method.displayLabel;
         return GestureDetector(
           onTap: () {
             context.read<PackageRequestFormBloc>().add(

@@ -128,7 +128,6 @@ dev_dependencies:
   mocktail: ^1.0.4
   fake_cloud_firestore: ^3.0.3
   flutter_launcher_icons: ^0.14.0
-  flutter_skill: ^0.9.36
 
 # flutter_stripe 12.6 est requis pour le fix iOS (stripe_ios 12.6 contient la
 # résolution de fenêtre via UIScene `connectedScenes` → la PaymentSheet s'ouvre
@@ -164,6 +163,8 @@ flutter_native_splash:
   android: true
 
 flutter:
+  config:
+    enable-lldb-debugging: false
   uses-material-design: true
   assets:
     - assets/logos/

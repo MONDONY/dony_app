@@ -12,4 +12,17 @@ enum PaymentMethod {
 
   static Set<PaymentMethod> setFromJson(List<dynamic>? l) =>
       (l ?? const []).map((e) => fromWire(e as String)).toSet();
+
+  String get displayLabel {
+    switch (this) {
+      case PaymentMethod.stripe:
+        return 'Carte';
+      case PaymentMethod.cash:
+        return 'Cash';
+      case PaymentMethod.wave:
+        return 'Wave';
+      case PaymentMethod.orangeMoney:
+        return 'Orange Money';
+    }
+  }
 }

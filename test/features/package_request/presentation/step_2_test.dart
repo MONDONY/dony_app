@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/mock_analytics_backend.dart';
 
 class _MockPackageRepo extends Mock implements PackageRequestRepository {}
 
@@ -21,7 +22,10 @@ void main() {
 
   Widget wrap(Widget child) => MaterialApp(
         home: BlocProvider(
-          create: (_) => PackageRequestFormBloc(packageRepo),
+          create: (_) => PackageRequestFormBloc(
+            packageRepo,
+            analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+          ),
           child: Scaffold(body: child),
         ),
       );
@@ -57,7 +61,10 @@ void main() {
     testWidgets(
         'typing in custom field dispatches category change event and updates state',
         (tester) async {
-      final bloc = PackageRequestFormBloc(packageRepo);
+      final bloc = PackageRequestFormBloc(
+        packageRepo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+      );
       await tester.pumpWidget(
         MaterialApp(
           home: BlocProvider.value(

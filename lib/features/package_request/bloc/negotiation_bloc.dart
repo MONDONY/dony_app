@@ -200,8 +200,9 @@ class NegotiationError extends NegotiationState {
 }
 
 class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
-  NegotiationBloc(this._repository, [this._analytics])
-      : super(const NegotiationInitial()) {
+  NegotiationBloc(this._repository, {required AnalyticsService analytics})
+      : _analytics = analytics,
+        super(const NegotiationInitial()) {
     on<NegotiationFetchRequested>(_onFetch);
     on<NegotiationStartRequested>(_onStart);
     on<NegotiationCounterRequested>(_onCounter);
@@ -214,7 +215,14 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
   }
 
   final NegotiationRepository _repository;
-  final AnalyticsService? _analytics;
+  final AnalyticsService _analytics;
+
+  static String _priceBracket(double eur) {
+    if (eur < 20) return '<20€';
+    if (eur < 50) return '20-50€';
+    if (eur < 100) return '50-100€';
+    return '>100€';
+  }
 
   Future<void> _onFetch(
     NegotiationFetchRequested e,
@@ -245,14 +253,14 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       );
       emit(NegotiationLoaded(thread));
       if (e.isFirmPrice) {
-        unawaited(_analytics?.logEvent(
+        unawaited(_analytics.logEvent(
           AnalyticsEvents.firmPriceTaken,
           properties: {'request_id': e.packageRequestId},
         ));
       } else {
-        unawaited(_analytics?.logEvent(
+        unawaited(_analytics.logEvent(
           AnalyticsEvents.negotiationOfferMade,
-          properties: {'amount': e.proposedPriceEur.round(), 'context': 'sender'},
+          properties: {'amount_bracket': _priceBracket(e.proposedPriceEur), 'context': 'sender'},
         ));
       }
     } catch (err) {
@@ -277,9 +285,9 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         body: e.body,
       );
       emit(NegotiationLoaded(thread));
-      unawaited(_analytics?.logEvent(
+      unawaited(_analytics.logEvent(
         AnalyticsEvents.negotiationOfferMade,
-        properties: {'amount': e.proposedPriceEur.round(), 'context': 'counter'},
+        properties: {'amount_bracket': _priceBracket(e.proposedPriceEur), 'context': 'counter'},
       ));
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
@@ -299,9 +307,9 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     try {
       final thread = await _repository.accept(e.threadId, body: e.body);
       emit(NegotiationLoaded(thread));
-      unawaited(_analytics?.logEvent(
+      unawaited(_analytics.logEvent(
         AnalyticsEvents.negotiationOfferAccepted,
-        properties: {'amount': thread.currentPriceEur.round()},
+        properties: {'amount_bracket': _priceBracket(thread.currentPriceEur)},
       ));
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
@@ -343,7 +351,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         paymentMethod: e.paymentMethod,
       );
       emit(NegotiationLoaded(thread));
-      unawaited(_analytics?.logEvent(
+      unawaited(_analytics.logEvent(
         AnalyticsEvents.paymentMethodSelected,
         properties: {'method': e.paymentMethod.wireName},
       ));
@@ -376,7 +384,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         paymentMethod: e.paymentMethod,
       );
       emit(NegotiationLoaded(thread));
-      unawaited(_analytics?.logEvent(
+      unawaited(_analytics.logEvent(
         AnalyticsEvents.paymentMethodSelected,
         properties: {'method': e.paymentMethod.wireName},
       ));

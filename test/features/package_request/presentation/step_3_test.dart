@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../helpers/mock_analytics_backend.dart';
 
 class _MockPackageRepo extends Mock implements PackageRequestRepository {}
 
@@ -24,7 +25,10 @@ void main() {
   });
 
   Widget wrap(Widget child, {PackageRequestFormState? initialState}) {
-    final bloc = PackageRequestFormBloc(packageRepo);
+    final bloc = PackageRequestFormBloc(
+      packageRepo,
+      analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+    );
     if (initialState != null) {
       // Emit the initial state by dispatching events or wrapping differently.
       // Use BlocProvider.value with a pre-configured bloc.
@@ -54,7 +58,10 @@ void main() {
 
     // 2. When totalBudgetEur = 39.20, displays net traveler amount
     testWidgets('shows net traveler amount when totalBudgetEur is set', (tester) async {
-      final bloc = PackageRequestFormBloc(packageRepo);
+      final bloc = PackageRequestFormBloc(
+        packageRepo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+      );
       bloc.add(const PackageRequestTotalBudgetChanged(39.20));
 
       await tester.pumpWidget(
@@ -93,7 +100,10 @@ void main() {
     // 5. Toggling negotiable dispatches the event and updates state
     testWidgets('tapping negotiable toggle dispatches PackageRequestNegotiableToggled',
         (tester) async {
-      final bloc = PackageRequestFormBloc(packageRepo);
+      final bloc = PackageRequestFormBloc(
+        packageRepo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+      );
       // Default negotiable = true, so initial value is true
       expect(bloc.state.negotiable, isTrue);
 
@@ -118,7 +128,10 @@ void main() {
 
     // 6. Tapping a payment chip toggles its selected state
     testWidgets('tapping Cash chip toggles acceptedPaymentMethods', (tester) async {
-      final bloc = PackageRequestFormBloc(packageRepo);
+      final bloc = PackageRequestFormBloc(
+        packageRepo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+      );
       // Default: {stripe} selected
       expect(bloc.state.acceptedPaymentMethods.contains(PaymentMethod.cash), isFalse);
 
@@ -154,7 +167,13 @@ void main() {
 /// Helper: a bloc that starts with a custom state by applying a side-effect.
 /// We create it and immediately add an event to set totalBudgetEur.
 class _BlocWithState extends PackageRequestFormBloc {
-  _BlocWithState(super.repository, PackageRequestFormState targetState) {
+  _BlocWithState(
+    PackageRequestRepository repository,
+    PackageRequestFormState targetState,
+  ) : super(
+          repository,
+          analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        ) {
     if (targetState.totalBudgetEur != null) {
       add(PackageRequestTotalBudgetChanged(targetState.totalBudgetEur!));
     }

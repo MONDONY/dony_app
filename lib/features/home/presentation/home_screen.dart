@@ -33,7 +33,6 @@ import 'package:dony/features/package_request/presentation/widgets/near_me_packa
 import 'package:dony/features/package_request/presentation/widgets/package_request_list_card.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/marker_bitmap_factory.dart';
-import 'package:dony/features/profile/presentation/widgets/pro_stats_card.dart';
 import 'package:dony/features/notifications/bloc/notification_state.dart';
 import 'package:dony/features/notifications/presentation/notification_bottom_sheet.dart';
 import 'package:flutter/material.dart';
@@ -58,9 +57,6 @@ const _defaultCorridorOptions = <_CorridorOpt>[
   (label: 'Paris → Douala',     departure: 'Paris',     arrival: 'Douala'),
   (label: 'Marseille → Bamako', departure: 'Marseille', arrival: 'Bamako'),
 ];
-
-// Accent clair sur fond ink pour le texte de mise en valeur (compatible design system)
-const _kAccentOnDark = DonyColors.blue200;
 
 // ── HomeScreen ───────────────────────────────────────────────────────────────
 
@@ -648,7 +644,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
     final authState = context.read<AuthBloc>().state;
     final currentUserId =
         authState is AuthAuthenticated ? authState.user.id : null;
-    final cs = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: BlocBuilder<AnnouncementBloc, AnnouncementState>(

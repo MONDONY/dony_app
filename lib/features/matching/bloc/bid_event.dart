@@ -1,5 +1,4 @@
 import 'package:dony/features/matching/data/models/bid_model.dart';
-import 'package:dony/features/matching/data/models/bid_quote_response.dart';
 
 abstract class BidEvent {
   const BidEvent();

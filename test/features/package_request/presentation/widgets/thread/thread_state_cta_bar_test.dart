@@ -174,14 +174,15 @@ void main() {
       expect(find.text('Créer un trajet dédié'), findsOneWidget);
     });
 
-    testWidgets('AWAITING_PAYMENT · sender → bouton "Payer X €" avec gross',
+    testWidgets(
+        'AWAITING_PAYMENT · sender → bouton "Compléter & payer X €" avec gross',
         (tester) async {
       await tester.pumpWidget(wrap(
         _thread(status: NegotiationThreadStatus.awaitingPayment),
         _viewerSender,
       ));
       // Sender sees gross: 38 * 1.12 = 42.56 → "43" (toStringAsFixed(0) rounds)
-      expect(find.text('Payer 43 €'), findsOneWidget);
+      expect(find.text('Compléter & payer 43 €'), findsOneWidget);
     });
 
     testWidgets('AWAITING_PAYMENT · traveler → banner "En attente du paiement"',

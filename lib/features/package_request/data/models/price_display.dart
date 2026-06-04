@@ -2,6 +2,7 @@ class PriceDisplay {
   static const double previewRate = 0.12;
 
   static double grossFromNet(double net) => net * (1 + previewRate);
+  static double netFromGross(double gross) => gross / (1 + previewRate);
   static double feeFromNet(double net) => net * previewRate;
 
   static String eur(double v) =>

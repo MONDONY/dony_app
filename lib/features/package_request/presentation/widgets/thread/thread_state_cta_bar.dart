@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/package_request/presentation/widgets/accept_offer_bottom_sheet.dart';
 import 'package:dony/features/package_request/presentation/widgets/counter_offer_bottom_sheet.dart';
@@ -28,6 +29,25 @@ class ThreadStateCtaBar extends StatelessWidget {
   bool get _lastFromMe =>
       thread.messages.isNotEmpty &&
       thread.messages.last.fromUserId == viewerUserId;
+
+  /// Sender flow at AWAITING_PAYMENT: complete the post-acceptance details
+  /// (recipient, addresses, declared value, disclaimer) BEFORE paying.
+  ///
+  /// The backend `/checkout` rejects with `request/details-incomplete` if those
+  /// are missing, and for Stripe it would authorise the card before the gate
+  /// fires — so we always route through complete-details first, then open the
+  /// payment recap once the details are saved.
+  Future<void> _completeDetailsThenPay(
+    BuildContext context,
+    NegotiationThread thread,
+  ) async {
+    final bloc = context.read<NegotiationBloc>();
+    final detailsDone = await context.push<bool>(
+      '/package-requests/${thread.packageRequestId}/complete-details',
+    );
+    if (detailsDone != true || !context.mounted) return;
+    await PaymentRecapBottomSheet.show(context, bloc: bloc, thread: thread);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,14 +126,10 @@ class ThreadStateCtaBar extends StatelessWidget {
       case NegotiationThreadStatus.awaitingPayment:
         return _isSender
             ? DonyButton(
-                label: 'Payer ${(thread.grossPriceEur ?? thread.currentPriceEur * 1.12).toStringAsFixed(0)} €',
+                label: 'Compléter & payer ${(thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur)).toStringAsFixed(0)} €',
                 onPressed: actionInProgress
                     ? null
-                    : () => PaymentRecapBottomSheet.show(
-                          context,
-                          bloc: context.read<NegotiationBloc>(),
-                          thread: thread,
-                        ),
+                    : () => _completeDetailsThenPay(context, thread),
               )
             : const ThreadStateBanner(
                 icon: Icons.payments_outlined,
@@ -162,7 +178,7 @@ class _SenderOpenActions extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         DonyButton(
-          label: 'Accepter — Tu paies ${(thread.grossPriceEur ?? thread.currentPriceEur * 1.12).toStringAsFixed(0)} €',
+          label: 'Accepter — Tu paies ${(thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur)).toStringAsFixed(0)} €',
           onPressed: actionInProgress
               ? null
               : () => AcceptOfferBottomSheet.show(

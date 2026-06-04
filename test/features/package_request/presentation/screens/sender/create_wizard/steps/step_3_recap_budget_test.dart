@@ -15,6 +15,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../../../../../helpers/mock_analytics_backend.dart';
 
 class _MockRepo extends Mock implements PackageRequestRepository {}
 
@@ -43,7 +44,12 @@ void main() {
     if (useMock && seed != null) {
       when(() => mockBloc.state).thenReturn(seed);
     }
-    final bloc = useMock ? mockBloc : PackageRequestFormBloc(repo);
+    final bloc = useMock
+        ? mockBloc
+        : PackageRequestFormBloc(
+            repo,
+            analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+          );
     return MaterialApp(
       theme: AppTheme.light,
       home: BlocProvider<PackageRequestFormBloc>.value(

@@ -69,7 +69,7 @@ void main() {
 
       final model = PriceGridItemModel.fromJson(json);
       expect(model.unitPriceNet, 10.0);
-      expect(model.unitPriceNet is double, true);
+      expect(model.unitPriceNet, isA<double>());
     });
   });
 }

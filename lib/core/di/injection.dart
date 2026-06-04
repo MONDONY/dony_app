@@ -601,7 +601,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => PriceEstimationRepository(getIt<ApiClient>()),
   );
   getIt.registerFactory<PackageRequestFormBloc>(
-    () => PackageRequestFormBloc(getIt<PackageRequestRepository>(), getIt<AnalyticsService>()),
+    () => PackageRequestFormBloc(getIt<PackageRequestRepository>(), analytics: getIt<AnalyticsService>()),
   );
   getIt.registerFactory<PackageRequestSearchBloc>(
     () => PackageRequestSearchBloc(getIt<PackageRequestRepository>(), getIt<AnalyticsService>()),
@@ -611,7 +611,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     dispose: (b) => b.close(),
   );
   getIt.registerFactory<NegotiationBloc>(
-    () => NegotiationBloc(getIt<NegotiationRepository>(), getIt<AnalyticsService>()),
+    () => NegotiationBloc(getIt<NegotiationRepository>(), analytics: getIt<AnalyticsService>()),
   );
   getIt.registerLazySingleton<NegotiationListBloc>(
     () => NegotiationListBloc(getIt<NegotiationRepository>()),
