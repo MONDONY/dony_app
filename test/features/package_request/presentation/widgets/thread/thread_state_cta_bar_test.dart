@@ -3,6 +3,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_state_banner.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_state_cta_bar.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +24,7 @@ NegotiationThread _thread({
   String viewer = _viewerSender,
   bool canAccept = false,
   bool canCounter = true,
+  PaymentMethod? paymentMethod,
 }) {
   final messages = <NegotiationMessage>[
     NegotiationMessage(
@@ -48,6 +50,7 @@ NegotiationThread _thread({
     lastActivityAt: DateTime(2026, 5, 11, 10),
     createdAt: DateTime(2026, 5, 11, 9),
     messages: messages,
+    paymentMethod: paymentMethod,
   );
 }
 
@@ -204,6 +207,23 @@ void main() {
       ));
       expect(find.byType(ThreadStateBanner), findsOneWidget);
       expect(find.text('Demande acceptée et payée'), findsOneWidget);
+    });
+
+    testWidgets(
+        'ACCEPTED · cash → "Demande acceptée" (pas "payée") + paiement à la remise',
+        (tester) async {
+      await tester.pumpWidget(wrap(
+        _thread(
+          status: NegotiationThreadStatus.accepted,
+          paymentMethod: PaymentMethod.cash,
+        ),
+        _viewerSender,
+      ));
+      expect(find.text('Demande acceptée'), findsOneWidget);
+      expect(find.text('Demande acceptée et payée'), findsNothing);
+      expect(
+          find.text('Le paiement se fait en espèces à la remise du colis.'),
+          findsOneWidget);
     });
 
     testWidgets('REJECTED → rien (SizedBox.shrink)', (tester) async {

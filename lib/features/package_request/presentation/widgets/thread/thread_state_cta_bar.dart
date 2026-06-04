@@ -1,6 +1,7 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/package_request/presentation/widgets/accept_offer_bottom_sheet.dart';
@@ -139,11 +140,19 @@ class ThreadStateCtaBar extends StatelessWidget {
               );
 
       case NegotiationThreadStatus.accepted:
-        return const ThreadStateBanner(
+        // En cash (et autres modes hors Stripe), le paiement se fait en main
+        // propre à la remise : ne pas afficher « payée ».
+        final bool paidOnline = thread.paymentMethod == null ||
+            thread.paymentMethod == PaymentMethod.stripe;
+        return ThreadStateBanner(
           icon: Icons.check_circle_rounded,
           tint: kSuccess,
-          message: 'Demande acceptée et payée',
-          subtitle: 'Tu peux passer aux étapes suivantes du suivi.',
+          message: paidOnline ? 'Demande acceptée et payée' : 'Demande acceptée',
+          subtitle: paidOnline
+              ? 'Tu peux passer aux étapes suivantes du suivi.'
+              : thread.paymentMethod == PaymentMethod.cash
+                  ? 'Le paiement se fait en espèces à la remise du colis.'
+                  : 'Le paiement se fait à la remise du colis.',
         );
 
       case NegotiationThreadStatus.rejected:
