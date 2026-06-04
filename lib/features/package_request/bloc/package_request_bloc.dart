@@ -31,35 +31,41 @@ class CancelRequest extends PackageRequestEvent {
 enum PackageRequestListStatus { initial, loading, loaded, cancelling, error }
 
 class PackageRequestState extends Equatable {
-  const PackageRequestState({
+  PackageRequestState({
     this.status = PackageRequestListStatus.initial,
     this.requests = const [],
     this.errorMessage,
-  });
+    DateTime? fetchedAt,
+  }) : fetchedAt = fetchedAt ?? DateTime(2000);
 
   final PackageRequestListStatus status;
   final List<PackageRequest> requests;
   final String? errorMessage;
 
+  /// Horodatage du dernier chargement réussi.
+  final DateTime fetchedAt;
+
   PackageRequestState copyWith({
     PackageRequestListStatus? status,
     List<PackageRequest>? requests,
     String? errorMessage,
+    DateTime? fetchedAt,
   }) =>
       PackageRequestState(
         status: status ?? this.status,
         requests: requests ?? this.requests,
         errorMessage: errorMessage ?? this.errorMessage,
+        fetchedAt: fetchedAt ?? this.fetchedAt,
       );
 
   @override
-  List<Object?> get props => [status, requests, errorMessage];
+  List<Object?> get props => [status, requests, errorMessage, fetchedAt];
 }
 
 // ─── BLoC ─────────────────────────────────────────────────────────────────────
 
 class PackageRequestBloc extends Bloc<PackageRequestEvent, PackageRequestState> {
-  PackageRequestBloc(this._repository) : super(const PackageRequestState()) {
+  PackageRequestBloc(this._repository) : super(PackageRequestState()) {
     on<FetchMyRequests>(_onFetch);
     on<RefreshMyRequests>(_onRefresh);
     on<CancelRequest>(_onCancel);
@@ -76,6 +82,7 @@ class PackageRequestBloc extends Bloc<PackageRequestEvent, PackageRequestState> 
       emit(state.copyWith(
         status: PackageRequestListStatus.loaded,
         requests: page.content,
+        fetchedAt: DateTime.now(),
       ));
     } catch (err) {
       emit(state.copyWith(
@@ -92,6 +99,7 @@ class PackageRequestBloc extends Bloc<PackageRequestEvent, PackageRequestState> 
       emit(state.copyWith(
         status: PackageRequestListStatus.loaded,
         requests: page.content,
+        fetchedAt: DateTime.now(),
       ));
     } catch (err) {
       emit(state.copyWith(
@@ -110,6 +118,7 @@ class PackageRequestBloc extends Bloc<PackageRequestEvent, PackageRequestState> 
       emit(state.copyWith(
         status: PackageRequestListStatus.loaded,
         requests: page.content,
+        fetchedAt: DateTime.now(),
       ));
     } catch (err) {
       emit(state.copyWith(

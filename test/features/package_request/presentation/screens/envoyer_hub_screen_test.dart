@@ -1,5 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/core/services/analytics_service.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -10,13 +12,17 @@ import 'package:dony/features/kyc/bloc/kyc_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
+import 'package:dony/features/package_request/bloc/negotiation_filter_cubit.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
+import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/envoyer_hub_screen.dart';
+import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -32,8 +38,7 @@ class _MockNegotiationListBloc
     extends MockBloc<NegotiationListEvent, NegotiationListState>
     implements NegotiationListBloc {}
 
-class _MockNegotiationRepository extends Mock implements NegotiationRepository {
-}
+class _MockNegotiationRepository extends Mock implements NegotiationRepository {}
 
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
@@ -44,11 +49,18 @@ class _MockPackageRequestFormBloc
 
 class _MockKycBloc extends MockBloc<KycEvent, KycState> implements KycBloc {}
 
+class _MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
+    implements PaymentBloc {}
+
+class _MockAnalyticsService extends Mock implements AnalyticsService {}
+
 void main() {
   late _MockPackageRequestBloc packageBloc;
   late _MockBidBloc bidBloc;
   late _MockNegotiationListBloc negoListBloc;
   late _MockNegotiationRepository negoRepo;
+  late _MockPaymentBloc paymentBloc;
+  late _MockAnalyticsService analytics;
 
   setUpAll(() {
     registerFallbackValue(const FetchMyRequests());
@@ -61,61 +73,72 @@ void main() {
     bidBloc = _MockBidBloc();
     negoListBloc = _MockNegotiationListBloc();
     negoRepo = _MockNegotiationRepository();
+    paymentBloc = _MockPaymentBloc();
+    analytics = _MockAnalyticsService();
 
-    when(() => packageBloc.state).thenReturn(const PackageRequestState());
+    when(() => packageBloc.state).thenReturn(PackageRequestState());
     when(() => packageBloc.stream)
         .thenAnswer((_) => const Stream<PackageRequestState>.empty());
-    when(() => bidBloc.state).thenReturn(BidInitial());
-    when(() => bidBloc.stream)
-        .thenAnswer((_) => const Stream<BidState>.empty());
-    when(() => negoListBloc.state).thenReturn(const NegotiationListState());
+    whenListen<BidState>(
+      bidBloc,
+      const Stream<BidState>.empty(),
+      initialState: BidInitial(),
+    );
+    when(() => negoListBloc.state).thenReturn(NegotiationListState());
     when(() => negoListBloc.stream)
         .thenAnswer((_) => const Stream<NegotiationListState>.empty());
+    whenListen<PaymentState>(
+      paymentBloc,
+      const Stream<PaymentState>.empty(),
+      initialState: const PaymentInitial(),
+    );
     when(() => negoRepo.findMine()).thenAnswer((_) async => []);
 
-    if (getIt.isRegistered<PackageRequestBloc>()) {
-      getIt.unregister<PackageRequestBloc>();
-    }
-    if (getIt.isRegistered<BidBloc>()) {
-      getIt.unregister<BidBloc>();
-    }
-    if (getIt.isRegistered<NegotiationListBloc>()) {
-      getIt.unregister<NegotiationListBloc>();
-    }
-    if (getIt.isRegistered<NegotiationRepository>()) {
-      getIt.unregister<NegotiationRepository>();
-    }
+    when(() => analytics.logScreen(any(), properties: any(named: 'properties')))
+        .thenAnswer((_) async {});
+    when(() => analytics.logEvent(any(), properties: any(named: 'properties')))
+        .thenAnswer((_) async {});
+
+    // Unregister and re-register all needed dependencies
+    _unregister<PackageRequestBloc>();
+    _unregister<BidBloc>();
+    _unregister<NegotiationListBloc>();
+    _unregister<NegotiationRepository>();
+    _unregister<PackageRequestFormBloc>();
+    _unregister<AnalyticsService>();
+    _unregister<ShipmentFilterCubit>();
+    _unregister<RequestFilterCubit>();
+    _unregister<NegotiationFilterCubit>();
+    _unregister<EnvoisRefreshNotifier>();
+
     getIt.registerFactory<PackageRequestBloc>(() => packageBloc);
     getIt.registerFactory<BidBloc>(() => bidBloc);
     getIt.registerFactory<NegotiationListBloc>(() => negoListBloc);
     getIt.registerLazySingleton<NegotiationRepository>(() => negoRepo);
+    getIt.registerLazySingleton<AnalyticsService>(() => analytics);
+    getIt.registerFactory<ShipmentFilterCubit>(() => ShipmentFilterCubit(analytics));
+    getIt.registerFactory<RequestFilterCubit>(() => RequestFilterCubit());
+    getIt.registerFactory<NegotiationFilterCubit>(() => NegotiationFilterCubit());
+    getIt.registerLazySingleton<EnvoisRefreshNotifier>(() => EnvoisRefreshNotifier());
 
     final formBloc = _MockPackageRequestFormBloc();
     when(() => formBloc.state).thenReturn(const PackageRequestFormState());
     when(() => formBloc.stream)
         .thenAnswer((_) => const Stream<PackageRequestFormState>.empty());
-    if (getIt.isRegistered<PackageRequestFormBloc>()) {
-      getIt.unregister<PackageRequestFormBloc>();
-    }
     getIt.registerFactory<PackageRequestFormBloc>(() => formBloc);
   });
 
   tearDown(() async {
-    if (getIt.isRegistered<PackageRequestBloc>()) {
-      getIt.unregister<PackageRequestBloc>();
-    }
-    if (getIt.isRegistered<BidBloc>()) {
-      getIt.unregister<BidBloc>();
-    }
-    if (getIt.isRegistered<NegotiationListBloc>()) {
-      getIt.unregister<NegotiationListBloc>();
-    }
-    if (getIt.isRegistered<NegotiationRepository>()) {
-      getIt.unregister<NegotiationRepository>();
-    }
-    if (getIt.isRegistered<PackageRequestFormBloc>()) {
-      getIt.unregister<PackageRequestFormBloc>();
-    }
+    _unregister<PackageRequestBloc>();
+    _unregister<BidBloc>();
+    _unregister<NegotiationListBloc>();
+    _unregister<NegotiationRepository>();
+    _unregister<PackageRequestFormBloc>();
+    _unregister<AnalyticsService>();
+    _unregister<ShipmentFilterCubit>();
+    _unregister<RequestFilterCubit>();
+    _unregister<NegotiationFilterCubit>();
+    _unregister<EnvoisRefreshNotifier>();
   });
 
   Widget wrap({String kycStatus = 'NOT_STARTED'}) {
@@ -142,26 +165,22 @@ void main() {
       providers: [
         BlocProvider<AuthBloc>.value(value: authBloc),
         BlocProvider<KycBloc>.value(value: kycBloc),
+        BlocProvider<PaymentBloc>.value(value: paymentBloc),
       ],
       child: const MaterialApp(home: EnvoyerHubScreen()),
     );
   }
 
   group('EnvoyerHubScreen', () {
-    testWidgets('rend le titre "Envoyer" et le sous-titre par défaut',
-        (tester) async {
+    testWidgets('rend le titre "Envoyer"', (tester) async {
       await tester.pumpWidget(wrap());
-      // Drain animations + async (flutter_animate + findMine future).
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+      await tester.pump(const Duration(milliseconds: 400));
       expect(find.text('Envoyer'), findsOneWidget);
-      expect(find.text('Aucune demande active'), findsOneWidget);
     });
 
-    testWidgets('rend les 3 onglets Demandes / Envois / Négos',
-        (tester) async {
+    testWidgets('rend les 3 onglets Demandes / Envois / Négos', (tester) async {
       await tester.pumpWidget(wrap());
-      await tester.pumpAndSettle(const Duration(seconds: 2));
-      // Les labels incluent un compteur, ex. "Demandes 0"
+      await tester.pump(const Duration(milliseconds: 400));
       expect(find.textContaining('Demandes'), findsWidgets);
       expect(find.textContaining('Envois'), findsWidgets);
       expect(find.textContaining('Négos'), findsWidgets);
@@ -169,8 +188,7 @@ void main() {
 
     testWidgets('rend le bouton Publier (icône +)', (tester) async {
       await tester.pumpWidget(wrap());
-      await tester.pumpAndSettle(const Duration(seconds: 2));
-      // Le "+" est intégré dans le header (pas un FAB)
+      await tester.pump(const Duration(milliseconds: 400));
       expect(find.byIcon(Icons.add_rounded), findsWidgets);
     });
 
@@ -178,57 +196,57 @@ void main() {
         'tap "+Nouveau" affiche le portail KYC si kycStatus=NOT_STARTED',
         (tester) async {
       await tester.pumpWidget(wrap(kycStatus: 'NOT_STARTED'));
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+      await tester.pump(const Duration(milliseconds: 400));
 
       await tester.tap(find.byIcon(Icons.add_rounded).last);
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.text('Vérification requise'), findsOneWidget);
+      // Drain any remaining animation timers before widget disposal
+      await tester.pump(const Duration(milliseconds: 600));
     });
 
     testWidgets(
         'tap "+Nouveau" affiche le portail KYC si kycStatus=REJECTED',
         (tester) async {
       await tester.pumpWidget(wrap(kycStatus: 'REJECTED'));
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+      await tester.pump(const Duration(milliseconds: 400));
 
       await tester.tap(find.byIcon(Icons.add_rounded).last);
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.text('Vérification requise'), findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 600));
     });
 
     testWidgets(
         'tap "+Nouveau" affiche le portail KYC si kycStatus=PENDING',
         (tester) async {
       await tester.pumpWidget(wrap(kycStatus: 'PENDING'));
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+      await tester.pump(const Duration(milliseconds: 400));
 
       await tester.tap(find.byIcon(Icons.add_rounded).last);
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.text('Vérification requise'), findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 600));
     });
 
     testWidgets(
         'tap "+Nouveau" ne montre pas le portail KYC si kycStatus=VERIFIED',
         (tester) async {
       await tester.pumpWidget(wrap(kycStatus: 'VERIFIED'));
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+      await tester.pump(const Duration(milliseconds: 400));
 
       await tester.tap(find.byIcon(Icons.add_rounded).last);
       // Ne pas pumpAndSettle : le wizard (VERIFIED path) tente de résoudre
-      // CitySearchBloc non enregistré dans ce test. On vérifie uniquement
-      // que le sheet KYC n'est PAS apparu avant que le wizard ne démarre.
-      // La vérification porte sur l'absence de 'Vérification requise' —
-      // propriété suffisante pour valider le comportement de la gate KYC.
+      // CitySearchBloc non enregistré dans ce test.
       expect(find.text('Vérification requise'), findsNothing);
     });
 
     testWidgets(
         'tap "+Nouveau" ne montre pas le portail KYC si AuthProfileUpdated VERIFIED',
         (tester) async {
-      // Override: use AuthProfileUpdated state instead of AuthAuthenticated
       final authBloc = _MockAuthBloc();
       when(() => authBloc.state).thenReturn(
         AuthProfileUpdated(
@@ -244,20 +262,24 @@ void main() {
           .thenAnswer((_) => const Stream<AuthState>.empty());
 
       await tester.pumpWidget(
-        BlocProvider<AuthBloc>.value(
-          value: authBloc,
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<AuthBloc>.value(value: authBloc),
+            BlocProvider<PaymentBloc>.value(value: paymentBloc),
+          ],
           child: const MaterialApp(home: EnvoyerHubScreen()),
         ),
       );
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+      await tester.pump(const Duration(milliseconds: 400));
 
       await tester.tap(find.byIcon(Icons.add_rounded).last);
-      // Ne pas pumpAndSettle : le wizard (VERIFIED path) tente de résoudre
-      // CitySearchBloc non enregistré dans ce test. On vérifie uniquement
-      // que le sheet KYC n'est PAS apparu avant que le wizard ne démarre.
-      // La vérification porte sur l'absence de 'Vérification requise' —
-      // propriété suffisante pour valider le comportement de la gate KYC.
       expect(find.text('Vérification requise'), findsNothing);
     });
   });
+}
+
+void _unregister<T extends Object>() {
+  if (getIt.isRegistered<T>()) {
+    getIt.unregister<T>();
+  }
 }

@@ -1,13 +1,14 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/package_request/bloc/negotiation_filter_cubit.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-
-enum _StatusFilter { all, active, terminal }
 
 class MyNegotiationsScreen extends StatefulWidget {
   const MyNegotiationsScreen({super.key});
@@ -45,125 +46,147 @@ class MyNegotiationsBody extends StatefulWidget {
 }
 
 class _MyNegotiationsBodyState extends State<MyNegotiationsBody> {
-  _StatusFilter _filter = _StatusFilter.all;
+  final _searchController = TextEditingController();
+  Timer? _debounce;
+  late final NegotiationFilterCubit _filterCubit;
 
-  List<NegotiationThread> _applyFilter(List<NegotiationThread> threads) =>
-      switch (_filter) {
-        _StatusFilter.all => threads,
-        _StatusFilter.active => threads
-            .where((t) =>
-                t.status == NegotiationThreadStatus.open ||
-                t.status == NegotiationThreadStatus.awaitingTrip ||
-                t.status == NegotiationThreadStatus.awaitingPayment)
-            .toList(),
-        _StatusFilter.terminal => threads
-            .where((t) =>
-                t.status == NegotiationThreadStatus.accepted ||
-                t.status == NegotiationThreadStatus.rejected ||
-                t.status == NegotiationThreadStatus.autoRejected ||
-                t.status == NegotiationThreadStatus.expired)
-            .toList(),
-      };
+  @override
+  void initState() {
+    super.initState();
+    _filterCubit = getIt<NegotiationFilterCubit>();
+  }
+
+  void _onQuery(String q) {
+    _debounce?.cancel();
+    _debounce = Timer(
+        const Duration(milliseconds: 250), () => _filterCubit.setQuery(q));
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    _filterCubit.close();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<NegotiationListBloc, NegotiationListState>(
-      builder: (context, state) {
-        if (state.status == NegotiationListStatus.loading &&
-            state.threads.isEmpty) {
-          return const Center(
-              child: CircularProgressIndicator(color: DonyColors.primary));
-        }
-        if (state.status == NegotiationListStatus.error) {
-          return _ErrorState(
-            message: state.errorMessage ?? 'Erreur',
-            onRetry: () => context
-                .read<NegotiationListBloc>()
-                .add(const NegotiationListRefreshRequested()),
-          );
-        }
-        if (state.threads.isEmpty) {
-          return const DonyEmptyState(
-            title: 'Aucune négociation',
-            description:
-                "Tes négociations actives apparaîtront ici dès qu'un voyageur fait une offre.",
-            mascotte: DonyMascotteType.assis,
-          );
-        }
+    return BlocProvider.value(
+      value: _filterCubit,
+      child: BlocBuilder<NegotiationFilterCubit, NegotiationFilterState>(
+        builder: (context, filter) =>
+            BlocBuilder<NegotiationListBloc, NegotiationListState>(
+          builder: (context, state) {
+            if (state.status == NegotiationListStatus.loading &&
+                state.threads.isEmpty) {
+              return const Center(
+                  child: CircularProgressIndicator(color: DonyColors.primary));
+            }
+            if (state.status == NegotiationListStatus.error) {
+              return _ErrorState(
+                message: state.errorMessage ?? 'Erreur',
+                onRetry: () => context
+                    .read<NegotiationListBloc>()
+                    .add(const NegotiationListRefreshRequested()),
+              );
+            }
+            if (state.threads.isEmpty) {
+              return const DonyEmptyState(
+                title: 'Aucune négociation',
+                description:
+                    "Tes négociations actives apparaîtront ici dès qu'un voyageur fait une offre.",
+                mascotte: DonyMascotteType.assis,
+              );
+            }
 
-        final all = state.threads;
-        final activeCount = all
-            .where((t) =>
-                t.status == NegotiationThreadStatus.open ||
-                t.status == NegotiationThreadStatus.awaitingTrip ||
-                t.status == NegotiationThreadStatus.awaitingPayment)
-            .length;
-        final terminalCount = all.length - activeCount;
-        final filtered = _applyFilter(all);
+            final all = state.threads;
+            final activeCount = all
+                .where((t) =>
+                    t.status == NegotiationThreadStatus.open ||
+                    t.status == NegotiationThreadStatus.awaitingTrip ||
+                    t.status == NegotiationThreadStatus.awaitingPayment)
+                .length;
+            final terminalCount = all.length - activeCount;
+            final filtered = applyNegotiationFilters(all, filter);
 
-        return Column(
-          children: [
-            // Filter chips
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                  DonySpacing.base, DonySpacing.md, DonySpacing.base, DonySpacing.xs),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _FilterChip(
-                      label: 'Toutes (${all.length})',
-                      active: _filter == _StatusFilter.all,
-                      onTap: () => setState(() => _filter = _StatusFilter.all),
-                    ),
+            return Column(
+              children: [
+                // Search bar
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                      DonySpacing.base, DonySpacing.sm, DonySpacing.base, 0),
+                  child: DonySearchField(
+                    hint: 'Voyageur, ville…',
+                    controller: _searchController,
+                    onChanged: _onQuery,
+                    onClear: () => _filterCubit.setQuery(''),
                   ),
-                  const SizedBox(width: DonySpacing.xs + 2),
-                  Expanded(
-                    child: _FilterChip(
-                      label: 'En cours ($activeCount)',
-                      active: _filter == _StatusFilter.active,
-                      onTap: () =>
-                          setState(() => _filter = _StatusFilter.active),
-                    ),
-                  ),
-                  const SizedBox(width: DonySpacing.xs + 2),
-                  Expanded(
-                    child: _FilterChip(
-                      label: 'Terminées ($terminalCount)',
-                      active: _filter == _StatusFilter.terminal,
-                      onTap: () =>
-                          setState(() => _filter = _StatusFilter.terminal),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // List
-            Expanded(
-              child: filtered.isEmpty
-                  ? _FilterEmptyState(filter: _filter)
-                  : RefreshIndicator(
-                      color: DonyColors.primary,
-                      onRefresh: () async => context
-                          .read<NegotiationListBloc>()
-                          .add(const NegotiationListRefreshRequested()),
-                      child: ListView.separated(
-                        padding: EdgeInsets.fromLTRB(
-                          DonySpacing.base,
-                          DonySpacing.sm,
-                          DonySpacing.base,
-                          MediaQuery.of(context).padding.bottom + 100,
+                ),
+                // Filter chips
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                      DonySpacing.base, DonySpacing.md, DonySpacing.base, DonySpacing.xs),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _FilterChip(
+                          label: 'Toutes (${all.length})',
+                          active: filter.preset == NegoQuickFilter.all,
+                          onTap: () => _filterCubit.setPreset(NegoQuickFilter.all),
                         ),
-                        itemCount: filtered.length,
-                        separatorBuilder: (_, i) =>
-                            const SizedBox(height: DonySpacing.sm),
-                        itemBuilder: (_, i) =>
-                            _NegoCard(thread: filtered[i], index: i),
                       ),
-                    ),
-            ),
-          ],
-        );
-      },
+                      const SizedBox(width: DonySpacing.xs + 2),
+                      Expanded(
+                        child: _FilterChip(
+                          label: 'En cours ($activeCount)',
+                          active: filter.preset == NegoQuickFilter.active,
+                          onTap: () => _filterCubit.setPreset(NegoQuickFilter.active),
+                        ),
+                      ),
+                      const SizedBox(width: DonySpacing.xs + 2),
+                      Expanded(
+                        child: _FilterChip(
+                          label: 'Terminées ($terminalCount)',
+                          active: filter.preset == NegoQuickFilter.terminal,
+                          onTap: () => _filterCubit.setPreset(NegoQuickFilter.terminal),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // List
+                Expanded(
+                  child: filtered.isEmpty
+                      ? _FilterEmptyState(
+                          preset: filter.preset,
+                          hasQuery: filter.query.isNotEmpty,
+                        )
+                      : RefreshIndicator(
+                          color: DonyColors.primary,
+                          onRefresh: () async => context
+                              .read<NegotiationListBloc>()
+                              .add(const NegotiationListRefreshRequested()),
+                          child: ListView.separated(
+                            padding: EdgeInsets.fromLTRB(
+                              DonySpacing.base,
+                              DonySpacing.sm,
+                              DonySpacing.base,
+                              MediaQuery.of(context).padding.bottom + 100,
+                            ),
+                            itemCount: filtered.length,
+                            separatorBuilder: (_, i) =>
+                                const SizedBox(height: DonySpacing.sm),
+                            itemBuilder: (_, i) =>
+                                _NegoCard(thread: filtered[i], index: i),
+                          ),
+                        ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
 }
@@ -213,14 +236,20 @@ class _FilterChip extends StatelessWidget {
 // ── Filter empty ──────────────────────────────────────────────────────────────
 
 class _FilterEmptyState extends StatelessWidget {
-  const _FilterEmptyState({required this.filter});
-  final _StatusFilter filter;
+  const _FilterEmptyState({required this.preset, required this.hasQuery});
+  final NegoQuickFilter preset;
+  final bool hasQuery;
 
-  String get _msg => switch (filter) {
-        _StatusFilter.active => 'Aucune négociation en cours',
-        _StatusFilter.terminal => 'Aucune négociation terminée',
-        _StatusFilter.all => 'Aucune négociation',
-      };
+  String get _msg {
+    if (hasQuery) {
+      return 'Aucun résultat pour cette recherche';
+    }
+    return switch (preset) {
+      NegoQuickFilter.active => 'Aucune négociation en cours',
+      NegoQuickFilter.terminal => 'Aucune négociation terminée',
+      NegoQuickFilter.all => 'Aucune négociation',
+    };
+  }
 
   @override
   Widget build(BuildContext context) {

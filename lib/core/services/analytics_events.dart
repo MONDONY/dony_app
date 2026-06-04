@@ -63,6 +63,14 @@ abstract final class AnalyticsEvents {
   static const analyticsConsentChanged  = 'analytics_consent_changed';
   static const accountDeletionRequested = 'account_deletion_requested';
 
+  // Envois
+  static const shipmentFilterApplied = 'shipment_filter_applied';
+
+  // Onglet « Envoyer » — noms d'écran (logScreen par onglet)
+  static const envoyerEnvoisScreen = 'envoyer_envois';
+  static const envoyerDemandesScreen = 'envoyer_demandes';
+  static const envoyerNegosScreen = 'envoyer_negos';
+
   // Errors (BlocObserver)
   static const blocError = 'bloc_error';
 }

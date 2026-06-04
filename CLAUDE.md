@@ -324,6 +324,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `referral_shared` | ReferralBloc._onShared() |
 | `analytics_consent_changed` | PrivacySettingsScreen.onChanged |
 | `account_deletion_requested` | AccountDeletionBloc._onRequestDeletion() |
+| `shipment_filter_applied` | ShipmentFilterCubit (statut/période/preset, sans PII) |
+| `envoyer_envois` / `envoyer_demandes` / `envoyer_negos` | EnvoyerHubScreen `logScreen` au changement d'onglet |
 | `bloc_error` | AnalyticsBlocObserver.onError() — global |
 
 ---

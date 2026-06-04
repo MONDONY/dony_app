@@ -1,17 +1,23 @@
+import 'dart:async';
+
+import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/features/auth/data/services/local_auth_service.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/search_form_bottom_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/shipment_period_filter_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/shipment_status_filter_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/presentation/payment_auth.dart';
-import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/error/error_presenter.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,23 +25,24 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-enum _Tab { enCours, aVenir, passes }
-
 String _ctaLabel(String status) => switch (status) {
-      'AWAITING_PAYMENT' => 'Payer →',
-      'ACCEPTED' || 'HANDED_OVER' || 'IN_TRANSIT' => 'Voir →',
-      _ => 'Détail →',
-    };
+  'AWAITING_PAYMENT' => 'Payer →',
+  'ACCEPTED' || 'HANDED_OVER' || 'IN_TRANSIT' => 'Voir →',
+  _ => 'Détail →',
+};
 
-class ShipmentListScreen extends StatefulWidget {
+class ShipmentListScreen extends StatelessWidget {
   const ShipmentListScreen({super.key, this.embedded = false});
 
-  /// Quand `true`, l'écran omet son header sombre et utilise une tab bar légère —
-  /// adapté pour servir de sous-onglet dans le hub `EnvoyerHubScreen`.
+  /// Quand `true`, l'écran omet son header sombre — adapté pour servir de
+  /// sous-onglet dans le hub `EnvoyerHubScreen`.
   final bool embedded;
 
   @override
-  State<ShipmentListScreen> createState() => _ShipmentListScreenState();
+  Widget build(BuildContext context) => BlocProvider(
+    create: (_) => getIt<ShipmentFilterCubit>(),
+    child: _ShipmentListContent(embedded: embedded),
+  );
 }
 
 /// Body extrait pour usage en sous-onglet du hub `EnvoyerHubScreen`.
@@ -49,77 +56,22 @@ class ShipmentListBody extends StatelessWidget {
       const ShipmentListScreen(embedded: true);
 }
 
-class _ShipmentListScreenState extends State<ShipmentListScreen> {
+class _ShipmentListContent extends StatefulWidget {
+  const _ShipmentListContent({required this.embedded});
+  final bool embedded;
+  @override
+  State<_ShipmentListContent> createState() => _ShipmentListContentState();
+}
+
+class _ShipmentListContentState extends State<_ShipmentListContent> {
   late final EnvoisRefreshNotifier _refreshNotifier;
-
-  _Tab _tab = _Tab.enCours;
-
-  List<BidModel> _inProgress = [];
-  List<BidModel> _upcoming = [];
-  List<BidModel> _past = [];
-  bool _hasData = false;
-  bool _isRefreshing = false;
-
+  final _searchController = TextEditingController();
+  Timer? _debounce;
   String? _payingBidId;
-
-  // Priorité : statut le plus avancé en tête ; à égalité, départ le plus proche.
-  static const _statusPriority = {
-    'IN_TRANSIT': 6,
-    'HANDED_OVER': 5,
-    'ACCEPTED': 4,
-    'PAYMENT_ESCROWED': 3,
-    'AWAITING_PAYMENT': 2,
-    'PENDING': 1,
-    'COMPLETED': 0,
-  };
-
-  static List<BidModel> _sortBids(List<BidModel> bids) {
-    bids.sort((a, b) {
-      final pa = _statusPriority[a.status] ?? 0;
-      final pb = _statusPriority[b.status] ?? 0;
-      if (pa != pb) return pb.compareTo(pa);
-      final da = a.departureDate ?? DateTime(9999);
-      final db = b.departureDate ?? DateTime(9999);
-      return da.compareTo(db);
-    });
-    return bids;
-  }
-
-  void _populateLists(List<BidModel> bids) {
-    _inProgress = _sortBids(bids
-        .where((b) =>
-            b.status == 'ACCEPTED' ||
-            b.status == 'HANDED_OVER' ||
-            b.status == 'IN_TRANSIT')
-        .toList());
-    _upcoming = _sortBids(bids
-        .where((b) =>
-            b.status == 'PENDING' ||
-            b.status == 'AWAITING_PAYMENT' ||
-            b.status == 'PAYMENT_ESCROWED')
-        .toList());
-    _past = _sortBids(bids
-        .where((b) =>
-            b.status == 'COMPLETED' ||
-            b.status == 'REJECTED' ||
-            b.status == 'CANCELLED' ||
-            b.status == 'NO_SHOW' ||
-            b.status == 'EXPIRED' ||
-            b.status == 'PARCEL_REFUSED')
-        .toList());
-    _hasData = true;
-  }
 
   @override
   void initState() {
     super.initState();
-    // Peupler immédiatement si le BLoC a déjà des données (évite l'écran vide
-    // quand BlocListener ne se déclenche pas car aucun changement d'état).
-    final existing = context.read<BidBloc>().state;
-    if (existing is BidListLoaded) {
-      _populateLists(existing.bids);
-      _isRefreshing = existing.isRefreshing;
-    }
     _refreshNotifier = getIt<EnvoisRefreshNotifier>();
     _refreshNotifier.addListener(_onTabRefreshRequested);
     context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
@@ -131,23 +83,35 @@ class _ShipmentListScreenState extends State<ShipmentListScreen> {
     }
   }
 
+  void _onQueryChanged(String q) {
+    _debounce?.cancel();
+    _debounce = Timer(
+      const Duration(milliseconds: 250),
+      () => context.read<ShipmentFilterCubit>().setQuery(q),
+    );
+  }
+
   @override
   void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
     _refreshNotifier.removeListener(_onTabRefreshRequested);
     super.dispose();
   }
 
   void _startPayment(BidModel bid) {
     setState(() => _payingBidId = bid.id);
-    context.read<BidBloc>().add(BidCheckoutRequested(
-      announcementId: bid.announcementId,
-      weightKg: bid.weightKg ?? 0,
-      declaredValueEur: bid.declaredValueEur ?? 0,
-      description: bid.description ?? '',
-      contentCategory: bid.contentCategory ?? '',
-      recipientName: bid.recipientName ?? '',
-      recipientPhone: bid.recipientPhone ?? '',
-    ));
+    context.read<BidBloc>().add(
+      BidCheckoutRequested(
+        announcementId: bid.announcementId,
+        weightKg: bid.weightKg ?? 0,
+        declaredValueEur: bid.declaredValueEur ?? 0,
+        description: bid.description ?? '',
+        contentCategory: bid.contentCategory ?? '',
+        recipientName: bid.recipientName ?? '',
+        recipientPhone: bid.recipientPhone ?? '',
+      ),
+    );
   }
 
   Future<void> _presentPaymentSheet(
@@ -185,53 +149,52 @@ class _ShipmentListScreenState extends State<ShipmentListScreen> {
       if (!context.mounted) return;
       setState(() => _payingBidId = null);
       if (e.error.code != FailureCode.Canceled) {
-        DonySnackbar.show(context,
-            message: 'Erreur de paiement: ${e.error.message}',
-            type: DonySnackbarType.error);
+        DonySnackbar.show(
+          context,
+          message: 'Erreur de paiement: ${e.error.message}',
+          type: DonySnackbarType.error,
+        );
       }
     } catch (e) {
       if (!context.mounted) return;
       setState(() => _payingBidId = null);
-      DonySnackbar.show(context,
-          message: 'Erreur: ${e.toString()}', type: DonySnackbarType.error);
+      DonySnackbar.show(
+        context,
+        message: 'Erreur: ${e.toString()}',
+        type: DonySnackbarType.error,
+      );
+    }
+  }
+
+  void _onBidState(BuildContext context, BidState state) {
+    if (state is BidCheckoutReady) {
+      context.read<PaymentBloc>().add(
+        BidCheckoutPaymentRequested(
+          clientSecret: state.response.clientSecret,
+          publishableKey: state.response.publishableKey,
+          bidId: state.response.bidId,
+        ),
+      );
+    } else if (state is BidDeleted) {
+      DonySnackbar.show(
+        context,
+        message: 'Envoi supprimé',
+        type: DonySnackbarType.success,
+      );
+      context.read<BidBloc>().add(
+        const BidMyListAutoRefreshRequested(force: true),
+      );
+    } else if (state is BidError && _payingBidId != null) {
+      setState(() => _payingBidId = null);
+      ErrorPresenter.show(context, state.error);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final counts = (
-      enCours: _inProgress.length,
-      aVenir: _upcoming.length,
-      passes: _past.length,
-    );
-
     return MultiBlocListener(
       listeners: [
-        BlocListener<BidBloc, BidState>(
-          listener: (context, state) {
-            if (state is BidListLoaded) {
-              setState(() {
-                _populateLists(state.bids);
-                _isRefreshing = state.isRefreshing;
-              });
-            } else if (state is BidCheckoutReady) {
-              context.read<PaymentBloc>().add(BidCheckoutPaymentRequested(
-                clientSecret: state.response.clientSecret,
-                publishableKey: state.response.publishableKey,
-                bidId: state.response.bidId,
-              ));
-            } else if (state is BidDeleted) {
-              DonySnackbar.show(context,
-                  message: 'Envoi supprimé', type: DonySnackbarType.success);
-              context
-                  .read<BidBloc>()
-                  .add(const BidMyListAutoRefreshRequested(force: true));
-            } else if (state is BidError && _payingBidId != null) {
-              setState(() => _payingBidId = null);
-              ErrorPresenter.show(context, state.error);
-            }
-          },
-        ),
+        BlocListener<BidBloc, BidState>(listener: _onBidState),
         BlocListener<PaymentBloc, PaymentState>(
           listener: (context, state) async {
             if (state is CheckoutPaymentSheetReady) {
@@ -240,140 +203,306 @@ class _ShipmentListScreenState extends State<ShipmentListScreen> {
           },
         ),
       ],
-      child: BlocBuilder<BidBloc, BidState>(
-        builder: (context, state) {
-          Widget body;
-          if (!_hasData && (state is BidLoading || state is BidInitial)) {
-            body = const _LoadingView();
-          } else if (!_hasData && state is BidError) {
-            body = _ErrorView(
-                message: ErrorPresenter.resolve(state.error).message);
-          } else {
-            body = _buildTabBody(context);
-          }
+      child: BlocBuilder<ShipmentFilterCubit, ShipmentFilterState>(
+        builder: (context, filter) => BlocBuilder<BidBloc, BidState>(
+          builder: (context, bidState) {
+            final hasData = bidState is BidListLoaded;
+            final filtered = hasData
+                ? applyShipmentFilters(bidState.bids, filter, DateTime.now())
+                : <BidModel>[];
 
-          if (_isRefreshing) {
-            body = Stack(
-              children: [
-                body,
-                LinearProgressIndicator(
-                  color: Theme.of(context).colorScheme.primary,
-                  minHeight: 2,
+            Widget body;
+            if (!hasData &&
+                (bidState is BidLoading || bidState is BidInitial)) {
+              body = const _LoadingView();
+            } else if (!hasData && bidState is BidError) {
+              body = _ErrorView(
+                message: ErrorPresenter.resolve(bidState.error).message,
+              );
+            } else if (bidState is BidListLoaded && bidState.bids.isEmpty) {
+              body = const _EmptyView(
+                icon: Icons.local_shipping_outlined,
+                title: 'Aucun envoi',
+                subtitle:
+                    'Vos colis acceptés par un voyageur apparaîtront ici.',
+              );
+            } else if (filtered.isEmpty) {
+              body = _FilteredEmptyView(
+                onReset: () => context.read<ShipmentFilterCubit>().reset(),
+              );
+            } else {
+              body = _ShipmentListView(
+                bids: filtered,
+                emptyMessage: '',
+                emptySubtitle: '',
+                emptyIcon: Icons.inbox_rounded,
+                hPadding: DonyLayout.hPadding(context),
+                payingBidId: _payingBidId,
+                onPayTap: _startPayment,
+                onRefresh: () async => context.read<BidBloc>().add(
+                  const BidMyListAutoRefreshRequested(force: true),
                 ),
-              ],
+                onDelete: (bid) =>
+                    context.read<BidBloc>().add(BidDeleteRequested(bid.id)),
+              );
+            }
+
+            if (hasData && bidState.isRefreshing) {
+              body = Stack(
+                children: [
+                  body,
+                  LinearProgressIndicator(
+                    color: Theme.of(context).colorScheme.primary,
+                    minHeight: 2,
+                  ),
+                ],
+              );
+            }
+
+            return Scaffold(
+              backgroundColor: widget.embedded
+                  ? Theme.of(context).colorScheme.surface
+                  : const Color(0xFFF2F1EF),
+              body: Column(
+                children: [
+                  if (!widget.embedded)
+                    SafeArea(
+                      bottom: false,
+                      child: _DarkHeader(
+                        total: hasData ? bidState.bids.length : 0,
+                      ),
+                    ),
+                  _ShipmentFilterBar(
+                    controller: _searchController,
+                    onQueryChanged: _onQueryChanged,
+                    resultCount: filtered.length,
+                    hasData: hasData,
+                  ),
+                  Expanded(child: body),
+                ],
+              ),
             );
-          }
-
-          if (widget.embedded) {
-            return Column(
-              children: [
-                _EmbeddedTabBar(
-                  activeTab: _tab,
-                  onTabChanged: (t) => setState(() => _tab = t),
-                ),
-                Expanded(child: body),
-              ],
-            );
-          }
-
-          return Scaffold(
-            backgroundColor: const Color(0xFFF2F1EF),
-            body: Column(
-              children: [
-                _DarkHeader(
-                  activeTab: _tab,
-                  counts: counts,
-                  onTabChanged: (t) => setState(() => _tab = t),
-                ),
-                Expanded(child: body),
-              ],
-            ),
-          );
-        },
+          },
+        ),
       ),
     );
   }
+}
 
-  Widget _buildTabBody(BuildContext context) {
-    final h = DonyLayout.hPadding(context);
-    switch (_tab) {
-      case _Tab.enCours:
-        return _ShipmentListView(
-          key: const PageStorageKey('tab_inprogress'),
-          bids: _inProgress,
-          emptyMessage: 'Aucun envoi en cours',
-          emptySubtitle: 'Vos colis acceptés par un voyageur apparaîtront ici.',
-          emptyIcon: Icons.local_shipping_outlined,
-          hPadding: h,
-          onRefresh: () async => context
-              .read<BidBloc>()
-              .add(const BidMyListAutoRefreshRequested(force: true)),
-        );
-      case _Tab.aVenir:
-        return _ShipmentListView(
-          key: const PageStorageKey('tab_upcoming'),
-          bids: _upcoming,
-          emptyMessage: 'Aucune demande en attente',
-          emptySubtitle: 'Trouvez un voyageur et faites votre premier envoi.',
-          emptyIcon: Icons.hourglass_empty_rounded,
-          hPadding: h,
-          payingBidId: _payingBidId,
-          onPayTap: _startPayment,
-          onRefresh: () async => context
-              .read<BidBloc>()
-              .add(const BidMyListAutoRefreshRequested(force: true)),
-        );
-      case _Tab.passes:
-        return _ShipmentListView(
-          key: const PageStorageKey('tab_past'),
-          bids: _past,
-          emptyMessage: 'Aucun historique',
-          emptySubtitle: 'Vos livraisons terminées apparaîtront ici.',
-          emptyIcon: Icons.history_rounded,
-          hPadding: h,
-          onRefresh: () async => context
-              .read<BidBloc>()
-              .add(const BidMyListAutoRefreshRequested(force: true)),
-          onDelete: (bid) =>
-              context.read<BidBloc>().add(BidDeleteRequested(bid.id)),
-        );
-    }
+// ── Filter bar ────────────────────────────────────────────────────────────────
+
+String? _activeQuickPreset(Set<String> s) {
+  if (s.isEmpty) {
+    return 'all';
+  }
+  if (setEquals(s, kEnvoisEnCours)) {
+    return 'encours';
+  }
+  if (setEquals(s, kEnvoisAVenir)) {
+    return 'avenir';
+  }
+  if (setEquals(s, kEnvoisPasses)) {
+    return 'passes';
+  }
+  return null;
+}
+
+const _quickPresets = <(String, String, Set<String>)>[
+  ('all', 'Tous', {}),
+  ('encours', 'En cours', kEnvoisEnCours),
+  ('avenir', 'À venir', kEnvoisAVenir),
+  ('passes', 'Passés', kEnvoisPasses),
+];
+
+class _ShipmentFilterBar extends StatelessWidget {
+  const _ShipmentFilterBar({
+    required this.controller,
+    required this.onQueryChanged,
+    required this.resultCount,
+    required this.hasData,
+  });
+  final TextEditingController controller;
+  final ValueChanged<String> onQueryChanged;
+  final int resultCount;
+  final bool hasData;
+
+  @override
+  Widget build(BuildContext context) {
+    final cubit = context.read<ShipmentFilterCubit>();
+    final filter = context.watch<ShipmentFilterCubit>().state;
+    final active = _activeQuickPreset(filter.statuses);
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      color: cs.surface,
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.base,
+        DonySpacing.sm,
+        DonySpacing.base,
+        DonySpacing.xs,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DonySearchField(
+            hint: 'Ville, destinataire, voyageur…',
+            controller: controller,
+            onChanged: onQueryChanged,
+            onClear: () {
+              controller.clear();
+              cubit.setQuery('');
+            },
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          Row(
+            children: [
+              _SelectorButton(
+                label: 'Statut',
+                onTap: () async {
+                  final r = await ShipmentStatusFilterSheet.show(
+                    context,
+                    filter.statuses,
+                  );
+                  if (r != null) {
+                    cubit.setStatuses(r);
+                  }
+                },
+              ),
+              const SizedBox(width: DonySpacing.xs),
+              _SelectorButton(
+                label: 'Période',
+                onTap: () async {
+                  final r = await ShipmentPeriodFilterSheet.show(
+                    context,
+                    basis: filter.periodBasis,
+                    preset: filter.periodPreset,
+                    range: filter.customRange,
+                  );
+                  if (r != null) {
+                    cubit.setPeriod(
+                      basis: r.basis,
+                      preset: r.preset,
+                      range: r.range,
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final p in _quickPresets) ...[
+                  DonyChip(
+                    label: p.$2,
+                    selected: active == p.$1,
+                    onTap: () => cubit.applyQuickPreset(p.$3),
+                  ),
+                  const SizedBox(width: DonySpacing.xs),
+                ],
+              ],
+            ),
+          ),
+          if (filter.hasActiveFilters) ...[
+            const SizedBox(height: DonySpacing.xs),
+            Row(
+              children: [
+                Text(
+                  hasData
+                      ? '$resultCount résultat${resultCount > 1 ? 's' : ''}'
+                      : '',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () {
+                    controller.clear();
+                    cubit.reset();
+                  },
+                  child: Text(
+                    'Tout effacer',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: cs.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _SelectorButton extends StatelessWidget {
+  const _SelectorButton({required this.label, required this.onTap});
+  final String label;
+  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: DonySpacing.md,
+          vertical: DonySpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: cs.onSurface,
+          borderRadius: BorderRadius.circular(DonyRadius.sm + 2),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                color: cs.surface,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(Icons.expand_more_rounded, color: cs.surface, size: 16),
+          ],
+        ),
+      ),
+    );
   }
 }
 
 // ── Dark Header ───────────────────────────────────────────────────────────────
 
 class _DarkHeader extends StatelessWidget {
-  const _DarkHeader({
-    required this.activeTab,
-    required this.counts,
-    required this.onTabChanged,
-  });
+  const _DarkHeader({required this.total});
 
-  final _Tab activeTab;
-  final ({int enCours, int aVenir, int passes}) counts;
-  final ValueChanged<_Tab> onTabChanged;
+  final int total;
 
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final canGoBack = context.canPop();
 
-    final activeCount = switch (activeTab) {
-      _Tab.enCours => counts.enCours,
-      _Tab.aVenir => counts.aVenir,
-      _Tab.passes => counts.passes,
-    };
-
     return Container(
       color: const Color(0xFF0A2540),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(height: MediaQuery.of(context).padding.top),
           Padding(
             padding: const EdgeInsets.fromLTRB(
-                DonySpacing.xs, DonySpacing.sm, DonySpacing.base, DonySpacing.xs),
+              DonySpacing.xs,
+              DonySpacing.sm,
+              DonySpacing.base,
+              DonySpacing.sm,
+            ),
             child: Row(
               children: [
                 if (canGoBack)
@@ -408,17 +537,18 @@ class _DarkHeader extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (activeCount > 0)
+                if (total > 0)
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: DonySpacing.sm,
-                        vertical: DonySpacing.xxs + 1),
+                      horizontal: DonySpacing.sm,
+                      vertical: DonySpacing.xxs + 1,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(DonyRadius.full),
                     ),
                     child: Text(
-                      '$activeCount',
+                      '$total',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -429,160 +559,7 @@ class _DarkHeader extends StatelessWidget {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-                DonySpacing.base, 0, DonySpacing.base, DonySpacing.sm),
-            child: Row(
-              children: [
-                _DarkTab(
-                  label: 'En cours',
-                  active: activeTab == _Tab.enCours,
-                  onTap: () => onTabChanged(_Tab.enCours),
-                ),
-                const SizedBox(width: DonySpacing.xs),
-                _DarkTab(
-                  label: 'À venir',
-                  active: activeTab == _Tab.aVenir,
-                  onTap: () => onTabChanged(_Tab.aVenir),
-                ),
-                const SizedBox(width: DonySpacing.xs),
-                _DarkTab(
-                  label: 'Passés',
-                  active: activeTab == _Tab.passes,
-                  onTap: () => onTabChanged(_Tab.passes),
-                ),
-              ],
-            ),
-          ),
         ],
-      ),
-    );
-  }
-}
-
-class _DarkTab extends StatelessWidget {
-  const _DarkTab({
-    required this.label,
-    required this.active,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(
-            horizontal: DonySpacing.md, vertical: DonySpacing.xs + 2),
-        decoration: BoxDecoration(
-          color: active
-              ? Colors.white.withValues(alpha: 0.15)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(DonyRadius.sm),
-          border: active
-              ? Border.all(
-                  color: Colors.white.withValues(alpha: 0.4), width: 1)
-              : null,
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: active
-                ? Colors.white
-                : Colors.white.withValues(alpha: 0.5),
-            fontSize: 12,
-            fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Embedded Tab Bar ──────────────────────────────────────────────────────────
-
-class _EmbeddedTabBar extends StatelessWidget {
-  const _EmbeddedTabBar({
-    required this.activeTab,
-    required this.onTabChanged,
-  });
-
-  final _Tab activeTab;
-  final ValueChanged<_Tab> onTabChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      color: cs.surface,
-      padding: const EdgeInsets.fromLTRB(
-          DonySpacing.base, DonySpacing.sm, DonySpacing.base, DonySpacing.sm),
-      child: Row(
-        children: [
-          _EmbeddedTab(
-            label: 'En cours',
-            active: activeTab == _Tab.enCours,
-            cs: cs,
-            onTap: () => onTabChanged(_Tab.enCours),
-          ),
-          const SizedBox(width: DonySpacing.xs),
-          _EmbeddedTab(
-            label: 'À venir',
-            active: activeTab == _Tab.aVenir,
-            cs: cs,
-            onTap: () => onTabChanged(_Tab.aVenir),
-          ),
-          const SizedBox(width: DonySpacing.xs),
-          _EmbeddedTab(
-            label: 'Passés',
-            active: activeTab == _Tab.passes,
-            cs: cs,
-            onTap: () => onTabChanged(_Tab.passes),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _EmbeddedTab extends StatelessWidget {
-  const _EmbeddedTab({
-    required this.label,
-    required this.active,
-    required this.cs,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool active;
-  final ColorScheme cs;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(
-            horizontal: DonySpacing.md, vertical: DonySpacing.xs + 2),
-        decoration: BoxDecoration(
-          color: active ? cs.primaryContainer : Colors.transparent,
-          borderRadius: BorderRadius.circular(DonyRadius.sm),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: active ? cs.primary : cs.onSurfaceVariant,
-            fontSize: 12,
-            fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-          ),
-        ),
       ),
     );
   }
@@ -595,23 +572,23 @@ class _ProgressStepper extends StatelessWidget {
   final String status;
 
   List<String> get _labels => [
-        'Proposé',
-        status == 'PAYMENT_ESCROWED' ? 'Payé' : 'À payer',
-        'Confirmé',
-        'En route',
-        'Livré',
-      ];
+    'Proposé',
+    status == 'PAYMENT_ESCROWED' ? 'Payé' : 'À payer',
+    'Confirmé',
+    'En route',
+    'Livré',
+  ];
 
   int get _active => switch (status) {
-        'PENDING' => 0,
-        'AWAITING_PAYMENT' => 1,
-        'PAYMENT_ESCROWED' => 1,
-        'ACCEPTED' => 2,
-        'HANDED_OVER' => 3,
-        'IN_TRANSIT' => 3,
-        'COMPLETED' => 5,
-        _ => -1,
-      };
+    'PENDING' => 0,
+    'AWAITING_PAYMENT' => 1,
+    'PAYMENT_ESCROWED' => 1,
+    'ACCEPTED' => 2,
+    'HANDED_OVER' => 3,
+    'IN_TRANSIT' => 3,
+    'COMPLETED' => 5,
+    _ => -1,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -684,10 +661,7 @@ class _ProgressStepper extends StatelessWidget {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 14),
-                child: Container(
-                  height: 2,
-                  color: connectorColor(i),
-                ),
+                child: Container(height: 2, color: connectorColor(i)),
               ),
             ),
         ],
@@ -710,7 +684,6 @@ class _ShipmentListView extends StatelessWidget {
   final void Function(BidModel)? onDelete;
 
   const _ShipmentListView({
-    super.key,
     required this.bids,
     required this.emptyMessage,
     required this.emptySubtitle,
@@ -726,10 +699,18 @@ class _ShipmentListView extends StatelessWidget {
   Widget build(BuildContext context) {
     final child = bids.isEmpty
         ? _EmptyView(
-            icon: emptyIcon, title: emptyMessage, subtitle: emptySubtitle)
+            icon: emptyIcon,
+            title: emptyMessage,
+            subtitle: emptySubtitle,
+          )
         : ListView.separated(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.fromLTRB(hPadding, DonySpacing.base, hPadding, 100),
+            padding: EdgeInsets.fromLTRB(
+              hPadding,
+              DonySpacing.base,
+              hPadding,
+              100,
+            ),
             itemCount: bids.length,
             separatorBuilder: (_, _) => const SizedBox(height: DonySpacing.md),
             itemBuilder: (_, i) {
@@ -740,7 +721,9 @@ class _ShipmentListView extends StatelessWidget {
                 isPaymentLoading: payingBidId == bid.id,
                 onPayTap: onPayTap != null ? () => onPayTap!(bid) : null,
               );
-              if (onDelete == null) return card;
+              if (onDelete == null || !kEnvoisPasses.contains(bid.status)) {
+                return card;
+              }
               return Dismissible(
                 key: ValueKey('dismiss_${bid.id}'),
                 direction: DismissDirection.endToStart,
@@ -789,8 +772,11 @@ class _DeleteBackground extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.delete_outline_rounded,
-              color: DonyColors.white, size: 26),
+          const Icon(
+            Icons.delete_outline_rounded,
+            color: DonyColors.white,
+            size: 26,
+          ),
           const SizedBox(height: DonySpacing.xs),
           Text(
             'Supprimer',
@@ -818,37 +804,36 @@ class _ShipmentCard extends StatelessWidget {
   final VoidCallback? onPayTap;
 
   Color _statusColor(ColorScheme cs) => switch (bid.status) {
-        'PENDING' || 'AWAITING_PAYMENT' || 'PAYMENT_ESCROWED' => cs.warning,
-        'ACCEPTED' || 'COMPLETED' => cs.success,
-        'HANDED_OVER' || 'IN_TRANSIT' => cs.primary,
-        _ => cs.onSurfaceVariant,
-      };
+    'PENDING' || 'AWAITING_PAYMENT' || 'PAYMENT_ESCROWED' => cs.warning,
+    'ACCEPTED' || 'COMPLETED' => cs.success,
+    'HANDED_OVER' || 'IN_TRANSIT' => cs.primary,
+    _ => cs.onSurfaceVariant,
+  };
 
   String get _statusLabel => switch (bid.status) {
-        'PENDING' => 'EN ATTENTE',
-        'AWAITING_PAYMENT' => 'À PAYER',
-        'PAYMENT_ESCROWED' => 'EN ATTENTE',
-        'ACCEPTED' => 'CONFIRMÉ',
-        'HANDED_OVER' => 'EN ROUTE',
-        'IN_TRANSIT' => 'EN TRANSIT',
-        'COMPLETED' => 'LIVRÉ',
-        'REJECTED' => 'REFUSÉ',
-        'CANCELLED' => 'ANNULÉ',
-        'NO_SHOW' => 'ABSENT',
-        'EXPIRED' => 'EXPIRÉ',
-        'PARCEL_REFUSED' => 'REFUSÉ',
-        _ => bid.status,
-      };
+    'PENDING' => 'EN ATTENTE',
+    'AWAITING_PAYMENT' => 'À PAYER',
+    'PAYMENT_ESCROWED' => 'EN ATTENTE',
+    'ACCEPTED' => 'CONFIRMÉ',
+    'HANDED_OVER' => 'EN ROUTE',
+    'IN_TRANSIT' => 'EN TRANSIT',
+    'COMPLETED' => 'LIVRÉ',
+    'REJECTED' => 'REFUSÉ',
+    'CANCELLED' => 'ANNULÉ',
+    'NO_SHOW' => 'ABSENT',
+    'EXPIRED' => 'EXPIRÉ',
+    'PARCEL_REFUSED' => 'REFUSÉ',
+    _ => bid.status,
+  };
 
   bool get _isDisabled => switch (bid.status) {
-        'REJECTED' ||
-        'CANCELLED' ||
-        'NO_SHOW' ||
-        'EXPIRED' ||
-        'PARCEL_REFUSED' =>
-          true,
-        _ => false,
-      };
+    'REJECTED' ||
+    'CANCELLED' ||
+    'NO_SHOW' ||
+    'EXPIRED' ||
+    'PARCEL_REFUSED' => true,
+    _ => false,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -944,7 +929,9 @@ class _ShipmentCard extends StatelessWidget {
                       onTap: isPaymentLoading ? null : onPayTap,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: DonySpacing.md, vertical: 6),
+                          horizontal: DonySpacing.md,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: cs.warning,
                           borderRadius: BorderRadius.circular(DonyRadius.sm),
@@ -975,9 +962,9 @@ class _ShipmentCard extends StatelessWidget {
                           : () async {
                               await context.push('/bids/${bid.id}', extra: bid);
                               if (context.mounted) {
-                                context
-                                    .read<BidBloc>()
-                                    .add(BidMyListRequested());
+                                context.read<BidBloc>().add(
+                                  BidMyListRequested(),
+                                );
                               }
                             },
                       child: Text(
@@ -985,8 +972,7 @@ class _ShipmentCard extends StatelessWidget {
                         style: tt.labelSmall?.copyWith(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
-                          color:
-                              _isDisabled ? cs.onSurfaceVariant : cs.primary,
+                          color: _isDisabled ? cs.onSurfaceVariant : cs.primary,
                         ),
                       ),
                     ),
@@ -1004,8 +990,8 @@ class _ShipmentCard extends StatelessWidget {
       bid.weightKg != null
           ? '${bid.weightKg!.toStringAsFixed(0)} kg'
           : bid.pricingMode == BidPricingMode.grid
-              ? 'Forfait'
-              : '—',
+          ? 'Forfait'
+          : '—',
     ];
     if (bid.contentCategory != null) parts.add(bid.contentCategory!);
     return parts.join(' · ');
@@ -1013,6 +999,43 @@ class _ShipmentCard extends StatelessWidget {
 }
 
 // ── Empty / Loading / Error ───────────────────────────────────────────────────
+
+class _FilteredEmptyView extends StatelessWidget {
+  const _FilteredEmptyView({required this.onReset});
+  final VoidCallback onReset;
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(DonySpacing.xxl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.filter_alt_off_rounded, size: 40, color: cs.outline),
+            const SizedBox(height: DonySpacing.base),
+            Text(
+              'Aucun envoi ne correspond à tes filtres',
+              textAlign: TextAlign.center,
+              style: tt.bodyMedium?.copyWith(
+                color: cs.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: DonySpacing.md),
+            DonyButton(
+              label: 'Réinitialiser',
+              variant: DonyButtonVariant.secondary,
+              fullWidth: false,
+              onPressed: onReset,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _EmptyView extends StatelessWidget {
   final IconData icon;
@@ -1037,85 +1060,94 @@ class _EmptyView extends StatelessWidget {
           height: constraints.maxHeight,
           child: Center(
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: DonySpacing.xxl),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 68,
-                    height: 68,
-                    decoration: BoxDecoration(
-                      color: cs.primaryContainer,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(icon, size: 30, color: cs.primary),
-                  ),
-                  const SizedBox(height: DonySpacing.base),
-                  Text(
-                    title,
-                    style: tt.titleLarge?.copyWith(color: cs.onSurface),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    subtitle,
-                    style: tt.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: DonySpacing.xl),
-                  GestureDetector(
-                    onTap: () async {
-                      final params =
-                          await SearchFormBottomSheet.show(context);
-                      if (params != null && context.mounted) {
-                        getIt<PendingSearchNotifier>().setPending(params);
-                        context.go('/home');
-                      }
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: DonySpacing.xl, vertical: 13),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [DonyColors.blue700, cs.primary],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(DonyRadius.md),
-                        boxShadow: [
-                          BoxShadow(
-                            color: cs.primary.withValues(alpha: 0.28),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
+              padding: const EdgeInsets.symmetric(horizontal: DonySpacing.xxl),
+              child:
+                  Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.search_rounded,
-                              color: DonyColors.textOnBrand, size: 16),
-                          const SizedBox(width: DonySpacing.sm),
+                          Container(
+                            width: 68,
+                            height: 68,
+                            decoration: BoxDecoration(
+                              color: cs.primaryContainer,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(icon, size: 30, color: cs.primary),
+                          ),
+                          const SizedBox(height: DonySpacing.base),
                           Text(
-                            'Rechercher un trajet',
-                            style: tt.labelLarge?.copyWith(
-                              color: DonyColors.textOnBrand,
+                            title,
+                            style: tt.titleLarge?.copyWith(color: cs.onSurface),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            subtitle,
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                              height: 1.5,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: DonySpacing.xl),
+                          GestureDetector(
+                            onTap: () async {
+                              final params = await SearchFormBottomSheet.show(
+                                context,
+                              );
+                              if (params != null && context.mounted) {
+                                getIt<PendingSearchNotifier>().setPending(
+                                  params,
+                                );
+                                context.go('/home');
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: DonySpacing.xl,
+                                vertical: 13,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [DonyColors.blue700, cs.primary],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(
+                                  DonyRadius.md,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: cs.primary.withValues(alpha: 0.28),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.search_rounded,
+                                    color: DonyColors.textOnBrand,
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: DonySpacing.sm),
+                                  Text(
+                                    'Rechercher un trajet',
+                                    style: tt.labelLarge?.copyWith(
+                                      color: DonyColors.textOnBrand,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
-                      ),
-                    ),
-                  ),
-                ],
-              )
-                  .animate()
-                  .fadeIn(duration: 300.ms)
-                  .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                      )
+                      .animate()
+                      .fadeIn(duration: 300.ms)
+                      .slideY(begin: 0.04, curve: Curves.easeOutCubic),
             ),
           ),
         ),
@@ -1181,7 +1213,9 @@ class _ErrorView extends StatelessWidget {
               onTap: () => context.read<BidBloc>().add(BidMyListRequested()),
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.lg, vertical: DonySpacing.md),
+                  horizontal: DonySpacing.lg,
+                  vertical: DonySpacing.md,
+                ),
                 decoration: BoxDecoration(
                   color: cs.primaryContainer,
                   borderRadius: BorderRadius.circular(10),
