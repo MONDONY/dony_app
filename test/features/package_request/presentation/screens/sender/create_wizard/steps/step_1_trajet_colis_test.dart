@@ -42,13 +42,15 @@ void main() {
       );
 
   group('Step1TrajetColis', () {
-    testWidgets('rend le label section + titre + 6 boutons transport',
+    testWidgets('rend le label section + titre + avion verrouillé',
         (tester) async {
       await tester.pumpWidget(wrap(const Step1TrajetColis()));
       expect(find.text('TRAJET & COLIS'), findsOneWidget);
       expect(find.text("D'où vers où ?"), findsOneWidget);
-      // 6 OptionButton pour TransportMode (plane, car, train, bus, boat, other)
-      expect(find.byType(OptionButton), findsNWidgets(6));
+      // Avion verrouillé remplace les 6 OptionButton
+      expect(find.byIcon(Icons.flight_rounded), findsOneWidget);
+      expect(find.text('Avion'), findsOneWidget);
+      expect(find.byType(OptionButton), findsNothing);
     });
 
     testWidgets('rend les labels de section Départ / Arrivée / Date',
@@ -59,7 +61,8 @@ void main() {
       // 'Date' apparaît 2 fois : label + placeholder du DatePickerField (date == null).
       expect(find.text('Date'), findsNWidgets(2));
       expect(find.text('Tolérance'), findsOneWidget);
-      expect(find.text('Mode de transport'), findsOneWidget);
+      // "Mode de transport" supprimé — remplacé par bloc avion verrouillé + champ poids
+      expect(find.text('Poids du colis'), findsOneWidget);
     });
 
     testWidgets('snackbar si date manquante au submit', (tester) async {
