@@ -7,6 +7,7 @@ import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/modify_trip_sheet.dart';
@@ -31,6 +32,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
   PackageRequest? _request;
   List<AnnouncementModel> _matchingTrips = const [];
   AnnouncementModel? _selectedTrip;
+  PaymentMethod _selectedPaymentMethod = PaymentMethod.stripe;
   bool _loading = true;
   String? _error;
 
@@ -87,6 +89,12 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
           _request = request;
           _matchingTrips = matching;
           _loading = false;
+          // Default to STRIPE; if STRIPE is not in accepted methods, pick first.
+          if (request.acceptedPaymentMethods.contains(PaymentMethod.stripe)) {
+            _selectedPaymentMethod = PaymentMethod.stripe;
+          } else if (request.acceptedPaymentMethods.isNotEmpty) {
+            _selectedPaymentMethod = request.acceptedPaymentMethods.first;
+          }
         });
       }
     } catch (e) {
@@ -109,6 +117,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
     context.read<NegotiationBloc>().add(NegotiationSubmitTripRequested(
       threadId: widget.thread.id,
       travelerAnnouncementId: ann.id,
+      paymentMethod: _selectedPaymentMethod,
     ));
     // Navigation handled by BlocListener on NegotiationLoaded(awaitingPayment).
   }
@@ -126,6 +135,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
       weightKg: r.weightKg,
       transportMode: r.transportMode,
       agreedPriceEur: widget.thread.currentPriceEur,
+      paymentMethod: _selectedPaymentMethod,
     );
     await CreateAnnouncementBottomSheet.show(
       context,
@@ -162,9 +172,15 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
           // Trip linked successfully: leave this screen.
           if (context.canPop()) context.pop();
         } else if (state is NegotiationError) {
+          final errorCode = state.error.code ?? '';
+          final message =
+              errorCode == 'payment-method/traveler-insufficient-funds-cash'
+                  ? 'Solde insuffisant pour le paiement en cash. '
+                      'Configurez votre méthode de commission dans les réglages.'
+                  : state.error.message;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.error.message),
+              content: Text(message),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -253,6 +269,12 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
             ),
           ),
           const SizedBox(height: DonySpacing.xl),
+          _PaymentMethodPicker(
+            methods: r.acceptedPaymentMethods,
+            selected: _selectedPaymentMethod,
+            onChanged: (m) => setState(() => _selectedPaymentMethod = m),
+          ),
+          const SizedBox(height: DonySpacing.xl),
           Text(
             _matchingTrips.isEmpty
                 ? 'Aucun de tes trajets ne match'
@@ -294,6 +316,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                 .asMap()
                 .entries
                 .map((e) => TripTile(
+                      key: Key('trip-tile-${e.key}'),
                       announcement: e.value,
                       index: e.key,
                       isSelected: _selectedTrip?.id == e.value.id,
@@ -315,6 +338,128 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ── Payment method labels ─────────────────────────────────────────────────────
+
+extension _PaymentMethodLabel on PaymentMethod {
+  String get label {
+    switch (this) {
+      case PaymentMethod.stripe:
+        return 'Carte';
+      case PaymentMethod.cash:
+        return 'Cash';
+      case PaymentMethod.wave:
+        return 'Wave';
+      case PaymentMethod.orangeMoney:
+        return 'Orange Money';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case PaymentMethod.stripe:
+        return Icons.credit_card_rounded;
+      case PaymentMethod.cash:
+        return Icons.payments_rounded;
+      case PaymentMethod.wave:
+        return Icons.waves_rounded;
+      case PaymentMethod.orangeMoney:
+        return Icons.phone_android_rounded;
+    }
+  }
+}
+
+/// Selector de méthode de paiement au moment de lier un trajet.
+/// Affiche uniquement les méthodes présentes dans [methods].
+class _PaymentMethodPicker extends StatelessWidget {
+  const _PaymentMethodPicker({
+    required this.methods,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final Set<PaymentMethod> methods;
+  final PaymentMethod selected;
+  final ValueChanged<PaymentMethod> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    if (methods.isEmpty) return const SizedBox.shrink();
+
+    // Canonical order: STRIPE first, then CASH, then others
+    final ordered = [
+      PaymentMethod.stripe,
+      PaymentMethod.cash,
+      PaymentMethod.wave,
+      PaymentMethod.orangeMoney,
+    ].where(methods.contains).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Mode de paiement',
+          style: tt.bodyMedium?.copyWith(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: kTextSecondary,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: DonySpacing.md),
+        Wrap(
+          spacing: DonySpacing.sm,
+          runSpacing: DonySpacing.sm,
+          children: ordered.map((method) {
+            final isSelected = selected == method;
+            return GestureDetector(
+              key: Key('payment-method-${method.wireName.toLowerCase()}'),
+              onTap: () => onChanged(method),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.base,
+                  vertical: DonySpacing.sm,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected ? cs.primaryContainer : cs.surface,
+                  borderRadius: BorderRadius.circular(DonyRadius.full),
+                  border: Border.all(
+                    color: isSelected ? cs.primary : cs.outline,
+                    width: isSelected ? 1.5 : 1.0,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      method.icon,
+                      size: 14,
+                      color: isSelected ? cs.primary : cs.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: DonySpacing.xs),
+                    Text(
+                      method.label,
+                      style: tt.labelMedium?.copyWith(
+                        color: isSelected ? cs.primary : cs.onSurfaceVariant,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 }

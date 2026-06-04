@@ -742,6 +742,7 @@ class _CreateAnnouncementContentState
             description: description,
             acceptedContentTypes: allAccepted,
             refusedTypes: refused,
+            paymentMethod: lc.paymentMethod,
           ));
       return;
     }

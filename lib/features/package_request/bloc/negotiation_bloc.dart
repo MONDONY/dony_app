@@ -7,6 +7,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:equatable/equatable.dart';
 
 import '../data/models/negotiation_thread.dart';
+import '../data/models/payment_method.dart';
 import '../data/negotiation_repository.dart';
 
 sealed class NegotiationEvent extends Equatable {
@@ -86,12 +87,14 @@ class NegotiationSubmitTripRequested extends NegotiationEvent {
   const NegotiationSubmitTripRequested({
     required this.threadId,
     required this.travelerAnnouncementId,
+    required this.paymentMethod,
   });
   final String threadId;
   final String travelerAnnouncementId;
+  final PaymentMethod paymentMethod;
 
   @override
-  List<Object?> get props => [threadId, travelerAnnouncementId];
+  List<Object?> get props => [threadId, travelerAnnouncementId, paymentMethod];
 }
 
 /// Traveler creates a dedicated trip (no existing announcement matches) and
@@ -107,6 +110,7 @@ class NegotiationCreateDedicatedTripRequested extends NegotiationEvent {
     this.description,
     this.acceptedContentTypes,
     this.refusedTypes,
+    required this.paymentMethod,
   });
   final String threadId;
   final DateTime departureDate;
@@ -117,12 +121,13 @@ class NegotiationCreateDedicatedTripRequested extends NegotiationEvent {
   final String? description;
   final List<String>? acceptedContentTypes;
   final List<String>? refusedTypes;
+  final PaymentMethod paymentMethod;
 
   @override
   List<Object?> get props => [
         threadId, departureDate, departureTime, arrivalTime,
         pickupAddress, deliveryAddress, description,
-        acceptedContentTypes, refusedTypes,
+        acceptedContentTypes, refusedTypes, paymentMethod,
       ];
 }
 
@@ -324,6 +329,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       final thread = await _repository.submitTrip(
         e.threadId,
         travelerAnnouncementId: e.travelerAnnouncementId,
+        paymentMethod: e.paymentMethod,
       );
       emit(NegotiationLoaded(thread));
     } catch (err) {
@@ -352,6 +358,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         description: e.description,
         acceptedContentTypes: e.acceptedContentTypes,
         refusedTypes: e.refusedTypes,
+        paymentMethod: e.paymentMethod,
       );
       emit(NegotiationLoaded(thread));
     } catch (err) {

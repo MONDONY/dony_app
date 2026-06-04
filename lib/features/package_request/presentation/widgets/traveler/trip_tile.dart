@@ -47,6 +47,7 @@ class TripTile extends StatelessWidget {
           child: Column(
             children: [
               InkWell(
+                key: const Key('trip-tile-select-inkwell'),
                 borderRadius: BorderRadius.circular(DonyRadius.md),
                 onTap: onTap,
                 child: Padding(
