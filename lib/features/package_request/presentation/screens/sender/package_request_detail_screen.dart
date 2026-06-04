@@ -2,11 +2,14 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -97,13 +100,22 @@ class _PackageRequestDetailScreenState
               ? _ErrorView(message: _error!, onRetry: _load)
               : _request == null
                   ? const SizedBox.shrink()
-                  : _DetailBody(
-                      request: _request!,
-                      threads: _threads,
-                      cancelling: _cancelling,
-                      onCancel: _cancel,
-                      onComplete: () => context.push(
-                          '/package-requests/${widget.requestId}/shipment'),
+                  : BlocProvider<NegotiationBloc>(
+                      create: (_) => getIt<NegotiationBloc>(),
+                      child: BlocListener<NegotiationBloc, NegotiationState>(
+                        listenWhen: (prev, curr) =>
+                            curr is NegotiationLoaded &&
+                            prev is! NegotiationLoaded,
+                        listener: (_, __) => _load(),
+                        child: _DetailBody(
+                          request: _request!,
+                          threads: _threads,
+                          cancelling: _cancelling,
+                          onCancel: _cancel,
+                          onComplete: () => context.push(
+                              '/package-requests/${widget.requestId}/shipment'),
+                        ),
+                      ),
                     ),
     );
   }
@@ -357,6 +369,11 @@ class _OffersSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // For firm-price (non-negotiable) requests, show candidates selection UI.
+    if (!request.negotiable) {
+      return CandidatesSection(request: request, threads: threads);
+    }
+
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -534,6 +551,239 @@ class _OfferTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Candidates section (prix ferme — non-negotiable) ─────────────────────────
+
+/// Public widget testable: shown for firm-price (negotiable=false) requests.
+/// Displays OPEN-status threads as candidate cards with a "Choisir" CTA.
+class CandidatesSection extends StatelessWidget {
+  const CandidatesSection({
+    required this.request,
+    required this.threads,
+    super.key,
+  });
+
+  final PackageRequest request;
+  final List<NegotiationThread> threads;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!request.negotiable) {
+      final openThreads = threads
+          .where((t) => t.status == NegotiationThreadStatus.open)
+          .toList();
+
+      if (openThreads.isEmpty) return const SizedBox.shrink();
+
+      final cs = Theme.of(context).colorScheme;
+      final tt = Theme.of(context).textTheme;
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section header
+          Row(
+            children: [
+              Text(
+                'VOYAGEURS INTÉRESSÉS',
+                style: tt.labelMedium?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
+                ),
+              ),
+              const SizedBox(width: DonySpacing.sm),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: DonyColors.primarySoft,
+                  borderRadius: BorderRadius.circular(DonyRadius.full),
+                ),
+                child: Text(
+                  '${openThreads.length}',
+                  style: tt.bodyMedium?.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: DonyColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: DonySpacing.base),
+          // Candidate cards
+          ...openThreads.asMap().entries.map((entry) {
+            final i = entry.key;
+            final thread = entry.value;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: DonySpacing.sm + 4),
+              child: _CandidateCard(
+                thread: thread,
+                onChoose: () => context
+                    .read<NegotiationBloc>()
+                    .add(NegotiationAcceptRequested(threadId: thread.id)),
+              ).animate().fadeIn(duration: 200.ms, delay: (60 * i).ms),
+            );
+          }),
+          // Disclaimer note
+          const SizedBox(height: DonySpacing.xs),
+          Container(
+            padding: const EdgeInsets.symmetric(
+                horizontal: DonySpacing.base, vertical: DonySpacing.sm),
+            decoration: BoxDecoration(
+              color: DonyColors.warning500.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(DonyRadius.md),
+              border: Border.all(
+                  color: DonyColors.warning500.withValues(alpha: 0.30)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline_rounded,
+                    size: 16, color: DonyColors.warning500),
+                const SizedBox(width: DonySpacing.xs),
+                Expanded(
+                  child: Text(
+                    'Les autres seront déclinés automatiquement.',
+                    style: tt.bodySmall?.copyWith(
+                      color: DonyColors.warning500,
+                      fontWeight: FontWeight.w600,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    // For negotiable requests, render nothing from this widget
+    // (_OffersSection handles it via the standard path).
+    return const SizedBox.shrink();
+  }
+}
+
+class _CandidateCard extends StatelessWidget {
+  const _CandidateCard({
+    required this.thread,
+    required this.onChoose,
+  });
+
+  final NegotiationThread thread;
+  final VoidCallback onChoose;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final name = thread.travelerName ?? 'Voyageur';
+    final rating = thread.travelerRating;
+    final date =
+        DateFormat('d MMM', 'fr').format(thread.travelerTravelDate);
+
+    final grossPrice =
+        thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur);
+    final priceLabel = 'Tu paies ${PriceDisplay.eur(grossPrice)}';
+
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        border: Border.all(color: DonyColors.neutral200),
+      ),
+      child: Row(
+        children: [
+          DonyAvatar(
+            name: name,
+            imageUrl: thread.travelerPhotoUrl,
+            size: DonyAvatarSize.md,
+            verified: (thread.travelerTripsCount ?? 0) > 0,
+          ),
+          const SizedBox(width: DonySpacing.sm + 4),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Traveler name + rating
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        name,
+                        style: tt.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (rating != null) ...[
+                      const SizedBox(width: 4),
+                      Icon(Icons.star_rounded,
+                          size: 13, color: DonyColors.warning500),
+                      Text(
+                        rating.toStringAsFixed(1),
+                        style: tt.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 2),
+                // Travel date
+                Text(
+                  date,
+                  style: tt.bodySmall?.copyWith(
+                    color: DonyColors.textMuted,
+                    fontSize: 11,
+                  ),
+                ),
+                const SizedBox(height: DonySpacing.sm),
+                // Price label
+                Text(
+                  priceLabel,
+                  style: tt.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    color: cs.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: DonySpacing.sm),
+          // Choose CTA
+          SizedBox(
+            height: 44,
+            child: ElevatedButton(
+              key: Key('choose-traveler-${thread.id}'),
+              onPressed: onChoose,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: DonyColors.primary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.base, vertical: 0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
+                ),
+                textStyle: tt.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+              child: const Text('Choisir'),
+            ),
+          ),
+        ],
       ),
     );
   }
