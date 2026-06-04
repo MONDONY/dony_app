@@ -219,6 +219,15 @@ abstract final class ErrorCatalog {
       icon: Icons.timer_off_rounded,
     ),
 
+    // ─── Négociation ─────────────────────────────────────────────────
+    'negotiation/commission-charge-failed': ErrorPresentation(
+      title: 'Accord non validé',
+      message:
+          "Impossible de finaliser : la commission n'a pas pu être prélevée au voyageur (solde et carte indisponibles). L'accord n'est pas validé.",
+      severity: ErrorSeverity.critical,
+      icon: Icons.account_balance_wallet_outlined,
+    ),
+
     // ─── Externes (Stripe, Google) ───────────────────────────────────
     'stripe-error': ErrorPresentation(
       title: 'Paiement refusé',

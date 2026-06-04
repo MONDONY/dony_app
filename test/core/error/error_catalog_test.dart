@@ -59,4 +59,31 @@ void main() {
       expect(ErrorCatalog.isKnown(error), isTrue);
     });
   });
+
+  group('ErrorCatalog — negotiation/commission-charge-failed', () {
+    // Le backend renvoie un 422 (ValidationException) avec ce code quand la
+    // commission n'a pas pu être prélevée au voyageur (wallet vide + carte
+    // refusée) lors de la finalisation d'un accord cash.
+    test('code dédié → message clair (critical)', () {
+      const error = ValidationException(
+        'commission charge failed',
+        code: 'negotiation/commission-charge-failed',
+      );
+
+      final p = ErrorCatalog.lookup(error);
+
+      expect(p.title, 'Accord non validé');
+      expect(p.message, contains('commission'));
+      expect(p.message, contains("L'accord n'est pas validé"));
+      expect(p.severity, ErrorSeverity.critical);
+    });
+
+    test('isKnown reconnaît le code', () {
+      const error = ValidationException(
+        'peu importe',
+        code: 'negotiation/commission-charge-failed',
+      );
+      expect(ErrorCatalog.isKnown(error), isTrue);
+    });
+  });
 }
