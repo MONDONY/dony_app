@@ -182,24 +182,26 @@ class _SenderOpenActions extends StatelessWidget {
         const SizedBox(height: 10),
         Row(
           children: [
-            Expanded(
-              child: DonyButton(
-                label: 'Contre-offre',
-                variant: DonyButtonVariant.secondary,
-                onPressed: actionInProgress
-                    ? null
-                    : () => CounterOfferBottomSheet.show(
-                          context,
-                          bloc: context.read<NegotiationBloc>(),
-                          threadId: thread.id,
-                          currentPriceEur: thread.currentPriceEur,
-                          grossPriceEur: thread.grossPriceEur,
-                          isTraveler: false,
-                          roundsCount: thread.roundsCount,
-                        ),
+            if (thread.canCounter) ...[
+              Expanded(
+                child: DonyButton(
+                  label: 'Contre-offre',
+                  variant: DonyButtonVariant.secondary,
+                  onPressed: actionInProgress
+                      ? null
+                      : () => CounterOfferBottomSheet.show(
+                            context,
+                            bloc: context.read<NegotiationBloc>(),
+                            threadId: thread.id,
+                            currentPriceEur: thread.currentPriceEur,
+                            grossPriceEur: thread.grossPriceEur,
+                            isTraveler: false,
+                            roundsCount: thread.roundsCount,
+                          ),
+                ),
               ),
-            ),
-            const SizedBox(width: 10),
+              const SizedBox(width: 10),
+            ],
             Expanded(
               child: DonyButton(
                 label: 'Rejeter',
