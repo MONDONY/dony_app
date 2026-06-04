@@ -4,6 +4,7 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -66,14 +67,48 @@ void main() {
         desiredDate: DateTime(2026, 6, 15),
         dateToleranceDays: 2,
         weightKg: 5.0,
-        parcelSize: ParcelSize.small,
-        transportMode: TransportMode.plane,
         contentCategory: ContentCategory.vetements,
+        negotiable: true,
+        acceptedPaymentMethods: {PaymentMethod.stripe},
       );
 
       expect(result.id, 'pr-1');
       expect(result.parcelSize, ParcelSize.small);
       expect(result.status, PackageRequestStatus.open);
+    });
+
+    test('create payload includes negotiable, acceptedPaymentMethods and totalBudgetEur', () async {
+      Map<String, dynamic>? capturedBody;
+
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/package-requests',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedBody = invocation.namedArguments[#data] as Map<String, dynamic>;
+        return _ok(_prJson, '/package-requests');
+      });
+
+      await repo.create(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        desiredDate: DateTime(2026, 6, 15),
+        dateToleranceDays: 2,
+        weightKg: 5.0,
+        contentCategory: ContentCategory.vetements,
+        negotiable: true,
+        acceptedPaymentMethods: {PaymentMethod.stripe, PaymentMethod.cash},
+        totalBudgetEur: 50.0,
+      );
+
+      expect(capturedBody, isNotNull);
+      expect(capturedBody!['negotiable'], true);
+      expect(capturedBody!['totalBudgetEur'], 50.0);
+      final methods = capturedBody!['acceptedPaymentMethods'] as List<dynamic>;
+      expect(methods, containsAll(['STRIPE', 'CASH']));
+      expect(capturedBody!.containsKey('parcelSize'), false);
+      expect(capturedBody!.containsKey('transportMode'), false);
     });
   });
 

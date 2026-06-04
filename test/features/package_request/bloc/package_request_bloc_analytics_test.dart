@@ -56,14 +56,14 @@ void main() {
           desiredDate: any(named: 'desiredDate'),
           dateToleranceDays: any(named: 'dateToleranceDays'),
           weightKg: any(named: 'weightKg'),
-          parcelSize: any(named: 'parcelSize'),
           contentCategory: any(named: 'contentCategory'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
           description: any(named: 'description'),
-          targetPriceEur: any(named: 'targetPriceEur'),
           photoUrl: any(named: 'photoUrl'),
           pickupNeighborhood: any(named: 'pickupNeighborhood'),
           deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
-          transportMode: any(named: 'transportMode'),
         )).thenAnswer((_) async => fakeRequest);
 
     final bloc = makeBloc();
@@ -103,14 +103,14 @@ void main() {
           desiredDate: any(named: 'desiredDate'),
           dateToleranceDays: any(named: 'dateToleranceDays'),
           weightKg: any(named: 'weightKg'),
-          parcelSize: any(named: 'parcelSize'),
           contentCategory: any(named: 'contentCategory'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
           description: any(named: 'description'),
-          targetPriceEur: any(named: 'targetPriceEur'),
           photoUrl: any(named: 'photoUrl'),
           pickupNeighborhood: any(named: 'pickupNeighborhood'),
           deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
-          transportMode: any(named: 'transportMode'),
         )).thenAnswer((_) async => fakeRequest);
 
     final bloc = makeBloc(enabled: false);

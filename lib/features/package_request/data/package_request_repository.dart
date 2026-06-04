@@ -2,12 +2,12 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
-import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 
 class PackageRequestPage {
   const PackageRequestPage({
@@ -85,11 +85,11 @@ class PackageRequestRepository {
     required DateTime desiredDate,
     required int dateToleranceDays,
     required double weightKg,
-    required ParcelSize parcelSize,
-    required TransportMode transportMode,
     required ContentCategory contentCategory,
+    required bool negotiable,
+    required Set<PaymentMethod> acceptedPaymentMethods,
+    double? totalBudgetEur,
     String? description,
-    double? targetPriceEur,
     String? photoUrl,
     String? pickupNeighborhood,
     String? deliveryNeighborhood,
@@ -102,11 +102,12 @@ class PackageRequestRepository {
         'desiredDate': desiredDate.toIso8601String().substring(0, 10),
         'dateToleranceDays': dateToleranceDays,
         'weightKg': weightKg,
-        'parcelSize': parcelSize.wireName,
-        'transportMode': transportModeToWire(transportMode),
         'contentCategory': contentCategory.wireName,
+        'negotiable': negotiable,
+        'acceptedPaymentMethods':
+            acceptedPaymentMethods.map((m) => m.wireName).toList(),
+        if (totalBudgetEur != null) 'totalBudgetEur': totalBudgetEur,
         if (description != null) 'description': description,
-        if (targetPriceEur != null) 'targetPriceEur': targetPriceEur,
         if (photoUrl != null) 'photoUrl': photoUrl,
         if (pickupNeighborhood != null) 'pickupNeighborhood': pickupNeighborhood,
         if (deliveryNeighborhood != null) 'deliveryNeighborhood': deliveryNeighborhood,
