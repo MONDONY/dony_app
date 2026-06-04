@@ -2,11 +2,35 @@ import 'dart:io';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+
+/// Compresses [input] to JPEG, max 1280×1280, quality 80.
+/// Returns a new [XFile] pointing to the compressed bytes saved in the temp
+/// directory. Falls back to the original file if compression fails.
+Future<XFile> defaultCompressForUpload(XFile input) async {
+  final bytes = await input.readAsBytes();
+  final compressed = await FlutterImageCompress.compressWithList(
+    bytes,
+    minWidth: 1280,
+    minHeight: 1280,
+    quality: 80,
+  );
+  final dir = await getTemporaryDirectory();
+  final outPath = '${dir.path}/${input.name}_compressed.jpg';
+  final outFile = File(outPath)..writeAsBytesSync(compressed);
+  return XFile(outFile.path);
+}
+
+/// Signature for an image compressor — injectable for testing.
+typedef ImageCompressor = Future<XFile> Function(XFile input);
 
 /// Slot photo optionnel pour le wizard étape 3.
 ///
 /// - Tap → bottom sheet "Caméra | Galerie".
+/// - Compresse la photo (max 1280×1280, qualité 80 %) via [compressor]
+///   avant de remonter le fichier au parent.
 /// - Affiche un preview circulaire à coins arrondis si une photo est choisie.
 /// - Le parent contrôle l'état via [photoFile] + [onPhotoPicked].
 class WizardPhotoUpload extends StatelessWidget {
@@ -14,10 +38,12 @@ class WizardPhotoUpload extends StatelessWidget {
     super.key,
     required this.photoFile,
     required this.onPhotoPicked,
-  });
+    ImageCompressor? compressor,
+  }) : _compress = compressor ?? defaultCompressForUpload;
 
   final File? photoFile;
   final ValueChanged<File?> onPhotoPicked;
+  final ImageCompressor _compress;
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +65,6 @@ class WizardPhotoUpload extends StatelessWidget {
           borderRadius: BorderRadius.circular(DonyRadius.lg),
           border: Border.all(
             color: Theme.of(context).colorScheme.outline,
-            style: BorderStyle.solid,
             width: 1.5,
           ),
         ),
@@ -130,7 +155,9 @@ class WizardPhotoUpload extends StatelessWidget {
         ),
       ),
     );
-    if (source == null) return;
+    if (source == null) {
+      return;
+    }
     final picker = ImagePicker();
     final picked = await picker.pickImage(
       source: source,
@@ -139,7 +166,8 @@ class WizardPhotoUpload extends StatelessWidget {
       imageQuality: 85,
     );
     if (picked != null) {
-      onPhotoPicked(File(picked.path));
+      final compressed = await _compress(picked);
+      onPhotoPicked(File(compressed.path));
     }
   }
 }
