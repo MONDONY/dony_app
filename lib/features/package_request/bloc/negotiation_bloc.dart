@@ -423,7 +423,24 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       );
       emit(NegotiationLoaded(thread));
     } catch (err) {
-      emit(NegotiationError(unwrapDioError(err)));
+      final appErr = unwrapDioError(err);
+      // Course gagnée par le webhook Stripe : `payment_intent.amount_capturable_updated`
+      // finalise le thread en ACCEPTED de façon asynchrone (côté serveur). Il peut
+      // arriver AVANT ce /checkout synchrone (safety-net). Dans ce cas le backend
+      // répond 409 `thread/not-awaiting-payment` alors que le paiement a RÉUSSI.
+      // On ne montre donc pas d'erreur : on recharge le thread (désormais finalisé)
+      // pour que l'écran affiche l'état « Demande acceptée et payée ».
+      if (appErr is ConflictException &&
+          appErr.message == 'thread/not-awaiting-payment') {
+        try {
+          final thread = await _repository.getById(e.threadId);
+          emit(NegotiationLoaded(thread));
+          return;
+        } catch (_) {
+          // Re-fetch échoué → on retombe sur l'erreur d'origine ci-dessous.
+        }
+      }
+      emit(NegotiationError(appErr));
     }
   }
 

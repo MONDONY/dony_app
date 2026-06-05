@@ -1,8 +1,10 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -237,6 +239,75 @@ void main() {
         isA<NegotiationActionInProgress>(),
         isA<NegotiationError>(),
       ],
+    );
+  });
+
+  group('checkout — course avec le webhook Stripe', () {
+    blocTest<NegotiationBloc, NegotiationState>(
+      'checkout 409 thread/not-awaiting-payment → recharge le thread et émet '
+      'Loaded (paiement déjà finalisé par le webhook, pas d\'erreur)',
+      build: () {
+        when(() => repo.checkout('t-1',
+                paymentIntentId: 'pi_1',
+                paymentMethod: PaymentMethod.stripe))
+            .thenThrow(const ConflictException('thread/not-awaiting-payment'));
+        when(() => repo.getById('t-1')).thenAnswer(
+            (_) async => _fakeThread(status: NegotiationThreadStatus.accepted));
+        return _makeBloc(repo);
+      },
+      act: (bloc) => bloc.add(const NegotiationCheckoutRequested(
+        threadId: 't-1',
+        paymentIntentId: 'pi_1',
+        paymentMethod: PaymentMethod.stripe,
+      )),
+      expect: () => [
+        isA<NegotiationLoading>(),
+        isA<NegotiationLoaded>().having(
+            (s) => s.thread.status, 'status', NegotiationThreadStatus.accepted),
+      ],
+      verify: (_) => verify(() => repo.getById('t-1')).called(1),
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'checkout succès → Loaded',
+      build: () {
+        when(() => repo.checkout('t-1',
+                paymentIntentId: 'pi_1',
+                paymentMethod: PaymentMethod.stripe))
+            .thenAnswer((_) async =>
+                _fakeThread(status: NegotiationThreadStatus.accepted));
+        return _makeBloc(repo);
+      },
+      act: (bloc) => bloc.add(const NegotiationCheckoutRequested(
+        threadId: 't-1',
+        paymentIntentId: 'pi_1',
+        paymentMethod: PaymentMethod.stripe,
+      )),
+      expect: () => [
+        isA<NegotiationLoading>(),
+        isA<NegotiationLoaded>(),
+      ],
+    );
+
+    blocTest<NegotiationBloc, NegotiationState>(
+      'checkout autre conflit → NegotiationError (erreur réelle non avalée)',
+      build: () {
+        when(() => repo.checkout('t-1',
+                paymentIntentId: 'pi_1',
+                paymentMethod: PaymentMethod.stripe))
+            .thenThrow(const ConflictException('payment-method/not-accepted'));
+        return _makeBloc(repo);
+      },
+      act: (bloc) => bloc.add(const NegotiationCheckoutRequested(
+        threadId: 't-1',
+        paymentIntentId: 'pi_1',
+        paymentMethod: PaymentMethod.stripe,
+      )),
+      expect: () => [
+        isA<NegotiationLoading>(),
+        isA<NegotiationError>(),
+      ],
+      verify: (_) => verifyNever(() => repo.getById(any())),
     );
   });
 }
