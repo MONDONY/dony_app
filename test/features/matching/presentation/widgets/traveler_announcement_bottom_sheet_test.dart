@@ -10,6 +10,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_announcement_bottom_sheet.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:dony/features/payments/wallet/bloc/wallet_bloc.dart';
@@ -82,6 +83,7 @@ AnnouncementModel _buildAnnouncement({
 Widget _harness({
   required AnnouncementModel announcement,
   AuthState? authState,
+  BidState? bidState,
 }) {
   final authBloc = _MockAuthBloc();
   when(() => authBloc.state).thenReturn(
@@ -90,9 +92,9 @@ Widget _harness({
   when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
 
   // showTravelerAnnouncementSheet lit BidBloc depuis l'arbre (context.read)
-  // pour rafraîchir la liste parente après création d'un bid.
+  // pour détecter un colis existant + rafraîchir la liste parente après bid.
   final bidBloc = _MockBidBloc();
-  when(() => bidBloc.state).thenReturn(BidInitial());
+  when(() => bidBloc.state).thenReturn(bidState ?? BidInitial());
   when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
 
   return MultiBlocProvider(
@@ -194,6 +196,65 @@ void main() {
     expect(block, findsOneWidget);
     final inkWell = tester.widget<InkWell>(block);
     expect(inkWell.onTap, isNotNull);
+  });
+
+  // ── Colis existant sur le trajet (existingBid) ─────────────────────────────
+
+  group('colis existant sur le trajet', () {
+    BidModel acceptedBidOn(String announcementId) => BidModel(
+          id: 'bid-1',
+          announcementId: announcementId,
+          senderId: 'u1',
+          status: 'ACCEPTED',
+          createdAt: DateTime(2026, 1, 1),
+          updatedAt: DateTime(2026, 1, 1),
+        );
+
+    testWidgets(
+        'colis ACCEPTED sur ce trajet → message + « Voir mon colis », '
+        'pas de « Faire une demande »', (tester) async {
+      final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
+      await tester.pumpWidget(_harness(
+        announcement: a,
+        bidState: BidListLoaded([acceptedBidOn('a1')]), // a1 = id de l'annonce
+      ));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Vous avez déjà un colis sur ce trajet'), findsOneWidget);
+      expect(find.byKey(const Key('see-my-parcel-btn')), findsOneWidget);
+      expect(find.text('Voir mon colis'), findsOneWidget);
+      expect(find.text('Faire une demande'), findsNothing);
+    });
+
+    testWidgets('aucun colis (liste chargée vide) → « Faire une demande »',
+        (tester) async {
+      final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
+      await tester.pumpWidget(_harness(
+        announcement: a,
+        bidState: BidListLoaded(const []),
+      ));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Faire une demande'), findsOneWidget);
+      expect(find.byKey(const Key('see-my-parcel-btn')), findsNothing);
+      expect(find.text('Vous avez déjà un colis sur ce trajet'), findsNothing);
+    });
+
+    testWidgets('colis sur un AUTRE trajet → « Faire une demande » ici',
+        (tester) async {
+      final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
+      await tester.pumpWidget(_harness(
+        announcement: a,
+        bidState: BidListLoaded([acceptedBidOn('autre-trajet')]),
+      ));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Faire une demande'), findsOneWidget);
+      expect(find.byKey(const Key('see-my-parcel-btn')), findsNothing);
+    });
   });
 
   // ── KYC Gate (nouveaux tests) ──────────────────────────────────────────────
