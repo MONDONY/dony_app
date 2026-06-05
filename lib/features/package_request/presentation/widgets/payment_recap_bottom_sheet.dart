@@ -34,13 +34,16 @@ class PaymentRecapBottomSheet {
     BuildContext context, {
     required NegotiationBloc bloc,
     required NegotiationThread thread,
+    dony.PaymentMethod? paymentMethod,
   }) async {
     final double net = thread.currentPriceEur;
     final double gross =
         thread.grossPriceEur ?? PriceDisplay.grossFromNet(net);
     final double fee = gross - net;
+    // Mode finalisé par l'expéditeur (s'il a choisi à l'étape complétion),
+    // sinon celui déjà porté par le thread, sinon Stripe par défaut.
     final dony.PaymentMethod method =
-        thread.paymentMethod ?? dony.PaymentMethod.stripe;
+        paymentMethod ?? thread.paymentMethod ?? dony.PaymentMethod.stripe;
     final bool isCash = method == dony.PaymentMethod.cash;
 
     await DonyBottomSheet.show<void>(
@@ -93,6 +96,7 @@ class PaymentRecapBottomSheet {
                         bloc.add(NegotiationCheckoutRequested(
                           threadId: thread.id,
                           paymentIntentId: init.paymentIntentId,
+                          paymentMethod: method,
                         ));
                         if (ctx.mounted) {
                           Navigator.of(ctx, rootNavigator: true).pop();
@@ -127,6 +131,7 @@ class PaymentRecapBottomSheet {
                       bloc.add(NegotiationCheckoutRequested(
                         threadId: thread.id,
                         paymentIntentId: kCashPaymentSentinel,
+                        paymentMethod: method,
                       ));
                       if (ctx.mounted) {
                         Navigator.of(ctx, rootNavigator: true).pop();

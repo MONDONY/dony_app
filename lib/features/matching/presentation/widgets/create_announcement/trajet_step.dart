@@ -40,6 +40,15 @@ class TrajetStep extends StatelessWidget {
   final CitySearchBloc? departureCityBloc;
   final CitySearchBloc? arrivalCityBloc;
 
+  /// Verrouille les villes (corridor) : champs en lecture seule. Utilisé quand
+  /// le trajet est contraint par une demande (modification OU trajet dédié).
+  final bool lockCorridor;
+
+  /// Verrouille la date de départ : champ en lecture seule. Utilisé en
+  /// modification (la date doit rester compatible avec la demande). Le trajet
+  /// dédié la garde éditable (choix dans la fenêtre de tolérance).
+  final bool lockDate;
+
   const TrajetStep({
     super.key,
     required this.departureCityNotifier,
@@ -53,6 +62,8 @@ class TrajetStep extends StatelessWidget {
     required this.onSelectDate,
     this.departureCityBloc,
     this.arrivalCityBloc,
+    this.lockCorridor = false,
+    this.lockDate = false,
   });
 
   @override
@@ -182,23 +193,36 @@ class TrajetStep extends StatelessWidget {
               // le thème) que DonyTextField — uniformité visuelle garantie.
               // L'autocomplétion (suggestions inline) est préservée.
               // requiredLabel: true → astérisque rouge via InputDecoration.label.
-              BlocProvider(
-                create: (_) => departureCityBloc ?? getIt<CitySearchBloc>(),
-                child: CityAutocompleteField(
-                  label: 'Ville de départ',
-                  fieldKey: const Key('departureCityField'),
-                  initialValue: departureCityNotifier.value,
-                  prefixIcon: Icon(
-                    DonyIcons.departureCity,
-                    size: 20,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  requiredLabel: true,
-                  onSelected: (CityModel city) {
-                    departureCityNotifier.value = city.name;
-                  },
-                ),
-              ),
+              lockCorridor
+                  ? DonyTextField.tappable(
+                      key: const Key('departureCityField'),
+                      label: 'Ville de départ',
+                      value: departureCityNotifier.value,
+                      prefixIcon: DonyIcons.departureCity,
+                      prefixIconColor:
+                          Theme.of(context).colorScheme.primary,
+                      trailing: Icon(Icons.lock_rounded,
+                          size: 16, color: cs.onSurfaceVariant),
+                      onTap: () {},
+                    )
+                  : BlocProvider(
+                      create: (_) =>
+                          departureCityBloc ?? getIt<CitySearchBloc>(),
+                      child: CityAutocompleteField(
+                        label: 'Ville de départ',
+                        fieldKey: const Key('departureCityField'),
+                        initialValue: departureCityNotifier.value,
+                        prefixIcon: Icon(
+                          DonyIcons.departureCity,
+                          size: 20,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        requiredLabel: true,
+                        onSelected: (CityModel city) {
+                          departureCityNotifier.value = city.name;
+                        },
+                      ),
+                    ),
               const SizedBox(height: DonySpacing.sm),
               // ── Heure de départ (optionnel) — DonyTextField.tappable ───
               DonyTextField.tappable(
@@ -232,23 +256,36 @@ class TrajetStep extends StatelessWidget {
               ),
               const SizedBox(height: DonySpacing.sm),
               // ── Ville d'arrivée * ───────────────────────────────────────
-              BlocProvider(
-                create: (_) => arrivalCityBloc ?? getIt<CitySearchBloc>(),
-                child: CityAutocompleteField(
-                  label: 'Ville d\'arrivée',
-                  fieldKey: const Key('arrivalCityField'),
-                  initialValue: arrivalCityNotifier.value,
-                  prefixIcon: Icon(
-                    DonyIcons.arrivalCity,
-                    size: 20,
-                    color: Theme.of(context).colorScheme.secondary,
-                  ),
-                  requiredLabel: true,
-                  onSelected: (CityModel city) {
-                    arrivalCityNotifier.value = city.name;
-                  },
-                ),
-              ),
+              lockCorridor
+                  ? DonyTextField.tappable(
+                      key: const Key('arrivalCityField'),
+                      label: 'Ville d\'arrivée',
+                      value: arrivalCityNotifier.value,
+                      prefixIcon: DonyIcons.arrivalCity,
+                      prefixIconColor:
+                          Theme.of(context).colorScheme.secondary,
+                      trailing: Icon(Icons.lock_rounded,
+                          size: 16, color: cs.onSurfaceVariant),
+                      onTap: () {},
+                    )
+                  : BlocProvider(
+                      create: (_) =>
+                          arrivalCityBloc ?? getIt<CitySearchBloc>(),
+                      child: CityAutocompleteField(
+                        label: 'Ville d\'arrivée',
+                        fieldKey: const Key('arrivalCityField'),
+                        initialValue: arrivalCityNotifier.value,
+                        prefixIcon: Icon(
+                          DonyIcons.arrivalCity,
+                          size: 20,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                        requiredLabel: true,
+                        onSelected: (CityModel city) {
+                          arrivalCityNotifier.value = city.name;
+                        },
+                      ),
+                    ),
               const SizedBox(height: DonySpacing.sm),
               // ── Heure d'arrivée (optionnel) — DonyTextField.tappable ───
               DonyTextField.tappable(
@@ -292,12 +329,12 @@ class TrajetStep extends StatelessWidget {
                 prefixIcon: DonyIcons.date,
                 prefixIconColor: Theme.of(context).colorScheme.primary,
                 trailing: Icon(
-                  DonyIcons.chevron,
-                  size: 18,
+                  lockDate ? Icons.lock_rounded : DonyIcons.chevron,
+                  size: lockDate ? 16 : 18,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 requiredLabel: true,
-                onTap: () => onSelectDate(),
+                onTap: lockDate ? () {} : () => onSelectDate(),
               ),
             ],
           ).animate().fadeIn(delay: 60.ms);

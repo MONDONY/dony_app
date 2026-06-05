@@ -43,11 +43,19 @@ class ThreadStateCtaBar extends StatelessWidget {
     NegotiationThread thread,
   ) async {
     final bloc = context.read<NegotiationBloc>();
-    final detailsDone = await context.push<bool>(
+    // The complete-details screen returns the payment method the sender chose
+    // among the accepted ones (null = cancelled / not completed).
+    final method = await context.push<PaymentMethod>(
       '/package-requests/${thread.packageRequestId}/complete-details',
+      extra: thread,
     );
-    if (detailsDone != true || !context.mounted) return;
-    await PaymentRecapBottomSheet.show(context, bloc: bloc, thread: thread);
+    if (method == null || !context.mounted) return;
+    await PaymentRecapBottomSheet.show(
+      context,
+      bloc: bloc,
+      thread: thread,
+      paymentMethod: method,
+    );
   }
 
   @override

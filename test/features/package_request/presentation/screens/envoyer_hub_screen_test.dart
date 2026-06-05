@@ -178,12 +178,14 @@ void main() {
       expect(find.text('Envoyer'), findsOneWidget);
     });
 
-    testWidgets('rend les 3 onglets Demandes / Envois / Négos', (tester) async {
+    testWidgets('rend les 2 onglets Envois / Demandes (Négos fusionné)',
+        (tester) async {
       await tester.pumpWidget(wrap());
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.textContaining('Demandes'), findsWidgets);
       expect(find.textContaining('Envois'), findsWidgets);
-      expect(find.textContaining('Négos'), findsWidgets);
+      // L'onglet Négos a été fusionné dans Demandes.
+      expect(find.textContaining('Négos'), findsNothing);
     });
 
     testWidgets('rend le bouton Publier (icône +)', (tester) async {

@@ -112,8 +112,6 @@ class _PackageRequestDetailScreenState
                           threads: _threads,
                           cancelling: _cancelling,
                           onCancel: _cancel,
-                          onComplete: () => context.push(
-                              '/package-requests/${widget.requestId}/shipment'),
                         ),
                       ),
                     ),
@@ -129,19 +127,15 @@ class _DetailBody extends StatelessWidget {
     required this.threads,
     required this.cancelling,
     required this.onCancel,
-    required this.onComplete,
   });
   final PackageRequest request;
   final List<NegotiationThread> threads;
   final bool cancelling;
   final VoidCallback onCancel;
-  final VoidCallback onComplete;
 
   bool get _canCancel =>
       request.status == PackageRequestStatus.open ||
       request.status == PackageRequestStatus.negotiating;
-  bool get _showComplete =>
-      request.status == PackageRequestStatus.accepted;
 
   @override
   Widget build(BuildContext context) {
@@ -169,15 +163,9 @@ class _DetailBody extends StatelessWidget {
           ).animate().fadeIn(duration: 280.ms).slideY(
               begin: 0.04, curve: Curves.easeOutCubic),
         ),
-        // CTA fixe en bas
-        if (_showComplete)
-          _StickyBottom(
-            child: DonyButton(
-              label: 'Compléter les détails →',
-              onPressed: onComplete,
-            ),
-          )
-        else if (_canCancel)
+        // CTA fixe en bas — seulement « Annuler » tant que la demande cherche
+        // un voyageur. Une fois payée, elle vit dans l'onglet Envois.
+        if (_canCancel)
           _StickyBottom(
             child: DonyButton(
               label: cancelling ? 'Annulation…' : 'Annuler la demande',
@@ -1030,17 +1018,8 @@ class _SheetBodyState extends State<_SheetBody> {
   void _syncBtn(PackageRequest r, bool cancelling) {
     final canCancel = r.status == PackageRequestStatus.open ||
         r.status == PackageRequestStatus.negotiating;
-    final showComplete = r.status == PackageRequestStatus.accepted;
 
-    if (showComplete) {
-      widget.onBtnConfig(_SheetBtnConfig(
-        label: 'Compléter les détails →',
-        onPressed: () {
-          Navigator.of(context, rootNavigator: true).pop();
-          context.push('/package-requests/${widget.requestId}/shipment');
-        },
-      ));
-    } else if (canCancel) {
+    if (canCancel) {
       widget.onBtnConfig(_SheetBtnConfig(
         label: cancelling ? 'Annulation…' : 'Annuler la demande',
         isDestructive: true,

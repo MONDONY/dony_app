@@ -102,6 +102,28 @@ void main() {
     )).called(1);
   });
 
+  test('surplus_opened fires with kg/price and no PII on success', () async {
+    when(() => repo.openSurplus(
+          announcementId: any(named: 'announcementId'),
+          surplusKg: any(named: 'surplusKg'),
+          pricePerKg: any(named: 'pricePerKg'),
+        )).thenAnswer((_) async => fakeAnnouncement());
+
+    final bloc = makeBloc();
+    bloc.add(AnnouncementSurplusOpenRequested(
+      announcementId: 'ann1',
+      surplusKg: 8.0,
+      pricePerKg: 7.0,
+    ));
+    await bloc.stream.firstWhere((s) => s is AnnouncementSurplusOpened);
+    await Future<void>.delayed(Duration.zero);
+
+    verify(() => backend.capture(
+          AnalyticsEvents.surplusOpened,
+          {'surplus_kg': 8.0, 'price_per_kg': 7.0},
+        )).called(1);
+  });
+
   test('no event when analytics disabled', () async {
     when(() => repo.createAnnouncement(
       departureCity: any(named: 'departureCity'),

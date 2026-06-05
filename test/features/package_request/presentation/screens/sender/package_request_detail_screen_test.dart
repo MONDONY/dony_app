@@ -49,11 +49,6 @@ Widget _buildApp({required String requestId}) {
           requestId: state.pathParameters['id']!,
         ),
       ),
-      GoRoute(
-        path: '/package-requests/:id/shipment',
-        builder: (ctx, state) =>
-            const Scaffold(body: Text('Shipment screen')),
-      ),
     ],
   );
   return MaterialApp.router(
@@ -147,7 +142,7 @@ void main() {
     expect(find.text('Annuler la demande'), findsOneWidget);
   });
 
-  testWidgets('shows Compléter les détails button when status is accepted',
+  testWidgets('aucun CTA « Compléter les détails » pour une demande acceptée',
       (tester) async {
     when(() => repo.getById('pr-1')).thenAnswer(
         (_) async => _fakeRequest(status: PackageRequestStatus.accepted));
@@ -157,7 +152,10 @@ void main() {
     await tester.pumpWidget(_buildApp(requestId: 'pr-1'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Compléter les détails'), findsOneWidget);
+    // Détails + paiement se font dans le fil de négo : plus de CTA ici une fois
+    // la demande acceptée (elle vit désormais dans l'onglet Envois).
+    expect(find.textContaining('Compléter'), findsNothing);
+    expect(find.text('Annuler la demande'), findsNothing);
   });
 
   testWidgets('retry button reloads data after error', (tester) async {

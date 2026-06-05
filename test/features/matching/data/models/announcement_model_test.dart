@@ -165,6 +165,64 @@ void main() {
     });
   });
 
+  group('AnnouncementModel surplus capacity', () {
+    test('parses reservedKg / surplusEligible / surplusPublished from JSON', () {
+      final json = baseAnnouncementJson()
+        ..['reservedKg'] = 12.0
+        ..['surplusEligible'] = true
+        ..['surplusPublished'] = true;
+      final model = AnnouncementModel.fromJson(json);
+
+      expect(model.reservedKg, 12.0);
+      expect(model.surplusEligible, isTrue);
+      expect(model.surplusPublished, isTrue);
+    });
+
+    test('parses integer reservedKg as double', () {
+      final json = baseAnnouncementJson()..['reservedKg'] = 8;
+      final model = AnnouncementModel.fromJson(json);
+      expect(model.reservedKg, 8.0);
+    });
+
+    test('defaults when surplus fields are absent', () {
+      final model = AnnouncementModel.fromJson(baseAnnouncementJson());
+      expect(model.reservedKg, 0);
+      expect(model.surplusEligible, isFalse);
+      expect(model.surplusPublished, isFalse);
+    });
+
+    test('round-trips surplus fields through toJson', () {
+      final json = baseAnnouncementJson()
+        ..['reservedKg'] = 5.0
+        ..['surplusEligible'] = true
+        ..['surplusPublished'] = false;
+      final out = AnnouncementModel.fromJson(json).toJson();
+      expect(out['reservedKg'], 5.0);
+      expect(out['surplusEligible'], true);
+      expect(out['surplusPublished'], false);
+    });
+
+    test('isDedicated is true when reservedKg > 0', () {
+      final dedicated = AnnouncementModel.fromJson(
+          baseAnnouncementJson()..['reservedKg'] = 10.0);
+      final normal = AnnouncementModel.fromJson(baseAnnouncementJson());
+      expect(dedicated.isDedicated, isTrue);
+      expect(normal.isDedicated, isFalse);
+    });
+
+    test('canOpenSurplus is true only when eligible and not yet published', () {
+      AnnouncementModel build({required bool eligible, required bool published}) =>
+          AnnouncementModel.fromJson(baseAnnouncementJson()
+            ..['surplusEligible'] = eligible
+            ..['surplusPublished'] = published);
+
+      expect(build(eligible: true, published: false).canOpenSurplus, isTrue);
+      expect(build(eligible: true, published: true).canOpenSurplus, isFalse);
+      expect(build(eligible: false, published: false).canOpenSurplus, isFalse);
+      expect(build(eligible: false, published: true).canOpenSurplus, isFalse);
+    });
+  });
+
   group('AnnouncementModel with priceGridItems', () {
     test('deserializes priceGridItems from JSON', () {
       final json = baseAnnouncementJson()

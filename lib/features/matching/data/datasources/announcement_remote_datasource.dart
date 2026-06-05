@@ -128,6 +128,23 @@ class AnnouncementRemoteDatasource {
     await _apiClient.dio.delete('/announcements/$id');
   }
 
+  /// Ouvre au public la capacité excédentaire d'un trajet dédié.
+  ///
+  /// POST `/negotiations/trip/{announcementId}/open-surplus` renvoie 204 (sans
+  /// corps) ; on recharge donc le détail pour récupérer l'annonce à jour
+  /// (`availableKg`/`pricePerKg`/`surplusPublished` mis à jour côté back).
+  Future<AnnouncementModel> openSurplus({
+    required String announcementId,
+    required double surplusKg,
+    required double pricePerKg,
+  }) async {
+    await _apiClient.dio.post(
+      '/negotiations/trip/$announcementId/open-surplus',
+      data: {'surplusKg': surplusKg, 'pricePerKg': pricePerKg},
+    );
+    return getAnnouncementDetail(announcementId);
+  }
+
   Future<AnnouncementModel> updateAnnouncement({
     required String id,
     required String departureCity,

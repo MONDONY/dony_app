@@ -178,6 +178,29 @@ void main() {
       );
       expect(thread.id, 'th-1');
     });
+
+    test('sends useCardForCommission in the body', () async {
+      Map<String, dynamic>? sentData;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/submit-trip',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
+        sentData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
+        return _ok(_threadJson, '/negotiations/th-1/submit-trip');
+      });
+
+      await repo.submitTrip(
+        'th-1',
+        travelerAnnouncementId: 'ann-1',
+        paymentMethod: PaymentMethod.cash,
+        useCardForCommission: true,
+      );
+
+      expect(sentData?['useCardForCommission'], true);
+    });
   });
 
   group('initiatePayment', () {
@@ -213,6 +236,44 @@ void main() {
       final thread =
           await repo.checkout('th-1', paymentIntentId: 'pi_test_id');
       expect(thread.id, 'th-1');
+    });
+
+    test('includes paymentMethod in the body when provided', () async {
+      Map<String, dynamic>? sentData;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/checkout',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
+        sentData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
+        return _ok(_threadJson, '/negotiations/th-1/checkout');
+      });
+
+      await repo.checkout('th-1',
+          paymentIntentId: 'CASH', paymentMethod: PaymentMethod.cash);
+
+      expect(sentData?['paymentIntentId'], 'CASH');
+      expect(sentData?['paymentMethod'], PaymentMethod.cash.wireName);
+    });
+
+    test('omits paymentMethod from the body when not provided', () async {
+      Map<String, dynamic>? sentData;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/checkout',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
+        sentData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
+        return _ok(_threadJson, '/negotiations/th-1/checkout');
+      });
+
+      await repo.checkout('th-1', paymentIntentId: 'pi_test_id');
+
+      expect(sentData?.containsKey('paymentMethod'), isFalse);
     });
   });
 

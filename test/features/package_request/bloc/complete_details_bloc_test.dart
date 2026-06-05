@@ -18,6 +18,21 @@ const _event = CompleteDetailsSubmitted(
   recipientCity: 'Dakar',
 );
 
+PackageRequest _fakeRequest() => PackageRequest(
+      id: 'pr-1',
+      senderId: 'sender-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      desiredDate: DateTime(2026, 8, 15),
+      dateToleranceDays: 3,
+      weightKg: 5,
+      parcelSize: ParcelSize.medium,
+      transportMode: TransportMode.plane,
+      contentCategory: ContentCategory.vetements,
+      status: PackageRequestStatus.negotiating,
+      createdAt: DateTime(2026, 1, 1),
+    );
+
 void main() {
   late _MockPackageRequestRepository repo;
 
@@ -65,6 +80,35 @@ void main() {
       expect: () => [
         const CompleteDetailsState(status: CompleteDetailsStatus.loading),
         const CompleteDetailsState(status: CompleteDetailsStatus.success),
+      ],
+    );
+
+    blocTest<CompleteDetailsBloc, CompleteDetailsState>(
+      'CompleteDetailsStarted loads the request into state',
+      build: () {
+        when(() => repo.getById('pr-1'))
+            .thenAnswer((_) async => _fakeRequest());
+        return CompleteDetailsBloc(repo);
+      },
+      act: (bloc) => bloc.add(const CompleteDetailsStarted('pr-1')),
+      expect: () => [
+        isA<CompleteDetailsState>()
+            .having((s) => s.loaded, 'loaded', isTrue)
+            .having((s) => s.request?.id, 'request.id', 'pr-1'),
+      ],
+    );
+
+    blocTest<CompleteDetailsBloc, CompleteDetailsState>(
+      'CompleteDetailsStarted still marks loaded on repo failure (best-effort recap)',
+      build: () {
+        when(() => repo.getById('pr-1')).thenThrow(Exception('boom'));
+        return CompleteDetailsBloc(repo);
+      },
+      act: (bloc) => bloc.add(const CompleteDetailsStarted('pr-1')),
+      expect: () => [
+        isA<CompleteDetailsState>()
+            .having((s) => s.loaded, 'loaded', isTrue)
+            .having((s) => s.request, 'request', isNull),
       ],
     );
 

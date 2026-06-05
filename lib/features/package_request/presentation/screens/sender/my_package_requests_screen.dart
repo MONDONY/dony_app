@@ -104,7 +104,11 @@ class _ListContentState extends State<_ListContent> {
                     context.read<PackageRequestBloc>().add(const FetchMyRequests()),
               );
             }
-            if (state.requests.isEmpty) {
+            // Demandes = uniquement celles « en recherche » (ouvertes / en négo
+            // / terminées). Les demandes payées (accepted/completed) vivent dans
+            // l'onglet Envois.
+            final visible = state.requests.where(isSearchRequest).toList();
+            if (visible.isEmpty) {
               return DonyEmptyState(
                 title: 'Tu n\'as encore rien envoyé',
                 description:
@@ -122,15 +126,15 @@ class _ListContentState extends State<_ListContent> {
               );
             }
 
-            final openCount = state.requests
+            final openCount = visible
                 .where((r) =>
                     r.status == PackageRequestStatus.open ||
                     r.status == PackageRequestStatus.negotiating)
                 .length;
-            final acceptedCount = state.requests
+            final closedCount = visible
                 .where((r) =>
-                    r.status == PackageRequestStatus.accepted ||
-                    r.status == PackageRequestStatus.completed)
+                    r.status == PackageRequestStatus.expired ||
+                    r.status == PackageRequestStatus.cancelled)
                 .length;
             final filtered = applyRequestFilters(state.requests, filter);
 
@@ -152,9 +156,9 @@ class _ListContentState extends State<_ListContent> {
                 ),
                 _FilterRow(
                   current: filter.preset,
-                  total: state.requests.length,
+                  total: visible.length,
                   openCount: openCount,
-                  acceptedCount: acceptedCount,
+                  closedCount: closedCount,
                   onChanged: (p) => context.read<RequestFilterCubit>().setPreset(p),
                 ),
                 Expanded(
@@ -230,12 +234,12 @@ class _FilterRow extends StatelessWidget {
     required this.current,
     required this.total,
     required this.openCount,
-    required this.acceptedCount,
+    required this.closedCount,
     required this.onChanged,
   });
 
   final RequestQuickFilter current;
-  final int total, openCount, acceptedCount;
+  final int total, openCount, closedCount;
   final ValueChanged<RequestQuickFilter> onChanged;
 
   @override
@@ -269,9 +273,9 @@ class _FilterRow extends StatelessWidget {
           const SizedBox(width: DonySpacing.xs + 2),
           Expanded(
             child: _FilterChip(
-              label: 'Acceptées ($acceptedCount)',
-              active: current == RequestQuickFilter.accepted,
-              onTap: () => onChanged(RequestQuickFilter.accepted),
+              label: 'Terminées ($closedCount)',
+              active: current == RequestQuickFilter.closed,
+              onTap: () => onChanged(RequestQuickFilter.closed),
             ),
           ),
         ],
@@ -335,7 +339,7 @@ class _FilterEmptyState extends StatelessWidget {
     } else {
       label = switch (preset) {
         RequestQuickFilter.open => 'Aucune demande ouverte',
-        RequestQuickFilter.accepted => 'Aucune demande acceptée',
+        RequestQuickFilter.closed => 'Aucune demande terminée',
         RequestQuickFilter.all => 'Aucune demande',
       };
     }
@@ -504,22 +508,6 @@ class _CardAction extends StatelessWidget {
               fontSize: 12,
             ),
           ),
-        ),
-      PackageRequestStatus.accepted => Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.check_circle_rounded,
-                size: 13, color: DonyColors.success500),
-            const SizedBox(width: 4),
-            Text(
-              'Compléter →',
-              style: tt.labelSmall?.copyWith(
-                color: DonyColors.success500,
-                fontWeight: FontWeight.w700,
-                fontSize: 12,
-              ),
-            ),
-          ],
         ),
       _ => const SizedBox.shrink(),
     };

@@ -677,6 +677,97 @@ void main() {
     );
   });
 
+  // ─── AnnouncementSurplusOpenRequested ────────────────────────────────────────
+
+  group('AnnouncementSurplusOpenRequested', () {
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'ouverture réussie → [Loading, AnnouncementSurplusOpened]',
+      build: () {
+        when(() => mockRepo.openSurplus(
+              announcementId: any(named: 'announcementId'),
+              surplusKg: any(named: 'surplusKg'),
+              pricePerKg: any(named: 'pricePerKg'),
+            )).thenAnswer((_) async => buildAnnouncement());
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementSurplusOpenRequested(
+        announcementId: 'ann-001',
+        surplusKg: 8.0,
+        pricePerKg: 7.0,
+      )),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        predicate<AnnouncementState>((s) =>
+            s is AnnouncementSurplusOpened &&
+            s.announcement.id == 'ann-001'),
+      ],
+      verify: (_) {
+        verify(() => mockRepo.openSurplus(
+              announcementId: 'ann-001',
+              surplusKg: 8.0,
+              pricePerKg: 7.0,
+            )).called(1);
+      },
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'erreur ouverture → [Loading, AnnouncementError]',
+      build: () {
+        when(() => mockRepo.openSurplus(
+              announcementId: any(named: 'announcementId'),
+              surplusKg: any(named: 'surplusKg'),
+              pricePerKg: any(named: 'pricePerKg'),
+            )).thenThrow(Exception('Server error'));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementSurplusOpenRequested(
+        announcementId: 'ann-001',
+        surplusKg: 8.0,
+        pricePerKg: 7.0,
+      )),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementError>(),
+      ],
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'double ouverture en rafale → 1 seul openSurplus',
+      build: () {
+        when(() => mockRepo.openSurplus(
+              announcementId: any(named: 'announcementId'),
+              surplusKg: any(named: 'surplusKg'),
+              pricePerKg: any(named: 'pricePerKg'),
+            )).thenAnswer((_) async {
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          return buildAnnouncement();
+        });
+        return buildBloc();
+      },
+      act: (bloc) {
+        final event = AnnouncementSurplusOpenRequested(
+          announcementId: 'ann-001',
+          surplusKg: 8.0,
+          pricePerKg: 7.0,
+        );
+        bloc.add(event);
+        bloc.add(event);
+      },
+      wait: const Duration(milliseconds: 100),
+      expect: () => [
+        isA<AnnouncementLoading>(),
+        isA<AnnouncementSurplusOpened>(),
+      ],
+      verify: (_) {
+        verify(() => mockRepo.openSurplus(
+              announcementId: any(named: 'announcementId'),
+              surplusKg: any(named: 'surplusKg'),
+              pricePerKg: any(named: 'pricePerKg'),
+            )).called(1);
+      },
+    );
+  });
+
   // ─── AnnouncementUpdateRequested ──────────────────────────────────────────────
 
   group('AnnouncementUpdateRequested', () {

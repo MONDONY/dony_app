@@ -8,6 +8,7 @@ import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement_bottom_sheet.dart';
+import 'package:dony/features/matching/presentation/widgets/open_surplus_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -49,6 +50,28 @@ class AnnouncementDetailBottomSheet {
                 )
               : null;
 
+          // Bouton « Ouvrir les kg restants » — uniquement sur un trajet dédié
+          // dont la négociation est payée et le surplus pas encore publié.
+          // Ouvre OpenSurplusBottomSheet, puis recharge le détail (sur ce même
+          // AnnouncementBloc partagé) si l'ouverture a réussi.
+          final Widget? surplusBtn = a.canOpenSurplus
+              ? DonyButton(
+                  label: 'Ouvrir les kg restants',
+                  icon: Icons.add_box_outlined,
+                  variant: DonyButtonVariant.secondary,
+                  onPressed: () async {
+                    final bloc = context.read<AnnouncementBloc>();
+                    final opened = await OpenSurplusBottomSheet.show(
+                      context,
+                      announcement: a,
+                    );
+                    if (opened == true) {
+                      bloc.add(AnnouncementDetailRequested(a.id));
+                    }
+                  },
+                )
+              : null;
+
           // Bouton secondaire — Modifier (gauche)
           final Widget? modifierBtn = canEdit
               ? DonyButton(
@@ -86,7 +109,10 @@ class AnnouncementDetailBottomSheet {
                     )
                   : null;
 
-          if (primaryBtn == null && modifierBtn == null && destructifBtn == null) {
+          if (primaryBtn == null &&
+              surplusBtn == null &&
+              modifierBtn == null &&
+              destructifBtn == null) {
             return const SizedBox.shrink();
           }
 
@@ -96,6 +122,11 @@ class AnnouncementDetailBottomSheet {
             children: [
               if (primaryBtn != null) ...[
                 primaryBtn,
+                if (surplusBtn != null || hasSecondRow)
+                  const SizedBox(height: DonySpacing.sm),
+              ],
+              if (surplusBtn != null) ...[
+                surplusBtn,
                 if (hasSecondRow) const SizedBox(height: DonySpacing.sm),
               ],
               if (hasSecondRow)
@@ -289,6 +320,15 @@ class _AnnouncementDetailContent extends StatelessWidget {
           ),
         ).animate().fadeIn(duration: 250.ms),
         const SizedBox(height: DonySpacing.md),
+
+        // ── Répartition capacité (trajet dédié au surplus ouvert) ───────────
+        if (a.surplusPublished) ...[
+          _SurplusSplitRow(
+            reservedKg: a.reservedKg,
+            openKg: a.availableKg,
+          ).animate().fadeIn(delay: 40.ms),
+          const SizedBox(height: DonySpacing.md),
+        ],
 
         // ── 3 info pills ────────────────────────────────────────────────────
         IntrinsicHeight(
@@ -545,6 +585,59 @@ class _StatusBadge extends StatelessWidget {
           fontSize: 11,
           fontWeight: FontWeight.w700,
         ),
+      ),
+    );
+  }
+}
+
+/// Répartition « X kg réservés · Y kg ouverts » affichée sur un trajet dédié
+/// dont le surplus a été publié au public.
+class _SurplusSplitRow extends StatelessWidget {
+  final double reservedKg;
+  final double openKg;
+  const _SurplusSplitRow({required this.reservedKg, required this.openKg});
+
+  String _fmt(double v) => v.toStringAsFixed(v % 1 == 0 ? 0 : 1);
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: cs.successLight.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.success.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.public_rounded, size: 18, color: cs.success),
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: '${_fmt(reservedKg)} kg réservés',
+                    style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+                  ),
+                  TextSpan(
+                    text: ' · ',
+                    style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                  TextSpan(
+                    text: '${_fmt(openKg)} kg ouverts',
+                    style: tt.bodyMedium?.copyWith(
+                      color: cs.success,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

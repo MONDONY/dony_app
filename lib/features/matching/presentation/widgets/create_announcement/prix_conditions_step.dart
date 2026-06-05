@@ -35,6 +35,22 @@ class PrixConditionsStep extends StatelessWidget {
   final TextEditingController refusedCtrl;
   final TextEditingController customPriceCtrl;
 
+  /// Verrouille la section prix (lecture seule) : utilisé quand le prix est déjà
+  /// fixé par une négociation (modification d'un trajet à lier, ou trajet dédié).
+  /// La section prix éditable est masquée et remplacée par une note ; le prix
+  /// déjà saisi reste inchangé à l'enregistrement. La capacité (étape 1) et les
+  /// autres champs restent éditables.
+  final bool lockPrice;
+
+  /// Trajet dédié : prix total convenu avec l'expéditeur (€). Si non-null et
+  /// [lockPrice] actif, la note générique est remplacée par une carte affichant
+  /// ce montant. Sinon, la note générique « Prix fixé par la négociation ».
+  final double? lockedTotalPriceEur;
+
+  /// Affiche la section « Modes de paiement acceptés ». Masquée dans le flux
+  /// trajet dédié (le mode de paiement est déjà fixé par la négociation).
+  final bool showPaymentMethods;
+
   const PrixConditionsStep({
     super.key,
     required this.priceOptionNotifier,
@@ -49,6 +65,9 @@ class PrixConditionsStep extends StatelessWidget {
     required this.customAcceptedCtrl,
     required this.refusedCtrl,
     required this.customPriceCtrl,
+    this.lockPrice = false,
+    this.lockedTotalPriceEur,
+    this.showPaymentMethods = true,
   });
 
   bool get _isCustomPrice => priceOptionNotifier.value == kPriceOptions.length;
@@ -67,6 +86,15 @@ class PrixConditionsStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Prix fixé par la négociation → section prix masquée (note + prix
+        // existant conservé). La capacité (étape 1) reste éditable.
+        // Trajet dédié : on affiche le prix total convenu ; modification-pour-
+        // négo : note générique (pas de total à afficher).
+        if (lockPrice)
+          lockedTotalPriceEur != null
+              ? _LockedAgreedPriceCard(amount: lockedTotalPriceEur!)
+              : const _LockedPriceNote(),
+        if (!lockPrice) ...[
         // ── MODE DE TARIFICATION ──────────────────────────────────────────────
         BlocBuilder<AnnouncementFormBloc, AnnouncementFormState>(
           buildWhen: (p, c) => p.pricingMode != c.pricingMode,
@@ -433,9 +461,13 @@ class PrixConditionsStep extends StatelessWidget {
             );
           },
         ),
+        ], // fin du bloc prix (masqué quand lockPrice)
         const SizedBox(height: DonySpacing.xxl),
 
         // ── MODES DE PAIEMENT ACCEPTÉS ────────────────────────────────────────
+        // Masqué dans le flux trajet dédié : le mode de paiement est déjà fixé
+        // par la négociation (lockContext.paymentMethod).
+        if (showPaymentMethods) ...[
         const CaSectionLabel(
           label: 'Modes de paiement acceptés',
           icon: Icons.payments_rounded,
@@ -550,6 +582,7 @@ class PrixConditionsStep extends StatelessWidget {
           },
         ).animate().fadeIn(delay: 180.ms),
         const SizedBox(height: DonySpacing.xxl),
+        ], // fin de la section paiement (masquée quand !showPaymentMethods)
 
         // ── CE QUE J'ACCEPTE ──────────────────────────────────────────────────
         const CaSectionLabel(
@@ -962,6 +995,101 @@ class _ModeToggleOption extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Note affichée à la place de la section prix quand le prix est verrouillé
+/// (fixé par une négociation). Le prix existant du trajet reste inchangé.
+class _LockedPriceNote extends StatelessWidget {
+  const _LockedPriceNote();
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      key: const Key('locked-price-note'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.lock_rounded, size: 18, color: cs.onSurfaceVariant),
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Prix fixé par la négociation',
+                  style: tt.bodyMedium
+                      ?.copyWith(fontWeight: FontWeight.w700, color: cs.onSurface),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  "Le montant de ce colis a été convenu avec l'expéditeur — "
+                  'non modifiable ici.',
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Carte affichant le prix total convenu (flux trajet dédié). Le montant est
+/// fixé par la négociation et non modifiable dans le formulaire.
+class _LockedAgreedPriceCard extends StatelessWidget {
+  const _LockedAgreedPriceCard({required this.amount});
+  final double amount;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      key: const Key('locked-agreed-price-card'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(DonySpacing.lg),
+      decoration: BoxDecoration(
+        color: cs.successLight,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.success.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.check_circle_rounded, color: cs.success, size: 28),
+          const SizedBox(width: DonySpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Prix total convenu',
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+                Text(
+                  '${amount.toStringAsFixed(0)} €',
+                  style: tt.headlineSmall?.copyWith(
+                    color: cs.success,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.lock_rounded, size: 16, color: cs.onSurfaceVariant),
+        ],
       ),
     );
   }

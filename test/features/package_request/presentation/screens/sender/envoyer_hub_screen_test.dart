@@ -195,15 +195,17 @@ void main() {
     );
   }
 
-  group('EnvoyerHubScreen — 3 onglets', () {
-    testWidgets('les 3 labels de segments sont présents (Envois, Demandes, Négos)',
+  group('EnvoyerHubScreen — 2 onglets', () {
+    testWidgets(
+        'les 2 labels de segments sont présents (Envois, Demandes), plus de Négos',
         (tester) async {
       await tester.pumpWidget(wrap());
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.textContaining('Envois'), findsWidgets);
       expect(find.textContaining('Demandes'), findsWidgets);
-      expect(find.textContaining('Négos'), findsWidgets);
+      // L'onglet Négos a été fusionné dans Demandes (offres visibles dans le détail).
+      expect(find.textContaining('Négos'), findsNothing);
     });
 
     testWidgets(
@@ -236,15 +238,13 @@ void main() {
       await tester.pumpWidget(wrap());
       await tester.pump(const Duration(milliseconds: 400));
 
-      // → onglet Demandes (index 1) : RefreshMyRequests envoyé à PackageRequestBloc
+      // → onglet Demandes (index 1) : rafraîchit les demandes ET les négos
+      // (les offres reçues y sont désormais surfacées).
       await tester.tap(find.textContaining('Demandes').first);
       await tester.pumpAndSettle();
       verify(() => packageBloc.add(const RefreshMyRequests())).called(1);
-
-      // → onglet Négos (index 2) : NegotiationListRefreshRequested envoyé
-      await tester.tap(find.textContaining('Négos').first);
-      await tester.pumpAndSettle();
-      verify(() => negoListBloc.add(const NegotiationListRefreshRequested())).called(1);
+      verify(() => negoListBloc.add(const NegotiationListRefreshRequested()))
+          .called(1);
 
       // → retour onglet Envois (index 0) : BidMyListAutoRefreshRequested envoyé
       await tester.tap(find.textContaining('Envois').first);
@@ -253,9 +253,9 @@ void main() {
     });
 
     testWidgets(
-        'pas de badge sur Négos avant la première visite (lastSeen=-1)',
+        'pas de badge sur Demandes avant la première visite (lastSeen=-1)',
         (tester) async {
-      // 2 active negotiations, but Négos never visited yet.
+      // 2 négos actives, mais l'onglet Demandes n'a pas encore été visité.
       when(() => negoListBloc.state).thenReturn(
         NegotiationListState(
           status: NegotiationListStatus.loaded,
@@ -269,7 +269,7 @@ void main() {
       await tester.pumpWidget(wrap());
       await tester.pump(const Duration(milliseconds: 400));
 
-      // lastSeen[2] == -1 → badge = 0, aucun badge rouge visible.
+      // _lastSeenNegoThreads == -1 → badge = 0, aucun badge rouge visible.
       expect(find.text('2'), findsNothing);
     });
 

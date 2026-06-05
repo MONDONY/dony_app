@@ -96,6 +96,19 @@ class AnnouncementDeleteRequested extends AnnouncementEvent {
   AnnouncementDeleteRequested(this.id);
 }
 
+/// Ouverture de la capacité excédentaire d'un trajet dédié au public.
+class AnnouncementSurplusOpenRequested extends AnnouncementEvent {
+  final String announcementId;
+  final double surplusKg;
+  final double pricePerKg;
+
+  AnnouncementSurplusOpenRequested({
+    required this.announcementId,
+    required this.surplusKg,
+    required this.pricePerKg,
+  });
+}
+
 class AnnouncementUpdateRequested extends AnnouncementEvent {
   final String id;
   final String departureCity;

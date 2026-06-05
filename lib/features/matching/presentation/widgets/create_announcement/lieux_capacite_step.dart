@@ -35,6 +35,11 @@ class LieuxCapaciteStep extends StatelessWidget {
   final void Function(AddressData? addr) onPickupChanged;
   final void Function(AddressData? addr) onDeliveryChanged;
 
+  /// Capacité verrouillée (kg) : fixée par la demande dans le flux trajet dédié.
+  /// Si non-null, la capacité interactive ([CapacityControl]) est remplacée par
+  /// un affichage en lecture seule. Les adresses restent éditables.
+  final double? lockedCapacityKg;
+
   const LieuxCapaciteStep({
     super.key,
     this.initialPickupAddress,
@@ -43,6 +48,7 @@ class LieuxCapaciteStep extends StatelessWidget {
     required this.onDeliverySaved,
     required this.onPickupChanged,
     required this.onDeliveryChanged,
+    this.lockedCapacityKg,
   });
 
   @override
@@ -99,9 +105,63 @@ class LieuxCapaciteStep extends StatelessWidget {
           icon: Icons.luggage_rounded,
         ),
         const SizedBox(height: DonySpacing.base),
-        const CapacityControl(),
+        // Trajet dédié : capacité fixée par la demande → affichage verrouillé.
+        lockedCapacityKg != null
+            ? _LockedCapacityDisplay(kg: lockedCapacityKg!)
+            : const CapacityControl(),
         const SizedBox(height: DonySpacing.xxl),
       ],
+    );
+  }
+}
+
+/// Affichage en lecture seule de la capacité quand elle est imposée par la
+/// demande (flux trajet dédié). Remplace [CapacityControl].
+class _LockedCapacityDisplay extends StatelessWidget {
+  const _LockedCapacityDisplay({required this.kg});
+  final double kg;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      key: const Key('locked-capacity-display'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(DonySpacing.lg),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.luggage_rounded, size: 24, color: cs.onSurfaceVariant),
+          const SizedBox(width: DonySpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${kg.toStringAsFixed(0)} kg',
+                  style: tt.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: cs.onSurface,
+                  ),
+                ),
+                Text(
+                  'Capacité fixée par la demande',
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.lock_rounded, size: 16, color: cs.onSurfaceVariant),
+        ],
+      ),
     );
   }
 }

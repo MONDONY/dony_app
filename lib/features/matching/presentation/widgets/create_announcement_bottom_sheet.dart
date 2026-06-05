@@ -1,8 +1,6 @@
-import 'package:dony/core/constants/city_airport_codes.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/core/services/address_autocomplete_service.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
@@ -18,7 +16,6 @@ import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
-import 'package:dony/features/matching/presentation/widgets/address_picker_field.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_preview_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_create_announcement_constants.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement/_shared_widgets.dart';
@@ -33,10 +30,8 @@ import 'package:dony/features/trip_templates/bloc/trip_template_event.dart';
 import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
 import 'package:dony/features/trip_templates/data/models/trip_template.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 // ─── Public entry point ───────────────────────────────────────────────────────
 
@@ -46,6 +41,7 @@ class CreateAnnouncementBottomSheet {
     AnnouncementModel? announcement,
     LockedTripContext? lockContext,
     NegotiationBloc? negotiationBloc,
+    bool lockCorridorAndDate = false,
   }) {
     assert(lockContext == null || negotiationBloc != null,
         'lockContext requires a negotiationBloc to dispatch the dedicated-trip event');
@@ -54,8 +50,10 @@ class CreateAnnouncementBottomSheet {
     final currentStepNotifier = ValueNotifier<int>(0);
     final departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
     // true dès que ville départ + ville arrivée + date sont renseignés (étape 0).
-    // Initialisé à true en mode édition car les champs sont pré-remplis.
-    final canContinueNotifier = ValueNotifier<bool>(announcement != null);
+    // Initialisé à true en mode édition ET en trajet dédié car le corridor +
+    // la date sont pré-remplis depuis la demande.
+    final canContinueNotifier =
+        ValueNotifier<bool>(announcement != null || lockContext != null);
     // true dès que lieu de remise + lieu de récupération sont renseignés (étape 1).
     final canContinueStep1Notifier = ValueNotifier<bool>(
       announcement?.pickupAddress != null && announcement?.deliveryAddress != null,
@@ -95,25 +93,7 @@ class CreateAnnouncementBottomSheet {
           ),
         );
       },
-      stickyBottom: isLocked
-          ? ValueListenableBuilder<bool>(
-              valueListenable: canSubmitNotifier,
-              builder: (ctx, canSubmit, _) {
-                return BlocBuilder<NegotiationBloc, NegotiationState>(
-                  builder: (ctx, state) {
-                    final isLoading = state is NegotiationLoading
-                        || state is NegotiationActionInProgress;
-                    return DonyButton(
-                      key: const Key('create-dedicated-trip-submit'),
-                      label: 'Confirmer le trajet',
-                      isLoading: isLoading,
-                      onPressed: (canSubmit && !isLoading) ? () => submit?.call() : null,
-                    );
-                  },
-                );
-              },
-            )
-          : ListenableBuilder(
+      stickyBottom: ListenableBuilder(
               listenable: Listenable.merge([canSubmitNotifier, currentStepNotifier, canContinueNotifier, canContinueStep1Notifier]),
               builder: (ctx, _) {
                 final step = currentStepNotifier.value;
@@ -151,6 +131,41 @@ class CreateAnnouncementBottomSheet {
                         ),
                       ),
                     ],
+                  );
+                }
+
+                // Étape 3 (finale) — Trajet dédié : « Confirmer le trajet »
+                // (dispatch NegotiationCreateDedicatedTripRequested).
+                if (isLocked) {
+                  return BlocBuilder<NegotiationBloc, NegotiationState>(
+                    builder: (ctx, state) {
+                      final isLoading = state is NegotiationLoading ||
+                          state is NegotiationActionInProgress;
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: DonyButton(
+                              label: 'Retour',
+                              variant: DonyButtonVariant.secondary,
+                              icon: DonyIcons.back,
+                              onPressed: () =>
+                                  currentStepNotifier.value = step - 1,
+                            ),
+                          ),
+                          const SizedBox(width: DonySpacing.sm),
+                          Expanded(
+                            child: DonyButton(
+                              key: const Key('create-dedicated-trip-submit'),
+                              label: 'Confirmer le trajet',
+                              isLoading: isLoading,
+                              onPressed: (canSubmit && !isLoading)
+                                  ? () => submit?.call()
+                                  : null,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   );
                 }
 
@@ -265,6 +280,7 @@ class CreateAnnouncementBottomSheet {
       child: _CreateAnnouncementContent(
         announcement: announcement,
         lockContext: lockContext,
+        lockCorridorAndDate: lockCorridorAndDate,
         canSubmitNotifier: canSubmitNotifier,
         canContinueNotifier: canContinueNotifier,
         canContinueStep1Notifier: canContinueStep1Notifier,
@@ -288,6 +304,9 @@ class CreateAnnouncementBottomSheet {
 class _CreateAnnouncementContent extends StatefulWidget {
   final AnnouncementModel? announcement;
   final LockedTripContext? lockContext;
+  /// Édition d'un trajet à lier à une négo : corridor + date verrouillés, et on
+  /// reste sur l'écran de liaison au succès (pas de redirection /announcements).
+  final bool lockCorridorAndDate;
   final ValueNotifier<bool>? canSubmitNotifier;
   final ValueNotifier<bool>? canContinueNotifier;
   final ValueNotifier<bool>? canContinueStep1Notifier;
@@ -301,6 +320,7 @@ class _CreateAnnouncementContent extends StatefulWidget {
   const _CreateAnnouncementContent({
     this.announcement,
     this.lockContext,
+    this.lockCorridorAndDate = false,
     this.canSubmitNotifier,
     this.canContinueNotifier,
     this.canContinueStep1Notifier,
@@ -456,6 +476,12 @@ class _CreateAnnouncementContentState
             ? PricingMode.mixed
             : PricingMode.kg;
         formBloc.add(AnnouncementPricingModeSetRequested(mode));
+
+        // Seed le prix dans le form bloc depuis les notifiers pré-remplis : le
+        // listener ne s'est pas déclenché (valeurs posées avant son attache).
+        // Indispensable quand la section prix est masquée (lockPrice) — sinon
+        // le submit enverrait pricePerKg = 0 et écraserait le prix du trajet.
+        _syncPriceToFormBloc();
       });
     }
     widget.onSubmitReady?.call(_submit);
@@ -869,22 +895,6 @@ class _CreateAnnouncementContentState
     }
   }
 
-  String _formatCorridorDateTime() {
-    final departureDate = _departureDateNotifier.value;
-    final departureTime = _departureTimeNotifier.value;
-    final arrivalTime = _arrivalTimeNotifier.value;
-    if (departureDate == null) {
-      return '';
-    }
-    final date = DateFormat('EEE d MMM', 'fr').format(departureDate);
-    if (departureTime != null && arrivalTime != null) {
-      return '$date · ${departureTime.hour}h–${arrivalTime.hour}h';
-    } else if (departureTime != null) {
-      return '$date · ${departureTime.hour}h';
-    }
-    return date;
-  }
-
   @override
   Widget build(BuildContext context) {
     final formChild = _buildForm(context);
@@ -918,7 +928,11 @@ class _CreateAnnouncementContentState
         listener: (context, state) async {
           if (state is AnnouncementCreated || state is AnnouncementUpdated) {
             Navigator.of(context, rootNavigator: true).pop();
-            if (context.mounted) context.go('/announcements');
+            // En modification depuis « Lier un trajet », on reste sur l'écran de
+            // liaison (le caller rafraîchit) — pas de redirection /announcements.
+            if (!widget.lockCorridorAndDate && context.mounted) {
+              context.go('/announcements');
+            }
           } else if (state is AnnouncementProLimitReached) {
             Navigator.of(context, rootNavigator: true).pop();
             if (context.mounted) {
@@ -1034,6 +1048,10 @@ class _CreateAnnouncementContentState
   // ── Step 0 — Trajet + Transport ─────────────────────────────────────────────
   List<Widget> _buildStep0(BuildContext context, TextTheme tt, ColorScheme cs) {
     return [
+      if (_isLocked) ...[
+        _LockedBanner(lockContext: widget.lockContext!),
+        const SizedBox(height: DonySpacing.lg),
+      ],
       if (!_isEdit && !_isLocked) _buildTemplatesSuggestionBar(context, tt, cs),
       TrajetStep(
         departureCityNotifier: _departureCityNotifier,
@@ -1045,6 +1063,11 @@ class _CreateAnnouncementContentState
         onSelectDepartureTime: _selectDepartureTime,
         onSelectArrivalTime: _selectArrivalTime,
         onSelectDate: _selectDate,
+        // Corridor verrouillé en modification (Q1) ET en trajet dédié (lockContext).
+        // Date verrouillée seulement en modification ; le dédié la garde éditable
+        // dans la fenêtre de tolérance.
+        lockCorridor: widget.lockCorridorAndDate || _isLocked,
+        lockDate: widget.lockCorridorAndDate,
       ),
     ];
   }
@@ -1065,6 +1088,8 @@ class _CreateAnnouncementContentState
           _deliveryAddressNotifier.value = addr;
           _updateCanContinueStep1();
         },
+        // Trajet dédié : capacité fixée par la demande → affichage verrouillé.
+        lockedCapacityKg: _isLocked ? widget.lockContext!.weightKg : null,
       ),
     ];
   }
@@ -1085,6 +1110,14 @@ class _CreateAnnouncementContentState
         customAcceptedCtrl: _customAcceptedCtrl,
         refusedCtrl: _refusedCtrl,
         customPriceCtrl: _customPriceCtrl,
+        // Prix verrouillé en modification-pour-négo ET en trajet dédié : il est
+        // fixé par la négociation.
+        lockPrice: widget.lockCorridorAndDate || _isLocked,
+        // Trajet dédié : affiche le prix total convenu et masque la section
+        // « Modes de paiement » (déjà fixé par la négociation).
+        lockedTotalPriceEur:
+            _isLocked ? widget.lockContext!.agreedPriceEur : null,
+        showPaymentMethods: !_isLocked,
       ),
     ];
   }
@@ -1092,498 +1125,6 @@ class _CreateAnnouncementContentState
   Widget _buildForm(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-
-    // Mode locked — formulaire plat, pas de stepper
-    if (_isLocked) {
-      return Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _LockedBanner(lockContext: widget.lockContext!),
-            const SizedBox(height: DonySpacing.lg),
-            // ── Corridor preview ───────────────────────────────────────────
-            ListenableBuilder(
-              listenable: Listenable.merge([
-                _departureCityNotifier,
-                _arrivalCityNotifier,
-                _departureDateNotifier,
-                _departureTimeNotifier,
-                _arrivalTimeNotifier,
-              ]),
-              builder: (context, _) {
-                final dep = _departureCityNotifier.value;
-                final arr = _arrivalCityNotifier.value;
-                if (dep == null || arr == null) return const SizedBox.shrink();
-                final depCode = cityAirportCode(dep, departure: true);
-                final arrCode = cityAirportCode(arr, departure: false);
-                final dateStr = _formatCorridorDateTime();
-                return Column(
-                  children: [
-                    CaSectionCard(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: DonySpacing.base,
-                          vertical: DonySpacing.md,
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '$depCode → $arrCode',
-                                    style: tt.titleLarge?.copyWith(
-                                        fontWeight: FontWeight.w700),
-                                  ),
-                                  if (dateStr.isNotEmpty)
-                                    Text(
-                                      dateStr,
-                                      style: tt.bodySmall?.copyWith(
-                                          color: cs.onSurfaceVariant),
-                                    ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: DonySpacing.sm,
-                                vertical: DonySpacing.xs,
-                              ),
-                              decoration: BoxDecoration(
-                                color: cs.primaryContainer,
-                                borderRadius:
-                                    BorderRadius.circular(DonyRadius.full),
-                              ),
-                              child: Text(
-                                'Confirmé',
-                                style: tt.labelSmall?.copyWith(
-                                  color: cs.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ).animate().fadeIn(duration: 250.ms),
-                    const SizedBox(height: DonySpacing.xl),
-                  ],
-                );
-              },
-            ),
-            // ── TRAJET ────────────────────────────────────────────────────
-            const CaSectionLabel(label: 'Trajet', icon: Icons.flight_takeoff_rounded),
-            const SizedBox(height: DonySpacing.sm),
-            ListenableBuilder(
-              listenable: Listenable.merge([
-                _departureCityNotifier,
-                _arrivalCityNotifier,
-                _departureDateNotifier,
-                _departureTimeNotifier,
-                _arrivalTimeNotifier,
-              ]),
-              builder: (context, _) {
-                return CaSectionCard(
-                  child: Column(
-                    children: [
-                      _LockedCityRow(
-                        label: 'Ville de départ',
-                        value: _departureCityNotifier.value ?? '',
-                        icon: Icons.flight_takeoff_rounded,
-                        iconColor: cs.primary,
-                      ),
-                      const CaRowDivider(),
-                      CaTimeRow(
-                        isDeparture: true,
-                        time: _departureTimeNotifier.value,
-                        onTap: _selectDepartureTime,
-                        onClear: _departureTimeNotifier.value != null
-                            ? () => _departureTimeNotifier.value = null
-                            : null,
-                      ),
-                      const CaRowDivider(),
-                      _LockedCityRow(
-                        label: 'Ville d\'arrivée',
-                        value: _arrivalCityNotifier.value ?? '',
-                        icon: Icons.flight_land_rounded,
-                        iconColor: DonyColors.accent,
-                      ),
-                      const CaRowDivider(),
-                      CaTimeRow(
-                        isDeparture: false,
-                        time: _arrivalTimeNotifier.value,
-                        onTap: _selectArrivalTime,
-                        onClear: _arrivalTimeNotifier.value != null
-                            ? () => _arrivalTimeNotifier.value = null
-                            : null,
-                      ),
-                      const CaRowDivider(),
-                      CaDateRow(
-                        date: _departureDateNotifier.value,
-                        onTap: _selectDate,
-                      ),
-                    ],
-                  ),
-                ).animate().fadeIn(delay: 60.ms);
-              },
-            ),
-            const SizedBox(height: DonySpacing.xxl),
-            // ── LIEUX DE REMISE ───────────────────────────────────────────
-            const CaSectionLabel(label: 'Lieux de remise', icon: Icons.swap_horiz_rounded),
-            const SizedBox(height: DonySpacing.xs),
-            Text(
-              'Précisez l\'endroit exact de remise et récupération',
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            ),
-            const SizedBox(height: DonySpacing.sm),
-            AddressPickerField(
-              fieldLabel: 'Lieu de remise du colis *',
-              isRequired: true,
-              initialValue: widget.announcement?.pickupAddress,
-              onSaved: (v) => _pickupAddressNotifier.value = v,
-              autocompleteService: getIt<AddressAutocompleteService>(),
-            ).animate().fadeIn(delay: 80.ms),
-            const SizedBox(height: 16),
-            AddressPickerField(
-              fieldLabel: 'Lieu de récupération *',
-              isRequired: true,
-              showGpsButton: false,
-              initialValue: widget.announcement?.deliveryAddress,
-              onSaved: (v) => _deliveryAddressNotifier.value = v,
-              autocompleteService: getIt<AddressAutocompleteService>(),
-            ).animate().fadeIn(delay: 90.ms),
-            const SizedBox(height: DonySpacing.xxl),
-            // ── CAPACITÉ DISPONIBLE ───────────────────────────────────────
-            const CaSectionLabel(label: 'Capacité disponible', icon: Icons.luggage_rounded),
-            const SizedBox(height: DonySpacing.base),
-            ValueListenableBuilder<double>(
-              valueListenable: _availableKgNotifier,
-              builder: (context, kg, _) {
-                return Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        const Expanded(child: SizedBox()),
-                        Text(
-                          kg.toStringAsFixed(0),
-                          style: tt.displayLarge?.copyWith(
-                            fontSize: 56,
-                            fontWeight: FontWeight.w800,
-                            color: cs.onSurface,
-                          ),
-                        ),
-                        Text(
-                          ' kg',
-                          style: tt.headlineMedium?.copyWith(
-                              color: cs.onSurfaceVariant),
-                        ),
-                        Expanded(
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: DonySpacing.sm,
-                                vertical: DonySpacing.xs,
-                              ),
-                              decoration: BoxDecoration(
-                                color: cs.surfaceContainerHighest,
-                                borderRadius:
-                                    BorderRadius.circular(DonyRadius.full),
-                              ),
-                              child: Text(
-                                'VALISE',
-                                style: tt.labelSmall?.copyWith(
-                                    color: cs.onSurfaceVariant),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: DonySpacing.xs),
-                    Text(
-                      'Capacité fixée par la demande',
-                      style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                          fontStyle: FontStyle.italic),
-                    ),
-                  ],
-                );
-              },
-            ),
-            const SizedBox(height: DonySpacing.xxl),
-            // ── PRIX verrouillé ───────────────────────────────────────────
-            _LockedTotalPriceCard(
-              agreedPriceEur: widget.lockContext!.agreedPriceEur,
-            ),
-            const SizedBox(height: DonySpacing.xxl),
-            // ── MODE DE TRANSPORT ─────────────────────────────────────────
-            const CaSectionLabel(
-              label: 'Mode de transport',
-              icon: Icons.commute_rounded,
-            ),
-            const SizedBox(height: DonySpacing.sm),
-            IgnorePointer(
-              ignoring: true,
-              child: Opacity(
-                opacity: 0.7,
-                child: ValueListenableBuilder<TransportMode?>(
-                  valueListenable: _transportModeNotifier,
-                  builder: (context, current, _) {
-                    return Wrap(
-                      spacing: DonySpacing.sm,
-                      runSpacing: DonySpacing.sm,
-                      children: [
-                        for (final mode in TransportMode.values)
-                          DonyChip(
-                            key: Key('transport-chip-${mode.name}'),
-                            label: mode.label,
-                            icon: mode.icon,
-                            selected: current == mode,
-                            onTap: () {},
-                          ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-            ).animate().fadeIn(delay: 110.ms),
-            const SizedBox(height: DonySpacing.xxl),
-            // ── CE QUE J'ACCEPTE ──────────────────────────────────────────
-            const CaSectionLabel(
-              label: 'Ce que j\'accepte',
-              icon: Icons.check_circle_outline_rounded,
-            ),
-            const SizedBox(height: DonySpacing.sm),
-            ListenableBuilder(
-              listenable: Listenable.merge([
-                _selectedContentNotifier,
-                _customAcceptedNotifier,
-              ]),
-              builder: (context, _) {
-                final selected = _selectedContentNotifier.value;
-                final custom = _customAcceptedNotifier.value;
-                return CaSectionCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(DonySpacing.base),
-                        child: Wrap(
-                          spacing: DonySpacing.xs,
-                          runSpacing: DonySpacing.xs,
-                          children: kContentTypes.map((type) {
-                            final isSelected = selected.contains(type);
-                            return GestureDetector(
-                              onTap: () {
-                                final updated = Set<String>.from(selected);
-                                if (isSelected) {
-                                  updated.remove(type);
-                                } else {
-                                  updated.add(type);
-                                }
-                                _selectedContentNotifier.value = updated;
-                              },
-                              child: AnimatedContainer(
-                                duration: 160.ms,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: DonySpacing.md,
-                                  vertical: DonySpacing.xs,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? cs.success
-                                      : Theme.of(context).scaffoldBackgroundColor,
-                                  borderRadius:
-                                      BorderRadius.circular(DonyRadius.full),
-                                  border: Border.all(
-                                    color: isSelected ? cs.success : cs.outline,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (isSelected) ...[
-                                      const Icon(Icons.check_rounded,
-                                          size: 12, color: DonyColors.white),
-                                      const SizedBox(width: DonySpacing.xs),
-                                    ],
-                                    Text(
-                                      type,
-                                      style: tt.bodySmall?.copyWith(
-                                        color: isSelected
-                                            ? DonyColors.white
-                                            : cs.onSurface,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                      if (custom.isNotEmpty) ...[
-                        const CaRowDivider(),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: DonySpacing.base,
-                            vertical: DonySpacing.sm,
-                          ),
-                          child: Wrap(
-                            spacing: DonySpacing.xs,
-                            runSpacing: DonySpacing.xs,
-                            children: custom
-                                .map((item) => CaRemovableChip(
-                                      label: item,
-                                      accentColor: cs.success,
-                                      onRemove: () {
-                                        final updated =
-                                            Set<String>.from(custom)
-                                              ..remove(item);
-                                        _customAcceptedNotifier.value = updated;
-                                      },
-                                    ))
-                                .toList(),
-                          ),
-                        ),
-                      ],
-                      const CaRowDivider(),
-                      CaInlineAddRow(
-                        controller: _customAcceptedCtrl,
-                        hint: 'Ajouter un autre type…',
-                        onAdd: () {
-                          final val = _customAcceptedCtrl.text.trim();
-                          if (val.isEmpty) return;
-                          _customAcceptedNotifier.value = {
-                            ..._customAcceptedNotifier.value,
-                            val,
-                          };
-                          _customAcceptedCtrl.clear();
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ).animate().fadeIn(delay: 120.ms),
-            const SizedBox(height: DonySpacing.xxl),
-            // ── CE QUE JE REFUSE ──────────────────────────────────────────
-            const CaSectionLabel(label: 'Ce que je refuse', icon: Icons.block_rounded),
-            const SizedBox(height: DonySpacing.sm),
-            ValueListenableBuilder<Set<String>>(
-              valueListenable: _refusedTypesNotifier,
-              builder: (context, refused, _) {
-                return CaSectionCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CaInlineAddRow(
-                        controller: _refusedCtrl,
-                        hint: 'Ex: Liquides, Denrées périssables…',
-                        accentColor: cs.error,
-                        onAdd: () {
-                          final val = _refusedCtrl.text.trim();
-                          if (val.isEmpty) return;
-                          _refusedTypesNotifier.value = {...refused, val};
-                          _refusedCtrl.clear();
-                        },
-                      ),
-                      if (refused.isNotEmpty) ...[
-                        const CaRowDivider(),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: DonySpacing.base,
-                            vertical: DonySpacing.sm,
-                          ),
-                          child: Wrap(
-                            spacing: DonySpacing.xs,
-                            runSpacing: DonySpacing.xs,
-                            children: refused
-                                .map((item) => CaRemovableChip(
-                                      label: item,
-                                      accentColor: cs.error,
-                                      onRemove: () {
-                                        final updated =
-                                            Set<String>.from(refused)
-                                              ..remove(item);
-                                        _refusedTypesNotifier.value = updated;
-                                      },
-                                    ))
-                                .toList(),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                );
-              },
-            ).animate().fadeIn(delay: 140.ms),
-            const SizedBox(height: DonySpacing.xxl),
-            // ── NOTE AUX EXPÉDITEURS ──────────────────────────────────────
-            const CaSectionLabel(
-              label: 'Note aux expéditeurs',
-              icon: Icons.edit_note_rounded,
-            ),
-            const SizedBox(height: DonySpacing.sm),
-            ValueListenableBuilder<TextEditingValue>(
-              valueListenable: _descriptionCtrl,
-              builder: (context, value, _) {
-                return CaSectionCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: DonySpacing.base,
-                          vertical: DonySpacing.xs,
-                        ),
-                        child: TextField(
-                          controller: _descriptionCtrl,
-                          maxLines: 4,
-                          maxLength: 500,
-                          scrollPadding: const EdgeInsets.only(bottom: 120),
-                          buildCounter: (_, {required currentLength, required isFocused, maxLength}) => null,
-                          style: tt.bodyMedium?.copyWith(color: cs.onSurface),
-                          decoration: InputDecoration(
-                            hintText:
-                                'Ex: Je préfère les colis bien emballés. Contactez-moi avant le départ.',
-                            hintStyle: tt.bodyMedium
-                                ?.copyWith(color: cs.onSurfaceVariant),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: DonySpacing.md,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          right: DonySpacing.base,
-                          bottom: DonySpacing.sm,
-                        ),
-                        child: Text(
-                          '${value.text.length}/500',
-                          style: tt.bodySmall
-                              ?.copyWith(color: cs.onSurfaceVariant),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ).animate().fadeIn(delay: 160.ms),
-            const SizedBox(height: DonySpacing.xl),
-          ],
-        ),
-      );
-    }
 
     // Mode création ou édition — formulaire avec stepper.
     // Offstage garde les 3 steps dans l'arbre en permanence :
@@ -1641,100 +1182,6 @@ class _CreateAnnouncementContentState
 
 // ─── Locked banner & locked-mode helpers ─────────────────────────────────────
 
-class _LockedCityRow extends StatelessWidget {
-  const _LockedCityRow({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.iconColor,
-  });
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color iconColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.base,
-        vertical: DonySpacing.md,
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: iconColor),
-          const SizedBox(width: DonySpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                ),
-                Text(
-                  value,
-                  style: tt.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: cs.onSurface,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Icon(Icons.lock_rounded, size: 14, color: cs.onSurfaceVariant),
-        ],
-      ),
-    );
-  }
-}
-
-class _LockedTotalPriceCard extends StatelessWidget {
-  const _LockedTotalPriceCard({required this.agreedPriceEur});
-  final double agreedPriceEur;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(DonySpacing.lg),
-      decoration: BoxDecoration(
-        color: cs.successLight,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-        border: Border.all(color: cs.success.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.check_circle_rounded, color: cs.success, size: 28),
-          const SizedBox(width: DonySpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Prix total convenu',
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                ),
-                Text(
-                  '${agreedPriceEur.toStringAsFixed(0)} €',
-                  style: tt.headlineSmall?.copyWith(
-                    color: cs.success,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Icon(Icons.lock_rounded, size: 16, color: cs.onSurfaceVariant),
-        ],
-      ),
-    );
-  }
-}
-
 class _LockedBanner extends StatelessWidget {
   const _LockedBanner({required this.lockContext});
   final LockedTripContext lockContext;
@@ -1768,7 +1215,7 @@ class _LockedBanner extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Corridor, capacité, mode de transport et prix sont verrouillés. '
+                  'Corridor, capacité et prix sont verrouillés. '
                   'La date doit rester dans la fenêtre de tolérance de l\'expéditeur.',
                   style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),

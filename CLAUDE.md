@@ -299,6 +299,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `kyc_failed` | KycBloc._onSessionRequested() |
 | `announcement_created` | AnnouncementBloc._onCreateRequested() |
 | `announcement_viewed` | AnnouncementDetailScreen (BlocListener) |
+| `surplus_opened` | AnnouncementBloc._onSurplusOpenRequested() |
 | `bid_submitted` | BidBloc._onCreateRequested() |
 | `bid_accepted` | BidAcceptanceBloc._handleResponse() |
 | `bid_rejected` | BidBloc._onRejectRequested() |
@@ -325,7 +326,7 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `analytics_consent_changed` | PrivacySettingsScreen.onChanged |
 | `account_deletion_requested` | AccountDeletionBloc._onRequestDeletion() |
 | `shipment_filter_applied` | ShipmentFilterCubit (statut/période/preset, sans PII) |
-| `envoyer_envois` / `envoyer_demandes` / `envoyer_negos` | EnvoyerHubScreen `logScreen` au changement d'onglet |
+| `envoyer_envois` / `envoyer_demandes` | EnvoyerHubScreen `logScreen` au changement d'onglet (Envois / Demandes) |
 | `firm_price_taken` | NegotiationBloc._onStart() — voyageur prend un prix ferme |
 | `payment_method_selected` | NegotiationBloc._onSubmitTrip()/_onCreateDedicatedTrip() — mode de paiement sélectionné au trip-linking |
 | `bloc_error` | AnalyticsBlocObserver.onError() — global |

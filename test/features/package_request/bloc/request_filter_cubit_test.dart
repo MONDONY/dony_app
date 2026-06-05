@@ -34,23 +34,42 @@ void main() {
     test('rien', () => expect(requestMatchesQuery(_req(), 'zzz'), isFalse));
   });
 
+  group('isSearchRequest', () {
+    test('open / negotiating / expired / cancelled = en recherche', () {
+      expect(isSearchRequest(_req(status: PackageRequestStatus.open)), isTrue);
+      expect(isSearchRequest(_req(status: PackageRequestStatus.negotiating)), isTrue);
+      expect(isSearchRequest(_req(status: PackageRequestStatus.expired)), isTrue);
+      expect(isSearchRequest(_req(status: PackageRequestStatus.cancelled)), isTrue);
+    });
+    test('accepted / completed = parties dans Envois', () {
+      expect(isSearchRequest(_req(status: PackageRequestStatus.accepted)), isFalse);
+      expect(isSearchRequest(_req(status: PackageRequestStatus.completed)), isFalse);
+    });
+  });
+
   group('applyRequestFilters', () {
     final all = [
       _req(arrivee: 'Dakar', status: PackageRequestStatus.open),
+      _req(arrivee: 'Lyon', status: PackageRequestStatus.negotiating),
       _req(arrivee: 'Abidjan', status: PackageRequestStatus.accepted),
+      _req(arrivee: 'Douala', status: PackageRequestStatus.cancelled),
     ];
-    test('preset open exclut accepted', () {
-      final r = applyRequestFilters(all, const RequestFilterState(preset: RequestQuickFilter.open));
-      expect(r.single.arrivalCity, 'Dakar');
+    test('exclut toujours les demandes acceptées (parties dans Envois)', () {
+      final r = applyRequestFilters(all, const RequestFilterState());
+      expect(r.map((e) => e.arrivalCity), isNot(contains('Abidjan')));
     });
-    test('preset accepted', () {
-      final r = applyRequestFilters(all, const RequestFilterState(preset: RequestQuickFilter.accepted));
-      expect(r.single.arrivalCity, 'Abidjan');
+    test('preset open = open + negotiating', () {
+      final r = applyRequestFilters(all, const RequestFilterState(preset: RequestQuickFilter.open));
+      expect(r.map((e) => e.arrivalCity).toSet(), {'Dakar', 'Lyon'});
+    });
+    test('preset closed = expired + cancelled', () {
+      final r = applyRequestFilters(all, const RequestFilterState(preset: RequestQuickFilter.closed));
+      expect(r.single.arrivalCity, 'Douala');
     });
     test('recherche + preset (ET)', () {
       final r = applyRequestFilters(all,
-          const RequestFilterState(preset: RequestQuickFilter.all, query: 'abidjan'));
-      expect(r.single.arrivalCity, 'Abidjan');
+          const RequestFilterState(preset: RequestQuickFilter.all, query: 'lyon'));
+      expect(r.single.arrivalCity, 'Lyon');
     });
   });
 }

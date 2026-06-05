@@ -8,9 +8,11 @@ import 'package:dony/features/package_request/data/models/locked_trip_context.da
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/payment_method.dart';
+import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
+import 'package:dony/features/payments/cash/data/repositories/commission_method_repository.dart';
+import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
-import 'package:dony/features/package_request/presentation/widgets/thread/modify_trip_sheet.dart';
 import 'package:dony/features/package_request/presentation/widgets/traveler/trip_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -131,6 +133,109 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
     // Navigation handled by BlocListener on NegotiationLoaded(awaitingPayment).
   }
 
+  void _resubmitCash(String announcementId, {required bool useCard}) {
+    if (!mounted) return;
+    context.read<NegotiationBloc>().add(NegotiationSubmitTripRequested(
+          threadId: widget.thread.id,
+          travelerAnnouncementId: announcementId,
+          paymentMethod: PaymentMethod.cash,
+          useCardForCommission: useCard,
+        ));
+  }
+
+  /// Commission cash « wallet d'abord » : si le solde est insuffisant, on propose
+  /// de recharger le wallet OU de consentir au prélèvement sur la carte (effectué
+  /// au finalize, wallet puis carte). Reprend le pattern de l'acceptation de bid.
+  Future<void> _showCashInsufficientSheet(BuildContext context) async {
+    final announcementId = _selectedTripNotifier.value?.id;
+    if (announcementId == null) return;
+
+    final net = widget.thread.currentPriceEur;
+    final gross = widget.thread.grossPriceEur ?? PriceDisplay.grossFromNet(net);
+    final commission = gross - net;
+
+    double balance = 0;
+    bool hasCard = false;
+    try {
+      balance = (await getIt<WalletRepository>().getBalance()).balance;
+    } catch (_) {}
+    try {
+      hasCard = (await getIt<CommissionMethodRepository>().load()) != null;
+    } catch (_) {}
+    if (!context.mounted) return;
+
+    final cs = Theme.of(context).colorScheme;
+    await DonyBottomSheet.show<void>(
+      context,
+      title: 'Solde insuffisant',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Commission à régler : ${commission.toStringAsFixed(2)} €',
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: cs.onSurface),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Solde wallet : ${balance.toStringAsFixed(2)} €',
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            'Recharge ton wallet, ou accepte que la commission soit prélevée sur '
+            'ta carte à la remise du colis.',
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
+      ),
+      stickyBottom: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DonyButton(
+            label: 'Recharger mon wallet',
+            onPressed: () async {
+              Navigator.of(context, rootNavigator: true).pop();
+              final recharged =
+                  await context.push<bool>('/payments/wallet/topup/method');
+              if ((recharged ?? false) && mounted) {
+                _resubmitCash(announcementId, useCard: false);
+              }
+            },
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          if (hasCard)
+            DonyButton(
+              label: 'Payer la commission par carte',
+              variant: DonyButtonVariant.secondary,
+              onPressed: () {
+                Navigator.of(context, rootNavigator: true).pop();
+                _resubmitCash(announcementId, useCard: true);
+              },
+            )
+          else
+            DonyButton(
+              label: 'Ajouter une carte',
+              variant: DonyButtonVariant.secondary,
+              onPressed: () async {
+                Navigator.of(context, rootNavigator: true).pop();
+                await context.push('/payments/commission-method');
+                if (mounted) _resubmitCash(announcementId, useCard: true);
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _createNewTrip() async {
     final r = _requestNotifier.value;
     if (r == null) return;
@@ -163,8 +268,15 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
       ann.pickupAddress != null && ann.deliveryAddress != null;
 
   Future<void> _openModifySheet(AnnouncementModel ann) async {
-    final changed = await ModifyTripSheet.show(context, announcement: ann);
-    if (changed == true && mounted) {
+    // Même wizard 3 étapes que la création, en mode édition : champs préremplis,
+    // corridor + date verrouillés (le trajet doit rester compatible avec la
+    // demande), tout le reste éditable.
+    await CreateAnnouncementBottomSheet.show(
+      context,
+      announcement: ann,
+      lockCorridorAndDate: true,
+    );
+    if (mounted) {
       await _load();
     }
   }
@@ -182,10 +294,14 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
           if (context.canPop()) context.pop();
         } else if (state is NegotiationError) {
           final errorCode = state.error.code ?? '';
+          if (errorCode == 'payment-method/traveler-insufficient-funds-cash') {
+            // Wallet insuffisant pour la commission cash : proposer recharge OU carte.
+            _showCashInsufficientSheet(context);
+            return;
+          }
           final message =
-              errorCode == 'payment-method/traveler-insufficient-funds-cash'
-                  ? 'Solde insuffisant pour le paiement en cash. '
-                      'Configurez votre méthode de commission dans les réglages.'
+              errorCode == 'payment-method/no-commission-card'
+                  ? 'Ajoute d\'abord une carte de commission pour payer en cash.'
                   : state.error.message;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

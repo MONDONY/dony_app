@@ -92,13 +92,19 @@ class NegotiationSubmitTripRequested extends NegotiationEvent {
     required this.threadId,
     required this.travelerAnnouncementId,
     required this.paymentMethod,
+    this.useCardForCommission = false,
   });
   final String threadId;
   final String travelerAnnouncementId;
   final PaymentMethod paymentMethod;
 
+  /// CASH only: traveler consents to pay the commission on their card when the
+  /// wallet is short (charged at finalize, wallet-first then card).
+  final bool useCardForCommission;
+
   @override
-  List<Object?> get props => [threadId, travelerAnnouncementId, paymentMethod];
+  List<Object?> get props =>
+      [threadId, travelerAnnouncementId, paymentMethod, useCardForCommission];
 }
 
 /// Traveler creates a dedicated trip (no existing announcement matches) and
@@ -140,12 +146,17 @@ class NegotiationCheckoutRequested extends NegotiationEvent {
   const NegotiationCheckoutRequested({
     required this.threadId,
     required this.paymentIntentId,
+    this.paymentMethod,
   });
   final String threadId;
   final String paymentIntentId;
 
+  /// Mode de paiement finalisé par l'expéditeur (parmi ceux acceptés). `null` →
+  /// le backend garde le mode déjà porté par le thread.
+  final PaymentMethod? paymentMethod;
+
   @override
-  List<Object?> get props => [threadId, paymentIntentId];
+  List<Object?> get props => [threadId, paymentIntentId, paymentMethod];
 }
 
 /// Sender refuses the linked trip on an AWAITING_PAYMENT thread.
@@ -349,6 +360,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         e.threadId,
         travelerAnnouncementId: e.travelerAnnouncementId,
         paymentMethod: e.paymentMethod,
+        useCardForCommission: e.useCardForCommission,
       );
       emit(NegotiationLoaded(thread));
       unawaited(_analytics.logEvent(
@@ -407,6 +419,7 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       final thread = await _repository.checkout(
         e.threadId,
         paymentIntentId: e.paymentIntentId,
+        paymentMethod: e.paymentMethod,
       );
       emit(NegotiationLoaded(thread));
     } catch (err) {

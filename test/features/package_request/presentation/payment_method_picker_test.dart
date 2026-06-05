@@ -276,7 +276,7 @@ void main() {
   // ── Test 3: Cash insufficient funds error ─────────────────────────────────
 
   testWidgets(
-      'affiche un message d\'erreur cash insuffisant pour le code payment-method/traveler-insufficient-funds-cash',
+      'erreur cash insuffisant → bottom sheet « Solde insuffisant » (recharge / carte)',
       (tester) async {
     final controller = StreamController<NegotiationState>.broadcast();
     addTearDown(controller.close);
@@ -287,25 +287,51 @@ void main() {
     );
     when(() => negotiationBloc.add(any())).thenReturn(null);
 
+    // A matching trip so the traveler can select one before the error fires.
+    final trip = AnnouncementModel(
+      id: 'ann-1',
+      travelerId: 'trav-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      departureDate: DateTime(2026, 8, 15),
+      availableKg: 10,
+      totalKg: 23,
+      pricePerKg: 7,
+      status: 'ACTIVE',
+      transportMode: TransportMode.plane,
+      createdAt: DateTime(2026, 1, 1),
+      updatedAt: DateTime(2026, 1, 1),
+      acceptedPaymentMethods: const {
+        BidPaymentMethod.stripe,
+        BidPaymentMethod.cash
+      },
+    );
     when(() => packageRequestRepo.getById(any()))
         .thenAnswer((_) async => _packageRequest());
     when(() => announcementRepo.getMyAnnouncements())
-        .thenAnswer((_) async => _emptyTrips());
+        .thenAnswer((_) async => (announcements: [trip], totalElements: 1));
 
     await tester.pumpWidget(_harness(_fakeThread()));
     await tester.pumpAndSettle();
 
-    // Emit the specific cash insufficient funds error
+    // Select cash + the trip, then confirm (a trip must be selected for the sheet).
+    await tester.ensureVisible(find.byKey(const Key('payment-method-cash')));
+    await tester.tap(find.byKey(const Key('payment-method-cash')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('trip-tile-select-inkwell')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirmer ce trajet'));
+    await tester.pump();
+
+    // Backend rejects: wallet too short for the cash commission.
     controller.add(NegotiationError(const ValidationException(
       'Insufficient funds for cash payment',
       code: 'payment-method/traveler-insufficient-funds-cash',
     )));
     await tester.pumpAndSettle();
 
-    // Should show a specific cash-related error message (SnackBar or inline)
-    expect(
-      find.textContaining('cash', findRichText: true),
-      findsAny,
-    );
+    // Wallet-first sheet (recharge OR card), not a dead-end snackbar.
+    expect(find.text('Solde insuffisant'), findsOneWidget);
+    expect(find.text('Recharger mon wallet'), findsOneWidget);
   });
 }
