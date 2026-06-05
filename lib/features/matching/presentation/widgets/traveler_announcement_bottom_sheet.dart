@@ -48,11 +48,10 @@ void showTravelerAnnouncementSheet(
   }
   final resolvedStatus = resolvedBid?.status ?? existingBidStatus;
 
-  final isPending =
-      resolvedStatus == 'PENDING' || resolvedStatus == 'AWAITING_PAYMENT';
-  final isAccepted =
-      resolvedStatus == 'ACCEPTED' || resolvedStatus == 'PAYMENT_ESCROWED';
-  final hasActiveBid = isPending || isAccepted;
+  // « A déjà un colis sur ce trajet » couvre tout colis en cours, demande
+  // jusqu'à livraison (EN ROUTE / LIVRÉ inclus) — pas seulement en attente/accepté.
+  final hasActiveBid = resolvedStatus != null &&
+      MyActiveBidsLookup.ongoingBidStatuses.contains(resolvedStatus);
 
   DonyBottomSheet.show<void>(
     context,

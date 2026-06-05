@@ -210,6 +210,15 @@ void main() {
           updatedAt: DateTime(2026, 1, 1),
         );
 
+    BidModel bidOn(String announcementId, String status) => BidModel(
+          id: 'bid-1',
+          announcementId: announcementId,
+          senderId: 'u1',
+          status: status,
+          createdAt: DateTime(2026, 1, 1),
+          updatedAt: DateTime(2026, 1, 1),
+        );
+
     testWidgets(
         'colis ACCEPTED sur ce trajet → message + « Voir mon colis », '
         'pas de « Faire une demande »', (tester) async {
@@ -225,6 +234,52 @@ void main() {
       expect(find.byKey(const Key('see-my-parcel-btn')), findsOneWidget);
       expect(find.text('Voir mon colis'), findsOneWidget);
       expect(find.text('Faire une demande'), findsNothing);
+    });
+
+    testWidgets(
+        'colis EN ROUTE (IN_TRANSIT) sur ce trajet → grisé + « Voir mon colis »',
+        (tester) async {
+      final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
+      await tester.pumpWidget(_harness(
+        announcement: a,
+        bidState: BidListLoaded([bidOn('a1', 'IN_TRANSIT')]),
+      ));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Vous avez déjà un colis sur ce trajet'), findsOneWidget);
+      expect(find.byKey(const Key('see-my-parcel-btn')), findsOneWidget);
+      expect(find.text('Faire une demande'), findsNothing);
+    });
+
+    testWidgets(
+        'colis LIVRÉ (COMPLETED) sur ce trajet → grisé + « Voir mon colis »',
+        (tester) async {
+      final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
+      await tester.pumpWidget(_harness(
+        announcement: a,
+        bidState: BidListLoaded([bidOn('a1', 'COMPLETED')]),
+      ));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Vous avez déjà un colis sur ce trajet'), findsOneWidget);
+      expect(find.byKey(const Key('see-my-parcel-btn')), findsOneWidget);
+      expect(find.text('Faire une demande'), findsNothing);
+    });
+
+    testWidgets('colis ANNULÉ (CANCELLED) → « Faire une demande » dispo',
+        (tester) async {
+      final a = _buildAnnouncement(kycVerified: true, totalTrips: 3);
+      await tester.pumpWidget(_harness(
+        announcement: a,
+        bidState: BidListLoaded([bidOn('a1', 'CANCELLED')]),
+      ));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Faire une demande'), findsOneWidget);
+      expect(find.byKey(const Key('see-my-parcel-btn')), findsNothing);
     });
 
     testWidgets('aucun colis (liste chargée vide) → « Faire une demande »',
