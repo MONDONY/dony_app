@@ -3,6 +3,7 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
@@ -213,6 +214,10 @@ class PackageRequestPublicDetailBody extends StatelessWidget {
                   ),
                 ]),
               ],
+              if (r.acceptedPaymentMethods.isNotEmpty) ...[
+                const SizedBox(height: DonySpacing.md),
+                _PaymentMethodsCard(methods: r.acceptedPaymentMethods),
+              ],
               if (r.pickupNeighborhood != null ||
                   r.deliveryNeighborhood != null) ...[
                 const SizedBox(height: DonySpacing.md),
@@ -377,6 +382,100 @@ class _FirmPriceCta extends StatelessWidget {
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+/// Carte lecture-seule listant les moyens de paiement que l'expéditeur accepte.
+/// Le voyageur voit ainsi, avant de faire son offre, comment il sera réglé
+/// (le choix effectif de la méthode se fait au moment de lier le trajet).
+class _PaymentMethodsCard extends StatelessWidget {
+  const _PaymentMethodsCard({required this.methods});
+
+  final Set<PaymentMethod> methods;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final ordered =
+        PaymentMethod.canonicalOrder.where(methods.contains).toList();
+
+    return Container(
+      key: const Key('payment-methods-card'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Mode de paiement',
+            style: tt.bodyMedium!.copyWith(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: kTextSecondary,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Accepté par l\'expéditeur',
+            style: tt.bodyMedium!.copyWith(fontSize: 12, color: kTextHint),
+          ),
+          const SizedBox(height: DonySpacing.md),
+          Wrap(
+            spacing: DonySpacing.sm,
+            runSpacing: DonySpacing.sm,
+            children: ordered
+                .map((m) => _PaymentMethodChip(method: m))
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PaymentMethodChip extends StatelessWidget {
+  const _PaymentMethodChip({required this.method});
+
+  final PaymentMethod method;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Container(
+      key: Key('payment-method-chip-${method.wireName.toLowerCase()}'),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.base,
+        vertical: DonySpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: cs.primaryContainer,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+        border: Border.all(color: cs.primary.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(method.icon, size: 14, color: cs.primary),
+          const SizedBox(width: DonySpacing.xs),
+          Text(
+            method.displayLabel,
+            style: tt.labelMedium!.copyWith(
+              color: cs.primary,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0,
+            ),
+          ),
+        ],
       ),
     );
   }

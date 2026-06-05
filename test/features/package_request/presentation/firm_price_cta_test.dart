@@ -18,6 +18,7 @@ import 'package:dony/features/package_request/data/models/negotiation_message.da
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/presentation/screens/traveler/package_request_public_detail_screen.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_state_cta_bar.dart';
 import 'package:flutter/material.dart';
@@ -64,6 +65,25 @@ PackageRequest _negotiableRequest() => PackageRequest(
       createdAt: DateTime(2026, 6, 1),
       negotiable: true,
       targetPriceEur: 35,
+    );
+
+PackageRequest _requestWithPayments(Set<PaymentMethod> methods) =>
+    PackageRequest(
+      id: 'pr-3',
+      senderId: 'sender-1',
+      departureCity: 'Paris',
+      arrivalCity: 'Dakar',
+      desiredDate: DateTime(2026, 8, 1),
+      dateToleranceDays: 3,
+      weightKg: 5,
+      parcelSize: ParcelSize.small,
+      transportMode: TransportMode.plane,
+      contentCategory: ContentCategory.vetements,
+      status: PackageRequestStatus.open,
+      createdAt: DateTime(2026, 6, 1),
+      negotiable: true,
+      targetPriceEur: 35,
+      acceptedPaymentMethods: methods,
     );
 
 NegotiationThread _thread({
@@ -180,6 +200,58 @@ void main() {
 
         expect(find.text('Faire une offre'), findsOneWidget);
         expect(find.byKey(const Key('take-firm-price')), findsNothing);
+      },
+    );
+  });
+
+  // ─── Mode de paiement souhaité par l'expéditeur ──────────────────────────
+  group('PackageRequestPublicDetailBody — mode de paiement', () {
+    Widget wrap(PackageRequest request) => MaterialApp(
+          theme: AppTheme.light,
+          home: Scaffold(
+            body: PackageRequestPublicDetailBody(request: request),
+          ),
+        );
+
+    testWidgets(
+      'acceptedPaymentMethods {Carte, Cash} → carte + chips visibles',
+      (tester) async {
+        await tester.pumpWidget(wrap(_requestWithPayments(
+            {PaymentMethod.stripe, PaymentMethod.cash})));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('payment-methods-card')), findsOneWidget);
+        expect(find.text('Mode de paiement'), findsOneWidget);
+        expect(find.text('Carte'), findsOneWidget);
+        expect(find.text('Cash'), findsOneWidget);
+        expect(
+            find.byKey(const Key('payment-method-chip-stripe')), findsOneWidget);
+        expect(
+            find.byKey(const Key('payment-method-chip-cash')), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'mobile money {Wave, Orange Money} → labels affichés',
+      (tester) async {
+        await tester.pumpWidget(wrap(_requestWithPayments(
+            {PaymentMethod.wave, PaymentMethod.orangeMoney})));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Wave'), findsOneWidget);
+        expect(find.text('Orange Money'), findsOneWidget);
+        expect(find.byKey(const Key('payment-method-chip-stripe')), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'acceptedPaymentMethods vide → carte masquée',
+      (tester) async {
+        await tester.pumpWidget(wrap(_requestWithPayments(const {})));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('payment-methods-card')), findsNothing);
+        expect(find.text('Mode de paiement'), findsNothing);
       },
     );
   });

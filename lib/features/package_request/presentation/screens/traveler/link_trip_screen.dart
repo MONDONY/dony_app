@@ -497,23 +497,6 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
   }
 }
 
-// ── Payment method icons ──────────────────────────────────────────────────────
-
-extension _PaymentMethodIcon on PaymentMethod {
-  IconData get icon {
-    switch (this) {
-      case PaymentMethod.stripe:
-        return Icons.credit_card_rounded;
-      case PaymentMethod.cash:
-        return Icons.payments_rounded;
-      case PaymentMethod.wave:
-        return Icons.waves_rounded;
-      case PaymentMethod.orangeMoney:
-        return Icons.phone_android_rounded;
-    }
-  }
-}
-
 /// Selector de méthode de paiement au moment de lier un trajet.
 /// Affiche uniquement les méthodes présentes dans [methods].
 class _PaymentMethodPicker extends StatelessWidget {
@@ -535,12 +518,8 @@ class _PaymentMethodPicker extends StatelessWidget {
     if (methods.isEmpty) return const SizedBox.shrink();
 
     // Canonical order: STRIPE first, then CASH, then others
-    final ordered = [
-      PaymentMethod.stripe,
-      PaymentMethod.cash,
-      PaymentMethod.wave,
-      PaymentMethod.orangeMoney,
-    ].where(methods.contains).toList();
+    final ordered =
+        PaymentMethod.canonicalOrder.where(methods.contains).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

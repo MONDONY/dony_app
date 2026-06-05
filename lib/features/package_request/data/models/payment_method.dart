@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 enum PaymentMethod {
   stripe('STRIPE'),
   cash('CASH'),
@@ -13,6 +15,14 @@ enum PaymentMethod {
   static Set<PaymentMethod> setFromJson(List<dynamic>? l) =>
       (l ?? const []).map((e) => fromWire(e as String)).toSet();
 
+  /// Ordre canonique d'affichage : carte d'abord, puis cash, puis mobile money.
+  static const List<PaymentMethod> canonicalOrder = [
+    PaymentMethod.stripe,
+    PaymentMethod.cash,
+    PaymentMethod.wave,
+    PaymentMethod.orangeMoney,
+  ];
+
   String get displayLabel {
     switch (this) {
       case PaymentMethod.stripe:
@@ -23,6 +33,19 @@ enum PaymentMethod {
         return 'Wave';
       case PaymentMethod.orangeMoney:
         return 'Orange Money';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case PaymentMethod.stripe:
+        return Icons.credit_card_rounded;
+      case PaymentMethod.cash:
+        return Icons.payments_rounded;
+      case PaymentMethod.wave:
+        return Icons.waves_rounded;
+      case PaymentMethod.orangeMoney:
+        return Icons.phone_android_rounded;
     }
   }
 }
