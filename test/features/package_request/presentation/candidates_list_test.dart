@@ -18,6 +18,7 @@ import 'package:dony/features/package_request/presentation/screens/sender/packag
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -108,6 +109,33 @@ void main() {
         ),
       );
 
+  // GoRouter harness pour les tests de navigation : « Choisir » / tap carte
+  // ouvre `/negotiations/:id` (rendu ici par une sentinelle « THREAD <id> »).
+  Widget wrapRouter({
+    required PackageRequest request,
+    required List<NegotiationThread> threads,
+  }) {
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, __) => Scaffold(
+            body: SingleChildScrollView(
+              child: CandidatesSection(request: request, threads: threads),
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/negotiations/:id',
+          builder: (_, state) =>
+              Scaffold(body: Text('THREAD ${state.pathParameters['id']}')),
+        ),
+      ],
+    );
+    return MaterialApp.router(theme: AppTheme.light, routerConfig: router);
+  }
+
   group('CandidatesSection — prix ferme (negotiable=false)', () {
     testWidgets(
       '3 cartes candidats sont affichées',
@@ -136,21 +164,35 @@ void main() {
     );
 
     testWidgets(
-      'tapper "Choisir" sur la première carte déclenche NegotiationAcceptRequested(threadId: "t-1")',
+      'tapper "Choisir" sur la première carte ouvre /negotiations/t-1',
       (tester) async {
-        await tester.pumpWidget(wrap(
+        await tester.pumpWidget(wrapRouter(
           request: _firmRequest(),
           threads: _threeThreads(),
         ));
         await tester.pumpAndSettle();
 
-        // Tap the first "Choisir" button (keyed choose-traveler-t-1)
         await tester.tap(find.byKey(const Key('choose-traveler-t-1')));
-        await tester.pump();
+        await tester.pumpAndSettle();
 
-        verify(
-          () => bloc.add(const NegotiationAcceptRequested(threadId: 't-1')),
-        ).called(1);
+        expect(find.text('THREAD t-1'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'tapper la carte (hors bouton) ouvre aussi la négociation correspondante',
+      (tester) async {
+        await tester.pumpWidget(wrapRouter(
+          request: _firmRequest(),
+          threads: _threeThreads(),
+        ));
+        await tester.pumpAndSettle();
+
+        // Tap on the 2nd candidate's name (inside the card InkWell, pas le bouton)
+        await tester.tap(find.text('Bob Diallo'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('THREAD t-2'), findsOneWidget);
       },
     );
 

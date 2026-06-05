@@ -611,9 +611,11 @@ class CandidatesSection extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: DonySpacing.sm + 4),
               child: _CandidateCard(
                 thread: thread,
-                onChoose: () => context
-                    .read<NegotiationBloc>()
-                    .add(NegotiationAcceptRequested(threadId: thread.id)),
+                // Ouvrir la négociation : c'est là que vit le flux complet
+                // d'acceptation + paiement (ThreadStateCtaBar → « Accepter —
+                // Tu paies X € » → complete-details → paiement avec biométrie).
+                // Un « accept » direct depuis ici ne pourrait pas finaliser.
+                onChoose: () => context.push('/negotiations/${thread.id}'),
               ).animate().fadeIn(duration: 200.ms, delay: (60 * i).ms),
             );
           }),
@@ -678,7 +680,13 @@ class _CandidateCard extends StatelessWidget {
         thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur);
     final priceLabel = 'Tu paies ${PriceDisplay.eur(grossPrice)}';
 
-    return Container(
+    // Toute la carte est tappable et ouvre la négociation (même cible que le
+    // bouton « Choisir »), comme _OfferTile pour les demandes négociables.
+    return InkWell(
+      key: Key('candidate-card-${thread.id}'),
+      borderRadius: BorderRadius.circular(DonyRadius.md),
+      onTap: onChoose,
+      child: Container(
       padding: const EdgeInsets.all(DonySpacing.base),
       decoration: BoxDecoration(
         color: cs.surface,
@@ -772,6 +780,7 @@ class _CandidateCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }
