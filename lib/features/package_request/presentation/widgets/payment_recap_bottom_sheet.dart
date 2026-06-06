@@ -46,100 +46,120 @@ class PaymentRecapBottomSheet {
         paymentMethod ?? thread.paymentMethod ?? dony.PaymentMethod.stripe;
     final bool isCash = method == dony.PaymentMethod.cash;
 
+    // Garde anti-double-tap : le flux Stripe (initiatePayment → présentation de
+    // la sheet) est asynchrone et ne change pas l'état du BLoC avant son terme,
+    // donc le bouton resterait tappable et un second tap ouvrirait la sheet
+    // Stripe une 2e fois (+ un escrow orphelin). `processing` désactive le
+    // bouton dès le 1er tap et rend `onPressed` ré-entrant.
+    final processing = ValueNotifier<bool>(false);
+
     await DonyBottomSheet.show<void>(
       context,
       title: isCash ? 'Confirmer l\'accord' : 'Payer en escrow',
       wrapper: (child) => BlocProvider.value(value: bloc, child: child),
-      stickyBottom: BlocBuilder<NegotiationBloc, NegotiationState>(
-        bloc: bloc,
-        builder: (ctx, state) {
-          final isLoading = state is NegotiationActionInProgress ||
-              state is NegotiationLoading;
-          return DonyButton(
-            label: isLoading
-                ? 'Traitement…'
-                : isCash
-                    ? 'Confirmer l\'accord'
-                    : 'Payer ${PriceDisplay.eur(gross)}',
-            isLoading: isLoading,
-            onPressed: isLoading
-                ? null
-                : () async {
-                    if (!isCash) {
-                      // Stripe: require biometric/PIN before payment
-                      final authenticated = await requirePaymentAuth(
-                        ctx,
-                        authService: getIt<LocalAuthService>(),
-                        userPrefs: getIt<HiveService>().userPrefs,
-                      );
-                      if (!ctx.mounted) return;
-                      if (!authenticated) {
-                        ScaffoldMessenger.of(ctx).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                                'Authentification requise pour effectuer le paiement'),
-                            backgroundColor: kError,
-                          ),
+      stickyBottom: ValueListenableBuilder<bool>(
+        valueListenable: processing,
+        builder: (ctx0, busy, _) =>
+            BlocBuilder<NegotiationBloc, NegotiationState>(
+          bloc: bloc,
+          builder: (ctx, state) {
+            final isLoading = busy ||
+                state is NegotiationActionInProgress ||
+                state is NegotiationLoading;
+            return DonyButton(
+              label: isLoading
+                  ? 'Traitement…'
+                  : isCash
+                      ? 'Confirmer l\'accord'
+                      : 'Payer ${PriceDisplay.eur(gross)}',
+              isLoading: isLoading,
+              onPressed: isLoading
+                  ? null
+                  : () async {
+                      // Ré-entrance : si un tap est déjà en cours, ignorer.
+                      if (processing.value) return;
+                      processing.value = true;
+                      if (!isCash) {
+                        // Stripe: require biometric/PIN before payment
+                        final authenticated = await requirePaymentAuth(
+                          ctx,
+                          authService: getIt<LocalAuthService>(),
+                          userPrefs: getIt<HiveService>().userPrefs,
                         );
-                        return;
-                      }
-                      try {
-                        final init = await getIt<NegotiationRepository>()
-                            .initiatePayment(thread.id);
-                        await Stripe.instance.initPaymentSheet(
-                          paymentSheetParameters: SetupPaymentSheetParameters(
-                            paymentIntentClientSecret: init.clientSecret,
-                            merchantDisplayName: 'Dony',
-                          ),
-                        );
-                        await Stripe.instance.presentPaymentSheet();
+                        if (!ctx.mounted) return;
+                        if (!authenticated) {
+                          processing.value = false;
+                          ScaffoldMessenger.of(ctx).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                  'Authentification requise pour effectuer le paiement'),
+                              backgroundColor: kError,
+                            ),
+                          );
+                          return;
+                        }
+                        try {
+                          final init = await getIt<NegotiationRepository>()
+                              .initiatePayment(thread.id);
+                          await Stripe.instance.initPaymentSheet(
+                            paymentSheetParameters:
+                                SetupPaymentSheetParameters(
+                              paymentIntentClientSecret: init.clientSecret,
+                              merchantDisplayName: 'Dony',
+                            ),
+                          );
+                          await Stripe.instance.presentPaymentSheet();
+                          bloc.add(NegotiationCheckoutRequested(
+                            threadId: thread.id,
+                            paymentIntentId: init.paymentIntentId,
+                            paymentMethod: method,
+                          ));
+                          if (ctx.mounted) {
+                            Navigator.of(ctx, rootNavigator: true).pop();
+                          }
+                        } on StripeException catch (e) {
+                          processing.value = false;
+                          if (ctx.mounted) {
+                            ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+                              content: Text(
+                                  e.error.code == FailureCode.Canceled
+                                      ? 'Paiement annulé'
+                                      : 'Erreur paiement : ${e.error.message ?? ""}'),
+                              backgroundColor: kError,
+                            ));
+                          }
+                        } catch (_) {
+                          processing.value = false;
+                          if (ctx.mounted) {
+                            ScaffoldMessenger.of(ctx).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'Une erreur est survenue. Veuillez réessayer.'),
+                                backgroundColor: kError,
+                              ),
+                            );
+                          }
+                        }
+                      } else {
+                        // Cash: no online payment. The agreement is settled in
+                        // person and dony collects its commission from the
+                        // traveler separately. We finalize the AWAITING_PAYMENT
+                        // thread via /checkout (idempotent placeholder), NOT
+                        // /accept — the thread is already past OPEN, so calling
+                        // accept here returns `thread/already-finalized`.
                         bloc.add(NegotiationCheckoutRequested(
                           threadId: thread.id,
-                          paymentIntentId: init.paymentIntentId,
+                          paymentIntentId: kCashPaymentSentinel,
                           paymentMethod: method,
                         ));
                         if (ctx.mounted) {
                           Navigator.of(ctx, rootNavigator: true).pop();
                         }
-                      } on StripeException catch (e) {
-                        if (ctx.mounted) {
-                          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-                            content: Text(
-                                e.error.code == FailureCode.Canceled
-                                    ? 'Paiement annulé'
-                                    : 'Erreur paiement : ${e.error.message ?? ""}'),
-                            backgroundColor: kError,
-                          ));
-                        }
-                      } catch (_) {
-                        if (ctx.mounted) {
-                          ScaffoldMessenger.of(ctx).showSnackBar(
-                            const SnackBar(
-                              content: Text('Une erreur est survenue. Veuillez réessayer.'),
-                              backgroundColor: kError,
-                            ),
-                          );
-                        }
                       }
-                    } else {
-                      // Cash: no online payment. The agreement is settled in
-                      // person and dony collects its commission from the
-                      // traveler separately. We finalize the AWAITING_PAYMENT
-                      // thread via /checkout (idempotent placeholder), NOT
-                      // /accept — the thread is already past OPEN, so calling
-                      // accept here returns `thread/already-finalized`.
-                      bloc.add(NegotiationCheckoutRequested(
-                        threadId: thread.id,
-                        paymentIntentId: kCashPaymentSentinel,
-                        paymentMethod: method,
-                      ));
-                      if (ctx.mounted) {
-                        Navigator.of(ctx, rootNavigator: true).pop();
-                      }
-                    }
-                  },
-          );
-        },
+                    },
+            );
+          },
+        ),
       ),
       child: PaymentRecapContent(
         net: net,
@@ -147,7 +167,7 @@ class PaymentRecapBottomSheet {
         fee: fee,
         isCash: isCash,
       ),
-    );
+    ).whenComplete(processing.dispose);
   }
 }
 

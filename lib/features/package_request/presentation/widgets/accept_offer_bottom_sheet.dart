@@ -36,94 +36,114 @@ class AcceptOfferBottomSheet {
     /// If false, this is the initial price acceptance (status was OPEN → AWAITING_TRIP).
     bool isCheckout = false,
   }) async {
+    // Garde anti-double-tap : le bouton n'était pas désactivé pendant le flux
+    // asynchrone (auth + Stripe), donc un 2e tap relançait l'action (double
+    // accept, ou double ouverture de la sheet Stripe en checkout). `processing`
+    // désactive le bouton dès le 1er tap et rend `onPressed` ré-entrant.
+    final processing = ValueNotifier<bool>(false);
+
     await DonyBottomSheet.show<void>(
       context,
       title: isCheckout ? 'Payer en escrow' : 'Accepter l\'offre',
       wrapper: (child) => BlocProvider.value(value: bloc, child: child),
-      stickyBottom: BlocBuilder<NegotiationBloc, NegotiationState>(
-        bloc: bloc,
-        builder: (ctx, state) {
-          final loading = state is NegotiationActionInProgress ||
-              state is NegotiationLoading;
-          final displayPrice = isTraveler
-              ? priceEur
-              : (grossPriceEur ?? PriceDisplay.grossFromNet(priceEur));
-          return DonyButton(
-            label: loading
-                ? 'Traitement…'
-                : isCheckout
-                    ? 'Payer (${displayPrice.toStringAsFixed(0)} €)'
-                    : 'Confirmer (${displayPrice.toStringAsFixed(0)} €)',
-            isLoading: loading,
-            onPressed: () async {
-              final authenticated = await requirePaymentAuth(
-                ctx,
-                authService: getIt<LocalAuthService>(),
-                userPrefs: getIt<HiveService>().userPrefs,
-              );
-              if (!ctx.mounted) return;
-              if (!authenticated) {
-                ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                        'Authentification requise pour effectuer le paiement'),
-                    backgroundColor: kError,
-                  ),
-                );
-                return;
-              }
-              try {
-                if (isCheckout) {
-                  // Stripe escrow flow:
-                  //  1. Backend creates the PaymentIntent and returns clientSecret.
-                  //  2. PaymentSheet collects the card, confirms the PI client-side.
-                  //  3. The Stripe webhook payment_intent.amount_capturable_updated
-                  //     fires server-side → NegotiationPaymentListener finalizes thread.
-                  //  4. We also call /checkout sync as a safety-net so the user sees
-                  //     ACCEPTED immediately without depending on webhook latency.
-                  try {
-                    final init = await getIt<NegotiationRepository>()
-                        .initiatePayment(threadId);
-                    await Stripe.instance.initPaymentSheet(
-                      paymentSheetParameters: SetupPaymentSheetParameters(
-                        paymentIntentClientSecret: init.clientSecret,
-                        merchantDisplayName: 'Dony',
-                      ),
-                    );
-                    await Stripe.instance.presentPaymentSheet();
-                    bloc.add(NegotiationCheckoutRequested(
-                      threadId: threadId,
-                      paymentIntentId: init.paymentIntentId,
-                    ));
-                  } on StripeException catch (e) {
-                    if (ctx.mounted) {
-                      ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-                        content: Text(e.error.code == FailureCode.Canceled
-                            ? 'Paiement annulé'
-                            : 'Erreur paiement : ${e.error.message ?? ""}'),
-                        backgroundColor: kError,
-                      ));
-                    }
-                    return;
-                  }
-                } else {
-                  bloc.add(NegotiationAcceptRequested(threadId: threadId));
-                }
-                if (ctx.mounted) {
-                  Navigator.of(ctx, rootNavigator: true).pop();
-                }
-              } catch (e) {
-                if (ctx.mounted) {
-                  ScaffoldMessenger.of(ctx).showSnackBar(
-                    SnackBar(
-                        content: Text(e.toString()),
-                        backgroundColor: kError),
-                  );
-                }
-              }
-            },
-          );
-        },
+      stickyBottom: ValueListenableBuilder<bool>(
+        valueListenable: processing,
+        builder: (ctx0, busy, _) =>
+            BlocBuilder<NegotiationBloc, NegotiationState>(
+          bloc: bloc,
+          builder: (ctx, state) {
+            final loading = busy ||
+                state is NegotiationActionInProgress ||
+                state is NegotiationLoading;
+            final displayPrice = isTraveler
+                ? priceEur
+                : (grossPriceEur ?? PriceDisplay.grossFromNet(priceEur));
+            return DonyButton(
+              label: loading
+                  ? 'Traitement…'
+                  : isCheckout
+                      ? 'Payer (${displayPrice.toStringAsFixed(0)} €)'
+                      : 'Confirmer (${displayPrice.toStringAsFixed(0)} €)',
+              isLoading: loading,
+              onPressed: loading
+                  ? null
+                  : () async {
+                      if (processing.value) return;
+                      processing.value = true;
+                      final authenticated = await requirePaymentAuth(
+                        ctx,
+                        authService: getIt<LocalAuthService>(),
+                        userPrefs: getIt<HiveService>().userPrefs,
+                      );
+                      if (!ctx.mounted) return;
+                      if (!authenticated) {
+                        processing.value = false;
+                        ScaffoldMessenger.of(ctx).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                                'Authentification requise pour effectuer le paiement'),
+                            backgroundColor: kError,
+                          ),
+                        );
+                        return;
+                      }
+                      try {
+                        if (isCheckout) {
+                          // Stripe escrow flow:
+                          //  1. Backend creates the PaymentIntent and returns clientSecret.
+                          //  2. PaymentSheet collects the card, confirms the PI client-side.
+                          //  3. The Stripe webhook payment_intent.amount_capturable_updated
+                          //     fires server-side → NegotiationPaymentListener finalizes thread.
+                          //  4. We also call /checkout sync as a safety-net so the user sees
+                          //     ACCEPTED immediately without depending on webhook latency.
+                          try {
+                            final init = await getIt<NegotiationRepository>()
+                                .initiatePayment(threadId);
+                            await Stripe.instance.initPaymentSheet(
+                              paymentSheetParameters:
+                                  SetupPaymentSheetParameters(
+                                paymentIntentClientSecret: init.clientSecret,
+                                merchantDisplayName: 'Dony',
+                              ),
+                            );
+                            await Stripe.instance.presentPaymentSheet();
+                            bloc.add(NegotiationCheckoutRequested(
+                              threadId: threadId,
+                              paymentIntentId: init.paymentIntentId,
+                            ));
+                          } on StripeException catch (e) {
+                            processing.value = false;
+                            if (ctx.mounted) {
+                              ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+                                content: Text(e.error.code ==
+                                        FailureCode.Canceled
+                                    ? 'Paiement annulé'
+                                    : 'Erreur paiement : ${e.error.message ?? ""}'),
+                                backgroundColor: kError,
+                              ));
+                            }
+                            return;
+                          }
+                        } else {
+                          bloc.add(NegotiationAcceptRequested(threadId: threadId));
+                        }
+                        if (ctx.mounted) {
+                          Navigator.of(ctx, rootNavigator: true).pop();
+                        }
+                      } catch (e) {
+                        processing.value = false;
+                        if (ctx.mounted) {
+                          ScaffoldMessenger.of(ctx).showSnackBar(
+                            SnackBar(
+                                content: Text(e.toString()),
+                                backgroundColor: kError),
+                          );
+                        }
+                      }
+                    },
+            );
+          },
+        ),
       ),
       child: Builder(
         builder: (context) {
@@ -190,6 +210,6 @@ class AcceptOfferBottomSheet {
           );
         },
       ),
-    );
+    ).whenComplete(processing.dispose);
   }
 }
