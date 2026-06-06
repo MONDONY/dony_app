@@ -14,6 +14,7 @@ import 'package:dony/features/matching/presentation/screens/shipment_list_screen
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
@@ -186,7 +187,7 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
         final name = t.travelerName ?? 'Un voyageur';
         _showNegoNotification(
           context,
-          message: '$name t\'a fait une offre à ${t.currentPriceEur.toStringAsFixed(0)} €',
+          message: '$name t\'a fait une offre à ${PriceDisplay.eur(t.grossPriceEur ?? PriceDisplay.grossFromNet(t.currentPriceEur))}',
           type: DonySnackbarType.info,
         );
         continue;
@@ -198,7 +199,7 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
         final name = t.travelerName ?? 'Un voyageur';
         _showNegoNotification(
           context,
-          message: '$name a fait une contre-proposition : ${t.currentPriceEur.toStringAsFixed(0)} €',
+          message: '$name a fait une contre-proposition : ${PriceDisplay.eur(t.grossPriceEur ?? PriceDisplay.grossFromNet(t.currentPriceEur))}',
           type: DonySnackbarType.warning,
         );
         continue;

@@ -89,8 +89,8 @@ void main() {
             canCounter: true),
         _viewerSender,
       ));
-      // Sender sees gross: 38 * 1.12 = 42.56 → "43" (toStringAsFixed(0) rounds)
-      expect(find.text('Accepter — Tu paies 43 €'), findsOneWidget);
+      // Sender sees gross exact: 38 * 1.12 = 42.56 → "42,56 €"
+      expect(find.text('Accepter — Tu paies 42,56 €'), findsOneWidget);
       expect(find.text('Contre-offre'), findsOneWidget);
       expect(find.text('Rejeter'), findsOneWidget);
     });
@@ -184,8 +184,8 @@ void main() {
         _thread(status: NegotiationThreadStatus.awaitingPayment),
         _viewerSender,
       ));
-      // Sender sees gross: 38 * 1.12 = 42.56 → "43" (toStringAsFixed(0) rounds)
-      expect(find.text('Compléter & payer 43 €'), findsOneWidget);
+      // Sender sees gross exact: 38 * 1.12 = 42.56 → "42,56 €"
+      expect(find.text('Compléter & payer 42,56 €'), findsOneWidget);
     });
 
     testWidgets('AWAITING_PAYMENT · traveler → banner "En attente du paiement"',

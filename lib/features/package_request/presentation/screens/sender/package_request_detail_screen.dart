@@ -529,7 +529,12 @@ class _OfferTile extends StatelessWidget {
               ),
             ),
             Text(
-              '${thread.currentPriceEur.toStringAsFixed(0)} €',
+              // L'expéditeur voit TOUJOURS le prix qu'il paie (net + commission
+              // = gross), montant exact — jamais le net touché par le voyageur.
+              PriceDisplay.eur(
+                thread.grossPriceEur ??
+                    PriceDisplay.grossFromNet(thread.currentPriceEur),
+              ),
               style: tt.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w800,
                 fontSize: 20,

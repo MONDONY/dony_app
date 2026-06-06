@@ -62,8 +62,8 @@ class AcceptOfferBottomSheet {
               label: loading
                   ? 'Traitement…'
                   : isCheckout
-                      ? 'Payer (${displayPrice.toStringAsFixed(0)} €)'
-                      : 'Confirmer (${displayPrice.toStringAsFixed(0)} €)',
+                      ? 'Payer (${PriceDisplay.eur(displayPrice)})'
+                      : 'Confirmer (${PriceDisplay.eur(displayPrice)})',
               isLoading: loading,
               onPressed: loading
                   ? null

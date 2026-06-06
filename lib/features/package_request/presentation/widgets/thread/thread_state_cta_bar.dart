@@ -135,7 +135,7 @@ class ThreadStateCtaBar extends StatelessWidget {
       case NegotiationThreadStatus.awaitingPayment:
         return _isSender
             ? DonyButton(
-                label: 'Compléter & payer ${(thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur)).toStringAsFixed(0)} €',
+                label: 'Compléter & payer ${PriceDisplay.eur(thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur))}',
                 onPressed: actionInProgress
                     ? null
                     : () => _completeDetailsThenPay(context, thread),
@@ -195,7 +195,7 @@ class _SenderOpenActions extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         DonyButton(
-          label: 'Accepter — Tu paies ${(thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur)).toStringAsFixed(0)} €',
+          label: 'Accepter — Tu paies ${PriceDisplay.eur(thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur))}',
           onPressed: actionInProgress
               ? null
               : () => AcceptOfferBottomSheet.show(
