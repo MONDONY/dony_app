@@ -30,6 +30,17 @@ class Step3RecapBudgetState extends State<Step3RecapBudget> {
   File? _photo;
 
   @override
+  void initState() {
+    super.initState();
+    // Pré-remplissage (édition / retour à l'étape) du budget brut depuis l'état.
+    final b = context.read<PackageRequestFormBloc>().state.totalBudgetEur;
+    if (b != null) {
+      _budgetCtrl.text =
+          b == b.roundToDouble() ? b.toInt().toString() : b.toStringAsFixed(2);
+    }
+  }
+
+  @override
   void dispose() {
     _budgetCtrl.dispose();
     super.dispose();

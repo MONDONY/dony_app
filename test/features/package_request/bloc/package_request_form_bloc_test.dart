@@ -126,6 +126,111 @@ void main() {
     },
   );
 
+  // ── Mode édition ────────────────────────────────────────────────────────────
+  final editRequest = PackageRequest(
+    id: 'r-edit', senderId: 's-1',
+    departureCity: 'Lyon', arrivalCity: 'Bamako',
+    desiredDate: DateTime(2026, 7, 20),
+    dateToleranceDays: 3,
+    weightKg: 8,
+    parcelSize: ParcelSize.medium,
+    transportMode: TransportMode.plane,
+    contentCategory: ContentCategory.vetements,
+    status: PackageRequestStatus.open,
+    createdAt: DateTime(2026, 5, 10),
+    negotiable: false,
+    targetPriceEur: 50.0, // net → brut attendu : 50 * 1.12 = 56
+    acceptedPaymentMethods: const {PaymentMethod.stripe, PaymentMethod.cash},
+  );
+
+  test('mode édition : état initial pré-rempli (id, champs, budget brut)', () {
+    final bloc = PackageRequestFormBloc(
+      repo,
+      analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+      editing: editRequest,
+    );
+    final s = bloc.state;
+    expect(s.isEditing, true);
+    expect(s.editingRequestId, 'r-edit');
+    expect(s.departureCity, 'Lyon');
+    expect(s.arrivalCity, 'Bamako');
+    expect(s.weightKg, 8);
+    expect(s.parcelSize, ParcelSize.medium);
+    expect(s.negotiable, false);
+    expect(s.acceptedPaymentMethods,
+        {PaymentMethod.stripe, PaymentMethod.cash});
+    expect(s.totalBudgetEur, closeTo(56.0, 0.001));
+    bloc.close();
+  });
+
+  blocTest<PackageRequestFormBloc, PackageRequestFormState>(
+    'mode édition : step 3 submit appelle repo.update (pas create) + Success',
+    build: () {
+      when(() => repo.update(
+            any(),
+            departureCity: any(named: 'departureCity'),
+            arrivalCity: any(named: 'arrivalCity'),
+            desiredDate: any(named: 'desiredDate'),
+            dateToleranceDays: any(named: 'dateToleranceDays'),
+            weightKg: any(named: 'weightKg'),
+            contentCategory: any(named: 'contentCategory'),
+            negotiable: any(named: 'negotiable'),
+            acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+            totalBudgetEur: any(named: 'totalBudgetEur'),
+            description: any(named: 'description'),
+            photoUrl: any(named: 'photoUrl'),
+            pickupNeighborhood: any(named: 'pickupNeighborhood'),
+            deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          )).thenAnswer((_) async => editRequest);
+      return PackageRequestFormBloc(
+        repo,
+        analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+        editing: editRequest,
+      );
+    },
+    act: (bloc) => bloc.add(const FormStep3Submitted()),
+    expect: () => [
+      isA<PackageRequestFormState>().having(
+          (s) => s.submissionStatus, 'status', FormSubmissionStatus.submitting),
+      isA<PackageRequestFormState>()
+          .having((s) => s.submissionStatus, 'status', FormSubmissionStatus.success)
+          .having((s) => s.createdRequest, 'saved', editRequest),
+    ],
+    verify: (_) {
+      verify(() => repo.update(
+            'r-edit',
+            departureCity: 'Lyon',
+            arrivalCity: 'Bamako',
+            desiredDate: DateTime(2026, 7, 20),
+            dateToleranceDays: 3,
+            weightKg: 8,
+            contentCategory: ContentCategory.vetements,
+            negotiable: false,
+            acceptedPaymentMethods: {PaymentMethod.stripe, PaymentMethod.cash},
+            totalBudgetEur: any(named: 'totalBudgetEur'),
+            description: any(named: 'description'),
+            photoUrl: any(named: 'photoUrl'),
+            pickupNeighborhood: any(named: 'pickupNeighborhood'),
+            deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          )).called(1);
+      verifyNever(() => repo.create(
+            departureCity: any(named: 'departureCity'),
+            arrivalCity: any(named: 'arrivalCity'),
+            desiredDate: any(named: 'desiredDate'),
+            dateToleranceDays: any(named: 'dateToleranceDays'),
+            weightKg: any(named: 'weightKg'),
+            contentCategory: any(named: 'contentCategory'),
+            negotiable: any(named: 'negotiable'),
+            acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+            totalBudgetEur: any(named: 'totalBudgetEur'),
+            description: any(named: 'description'),
+            photoUrl: any(named: 'photoUrl'),
+            pickupNeighborhood: any(named: 'pickupNeighborhood'),
+            deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
+          ));
+    },
+  );
+
   blocTest<PackageRequestFormBloc, PackageRequestFormState>(
     'repo throws → Error state',
     build: () {

@@ -471,17 +471,19 @@ void main() {
       verify(() => bloc.add(const FetchMyRequests())).called(greaterThanOrEqualTo(1));
     });
 
-    testWidgets('taper « Modifier → » sur une card open montre la snackbar',
+    testWidgets('« Modifier → » expose la clé d\'édition (open) et plus de placeholder',
         (tester) async {
+      final req = _request(status: PackageRequestStatus.open);
       when(() => bloc.state).thenReturn(PackageRequestState(
         status: PackageRequestListStatus.loaded,
-        requests: [_request(status: PackageRequestStatus.open)],
+        requests: [req],
       ));
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
-      await tester.tap(find.textContaining('Modifier'));
-      await tester.pump();
-      expect(find.text('Modification à venir'), findsOneWidget);
+      // Le bouton d'édition est câblé (ouvre le wizard pré-rempli).
+      expect(find.byKey(Key('edit-request-${req.id}')), findsOneWidget);
+      // L'ancien placeholder « Modification à venir » n'existe plus.
+      expect(find.text('Modification à venir'), findsNothing);
     });
   });
 

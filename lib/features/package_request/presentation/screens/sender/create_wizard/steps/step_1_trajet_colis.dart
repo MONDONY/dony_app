@@ -5,6 +5,7 @@ import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
+import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -24,6 +25,18 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
   DateTime? _date;
   int _tolerance = 2;
   final TransportMode _transportMode = TransportMode.plane;
+
+  @override
+  void initState() {
+    super.initState();
+    // Pré-remplissage (mode édition ou retour à l'étape) depuis l'état du bloc.
+    final PackageRequestFormState s =
+        context.read<PackageRequestFormBloc>().state;
+    _departureCity = s.departureCity;
+    _arrivalCity = s.arrivalCity;
+    _date = s.desiredDate;
+    if (s.dateToleranceDays != null) _tolerance = s.dateToleranceDays!;
+  }
 
   void submit() {
     if (!_formKey.currentState!.validate()) {

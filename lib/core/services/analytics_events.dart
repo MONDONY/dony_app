@@ -34,6 +34,7 @@ abstract final class AnalyticsEvents {
 
   // Package Request
   static const packageRequestCreated    = 'package_request_created';
+  static const packageRequestUpdated    = 'package_request_updated';
   static const packageRequestSearched   = 'package_request_searched';
   static const negotiationOfferMade     = 'negotiation_offer_made';
   static const negotiationOfferAccepted = 'negotiation_offer_accepted';

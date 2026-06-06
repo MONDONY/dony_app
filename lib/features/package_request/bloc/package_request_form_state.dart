@@ -34,6 +34,7 @@ class PackageRequestFormState extends Equatable {
     this.submissionStatus = FormSubmissionStatus.idle,
     this.errorMessage,
     this.createdRequest,
+    this.editingRequestId,
   });
 
   final int currentStep;
@@ -63,6 +64,11 @@ class PackageRequestFormState extends Equatable {
   final String? errorMessage;
   final PackageRequest? createdRequest;
 
+  /// Non-null en mode édition : id de la demande modifiée (sinon création).
+  final String? editingRequestId;
+
+  bool get isEditing => editingRequestId != null;
+
   PackageRequestFormState copyWith({
     int? currentStep,
     String? departureCity,
@@ -86,6 +92,7 @@ class PackageRequestFormState extends Equatable {
     FormSubmissionStatus? submissionStatus,
     String? errorMessage,
     PackageRequest? createdRequest,
+    String? editingRequestId,
   }) =>
       PackageRequestFormState(
         currentStep: currentStep ?? this.currentStep,
@@ -112,6 +119,7 @@ class PackageRequestFormState extends Equatable {
         submissionStatus: submissionStatus ?? this.submissionStatus,
         errorMessage: errorMessage ?? this.errorMessage,
         createdRequest: createdRequest ?? this.createdRequest,
+        editingRequestId: editingRequestId ?? this.editingRequestId,
       );
 
   @override
@@ -120,6 +128,6 @@ class PackageRequestFormState extends Equatable {
         transportMode, weightKg, parcelSize, contentCategory, customCategoryLabel,
         description, targetPriceEur, photoUrl, pickupNeighborhood,
         deliveryNeighborhood, negotiable, acceptedPaymentMethods, totalBudgetEur,
-        submissionStatus, errorMessage, createdRequest,
+        submissionStatus, errorMessage, createdRequest, editingRequestId,
       ];
 }

@@ -116,6 +116,47 @@ class PackageRequestRepository {
     return PackageRequest.fromJson(response.data!);
   }
 
+  /// Modifie une demande existante (PUT). Autorisé tant qu'aucun accord n'a été
+  /// conclu (OPEN/NEGOTIATING côté backend) ; sinon 409 `request/not-editable`.
+  Future<PackageRequest> update(
+    String id, {
+    required String departureCity,
+    required String arrivalCity,
+    required DateTime desiredDate,
+    required int dateToleranceDays,
+    required double weightKg,
+    required ContentCategory contentCategory,
+    required bool negotiable,
+    required Set<PaymentMethod> acceptedPaymentMethods,
+    double? totalBudgetEur,
+    String? description,
+    String? photoUrl,
+    String? pickupNeighborhood,
+    String? deliveryNeighborhood,
+  }) async {
+    final response = await _apiClient.dio.put<Map<String, dynamic>>(
+      '/package-requests/$id',
+      data: {
+        'departureCity': departureCity,
+        'arrivalCity': arrivalCity,
+        'desiredDate': desiredDate.toIso8601String().substring(0, 10),
+        'dateToleranceDays': dateToleranceDays,
+        'weightKg': weightKg,
+        'contentCategory': contentCategory.wireName,
+        'negotiable': negotiable,
+        'acceptedPaymentMethods':
+            acceptedPaymentMethods.map((m) => m.wireName).toList(),
+        if (totalBudgetEur != null) 'totalBudgetEur': totalBudgetEur,
+        if (description != null) 'description': description,
+        if (photoUrl != null) 'photoUrl': photoUrl,
+        if (pickupNeighborhood != null) 'pickupNeighborhood': pickupNeighborhood,
+        if (deliveryNeighborhood != null)
+          'deliveryNeighborhood': deliveryNeighborhood,
+      },
+    );
+    return PackageRequest.fromJson(response.data!);
+  }
+
   Future<PackageRequestPage> findMine({int page = 0, int size = 20}) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       '/package-requests/me',

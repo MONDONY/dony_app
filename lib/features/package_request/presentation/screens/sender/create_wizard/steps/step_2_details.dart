@@ -41,6 +41,24 @@ class Step2DetailsState extends State<Step2Details> {
       .toList(growable: false);
 
   @override
+  void initState() {
+    super.initState();
+    // Pré-remplissage (édition / retour à l'étape) depuis l'état du bloc.
+    final s = context.read<PackageRequestFormBloc>().state;
+    if (s.weightKg != null) {
+      final w = s.weightKg!;
+      _weightCtrl.text =
+          w == w.roundToDouble() ? w.toInt().toString() : w.toString();
+    }
+    if (s.parcelSize != null) _size = s.parcelSize!;
+    if (s.contentCategory != null) _category = s.contentCategory!;
+    if (s.customCategoryLabel != null && s.customCategoryLabel!.isNotEmpty) {
+      _customCategoryCtrl.text = s.customCategoryLabel!;
+      _showCustomField.value = true;
+    }
+  }
+
+  @override
   void dispose() {
     _weightCtrl.dispose();
     _customCategoryCtrl.dispose();

@@ -494,12 +494,12 @@ class _CardAction extends StatelessWidget {
       PackageRequestStatus.open ||
       PackageRequestStatus.negotiating =>
         GestureDetector(
-          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Modification à venir'),
-              behavior: SnackBarBehavior.floating,
-            ),
-          ),
+          key: Key('edit-request-${request.id}'),
+          onTap: () async {
+            final bloc = context.read<PackageRequestBloc>();
+            await PackageRequestCreateWizard.show(context, initial: request);
+            bloc.add(const RefreshMyRequests());
+          },
           child: Text(
             'Modifier →',
             style: tt.labelSmall?.copyWith(
