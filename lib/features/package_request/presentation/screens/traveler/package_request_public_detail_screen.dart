@@ -8,6 +8,7 @@ import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/package_request/presentation/widgets/make_offer_bottom_sheet.dart';
+import 'package:dony/features/package_request/presentation/widgets/payment_methods_chips.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -399,8 +400,6 @@ class _PaymentMethodsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final ordered =
-        PaymentMethod.canonicalOrder.where(methods.contains).toList();
 
     return Container(
       key: const Key('payment-methods-card'),
@@ -429,52 +428,7 @@ class _PaymentMethodsCard extends StatelessWidget {
             style: tt.bodyMedium!.copyWith(fontSize: 12, color: kTextHint),
           ),
           const SizedBox(height: DonySpacing.md),
-          Wrap(
-            spacing: DonySpacing.sm,
-            runSpacing: DonySpacing.sm,
-            children: ordered
-                .map((m) => _PaymentMethodChip(method: m))
-                .toList(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PaymentMethodChip extends StatelessWidget {
-  const _PaymentMethodChip({required this.method});
-
-  final PaymentMethod method;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Container(
-      key: Key('payment-method-chip-${method.wireName.toLowerCase()}'),
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.base,
-        vertical: DonySpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: cs.primaryContainer,
-        borderRadius: BorderRadius.circular(DonyRadius.full),
-        border: Border.all(color: cs.primary.withValues(alpha: 0.25)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(method.icon, size: 14, color: cs.primary),
-          const SizedBox(width: DonySpacing.xs),
-          Text(
-            method.displayLabel,
-            style: tt.labelMedium!.copyWith(
-              color: cs.primary,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0,
-            ),
-          ),
+          PaymentMethodsChips(methods: methods),
         ],
       ),
     );

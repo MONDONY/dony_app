@@ -1,6 +1,7 @@
 import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Map<String, dynamic> _baseJson({Object? negotiable = _absent}) => {
@@ -71,6 +72,21 @@ void main() {
       final negotiable =
           PackageRequestSearchItem.fromJson(_baseJson(negotiable: true));
       expect(firm, isNot(equals(negotiable)));
+    });
+
+    test('parses acceptedPaymentMethods from JSON', () {
+      final json = _baseJson()
+        ..['acceptedPaymentMethods'] = ['STRIPE', 'CASH'];
+      final item = PackageRequestSearchItem.fromJson(json);
+      expect(
+        item.acceptedPaymentMethods,
+        {PaymentMethod.stripe, PaymentMethod.cash},
+      );
+    });
+
+    test('acceptedPaymentMethods defaults to empty when absent', () {
+      final item = PackageRequestSearchItem.fromJson(_baseJson());
+      expect(item.acceptedPaymentMethods, isEmpty);
     });
   });
 }

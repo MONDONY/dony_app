@@ -2,6 +2,7 @@ import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/presentation/widgets/package_request_preview_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,6 +15,7 @@ PackageRequestSearchItem _item({
   bool kycVerified = true,
   int tolerance = 2,
   bool negotiable = true,
+  Set<PaymentMethod> acceptedPaymentMethods = const {},
 }) =>
     PackageRequestSearchItem(
       id: 'pr-1',
@@ -28,6 +30,7 @@ PackageRequestSearchItem _item({
       pickupNeighborhood: pickupNeighborhood,
       deliveryNeighborhood: deliveryNeighborhood,
       negotiable: negotiable,
+      acceptedPaymentMethods: acceptedPaymentMethods,
       sender: SenderPublicProfile(
         id: 'sender-1',
         displayName: 'Fatou Diallo',
@@ -214,6 +217,34 @@ void main() {
       await tester.tap(find.byKey(const Key('open')));
       await tester.pumpAndSettle();
       expect(find.textContaining('±'), findsNothing);
+    });
+
+    testWidgets('affiche les modes de paiement acceptés (chips)',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(_buildApp(_item(
+        acceptedPaymentMethods: {PaymentMethod.stripe, PaymentMethod.cash},
+      )));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+      expect(find.text('Mode de paiement'), findsOneWidget);
+      expect(find.text('Carte'), findsOneWidget);
+      expect(find.text('Cash'), findsOneWidget);
+      expect(
+          find.byKey(const Key('payment-method-chip-stripe')), findsOneWidget);
+    });
+
+    testWidgets('masque la section paiement quand aucun mode n\'est fourni',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(_buildApp(_item()));
+      await tester.tap(find.byKey(const Key('open')));
+      await tester.pumpAndSettle();
+      expect(find.text('Mode de paiement'), findsNothing);
     });
   });
 }
