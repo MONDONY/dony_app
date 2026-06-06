@@ -566,11 +566,24 @@ class CandidatesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!request.negotiable) {
+      // Candidats encore en lice (le voyageur a pris le prix ferme → OPEN).
       final openThreads = threads
           .where((t) => t.status == NegotiationThreadStatus.open)
           .toList();
+      // Offre déjà choisie : le thread est passé en AWAITING_TRIP / AWAITING_PAYMENT.
+      // Tant qu'elle n'est pas payée, elle doit RESTER visible ici pour que
+      // l'expéditeur la finalise — sinon l'offre disparaît de « Ma demande ».
+      final chosen = threads
+          .where((t) =>
+              t.status == NegotiationThreadStatus.awaitingTrip ||
+              t.status == NegotiationThreadStatus.awaitingPayment)
+          .toList();
 
-      if (openThreads.isEmpty) return const SizedBox.shrink();
+      // Une fois un voyageur choisi, on n'affiche que l'offre en cours à finaliser.
+      final visible = chosen.isNotEmpty ? chosen : openThreads;
+      final showingChosen = chosen.isNotEmpty;
+
+      if (visible.isEmpty) return const SizedBox.shrink();
 
       final cs = Theme.of(context).colorScheme;
       final tt = Theme.of(context).textTheme;
@@ -582,7 +595,7 @@ class CandidatesSection extends StatelessWidget {
           Row(
             children: [
               Text(
-                'VOYAGEURS INTÉRESSÉS',
+                showingChosen ? 'OFFRE ACCEPTÉE' : 'VOYAGEURS INTÉRESSÉS',
                 style: tt.labelMedium?.copyWith(
                   color: cs.onSurfaceVariant,
                   fontWeight: FontWeight.w700,
@@ -597,7 +610,7 @@ class CandidatesSection extends StatelessWidget {
                   borderRadius: BorderRadius.circular(DonyRadius.full),
                 ),
                 child: Text(
-                  '${openThreads.length}',
+                  '${visible.length}',
                   style: tt.bodyMedium?.copyWith(
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
@@ -609,13 +622,16 @@ class CandidatesSection extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.base),
           // Candidate cards
-          ...openThreads.asMap().entries.map((entry) {
+          ...visible.asMap().entries.map((entry) {
             final i = entry.key;
             final thread = entry.value;
             return Padding(
               padding: const EdgeInsets.only(bottom: DonySpacing.sm + 4),
               child: _CandidateCard(
                 thread: thread,
+                // OPEN → « Choisir » (sélection) ; offre déjà choisie → « Finaliser »
+                // (le thread est en AWAITING_TRIP/PAYMENT, l'expéditeur doit payer).
+                ctaLabel: showingChosen ? 'Finaliser' : 'Choisir',
                 // Ouvrir la négociation : c'est là que vit le flux complet
                 // d'acceptation + paiement (ThreadStateCtaBar → « Accepter —
                 // Tu paies X € » → complete-details → paiement avec biométrie).
@@ -624,35 +640,38 @@ class CandidatesSection extends StatelessWidget {
               ).animate().fadeIn(duration: 200.ms, delay: (60 * i).ms),
             );
           }),
-          // Disclaimer note
-          const SizedBox(height: DonySpacing.xs),
-          Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: DonySpacing.base, vertical: DonySpacing.sm),
-            decoration: BoxDecoration(
-              color: DonyColors.warning500.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(DonyRadius.md),
-              border: Border.all(
-                  color: DonyColors.warning500.withValues(alpha: 0.30)),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.info_outline_rounded,
-                    size: 16, color: DonyColors.warning500),
-                const SizedBox(width: DonySpacing.xs),
-                Expanded(
-                  child: Text(
-                    'Les autres seront déclinés automatiquement.',
-                    style: tt.bodySmall?.copyWith(
-                      color: DonyColors.warning500,
-                      fontWeight: FontWeight.w600,
-                      height: 1.4,
+          // Disclaimer note — uniquement à l'étape de choix (candidats OPEN).
+          // Une fois un voyageur choisi, plus rien à « décliner ».
+          if (!showingChosen) ...[
+            const SizedBox(height: DonySpacing.xs),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.base, vertical: DonySpacing.sm),
+              decoration: BoxDecoration(
+                color: DonyColors.warning500.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(DonyRadius.md),
+                border: Border.all(
+                    color: DonyColors.warning500.withValues(alpha: 0.30)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded,
+                      size: 16, color: DonyColors.warning500),
+                  const SizedBox(width: DonySpacing.xs),
+                  Expanded(
+                    child: Text(
+                      'Les autres seront déclinés automatiquement.',
+                      style: tt.bodySmall?.copyWith(
+                        color: DonyColors.warning500,
+                        fontWeight: FontWeight.w600,
+                        height: 1.4,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       );
     }
@@ -667,10 +686,12 @@ class _CandidateCard extends StatelessWidget {
   const _CandidateCard({
     required this.thread,
     required this.onChoose,
+    this.ctaLabel = 'Choisir',
   });
 
   final NegotiationThread thread;
   final VoidCallback onChoose;
+  final String ctaLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -781,7 +802,7 @@ class _CandidateCard extends StatelessWidget {
                   fontSize: 14,
                 ),
               ),
-              child: const Text('Choisir'),
+              child: Text(ctaLabel),
             ),
           ),
         ],

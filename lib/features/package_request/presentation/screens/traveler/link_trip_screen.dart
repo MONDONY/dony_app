@@ -88,6 +88,12 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
       final dateTo = request.desiredDate
           .add(Duration(days: request.dateToleranceDays));
       final matching = myTrips.announcements.where((ann) {
+        // Seuls les trajets encore ACTIFS avec assez de capacité disponible
+        // peuvent porter ce colis. Un trajet COMPLETED / IN_PROGRESS / CANCELLED
+        // ou sans place ne doit jamais être proposé : une fois lié, il resterait
+        // bloqué hors de l'onglet « À venir » (qui ne montre que ACTIVE/FULL).
+        final linkable =
+            ann.status == 'ACTIVE' && ann.availableKg >= request.weightKg;
         final corridorMatch =
             cityKey(ann.departureCity) == cityKey(request.departureCity) &&
             cityKey(ann.arrivalCity) == cityKey(request.arrivalCity);
@@ -96,7 +102,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                 .isBefore(DateTime(dateFrom.year, dateFrom.month, dateFrom.day)) &&
             !DateTime(d.year, d.month, d.day)
                 .isAfter(DateTime(dateTo.year, dateTo.month, dateTo.day));
-        return corridorMatch && dateMatch;
+        return linkable && corridorMatch && dateMatch;
       }).toList();
 
       if (mounted) {

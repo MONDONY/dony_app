@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
@@ -85,6 +86,8 @@ class PackageRequestRepository {
     required DateTime desiredDate,
     required int dateToleranceDays,
     required double weightKg,
+    required ParcelSize parcelSize,
+    required TransportMode transportMode,
     required ContentCategory contentCategory,
     required bool negotiable,
     required Set<PaymentMethod> acceptedPaymentMethods,
@@ -102,6 +105,8 @@ class PackageRequestRepository {
         'desiredDate': desiredDate.toIso8601String().substring(0, 10),
         'dateToleranceDays': dateToleranceDays,
         'weightKg': weightKg,
+        'parcelSize': parcelSize.wireName,
+        'transportMode': transportModeToWire(transportMode),
         'contentCategory': contentCategory.wireName,
         'negotiable': negotiable,
         'acceptedPaymentMethods':
@@ -125,6 +130,8 @@ class PackageRequestRepository {
     required DateTime desiredDate,
     required int dateToleranceDays,
     required double weightKg,
+    required ParcelSize parcelSize,
+    required TransportMode transportMode,
     required ContentCategory contentCategory,
     required bool negotiable,
     required Set<PaymentMethod> acceptedPaymentMethods,
@@ -142,6 +149,8 @@ class PackageRequestRepository {
         'desiredDate': desiredDate.toIso8601String().substring(0, 10),
         'dateToleranceDays': dateToleranceDays,
         'weightKg': weightKg,
+        'parcelSize': parcelSize.wireName,
+        'transportMode': transportModeToWire(transportMode),
         'contentCategory': contentCategory.wireName,
         'negotiable': negotiable,
         'acceptedPaymentMethods':

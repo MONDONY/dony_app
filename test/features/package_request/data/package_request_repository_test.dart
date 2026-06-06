@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
+import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
@@ -66,6 +67,8 @@ void main() {
         desiredDate: DateTime(2026, 6, 15),
         dateToleranceDays: 2,
         weightKg: 5.0,
+        parcelSize: ParcelSize.small,
+        transportMode: TransportMode.plane,
         contentCategory: ContentCategory.vetements,
         negotiable: true,
         acceptedPaymentMethods: {PaymentMethod.stripe},
@@ -95,6 +98,8 @@ void main() {
         desiredDate: DateTime(2026, 6, 15),
         dateToleranceDays: 2,
         weightKg: 5.0,
+        parcelSize: ParcelSize.small,
+        transportMode: TransportMode.plane,
         contentCategory: ContentCategory.vetements,
         negotiable: true,
         acceptedPaymentMethods: {PaymentMethod.stripe, PaymentMethod.cash},
@@ -106,8 +111,10 @@ void main() {
       expect(capturedBody!['totalBudgetEur'], 50.0);
       final methods = capturedBody!['acceptedPaymentMethods'] as List<dynamic>;
       expect(methods, containsAll(['STRIPE', 'CASH']));
-      expect(capturedBody!.containsKey('parcelSize'), false);
-      expect(capturedBody!.containsKey('transportMode'), false);
+      // Régression : le backend exige parcelSize + transportMode (@NotNull).
+      // Les omettre renvoyait un 422 « Validation failed » à la publication.
+      expect(capturedBody!['parcelSize'], 'SMALL');
+      expect(capturedBody!['transportMode'], 'PLANE');
     });
   });
 

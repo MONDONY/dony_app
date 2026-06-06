@@ -294,4 +294,45 @@ void main() {
       },
     );
   });
+
+  group('CandidatesSection — offre déjà choisie (AWAITING_PAYMENT)', () {
+    testWidgets(
+      'le thread choisi reste visible avec « Finaliser » (régression : il '
+      'disparaissait de « Ma demande » une fois choisi)',
+      (tester) async {
+        final chosen = [
+          NegotiationThread(
+            id: 't-chosen',
+            packageRequestId: 'pr-firm',
+            travelerId: 'tv-9',
+            travelerTravelDate: DateTime(2026, 8, 15),
+            travelerAvailableKg: 10,
+            status: NegotiationThreadStatus.awaitingPayment,
+            currentPriceEur: 35.0,
+            grossPriceEur: 39.20,
+            roundsCount: 1,
+            lastActivityAt: DateTime(2026, 6, 2),
+            createdAt: DateTime(2026, 6, 1),
+            messages: const [],
+            travelerName: 'Diane Camara',
+          ),
+        ];
+
+        await tester.pumpWidget(wrap(
+          request: _firmRequest(),
+          threads: chosen,
+        ));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Diane Camara'), findsOneWidget);
+        expect(find.text('Finaliser'), findsOneWidget);
+        expect(find.text('Choisir'), findsNothing);
+        expect(find.text('OFFRE ACCEPTÉE'), findsOneWidget);
+        expect(
+          find.text('Les autres seront déclinés automatiquement.'),
+          findsNothing,
+        );
+      },
+    );
+  });
 }
