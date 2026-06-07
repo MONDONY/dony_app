@@ -1,6 +1,7 @@
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:equatable/equatable.dart';
 
 enum PackageRequestStatus {
@@ -37,6 +38,8 @@ class PackageRequest extends Equatable {
     this.deliveryNeighborhood,
     required this.status,
     required this.createdAt,
+    this.negotiable = true,
+    this.acceptedPaymentMethods = const {},
   });
 
   final String id;
@@ -56,6 +59,8 @@ class PackageRequest extends Equatable {
   final String? deliveryNeighborhood;
   final PackageRequestStatus status;
   final DateTime createdAt;
+  final bool negotiable;
+  final Set<PaymentMethod> acceptedPaymentMethods;
 
   factory PackageRequest.fromJson(Map<String, dynamic> json) => PackageRequest(
         id: json['id'] as String,
@@ -76,6 +81,9 @@ class PackageRequest extends Equatable {
         deliveryNeighborhood: json['deliveryNeighborhood'] as String?,
         status: PackageRequestStatus.fromJson(json['status'] as String),
         createdAt: DateTime.parse(json['createdAt'] as String),
+        negotiable: json['negotiable'] as bool? ?? true,
+        acceptedPaymentMethods: PaymentMethod.setFromJson(
+            json['acceptedPaymentMethods'] as List<dynamic>?),
       );
 
   @override
@@ -87,5 +95,6 @@ class PackageRequest extends Equatable {
         description, targetPriceEur, photoUrl,
         pickupNeighborhood, deliveryNeighborhood,
         status, createdAt,
+        negotiable, acceptedPaymentMethods,
       ];
 }

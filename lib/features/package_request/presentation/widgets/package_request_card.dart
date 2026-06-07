@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
+import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/presentation/widgets/make_offer_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -188,16 +189,25 @@ class PackageRequestCard extends StatelessWidget {
                 ),
 
                 const SizedBox(height: DonySpacing.md),
-                DonyButton(
-                  label: 'Faire une offre',
-                  onPressed: () => MakeOfferBottomSheet.show(
-                    context,
-                    packageRequestId: item.id,
-                    targetPriceEur: item.targetPriceEur,
-                    weightKg: item.weightKg,
-                    departureCity: item.departureCity,
-                    arrivalCity: item.arrivalCity,
-                  ),
+                Builder(
+                  builder: (context) {
+                    final isFirm =
+                        !item.negotiable && item.targetPriceEur != null;
+                    return DonyButton(
+                      label: isFirm
+                          ? 'Prendre à ${PriceDisplay.eur(item.targetPriceEur!)}'
+                          : 'Faire une offre',
+                      onPressed: () => MakeOfferBottomSheet.show(
+                        context,
+                        packageRequestId: item.id,
+                        targetPriceEur: item.targetPriceEur,
+                        weightKg: item.weightKg,
+                        departureCity: item.departureCity,
+                        arrivalCity: item.arrivalCity,
+                        isFirmPrice: isFirm,
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

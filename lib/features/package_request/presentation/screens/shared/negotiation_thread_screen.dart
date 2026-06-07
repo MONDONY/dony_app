@@ -272,7 +272,11 @@ class _LoadedViewState extends State<_LoadedView> {
 
     return Column(
       children: [
-        ThreadHeroCard(thread: thread, statusVariant: variant)
+        ThreadHeroCard(
+          thread: thread,
+          statusVariant: variant,
+          isTraveler: viewerUserId == thread.travelerId,
+        )
             .animate()
             .fadeIn(duration: 220.ms)
             .slideY(begin: -0.04, curve: Curves.easeOutCubic),
@@ -306,6 +310,8 @@ class _LoadedViewState extends State<_LoadedView> {
                   message: m,
                   mine: mine,
                   highlight: shouldHighlight,
+                  isTraveler: viewerUserId == thread.travelerId,
+                  grossPriceEur: thread.grossPriceEur,
                 )
                     .animate()
                     .fadeIn(duration: 200.ms, delay: (40 * i).ms)

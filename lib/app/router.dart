@@ -50,7 +50,6 @@ import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:dony/features/stripe_account/presentation/screens/account_disabled_screen.dart';
 import 'package:dony/features/stripe_account/presentation/screens/account_rejected_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/complete_details_screen.dart';
-import 'package:dony/features/package_request/presentation/screens/sender/shipment_steps_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/package_request_detail_screen.dart';
@@ -128,7 +127,6 @@ import 'package:dony/features/settings/presentation/screens/blocked_users_screen
 import 'package:dony/features/settings/presentation/screens/connected_devices_screen.dart';
 import 'package:dony/features/ratings/bloc/rating_bloc.dart';
 import 'package:dony/features/referral/bloc/referral_bloc.dart';
-import 'package:dony/features/referral/bloc/referral_event.dart';
 import 'package:dony/features/referral/presentation/screens/referral_screen.dart';
 import 'package:dony/features/auth/presentation/screens/referral_code_screen.dart';
 import 'package:dony/features/referral/data/referral_repository.dart';
@@ -1002,18 +1000,10 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/package-requests/:id/complete-details',
-      builder: (_, state) =>
-          CompleteDetailsScreen(requestId: state.pathParameters['id']!),
-    ),
-    GoRoute(
-      path: '/package-requests/:id/shipment',
-      builder: (_, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return ShipmentStepsScreen(
-          requestId: state.pathParameters['id']!,
-          travelerDisplayName: extra?['travelerDisplayName'] as String?,
-        );
-      },
+      builder: (_, state) => CompleteDetailsScreen(
+        requestId: state.pathParameters['id']!,
+        thread: state.extra as NegotiationThread?,
+      ),
     ),
     GoRoute(
       path: '/negotiations',

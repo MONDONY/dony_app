@@ -2,6 +2,7 @@ import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_bottom_sheet.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,6 +15,8 @@ class CounterOfferBottomSheet {
     required NegotiationBloc bloc,
     required String threadId,
     required double currentPriceEur,
+    double? grossPriceEur,
+    bool isTraveler = false,
     int roundsCount = 1,
   }) {
     final submitNotifier = ValueNotifier<VoidCallback?>(null);
@@ -33,6 +36,8 @@ class CounterOfferBottomSheet {
         bloc: bloc,
         threadId: threadId,
         currentPriceEur: currentPriceEur,
+        grossPriceEur: grossPriceEur,
+        isTraveler: isTraveler,
         roundsCount: roundsCount,
         onSubmitReady: (fn) => WidgetsBinding.instance
             .addPostFrameCallback((_) => submitNotifier.value = fn),
@@ -46,6 +51,8 @@ class _CounterOfferContent extends StatefulWidget {
     required this.bloc,
     required this.threadId,
     required this.currentPriceEur,
+    this.grossPriceEur,
+    this.isTraveler = false,
     required this.roundsCount,
     required this.onSubmitReady,
   });
@@ -53,6 +60,8 @@ class _CounterOfferContent extends StatefulWidget {
   final NegotiationBloc bloc;
   final String threadId;
   final double currentPriceEur;
+  final double? grossPriceEur;
+  final bool isTraveler;
   final int roundsCount;
   final void Function(VoidCallback?) onSubmitReady;
 
@@ -109,9 +118,9 @@ class _CounterOfferContentState extends State<_CounterOfferContent> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Sous-titre : prix actuel + round
+          // Sous-titre : prix actuel (rôle-aware) + round
           Text(
-            'Prix actuel : ${widget.currentPriceEur.toStringAsFixed(0)} € · Round ${widget.roundsCount}/5',
+            '${PriceDisplay.threadPriceLabel(widget.currentPriceEur, widget.grossPriceEur, widget.isTraveler)} · Round ${widget.roundsCount}/5',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: DonySpacing.xl),

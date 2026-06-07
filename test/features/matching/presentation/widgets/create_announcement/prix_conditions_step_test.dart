@@ -23,8 +23,6 @@ import 'package:dony/features/payments/cash/bloc/commission_method_bloc.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_event.dart';
 import 'package:dony/features/payments/cash/bloc/commission_method_state.dart';
 import 'package:dony/features/payments/cash/data/models/commission_method.dart';
-import 'package:dony/features/price_grid/data/models/price_grid_item_model.dart';
-import 'package:dony/features/price_grid/data/repositories/price_grid_repository.dart';
 import 'package:dony/features/stripe_account/bloc/stripe_account_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -40,8 +38,6 @@ class _MockStripeAccountBloc
 class _MockCommissionMethodBloc
     extends MockBloc<CommissionMethodEvent, CommissionMethodState>
     implements CommissionMethodBloc {}
-
-class _MockPriceGridRepository extends Mock implements PriceGridRepository {}
 
 class _MockAnnouncementFormBloc
     extends MockBloc<AnnouncementFormEvent, AnnouncementFormState>

@@ -7,17 +7,21 @@ import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_status_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
+import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/widgets/create_bid_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/traveler_profile_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 void showTravelerAnnouncementSheet(
   BuildContext context, {
   required AnnouncementModel announcement,
   String? existingBidStatus,
+  BidModel? existingBid,
 }) {
   // Captured before DonyBottomSheet.show() — context may be invalid inside
   // onPressed since useRootNavigator: true places the sheet outside BlocProvider.
@@ -30,44 +34,93 @@ void showTravelerAnnouncementSheet(
   final BidBloc? parentBidBloc =
       context.mounted ? context.read<BidBloc>() : null;
 
-  final isPending = existingBidStatus == 'PENDING' ||
-      existingBidStatus == 'AWAITING_PAYMENT';
-  final isAccepted = existingBidStatus == 'ACCEPTED' ||
-      existingBidStatus == 'PAYMENT_ESCROWED';
-  final hasActiveBid = isPending || isAccepted;
+  // Détecte un colis existant du viewer sur ce trajet — même si l'appelant n'a
+  // pas passé existingBid (certains points d'entrée — carte, accueil — ne le
+  // font pas). On lit le BidBloc du parent maintenant (avant le sheet : avec
+  // useRootNavigator le sheet sort du BlocProvider tree). Le bid négocié
+  // matérialisé (statut ACCEPTED) y figure → on grise « Faire une demande ».
+  BidModel? resolvedBid = existingBid;
+  if (resolvedBid == null && context.mounted) {
+    try {
+      resolvedBid =
+          context.read<BidBloc>().state.activeBidsByAnnouncement()[announcement.id];
+    } catch (_) {/* BidBloc indisponible dans ce contexte — on ignore */}
+  }
+  final resolvedStatus = resolvedBid?.status ?? existingBidStatus;
+
+  // « A déjà un colis sur ce trajet » couvre tout colis en cours, demande
+  // jusqu'à livraison (EN ROUTE / LIVRÉ inclus) — pas seulement en attente/accepté.
+  final hasActiveBid = resolvedStatus != null &&
+      MyActiveBidsLookup.ongoingBidStatuses.contains(resolvedStatus);
 
   DonyBottomSheet.show<void>(
     context,
     title: 'Détail du trajet',
     stickyBottom: Builder(
-      builder: (innerCtx) => DonyButton(
-        label: isPending
-            ? 'Demande en attente'
-            : isAccepted
-                ? 'Demande acceptée'
-                : 'Faire une demande',
-        icon: hasActiveBid
-            ? Icons.check_circle_rounded
-            : Icons.send_rounded,
-        onPressed: hasActiveBid
-            ? null
-            : () async {
-                final navigator =
-                    Navigator.of(innerCtx, rootNavigator: true);
-                final rootCtx = navigator.context;
-                navigator.pop();
-                if (isKycVerified) {
-                  await CreateBidBottomSheet.show(rootCtx,
-                      announcement: announcement);
-                  // Refresh silencieux du BidBloc parent pour que la liste
-                  // affiche immédiatement le chip "Demande en attente".
-                  parentBidBloc
-                      ?.add(const BidMyListAutoRefreshRequested(force: true));
-                } else {
-                  await KycStatusBottomSheet.show(rootCtx);
-                }
-              },
-      ),
+      builder: (innerCtx) {
+        // Le viewer a déjà un colis sur ce trajet : on n'autorise pas une
+        // nouvelle demande (le back la refuserait). On l'oriente vers son colis.
+        if (hasActiveBid) {
+          final tt = Theme.of(innerCtx).textTheme;
+          final cs = Theme.of(innerCtx).colorScheme;
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.info_outline_rounded,
+                        size: 16, color: cs.onSurfaceVariant),
+                    const SizedBox(width: DonySpacing.xs),
+                    Flexible(
+                      child: Text(
+                        'Vous avez déjà un colis sur ce trajet',
+                        textAlign: TextAlign.center,
+                        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              DonyButton(
+                key: const Key('see-my-parcel-btn'),
+                label: 'Voir mon colis',
+                icon: Icons.inventory_2_rounded,
+                onPressed: resolvedBid == null
+                    ? null
+                    : () {
+                        Navigator.of(innerCtx, rootNavigator: true).pop();
+                        if (context.mounted) {
+                          context.push('/bids/${resolvedBid!.id}',
+                              extra: resolvedBid);
+                        }
+                      },
+              ),
+            ],
+          );
+        }
+        return DonyButton(
+          label: 'Faire une demande',
+          icon: Icons.send_rounded,
+          onPressed: () async {
+            final navigator = Navigator.of(innerCtx, rootNavigator: true);
+            final rootCtx = navigator.context;
+            navigator.pop();
+            if (isKycVerified) {
+              await CreateBidBottomSheet.show(rootCtx,
+                  announcement: announcement);
+              // Refresh silencieux du BidBloc parent pour que la liste
+              // affiche immédiatement le chip "Demande en attente".
+              parentBidBloc
+                  ?.add(const BidMyListAutoRefreshRequested(force: true));
+            } else {
+              await KycStatusBottomSheet.show(rootCtx);
+            }
+          },
+        );
+      },
     ),
     child: _TravelerAnnouncementContent(announcement: announcement),
   );

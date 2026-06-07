@@ -23,6 +23,12 @@ void main() {
 
   setUpAll(() async {
     await initializeDateFormatting('fr', null);
+    registerFallbackValue(NegotiationStartRequested(
+      packageRequestId: 'x',
+      proposedPriceEur: 1,
+      travelerTravelDate: DateTime(2026),
+      travelerAvailableKg: 1,
+    ));
   });
 
   setUp(() {
@@ -57,7 +63,12 @@ void main() {
     }
   });
 
-  Widget wrap({DateTime? initialDate}) => MaterialApp.router(
+  Widget wrap({
+    DateTime? initialDate,
+    bool isFirmPrice = false,
+    double? targetPriceEur,
+  }) =>
+      MaterialApp.router(
         routerConfig: GoRouter(
           routes: [
             GoRoute(
@@ -71,6 +82,8 @@ void main() {
                     departureCity: 'Paris',
                     arrivalCity: 'Dakar',
                     initialDate: initialDate,
+                    isFirmPrice: isFirmPrice,
+                    targetPriceEur: targetPriceEur,
                   ),
                   child: const Text('Ouvrir'),
                 ),
@@ -106,6 +119,35 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Sélectionner…'), findsOneWidget);
+    });
+
+    testWidgets(
+        'prix ferme → champ verrouillé + envoie le prix EXACT (pas arrondi)',
+        (tester) async {
+      await tester.pumpWidget(wrap(
+        initialDate: DateTime(2026, 6, 12),
+        isFirmPrice: true,
+        targetPriceEur: 35.5,
+      ));
+      await tester.tap(find.text('Ouvrir'));
+      await tester.pumpAndSettle();
+
+      // Framing « prendre » et non « négocier ».
+      expect(find.text('Prendre ce colis'), findsOneWidget);
+      expect(find.text('PRIX FERME'), findsOneWidget);
+      expect(find.text('Faire une offre'), findsNothing);
+      // Prix affiché EXACT (35,50), jamais arrondi à 36.
+      expect(find.text('35.50'), findsOneWidget);
+      expect(find.text('Prendre à 35,50 €'), findsOneWidget);
+
+      // Soumission → événement avec le prix EXACT (régression firm-price-must-match).
+      await tester.tap(find.text('Prendre à 35,50 €'));
+      await tester.pump();
+      verify(() => negoBloc.add(any(
+            that: isA<NegotiationStartRequested>()
+                .having((e) => e.proposedPriceEur, 'proposedPriceEur', 35.5)
+                .having((e) => e.isFirmPrice, 'isFirmPrice', true),
+          ))).called(1);
     });
   });
 }

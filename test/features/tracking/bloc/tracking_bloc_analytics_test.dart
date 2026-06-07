@@ -1,8 +1,6 @@
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
-import 'package:dony/features/tracking/bloc/tracking_state.dart';
-import 'package:dony/features/tracking/data/models/tracking_event_model.dart';
 import 'package:dony/features/tracking/data/offline_sync_service.dart';
 import 'package:dony/features/tracking/data/tracking_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,14 +10,6 @@ import '../../../helpers/mock_analytics_backend.dart';
 class _MockTrackingRepo extends Mock implements TrackingRepository {}
 
 class _MockOfflineSync extends Mock implements OfflineSyncService {}
-
-TrackingEventModel _fakeTrackingEvent() => TrackingEventModel(
-      id: 'ev-test',
-      bidId: 'bid1',
-      eventType: 'PICKUP',
-      scannedAt: DateTime(2024, 1, 1, 12),
-      createdAt: DateTime(2024, 1, 1, 12),
-    );
 
 void main() {
   late _MockTrackingRepo repo;

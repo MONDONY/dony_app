@@ -1,5 +1,6 @@
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -30,6 +31,20 @@ void main() {
     expect(pr.status, PackageRequestStatus.open);
     expect(pr.weightKg, 5.0);
     expect(pr.targetPriceEur, 25.5);
+  });
+
+  test('fromJson parses negotiable + acceptedPaymentMethods', () {
+    final json = {
+      'id': '1', 'senderId': 's', 'departureCity': 'Paris', 'arrivalCity': 'Dakar',
+      'desiredDate': '2026-06-12', 'dateToleranceDays': 2, 'weightKg': 23,
+      'parcelSize': 'LARGE', 'transportMode': 'PLANE', 'contentCategory': 'MEDICAMENTS',
+      'status': 'OPEN', 'createdAt': '2026-06-04T10:00:00',
+      'negotiable': false,
+      'acceptedPaymentMethods': ['STRIPE', 'CASH'],
+    };
+    final r = PackageRequest.fromJson(json);
+    expect(r.negotiable, isFalse);
+    expect(r.acceptedPaymentMethods, {PaymentMethod.stripe, PaymentMethod.cash});
   });
 
   test('PackageRequest equality via Equatable', () {

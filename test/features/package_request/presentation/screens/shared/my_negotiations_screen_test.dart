@@ -1,6 +1,10 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/package_request/bloc/negotiation_filter_cubit.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
@@ -9,13 +13,23 @@ import 'package:dony/features/package_request/presentation/screens/shared/my_neg
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get_it/get_it.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockNegotiationListBloc
     extends MockBloc<NegotiationListEvent, NegotiationListState>
     implements NegotiationListBloc {}
+
+class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {}
+
+UserModel _user(String id) => UserModel(
+      id: id,
+      roles: const ['SENDER'],
+      kycStatus: 'VERIFIED',
+      status: 'ACTIVE',
+      stripeAccountStatus: 'NOT_CREATED',
+    );
 
 NegotiationThread _thread({
   NegotiationThreadStatus status = NegotiationThreadStatus.open,
@@ -57,6 +71,7 @@ NegotiationThread _thread({
 
 void main() {
   late _MockNegotiationListBloc bloc;
+  late _MockAuthBloc authBloc;
 
   setUpAll(() async {
     await initializeDateFormatting('fr', null);
@@ -68,6 +83,13 @@ void main() {
     when(() => bloc.state).thenReturn(NegotiationListState());
     when(() => bloc.stream)
         .thenAnswer((_) => const Stream<NegotiationListState>.empty());
+
+    // Viewer = expéditeur (id ≠ travelerId 'tr-1') → voit le prix gross.
+    authBloc = _MockAuthBloc();
+    when(() => authBloc.state)
+        .thenReturn(AuthAuthenticated(_user('sender-1')));
+    when(() => authBloc.stream)
+        .thenAnswer((_) => const Stream<AuthState>.empty());
 
     if (!getIt.isRegistered<NegotiationFilterCubit>()) {
       getIt.registerFactory<NegotiationFilterCubit>(() => NegotiationFilterCubit());
@@ -82,8 +104,11 @@ void main() {
 
   Widget wrap() => MaterialApp(
         theme: AppTheme.light,
-        home: BlocProvider<NegotiationListBloc>.value(
-          value: bloc,
+        home: MultiBlocProvider(
+          providers: [
+            BlocProvider<NegotiationListBloc>.value(value: bloc),
+            BlocProvider<AuthBloc>.value(value: authBloc),
+          ],
           child: const Scaffold(body: MyNegotiationsBody()),
         ),
       );
@@ -158,14 +183,30 @@ void main() {
       expect(find.textContaining('Voyageur tr-'), findsOneWidget);
     });
 
-    testWidgets('affiche le prix actuel', (tester) async {
+    testWidgets('expéditeur → affiche le prix qu\'il paie (gross = net+commission)',
+        (tester) async {
+      // Viewer 'sender-1' ≠ travelerId 'tr-1' → gross exact. net 45 → 45×1.12 = "50,40 €".
       when(() => bloc.state).thenReturn(NegotiationListState(
         status: NegotiationListStatus.loaded,
         threads: [_thread()],
       ));
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
-      expect(find.text('45 €'), findsOneWidget);
+      expect(find.text('50,40 €'), findsOneWidget);
+      expect(find.text('45,00 €'), findsNothing);
+    });
+
+    testWidgets('voyageur → affiche son net', (tester) async {
+      // Viewer = le voyageur 'tr-1' → net exact → "45,00 €".
+      when(() => authBloc.state)
+          .thenReturn(AuthAuthenticated(_user('tr-1')));
+      when(() => bloc.state).thenReturn(NegotiationListState(
+        status: NegotiationListStatus.loaded,
+        threads: [_thread()],
+      ));
+      await tester.pumpWidget(wrap());
+      await tester.pumpAndSettle();
+      expect(find.text('45,00 €'), findsOneWidget);
     });
 
     testWidgets('affiche "R.2/5"', (tester) async {

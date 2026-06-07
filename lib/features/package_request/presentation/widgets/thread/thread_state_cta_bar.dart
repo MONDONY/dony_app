@@ -1,9 +1,12 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
+import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/package_request/presentation/widgets/accept_offer_bottom_sheet.dart';
 import 'package:dony/features/package_request/presentation/widgets/counter_offer_bottom_sheet.dart';
+import 'package:dony/features/package_request/presentation/widgets/payment_recap_bottom_sheet.dart';
 import 'package:dony/features/package_request/presentation/widgets/reject_bottom_sheet.dart';
 import 'package:dony/features/package_request/presentation/widgets/thread/thread_state_banner.dart';
 import 'package:flutter/material.dart';
@@ -27,6 +30,33 @@ class ThreadStateCtaBar extends StatelessWidget {
   bool get _lastFromMe =>
       thread.messages.isNotEmpty &&
       thread.messages.last.fromUserId == viewerUserId;
+
+  /// Sender flow at AWAITING_PAYMENT: complete the post-acceptance details
+  /// (recipient, addresses, declared value, disclaimer) BEFORE paying.
+  ///
+  /// The backend `/checkout` rejects with `request/details-incomplete` if those
+  /// are missing, and for Stripe it would authorise the card before the gate
+  /// fires — so we always route through complete-details first, then open the
+  /// payment recap once the details are saved.
+  Future<void> _completeDetailsThenPay(
+    BuildContext context,
+    NegotiationThread thread,
+  ) async {
+    final bloc = context.read<NegotiationBloc>();
+    // The complete-details screen returns the payment method the sender chose
+    // among the accepted ones (null = cancelled / not completed).
+    final method = await context.push<PaymentMethod>(
+      '/package-requests/${thread.packageRequestId}/complete-details',
+      extra: thread,
+    );
+    if (method == null || !context.mounted) return;
+    await PaymentRecapBottomSheet.show(
+      context,
+      bloc: bloc,
+      thread: thread,
+      paymentMethod: method,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,17 +135,10 @@ class ThreadStateCtaBar extends StatelessWidget {
       case NegotiationThreadStatus.awaitingPayment:
         return _isSender
             ? DonyButton(
-                label:
-                    'Payer ${thread.currentPriceEur.toStringAsFixed(0)} €',
+                label: 'Compléter & payer ${PriceDisplay.eur(thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur))}',
                 onPressed: actionInProgress
                     ? null
-                    : () => AcceptOfferBottomSheet.show(
-                          context,
-                          bloc: context.read<NegotiationBloc>(),
-                          threadId: thread.id,
-                          priceEur: thread.currentPriceEur,
-                          isCheckout: true,
-                        ),
+                    : () => _completeDetailsThenPay(context, thread),
               )
             : const ThreadStateBanner(
                 icon: Icons.payments_outlined,
@@ -125,11 +148,19 @@ class ThreadStateCtaBar extends StatelessWidget {
               );
 
       case NegotiationThreadStatus.accepted:
-        return const ThreadStateBanner(
+        // En cash (et autres modes hors Stripe), le paiement se fait en main
+        // propre à la remise : ne pas afficher « payée ».
+        final bool paidOnline = thread.paymentMethod == null ||
+            thread.paymentMethod == PaymentMethod.stripe;
+        return ThreadStateBanner(
           icon: Icons.check_circle_rounded,
           tint: kSuccess,
-          message: 'Demande acceptée et payée',
-          subtitle: 'Tu peux passer aux étapes suivantes du suivi.',
+          message: paidOnline ? 'Demande acceptée et payée' : 'Demande acceptée',
+          subtitle: paidOnline
+              ? 'Tu peux passer aux étapes suivantes du suivi.'
+              : thread.paymentMethod == PaymentMethod.cash
+                  ? 'Le paiement se fait en espèces à la remise du colis.'
+                  : 'Le paiement se fait à la remise du colis.',
         );
 
       case NegotiationThreadStatus.rejected:
@@ -164,7 +195,7 @@ class _SenderOpenActions extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         DonyButton(
-          label: 'Accepter ${thread.currentPriceEur.toStringAsFixed(0)} €',
+          label: 'Accepter — Tu paies ${PriceDisplay.eur(thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur))}',
           onPressed: actionInProgress
               ? null
               : () => AcceptOfferBottomSheet.show(
@@ -172,27 +203,33 @@ class _SenderOpenActions extends StatelessWidget {
                     bloc: context.read<NegotiationBloc>(),
                     threadId: thread.id,
                     priceEur: thread.currentPriceEur,
+                    grossPriceEur: thread.grossPriceEur,
+                    isTraveler: false,
                   ),
         ),
         const SizedBox(height: 10),
         Row(
           children: [
-            Expanded(
-              child: DonyButton(
-                label: 'Contre-offre',
-                variant: DonyButtonVariant.secondary,
-                onPressed: actionInProgress
-                    ? null
-                    : () => CounterOfferBottomSheet.show(
-                          context,
-                          bloc: context.read<NegotiationBloc>(),
-                          threadId: thread.id,
-                          currentPriceEur: thread.currentPriceEur,
-                          roundsCount: thread.roundsCount,
-                        ),
+            if (thread.canCounter) ...[
+              Expanded(
+                child: DonyButton(
+                  label: 'Contre-offre',
+                  variant: DonyButtonVariant.secondary,
+                  onPressed: actionInProgress
+                      ? null
+                      : () => CounterOfferBottomSheet.show(
+                            context,
+                            bloc: context.read<NegotiationBloc>(),
+                            threadId: thread.id,
+                            currentPriceEur: thread.currentPriceEur,
+                            grossPriceEur: thread.grossPriceEur,
+                            isTraveler: false,
+                            roundsCount: thread.roundsCount,
+                          ),
+                ),
               ),
-            ),
-            const SizedBox(width: 10),
+              const SizedBox(width: 10),
+            ],
             Expanded(
               child: DonyButton(
                 label: 'Rejeter',
@@ -230,7 +267,7 @@ class _TravelerOpenActions extends StatelessWidget {
         // Accept button — visible only when backend says canAccept
         if (thread.canAccept) ...[
           DonyButton(
-            label: 'Accepter ${thread.currentPriceEur.toStringAsFixed(0)} €',
+            label: 'Accepter — Tu reçois ${thread.currentPriceEur.toStringAsFixed(0)} €',
             onPressed: actionInProgress
                 ? null
                 : () => AcceptOfferBottomSheet.show(
@@ -238,6 +275,8 @@ class _TravelerOpenActions extends StatelessWidget {
                       bloc: context.read<NegotiationBloc>(),
                       threadId: thread.id,
                       priceEur: thread.currentPriceEur,
+                      grossPriceEur: thread.grossPriceEur,
+                      isTraveler: true,
                     ),
           ),
           const SizedBox(height: 10),
@@ -269,6 +308,8 @@ class _TravelerOpenActions extends StatelessWidget {
                             bloc: context.read<NegotiationBloc>(),
                             threadId: thread.id,
                             currentPriceEur: thread.currentPriceEur,
+                            grossPriceEur: thread.grossPriceEur,
+                            isTraveler: true,
                             roundsCount: thread.roundsCount,
                           ),
                 ),

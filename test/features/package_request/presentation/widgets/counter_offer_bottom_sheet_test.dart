@@ -63,9 +63,11 @@ void main() {
       expect(find.text('Faire une contre-offre'), findsOneWidget);
     });
 
-    testWidgets('affiche le prix actuel et le round', (tester) async {
+    testWidgets('affiche le prix actuel (format role-aware) et le round',
+        (tester) async {
       await openSheet(tester, currentPriceEur: 50, roundsCount: 2);
-      expect(find.textContaining('50'), findsWidgets);
+      // isTraveler defaults to false → sender sees gross: 50 * 1.12 = 56 → "Tu paies 56,00 €"
+      expect(find.textContaining('56'), findsWidgets);
       expect(find.textContaining('Round 2/5'), findsOneWidget);
     });
 

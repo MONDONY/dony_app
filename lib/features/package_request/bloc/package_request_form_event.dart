@@ -4,6 +4,7 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:equatable/equatable.dart';
 import '../data/models/content_category.dart';
 import '../data/models/parcel_size.dart';
+import '../data/models/payment_method.dart';
 
 sealed class PackageRequestFormEvent extends Equatable {
   const PackageRequestFormEvent();
@@ -61,10 +62,46 @@ class FormStep3Submitted extends PackageRequestFormEvent {
   List<Object?> get props => [targetPriceEur, pickupNeighborhood, deliveryNeighborhood];
 }
 
+/// Dispatched in real-time as the user types a free-text category label.
+/// [label] is the raw string from the text field.
+/// When [label] is null or empty, it means the user cleared the custom field
+/// or switched back to a predefined category.
+class FormStep2CategoryChanged extends PackageRequestFormEvent {
+  const FormStep2CategoryChanged(this.label);
+  final String? label;
+
+  @override
+  List<Object?> get props => [label];
+}
+
 class FormStepBack extends PackageRequestFormEvent {
   const FormStepBack();
 }
 
 class FormReset extends PackageRequestFormEvent {
   const FormReset();
+}
+
+class PackageRequestNegotiableToggled extends PackageRequestFormEvent {
+  const PackageRequestNegotiableToggled(this.value);
+  final bool value;
+
+  @override
+  List<Object?> get props => [value];
+}
+
+class PackageRequestPaymentMethodToggled extends PackageRequestFormEvent {
+  const PackageRequestPaymentMethodToggled(this.method);
+  final PaymentMethod method;
+
+  @override
+  List<Object?> get props => [method];
+}
+
+class PackageRequestTotalBudgetChanged extends PackageRequestFormEvent {
+  const PackageRequestTotalBudgetChanged(this.value);
+  final double? value;
+
+  @override
+  List<Object?> get props => [value];
 }

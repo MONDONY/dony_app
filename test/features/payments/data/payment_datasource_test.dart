@@ -92,6 +92,28 @@ void main() {
       expect(json['status'], 'PENDING');
     });
 
+    // Régression : un colis payé via la négociation (trajet dédié / lié, Stripe)
+    // a son paiement rattaché au THREAD avec bid_id = NULL → le backend renvoie
+    // "bidId": null. Avant le fix, le cast non-nullable jetait, l'erreur était
+    // avalée et l'écran retombait sur le bouton "Payer mon envoi" sur un colis
+    // pourtant déjà payé (escrow).
+    test('fromJson parses a negotiation/thread payment with null bidId (ESCROW)', () {
+      final m = PaymentModel.fromJson({
+        ..._paymentJson,
+        'bidId': null,
+        'status': 'ESCROW',
+      });
+      expect(m.bidId, isNull);
+      expect(m.status, PaymentStatus.escrow);
+      expect(m.amount, 120.0);
+    });
+
+    test('fromJson with missing bidId does not throw', () {
+      final json = Map<String, dynamic>.from(_paymentJson)..remove('bidId');
+      final m = PaymentModel.fromJson(json);
+      expect(m.bidId, isNull);
+    });
+
     test('int amounts coerce to double', () {
       final m = PaymentModel.fromJson({..._paymentJson, 'amount': 100, 'commissionAmount': 12});
       expect(m.amount, 100.0);

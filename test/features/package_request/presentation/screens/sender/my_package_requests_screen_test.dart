@@ -11,7 +11,6 @@ import 'package:dony/features/package_request/presentation/screens/sender/my_pac
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get_it/get_it.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -163,14 +162,18 @@ void main() {
       expect(find.text('NÉGOCIATION'), findsOneWidget);
     });
 
-    testWidgets('affiche le badge ACCEPTÉE pour status=accepted', (tester) async {
+    testWidgets(
+        'n\'affiche pas les demandes acceptées (parties dans Envois)',
+        (tester) async {
       when(() => bloc.state).thenReturn(PackageRequestState(
         status: PackageRequestListStatus.loaded,
         requests: [_request(status: PackageRequestStatus.accepted)],
       ));
       await tester.pumpWidget(wrapCard(_request()));
       await tester.pumpAndSettle();
-      expect(find.text('ACCEPTÉE'), findsOneWidget);
+      // La carte n'est pas rendue → on retombe sur l'état vide global.
+      expect(find.text('ACCEPTÉE'), findsNothing);
+      expect(find.text('Tu n\'as encore rien envoyé'), findsOneWidget);
     });
 
     testWidgets('affiche le badge EXPIRÉE pour status=expired', (tester) async {
@@ -213,7 +216,7 @@ void main() {
     );
     final abidjanRequest = _request(
       arrivalCity: 'Abidjan',
-      status: PackageRequestStatus.accepted,
+      status: PackageRequestStatus.cancelled,
     );
 
     setUp(() {
@@ -247,7 +250,7 @@ void main() {
       expect(find.text('Paris → Dakar'), findsNothing);
     });
 
-    testWidgets('le chip Acceptées filtre par statut accepted',
+    testWidgets('le chip Terminées filtre les demandes terminées (annulées/expirées)',
         (tester) async {
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
@@ -256,11 +259,11 @@ void main() {
       expect(find.text('Paris → Dakar'), findsOneWidget);
       expect(find.text('Paris → Abidjan'), findsOneWidget);
 
-      // Tap "Acceptées" chip
-      await tester.tap(find.text('Acceptées (1)'));
+      // Tap "Terminées" chip (1 = Abidjan annulée)
+      await tester.tap(find.text('Terminées (1)'));
       await tester.pumpAndSettle();
 
-      // Only accepted (Abidjan) should be visible
+      // Only the closed request (Abidjan cancelled) should be visible
       expect(find.text('Paris → Abidjan'), findsOneWidget);
       expect(find.text('Paris → Dakar'), findsNothing);
     });
@@ -281,7 +284,6 @@ void main() {
 
   group('_StatusBadge — tous les statuts', () {
     for (final entry in [
-      (PackageRequestStatus.completed, 'LIVRÉE'),
       (PackageRequestStatus.cancelled, 'ANNULÉE'),
     ]) {
       final status = entry.$1;
@@ -299,17 +301,7 @@ void main() {
     }
   });
 
-  group('_CardAction — statut accepted affiche « Compléter → »', () {
-    testWidgets('affiche "Compléter →" pour status=accepted', (tester) async {
-      when(() => bloc.state).thenReturn(PackageRequestState(
-        status: PackageRequestListStatus.loaded,
-        requests: [_request(status: PackageRequestStatus.accepted)],
-      ));
-      await tester.pumpWidget(wrap());
-      await tester.pumpAndSettle();
-      expect(find.textContaining('Compléter'), findsOneWidget);
-    });
-
+  group('_CardAction — pas de CTA « Compléter » (détails faits au paiement)', () {
     testWidgets('n\'affiche pas de CTA pour status=expired', (tester) async {
       when(() => bloc.state).thenReturn(PackageRequestState(
         status: PackageRequestListStatus.loaded,
@@ -392,7 +384,7 @@ void main() {
         (tester) async {
       when(() => bloc.state).thenReturn(PackageRequestState(
         status: PackageRequestListStatus.loaded,
-        requests: [_request(status: PackageRequestStatus.accepted)],
+        requests: [_request(status: PackageRequestStatus.cancelled)],
       ));
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
@@ -403,7 +395,7 @@ void main() {
       expect(find.text('Aucune demande ouverte'), findsOneWidget);
     });
 
-    testWidgets('chip Acceptées + aucune acceptée affiche « Aucune demande acceptée »',
+    testWidgets('chip Terminées + aucune terminée affiche « Aucune demande terminée »',
         (tester) async {
       when(() => bloc.state).thenReturn(PackageRequestState(
         status: PackageRequestListStatus.loaded,
@@ -412,10 +404,10 @@ void main() {
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Acceptées (0)'));
+      await tester.tap(find.text('Terminées (0)'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Aucune demande acceptée'), findsOneWidget);
+      expect(find.text('Aucune demande terminée'), findsOneWidget);
     });
 
     testWidgets('preset=all + aucun résultat après recherche affiche « Aucune demande »',
@@ -479,25 +471,27 @@ void main() {
       verify(() => bloc.add(const FetchMyRequests())).called(greaterThanOrEqualTo(1));
     });
 
-    testWidgets('taper « Modifier → » sur une card open montre la snackbar',
+    testWidgets('« Modifier → » expose la clé d\'édition (open) et plus de placeholder',
         (tester) async {
+      final req = _request(status: PackageRequestStatus.open);
       when(() => bloc.state).thenReturn(PackageRequestState(
         status: PackageRequestListStatus.loaded,
-        requests: [_request(status: PackageRequestStatus.open)],
+        requests: [req],
       ));
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
-      await tester.tap(find.textContaining('Modifier'));
-      await tester.pump();
-      expect(find.text('Modification à venir'), findsOneWidget);
+      // Le bouton d'édition est câblé (ouvre le wizard pré-rempli).
+      expect(find.byKey(Key('edit-request-${req.id}')), findsOneWidget);
+      // L'ancien placeholder « Modification à venir » n'existe plus.
+      expect(find.text('Modification à venir'), findsNothing);
     });
   });
 
   group('chip Toutes et onClear', () {
-    testWidgets('chip Toutes réinitialise le filtre depuis Acceptées', (tester) async {
+    testWidgets('chip Toutes réinitialise le filtre depuis Terminées', (tester) async {
       final requests = [
         _request(arrivalCity: 'Dakar', status: PackageRequestStatus.open),
-        _request(arrivalCity: 'Abidjan', status: PackageRequestStatus.accepted),
+        _request(arrivalCity: 'Abidjan', status: PackageRequestStatus.cancelled),
       ];
       when(() => bloc.state).thenReturn(PackageRequestState(
         status: PackageRequestListStatus.loaded,
@@ -506,12 +500,12 @@ void main() {
       await tester.pumpWidget(wrap());
       await tester.pumpAndSettle();
 
-      // Filter by accepted
-      await tester.tap(find.text('Acceptées (1)'));
+      // Filtrer sur Terminées (Abidjan annulée)
+      await tester.tap(find.text('Terminées (1)'));
       await tester.pumpAndSettle();
       expect(find.text('Paris → Dakar'), findsNothing);
 
-      // Tap Toutes to reset
+      // Tap Toutes pour réinitialiser
       await tester.tap(find.text('Toutes (2)'));
       await tester.pumpAndSettle();
 

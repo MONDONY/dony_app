@@ -5,20 +5,29 @@ import 'package:dony/features/matching/data/models/bid_quote_response.dart';
 
 abstract class BidState {}
 
-/// Helper exposant les bids actifs du sender courant indexés par
-/// `announcementId`. Couvre tous les statuts qui signifient qu'une demande
-/// est déjà en cours : AWAITING_PAYMENT (paiement non encore effectué),
-/// PENDING (en attente de réponse du voyageur), PAYMENT_ESCROWED et ACCEPTED.
+/// Helper exposant le colis « en cours » du sender courant indexé par
+/// `announcementId`. Couvre TOUS les statuts non terminés-négatifs : de la
+/// demande jusqu'à la livraison — un colis EN ROUTE (`IN_TRANSIT`/`HANDED_OVER`)
+/// ou LIVRÉ (`COMPLETED`) signifie aussi que l'expéditeur a déjà un colis sur ce
+/// trajet et ne doit pas pouvoir en redéposer un. Exclut REJECTED / CANCELLED /
+/// NO_SHOW (pas de colis effectif).
 extension MyActiveBidsLookup on BidState {
+  static const ongoingBidStatuses = {
+    'AWAITING_PAYMENT',
+    'PENDING',
+    'PAYMENT_ESCROWED',
+    'ACCEPTED',
+    'HANDED_OVER',
+    'IN_TRANSIT',
+    'COMPLETED',
+  };
+
   Map<String, BidModel> activeBidsByAnnouncement() {
     final state = this;
     if (state is! BidListLoaded) return const {};
     final result = <String, BidModel>{};
     for (final bid in state.bids) {
-      if (bid.status == 'AWAITING_PAYMENT' ||
-          bid.status == 'PENDING' ||
-          bid.status == 'PAYMENT_ESCROWED' ||
-          bid.status == 'ACCEPTED') {
+      if (ongoingBidStatuses.contains(bid.status)) {
         result[bid.announcementId] = bid;
       }
     }

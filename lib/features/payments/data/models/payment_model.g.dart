@@ -8,7 +8,7 @@ part of 'payment_model.dart';
 
 PaymentModel _$PaymentModelFromJson(Map<String, dynamic> json) => PaymentModel(
   id: json['id'] as String,
-  bidId: json['bidId'] as String,
+  bidId: json['bidId'] as String?,
   clientSecret: json['clientSecret'] as String?,
   amount: (json['amount'] as num).toDouble(),
   commissionAmount: (json['commissionAmount'] as num).toDouble(),

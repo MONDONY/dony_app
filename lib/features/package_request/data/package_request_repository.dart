@@ -8,6 +8,7 @@ import 'package:dony/features/package_request/data/models/negotiation_thread.dar
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 
 class PackageRequestPage {
   const PackageRequestPage({
@@ -88,8 +89,10 @@ class PackageRequestRepository {
     required ParcelSize parcelSize,
     required TransportMode transportMode,
     required ContentCategory contentCategory,
+    required bool negotiable,
+    required Set<PaymentMethod> acceptedPaymentMethods,
+    double? totalBudgetEur,
     String? description,
-    double? targetPriceEur,
     String? photoUrl,
     String? pickupNeighborhood,
     String? deliveryNeighborhood,
@@ -105,11 +108,59 @@ class PackageRequestRepository {
         'parcelSize': parcelSize.wireName,
         'transportMode': transportModeToWire(transportMode),
         'contentCategory': contentCategory.wireName,
+        'negotiable': negotiable,
+        'acceptedPaymentMethods':
+            acceptedPaymentMethods.map((m) => m.wireName).toList(),
+        if (totalBudgetEur != null) 'totalBudgetEur': totalBudgetEur,
         if (description != null) 'description': description,
-        if (targetPriceEur != null) 'targetPriceEur': targetPriceEur,
         if (photoUrl != null) 'photoUrl': photoUrl,
         if (pickupNeighborhood != null) 'pickupNeighborhood': pickupNeighborhood,
         if (deliveryNeighborhood != null) 'deliveryNeighborhood': deliveryNeighborhood,
+      },
+    );
+    return PackageRequest.fromJson(response.data!);
+  }
+
+  /// Modifie une demande existante (PUT). Autorisé tant qu'aucun accord n'a été
+  /// conclu (OPEN/NEGOTIATING côté backend) ; sinon 409 `request/not-editable`.
+  Future<PackageRequest> update(
+    String id, {
+    required String departureCity,
+    required String arrivalCity,
+    required DateTime desiredDate,
+    required int dateToleranceDays,
+    required double weightKg,
+    required ParcelSize parcelSize,
+    required TransportMode transportMode,
+    required ContentCategory contentCategory,
+    required bool negotiable,
+    required Set<PaymentMethod> acceptedPaymentMethods,
+    double? totalBudgetEur,
+    String? description,
+    String? photoUrl,
+    String? pickupNeighborhood,
+    String? deliveryNeighborhood,
+  }) async {
+    final response = await _apiClient.dio.put<Map<String, dynamic>>(
+      '/package-requests/$id',
+      data: {
+        'departureCity': departureCity,
+        'arrivalCity': arrivalCity,
+        'desiredDate': desiredDate.toIso8601String().substring(0, 10),
+        'dateToleranceDays': dateToleranceDays,
+        'weightKg': weightKg,
+        'parcelSize': parcelSize.wireName,
+        'transportMode': transportModeToWire(transportMode),
+        'contentCategory': contentCategory.wireName,
+        'negotiable': negotiable,
+        'acceptedPaymentMethods':
+            acceptedPaymentMethods.map((m) => m.wireName).toList(),
+        if (totalBudgetEur != null) 'totalBudgetEur': totalBudgetEur,
+        if (description != null) 'description': description,
+        if (photoUrl != null) 'photoUrl': photoUrl,
+        if (pickupNeighborhood != null) 'pickupNeighborhood': pickupNeighborhood,
+        if (deliveryNeighborhood != null)
+          'deliveryNeighborhood': deliveryNeighborhood,
       },
     );
     return PackageRequest.fromJson(response.data!);
@@ -144,30 +195,17 @@ class PackageRequestRepository {
 
   Future<PackageRequest> completeDetails(
     String id, {
-    required String pickupAddressLabel,
-    required double pickupLat,
-    required double pickupLng,
-    required String deliveryAddressLabel,
-    required double deliveryLat,
-    required double deliveryLng,
     required String recipientName,
     required String recipientPhone,
-    required double declaredValueEur,
-    required bool disclaimerSigned,
+    String? recipientCity,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/package-requests/$id/complete-details',
       data: {
-        'pickupAddressLabel': pickupAddressLabel,
-        'pickupLat': pickupLat,
-        'pickupLng': pickupLng,
-        'deliveryAddressLabel': deliveryAddressLabel,
-        'deliveryLat': deliveryLat,
-        'deliveryLng': deliveryLng,
         'recipientName': recipientName,
         'recipientPhone': recipientPhone,
-        'declaredValueEur': declaredValueEur,
-        'disclaimerSigned': disclaimerSigned,
+        if (recipientCity != null && recipientCity.isNotEmpty)
+          'recipientCity': recipientCity,
       },
     );
     return PackageRequest.fromJson(response.data!);

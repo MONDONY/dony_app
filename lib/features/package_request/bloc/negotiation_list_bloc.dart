@@ -7,10 +7,10 @@ import '../data/negotiation_repository.dart';
 /// BLoC managing the viewer's list of negotiation threads.
 ///
 /// Used by:
-/// - `MyNegotiationsBody` to render the list under the "Négos" tab of
-///   `EnvoyerHubScreen`.
-/// - `_CountedTab` "Négos" in `EnvoyerHubScreen` to display the active thread
-///   count badge (matching the maquette's "1 demande · 2 nouvelles négos").
+/// - `MyNegotiationsBody` (standalone `MyNegotiationsScreen`, route
+///   `/negotiations`, accessible depuis le profil) to render the full list.
+/// - `EnvoyerHubScreen` to drive the "Demandes" tab badge — nouvelles offres +
+///   contre-propositions reçues depuis la dernière visite de l'onglet.
 ///
 /// Active threads = anything in OPEN / AWAITING_TRIP / AWAITING_PAYMENT (i.e.
 /// still requiring attention). Terminal states (accepted, rejected, expired,

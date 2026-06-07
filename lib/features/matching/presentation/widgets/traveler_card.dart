@@ -34,13 +34,25 @@ class TravelerCard extends StatelessWidget {
   ({Color border, Color chipBg, Color chipFg, String label}) _bidStyle(ColorScheme cs) {
     switch (existingBidStatus) {
       case 'ACCEPTED':
+      case 'PAYMENT_ESCROWED':
         return (
           border: cs.success,
           chipBg: cs.successLight,
           chipFg: cs.success,
           label: 'Demande acceptée',
         );
+      // Colis déjà en cours sur ce trajet (remis / en route / livré).
+      case 'HANDED_OVER':
+      case 'IN_TRANSIT':
+      case 'COMPLETED':
+        return (
+          border: cs.primary,
+          chipBg: cs.primaryContainer,
+          chipFg: cs.primary,
+          label: 'Colis sur ce trajet',
+        );
       case 'PENDING':
+      case 'AWAITING_PAYMENT':
       default:
         return (
           border: cs.warning,

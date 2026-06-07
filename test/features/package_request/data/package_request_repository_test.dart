@@ -4,6 +4,7 @@ import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/data/models/content_category.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -69,11 +70,51 @@ void main() {
         parcelSize: ParcelSize.small,
         transportMode: TransportMode.plane,
         contentCategory: ContentCategory.vetements,
+        negotiable: true,
+        acceptedPaymentMethods: {PaymentMethod.stripe},
       );
 
       expect(result.id, 'pr-1');
       expect(result.parcelSize, ParcelSize.small);
       expect(result.status, PackageRequestStatus.open);
+    });
+
+    test('create payload includes negotiable, acceptedPaymentMethods and totalBudgetEur', () async {
+      Map<String, dynamic>? capturedBody;
+
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/package-requests',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedBody = invocation.namedArguments[#data] as Map<String, dynamic>;
+        return _ok(_prJson, '/package-requests');
+      });
+
+      await repo.create(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        desiredDate: DateTime(2026, 6, 15),
+        dateToleranceDays: 2,
+        weightKg: 5.0,
+        parcelSize: ParcelSize.small,
+        transportMode: TransportMode.plane,
+        contentCategory: ContentCategory.vetements,
+        negotiable: true,
+        acceptedPaymentMethods: {PaymentMethod.stripe, PaymentMethod.cash},
+        totalBudgetEur: 50.0,
+      );
+
+      expect(capturedBody, isNotNull);
+      expect(capturedBody!['negotiable'], true);
+      expect(capturedBody!['totalBudgetEur'], 50.0);
+      final methods = capturedBody!['acceptedPaymentMethods'] as List<dynamic>;
+      expect(methods, containsAll(['STRIPE', 'CASH']));
+      // Régression : le backend exige parcelSize + transportMode (@NotNull).
+      // Les omettre renvoyait un 422 « Validation failed » à la publication.
+      expect(capturedBody!['parcelSize'], 'SMALL');
+      expect(capturedBody!['transportMode'], 'PLANE');
     });
   });
 
@@ -120,6 +161,86 @@ void main() {
       );
 
       await expectLater(repo.cancel('pr-1'), completes);
+    });
+  });
+
+  group('completeDetails', () {
+    test('POSTs recipientName, recipientPhone and recipientCity', () async {
+      Map<String, dynamic>? capturedBody;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/package-requests/pr-1/complete-details',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedBody = invocation.namedArguments[#data] as Map<String, dynamic>;
+        return _ok(_prJson, '/package-requests/pr-1/complete-details');
+      });
+
+      final result = await repo.completeDetails(
+        'pr-1',
+        recipientName: 'Fatou Diop',
+        recipientPhone: '+221771234567',
+        recipientCity: 'Dakar',
+      );
+
+      expect(result.id, 'pr-1');
+      expect(capturedBody, isNotNull);
+      expect(capturedBody!['recipientName'], 'Fatou Diop');
+      expect(capturedBody!['recipientPhone'], '+221771234567');
+      expect(capturedBody!['recipientCity'], 'Dakar');
+      // Removed legacy fields must not be sent.
+      expect(capturedBody!.containsKey('pickupAddressLabel'), false);
+      expect(capturedBody!.containsKey('pickupLat'), false);
+      expect(capturedBody!.containsKey('pickupLng'), false);
+      expect(capturedBody!.containsKey('deliveryAddressLabel'), false);
+      expect(capturedBody!.containsKey('deliveryLat'), false);
+      expect(capturedBody!.containsKey('deliveryLng'), false);
+      expect(capturedBody!.containsKey('declaredValueEur'), false);
+      expect(capturedBody!.containsKey('disclaimerSigned'), false);
+    });
+
+    test('omits recipientCity when null', () async {
+      Map<String, dynamic>? capturedBody;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/package-requests/pr-1/complete-details',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedBody = invocation.namedArguments[#data] as Map<String, dynamic>;
+        return _ok(_prJson, '/package-requests/pr-1/complete-details');
+      });
+
+      await repo.completeDetails(
+        'pr-1',
+        recipientName: 'Fatou Diop',
+        recipientPhone: '+221771234567',
+      );
+
+      expect(capturedBody!.containsKey('recipientCity'), false);
+    });
+
+    test('omits recipientCity when empty string', () async {
+      Map<String, dynamic>? capturedBody;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/package-requests/pr-1/complete-details',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedBody = invocation.namedArguments[#data] as Map<String, dynamic>;
+        return _ok(_prJson, '/package-requests/pr-1/complete-details');
+      });
+
+      await repo.completeDetails(
+        'pr-1',
+        recipientName: 'Fatou Diop',
+        recipientPhone: '+221771234567',
+        recipientCity: '',
+      );
+
+      expect(capturedBody!.containsKey('recipientCity'), false);
     });
   });
 

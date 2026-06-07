@@ -31,7 +31,7 @@ void main() {
   PackageRequestFormBloc makeBloc({bool enabled = true}) {
     final a = enabled ? makeEnabledAnalytics(backend) : makeDisabledAnalytics(backend);
     a.onConfigured();
-    return PackageRequestFormBloc(repo, a);
+    return PackageRequestFormBloc(repo, analytics: a);
   }
 
   final fakeRequest = PackageRequest(
@@ -57,13 +57,15 @@ void main() {
           dateToleranceDays: any(named: 'dateToleranceDays'),
           weightKg: any(named: 'weightKg'),
           parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
           contentCategory: any(named: 'contentCategory'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
           description: any(named: 'description'),
-          targetPriceEur: any(named: 'targetPriceEur'),
           photoUrl: any(named: 'photoUrl'),
           pickupNeighborhood: any(named: 'pickupNeighborhood'),
           deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
-          transportMode: any(named: 'transportMode'),
         )).thenAnswer((_) async => fakeRequest);
 
     final bloc = makeBloc();
@@ -88,7 +90,11 @@ void main() {
 
     verify(() => backend.capture(
           AnalyticsEvents.packageRequestCreated,
-          {'corridor': 'Paris→Dakar'},
+          {
+            'corridor': 'Paris→Dakar',
+            'negotiable': true,
+            'payment_methods': ['STRIPE'],
+          },
         )).called(1);
   });
 
@@ -100,13 +106,15 @@ void main() {
           dateToleranceDays: any(named: 'dateToleranceDays'),
           weightKg: any(named: 'weightKg'),
           parcelSize: any(named: 'parcelSize'),
+          transportMode: any(named: 'transportMode'),
           contentCategory: any(named: 'contentCategory'),
+          negotiable: any(named: 'negotiable'),
+          acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
+          totalBudgetEur: any(named: 'totalBudgetEur'),
           description: any(named: 'description'),
-          targetPriceEur: any(named: 'targetPriceEur'),
           photoUrl: any(named: 'photoUrl'),
           pickupNeighborhood: any(named: 'pickupNeighborhood'),
           deliveryNeighborhood: any(named: 'deliveryNeighborhood'),
-          transportMode: any(named: 'transportMode'),
         )).thenAnswer((_) async => fakeRequest);
 
     final bloc = makeBloc(enabled: false);

@@ -6,7 +6,6 @@ import 'package:dony/features/referral/bloc/referral_state.dart';
 import 'package:dony/features/referral/data/models/referral_info.dart';
 import 'package:dony/features/referral/data/referral_repository.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import '../../../helpers/mock_analytics_backend.dart';

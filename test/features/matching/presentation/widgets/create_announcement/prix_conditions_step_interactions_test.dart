@@ -54,6 +54,9 @@ Widget _host({
   TextEditingController? customAcceptedCtrl,
   TextEditingController? refusedCtrl,
   TextEditingController? customPriceCtrl,
+  bool lockPrice = false,
+  double? lockedTotalPriceEur,
+  bool showPaymentMethods = true,
 }) {
   final mockStripeBloc = _MockStripeAccountBloc();
   final resolvedStripeState = stripeState ?? _stripeConfiguredState;
@@ -90,6 +93,9 @@ Widget _host({
             customAcceptedCtrl: customAcceptedCtrl ?? TextEditingController(),
             refusedCtrl: refusedCtrl ?? TextEditingController(),
             customPriceCtrl: customPriceCtrl ?? TextEditingController(),
+            lockPrice: lockPrice,
+            lockedTotalPriceEur: lockedTotalPriceEur,
+            showPaymentMethods: showPaymentMethods,
           ),
         ),
       ),
@@ -396,6 +402,54 @@ void main() {
 
       // Maintenant 5/500
       expect(find.text('5/500'), findsOneWidget);
+    });
+  });
+
+  group('verrouillage du prix (lockPrice)', () {
+    testWidgets('lockPrice masque la section prix et affiche la note', (tester) async {
+      await tester.pumpWidget(_host(lockPrice: true));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('locked-price-note')), findsOneWidget);
+      // La section "Prix par kg" éditable est masquée.
+      expect(find.text('Prix par kg'), findsNothing);
+    });
+
+    testWidgets('sans lockPrice, la section prix est visible (pas de note)',
+        (tester) async {
+      await tester.pumpWidget(_host());
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('locked-price-note')), findsNothing);
+      expect(find.text('Prix par kg'), findsWidgets);
+    });
+
+    testWidgets(
+        'lockPrice + lockedTotalPriceEur → carte « Prix total convenu » (et pas la note)',
+        (tester) async {
+      await tester.pumpWidget(
+          _host(lockPrice: true, lockedTotalPriceEur: 150));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('locked-agreed-price-card')), findsOneWidget);
+      expect(find.text('Prix total convenu'), findsOneWidget);
+      expect(find.text('150 €'), findsOneWidget);
+      // La note générique n'est PAS affichée quand un montant convenu existe.
+      expect(find.byKey(const Key('locked-price-note')), findsNothing);
+    });
+  });
+
+  group('section paiement (showPaymentMethods)', () {
+    testWidgets('showPaymentMethods=false masque la section paiement',
+        (tester) async {
+      await tester.pumpWidget(_host(showPaymentMethods: false));
+      await tester.pumpAndSettle();
+      expect(find.text('Modes de paiement acceptés'), findsNothing);
+      expect(find.byKey(const Key('payment-method-stripe')), findsNothing);
+      expect(find.byKey(const Key('payment-method-cash')), findsNothing);
+    });
+
+    testWidgets('par défaut, la section paiement est visible', (tester) async {
+      await tester.pumpWidget(_host());
+      await tester.pumpAndSettle();
+      expect(find.text('Modes de paiement acceptés'), findsOneWidget);
     });
   });
 }

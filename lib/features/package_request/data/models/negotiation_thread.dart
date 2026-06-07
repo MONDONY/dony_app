@@ -1,5 +1,6 @@
 import 'package:dony/features/package_request/data/models/linked_trip_summary.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:equatable/equatable.dart';
 
 enum NegotiationThreadStatus {
@@ -32,6 +33,8 @@ class NegotiationThread extends Equatable {
     required this.lastActivityAt,
     required this.createdAt,
     required this.messages,
+    this.grossPriceEur,
+    this.paymentMethod,
     this.paymentIntentClientSecret,
     // Profil voyageur — inclus par le back-end dans certains endpoints
     this.travelerName,
@@ -63,6 +66,8 @@ class NegotiationThread extends Equatable {
   final DateTime lastActivityAt;
   final DateTime createdAt;
   final List<NegotiationMessage> messages;
+  final double? grossPriceEur;
+  final PaymentMethod? paymentMethod;
   final String? paymentIntentClientSecret;
 
   // Optionnels — présents quand le back-end les embed
@@ -100,6 +105,10 @@ class NegotiationThread extends Equatable {
                 ?.map((e) => NegotiationMessage.fromJson(e as Map<String, dynamic>))
                 .toList() ??
             const [],
+        grossPriceEur: (json['grossPriceEur'] as num?)?.toDouble(),
+        paymentMethod: json['paymentMethod'] != null
+            ? PaymentMethod.fromWire(json['paymentMethod'] as String)
+            : null,
         paymentIntentClientSecret: json['paymentIntentClientSecret'] as String?,
         travelerName: json['travelerName'] as String?,
         travelerRating: (json['travelerRating'] as num?)?.toDouble(),
@@ -123,7 +132,7 @@ class NegotiationThread extends Equatable {
         id, packageRequestId, travelerId, travelerAnnouncementId,
         travelerTravelDate, travelerAvailableKg,
         status, currentPriceEur, roundsCount, lastActivityAt, createdAt,
-        messages, paymentIntentClientSecret,
+        messages, grossPriceEur, paymentMethod, paymentIntentClientSecret,
         travelerName, travelerRating, travelerTripsCount, travelerPhotoUrl,
         departureCity, arrivalCity, weightKg, senderName,
         isMyTurn, canAccept, canCounter, roundsRemaining,

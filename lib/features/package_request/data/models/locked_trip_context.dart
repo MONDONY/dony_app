@@ -1,4 +1,5 @@
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:equatable/equatable.dart';
 
 /// Locks the corridor / weight / transport mode / agreed price of a brand-new
@@ -16,6 +17,7 @@ class LockedTripContext extends Equatable {
     required this.weightKg,
     required this.transportMode,
     required this.agreedPriceEur,
+    this.paymentMethod = PaymentMethod.stripe,
   });
 
   final String threadId;
@@ -27,6 +29,8 @@ class LockedTripContext extends Equatable {
   final double weightKg;
   final TransportMode transportMode;
   final double agreedPriceEur;
+  /// The payment method selected by the traveler in the link-trip screen.
+  final PaymentMethod paymentMethod;
 
   DateTime get earliestDate => desiredDate.subtract(Duration(days: dateToleranceDays));
   DateTime get latestDate => desiredDate.add(Duration(days: dateToleranceDays));
@@ -37,5 +41,6 @@ class LockedTripContext extends Equatable {
         departureCity, arrivalCity,
         desiredDate, dateToleranceDays,
         weightKg, transportMode, agreedPriceEur,
+        paymentMethod,
       ];
 }

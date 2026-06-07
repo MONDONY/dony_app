@@ -129,6 +129,16 @@ class AnnouncementModel {
   )
   final List<AnnouncementGridItemModel> priceGridItems;
 
+  /// Capacité réservée à la négociation (trajet dédié). `0` pour un trajet
+  /// public classique. `> 0` ⇒ trajet dédié (cf. [isDedicated]).
+  final double reservedKg;
+
+  /// La négociation liée a été payée → le voyageur peut ouvrir le surplus.
+  final bool surplusEligible;
+
+  /// Le surplus a déjà été ouvert au public (action définitive, non répétable).
+  final bool surplusPublished;
+
   const AnnouncementModel({
     required this.id,
     required this.travelerId,
@@ -156,12 +166,22 @@ class AnnouncementModel {
     this.capacityUnit,
     this.pricingMode = 'KG',
     this.priceGridItems = const [],
+    this.reservedKg = 0,
+    this.surplusEligible = false,
+    this.surplusPublished = false,
   });
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) =>
       _$AnnouncementModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$AnnouncementModelToJson(this);
+
+  /// Trajet dédié : une part de la capacité est réservée à une négociation.
+  bool get isDedicated => reservedKg > 0;
+
+  /// Le voyageur peut ouvrir le surplus : la négo est payée mais le surplus
+  /// n'a pas encore été publié.
+  bool get canOpenSurplus => surplusEligible && !surplusPublished;
 }
 
 String? _transportModeToWireOrNull(TransportMode? mode) =>

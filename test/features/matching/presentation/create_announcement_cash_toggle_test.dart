@@ -1,5 +1,4 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dio/dio.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/address_autocomplete_service.dart';
@@ -25,7 +24,6 @@ import 'package:dony/features/trip_templates/bloc/trip_template_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
@@ -67,17 +65,6 @@ const _validCard = CommissionMethod(
   expMonth: 12,
   expYear: 2028,
   expirationStatus: ExpirationStatus.valid,
-);
-
-final _testPickupAddress = AddressData(
-  label: '10 rue de Rivoli, Paris',
-  lat: 48.86,
-  lng: 2.35,
-);
-final _testDeliveryAddress = AddressData(
-  label: 'Aéroport CDG, Roissy',
-  lat: 49.01,
-  lng: 2.55,
 );
 
 final _testAnnouncementWithCash = AnnouncementModel(

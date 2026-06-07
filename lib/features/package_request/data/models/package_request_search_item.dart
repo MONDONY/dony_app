@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'content_category.dart';
 import 'parcel_size.dart';
+import 'payment_method.dart';
 
 /// Lightweight item returned by the search endpoint (`GET /package-requests`).
 /// Includes city-level coords (departure/arrival) for map markers and a public
@@ -23,6 +24,8 @@ class PackageRequestSearchItem extends Equatable {
     this.photoUrl,
     this.pickupNeighborhood,
     this.deliveryNeighborhood,
+    this.negotiable = true,
+    this.acceptedPaymentMethods = const {},
     required this.sender,
   });
 
@@ -42,6 +45,8 @@ class PackageRequestSearchItem extends Equatable {
   final String? photoUrl;
   final String? pickupNeighborhood;
   final String? deliveryNeighborhood;
+  final bool negotiable;
+  final Set<PaymentMethod> acceptedPaymentMethods;
   final SenderPublicProfile sender;
 
   factory PackageRequestSearchItem.fromJson(Map<String, dynamic> json) =>
@@ -63,6 +68,9 @@ class PackageRequestSearchItem extends Equatable {
         photoUrl: json['photoUrl'] as String?,
         pickupNeighborhood: json['pickupNeighborhood'] as String?,
         deliveryNeighborhood: json['deliveryNeighborhood'] as String?,
+        negotiable: json['negotiable'] as bool? ?? true,
+        acceptedPaymentMethods: PaymentMethod.setFromJson(
+            json['acceptedPaymentMethods'] as List<dynamic>?),
         sender: SenderPublicProfile.fromJson(
             json['sender'] as Map<String, dynamic>),
       );
@@ -75,6 +83,8 @@ class PackageRequestSearchItem extends Equatable {
         weightKg, parcelSize, contentCategory,
         targetPriceEur, photoUrl,
         pickupNeighborhood, deliveryNeighborhood,
+        negotiable,
+        acceptedPaymentMethods,
         sender,
       ];
 }

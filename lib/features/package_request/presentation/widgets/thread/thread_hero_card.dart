@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -91,10 +92,16 @@ class ThreadHeroCard extends StatelessWidget {
     super.key,
     required this.thread,
     required this.statusVariant,
+    required this.isTraveler,
   });
 
   final NegotiationThread thread;
   final ThreadStatusVariant statusVariant;
+
+  /// Whether the current viewer is the traveler.
+  /// - Traveler sees "Tu reçois X €" (net = currentPriceEur)
+  /// - Sender sees "Tu paies X €" (gross = grossPriceEur or computed)
+  final bool isTraveler;
 
   @override
   Widget build(BuildContext context) {
@@ -162,7 +169,11 @@ class ThreadHeroCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '${thread.currentPriceEur.toStringAsFixed(0)} €',
+                            PriceDisplay.threadPriceLabel(
+                              thread.currentPriceEur,
+                              thread.grossPriceEur,
+                              isTraveler,
+                            ),
                             style:
                                 Theme.of(context).textTheme.bodyMedium!.copyWith(
                               fontSize: 28,

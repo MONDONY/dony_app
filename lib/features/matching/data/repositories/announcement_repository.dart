@@ -102,6 +102,20 @@ class AnnouncementRepository {
     return _remoteDatasource.deleteAnnouncement(id);
   }
 
+  /// Ouvre au public la capacité excédentaire d'un trajet dédié, puis renvoie
+  /// l'annonce rechargée (le back répond 204 sans corps).
+  Future<AnnouncementModel> openSurplus({
+    required String announcementId,
+    required double surplusKg,
+    required double pricePerKg,
+  }) async {
+    return _remoteDatasource.openSurplus(
+      announcementId: announcementId,
+      surplusKg: surplusKg,
+      pricePerKg: pricePerKg,
+    );
+  }
+
   Future<AnnouncementModel> updateAnnouncement({
     required String id,
     required String departureCity,

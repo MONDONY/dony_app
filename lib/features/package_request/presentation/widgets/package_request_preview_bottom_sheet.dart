@@ -1,7 +1,10 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/data/models/package_request_search_item.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
+import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/presentation/widgets/make_offer_bottom_sheet.dart';
+import 'package:dony/features/package_request/presentation/widgets/payment_methods_chips.dart';
 import 'package:dony/features/package_request/presentation/widgets/sender_public_profile_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -15,12 +18,15 @@ class PackageRequestPreviewBottomSheet {
     required PackageRequestSearchItem item,
     bool isOwnRequest = false,
   }) async {
+    final isFirm = !item.negotiable && item.targetPriceEur != null;
     await DonyBottomSheet.show<void>(
       context,
       stickyBottom: isOwnRequest
           ? null
           : DonyButton(
-              label: 'Faire une offre',
+              label: isFirm
+                  ? 'Prendre à ${PriceDisplay.eur(item.targetPriceEur!)}'
+                  : 'Faire une offre',
               onPressed: () {
                 Navigator.of(context, rootNavigator: true).pop();
                 MakeOfferBottomSheet.show(
@@ -30,6 +36,7 @@ class PackageRequestPreviewBottomSheet {
                   weightKg: item.weightKg,
                   departureCity: item.departureCity,
                   arrivalCity: item.arrivalCity,
+                  isFirmPrice: isFirm,
                 );
               },
             ),
@@ -59,6 +66,13 @@ class _PreviewContent extends StatelessWidget {
             .fadeIn(delay: 60.ms, duration: 260.ms)
             .slideY(begin: 0.04, curve: Curves.easeOutCubic),
         const SizedBox(height: DonySpacing.base),
+        if (item.acceptedPaymentMethods.isNotEmpty) ...[
+          _PaymentSection(methods: item.acceptedPaymentMethods)
+              .animate()
+              .fadeIn(delay: 90.ms, duration: 260.ms)
+              .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+          const SizedBox(height: DonySpacing.base),
+        ],
         _SenderCard(sender: item.sender)
             .animate()
             .fadeIn(delay: 120.ms, duration: 260.ms)
@@ -436,6 +450,34 @@ class _InfoTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ── Section mode de paiement ──────────────────────────────────────────────────
+
+class _PaymentSection extends StatelessWidget {
+  const _PaymentSection({required this.methods});
+  final Set<PaymentMethod> methods;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Mode de paiement',
+          style: tt.labelSmall?.copyWith(
+            color: cs.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.3,
+          ),
+        ),
+        const SizedBox(height: DonySpacing.sm),
+        PaymentMethodsChips(methods: methods),
+      ],
     );
   }
 }

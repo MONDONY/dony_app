@@ -3,8 +3,13 @@ import 'package:equatable/equatable.dart';
 import '../data/models/content_category.dart';
 import '../data/models/package_request.dart';
 import '../data/models/parcel_size.dart';
+import '../data/models/payment_method.dart';
 
 enum FormSubmissionStatus { idle, submitting, success, error }
+
+/// Sentinel used by [PackageRequestFormState.copyWith] to distinguish
+/// "not provided" from an explicitly-passed `null` for [customCategoryLabel].
+const Object _keep = Object();
 
 class PackageRequestFormState extends Equatable {
   const PackageRequestFormState({
@@ -17,14 +22,19 @@ class PackageRequestFormState extends Equatable {
     this.weightKg,
     this.parcelSize,
     this.contentCategory,
+    this.customCategoryLabel,
     this.description,
     this.targetPriceEur,
     this.photoUrl,
     this.pickupNeighborhood,
     this.deliveryNeighborhood,
+    this.negotiable = true,
+    this.acceptedPaymentMethods = const {PaymentMethod.stripe},
+    this.totalBudgetEur,
     this.submissionStatus = FormSubmissionStatus.idle,
     this.errorMessage,
     this.createdRequest,
+    this.editingRequestId,
   });
 
   final int currentStep;
@@ -36,14 +46,28 @@ class PackageRequestFormState extends Equatable {
   final double? weightKg;
   final ParcelSize? parcelSize;
   final ContentCategory? contentCategory;
+
+  /// Free-text label when the user selects "Autre…" and types a custom value.
+  /// Non-null only when [contentCategory] == [ContentCategory.autre] and the
+  /// user has typed something.
+  final String? customCategoryLabel;
+
   final String? description;
   final double? targetPriceEur;
   final String? photoUrl;
   final String? pickupNeighborhood;
   final String? deliveryNeighborhood;
+  final bool negotiable;
+  final Set<PaymentMethod> acceptedPaymentMethods;
+  final double? totalBudgetEur;
   final FormSubmissionStatus submissionStatus;
   final String? errorMessage;
   final PackageRequest? createdRequest;
+
+  /// Non-null en mode édition : id de la demande modifiée (sinon création).
+  final String? editingRequestId;
+
+  bool get isEditing => editingRequestId != null;
 
   PackageRequestFormState copyWith({
     int? currentStep,
@@ -55,14 +79,20 @@ class PackageRequestFormState extends Equatable {
     double? weightKg,
     ParcelSize? parcelSize,
     ContentCategory? contentCategory,
+    // Use a sentinel to allow explicitly clearing customCategoryLabel.
+    Object? customCategoryLabel = _keep,
     String? description,
     double? targetPriceEur,
     String? photoUrl,
     String? pickupNeighborhood,
     String? deliveryNeighborhood,
+    bool? negotiable,
+    Set<PaymentMethod>? acceptedPaymentMethods,
+    double? totalBudgetEur,
     FormSubmissionStatus? submissionStatus,
     String? errorMessage,
     PackageRequest? createdRequest,
+    String? editingRequestId,
   }) =>
       PackageRequestFormState(
         currentStep: currentStep ?? this.currentStep,
@@ -74,21 +104,30 @@ class PackageRequestFormState extends Equatable {
         weightKg: weightKg ?? this.weightKg,
         parcelSize: parcelSize ?? this.parcelSize,
         contentCategory: contentCategory ?? this.contentCategory,
+        customCategoryLabel: customCategoryLabel == _keep
+            ? this.customCategoryLabel
+            : customCategoryLabel as String?,
         description: description ?? this.description,
         targetPriceEur: targetPriceEur ?? this.targetPriceEur,
         photoUrl: photoUrl ?? this.photoUrl,
         pickupNeighborhood: pickupNeighborhood ?? this.pickupNeighborhood,
         deliveryNeighborhood: deliveryNeighborhood ?? this.deliveryNeighborhood,
+        negotiable: negotiable ?? this.negotiable,
+        acceptedPaymentMethods:
+            acceptedPaymentMethods ?? this.acceptedPaymentMethods,
+        totalBudgetEur: totalBudgetEur ?? this.totalBudgetEur,
         submissionStatus: submissionStatus ?? this.submissionStatus,
         errorMessage: errorMessage ?? this.errorMessage,
         createdRequest: createdRequest ?? this.createdRequest,
+        editingRequestId: editingRequestId ?? this.editingRequestId,
       );
 
   @override
   List<Object?> get props => [
         currentStep, departureCity, arrivalCity, desiredDate, dateToleranceDays,
-        transportMode, weightKg, parcelSize, contentCategory, description,
-        targetPriceEur, photoUrl, pickupNeighborhood, deliveryNeighborhood,
-        submissionStatus, errorMessage, createdRequest,
+        transportMode, weightKg, parcelSize, contentCategory, customCategoryLabel,
+        description, targetPriceEur, photoUrl, pickupNeighborhood,
+        deliveryNeighborhood, negotiable, acceptedPaymentMethods, totalBudgetEur,
+        submissionStatus, errorMessage, createdRequest, editingRequestId,
       ];
 }

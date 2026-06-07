@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -145,6 +146,164 @@ void main() {
       );
 
       await expectLater(repo.reject('th-1', reason: 'Not convenient'), completes);
+    });
+  });
+
+  group('getById', () {
+    test('GETs /negotiations/:id and returns NegotiationThread', () async {
+      when(
+        () => mockDio.get<Map<String, dynamic>>('/negotiations/th-1'),
+      ).thenAnswer((_) async => _ok(_threadJson, '/negotiations/th-1'));
+
+      final thread = await repo.getById('th-1');
+      expect(thread.id, 'th-1');
+    });
+  });
+
+  group('submitTrip', () {
+    test('POSTs to /negotiations/:id/submit-trip and returns updated thread',
+        () async {
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/submit-trip',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+          (_) async => _ok(_threadJson, '/negotiations/th-1/submit-trip'));
+
+      final thread = await repo.submitTrip(
+        'th-1',
+        travelerAnnouncementId: 'ann-1',
+        paymentMethod: PaymentMethod.stripe,
+      );
+      expect(thread.id, 'th-1');
+    });
+
+    test('sends useCardForCommission in the body', () async {
+      Map<String, dynamic>? sentData;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/submit-trip',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
+        sentData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
+        return _ok(_threadJson, '/negotiations/th-1/submit-trip');
+      });
+
+      await repo.submitTrip(
+        'th-1',
+        travelerAnnouncementId: 'ann-1',
+        paymentMethod: PaymentMethod.cash,
+        useCardForCommission: true,
+      );
+
+      expect(sentData?['useCardForCommission'], true);
+    });
+  });
+
+  group('initiatePayment', () {
+    test('POSTs to /negotiations/:id/initiate-payment and returns secrets',
+        () async {
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/initiate-payment',
+        ),
+      ).thenAnswer(
+        (_) async => _ok({
+          'clientSecret': 'pi_test_secret',
+          'stripePaymentIntentId': 'pi_test_id',
+        }, '/negotiations/th-1/initiate-payment'),
+      );
+
+      final result = await repo.initiatePayment('th-1');
+      expect(result.clientSecret, 'pi_test_secret');
+      expect(result.paymentIntentId, 'pi_test_id');
+    });
+  });
+
+  group('checkout', () {
+    test('POSTs to /negotiations/:id/checkout and returns thread', () async {
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/checkout',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+          (_) async => _ok(_threadJson, '/negotiations/th-1/checkout'));
+
+      final thread =
+          await repo.checkout('th-1', paymentIntentId: 'pi_test_id');
+      expect(thread.id, 'th-1');
+    });
+
+    test('includes paymentMethod in the body when provided', () async {
+      Map<String, dynamic>? sentData;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/checkout',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
+        sentData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
+        return _ok(_threadJson, '/negotiations/th-1/checkout');
+      });
+
+      await repo.checkout('th-1',
+          paymentIntentId: 'CASH', paymentMethod: PaymentMethod.cash);
+
+      expect(sentData?['paymentIntentId'], 'CASH');
+      expect(sentData?['paymentMethod'], PaymentMethod.cash.wireName);
+    });
+
+    test('omits paymentMethod from the body when not provided', () async {
+      Map<String, dynamic>? sentData;
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/checkout',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer((inv) async {
+        sentData =
+            inv.namedArguments[const Symbol('data')] as Map<String, dynamic>;
+        return _ok(_threadJson, '/negotiations/th-1/checkout');
+      });
+
+      await repo.checkout('th-1', paymentIntentId: 'pi_test_id');
+
+      expect(sentData?.containsKey('paymentMethod'), isFalse);
+    });
+  });
+
+  group('refuseTrip', () {
+    test('POSTs to /negotiations/:id/refuse-trip and returns thread',
+        () async {
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/refuse-trip',
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+          (_) async => _ok(_threadJson, '/negotiations/th-1/refuse-trip'));
+
+      final thread = await repo.refuseTrip('th-1', reason: 'Wrong date');
+      expect(thread.id, 'th-1');
+    });
+
+    test('POSTs to /negotiations/:id/refuse-trip with no data when reason is null',
+        () async {
+      when(
+        () => mockDio.post<Map<String, dynamic>>(
+          '/negotiations/th-1/refuse-trip',
+          data: null,
+        ),
+      ).thenAnswer(
+          (_) async => _ok(_threadJson, '/negotiations/th-1/refuse-trip'));
+
+      final thread = await repo.refuseTrip('th-1');
+      expect(thread.id, 'th-1');
     });
   });
 }

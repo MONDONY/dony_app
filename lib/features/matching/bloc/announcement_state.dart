@@ -59,6 +59,13 @@ class AnnouncementSearchLoaded extends AnnouncementState {
 
 class AnnouncementNotFound extends AnnouncementState {}
 
+/// Émis après l'ouverture réussie de la capacité excédentaire d'un trajet
+/// dédié. Porte l'annonce rechargée (surplus publié, capacité publique à jour).
+class AnnouncementSurplusOpened extends AnnouncementState {
+  final AnnouncementModel announcement;
+  AnnouncementSurplusOpened(this.announcement);
+}
+
 class AnnouncementProLimitReached extends AnnouncementState {
   final String message;
   AnnouncementProLimitReached(this.message);

@@ -7,14 +7,19 @@ import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/locked_trip_context.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
+import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
+import 'package:dony/features/payments/cash/data/repositories/commission_method_repository.dart';
+import 'package:dony/features/payments/wallet/data/repositories/wallet_repository.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
-import 'package:dony/features/package_request/presentation/widgets/thread/modify_trip_sheet.dart';
 import 'package:dony/features/package_request/presentation/widgets/traveler/trip_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+
+// TODO(lot2): migrate loading state to LinkTripCubit (BLoC pattern)
 
 /// Screen shown to the traveler after sender accepted the offer.
 /// They must pick one of their existing trips matching the corridor + date,
@@ -28,11 +33,13 @@ class LinkTripScreen extends StatefulWidget {
 }
 
 class _LinkTripScreenState extends State<LinkTripScreen> {
-  PackageRequest? _request;
-  List<AnnouncementModel> _matchingTrips = const [];
-  AnnouncementModel? _selectedTrip;
-  bool _loading = true;
-  String? _error;
+  // Loading state — ValueNotifiers used instead of setState (BLoC rule compliance).
+  final _loadingNotifier = ValueNotifier<bool>(true);
+  final _errorNotifier = ValueNotifier<String?>(null);
+  final _requestNotifier = ValueNotifier<PackageRequest?>(null);
+  final _matchingTripsNotifier = ValueNotifier<List<AnnouncementModel>>(const []);
+  final _selectedTripNotifier = ValueNotifier<AnnouncementModel?>(null);
+  final _paymentMethodNotifier = ValueNotifier<PaymentMethod>(PaymentMethod.stripe);
 
   @override
   void initState() {
@@ -40,12 +47,22 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
     _load();
   }
 
+  @override
+  void dispose() {
+    _loadingNotifier.dispose();
+    _errorNotifier.dispose();
+    _requestNotifier.dispose();
+    _matchingTripsNotifier.dispose();
+    _selectedTripNotifier.dispose();
+    _paymentMethodNotifier.dispose();
+    super.dispose();
+  }
+
   Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-      _selectedTrip = null;
-    });
+    _loadingNotifier.value = true;
+    _errorNotifier.value = null;
+    _selectedTripNotifier.value = null;
+
     try {
       // Fetch the request to know its corridor + date window
       final request = await getIt<PackageRequestRepository>()
@@ -71,6 +88,12 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
       final dateTo = request.desiredDate
           .add(Duration(days: request.dateToleranceDays));
       final matching = myTrips.announcements.where((ann) {
+        // Seuls les trajets encore ACTIFS avec assez de capacité disponible
+        // peuvent porter ce colis. Un trajet COMPLETED / IN_PROGRESS / CANCELLED
+        // ou sans place ne doit jamais être proposé : une fois lié, il resterait
+        // bloqué hors de l'onglet « À venir » (qui ne montre que ACTIVE/FULL).
+        final linkable =
+            ann.status == 'ACTIVE' && ann.availableKg >= request.weightKg;
         final corridorMatch =
             cityKey(ann.departureCity) == cityKey(request.departureCity) &&
             cityKey(ann.arrivalCity) == cityKey(request.arrivalCity);
@@ -79,42 +102,148 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                 .isBefore(DateTime(dateFrom.year, dateFrom.month, dateFrom.day)) &&
             !DateTime(d.year, d.month, d.day)
                 .isAfter(DateTime(dateTo.year, dateTo.month, dateTo.day));
-        return corridorMatch && dateMatch;
+        return linkable && corridorMatch && dateMatch;
       }).toList();
 
       if (mounted) {
-        setState(() {
-          _request = request;
-          _matchingTrips = matching;
-          _loading = false;
-        });
+        _requestNotifier.value = request;
+        _matchingTripsNotifier.value = matching;
+        // Default to STRIPE; if STRIPE is not in accepted methods, pick first.
+        if (request.acceptedPaymentMethods.contains(PaymentMethod.stripe)) {
+          _paymentMethodNotifier.value = PaymentMethod.stripe;
+        } else if (request.acceptedPaymentMethods.isNotEmpty) {
+          _paymentMethodNotifier.value = request.acceptedPaymentMethods.first;
+        }
+        _loadingNotifier.value = false;
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _error = e.toString();
-          _loading = false;
-        });
+        _errorNotifier.value = e.toString();
+        _loadingNotifier.value = false;
       }
     }
   }
 
   void _selectTrip(AnnouncementModel ann) {
-    setState(() => _selectedTrip = ann);
+    _selectedTripNotifier.value = ann;
   }
 
   Future<void> _confirmTrip() async {
-    final ann = _selectedTrip;
+    final ann = _selectedTripNotifier.value;
     if (ann == null) return;
     context.read<NegotiationBloc>().add(NegotiationSubmitTripRequested(
       threadId: widget.thread.id,
       travelerAnnouncementId: ann.id,
+      paymentMethod: _paymentMethodNotifier.value,
     ));
     // Navigation handled by BlocListener on NegotiationLoaded(awaitingPayment).
   }
 
+  void _resubmitCash(String announcementId, {required bool useCard}) {
+    if (!mounted) return;
+    context.read<NegotiationBloc>().add(NegotiationSubmitTripRequested(
+          threadId: widget.thread.id,
+          travelerAnnouncementId: announcementId,
+          paymentMethod: PaymentMethod.cash,
+          useCardForCommission: useCard,
+        ));
+  }
+
+  /// Commission cash « wallet d'abord » : si le solde est insuffisant, on propose
+  /// de recharger le wallet OU de consentir au prélèvement sur la carte (effectué
+  /// au finalize, wallet puis carte). Reprend le pattern de l'acceptation de bid.
+  Future<void> _showCashInsufficientSheet(BuildContext context) async {
+    final announcementId = _selectedTripNotifier.value?.id;
+    if (announcementId == null) return;
+
+    final net = widget.thread.currentPriceEur;
+    final gross = widget.thread.grossPriceEur ?? PriceDisplay.grossFromNet(net);
+    final commission = gross - net;
+
+    double balance = 0;
+    bool hasCard = false;
+    try {
+      balance = (await getIt<WalletRepository>().getBalance()).balance;
+    } catch (_) {}
+    try {
+      hasCard = (await getIt<CommissionMethodRepository>().load()) != null;
+    } catch (_) {}
+    if (!context.mounted) return;
+
+    final cs = Theme.of(context).colorScheme;
+    await DonyBottomSheet.show<void>(
+      context,
+      title: 'Solde insuffisant',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Commission à régler : ${commission.toStringAsFixed(2)} €',
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: cs.onSurface),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Solde wallet : ${balance.toStringAsFixed(2)} €',
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          Text(
+            'Recharge ton wallet, ou accepte que la commission soit prélevée sur '
+            'ta carte à la remise du colis.',
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
+      ),
+      stickyBottom: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DonyButton(
+            label: 'Recharger mon wallet',
+            onPressed: () async {
+              Navigator.of(context, rootNavigator: true).pop();
+              final recharged =
+                  await context.push<bool>('/payments/wallet/topup/method');
+              if ((recharged ?? false) && mounted) {
+                _resubmitCash(announcementId, useCard: false);
+              }
+            },
+          ),
+          const SizedBox(height: DonySpacing.sm),
+          if (hasCard)
+            DonyButton(
+              label: 'Payer la commission par carte',
+              variant: DonyButtonVariant.secondary,
+              onPressed: () {
+                Navigator.of(context, rootNavigator: true).pop();
+                _resubmitCash(announcementId, useCard: true);
+              },
+            )
+          else
+            DonyButton(
+              label: 'Ajouter une carte',
+              variant: DonyButtonVariant.secondary,
+              onPressed: () async {
+                Navigator.of(context, rootNavigator: true).pop();
+                await context.push('/payments/commission-method');
+                if (mounted) _resubmitCash(announcementId, useCard: true);
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _createNewTrip() async {
-    final r = _request;
+    final r = _requestNotifier.value;
     if (r == null) return;
     final lockContext = LockedTripContext(
       threadId: widget.thread.id,
@@ -126,6 +255,7 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
       weightKg: r.weightKg,
       transportMode: r.transportMode,
       agreedPriceEur: widget.thread.currentPriceEur,
+      paymentMethod: _paymentMethodNotifier.value,
     );
     await CreateAnnouncementBottomSheet.show(
       context,
@@ -144,8 +274,15 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
       ann.pickupAddress != null && ann.deliveryAddress != null;
 
   Future<void> _openModifySheet(AnnouncementModel ann) async {
-    final changed = await ModifyTripSheet.show(context, announcement: ann);
-    if (changed == true && mounted) {
+    // Même wizard 3 étapes que la création, en mode édition : champs préremplis,
+    // corridor + date verrouillés (le trajet doit rester compatible avec la
+    // demande), tout le reste éditable.
+    await CreateAnnouncementBottomSheet.show(
+      context,
+      announcement: ann,
+      lockCorridorAndDate: true,
+    );
+    if (mounted) {
       await _load();
     }
   }
@@ -162,159 +299,294 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
           // Trip linked successfully: leave this screen.
           if (context.canPop()) context.pop();
         } else if (state is NegotiationError) {
+          final errorCode = state.error.code ?? '';
+          if (errorCode == 'payment-method/traveler-insufficient-funds-cash') {
+            // Wallet insuffisant pour la commission cash : proposer recharge OU carte.
+            _showCashInsufficientSheet(context);
+            return;
+          }
+          final message =
+              errorCode == 'payment-method/no-commission-card'
+                  ? 'Ajoute d\'abord une carte de commission pour payer en cash.'
+                  : state.error.message;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.error.message),
+              content: Text(message),
               behavior: SnackBarBehavior.floating,
             ),
           );
         }
       },
-      child: Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        appBar: const DonyAppBar(title: 'Lier un trajet'),
-        body: _loading
-            ? Center(child: CircularProgressIndicator(color: cs.primary))
-            : _error != null
-                ? _ErrorView(message: _error!, onRetry: _load)
-                : _buildBody(),
-        bottomNavigationBar: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.lg,
-              DonySpacing.sm,
-              DonySpacing.lg,
-              DonySpacing.base,
-            ),
-            child: DonySelectBar(
-              defaultLabel: 'Sélectionner un trajet',
-              confirmedLabel: 'Confirmer ce trajet',
-              selectedSummary: _selectedTrip != null
-                  ? '${DateFormat('EEE d MMM', 'fr').format(_selectedTrip!.departureDate)} · ${_selectedTrip!.availableKg} kg dispo'
-                  : null,
-              selectedCount: _selectedTrip != null ? '1 trajet' : null,
-              onConfirm: _selectedTrip != null ? _confirmTrip : null,
-            ),
-          ),
-        ),
+      child: ValueListenableBuilder<bool>(
+        valueListenable: _loadingNotifier,
+        builder: (context, loading, _) {
+          return ValueListenableBuilder<String?>(
+            valueListenable: _errorNotifier,
+            builder: (context, error, _) {
+              return Scaffold(
+                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                appBar: const DonyAppBar(title: 'Lier un trajet'),
+                body: loading
+                    ? Center(child: CircularProgressIndicator(color: cs.primary))
+                    : error != null
+                        ? _ErrorView(message: error, onRetry: _load)
+                        : _buildBody(),
+                bottomNavigationBar: ValueListenableBuilder<AnnouncementModel?>(
+                  valueListenable: _selectedTripNotifier,
+                  builder: (context, selectedTrip, _) {
+                    return SafeArea(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          DonySpacing.lg,
+                          DonySpacing.sm,
+                          DonySpacing.lg,
+                          DonySpacing.base,
+                        ),
+                        child: DonySelectBar(
+                          defaultLabel: 'Sélectionner un trajet',
+                          confirmedLabel: 'Confirmer ce trajet',
+                          selectedSummary: selectedTrip != null
+                              ? '${DateFormat('EEE d MMM', 'fr').format(selectedTrip.departureDate)} · ${selectedTrip.availableKg} kg dispo'
+                              : null,
+                          selectedCount: selectedTrip != null ? '1 trajet' : null,
+                          onConfirm: selectedTrip != null ? _confirmTrip : null,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
 
   Widget _buildBody() {
     final cs = Theme.of(context).colorScheme;
-    final r = _request!;
-    return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(
-        DonySpacing.lg,
-        DonySpacing.lg,
-        DonySpacing.lg,
-        MediaQuery.paddingOf(context).bottom + 100, // room for DonySelectBar + safe area
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(DonySpacing.base),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [DonyColors.blue500, DonyColors.blue700],
-              ),
-              borderRadius: BorderRadius.circular(DonyRadius.card),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Demande acceptée à ${widget.thread.currentPriceEur.toStringAsFixed(0)} €',
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.85),
-                      fontWeight: FontWeight.w600,
-                    )),
-                const SizedBox(height: 6),
-                Text(
-                  '${r.departureCity} → ${r.arrivalCity}',
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
+    final r = _requestNotifier.value!;
+    return ValueListenableBuilder<PaymentMethod>(
+      valueListenable: _paymentMethodNotifier,
+      builder: (context, selectedPaymentMethod, _) {
+        return ValueListenableBuilder<AnnouncementModel?>(
+          valueListenable: _selectedTripNotifier,
+          builder: (context, selectedTrip, _) {
+            return ValueListenableBuilder<List<AnnouncementModel>>(
+              valueListenable: _matchingTripsNotifier,
+              builder: (context, matchingTrips, _) {
+                return SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(
+                    DonySpacing.lg,
+                    DonySpacing.lg,
+                    DonySpacing.lg,
+                    MediaQuery.paddingOf(context).bottom + 100, // room for DonySelectBar + safe area
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(DonySpacing.base),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [DonyColors.blue500, DonyColors.blue700],
+                          ),
+                          borderRadius: BorderRadius.circular(DonyRadius.card),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Demande acceptée à ${widget.thread.currentPriceEur.toStringAsFixed(0)} €',
+                                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                  fontSize: 14,
+                                  color: Colors.white.withValues(alpha: 0.85),
+                                  fontWeight: FontWeight.w600,
+                                )),
+                            const SizedBox(height: 6),
+                            Text(
+                              '${r.departureCity} → ${r.arrivalCity}',
+                              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Text(
+                              'Date de voyage : ${DateFormat('d MMM yyyy', 'fr').format(widget.thread.travelerTravelDate)}',
+                              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                fontSize: 13,
+                                color: Colors.white.withValues(alpha: 0.85),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: DonySpacing.xl),
+                      _PaymentMethodPicker(
+                        methods: r.acceptedPaymentMethods,
+                        selected: selectedPaymentMethod,
+                        onChanged: (m) => _paymentMethodNotifier.value = m,
+                      ),
+                      const SizedBox(height: DonySpacing.xl),
+                      Text(
+                        matchingTrips.isEmpty
+                            ? 'Aucun de tes trajets ne match'
+                            : 'Tes trajets compatibles',
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: kTextSecondary,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: DonySpacing.md),
+                      if (matchingTrips.isEmpty)
+                        Container(
+                          padding: const EdgeInsets.all(DonySpacing.lg),
+                          decoration: BoxDecoration(
+                            color: cs.surface,
+                            borderRadius: BorderRadius.circular(DonyRadius.md),
+                            border: Border.all(color: cs.outline),
+                          ),
+                          child: Column(
+                            children: [
+                              const Icon(Icons.flight_outlined,
+                                  size: 36, color: kTextHint),
+                              const SizedBox(height: DonySpacing.sm),
+                              Text(
+                                'Crée un trajet correspondant à cette demande',
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                  fontSize: 14,
+                                  color: kTextSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        ...matchingTrips
+                            .asMap()
+                            .entries
+                            .map((e) => TripTile(
+                                  key: Key('trip-tile-${e.key}'),
+                                  announcement: e.value,
+                                  index: e.key,
+                                  isSelected: selectedTrip?.id == e.value.id,
+                                  onTap: () => _selectTrip(e.value),
+                                  onModify: _canModify(e.value)
+                                      ? () => _openModifySheet(e.value)
+                                      : null,
+                                )),
+                      const SizedBox(height: DonySpacing.base),
+                      OutlinedButton.icon(
+                        onPressed: _createNewTrip,
+                        icon: const Icon(Icons.add_rounded),
+                        label: const Text('Créer un nouveau trajet'),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 52),
+                          foregroundColor: cs.primary,
+                          side: BorderSide(color: cs.primary, width: 1.5),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+/// Selector de méthode de paiement au moment de lier un trajet.
+/// Affiche uniquement les méthodes présentes dans [methods].
+class _PaymentMethodPicker extends StatelessWidget {
+  const _PaymentMethodPicker({
+    required this.methods,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final Set<PaymentMethod> methods;
+  final PaymentMethod selected;
+  final ValueChanged<PaymentMethod> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    if (methods.isEmpty) return const SizedBox.shrink();
+
+    // Canonical order: STRIPE first, then CASH, then others
+    final ordered =
+        PaymentMethod.canonicalOrder.where(methods.contains).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Mode de paiement',
+          style: tt.bodyMedium?.copyWith(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: kTextSecondary,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: DonySpacing.md),
+        Wrap(
+          spacing: DonySpacing.sm,
+          runSpacing: DonySpacing.sm,
+          children: ordered.map((method) {
+            final isSelected = selected == method;
+            return GestureDetector(
+              key: Key('payment-method-${method.wireName.toLowerCase()}'),
+              onTap: () => onChanged(method),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.base,
+                  vertical: DonySpacing.sm,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected ? cs.primaryContainer : cs.surface,
+                  borderRadius: BorderRadius.circular(DonyRadius.full),
+                  border: Border.all(
+                    color: isSelected ? cs.primary : cs.outline,
+                    width: isSelected ? 1.5 : 1.0,
                   ),
                 ),
-                Text(
-                  'Date de voyage : ${DateFormat('d MMM yyyy', 'fr').format(widget.thread.travelerTravelDate)}',
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    fontSize: 13,
-                    color: Colors.white.withValues(alpha: 0.85),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: DonySpacing.xl),
-          Text(
-            _matchingTrips.isEmpty
-                ? 'Aucun de tes trajets ne match'
-                : 'Tes trajets compatibles',
-            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: kTextSecondary,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: DonySpacing.md),
-          if (_matchingTrips.isEmpty)
-            Container(
-              padding: const EdgeInsets.all(DonySpacing.lg),
-              decoration: BoxDecoration(
-                color: cs.surface,
-                borderRadius: BorderRadius.circular(DonyRadius.md),
-                border: Border.all(color: cs.outline),
-              ),
-              child: Column(
-                children: [
-                  const Icon(Icons.flight_outlined,
-                      size: 36, color: kTextHint),
-                  const SizedBox(height: DonySpacing.sm),
-                  Text(
-                    'Crée un trajet correspondant à cette demande',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 14,
-                      color: kTextSecondary,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      method.icon,
+                      size: 14,
+                      color: isSelected ? cs.primary : cs.onSurfaceVariant,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: DonySpacing.xs),
+                    Text(
+                      method.displayLabel,
+                      style: tt.labelMedium?.copyWith(
+                        color: isSelected ? cs.primary : cs.onSurfaceVariant,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            )
-          else
-            ..._matchingTrips
-                .asMap()
-                .entries
-                .map((e) => TripTile(
-                      announcement: e.value,
-                      index: e.key,
-                      isSelected: _selectedTrip?.id == e.value.id,
-                      onTap: () => _selectTrip(e.value),
-                      onModify: _canModify(e.value)
-                          ? () => _openModifySheet(e.value)
-                          : null,
-                    )),
-          const SizedBox(height: DonySpacing.base),
-          OutlinedButton.icon(
-            onPressed: _createNewTrip,
-            icon: const Icon(Icons.add_rounded),
-            label: const Text('Créer un nouveau trajet'),
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 52),
-              foregroundColor: cs.primary,
-              side: BorderSide(color: cs.primary, width: 1.5),
-            ),
-          ),
-        ],
-      ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 }

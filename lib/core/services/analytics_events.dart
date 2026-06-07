@@ -15,6 +15,7 @@ abstract final class AnalyticsEvents {
   // Announcements
   static const announcementCreated = 'announcement_created';
   static const announcementViewed  = 'announcement_viewed';
+  static const surplusOpened       = 'surplus_opened';
 
   // Bids
   static const bidSubmitted = 'bid_submitted';
@@ -33,9 +34,12 @@ abstract final class AnalyticsEvents {
 
   // Package Request
   static const packageRequestCreated    = 'package_request_created';
+  static const packageRequestUpdated    = 'package_request_updated';
   static const packageRequestSearched   = 'package_request_searched';
   static const negotiationOfferMade     = 'negotiation_offer_made';
   static const negotiationOfferAccepted = 'negotiation_offer_accepted';
+  static const firmPriceTaken           = 'firm_price_taken';
+  static const paymentMethodSelected    = 'payment_method_selected';
 
   // Messaging
   static const conversationOpened = 'conversation_opened';
@@ -69,7 +73,6 @@ abstract final class AnalyticsEvents {
   // Onglet « Envoyer » — noms d'écran (logScreen par onglet)
   static const envoyerEnvoisScreen = 'envoyer_envois';
   static const envoyerDemandesScreen = 'envoyer_demandes';
-  static const envoyerNegosScreen = 'envoyer_negos';
 
   // Errors (BlocObserver)
   static const blocError = 'bloc_error';

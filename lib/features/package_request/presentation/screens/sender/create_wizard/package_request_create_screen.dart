@@ -4,6 +4,7 @@ import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
+import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_1_trajet_colis.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_2_details.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/steps/step_3_recap_budget.dart';
@@ -14,7 +15,8 @@ import 'package:go_router/go_router.dart';
 
 /// Wizard 3 étapes — bottom sheet crème/terracotta (Proposition B).
 abstract final class PackageRequestCreateWizard {
-  static Future<void> show(BuildContext context) {
+  /// [initial] non-null → ouvre le wizard en mode édition (pré-rempli).
+  static Future<void> show(BuildContext context, {PackageRequest? initial}) {
     return showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
@@ -23,7 +25,7 @@ abstract final class PackageRequestCreateWizard {
       barrierColor: Colors.black.withValues(alpha: 0.35),
       builder: (sheetContext) {
         return BlocProvider(
-          create: (_) => getIt<PackageRequestFormBloc>(),
+          create: (_) => getIt<PackageRequestFormBloc>(param1: initial),
           child: const _WizardSheet(),
         );
       },
@@ -96,7 +98,9 @@ class _WizardSheetState extends State<_WizardSheet> {
           Navigator.of(context, rootNavigator: true).pop();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Demande publiée — les voyageurs sont notifiés'),
+              content: Text(state.isEditing
+                  ? 'Demande modifiée'
+                  : 'Demande publiée — les voyageurs sont notifiés'),
               backgroundColor: DonyColors.success500,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
@@ -128,7 +132,10 @@ class _WizardSheetState extends State<_WizardSheet> {
                 child: Column(
                   mainAxisSize: MainAxisSize.max,
                   children: [
-                    _Header(currentStep: state.currentStep),
+                    _Header(
+                      currentStep: state.currentStep,
+                      isEditing: state.isEditing,
+                    ),
                     Expanded(
                       child: switch (state.currentStep) {
                         0 => Step1TrajetColis(key: _step1Key),
@@ -170,11 +177,12 @@ class _WizardSheetState extends State<_WizardSheet> {
 // ─── Header ─────────────────────────────────────────────────────────────────
 
 class _Header extends StatelessWidget {
-  const _Header({required this.currentStep});
+  const _Header({required this.currentStep, this.isEditing = false});
   final int currentStep;
+  final bool isEditing;
 
   String get _title => switch (currentStep) {
-        0 => 'Nouvelle demande',
+        0 => isEditing ? 'Modifier la demande' : 'Nouvelle demande',
         1 => 'Ton colis',
         _ => 'Dernière étape',
       };

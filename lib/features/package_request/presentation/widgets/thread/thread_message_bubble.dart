@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/package_request/data/models/negotiation_message.dart';
+import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -20,6 +21,8 @@ class ThreadMessageBubble extends StatelessWidget {
     required this.message,
     required this.mine,
     this.highlight = false,
+    required this.isTraveler,
+    this.grossPriceEur,
   });
 
   final NegotiationMessage message;
@@ -28,6 +31,15 @@ class ThreadMessageBubble extends StatelessWidget {
   /// Affiche un cadre coloré "NOUVEAU" autour de la bulle (cas dernière
   /// proposition reçue côté sender quand pas encore lue).
   final bool highlight;
+
+  /// Whether the current viewer is the traveler.
+  /// - Traveler sees "Tu reçois X €" (net)
+  /// - Sender sees "Tu paies X €" (gross)
+  final bool isTraveler;
+
+  /// Pre-computed gross price from the server. When null, gross is derived
+  /// from the net using [PriceDisplay.grossFromNet].
+  final double? grossPriceEur;
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +94,11 @@ class ThreadMessageBubble extends StatelessWidget {
                   if (message.proposedPriceEur != null) ...[
                     const SizedBox(height: 2),
                     Text(
-                      '${message.proposedPriceEur!.toStringAsFixed(0)} €',
+                      PriceDisplay.threadPriceLabel(
+                        message.proposedPriceEur!,
+                        grossPriceEur,
+                        isTraveler,
+                      ),
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,

@@ -63,14 +63,6 @@ const _promoQuote = BidQuoteResponse(
   promoLabel: 'Code WELCOME10 : 6 % de commission',
 );
 
-const _noPromoQuote = BidQuoteResponse(
-  netEur: 60.0,
-  rate: 0.12,
-  commissionEur: 7.20,
-  totalEur: 67.20,
-  promoApplied: false,
-);
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 void main() {
@@ -110,9 +102,6 @@ void main() {
 
   tearDown(() async {
     await bidStream.close();
-    for (final type in [BidBloc, PaymentBloc, WalletBloc]) {
-      // unregister best-effort
-    }
     if (getIt.isRegistered<BidBloc>()) getIt.unregister<BidBloc>();
     if (getIt.isRegistered<PaymentBloc>()) getIt.unregister<PaymentBloc>();
     if (getIt.isRegistered<WalletBloc>()) getIt.unregister<WalletBloc>();

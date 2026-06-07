@@ -1,5 +1,6 @@
 import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
+import 'package:dony/features/package_request/data/models/payment_method.dart';
 
 class NegotiationRepository {
   const NegotiationRepository(this._apiClient);
@@ -74,10 +75,19 @@ class NegotiationRepository {
   /// Traveler links a trip (existing announcement) to an AWAITING_TRIP thread.
   /// Backend validates corridor + date window match the request.
   /// Thread moves to AWAITING_PAYMENT.
-  Future<NegotiationThread> submitTrip(String id, {required String travelerAnnouncementId}) async {
+  Future<NegotiationThread> submitTrip(
+    String id, {
+    required String travelerAnnouncementId,
+    required PaymentMethod paymentMethod,
+    bool useCardForCommission = false,
+  }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/negotiations/$id/submit-trip',
-      data: {'travelerAnnouncementId': travelerAnnouncementId},
+      data: {
+        'travelerAnnouncementId': travelerAnnouncementId,
+        'paymentMethod': paymentMethod.wireName,
+        'useCardForCommission': useCardForCommission,
+      },
     );
     return NegotiationThread.fromJson(response.data!);
   }
@@ -96,6 +106,7 @@ class NegotiationRepository {
     String? description,
     List<String>? acceptedContentTypes,
     List<String>? refusedTypes,
+    required PaymentMethod paymentMethod,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/negotiations/$threadId/create-dedicated-trip',
@@ -108,6 +119,7 @@ class NegotiationRepository {
         if (description != null) 'description': description,
         if (acceptedContentTypes != null) 'acceptedContentTypes': acceptedContentTypes,
         if (refusedTypes != null) 'refusedTypes': refusedTypes,
+        'paymentMethod': paymentMethod.wireName,
       },
     );
     return NegotiationThread.fromJson(response.data!);
@@ -130,10 +142,17 @@ class NegotiationRepository {
   /// AWAITING_PAYMENT thread. Thread → ACCEPTED, competing threads → AUTO_REJECTED.
   /// In production this is called after Stripe.instance.presentPaymentSheet succeeds;
   /// the webhook may also finalize automatically — calling this is idempotent.
-  Future<NegotiationThread> checkout(String id, {required String paymentIntentId}) async {
+  Future<NegotiationThread> checkout(
+    String id, {
+    required String paymentIntentId,
+    PaymentMethod? paymentMethod,
+  }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/negotiations/$id/checkout',
-      data: {'paymentIntentId': paymentIntentId},
+      data: {
+        'paymentIntentId': paymentIntentId,
+        if (paymentMethod != null) 'paymentMethod': paymentMethod.wireName,
+      },
     );
     return NegotiationThread.fromJson(response.data!);
   }

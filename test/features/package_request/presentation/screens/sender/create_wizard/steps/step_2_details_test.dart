@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import '../../../../../../../helpers/mock_analytics_backend.dart';
 
 class _MockRepo extends Mock implements PackageRequestRepository {}
 
@@ -48,7 +49,11 @@ void main() {
   Widget wrap(Widget child, {PackageRequestFormBloc? bloc}) => MaterialApp(
         theme: AppTheme.light,
         home: BlocProvider<PackageRequestFormBloc>.value(
-          value: bloc ?? PackageRequestFormBloc(repo),
+          value: bloc ??
+              PackageRequestFormBloc(
+                repo,
+                analytics: makeDisabledAnalytics(MockAnalyticsBackend()),
+              ),
           child: Scaffold(body: child),
         ),
       );

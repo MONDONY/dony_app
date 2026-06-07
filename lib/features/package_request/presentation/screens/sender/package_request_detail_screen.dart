@@ -2,11 +2,14 @@ import 'package:dio/dio.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
+import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/package_request_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -97,13 +100,20 @@ class _PackageRequestDetailScreenState
               ? _ErrorView(message: _error!, onRetry: _load)
               : _request == null
                   ? const SizedBox.shrink()
-                  : _DetailBody(
-                      request: _request!,
-                      threads: _threads,
-                      cancelling: _cancelling,
-                      onCancel: _cancel,
-                      onComplete: () => context.push(
-                          '/package-requests/${widget.requestId}/shipment'),
+                  : BlocProvider<NegotiationBloc>(
+                      create: (_) => getIt<NegotiationBloc>(),
+                      child: BlocListener<NegotiationBloc, NegotiationState>(
+                        listenWhen: (prev, curr) =>
+                            curr is NegotiationLoaded &&
+                            prev is! NegotiationLoaded,
+                        listener: (_, __) => _load(),
+                        child: _DetailBody(
+                          request: _request!,
+                          threads: _threads,
+                          cancelling: _cancelling,
+                          onCancel: _cancel,
+                        ),
+                      ),
                     ),
     );
   }
@@ -117,19 +127,15 @@ class _DetailBody extends StatelessWidget {
     required this.threads,
     required this.cancelling,
     required this.onCancel,
-    required this.onComplete,
   });
   final PackageRequest request;
   final List<NegotiationThread> threads;
   final bool cancelling;
   final VoidCallback onCancel;
-  final VoidCallback onComplete;
 
   bool get _canCancel =>
       request.status == PackageRequestStatus.open ||
       request.status == PackageRequestStatus.negotiating;
-  bool get _showComplete =>
-      request.status == PackageRequestStatus.accepted;
 
   @override
   Widget build(BuildContext context) {
@@ -157,15 +163,9 @@ class _DetailBody extends StatelessWidget {
           ).animate().fadeIn(duration: 280.ms).slideY(
               begin: 0.04, curve: Curves.easeOutCubic),
         ),
-        // CTA fixe en bas
-        if (_showComplete)
-          _StickyBottom(
-            child: DonyButton(
-              label: 'Compléter les détails →',
-              onPressed: onComplete,
-            ),
-          )
-        else if (_canCancel)
+        // CTA fixe en bas — seulement « Annuler » tant que la demande cherche
+        // un voyageur. Une fois payée, elle vit dans l'onglet Envois.
+        if (_canCancel)
           _StickyBottom(
             child: DonyButton(
               label: cancelling ? 'Annulation…' : 'Annuler la demande',
@@ -357,6 +357,11 @@ class _OffersSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // For firm-price (non-negotiable) requests, show candidates selection UI.
+    if (!request.negotiable) {
+      return CandidatesSection(request: request, threads: threads);
+    }
+
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -524,7 +529,12 @@ class _OfferTile extends StatelessWidget {
               ),
             ),
             Text(
-              '${thread.currentPriceEur.toStringAsFixed(0)} €',
+              // L'expéditeur voit TOUJOURS le prix qu'il paie (net + commission
+              // = gross), montant exact — jamais le net touché par le voyageur.
+              PriceDisplay.eur(
+                thread.grossPriceEur ??
+                    PriceDisplay.grossFromNet(thread.currentPriceEur),
+              ),
               style: tt.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w800,
                 fontSize: 20,
@@ -534,6 +544,269 @@ class _OfferTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Candidates section (prix ferme — non-negotiable) ─────────────────────────
+
+/// Public widget testable: shown for firm-price (negotiable=false) requests.
+/// Displays OPEN-status threads as candidate cards with a "Choisir" CTA.
+class CandidatesSection extends StatelessWidget {
+  const CandidatesSection({
+    required this.request,
+    required this.threads,
+    super.key,
+  });
+
+  final PackageRequest request;
+  final List<NegotiationThread> threads;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!request.negotiable) {
+      // Candidats encore en lice (le voyageur a pris le prix ferme → OPEN).
+      final openThreads = threads
+          .where((t) => t.status == NegotiationThreadStatus.open)
+          .toList();
+      // Offre déjà choisie : le thread est passé en AWAITING_TRIP / AWAITING_PAYMENT.
+      // Tant qu'elle n'est pas payée, elle doit RESTER visible ici pour que
+      // l'expéditeur la finalise — sinon l'offre disparaît de « Ma demande ».
+      final chosen = threads
+          .where((t) =>
+              t.status == NegotiationThreadStatus.awaitingTrip ||
+              t.status == NegotiationThreadStatus.awaitingPayment)
+          .toList();
+
+      // Une fois un voyageur choisi, on n'affiche que l'offre en cours à finaliser.
+      final visible = chosen.isNotEmpty ? chosen : openThreads;
+      final showingChosen = chosen.isNotEmpty;
+
+      if (visible.isEmpty) return const SizedBox.shrink();
+
+      final cs = Theme.of(context).colorScheme;
+      final tt = Theme.of(context).textTheme;
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section header
+          Row(
+            children: [
+              Text(
+                showingChosen ? 'OFFRE ACCEPTÉE' : 'VOYAGEURS INTÉRESSÉS',
+                style: tt.labelMedium?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
+                ),
+              ),
+              const SizedBox(width: DonySpacing.sm),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: DonyColors.primarySoft,
+                  borderRadius: BorderRadius.circular(DonyRadius.full),
+                ),
+                child: Text(
+                  '${visible.length}',
+                  style: tt.bodyMedium?.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: DonyColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: DonySpacing.base),
+          // Candidate cards
+          ...visible.asMap().entries.map((entry) {
+            final i = entry.key;
+            final thread = entry.value;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: DonySpacing.sm + 4),
+              child: _CandidateCard(
+                thread: thread,
+                // OPEN → « Choisir » (sélection) ; offre déjà choisie → « Finaliser »
+                // (le thread est en AWAITING_TRIP/PAYMENT, l'expéditeur doit payer).
+                ctaLabel: showingChosen ? 'Finaliser' : 'Choisir',
+                // Ouvrir la négociation : c'est là que vit le flux complet
+                // d'acceptation + paiement (ThreadStateCtaBar → « Accepter —
+                // Tu paies X € » → complete-details → paiement avec biométrie).
+                // Un « accept » direct depuis ici ne pourrait pas finaliser.
+                onChoose: () => context.push('/negotiations/${thread.id}'),
+              ).animate().fadeIn(duration: 200.ms, delay: (60 * i).ms),
+            );
+          }),
+          // Disclaimer note — uniquement à l'étape de choix (candidats OPEN).
+          // Une fois un voyageur choisi, plus rien à « décliner ».
+          if (!showingChosen) ...[
+            const SizedBox(height: DonySpacing.xs),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.base, vertical: DonySpacing.sm),
+              decoration: BoxDecoration(
+                color: DonyColors.warning500.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(DonyRadius.md),
+                border: Border.all(
+                    color: DonyColors.warning500.withValues(alpha: 0.30)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded,
+                      size: 16, color: DonyColors.warning500),
+                  const SizedBox(width: DonySpacing.xs),
+                  Expanded(
+                    child: Text(
+                      'Les autres seront déclinés automatiquement.',
+                      style: tt.bodySmall?.copyWith(
+                        color: DonyColors.warning500,
+                        fontWeight: FontWeight.w600,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      );
+    }
+
+    // For negotiable requests, render nothing from this widget
+    // (_OffersSection handles it via the standard path).
+    return const SizedBox.shrink();
+  }
+}
+
+class _CandidateCard extends StatelessWidget {
+  const _CandidateCard({
+    required this.thread,
+    required this.onChoose,
+    this.ctaLabel = 'Choisir',
+  });
+
+  final NegotiationThread thread;
+  final VoidCallback onChoose;
+  final String ctaLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final name = thread.travelerName ?? 'Voyageur';
+    final rating = thread.travelerRating;
+    final date =
+        DateFormat('d MMM', 'fr').format(thread.travelerTravelDate);
+
+    final grossPrice =
+        thread.grossPriceEur ?? PriceDisplay.grossFromNet(thread.currentPriceEur);
+    final priceLabel = 'Tu paies ${PriceDisplay.eur(grossPrice)}';
+
+    // Toute la carte est tappable et ouvre la négociation (même cible que le
+    // bouton « Choisir »), comme _OfferTile pour les demandes négociables.
+    return InkWell(
+      key: Key('candidate-card-${thread.id}'),
+      borderRadius: BorderRadius.circular(DonyRadius.md),
+      onTap: onChoose,
+      child: Container(
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        border: Border.all(color: DonyColors.neutral200),
+      ),
+      child: Row(
+        children: [
+          DonyAvatar(
+            name: name,
+            imageUrl: thread.travelerPhotoUrl,
+            size: DonyAvatarSize.md,
+            verified: (thread.travelerTripsCount ?? 0) > 0,
+          ),
+          const SizedBox(width: DonySpacing.sm + 4),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Traveler name + rating
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        name,
+                        style: tt.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (rating != null) ...[
+                      const SizedBox(width: 4),
+                      Icon(Icons.star_rounded,
+                          size: 13, color: DonyColors.warning500),
+                      Text(
+                        rating.toStringAsFixed(1),
+                        style: tt.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 2),
+                // Travel date
+                Text(
+                  date,
+                  style: tt.bodySmall?.copyWith(
+                    color: DonyColors.textMuted,
+                    fontSize: 11,
+                  ),
+                ),
+                const SizedBox(height: DonySpacing.sm),
+                // Price label
+                Text(
+                  priceLabel,
+                  style: tt.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    color: cs.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: DonySpacing.sm),
+          // Choose CTA
+          SizedBox(
+            height: 44,
+            child: ElevatedButton(
+              key: Key('choose-traveler-${thread.id}'),
+              onPressed: onChoose,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: DonyColors.primary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.base, vertical: 0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(DonyRadius.md),
+                ),
+                textStyle: tt.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+              child: Text(ctaLabel),
+            ),
+          ),
+        ],
+      ),
       ),
     );
   }
@@ -780,17 +1053,8 @@ class _SheetBodyState extends State<_SheetBody> {
   void _syncBtn(PackageRequest r, bool cancelling) {
     final canCancel = r.status == PackageRequestStatus.open ||
         r.status == PackageRequestStatus.negotiating;
-    final showComplete = r.status == PackageRequestStatus.accepted;
 
-    if (showComplete) {
-      widget.onBtnConfig(_SheetBtnConfig(
-        label: 'Compléter les détails →',
-        onPressed: () {
-          Navigator.of(context, rootNavigator: true).pop();
-          context.push('/package-requests/${widget.requestId}/shipment');
-        },
-      ));
-    } else if (canCancel) {
+    if (canCancel) {
       widget.onBtnConfig(_SheetBtnConfig(
         label: cancelling ? 'Annulation…' : 'Annuler la demande',
         isDestructive: true,

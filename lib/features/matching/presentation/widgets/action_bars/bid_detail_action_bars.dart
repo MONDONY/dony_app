@@ -261,6 +261,13 @@ class SenderActionBar extends StatelessWidget {
     );
   }
 
+  /// Whether the sender pays dony online (escrow). Only [BidPaymentMethod.stripe]
+  /// involves an in-app sender payment. Cash / Wave / Orange Money are settled in
+  /// person with the traveler — dony already collects its commission from the
+  /// traveler server-side — so the sender must NOT see "Payer mon envoi".
+  bool get _hasOnlineSenderPayment =>
+      bid.paymentMethod == BidPaymentMethod.stripe;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -295,7 +302,12 @@ class SenderActionBar extends StatelessWidget {
           if (bid.status == 'PENDING' || bid.status == 'ACCEPTED') ...[
             const SizedBox(width: DonySpacing.md),
             Expanded(
-              child: !paymentLoaded
+              // Cash / Wave / Orange Money: paid in person, dony's commission
+              // is collected from the traveler server-side — never show an
+              // online sender payment button or its loading placeholder.
+              child: !_hasOnlineSenderPayment
+                  ? const _CashBadge()
+                  : !paymentLoaded
                   ? Container(
                       height: 52,
                       decoration: BoxDecoration(
@@ -481,6 +493,44 @@ class _EscrowBadge extends StatelessWidget {
       ),
       _ => (Icons.lock_rounded, cs.success, 'Paiement sécurisé — $amount €'),
     };
+  }
+}
+
+/// Informational pill shown to the sender when the deal is settled in person
+/// (cash / Wave / Orange Money). There is no online sender payment: dony's
+/// commission is collected from the traveler server-side. Styled like
+/// [_EscrowBadge] but with a warning tone.
+class _CashBadge extends StatelessWidget {
+  const _CashBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final color = cs.warning;
+
+    return Container(
+      height: 52,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(DonyRadius.lg),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.payments_outlined, color: color, size: 18),
+          const SizedBox(width: DonySpacing.sm),
+          Flexible(
+            child: Text(
+              'Paiement en espèces à la remise',
+              style: tt.titleSmall?.copyWith(color: color),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

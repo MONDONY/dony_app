@@ -5,6 +5,7 @@ import 'package:dony/features/city/presentation/widgets/city_autocomplete_field.
 import 'package:dony/features/matching/data/models/transport_mode.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_form_event.dart';
+import 'package:dony/features/package_request/bloc/package_request_form_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -23,10 +24,24 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
   String? _arrivalCity;
   DateTime? _date;
   int _tolerance = 2;
-  TransportMode _transportMode = TransportMode.plane;
+  final TransportMode _transportMode = TransportMode.plane;
+
+  @override
+  void initState() {
+    super.initState();
+    // Pré-remplissage (mode édition ou retour à l'étape) depuis l'état du bloc.
+    final PackageRequestFormState s =
+        context.read<PackageRequestFormBloc>().state;
+    _departureCity = s.departureCity;
+    _arrivalCity = s.arrivalCity;
+    _date = s.desiredDate;
+    if (s.dateToleranceDays != null) _tolerance = s.dateToleranceDays!;
+  }
 
   void submit() {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
     if (_date == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Choisis une date souhaitée')),
@@ -122,7 +137,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _FieldLabel('Date'),
+                      const _FieldLabel('Date'),
                       const SizedBox(height: DonySpacing.xs),
                       _DatePickerField(
                         date: _date,
@@ -136,7 +151,7 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _FieldLabel('Tolérance'),
+                      const _FieldLabel('Tolérance'),
                       const SizedBox(height: DonySpacing.xs),
                       _ToleranceField(
                         tolerance: _tolerance,
@@ -149,23 +164,69 @@ class Step1TrajetColisState extends State<Step1TrajetColis> {
             ),
             const SizedBox(height: DonySpacing.base),
 
-            // ── Mode de transport ──────────────────────────────────────────
-            _FieldLabel('Mode de transport'),
-            const SizedBox(height: DonySpacing.sm),
-            Wrap(
-              spacing: DonySpacing.sm,
-              runSpacing: DonySpacing.sm,
-              children: TransportMode.values.map((m) {
-                return OptionButton(
-                  label: m.label,
-                  icon: m.icon,
-                  selected: m == _transportMode,
-                  onTap: () => setState(() => _transportMode = m),
-                );
-              }).toList(),
-            ),
+            // ── Mode de transport — Avion verrouillé ───────────────────────
+            const _LockedAirplaneBlock(),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ─── Locked Airplane Block ────────────────────────────────────────────────────
+
+class _LockedAirplaneBlock extends StatelessWidget {
+  const _LockedAirplaneBlock();
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      constraints: const BoxConstraints(minHeight: 56),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.base,
+        vertical: DonySpacing.md,
+      ),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+        border: Border.all(color: cs.outline),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.flight_rounded,
+            size: 22,
+            color: cs.onSurfaceVariant,
+          ),
+          const SizedBox(width: DonySpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Avion',
+                  style: tt.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: cs.onSurface,
+                  ),
+                ),
+                Text(
+                  'seul mode disponible',
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.lock_outline_rounded,
+            size: 16,
+            color: cs.onSurfaceVariant,
+          ),
+        ],
       ),
     );
   }

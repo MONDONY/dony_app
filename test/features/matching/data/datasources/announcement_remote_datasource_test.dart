@@ -200,6 +200,37 @@ void main() {
     });
   });
 
+  // ── openSurplus ──────────────────────────────────────────────────────────────
+
+  group('openSurplus', () {
+    test('POSTs to /negotiations/trip/{id}/open-surplus then reloads detail',
+        () async {
+      when(() => mockDio.post(
+                '/negotiations/trip/ann-001/open-surplus',
+                data: any(named: 'data'),
+              ))
+          .thenAnswer((_) async =>
+              _ok(null, '/negotiations/trip/ann-001/open-surplus'));
+      when(() => mockDio.get('/announcements/ann-001')).thenAnswer(
+          (_) async => _ok(_announcementJson, '/announcements/ann-001'));
+
+      final result = await datasource.openSurplus(
+        announcementId: 'ann-001',
+        surplusKg: 8.0,
+        pricePerKg: 7.0,
+      );
+
+      expect(result.id, 'ann-001');
+      final captured = verify(() => mockDio.post(
+            '/negotiations/trip/ann-001/open-surplus',
+            data: captureAny(named: 'data'),
+          )).captured.single as Map<String, dynamic>;
+      expect(captured['surplusKg'], 8.0);
+      expect(captured['pricePerKg'], 7.0);
+      verify(() => mockDio.get('/announcements/ann-001')).called(1);
+    });
+  });
+
   // ── updateAnnouncement ───────────────────────────────────────────────────────
 
   group('updateAnnouncement', () {

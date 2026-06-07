@@ -4,6 +4,7 @@ import 'package:dony/core/design/widgets/dony_button.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/package_request/bloc/negotiation_bloc.dart';
+import 'package:dony/features/package_request/data/models/price_display.dart';
 import 'package:dony/features/package_request/data/models/price_estimate.dart';
 import 'package:dony/features/package_request/data/price_estimation_repository.dart';
 import 'package:dony/features/package_request/presentation/_theme.dart';
@@ -24,6 +25,7 @@ class MakeOfferBottomSheet {
     required String departureCity,
     required String arrivalCity,
     DateTime? initialDate,
+    bool isFirmPrice = false,
   }) async {
     PriceEstimate? estimate;
     try {
@@ -46,7 +48,7 @@ class MakeOfferBottomSheet {
 
     await DonyBottomSheet.show<void>(
       context,
-      title: 'Faire une offre',
+      title: isFirmPrice ? 'Prendre ce colis' : 'Faire une offre',
       wrapper: (child) => BlocProvider(
         create: (_) => getIt<NegotiationBloc>(),
         child: child,
@@ -59,12 +61,23 @@ class MakeOfferBottomSheet {
         rootRouter: rootRouter,
         onSubmitReady: (fn) => submitFn = fn,
         initialDate: initialDate,
+        isFirmPrice: isFirmPrice,
       ),
       stickyBottom: BlocBuilder<NegotiationBloc, NegotiationState>(
         builder: (ctx, state) {
           final loading = state is NegotiationLoading;
+          final String label;
+          if (loading) {
+            label = 'Envoi…';
+          } else if (isFirmPrice) {
+            label = targetPriceEur != null
+                ? 'Prendre à ${PriceDisplay.eur(targetPriceEur)}'
+                : 'Prendre ce colis';
+          } else {
+            label = 'Envoyer l\'offre';
+          }
           return DonyButton(
-            label: loading ? 'Envoi…' : 'Envoyer l\'offre',
+            label: label,
             isLoading: loading,
             onPressed: loading ? null : () => submitFn?.call(),
           );
@@ -83,6 +96,7 @@ class _MakeOfferContent extends StatefulWidget {
     required this.rootRouter,
     required this.onSubmitReady,
     this.initialDate,
+    this.isFirmPrice = false,
   });
 
   final String packageRequestId;
@@ -92,6 +106,7 @@ class _MakeOfferContent extends StatefulWidget {
   final GoRouter rootRouter;
   final void Function(VoidCallback) onSubmitReady;
   final DateTime? initialDate;
+  final bool isFirmPrice;
 
   @override
   State<_MakeOfferContent> createState() => _MakeOfferContentState();
@@ -110,7 +125,9 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
     widget.onSubmitReady(_submit);
     _priceCtrl = TextEditingController(
       text: widget.targetPriceEur != null
-          ? widget.targetPriceEur!.toStringAsFixed(0)
+          // Prix ferme : valeur EXACTE (pas d'arrondi) — sinon le backend
+          // rejette avec negotiation/firm-price-must-match.
+          ? widget.targetPriceEur!.toStringAsFixed(widget.isFirmPrice ? 2 : 0)
           : '',
     );
     _kgCtrl = TextEditingController(text: widget.weightKg.toStringAsFixed(1));
@@ -145,12 +162,16 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
     }
     context.read<NegotiationBloc>().add(NegotiationStartRequested(
           packageRequestId: widget.packageRequestId,
-          proposedPriceEur:
-              double.parse(_priceCtrl.text.replaceAll(',', '.')),
+          // Prix ferme : on envoie la valeur exacte (le champ est verrouillé),
+          // jamais le texte arrondi → match garanti côté backend.
+          proposedPriceEur: widget.isFirmPrice && widget.targetPriceEur != null
+              ? widget.targetPriceEur!
+              : double.parse(_priceCtrl.text.replaceAll(',', '.')),
           travelerTravelDate: _dateNotifier.value!,
           travelerAvailableKg:
               double.parse(_kgCtrl.text.replaceAll(',', '.')),
           body: _bodyCtrl.text.trim().isEmpty ? null : _bodyCtrl.text.trim(),
+          isFirmPrice: widget.isFirmPrice,
         ));
   }
 
@@ -190,12 +211,16 @@ class _MakeOfferContentState extends State<_MakeOfferContent> {
                 children: [
                   Expanded(
                     child: _FieldTile(
-                      label: 'VOTRE PRIX',
-                      icon: Icons.payments_rounded,
+                      label: widget.isFirmPrice ? 'PRIX FERME' : 'VOTRE PRIX',
+                      icon: widget.isFirmPrice
+                          ? Icons.lock_outline_rounded
+                          : Icons.payments_rounded,
                       iconBgKey: _TileColor.blue,
                       suffix: '€',
                       child: TextFormField(
                         controller: _priceCtrl,
+                        // Prix ferme : non négociable → champ verrouillé.
+                        readOnly: widget.isFirmPrice,
                         keyboardType: const TextInputType.numberWithOptions(
                             decimal: true),
                         inputFormatters: [

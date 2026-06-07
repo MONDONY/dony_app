@@ -7,6 +7,7 @@ import 'package:dony/core/services/analytics_service.dart';
 import 'package:equatable/equatable.dart';
 
 import '../data/models/negotiation_thread.dart';
+import '../data/models/payment_method.dart';
 import '../data/negotiation_repository.dart';
 
 sealed class NegotiationEvent extends Equatable {
@@ -30,6 +31,7 @@ class NegotiationStartRequested extends NegotiationEvent {
     required this.travelerAvailableKg,
     this.travelerAnnouncementId,
     this.body,
+    this.isFirmPrice = false,
   });
   final String packageRequestId;
   final double proposedPriceEur;
@@ -37,6 +39,8 @@ class NegotiationStartRequested extends NegotiationEvent {
   final double travelerAvailableKg;
   final String? travelerAnnouncementId;
   final String? body;
+  /// True when the traveler accepted a firm (non-negotiable) price.
+  final bool isFirmPrice;
 
   @override
   List<Object?> get props => [
@@ -46,6 +50,7 @@ class NegotiationStartRequested extends NegotiationEvent {
         travelerAvailableKg,
         travelerAnnouncementId,
         body,
+        isFirmPrice,
       ];
 }
 
@@ -86,12 +91,20 @@ class NegotiationSubmitTripRequested extends NegotiationEvent {
   const NegotiationSubmitTripRequested({
     required this.threadId,
     required this.travelerAnnouncementId,
+    required this.paymentMethod,
+    this.useCardForCommission = false,
   });
   final String threadId;
   final String travelerAnnouncementId;
+  final PaymentMethod paymentMethod;
+
+  /// CASH only: traveler consents to pay the commission on their card when the
+  /// wallet is short (charged at finalize, wallet-first then card).
+  final bool useCardForCommission;
 
   @override
-  List<Object?> get props => [threadId, travelerAnnouncementId];
+  List<Object?> get props =>
+      [threadId, travelerAnnouncementId, paymentMethod, useCardForCommission];
 }
 
 /// Traveler creates a dedicated trip (no existing announcement matches) and
@@ -107,6 +120,7 @@ class NegotiationCreateDedicatedTripRequested extends NegotiationEvent {
     this.description,
     this.acceptedContentTypes,
     this.refusedTypes,
+    required this.paymentMethod,
   });
   final String threadId;
   final DateTime departureDate;
@@ -117,12 +131,13 @@ class NegotiationCreateDedicatedTripRequested extends NegotiationEvent {
   final String? description;
   final List<String>? acceptedContentTypes;
   final List<String>? refusedTypes;
+  final PaymentMethod paymentMethod;
 
   @override
   List<Object?> get props => [
         threadId, departureDate, departureTime, arrivalTime,
         pickupAddress, deliveryAddress, description,
-        acceptedContentTypes, refusedTypes,
+        acceptedContentTypes, refusedTypes, paymentMethod,
       ];
 }
 
@@ -131,12 +146,17 @@ class NegotiationCheckoutRequested extends NegotiationEvent {
   const NegotiationCheckoutRequested({
     required this.threadId,
     required this.paymentIntentId,
+    this.paymentMethod,
   });
   final String threadId;
   final String paymentIntentId;
 
+  /// Mode de paiement finalisé par l'expéditeur (parmi ceux acceptés). `null` →
+  /// le backend garde le mode déjà porté par le thread.
+  final PaymentMethod? paymentMethod;
+
   @override
-  List<Object?> get props => [threadId, paymentIntentId];
+  List<Object?> get props => [threadId, paymentIntentId, paymentMethod];
 }
 
 /// Sender refuses the linked trip on an AWAITING_PAYMENT thread.
@@ -191,8 +211,9 @@ class NegotiationError extends NegotiationState {
 }
 
 class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
-  NegotiationBloc(this._repository, [this._analytics])
-      : super(const NegotiationInitial()) {
+  NegotiationBloc(this._repository, {required AnalyticsService analytics})
+      : _analytics = analytics,
+        super(const NegotiationInitial()) {
     on<NegotiationFetchRequested>(_onFetch);
     on<NegotiationStartRequested>(_onStart);
     on<NegotiationCounterRequested>(_onCounter);
@@ -205,7 +226,14 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
   }
 
   final NegotiationRepository _repository;
-  final AnalyticsService? _analytics;
+  final AnalyticsService _analytics;
+
+  static String _priceBracket(double eur) {
+    if (eur < 20) return '<20€';
+    if (eur < 50) return '20-50€';
+    if (eur < 100) return '50-100€';
+    return '>100€';
+  }
 
   Future<void> _onFetch(
     NegotiationFetchRequested e,
@@ -235,10 +263,17 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         body: e.body,
       );
       emit(NegotiationLoaded(thread));
-      unawaited(_analytics?.logEvent(
-        AnalyticsEvents.negotiationOfferMade,
-        properties: {'amount': e.proposedPriceEur.round(), 'context': 'sender'},
-      ));
+      if (e.isFirmPrice) {
+        unawaited(_analytics.logEvent(
+          AnalyticsEvents.firmPriceTaken,
+          properties: {'request_id': e.packageRequestId},
+        ));
+      } else {
+        unawaited(_analytics.logEvent(
+          AnalyticsEvents.negotiationOfferMade,
+          properties: {'amount_bracket': _priceBracket(e.proposedPriceEur), 'context': 'sender'},
+        ));
+      }
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
     }
@@ -261,9 +296,9 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         body: e.body,
       );
       emit(NegotiationLoaded(thread));
-      unawaited(_analytics?.logEvent(
+      unawaited(_analytics.logEvent(
         AnalyticsEvents.negotiationOfferMade,
-        properties: {'amount': e.proposedPriceEur.round(), 'context': 'counter'},
+        properties: {'amount_bracket': _priceBracket(e.proposedPriceEur), 'context': 'counter'},
       ));
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
@@ -283,9 +318,9 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
     try {
       final thread = await _repository.accept(e.threadId, body: e.body);
       emit(NegotiationLoaded(thread));
-      unawaited(_analytics?.logEvent(
+      unawaited(_analytics.logEvent(
         AnalyticsEvents.negotiationOfferAccepted,
-        properties: {'amount': thread.currentPriceEur.round()},
+        properties: {'amount_bracket': _priceBracket(thread.currentPriceEur)},
       ));
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
@@ -324,8 +359,14 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       final thread = await _repository.submitTrip(
         e.threadId,
         travelerAnnouncementId: e.travelerAnnouncementId,
+        paymentMethod: e.paymentMethod,
+        useCardForCommission: e.useCardForCommission,
       );
       emit(NegotiationLoaded(thread));
+      unawaited(_analytics.logEvent(
+        AnalyticsEvents.paymentMethodSelected,
+        properties: {'method': e.paymentMethod.wireName},
+      ));
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
     }
@@ -352,8 +393,13 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
         description: e.description,
         acceptedContentTypes: e.acceptedContentTypes,
         refusedTypes: e.refusedTypes,
+        paymentMethod: e.paymentMethod,
       );
       emit(NegotiationLoaded(thread));
+      unawaited(_analytics.logEvent(
+        AnalyticsEvents.paymentMethodSelected,
+        properties: {'method': e.paymentMethod.wireName},
+      ));
     } catch (err) {
       emit(NegotiationError(unwrapDioError(err)));
     }
@@ -373,10 +419,28 @@ class NegotiationBloc extends Bloc<NegotiationEvent, NegotiationState> {
       final thread = await _repository.checkout(
         e.threadId,
         paymentIntentId: e.paymentIntentId,
+        paymentMethod: e.paymentMethod,
       );
       emit(NegotiationLoaded(thread));
     } catch (err) {
-      emit(NegotiationError(unwrapDioError(err)));
+      final appErr = unwrapDioError(err);
+      // Course gagnée par le webhook Stripe : `payment_intent.amount_capturable_updated`
+      // finalise le thread en ACCEPTED de façon asynchrone (côté serveur). Il peut
+      // arriver AVANT ce /checkout synchrone (safety-net). Dans ce cas le backend
+      // répond 409 `thread/not-awaiting-payment` alors que le paiement a RÉUSSI.
+      // On ne montre donc pas d'erreur : on recharge le thread (désormais finalisé)
+      // pour que l'écran affiche l'état « Demande acceptée et payée ».
+      if (appErr is ConflictException &&
+          appErr.message == 'thread/not-awaiting-payment') {
+        try {
+          final thread = await _repository.getById(e.threadId);
+          emit(NegotiationLoaded(thread));
+          return;
+        } catch (_) {
+          // Re-fetch échoué → on retombe sur l'erreur d'origine ci-dessous.
+        }
+      }
+      emit(NegotiationError(appErr));
     }
   }
 
