@@ -11,6 +11,7 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/presentation/screens/shipment_list_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/secondary_activity_entry.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
@@ -22,7 +23,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class EnvoyerHubScreen extends StatefulWidget {
-  const EnvoyerHubScreen({super.key});
+  const EnvoyerHubScreen({super.key, this.onShowTrips});
+
+  /// Optional callback for "Mes trajets" secondary entry.
+  /// When non-null, a [SecondaryActivityEntry] is shown below the header.
+  final VoidCallback? onShowTrips;
 
   @override
   State<EnvoyerHubScreen> createState() => _EnvoyerHubScreenState();
@@ -47,7 +52,7 @@ class _EnvoyerHubScreenState extends State<EnvoyerHubScreen> {
         ),
         BlocProvider.value(value: getIt<NegotiationListBloc>()),
       ],
-      child: const _EnvoyerTabsView(),
+      child: _EnvoyerTabsView(onShowTrips: widget.onShowTrips),
     );
   }
 }
@@ -55,7 +60,9 @@ class _EnvoyerHubScreenState extends State<EnvoyerHubScreen> {
 // ── Tabbed view ───────────────────────────────────────────────────────────────
 
 class _EnvoyerTabsView extends StatefulWidget {
-  const _EnvoyerTabsView();
+  const _EnvoyerTabsView({this.onShowTrips});
+
+  final VoidCallback? onShowTrips;
 
   @override
   State<_EnvoyerTabsView> createState() => _EnvoyerTabsViewState();
@@ -337,7 +344,7 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
           bottom: false,
           child: Column(
             children: [
-              _EnvoyerHeader(onNew: _onNew),
+              _EnvoyerHeader(onNew: _onNew, onShowTrips: widget.onShowTrips),
               _EnvoyerSegmented(
                 controller: _controller,
                 badgeForIndex: badgeFor,
@@ -363,9 +370,10 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
 // ── Header ────────────────────────────────────────────────────────────────────
 
 class _EnvoyerHeader extends StatelessWidget {
-  const _EnvoyerHeader({required this.onNew});
+  const _EnvoyerHeader({required this.onNew, this.onShowTrips});
 
   final VoidCallback onNew;
+  final VoidCallback? onShowTrips;
 
   @override
   Widget build(BuildContext context) {
@@ -376,7 +384,10 @@ class _EnvoyerHeader extends StatelessWidget {
         DonySpacing.lg,
         DonySpacing.sm,
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+      Row(
         children: [
           Text(
             'Envoyer',
@@ -423,6 +434,16 @@ class _EnvoyerHeader extends StatelessWidget {
               ),
             ),
           ),
+        ],
+      ),
+      if (onShowTrips != null) ...[
+        const SizedBox(height: DonySpacing.sm),
+        SecondaryActivityEntry(
+          icon: Icons.flight_takeoff_rounded,
+          label: 'Mes trajets',
+          onTap: onShowTrips!,
+        ),
+      ],
         ],
       ),
     );
