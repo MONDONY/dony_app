@@ -25,11 +25,13 @@ import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/create_announcement_screen.dart';
 import 'package:dony/features/matching/presentation/screens/matching_management_screen.dart';
 import 'package:dony/features/matching/presentation/screens/traveler_profile_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/envoyer_hub_screen.dart';
 import 'package:dony/features/messaging/bloc/conversation_list/conversation_list_bloc.dart';
 import 'package:dony/features/messaging/presentation/archived_conversations_screen.dart';
 import 'package:dony/features/notifications/presentation/inbox_screen.dart';
@@ -420,6 +422,19 @@ final appRouter = GoRouter(
           child: CreateAnnouncementScreen(announcement: announcement),
         );
       },
+    ),
+
+    // ── Annonces additives (Phase 2) — secondary destinations from bottom nav ──
+    GoRoute(
+      path: '/announcements/trips',
+      builder: (context, state) => BlocProvider(
+        create: (_) => getIt<AnnouncementBloc>(),
+        child: const AnnouncementListScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/announcements/send',
+      builder: (context, state) => const EnvoyerHubScreen(),
     ),
 
     // ── Modèles de trajet (hors shell) ───────────────────────────────────
