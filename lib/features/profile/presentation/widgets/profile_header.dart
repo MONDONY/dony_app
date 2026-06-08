@@ -1,12 +1,10 @@
 import 'package:dony/core/design/design_system.dart';
-import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:flutter/material.dart';
 
 class ProfileHeader extends StatelessWidget {
   const ProfileHeader({
     super.key,
     required this.displayName,
-    required this.activeRole,
     required this.isTraveler,
     required this.isSender,
     required this.isKycVerified,
@@ -16,11 +14,9 @@ class ProfileHeader extends StatelessWidget {
     this.city,
     this.profileCompletionPercent = 0.0,
     this.onEditProfile,
-    this.onRoleSwitch,
   });
 
   final String displayName;
-  final ActiveRole activeRole;
   final bool isTraveler;
   final bool isSender;
   final bool isKycVerified;
@@ -30,7 +26,6 @@ class ProfileHeader extends StatelessWidget {
   final String? city;
   final double profileCompletionPercent;
   final VoidCallback? onEditProfile;
-  final ValueChanged<ActiveRole>? onRoleSwitch;
 
   @override
   Widget build(BuildContext context) {
@@ -124,12 +119,6 @@ class ProfileHeader extends StatelessWidget {
               ),
             ],
           ),
-
-          // ── Toggle rôle (uniquement si double rôle) ───────────────────
-          if (isTraveler && isSender) ...[
-            const SizedBox(height: DonySpacing.md),
-            _RolePill(activeRole: activeRole, onRoleSwitch: onRoleSwitch),
-          ],
 
           // ── Barre de complétion — masquée à 100% ──────────────────────
           if (profileCompletionPercent < 1.0) ...[
@@ -274,102 +263,6 @@ class _Chip extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ── Toggle rôle ───────────────────────────────────────────────────────────────
-
-class _RolePill extends StatelessWidget {
-  const _RolePill({required this.activeRole, this.onRoleSwitch});
-
-  final ActiveRole activeRole;
-  final ValueChanged<ActiveRole>? onRoleSwitch;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(DonyRadius.full),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _PillTab(
-            emoji: '📦',
-            label: 'Expéditeur',
-            isActive: activeRole == ActiveRole.sender,
-            onTap: () => onRoleSwitch?.call(ActiveRole.sender),
-          ),
-          _PillTab(
-            emoji: '✈️',
-            label: 'Voyageur',
-            isActive: activeRole == ActiveRole.traveler,
-            onTap: () => onRoleSwitch?.call(ActiveRole.traveler),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PillTab extends StatelessWidget {
-  const _PillTab({
-    required this.emoji,
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
-
-  final String emoji;
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    final cs = Theme.of(context).colorScheme;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.md,
-          vertical: DonySpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: isActive ? cs.surface : Colors.transparent,
-          borderRadius: BorderRadius.circular(DonyRadius.full),
-          boxShadow: isActive
-              ? [
-                  BoxShadow(
-                    color: cs.shadow,
-                    blurRadius: 6,
-                    offset: const Offset(0, 1),
-                  ),
-                ]
-              : null,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 13)),
-            const SizedBox(width: DonySpacing.xs),
-            Text(
-              label,
-              style: tt.labelMedium?.copyWith(
-                color: isActive ? cs.primary : cs.onSurfaceVariant,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
