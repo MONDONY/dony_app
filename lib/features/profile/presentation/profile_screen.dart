@@ -431,13 +431,13 @@ class _ActivityTab extends StatelessWidget {
 
         // ── Stats card ──────────────────────────────────────────────────
         _SectionLabel(
-          label: activeRole == ActiveRole.traveler
+          label: isTraveler
               ? 'ACTIVITÉ · VOYAGEUR'
               : 'ACTIVITÉ · EXPÉDITEUR',
           cs: cs,
         ),
         _ActivitySection(
-          activeRole: activeRole,
+          isTraveler: isTraveler,
           totalTrips: user?.totalTrips ?? 0,
           totalShipments: user?.totalShipments ?? 0,
           isLoading: isLoading,
@@ -447,8 +447,89 @@ class _ActivityTab extends StatelessWidget {
             ),
         const SizedBox(height: DonySpacing.xl),
 
-        if (activeRole == ActiveRole.traveler) ...[
-          _SectionLabel(label: 'MON ACTIVITÉ', cs: cs),
+        // Base commune (expéditeur) — toujours visible
+        _SectionLabel(label: 'MON ACTIVITÉ', cs: cs),
+        DonyListSection(
+          tiles: [
+            DonyListTile(
+              icon: Icons.local_shipping_rounded,
+              iconColor: cs.secondary,
+              iconBgColor: cs.secondaryContainer,
+              label: 'Mes envois en cours',
+              showDivider: activeBids > 0,
+              trailing: activeBids > 0
+                  ? Text(
+                      '$activeBids en cours',
+                      style: tt.labelMedium?.copyWith(
+                        color: cs.secondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    )
+                  : null,
+              onTap: () => context.push('/announcements'),
+            ),
+            if (activeBids > 0)
+              DonyListTile(
+                icon: Icons.compare_arrows_rounded,
+                iconColor: cs.tertiary,
+                iconBgColor: cs.tertiaryContainer,
+                label: 'Mes négociations',
+                showDivider: false,
+                onTap: () => context.push('/negotiations'),
+              ),
+          ],
+        ).animate().fadeIn(delay: 140.ms).slideY(
+              begin: 0.04,
+              curve: Curves.easeOutCubic,
+            ),
+        const SizedBox(height: DonySpacing.lg),
+
+        _SectionLabel(label: 'MON CARNET', cs: cs),
+        DonyListSection(
+          tiles: [
+            DonyListTile(
+              icon: Icons.contacts_rounded,
+              iconColor: cs.primary,
+              iconBgColor: cs.primaryContainer,
+              label: 'Mes destinataires',
+              onTap: () => context.push('/profile/recipients'),
+            ),
+            DonyListTile(
+              icon: Icons.notifications_active_rounded,
+              iconColor: cs.tertiary,
+              iconBgColor: cs.tertiaryContainer.withValues(alpha: 0.5),
+              label: 'Mes abonnements',
+              showDivider: false,
+              onTap: () => context.push('/profile/subscriptions'),
+            ),
+          ],
+        ).animate().fadeIn(delay: 180.ms).slideY(
+              begin: 0.04,
+              curve: Curves.easeOutCubic,
+            ),
+        const SizedBox(height: DonySpacing.lg),
+
+        _SectionLabel(label: 'LITIGES', cs: cs),
+        DonyListSection(
+          tiles: [
+            DonyListTile(
+              icon: Icons.balance_rounded,
+              iconColor: cs.error,
+              iconBgColor: cs.errorContainer.withValues(alpha: 0.5),
+              label: 'Mes litiges',
+              showDivider: false,
+              onTap: () => context.push('/disputes'),
+            ),
+          ],
+        ).animate().fadeIn(delay: 240.ms).slideY(
+              begin: 0.04,
+              curve: Curves.easeOutCubic,
+            ),
+        const SizedBox(height: DonySpacing.xl),
+
+        // Ajout voyageur
+        if (isTraveler) ...[
+          _SectionLabel(label: 'MES TRAJETS', cs: cs),
           DonyListSection(
             tiles: [
               DonyListTile(
@@ -484,41 +565,12 @@ class _ActivityTab extends StatelessWidget {
                 onTap: () => context.push('/package-requests/match'),
               ),
               DonyListTile(
-                icon: Icons.compare_arrows_rounded,
-                iconColor: cs.tertiary,
-                iconBgColor: cs.tertiaryContainer,
-                label: 'Mes négociations',
-                showDivider: false,
-                onTap: () => context.push('/negotiations'),
-              ),
-            ],
-          ).animate().fadeIn(delay: 140.ms).slideY(
-                begin: 0.04,
-                curve: Curves.easeOutCubic,
-              ),
-          const SizedBox(height: DonySpacing.lg),
-
-          _SectionLabel(label: 'MES MODÈLES', cs: cs),
-          DonyListSection(
-            tiles: [
-              DonyListTile(
                 icon: Icons.bookmark_rounded,
                 iconColor: cs.primary,
                 iconBgColor: cs.primaryContainer,
                 label: 'Mes modèles de trajet',
-                showDivider: false,
                 onTap: () => context.push('/trip-templates'),
               ),
-            ],
-          ).animate().fadeIn(delay: 170.ms).slideY(
-                begin: 0.04,
-                curve: Curves.easeOutCubic,
-              ),
-          const SizedBox(height: DonySpacing.lg),
-
-          _SectionLabel(label: 'MES ADRESSES', cs: cs),
-          DonyListSection(
-            tiles: [
               DonyListTile(
                 icon: Icons.location_on_rounded,
                 iconColor: cs.primary,
@@ -528,97 +580,11 @@ class _ActivityTab extends StatelessWidget {
                 onTap: () => context.push('/profile/addresses'),
               ),
             ],
-          ).animate().fadeIn(delay: 160.ms).slideY(
-                begin: 0.04,
-                curve: Curves.easeOutCubic,
-              ),
-          const SizedBox(height: DonySpacing.lg),
-
-          _SectionLabel(label: 'LITIGES', cs: cs),
-          DonyListSection(
-            tiles: [
-              DonyListTile(
-                icon: Icons.balance_rounded,
-                iconColor: cs.error,
-                iconBgColor: cs.errorContainer.withValues(alpha: 0.5),
-                label: 'Mes litiges',
-                showDivider: false,
-                onTap: () => context.push('/disputes'),
-              ),
-            ],
-          ).animate().fadeIn(delay: 200.ms).slideY(
-                begin: 0.04,
-                curve: Curves.easeOutCubic,
-              ),
-        ] else ...[
-          _SectionLabel(label: 'MON ACTIVITÉ', cs: cs),
-          DonyListSection(
-            tiles: [
-              DonyListTile(
-                icon: Icons.local_shipping_rounded,
-                iconColor: cs.secondary,
-                iconBgColor: cs.secondaryContainer,
-                label: 'Mes envois en cours',
-                showDivider: false,
-                trailing: activeBids > 0
-                    ? Text(
-                        '$activeBids en cours',
-                        style: tt.labelMedium?.copyWith(
-                          color: cs.secondary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      )
-                    : null,
-                onTap: () => context.push('/announcements'),
-              ),
-            ],
           ).animate().fadeIn(delay: 140.ms).slideY(
                 begin: 0.04,
                 curve: Curves.easeOutCubic,
               ),
-          const SizedBox(height: DonySpacing.lg),
-
-          _SectionLabel(label: 'MON CARNET', cs: cs),
-          DonyListSection(
-            tiles: [
-              DonyListTile(
-                icon: Icons.contacts_rounded,
-                iconColor: cs.primary,
-                iconBgColor: cs.primaryContainer,
-                label: 'Mes destinataires',
-                onTap: () => context.push('/profile/recipients'),
-              ),
-              DonyListTile(
-                icon: Icons.notifications_active_rounded,
-                iconColor: cs.tertiary,
-                iconBgColor: cs.tertiaryContainer.withValues(alpha: 0.5),
-                label: 'Mes abonnements',
-                showDivider: false,
-                onTap: () => context.push('/profile/subscriptions'),
-              ),
-            ],
-          ).animate().fadeIn(delay: 180.ms).slideY(
-                begin: 0.04,
-                curve: Curves.easeOutCubic,
-              ),
-          const SizedBox(height: DonySpacing.lg),
-
-          _SectionLabel(label: 'LITIGES', cs: cs),
-          DonyListSection(
-            tiles: [
-              DonyListTile(
-                icon: Icons.balance_rounded,
-                iconColor: cs.error,
-                iconBgColor: cs.errorContainer.withValues(alpha: 0.5),
-                label: 'Mes litiges',
-                showDivider: false,
-                onTap: () => context.push('/disputes'),
-              ),
-            ],
-          ).animate().fadeIn(delay: 240.ms).slideY(
-                begin: 0.04,
-                curve: Curves.easeOutCubic,
-              ),
+          const SizedBox(height: DonySpacing.xl),
         ],
       ],
     );
@@ -1256,13 +1222,13 @@ class _StatusBadge extends StatelessWidget {
 
 class _ActivitySection extends StatelessWidget {
   const _ActivitySection({
-    required this.activeRole,
+    required this.isTraveler,
     required this.totalTrips,
     required this.totalShipments,
     required this.isLoading,
   });
 
-  final ActiveRole activeRole;
+  final bool isTraveler;
   final int totalTrips;
   final int totalShipments;
   final bool isLoading;
@@ -1270,7 +1236,6 @@ class _ActivitySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs        = Theme.of(context).colorScheme;
-    final isTraveler = activeRole == ActiveRole.traveler;
     final mainValue  = isLoading
         ? '—'
         : '${isTraveler ? totalTrips : totalShipments}';
