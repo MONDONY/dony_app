@@ -5,6 +5,7 @@ import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_detail_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement_bottom_sheet.dart';
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/features/matching/presentation/widgets/secondary_activity_entry.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -15,7 +16,11 @@ import 'package:intl/intl.dart';
 enum _TripsTab { upcoming, history, cancelled }
 
 class AnnouncementListScreen extends StatefulWidget {
-  const AnnouncementListScreen({super.key});
+  const AnnouncementListScreen({super.key, this.onSendParcel});
+
+  /// Optional callback for "Envoyer un colis" secondary entry.
+  /// When non-null, a [SecondaryActivityEntry] is shown at the top of the screen.
+  final VoidCallback? onSendParcel;
 
   @override
   State<AnnouncementListScreen> createState() => _AnnouncementListScreenState();
@@ -148,6 +153,17 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
 
           return Column(
             children: [
+              if (widget.onSendParcel != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    DonySpacing.lg, DonySpacing.sm, DonySpacing.lg, 0,
+                  ),
+                  child: SecondaryActivityEntry(
+                    icon: Icons.local_shipping_rounded,
+                    label: 'Envoyer un colis',
+                    onTap: widget.onSendParcel!,
+                  ),
+                ),
               // "En cours" section — pinned above tabs, visible only when at least one trip is IN_PROGRESS
               if (inProgressList.isNotEmpty) ...[
                 _InProgressSection(announcements: inProgressList, tt: tt, cs: cs),
