@@ -33,13 +33,15 @@ class BidRepository {
 
   Future<BidQuoteResponse> quoteBid({
     required String announcementId,
-    required double weightKg,
+    double? weightKg,
     String? promoCode,
+    List<Map<String, dynamic>>? gridItems,
   }) =>
       _datasource.quoteBid(
         announcementId: announcementId,
         weightKg: weightKg,
         promoCode: promoCode,
+        gridItems: gridItems,
       );
 
   Future<BidModel> createBid({

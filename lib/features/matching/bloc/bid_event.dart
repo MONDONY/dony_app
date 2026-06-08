@@ -66,15 +66,21 @@ class BidCreateRequested extends BidEvent {
 }
 
 /// Calcule le devis pour un bid (net, commission, total) avec promo éventuel.
+/// Supporte les trois modes : KG ([weightKg] seul), GRID ([gridItems] seuls)
+/// et MIXED (les deux) — le promo est ainsi reflété quel que soit le mode.
 class BidQuoteRequested extends BidEvent {
   final String announcementId;
-  final double weightKg;
+  final double? weightKg;
   final String? promoCode;
+
+  /// Articles de la grille : `[{'announcementGridItemId': String, 'quantity': int}]`.
+  final List<Map<String, dynamic>>? gridItems;
 
   BidQuoteRequested({
     required this.announcementId,
-    required this.weightKg,
+    this.weightKg,
     this.promoCode,
+    this.gridItems,
   });
 }
 

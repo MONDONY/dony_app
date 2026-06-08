@@ -559,4 +559,92 @@ void main() {
       expect((capturedBody as Map)['paymentMethod'], 'CASH');
     });
   });
+
+  // ── quoteBid ─────────────────────────────────────────────────────────────────
+
+  group('quoteBid', () {
+    final _quoteJson = {
+      'netEur': 65.0,
+      'gridNetEur': 65.0,
+      'kgNetEur': 0.0,
+      'rate': 0.12,
+      'commissionEur': 7.80,
+      'totalEur': 72.80,
+      'promoApplied': false,
+      'promoLabel': null,
+    };
+
+    test('mode KG : inclut weightKg, omet gridItems', () async {
+      dynamic capturedBody;
+      when(() => mockDio.post('/bids/quote', data: any(named: 'data')))
+          .thenAnswer((inv) async {
+        capturedBody = inv.namedArguments[const Symbol('data')];
+        return _ok(_quoteJson, '/bids/quote');
+      });
+
+      await datasource.quoteBid(announcementId: 'ann-001', weightKg: 5.0);
+
+      final body = capturedBody as Map;
+      expect(body['weightKg'], 5.0);
+      expect(body.containsKey('gridItems'), isFalse);
+    });
+
+    test('mode GRID pur : omet weightKg (null/0), inclut gridItems', () async {
+      dynamic capturedBody;
+      when(() => mockDio.post('/bids/quote', data: any(named: 'data')))
+          .thenAnswer((inv) async {
+        capturedBody = inv.namedArguments[const Symbol('data')];
+        return _ok(_quoteJson, '/bids/quote');
+      });
+
+      final result = await datasource.quoteBid(
+        announcementId: 'ann-001',
+        gridItems: [
+          {'announcementGridItemId': 'item-1', 'quantity': 2}
+        ],
+      );
+
+      final body = capturedBody as Map;
+      expect(body.containsKey('weightKg'), isFalse);
+      expect(body['gridItems'], hasLength(1));
+      expect(result.gridNetEur, 65.0);
+      expect(result.totalEur, 72.80);
+    });
+
+    test('weightKg = 0 est omis (le backend exige ≥ 0.1)', () async {
+      dynamic capturedBody;
+      when(() => mockDio.post('/bids/quote', data: any(named: 'data')))
+          .thenAnswer((inv) async {
+        capturedBody = inv.namedArguments[const Symbol('data')];
+        return _ok(_quoteJson, '/bids/quote');
+      });
+
+      await datasource.quoteBid(
+        announcementId: 'ann-001',
+        weightKg: 0,
+        gridItems: [
+          {'announcementGridItemId': 'item-1', 'quantity': 1}
+        ],
+      );
+
+      expect((capturedBody as Map).containsKey('weightKg'), isFalse);
+    });
+
+    test('promoCode envoyé en majuscules', () async {
+      dynamic capturedBody;
+      when(() => mockDio.post('/bids/quote', data: any(named: 'data')))
+          .thenAnswer((inv) async {
+        capturedBody = inv.namedArguments[const Symbol('data')];
+        return _ok(_quoteJson, '/bids/quote');
+      });
+
+      await datasource.quoteBid(
+        announcementId: 'ann-001',
+        weightKg: 5.0,
+        promoCode: 'welcome10',
+      );
+
+      expect((capturedBody as Map)['promoCode'], 'WELCOME10');
+    });
+  });
 }

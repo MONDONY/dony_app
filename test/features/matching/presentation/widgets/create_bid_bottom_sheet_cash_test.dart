@@ -714,8 +714,8 @@ void main() {
 
       // Main sheet now shows the selected-items state.
       expect(find.textContaining('article sélectionné'), findsOneWidget);
-      // _GridTotalRecap rendered (gridTotal > 0).
-      expect(find.text('Total articles'), findsOneWidget);
+      // Le breakdown de prix affiche la ligne « Articles » (grille > 0).
+      expect(find.text('Articles'), findsOneWidget);
     });
 
     testWidgets(

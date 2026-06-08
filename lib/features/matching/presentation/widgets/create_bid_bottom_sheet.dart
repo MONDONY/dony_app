@@ -202,14 +202,43 @@ class _CreateBidContentState extends State<_CreateBidContent> {
   double get _maxKg => widget.announcement.availableKg;
   double get _pricePerKg => widget.announcement.pricePerKg;
 
+  /// Articles sélectionnés au format attendu par l'API (`null` si aucun).
+  List<Map<String, dynamic>>? _selectedGridItems() {
+    final q = _gridQuantitiesNotifier.value;
+    final items = <Map<String, dynamic>>[];
+    for (final item in widget.announcement.priceGridItems) {
+      final qty = q[item.id] ?? 0;
+      if (qty > 0) {
+        items.add({'announcementGridItemId': item.id, 'quantity': qty});
+      }
+    }
+    return items.isEmpty ? null : items;
+  }
+
+  /// Total grille « prix affiché expéditeur » (commission Dony incluse), au taux global.
+  double _gridDisplayTotal() {
+    final q = _gridQuantitiesNotifier.value;
+    return widget.announcement.priceGridItems.fold<double>(
+      0,
+      (sum, item) => sum + item.unitPriceDisplay * (q[item.id] ?? 0),
+    );
+  }
+
   void _applyPromoCode() {
     final code = _promoCtrl.text.trim();
     if (code.isEmpty) { _quoteNotifier.value = null; return; }
+    final weight = _weightNotifier.value;
     widget.bidBloc.add(BidQuoteRequested(
       announcementId: widget.announcement.id,
-      weightKg: _weightNotifier.value,
+      weightKg: weight > 0 ? weight : null,
       promoCode: code,
+      gridItems: _selectedGridItems(),
     ));
+  }
+
+  /// Un devis (promo) calculé sur d'anciens poids/articles devient caduc.
+  void _invalidateQuote() {
+    if (_quoteNotifier.value != null) _quoteNotifier.value = null;
   }
 
   bool get _hasAlternativePaymentMethods =>
@@ -234,6 +263,10 @@ class _CreateBidContentState extends State<_CreateBidContent> {
     _categoriesNotifier.addListener(_syncFormButtonState);
     _disclaimerNotifier.addListener(_syncFormButtonState);
     _gridQuantitiesNotifier.addListener(_syncFormButtonState);
+
+    // Tout changement de poids/articles invalide un devis promo désormais périmé.
+    _weightNotifier.addListener(_invalidateQuote);
+    _gridQuantitiesNotifier.addListener(_invalidateQuote);
 
     // Picker step listeners
     _stepNotifier.addListener(_onStepChanged);
@@ -309,10 +342,12 @@ class _CreateBidContentState extends State<_CreateBidContent> {
 
   double _computeStripeTotal() {
     final quote = _quoteNotifier.value;
-    if (quote is BidQuoteResponse && quote.promoApplied) return quote.totalEur;
+    // Le devis serveur couvre tous les modes (poids + articles + promo).
+    if (quote is BidQuoteResponse) return quote.totalEur;
     final data = _formData;
     if (data == null) return 0.0;
-    return netToSenderPrice(data.weightKg * _pricePerKg);
+    // Repli local : part poids (commission incl.) + part articles (déjà commission incl.).
+    return netToSenderPrice(data.weightKg * _pricePerKg) + _gridDisplayTotal();
   }
 
   // ── Navigation between steps ───────────────────────────────────────────────
@@ -340,14 +375,6 @@ class _CreateBidContentState extends State<_CreateBidContent> {
       return;
     }
 
-    final gridItems = widget.announcement.priceGridItems
-        .where((item) => (_gridQuantitiesNotifier.value[item.id] ?? 0) > 0)
-        .map((item) => {
-              'announcementGridItemId': item.id,
-              'quantity': _gridQuantitiesNotifier.value[item.id]!,
-            })
-        .toList();
-
     final promoCode = _promoCtrl.text.trim().isNotEmpty
         ? _promoCtrl.text.trim()
         : null;
@@ -358,7 +385,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
       contentCategory: _categoriesNotifier.value.join(', '),
       recipientName: _recipientNameCtrl.text.trim(),
       recipientPhone: _recipientPhoneCtrl.text.trim(),
-      gridItems: gridItems.isEmpty ? null : gridItems,
+      gridItems: _selectedGridItems(),
       promoCode: promoCode,
     );
 
@@ -443,6 +470,8 @@ class _CreateBidContentState extends State<_CreateBidContent> {
     _categoriesNotifier.removeListener(_syncFormButtonState);
     _disclaimerNotifier.removeListener(_syncFormButtonState);
     _gridQuantitiesNotifier.removeListener(_syncFormButtonState);
+    _weightNotifier.removeListener(_invalidateQuote);
+    _gridQuantitiesNotifier.removeListener(_invalidateQuote);
     _stepNotifier.removeListener(_onStepChanged);
     _methodNotifier.removeListener(_syncPickerButtonState);
     _mmPhoneCtrl.removeListener(_syncPickerButtonState);
@@ -538,9 +567,6 @@ class _CreateBidContentState extends State<_CreateBidContent> {
         final gridQuantities = _gridQuantitiesNotifier.value;
         final hasGridPricing = widget.announcement.priceGridItems.isNotEmpty;
         final hasKgPricing = widget.announcement.pricePerKg > 0;
-        final serviceFee = (weightKg * _pricePerKg) * donyCommissionRate;
-        final basePrice = weightKg * _pricePerKg;
-        final totalPrice = basePrice + serviceFee;
 
         final gridTotal = hasGridPricing
             ? widget.announcement.priceGridItems.fold<double>(
@@ -900,28 +926,41 @@ class _CreateBidContentState extends State<_CreateBidContent> {
             ).animate().fadeIn(delay: 220.ms),
             const SizedBox(height: DonySpacing.xxl),
 
-            // ── Récap grille ────────────────────────────────────────────────
-            if (hasGridPricing && gridTotal > 0) ...[
-              _GridTotalRecap(gridTotal: gridTotal),
-              const SizedBox(height: DonySpacing.md),
-            ],
+            // ── Prix (live, tous modes, promo inclus) ────────────────────────
+            ValueListenableBuilder<Object?>(
+              valueListenable: _quoteNotifier,
+              builder: (_, quoteVal, __) {
+                final quote = quoteVal is BidQuoteResponse ? quoteVal : null;
+                final kgDisplayLocal =
+                    hasKgPricing ? netToSenderPrice(weightKg * _pricePerKg) : 0.0;
+                final localTotal = kgDisplayLocal + gridTotal;
 
-            // ── Prix (mis à jour depuis le devis si promo) ───────────────────
-            if (hasKgPricing)
-              ValueListenableBuilder<Object?>(
-                valueListenable: _quoteNotifier,
-                builder: (_, quoteVal, __) {
-                  final quote = quoteVal is BidQuoteResponse ? quoteVal : null;
-                  return _PriceBreakdown(
-                    weightKg: weightKg,
-                    pricePerKg: _pricePerKg,
-                    basePrice: basePrice,
-                    serviceFee: quote?.commissionEur ?? serviceFee,
-                    totalPrice: quote?.totalEur ?? totalPrice,
-                    promoApplied: quote?.promoApplied ?? false,
-                  );
-                },
-              ),
+                double kgLine = kgDisplayLocal;
+                double gridLine = gridTotal;
+                double total = localTotal;
+                double? original;
+                bool promoApplied = false;
+                if (quote != null) {
+                  // Devis serveur : lignes recalculées au taux effectif → somme = total.
+                  final mult = 1 + quote.rate;
+                  kgLine = quote.kgNetEur * mult;
+                  gridLine = quote.gridNetEur * mult;
+                  total = quote.totalEur;
+                  promoApplied = quote.promoApplied;
+                  original = promoApplied ? localTotal : null;
+                }
+                if (total <= 0) return const SizedBox.shrink();
+                return _PriceBreakdown(
+                  weightKg: weightKg,
+                  pricePerKg: _pricePerKg,
+                  kgDisplay: kgLine,
+                  gridDisplay: gridLine,
+                  totalPrice: total,
+                  originalTotal: original,
+                  promoApplied: promoApplied,
+                );
+              },
+            ),
             const SizedBox(height: DonySpacing.md),
           ],
         );
@@ -1515,41 +1554,6 @@ class _MethodTile extends StatelessWidget {
 
 // ── Grid total recap ─────────────────────────────────────────────────────────
 
-class _GridTotalRecap extends StatelessWidget {
-  const _GridTotalRecap({required this.gridTotal});
-
-  final double gridTotal;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.all(DonySpacing.base),
-      decoration: BoxDecoration(
-        color: cs.primary,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'Total articles',
-            style: tt.labelMedium?.copyWith(color: cs.onPrimary),
-          ),
-          Text(
-            '${gridTotal.toStringAsFixed(2)} €',
-            style: tt.titleSmall?.copyWith(
-              color: cs.onPrimary,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ── Wallet tile (Compte Dony) ────────────────────────────────────────────────
 
 class _WalletTile extends StatelessWidget {
@@ -1632,17 +1636,28 @@ class _PriceBreakdown extends StatelessWidget {
   const _PriceBreakdown({
     required this.weightKg,
     required this.pricePerKg,
-    required this.basePrice,
-    required this.serviceFee,
+    required this.kgDisplay,
+    required this.gridDisplay,
     required this.totalPrice,
+    this.originalTotal,
     this.promoApplied = false,
   });
 
   final double weightKg;
   final double pricePerKg;
-  final double basePrice;
-  final double serviceFee;
+
+  /// Part « poids » au prix expéditeur (commission Dony incluse). 0 si pas de poids.
+  final double kgDisplay;
+
+  /// Part « articles » au prix expéditeur (commission Dony incluse). 0 si pas d'article.
+  final double gridDisplay;
+
+  /// Total à payer par l'expéditeur.
   final double totalPrice;
+
+  /// Total avant promo (barré) — null si pas de promo.
+  final double? originalTotal;
+
   final bool promoApplied;
 
   @override
@@ -1650,6 +1665,18 @@ class _PriceBreakdown extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final fmt = NumberFormat.currency(locale: 'fr_FR', symbol: '€');
+
+    final lines = <Widget>[];
+    if (weightKg > 0 && kgDisplay > 0) {
+      lines.add(_line(
+        tt,
+        '${formatKgPrice(weightKg)} kg × ${formatKgPrice(pricePerKg)}€',
+        fmt.format(kgDisplay),
+      ));
+    }
+    if (gridDisplay > 0) {
+      lines.add(_line(tt, 'Articles', fmt.format(gridDisplay)));
+    }
 
     return Container(
       padding: const EdgeInsets.all(DonySpacing.base),
@@ -1660,28 +1687,24 @@ class _PriceBreakdown extends StatelessWidget {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${weightKg.toStringAsFixed(0)} kg × '
-                '${pricePerKg.toStringAsFixed(0)}€',
-                style: tt.bodyMedium,
-              ),
-              Text(fmt.format(basePrice), style: tt.titleMedium),
-            ],
-          ),
-          const SizedBox(height: DonySpacing.xs),
+          for (final l in lines) ...[
+            l,
+            const SizedBox(height: DonySpacing.xs),
+          ],
+          if (lines.isNotEmpty) ...[
+            Divider(color: cs.outline),
+            const SizedBox(height: DonySpacing.xs),
+          ],
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
                 children: [
-                  Text('Frais de service',
-                      style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+                  Text('Total', style: tt.titleLarge),
                   if (promoApplied) ...[
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
@@ -1699,24 +1722,43 @@ class _PriceBreakdown extends StatelessWidget {
                   ],
                 ],
               ),
-              Text(fmt.format(serviceFee), style: tt.bodyMedium),
-            ],
-          ),
-          const SizedBox(height: DonySpacing.sm),
-          Divider(color: cs.outline),
-          const SizedBox(height: DonySpacing.sm),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Total', style: tt.titleLarge),
-              Text(
-                fmt.format(totalPrice),
-                style: tt.titleLarge?.copyWith(color: cs.primary),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (promoApplied && originalTotal != null) ...[
+                    Text(
+                      fmt.format(originalTotal),
+                      style: tt.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  Text(
+                    fmt.format(totalPrice),
+                    key: const Key('bid-total-amount'),
+                    style: tt.titleLarge?.copyWith(color: cs.primary),
+                  ),
+                ],
               ),
             ],
+          ),
+          const SizedBox(height: DonySpacing.xs),
+          Text(
+            'Commission Dony incluse',
+            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
       ),
     );
   }
+
+  Widget _line(TextTheme tt, String label, String value) => Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: tt.bodyMedium),
+          Text(value, style: tt.titleMedium),
+        ],
+      );
 }

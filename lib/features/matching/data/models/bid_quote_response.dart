@@ -13,10 +13,20 @@ class BidQuoteResponse {
     required this.totalEur,
     required this.promoApplied,
     this.promoLabel,
+    this.gridNetEur = 0,
+    this.kgNetEur = 0,
   });
 
-  /// Montant net voyageur (weightKg × pricePerKg).
+  /// Montant net voyageur total (= gridNetEur + kgNetEur).
   final double netEur;
+
+  /// Part nette issue des articles de la grille (= Σ unitPriceNet × quantité). 0 en mode KG.
+  @JsonKey(defaultValue: 0)
+  final double gridNetEur;
+
+  /// Part nette issue du poids (= weightKg × pricePerKg). 0 en mode GRID.
+  @JsonKey(defaultValue: 0)
+  final double kgNetEur;
 
   /// Taux de commission Dony effectif (promo/override/global).
   final double rate;
