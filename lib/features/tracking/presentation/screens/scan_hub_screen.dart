@@ -1,13 +1,11 @@
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/injection.dart';
+import 'package:dony/features/matching/presentation/widgets/secondary_activity_entry.dart';
+import 'package:dony/features/tracking/bloc/scan_hub_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-
-class _TripStub {
-  static const corridor = 'Paris → Dakar';
-  static const date = '22 mai 2025';
-  static const totalColis = 3;
-  static const scannedDepart = 1;
-}
+import 'package:intl/intl.dart';
 
 class _EtapeInfo {
   final String code;
@@ -25,7 +23,24 @@ const _etapes = [
 ];
 
 class ScanHubScreen extends StatelessWidget {
-  const ScanHubScreen({super.key});
+  const ScanHubScreen({super.key, this.onTrackParcel});
+
+  /// Entrée additive « Suivre un colis » (voyageur pro). Null = non affichée.
+  final VoidCallback? onTrackParcel;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => getIt<ScanHubCubit>()..load(),
+      child: ScanHubView(onTrackParcel: onTrackParcel),
+    );
+  }
+}
+
+class ScanHubView extends StatelessWidget {
+  const ScanHubView({super.key, this.onTrackParcel});
+
+  final VoidCallback? onTrackParcel;
 
   @override
   Widget build(BuildContext context) {
@@ -45,31 +60,81 @@ class ScanHubScreen extends StatelessWidget {
           child: Divider(height: 1, color: cs.outline),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
-          DonySpacing.lg, DonySpacing.xl, DonySpacing.lg, DonySpacing.huge,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _TripHeroCard(),
-            const SizedBox(height: DonySpacing.xl),
-            _EtapesSection(),
-            const SizedBox(height: DonySpacing.xl),
-            _QuickActionsSection(),
-          ],
-        ),
+      body: BlocBuilder<ScanHubCubit, ScanHubState>(
+        builder: (context, state) {
+          switch (state) {
+            case ScanHubLoading():
+              return Center(
+                child: CircularProgressIndicator(color: cs.primary),
+              );
+            case ScanHubError(:final message):
+              return _ErrorState(
+                message: message,
+                onRetry: () => context.read<ScanHubCubit>().load(),
+              );
+            case ScanHubEmpty():
+              return const _NoTripState();
+            case ScanHubLoaded(:final trip, :final progress):
+              return SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  DonySpacing.lg,
+                  DonySpacing.xl,
+                  DonySpacing.lg,
+                  DonySpacing.huge,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (onTrackParcel != null) ...[
+                      SecondaryActivityEntry(
+                        icon: Icons.local_shipping_rounded,
+                        label: 'Suivre un colis',
+                        onTap: onTrackParcel!,
+                      ),
+                      const SizedBox(height: DonySpacing.lg),
+                    ],
+                    _TripHeroCard(
+                      corridor: '${trip.departureCity} → ${trip.arrivalCity}',
+                      dateLabel: _formatDate(trip.departureDate),
+                      confirmedColis: progress.confirmedColis,
+                      scannedDepart: progress.scannedDepart,
+                    ),
+                    const SizedBox(height: DonySpacing.xl),
+                    const _EtapesSection(),
+                    const SizedBox(height: DonySpacing.xl),
+                    const _QuickActionsSection(),
+                  ],
+                ),
+              );
+          }
+        },
       ),
     );
   }
 }
 
+String _formatDate(DateTime date) {
+  return DateFormat('d MMMM yyyy', 'fr').format(date);
+}
+
 class _TripHeroCard extends StatelessWidget {
+  const _TripHeroCard({
+    required this.corridor,
+    required this.dateLabel,
+    required this.confirmedColis,
+    required this.scannedDepart,
+  });
+
+  final String corridor;
+  final String dateLabel;
+  final int confirmedColis;
+  final int scannedDepart;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    const progress = _TripStub.scannedDepart / _TripStub.totalColis;
+    final progress = confirmedColis == 0 ? 0.0 : scannedDepart / confirmedColis;
 
     return Container(
       decoration: BoxDecoration(
@@ -96,14 +161,14 @@ class _TripHeroCard extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(
-            _TripStub.corridor,
+            corridor,
             style: tt.headlineMedium?.copyWith(
               color: DonyColors.neutral0,
               fontWeight: FontWeight.w800,
             ),
           ),
           Text(
-            '${_TripStub.date} · ${_TripStub.totalColis} colis confirmés',
+            '$dateLabel · $confirmedColis colis confirmés',
             style: tt.bodySmall?.copyWith(
               color: DonyColors.neutral0.withValues(alpha: 0.75),
             ),
@@ -128,7 +193,7 @@ class _TripHeroCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${_TripStub.scannedDepart} / ${_TripStub.totalColis}',
+                      '$scannedDepart / $confirmedColis',
                       style: tt.labelSmall?.copyWith(
                         color: DonyColors.neutral0,
                         fontWeight: FontWeight.w800,
@@ -155,7 +220,43 @@ class _TripHeroCard extends StatelessWidget {
   }
 }
 
+class _NoTripState extends StatelessWidget {
+  const _NoTripState();
+
+  @override
+  Widget build(BuildContext context) {
+    return DonyEmptyState(
+      title: 'Aucun trajet à scanner',
+      description:
+          'Tu pourras scanner les colis dès qu\'une demande sera acceptée sur l\'un de tes trajets.',
+      mascotte: DonyMascotteType.assis,
+      actionLabel: 'Voir mes trajets',
+      onAction: () => context.push('/announcements/trips'),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return DonyEmptyState(
+      title: 'Impossible de charger les trajets',
+      description: message,
+      type: DonyEmptyStateType.error,
+      actionLabel: 'Réessayer',
+      onAction: onRetry,
+    );
+  }
+}
+
 class _EtapesSection extends StatelessWidget {
+  const _EtapesSection();
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -260,6 +361,8 @@ class _EtapeChip extends StatelessWidget {
 }
 
 class _QuickActionsSection extends StatelessWidget {
+  const _QuickActionsSection();
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
