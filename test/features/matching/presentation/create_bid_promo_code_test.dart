@@ -332,4 +332,42 @@ void main() {
     expect(find.text('Code WELCOME10 : 6 % de commission'), findsNothing);
     expect(find.text('Code expiré'), findsOneWidget);
   });
+
+  // ── 7. Total reflète la remise promo ─────────────────────────────────────
+
+  testWidgets('promo appliqué → total remisé affiché (ancien barré + nouveau)',
+      (tester) async {
+    await _openSheet(tester);
+    await _scrollTo(tester, find.text('CODE PROMO (OPTIONNEL)'));
+
+    final promoField = find.ancestor(
+      of: find.text('Ex: WELCOME10'),
+      matching: find.byType(TextFormField),
+    );
+    await tester.enterText(promoField, 'WELCOME10');
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, 'Appliquer'));
+    await tester.pump();
+
+    // Devis serveur : net 60 € (5 kg × 12 €/kg), promo 6 % → total 63,60 €.
+    bidStream.add(BidQuoteLoaded(const BidQuoteResponse(
+      netEur: 60.0,
+      kgNetEur: 60.0,
+      gridNetEur: 0.0,
+      rate: 0.06,
+      commissionEur: 3.60,
+      totalEur: 63.60,
+      promoApplied: true,
+      promoLabel: 'Code WELCOME10 : 6 % de commission',
+    )));
+    await tester.pumpAndSettle();
+
+    final totalFinder = find.byKey(const Key('bid-total-amount'));
+    await _scrollTo(tester, totalFinder);
+
+    // Le total à payer affiché reflète la remise (63,60 €), pas le tarif plein.
+    expect(tester.widget<Text>(totalFinder).data, contains('63,60'));
+    // L'ancien total (67,20 € = 60 × 1,12) est affiché barré.
+    expect(find.textContaining('67,20'), findsOneWidget);
+  });
 }

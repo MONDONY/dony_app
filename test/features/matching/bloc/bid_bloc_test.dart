@@ -1237,5 +1237,49 @@ void main() {
       )),
       expect: () => [isA<BidQuoteLoading>(), isA<BidQuoteLoaded>()],
     );
+
+    blocTest<BidBloc, BidState>(
+      'mode GRID (poids null + gridItems) → forwarde gridItems au repository',
+      build: () {
+        when(() => mockRepo.quoteBid(
+          announcementId: any(named: 'announcementId'),
+          weightKg: any(named: 'weightKg'),
+          promoCode: any(named: 'promoCode'),
+          gridItems: any(named: 'gridItems'),
+        )).thenAnswer((_) async => const BidQuoteResponse(
+          netEur: 65.0,
+          gridNetEur: 65.0,
+          kgNetEur: 0.0,
+          rate: 0.06,
+          commissionEur: 3.90,
+          totalEur: 68.90,
+          promoApplied: true,
+          promoLabel: 'Code PROMO6 : 6 % de commission',
+        ));
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(BidQuoteRequested(
+        announcementId: 'ann-001',
+        promoCode: 'PROMO6',
+        gridItems: [
+          {'announcementGridItemId': 'item-1', 'quantity': 2}
+        ],
+      )),
+      expect: () => [isA<BidQuoteLoading>(), isA<BidQuoteLoaded>()],
+      verify: (_) {
+        // Mocktail : dès qu'un argument est un matcher, tous doivent l'être.
+        verify(() => mockRepo.quoteBid(
+          announcementId: any(named: 'announcementId', that: equals('ann-001')),
+          weightKg: any(named: 'weightKg', that: isNull),
+          promoCode: any(named: 'promoCode', that: equals('PROMO6')),
+          gridItems: any(
+            named: 'gridItems',
+            that: predicate<List<Map<String, dynamic>>?>(
+              (g) => g != null && g.length == 1 && g.first['quantity'] == 2,
+            ),
+          ),
+        )).called(1);
+      },
+    );
   });
 }

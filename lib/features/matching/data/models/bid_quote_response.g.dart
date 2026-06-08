@@ -14,11 +14,15 @@ BidQuoteResponse _$BidQuoteResponseFromJson(Map<String, dynamic> json) =>
       totalEur: (json['totalEur'] as num).toDouble(),
       promoApplied: json['promoApplied'] as bool,
       promoLabel: json['promoLabel'] as String?,
+      gridNetEur: (json['gridNetEur'] as num?)?.toDouble() ?? 0,
+      kgNetEur: (json['kgNetEur'] as num?)?.toDouble() ?? 0,
     );
 
 Map<String, dynamic> _$BidQuoteResponseToJson(BidQuoteResponse instance) =>
     <String, dynamic>{
       'netEur': instance.netEur,
+      'gridNetEur': instance.gridNetEur,
+      'kgNetEur': instance.kgNetEur,
       'rate': instance.rate,
       'commissionEur': instance.commissionEur,
       'totalEur': instance.totalEur,

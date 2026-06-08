@@ -316,6 +316,7 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         announcementId: event.announcementId,
         weightKg: event.weightKg,
         promoCode: event.promoCode,
+        gridItems: event.gridItems,
       );
       emit(BidQuoteLoaded(quote));
     } on DioException catch (e) {

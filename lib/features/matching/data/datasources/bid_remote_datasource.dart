@@ -41,16 +41,19 @@ class BidRemoteDatasource {
   /// Lève une [DioException] avec le code promo-* si le code est invalide.
   Future<BidQuoteResponse> quoteBid({
     required String announcementId,
-    required double weightKg,
+    double? weightKg,
     String? promoCode,
+    List<Map<String, dynamic>>? gridItems,
   }) async {
     final body = <String, dynamic>{
       'announcementId': announcementId,
-      'weightKg': weightKg,
     };
+    // Poids omis en mode GRID pur (le backend exige ≥ 0.1 kg s'il est présent).
+    if (weightKg != null && weightKg > 0) body['weightKg'] = weightKg;
     if (promoCode != null && promoCode.isNotEmpty) {
       body['promoCode'] = promoCode.trim().toUpperCase();
     }
+    if (gridItems != null && gridItems.isNotEmpty) body['gridItems'] = gridItems;
     final response = await _apiClient.dio.post('/bids/quote', data: body);
     return BidQuoteResponse.fromJson(response.data as Map<String, dynamic>);
   }
