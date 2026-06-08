@@ -6,14 +6,16 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   testWidgets('affiche les 3 segments et notifie au tap', (tester) async {
     HomeMapFocus? picked;
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: HomeFocusFilter(
-          focus: HomeMapFocus.all,
-          onChanged: (f) => picked = f,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: HomeFocusFilter(
+            focus: HomeMapFocus.all,
+            onChanged: (f) => picked = f,
+          ),
         ),
       ),
-    ));
+    );
 
     expect(find.text('Tout'), findsOneWidget);
     expect(find.text('Colis'), findsOneWidget);
@@ -26,14 +28,16 @@ void main() {
 
   testWidgets('tap sur Trajets notifie trips', (tester) async {
     HomeMapFocus? picked;
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: HomeFocusFilter(
-          focus: HomeMapFocus.all,
-          onChanged: (f) => picked = f,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: HomeFocusFilter(
+            focus: HomeMapFocus.all,
+            onChanged: (f) => picked = f,
+          ),
         ),
       ),
-    ));
+    );
 
     await tester.tap(find.text('Trajets'));
     await tester.pump();
@@ -42,14 +46,16 @@ void main() {
 
   testWidgets('tap sur Tout notifie all', (tester) async {
     HomeMapFocus? picked;
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: HomeFocusFilter(
-          focus: HomeMapFocus.parcels,
-          onChanged: (f) => picked = f,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: HomeFocusFilter(
+            focus: HomeMapFocus.parcels,
+            onChanged: (f) => picked = f,
+          ),
         ),
       ),
-    ));
+    );
 
     await tester.tap(find.text('Tout'));
     await tester.pump();
