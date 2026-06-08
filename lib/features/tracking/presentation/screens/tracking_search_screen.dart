@@ -1,5 +1,6 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
+import 'package:dony/features/matching/presentation/widgets/secondary_activity_entry.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
@@ -10,7 +11,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class TrackingSearchScreen extends StatefulWidget {
-  const TrackingSearchScreen({super.key});
+  const TrackingSearchScreen({
+    super.key,
+    this.onScanTrip,
+    this.showBackButton = true,
+  });
+
+  /// Entrée additive « Scanner un trajet » (voyageur occasionnel). Null = non affichée.
+  final VoidCallback? onScanTrip;
+
+  /// Masque le bouton retour quand l'écran est rendu in-shell.
+  final bool showBackButton;
 
   @override
   State<TrackingSearchScreen> createState() => _TrackingSearchScreenState();
@@ -42,7 +53,10 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
     final tt = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: const DonyAppBar(title: 'Suivre un colis'),
+      appBar: DonyAppBar(
+        title: 'Suivre un colis',
+        showBackButton: widget.showBackButton,
+      ),
       body: Builder(builder: (context) {
         final h = DonyLayout.hPadding(context);
         return SingleChildScrollView(
@@ -52,6 +66,16 @@ class _TrackingSearchScreenState extends State<TrackingSearchScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (widget.onScanTrip != null) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 0, 0, DonySpacing.lg),
+                    child: SecondaryActivityEntry(
+                      icon: Icons.qr_code_scanner_rounded,
+                      label: 'Scanner un trajet',
+                      onTap: widget.onScanTrip!,
+                    ),
+                  ),
+                ],
                 _buildSearchHeader(cs, tt),
                 const SizedBox(height: DonySpacing.xl),
                 _buildSearchField(cs, tt),
