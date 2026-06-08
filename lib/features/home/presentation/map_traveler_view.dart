@@ -25,8 +25,8 @@ class MapTravelerView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<PackageRequestSearchBloc>(
-      create: (_) => getIt<PackageRequestSearchBloc>()
-        ..add(const SearchFiltersChanged()),
+      create: (_) =>
+          getIt<PackageRequestSearchBloc>()..add(const SearchFiltersChanged()),
       child: const _MapTravelerViewContent(),
     );
   }
@@ -71,8 +71,11 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
     final access = await requestLocationAccess(locationService);
     if (!mounted) return;
     if (access != LocationAccess.granted) {
-      await LocationDeniedSheet.show(context,
-          access: access, service: locationService);
+      await LocationDeniedSheet.show(
+        context,
+        access: access,
+        service: locationService,
+      );
       return;
     }
     final selectedRadius = await NearMeRadiusSheet.show(context);
@@ -80,13 +83,17 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
     final Position position;
     try {
       position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.low),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.low,
+        ),
       );
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Impossible de te localiser. Réessaie.'),
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Impossible de te localiser. Réessaie.'),
+          ),
+        );
       }
       return;
     }
@@ -95,11 +102,13 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
       _userPosition = LatLng(position.latitude, position.longitude);
       _radiusKm = selectedRadius;
     });
-    context.read<PackageRequestSearchBloc>().add(SearchFiltersChanged(
-          userLat: position.latitude,
-          userLng: position.longitude,
-          radiusKm: selectedRadius,
-        ));
+    context.read<PackageRequestSearchBloc>().add(
+      SearchFiltersChanged(
+        userLat: position.latitude,
+        userLng: position.longitude,
+        radiusKm: selectedRadius,
+      ),
+    );
   }
 
   void _deactivateNearMe() {
@@ -114,28 +123,31 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
     return items
         .where((it) => it.departureLat != null && it.departureLng != null)
         .map((it) {
-      return Marker(
-        markerId: MarkerId('pr_${it.id}'),
-        position: LatLng(it.departureLat!, it.departureLng!),
-        infoWindow: InfoWindow(
-          title: '${it.departureCity} → ${it.arrivalCity}',
-          snippet: it.targetPriceEur != null
-              ? '${it.targetPriceEur!.toStringAsFixed(0)} €'
-              : 'Libre',
-        ),
-        icon: BitmapDescriptor.defaultMarkerWithHue(
-          _selectedRequestId == it.id
-              ? BitmapDescriptor.hueAzure
-              : BitmapDescriptor.hueRed,
-        ),
-        onTap: () => setState(() => _selectedRequestId = it.id),
-      );
-    }).toSet();
+          return Marker(
+            markerId: MarkerId('pr_${it.id}'),
+            position: LatLng(it.departureLat!, it.departureLng!),
+            infoWindow: InfoWindow(
+              title: '${it.departureCity} → ${it.arrivalCity}',
+              snippet: it.targetPriceEur != null
+                  ? '${it.targetPriceEur!.toStringAsFixed(0)} €'
+                  : 'Libre',
+            ),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+              _selectedRequestId == it.id
+                  ? BitmapDescriptor.hueAzure
+                  : BitmapDescriptor.hueRed,
+            ),
+            onTap: () => setState(() => _selectedRequestId = it.id),
+          );
+        })
+        .toSet();
   }
 
   void _openPreview(BuildContext context, PackageRequestSearchItem item) {
     final authState = context.read<AuthBloc>().state;
-    final currentUserId = authState is AuthAuthenticated ? authState.user.id : null;
+    final currentUserId = authState is AuthAuthenticated
+        ? authState.user.id
+        : null;
     if (currentUserId != null && item.sender.id == currentUserId) return;
     PackageRequestPreviewBottomSheet.show(context, item: item);
   }
@@ -159,7 +171,8 @@ class _MapTravelerViewContentState extends State<_MapTravelerViewContent> {
                 userPosition: _userPosition,
                 onNearMeToggle: () =>
                     isNearMe ? _deactivateNearMe() : _activateNearMe(),
-                fabBottomPadding: MediaQuery.of(context).size.height * _sheetSize,
+                fabBottomPadding:
+                    MediaQuery.of(context).size.height * _sheetSize,
               ),
               DraggableScrollableSheet(
                 controller: _sheetController,
@@ -219,8 +232,7 @@ class _TravelerSheet extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: cs.surface,
-        borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
@@ -242,7 +254,10 @@ class _TravelerSheet extends StatelessWidget {
                   items: state.results,
                   userPosition: userPosition == null
                       ? null
-                      : (lat: userPosition!.latitude, lng: userPosition!.longitude),
+                      : (
+                          lat: userPosition!.latitude,
+                          lng: userPosition!.longitude,
+                        ),
                   selectedRequestId: selectedRequestId,
                   onCardChanged: onCardChanged,
                   onSeeAll: onSeeAll,
@@ -262,14 +277,21 @@ class _TravelerSheet extends StatelessWidget {
             )
           else
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.md, DonySpacing.lg, 40),
+              padding: const EdgeInsets.fromLTRB(
+                DonySpacing.lg,
+                DonySpacing.md,
+                DonySpacing.lg,
+                40,
+              ),
               sliver: SliverList.separated(
                 itemCount: state.results.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 16),
                 itemBuilder: (_, i) {
                   final item = state.results[i];
                   final authState = context.read<AuthBloc>().state;
-                  final uid = authState is AuthAuthenticated ? authState.user.id : null;
+                  final uid = authState is AuthAuthenticated
+                      ? authState.user.id
+                      : null;
                   final isOwn = uid != null && item.sender.id == uid;
                   return PackageRequestListCard(
                     item: item,
@@ -312,7 +334,12 @@ class _SheetTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(DonySpacing.lg, DonySpacing.sm, DonySpacing.lg, DonySpacing.xs),
+      padding: const EdgeInsets.fromLTRB(
+        DonySpacing.lg,
+        DonySpacing.sm,
+        DonySpacing.lg,
+        DonySpacing.xs,
+      ),
       child: Row(
         children: [
           Text(
@@ -327,8 +354,7 @@ class _SheetTitle extends StatelessWidget {
           const SizedBox(width: 10),
           if (count > 0)
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: cs.primaryContainer,
                 borderRadius: BorderRadius.circular(DonyRadius.full),
