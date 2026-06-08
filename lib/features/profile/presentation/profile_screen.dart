@@ -1,6 +1,5 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/error/error_presenter.dart';
-import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -102,9 +101,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             final isProAccount  = user?.isProAccount ?? false;
             final displayName   = user?.displayName ?? 'Utilisateur';
 
-            return BlocBuilder<ActiveRoleCubit, ActiveRole>(
-              builder: (context, activeRole) {
-                return BlocBuilder<BidBloc, BidState>(
+            return BlocBuilder<BidBloc, BidState>(
                   builder: (context, bidState) {
                     return BlocBuilder<AnnouncementBloc, AnnouncementState>(
                       builder: (context, announcementState) {
@@ -224,7 +221,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   collapseMode: CollapseMode.parallax,
                                   background: ProfileHeader(
                                     displayName: displayName,
-                                    activeRole: activeRole,
                                     isTraveler: isTraveler,
                                     isSender: isSender,
                                     isKycVerified: isKycVerified,
@@ -236,20 +232,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                                         profileCompletionPercent,
                                     onEditProfile: () =>
                                         EditProfileBottomSheet.show(context),
-                                    onRoleSwitch: (isTraveler && isSender)
-                                        ? (role) {
-                                            if (role == ActiveRole.traveler) {
-                                              context
-                                                  .read<ActiveRoleCubit>()
-                                                  .switchToTraveler();
-                                            } else {
-                                              context
-                                                  .read<ActiveRoleCubit>()
-                                                  .switchToSender();
-                                            }
-                                            context.go('/home');
-                                          }
-                                        : null,
                                   ),
                                 ),
                               ),
@@ -310,7 +292,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                               children: [
                                 _ActivityTab(
                                   user: user,
-                                  activeRole: activeRole,
+                                  isTraveler: isTraveler,
                                   upcomingAnnouncements:
                                       upcomingAnnouncements,
                                   activeBids: activeBids,
@@ -319,7 +301,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 ),
                                 _AccountTab(
                                   user: user,
-                                  activeRole: activeRole,
+                                  isTraveler: isTraveler,
                                   isProAccount: isProAccount,
                                 ),
                                 const _SettingsTab(),
@@ -331,8 +313,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                     );
                   },
                 );
-              },
-            );
           },
         ),
       ),
@@ -397,7 +377,7 @@ class _TabItem extends StatelessWidget {
 class _ActivityTab extends StatelessWidget {
   const _ActivityTab({
     required this.user,
-    required this.activeRole,
+    required this.isTraveler,
     required this.upcomingAnnouncements,
     required this.activeBids,
     required this.bidState,
@@ -405,7 +385,7 @@ class _ActivityTab extends StatelessWidget {
   });
 
   final UserModel? user;
-  final ActiveRole activeRole;
+  final bool isTraveler;
   final int upcomingAnnouncements;
   final int activeBids;
   final BidState bidState;
@@ -652,12 +632,12 @@ class _ActivityTab extends StatelessWidget {
 class _AccountTab extends StatelessWidget {
   const _AccountTab({
     required this.user,
-    required this.activeRole,
+    required this.isTraveler,
     required this.isProAccount,
   });
 
   final UserModel? user;
-  final ActiveRole activeRole;
+  final bool isTraveler;
   final bool isProAccount;
 
   @override
