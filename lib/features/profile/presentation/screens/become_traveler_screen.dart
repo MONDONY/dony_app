@@ -5,7 +5,6 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -48,7 +47,6 @@ class _BecomeATravelerScreenState extends State<BecomeATravelerScreen> {
           if (context.canPop()) context.pop();
         } else if (state is TravelerUpgradeDeactivated) {
           context.read<AuthBloc>().add(AuthUserSynced(state.user));
-          context.read<ActiveRoleCubit>().switchToSender();
           DonySnackbar.show(
             context,
             message: 'Compte voyageur désactivé',
