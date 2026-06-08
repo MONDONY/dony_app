@@ -660,7 +660,106 @@ class _AccountTab extends StatelessWidget {
             ),
         const SizedBox(height: DonySpacing.lg),
 
-        if (activeRole == ActiveRole.traveler) ...[
+        // ── PAIEMENTS & FACTURES (commun) ──────────────────────────────
+        _SectionLabel(label: 'PAIEMENTS & FACTURES', cs: cs),
+        DonyListSection(
+          tiles: [
+            DonyListTile(
+              icon: Icons.credit_card_rounded,
+              iconColor: DonyColors.purple,
+              iconBgColor: DonyColors.violetLight,
+              label: 'Moyens de paiement',
+              onTap: () => ComingSoonBottomSheet.show(
+                context,
+                title: 'Moyens de paiement',
+                description:
+                    'Gère tes cartes enregistrées, Apple Pay et Google Pay via Stripe.',
+                icon: Icons.credit_card_rounded,
+              ),
+            ),
+            DonyListTile(
+              icon: Icons.receipt_long_rounded,
+              iconColor: DonyColors.purple,
+              iconBgColor: DonyColors.violetLight,
+              label: 'Factures',
+              onTap: () => ComingSoonBottomSheet.show(
+                context,
+                title: 'Factures',
+                description:
+                    'Télécharge les factures PDF de tes envois.',
+                icon: Icons.receipt_long_rounded,
+              ),
+            ),
+            DonyListTile(
+              icon: Icons.local_offer_rounded,
+              iconColor: cs.success,
+              iconBgColor: cs.successLight,
+              label: 'Crédits & codes promo',
+              showDivider: false,
+              onTap: () => ComingSoonBottomSheet.show(
+                context,
+                title: 'Crédits & codes promo',
+                description:
+                    'Entre un code de réduction et suis ton solde de crédits dony.',
+                icon: Icons.local_offer_rounded,
+              ),
+            ),
+          ],
+        ).animate().fadeIn(delay: 160.ms).slideY(
+              begin: 0.04,
+              curve: Curves.easeOutCubic,
+            ),
+        const SizedBox(height: DonySpacing.lg),
+
+        // ── FIDÉLITÉ (commun, dédupliqué) ───────────────────────────────
+        _SectionLabel(label: 'FIDÉLITÉ', cs: cs),
+        DonyListSection(
+          tiles: [
+            DonyListTile(
+              icon: Icons.group_add_rounded,
+              iconColor: cs.success,
+              iconBgColor: cs.successLight,
+              label: 'Parrainages',
+              trailing: Text(
+                '0 invité',
+                style: tt.labelMedium
+                    ?.copyWith(color: cs.onSurfaceVariant),
+              ),
+              showDivider: true,
+              onTap: () => context.push('/profile/referral'),
+            ),
+            BlocBuilder<ReferralBloc, ReferralState>(
+              builder: (context, referralState) {
+                final alreadyReferred = referralState is ReferralLoaded &&
+                    referralState.info.hasBeenReferred;
+                if (alreadyReferred) return const SizedBox.shrink();
+                return DonyListTile(
+                  icon: Icons.card_giftcard_rounded,
+                  iconColor: cs.primary,
+                  iconBgColor: cs.primaryContainer,
+                  label: 'J\'ai un code parrain',
+                  showDivider: false,
+                  onTap: () async {
+                    final redeemed =
+                        await RedeemCodeBottomSheet.show(context);
+                    if ((redeemed ?? false) && context.mounted) {
+                      context
+                          .read<ReferralBloc>()
+                          .add(const ReferralLoadRequested());
+                    }
+                  },
+                );
+              },
+            ),
+          ],
+        ).animate().fadeIn(delay: 200.ms).slideY(
+              begin: 0.04,
+              curve: Curves.easeOutCubic,
+            ),
+        const SizedBox(height: DonySpacing.lg),
+
+        // ── Ajout voyageur ──────────────────────────────────────────────
+        if (isTraveler) ...[
           // ── REVENUS & PAIEMENTS ─────────────────────────────────────
           _SectionLabel(label: 'REVENUS & PAIEMENTS', cs: cs),
           DonyListSection(
@@ -691,7 +790,7 @@ class _AccountTab extends StatelessWidget {
                 icon: Icons.receipt_rounded,
                 iconColor: DonyColors.purple,
                 iconBgColor: DonyColors.violetLight,
-                label: 'Paiements & factures',
+                label: 'Paiements & factures voyage',
                 showDivider: false,
                 onTap: () => ComingSoonBottomSheet.show(
                   context,
@@ -702,7 +801,7 @@ class _AccountTab extends StatelessWidget {
                 ),
               ),
             ],
-          ).animate().fadeIn(delay: 160.ms).slideY(
+          ).animate().fadeIn(delay: 240.ms).slideY(
                 begin: 0.04,
                 curve: Curves.easeOutCubic,
               ),
@@ -729,144 +828,15 @@ class _AccountTab extends StatelessWidget {
                     : null,
               ),
             ],
-          ).animate().fadeIn(delay: 200.ms).slideY(
+          ).animate().fadeIn(delay: 280.ms).slideY(
                 begin: 0.04,
                 curve: Curves.easeOutCubic,
               ),
           const SizedBox(height: DonySpacing.lg),
+        ],
 
-          // ── FIDÉLITÉ ───────────────────────────────────────────────
-          _SectionLabel(label: 'FIDÉLITÉ', cs: cs),
-          DonyListSection(
-            tiles: [
-              DonyListTile(
-                icon: Icons.group_add_rounded,
-                iconColor: cs.success,
-                iconBgColor: cs.successLight,
-                label: 'Parrainages',
-                trailing: Text(
-                  '0 invité',
-                  style: tt.labelMedium
-                      ?.copyWith(color: cs.onSurfaceVariant),
-                ),
-                showDivider: true,
-                onTap: () => context.push('/profile/referral'),
-              ),
-              BlocBuilder<ReferralBloc, ReferralState>(
-                builder: (context, referralState) {
-                  final alreadyReferred = referralState is ReferralLoaded &&
-                      referralState.info.hasBeenReferred;
-                  if (alreadyReferred) return const SizedBox.shrink();
-                  return DonyListTile(
-                    icon: Icons.card_giftcard_rounded,
-                    iconColor: cs.primary,
-                    iconBgColor: cs.primaryContainer,
-                    label: 'J\'ai un code parrain',
-                    showDivider: false,
-                    onTap: () async {
-                      final redeemed =
-                          await RedeemCodeBottomSheet.show(context);
-                      if ((redeemed ?? false) && context.mounted) {
-                        context
-                            .read<ReferralBloc>()
-                            .add(const ReferralLoadRequested());
-                      }
-                    },
-                  );
-                },
-              ),
-            ],
-          ).animate().fadeIn(delay: 240.ms).slideY(
-                begin: 0.04,
-                curve: Curves.easeOutCubic,
-              ),
-        ] else ...[
-          // ── PAIEMENTS & FACTURES (expéditeur) ──────────────────────
-          _SectionLabel(label: 'PAIEMENTS & FACTURES', cs: cs),
-          DonyListSection(
-            tiles: [
-              DonyListTile(
-                icon: Icons.credit_card_rounded,
-                iconColor: DonyColors.purple,
-                iconBgColor: DonyColors.violetLight,
-                label: 'Moyens de paiement',
-                onTap: () => ComingSoonBottomSheet.show(
-                  context,
-                  title: 'Moyens de paiement',
-                  description:
-                      'Gère tes cartes enregistrées, Apple Pay et Google Pay via Stripe.',
-                  icon: Icons.credit_card_rounded,
-                ),
-              ),
-              DonyListTile(
-                icon: Icons.receipt_long_rounded,
-                iconColor: DonyColors.purple,
-                iconBgColor: DonyColors.violetLight,
-                label: 'Factures',
-                onTap: () => ComingSoonBottomSheet.show(
-                  context,
-                  title: 'Factures',
-                  description:
-                      'Télécharge les factures PDF de tes envois.',
-                  icon: Icons.receipt_long_rounded,
-                ),
-              ),
-              DonyListTile(
-                icon: Icons.local_offer_rounded,
-                iconColor: cs.success,
-                iconBgColor: cs.successLight,
-                label: 'Crédits & codes promo',
-                onTap: () => ComingSoonBottomSheet.show(
-                  context,
-                  title: 'Crédits & codes promo',
-                  description:
-                      'Entre un code de réduction et suis ton solde de crédits dony.',
-                  icon: Icons.local_offer_rounded,
-                ),
-              ),
-              DonyListTile(
-                icon: Icons.group_add_rounded,
-                iconColor: cs.success,
-                iconBgColor: cs.successLight,
-                label: 'Parrainage',
-                trailing: Text(
-                  '0 invité',
-                  style: tt.labelMedium
-                      ?.copyWith(color: cs.onSurfaceVariant),
-                ),
-                showDivider: true,
-                onTap: () => context.push('/profile/referral'),
-              ),
-              BlocBuilder<ReferralBloc, ReferralState>(
-                builder: (context, referralState) {
-                  final alreadyReferred = referralState is ReferralLoaded &&
-                      referralState.info.hasBeenReferred;
-                  if (alreadyReferred) return const SizedBox.shrink();
-                  return DonyListTile(
-                    icon: Icons.card_giftcard_rounded,
-                    iconColor: cs.primary,
-                    iconBgColor: cs.primaryContainer,
-                    label: 'J\'ai un code parrain',
-                    showDivider: false,
-                    onTap: () async {
-                      final redeemed =
-                          await RedeemCodeBottomSheet.show(context);
-                      if ((redeemed ?? false) && context.mounted) {
-                        context
-                            .read<ReferralBloc>()
-                            .add(const ReferralLoadRequested());
-                      }
-                    },
-                  );
-                },
-              ),
-            ],
-          ).animate().fadeIn(delay: 160.ms).slideY(
-                begin: 0.04,
-                curve: Curves.easeOutCubic,
-              ),
-          const SizedBox(height: DonySpacing.lg),
-
+        // ── Uniquement non-voyageur ─────────────────────────────────────
+        if (!isTraveler) ...[
           // ── DEVENIR VOYAGEUR ───────────────────────────────────────
           _SectionLabel(label: 'DEVENIR VOYAGEUR', cs: cs),
           DonyListSection(
@@ -884,10 +854,11 @@ class _AccountTab extends StatelessWidget {
                 onTap: () => context.push('/profile/become-traveler'),
               ),
             ],
-          ).animate().fadeIn(delay: 200.ms).slideY(
+          ).animate().fadeIn(delay: 240.ms).slideY(
                 begin: 0.04,
                 curve: Curves.easeOutCubic,
               ),
+          const SizedBox(height: DonySpacing.lg),
         ],
 
         // ── MON PORTEFEUILLE (commun aux deux rôles) ────────────────────
