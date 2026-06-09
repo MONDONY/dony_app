@@ -305,7 +305,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   // Near-me touche le jeu de résultats de la capacité courante : annonces (expéditeur)
   // ou demandes de colis (voyageur). Utilisé par activate/deactivate/changeRadius.
-  void _dispatchForActiveRole() {
+  void _dispatchForCapability() {
     final authState = context.read<AuthBloc>().state;
     final isTraveler = authState is AuthAuthenticated
         ? authState.user.isTraveler
@@ -326,7 +326,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       _userPosition = null;
       _selectedAnnouncementId = null;
     });
-    _dispatchForActiveRole();
+    _dispatchForCapability();
   }
 
   // Ajuste le rayon SANS couper le filtre : rouvre le slider pré-rempli au rayon
@@ -340,7 +340,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     );
     if (radiusKm == null || !mounted) return;
     setState(() => _nearMeRadiusKm = radiusKm);
-    _dispatchForActiveRole();
+    _dispatchForCapability();
   }
 
   Future<void> _activateNearMe() async {
@@ -386,7 +386,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
       _nearMeRadiusKm = radiusKm;
       _userPosition = LatLng(pos.latitude, pos.longitude);
     });
-    _dispatchForActiveRole();
+    _dispatchForCapability();
   }
 
   Future<void> _showDatePresetSheet() async {
