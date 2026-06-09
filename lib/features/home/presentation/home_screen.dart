@@ -1343,48 +1343,55 @@ class _MapSenderViewState extends State<_MapSenderView> {
                           final myActiveBids =
                               bidState.activeBidsByAnnouncement();
                           final parcels = prState.results;
+                          final totalCount = count + parcels.length;
+
+                          if (totalCount == 0 &&
+                              prState.status != SearchStatus.loading) {
+                            return const SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: DonyEmptyState(
+                                title: 'Aucun résultat',
+                                description:
+                                    'Aucun voyageur ni demande disponible.',
+                                mascotte: DonyMascotteType.assis,
+                              ),
+                            );
+                          }
+
+                          // Interleave 1:1 — paires trip/parcel puis reste
+                          final minLen =
+                              count < parcels.length ? count : parcels.length;
+                          final pairedCount = minLen * 2;
+                          final tripsLonger = count >= parcels.length;
+
                           return SliverMainAxisGroup(
                             slivers: [
-                              // ── Section Trajets ──────────────────────────
-                              SliverToBoxAdapter(
-                                child: _BothTypesSectionHeader(
-                                  emoji: '✈️',
-                                  label: 'Trajets',
-                                  count: count,
-                                  cs: cs,
-                                  tt: tt,
+                              SliverPadding(
+                                padding: EdgeInsets.fromLTRB(
+                                  DonySpacing.base,
+                                  DonySpacing.sm,
+                                  DonySpacing.base,
+                                  bottomPad + DonySpacing.huge,
                                 ),
-                              ),
-                              if (count == 0)
-                                SliverToBoxAdapter(
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: DonySpacing.base,
-                                      vertical: DonySpacing.md,
-                                    ),
-                                    child: Text(
-                                      'Aucun voyageur disponible',
-                                      style: tt.bodyMedium?.copyWith(
-                                        color: cs.onSurfaceVariant,
-                                      ),
-                                    ),
+                                sliver: SliverList.separated(
+                                  itemCount: totalCount,
+                                  separatorBuilder: (_, _) => const SizedBox(
+                                    height: DonySpacing.md,
                                   ),
-                                )
-                              else
-                                SliverPadding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    DonySpacing.base,
-                                    DonySpacing.sm,
-                                    DonySpacing.base,
-                                    DonySpacing.xs,
-                                  ),
-                                  sliver: SliverList.separated(
-                                    itemCount: count,
-                                    separatorBuilder: (_, _) => const SizedBox(
-                                      height: DonySpacing.md,
-                                    ),
-                                    itemBuilder: (ctx, i) {
-                                      final a = announcements[i];
+                                  itemBuilder: (ctx, i) {
+                                    final bool isTrip;
+                                    final int itemIndex;
+
+                                    if (i < pairedCount) {
+                                      isTrip = i.isEven;
+                                      itemIndex = i ~/ 2;
+                                    } else {
+                                      isTrip = tripsLonger;
+                                      itemIndex = minLen + (i - pairedCount);
+                                    }
+
+                                    if (isTrip) {
+                                      final a = announcements[itemIndex];
                                       final authState =
                                           context.read<AuthBloc>().state;
                                       final uid =
@@ -1398,7 +1405,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                           myActiveBids[a.id];
                                       return TravelerCard(
                                         announcement: a,
-                                        index: i,
+                                        index: itemIndex,
                                         isOwnAnnouncement: isOwn,
                                         existingBidStatus:
                                             existingBid?.status,
@@ -1415,67 +1422,14 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                                     announcement: a,
                                                   ),
                                       );
-                                    },
-                                  ),
-                                ),
-                              // ── Section Colis ────────────────────────────
-                              SliverToBoxAdapter(
-                                child: _BothTypesSectionHeader(
-                                  emoji: '📦',
-                                  label: 'Colis',
-                                  count: parcels.length,
-                                  cs: cs,
-                                  tt: tt,
-                                ),
-                              ),
-                              if (prState.status == SearchStatus.loading)
-                                SliverToBoxAdapter(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(
-                                      DonySpacing.md,
-                                    ),
-                                    child: Center(
-                                      child: CircularProgressIndicator(
-                                        color: cs.primary,
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              else if (parcels.isEmpty)
-                                SliverToBoxAdapter(
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: DonySpacing.base,
-                                      vertical: DonySpacing.md,
-                                    ),
-                                    child: Text(
-                                      'Aucune demande disponible',
-                                      style: tt.bodyMedium?.copyWith(
-                                        color: cs.onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              else
-                                SliverPadding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    DonySpacing.base,
-                                    DonySpacing.sm,
-                                    DonySpacing.base,
-                                    DonySpacing.xs,
-                                  ),
-                                  sliver: SliverList.separated(
-                                    itemCount: parcels.length,
-                                    separatorBuilder: (_, _) =>
-                                        const SizedBox(height: DonySpacing.md),
-                                    itemBuilder: (_, i) {
-                                      final pr = parcels[i];
+                                    } else {
+                                      final pr = parcels[itemIndex];
                                       final isOwn =
                                           currentUserId != null &&
                                           pr.sender.id == currentUserId;
                                       return PackageRequestListCard(
                                         item: pr,
-                                        index: i,
+                                        index: itemIndex,
                                         isOwnRequest: isOwn,
                                         onTap: isOwn
                                             ? null
@@ -1492,14 +1446,23 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                                     item: pr,
                                                   ),
                                       );
-                                    },
-                                  ),
-                                ),
-                              SliverToBoxAdapter(
-                                child: SizedBox(
-                                  height: bottomPad + DonySpacing.huge,
+                                    }
+                                  },
                                 ),
                               ),
+                              if (prState.status == SearchStatus.loading)
+                                SliverToBoxAdapter(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                      bottom: DonySpacing.lg,
+                                    ),
+                                    child: Center(
+                                      child: CircularProgressIndicator(
+                                        color: cs.primary,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                             ],
                           );
                         },
@@ -1737,72 +1700,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
 // ══════════════════════════════════════════════════════════════════════════════
 // MAP SENDER — sub-widgets
 // ══════════════════════════════════════════════════════════════════════════════
-
-// ── _BothTypesSectionHeader ───────────────────────────────────────────────────
-
-class _BothTypesSectionHeader extends StatelessWidget {
-  const _BothTypesSectionHeader({
-    required this.emoji,
-    required this.label,
-    required this.count,
-    required this.cs,
-    required this.tt,
-  });
-
-  final String emoji;
-  final String label;
-  final int count;
-  final ColorScheme cs;
-  final TextTheme tt;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(
-        DonySpacing.base,
-        DonySpacing.md,
-        DonySpacing.base,
-        DonySpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: cs.outline.withValues(alpha: 0.5)),
-        ),
-      ),
-      child: Row(
-        children: [
-          Text(emoji, style: const TextStyle(fontSize: 16)),
-          const SizedBox(width: DonySpacing.xs),
-          Text(
-            label,
-            style: tt.labelMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: cs.onSurface,
-            ),
-          ),
-          const SizedBox(width: DonySpacing.xs),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 6,
-              vertical: 2,
-            ),
-            decoration: BoxDecoration(
-              color: cs.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              '$count',
-              style: tt.labelSmall?.copyWith(
-                color: cs.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 // ── _CorridorBar ──────────────────────────────────────────────────────────────
 
