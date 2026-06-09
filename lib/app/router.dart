@@ -23,7 +23,10 @@ import 'package:dony/features/kyc/bloc/kyc_bloc.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_status_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
+import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
+import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
+import 'package:dony/features/package_request/presentation/screens/sender/envoyer_hub_screen.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/bid_detail_screen.dart';
 import 'package:dony/features/matching/presentation/screens/bid_list_screen.dart';
@@ -420,6 +423,22 @@ final appRouter = GoRouter(
           child: CreateAnnouncementScreen(announcement: announcement),
         );
       },
+    ),
+
+    // ── Mes trajets (voyageur occasionnel, hors shell) ──────────────────────
+    GoRoute(
+      path: '/announcements/trips',
+      builder: (context, state) => BlocProvider(
+        create: (_) =>
+            getIt<AnnouncementBloc>()..add(AnnouncementListRequested()),
+        child: const AnnouncementListScreen(),
+      ),
+    ),
+
+    // ── Envoyer un colis (voyageur PRO, hors shell) ──────────────────────────
+    GoRoute(
+      path: '/announcements/send',
+      builder: (context, state) => const EnvoyerHubScreen(),
     ),
 
     // ── Modèles de trajet (hors shell) ───────────────────────────────────

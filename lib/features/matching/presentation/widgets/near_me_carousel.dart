@@ -221,7 +221,9 @@ class _NearMeCarouselState extends State<NearMeCarousel> {
                     color: cs.primary.withValues(alpha: 0.3)),
               ),
               child: Text(
-                'Voir les ${widget.announcements.length} annonce${widget.announcements.length > 1 ? 's' : ''}',
+                widget.announcements.length == 1
+                    ? 'Voir l\'annonce'
+                    : 'Voir les ${widget.announcements.length} annonces',
                 style: tt.labelLarge?.copyWith(
                     color: cs.primary, fontWeight: FontWeight.w700),
                 textAlign: TextAlign.center,

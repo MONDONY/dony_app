@@ -1,11 +1,11 @@
+import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/widgets/announcement_detail_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/create_announcement_bottom_sheet.dart';
-import 'package:dony/core/design/design_system.dart';
-import 'package:dony/core/error/error_presenter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,7 +15,15 @@ import 'package:intl/intl.dart';
 enum _TripsTab { upcoming, history, cancelled }
 
 class AnnouncementListScreen extends StatefulWidget {
-  const AnnouncementListScreen({super.key});
+  const AnnouncementListScreen({
+    super.key,
+    this.onSendParcel,
+  });
+
+  /// Si non nul, un bouton secondaire « Envoyer » apparaît dans l'AppBar,
+  /// permettant au voyageur PRO d'accéder au flux expéditeur depuis leur vue
+  /// Mes Trajets (modèle additif Phase 1).
+  final VoidCallback? onSendParcel;
 
   @override
   State<AnnouncementListScreen> createState() => _AnnouncementListScreenState();
@@ -102,9 +110,28 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
     final tt = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: const DonyAppBar(
+      appBar: DonyAppBar(
         title: 'Mes trajets',
         showBackButton: false,
+        actions: widget.onSendParcel != null
+            ? [
+                Padding(
+                  padding: const EdgeInsets.only(right: DonySpacing.base),
+                  child: TextButton.icon(
+                    key: const Key('send-parcel-btn'),
+                    onPressed: widget.onSendParcel,
+                    icon: const Icon(Icons.send_rounded, size: 16),
+                    label: const Text('Envoyer'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: cs.primary,
+                      textStyle: tt.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ]
+            : null,
       ),
       floatingActionButton: FloatingActionButton(
         heroTag: null,

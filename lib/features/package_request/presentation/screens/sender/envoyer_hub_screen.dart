@@ -22,7 +22,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class EnvoyerHubScreen extends StatefulWidget {
-  const EnvoyerHubScreen({super.key});
+  const EnvoyerHubScreen({
+    super.key,
+    this.onShowTrips,
+  });
+
+  /// Si non nul, un bouton « Mes trajets » apparaît dans le header du hub,
+  /// permettant au voyageur occasionnel d'accéder à ses trajets depuis la vue
+  /// expéditeur (modèle additif Phase 1).
+  final VoidCallback? onShowTrips;
 
   @override
   State<EnvoyerHubScreen> createState() => _EnvoyerHubScreenState();
@@ -47,7 +55,7 @@ class _EnvoyerHubScreenState extends State<EnvoyerHubScreen> {
         ),
         BlocProvider.value(value: getIt<NegotiationListBloc>()),
       ],
-      child: const _EnvoyerTabsView(),
+      child: _EnvoyerTabsView(onShowTrips: widget.onShowTrips),
     );
   }
 }
@@ -55,7 +63,9 @@ class _EnvoyerHubScreenState extends State<EnvoyerHubScreen> {
 // ── Tabbed view ───────────────────────────────────────────────────────────────
 
 class _EnvoyerTabsView extends StatefulWidget {
-  const _EnvoyerTabsView();
+  const _EnvoyerTabsView({this.onShowTrips});
+
+  final VoidCallback? onShowTrips;
 
   @override
   State<_EnvoyerTabsView> createState() => _EnvoyerTabsViewState();
@@ -337,7 +347,7 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
           bottom: false,
           child: Column(
             children: [
-              _EnvoyerHeader(onNew: _onNew),
+              _EnvoyerHeader(onNew: _onNew, onShowTrips: widget.onShowTrips),
               _EnvoyerSegmented(
                 controller: _controller,
                 badgeForIndex: badgeFor,
@@ -363,9 +373,13 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
 // ── Header ────────────────────────────────────────────────────────────────────
 
 class _EnvoyerHeader extends StatelessWidget {
-  const _EnvoyerHeader({required this.onNew});
+  const _EnvoyerHeader({required this.onNew, this.onShowTrips});
 
   final VoidCallback onNew;
+
+  /// Si non nul, affiche un bouton secondaire « Mes trajets » pour les
+  /// voyageurs occasionnels (modèle additif Phase 1).
+  final VoidCallback? onShowTrips;
 
   @override
   Widget build(BuildContext context) {
@@ -389,6 +403,40 @@ class _EnvoyerHeader extends StatelessWidget {
                 ),
           ),
           const Spacer(),
+          if (onShowTrips != null) ...[
+            GestureDetector(
+              onTap: onShowTrips,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.md,
+                  vertical: 9,
+                ),
+                decoration: BoxDecoration(
+                  color: DonyColors.primary.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(DonyRadius.full),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.flight_rounded,
+                      color: DonyColors.primary,
+                      size: 15,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      'Mes trajets',
+                      style: Theme.of(context).textTheme.labelMedium!.copyWith(
+                            color: DonyColors.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: DonySpacing.sm),
+          ],
           GestureDetector(
             onTap: onNew,
             child: Container(

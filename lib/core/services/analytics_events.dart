@@ -74,6 +74,13 @@ abstract final class AnalyticsEvents {
   static const envoyerEnvoisScreen = 'envoyer_envois';
   static const envoyerDemandesScreen = 'envoyer_demandes';
 
+  // Home map focus
+  static const homeMapFocusChanged = 'home_map_focus_changed';
+
+  // Annonces tab navigation (Phase 1 — modèle additif)
+  static const annoncesTripsOpened = 'annonces_trips_opened';
+  static const annoncesSendOpened  = 'annonces_send_opened';
+
   // Errors (BlocObserver)
   static const blocError = 'bloc_error';
 }
