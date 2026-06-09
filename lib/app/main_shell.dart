@@ -4,7 +4,6 @@ import 'dart:ui';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
-import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
@@ -162,9 +161,7 @@ class _DonyBottomNav extends StatelessWidget {
         if (authState is AuthProfileUpdated) authUser = authState.user;
         final isProAccount = authUser?.isProAccount ?? false;
 
-        return BlocBuilder<ActiveRoleCubit, ActiveRole>(
-      builder: (context, activeRole) {
-        final isTraveler = activeRole == ActiveRole.traveler;
+        final isTraveler = authUser?.isTraveler ?? false;
 
         // Tab 1 — Envoyer (sender) ou Trajets (traveler)
         final tab1Label = isTraveler ? 'Trajets' : 'Envoyer';
@@ -287,8 +284,6 @@ class _DonyBottomNav extends StatelessWidget {
         ),
       ),
     );
-      },
-        );
       },
     );
   }

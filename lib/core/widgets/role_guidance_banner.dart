@@ -2,20 +2,19 @@ import 'dart:async';
 
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/storage/hive_service.dart';
-import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
 class RoleGuidanceBanner extends StatefulWidget {
   const RoleGuidanceBanner({
     super.key,
-    required this.role,
+    required this.isTraveler,
     required this.hiveService,
     this.onCtaTap,
     this.forceHide = false,
   });
 
-  final ActiveRole role;
+  final bool isTraveler;
   final HiveService hiveService;
   final VoidCallback? onCtaTap;
   final bool forceHide;
@@ -31,11 +30,11 @@ class RoleGuidanceBanner extends StatefulWidget {
 class _RoleGuidanceBannerState extends State<RoleGuidanceBanner> {
   Timer? _expirationTimer;
 
-  String get _publishKey => widget.role == ActiveRole.traveler
+  String get _publishKey => widget.isTraveler
       ? HiveService.kHasPublishedAsTraveler
       : HiveService.kHasPublishedAsSender;
 
-  String get _dismissKey => widget.role == ActiveRole.traveler
+  String get _dismissKey => widget.isTraveler
       ? HiveService.kTravelerBannerDismissed
       : HiveService.kSenderBannerDismissed;
 
@@ -44,7 +43,7 @@ class _RoleGuidanceBannerState extends State<RoleGuidanceBanner> {
   @override
   void initState() {
     super.initState();
-    if (widget.role == ActiveRole.sender) {
+    if (!widget.isTraveler) {
       _scheduleSenderExpiration();
     }
   }
@@ -82,7 +81,7 @@ class _RoleGuidanceBannerState extends State<RoleGuidanceBanner> {
   }
 
   bool get _isSenderBannerExpired {
-    if (widget.role != ActiveRole.sender) return false;
+    if (widget.isTraveler) return false;
     final firstSeenMs = widget.hiveService.userPrefs
         .get(HiveService.kSenderBannerFirstSeenAt) as int?;
     if (firstSeenMs == null) return false;
@@ -115,7 +114,7 @@ class _RoleGuidanceBannerState extends State<RoleGuidanceBanner> {
   }
 
   Widget _buildBanner(BuildContext context) {
-    final isSender = widget.role == ActiveRole.sender;
+    final isSender = !widget.isTraveler;
     final title =
         isSender ? 'Envoyer ton premier colis' : 'Publier ton premier trajet';
     final emoji = isSender ? '📦' : '🧭';

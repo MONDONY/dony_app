@@ -3,8 +3,6 @@ import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/di/pending_search_notifier.dart';
 import 'package:dony/core/storage/hive_service.dart';
 import 'package:dony/core/widgets/role_guidance_banner.dart';
-import 'package:dony/core/widgets/role_mode_pill.dart';
-import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -305,10 +303,16 @@ class _MapSenderViewState extends State<_MapSenderView> {
     ));
   }
 
-  // Near-me touche le jeu de résultats du rôle courant : annonces (expéditeur)
+  // Near-me touche le jeu de résultats de la capacité courante : annonces (expéditeur)
   // ou demandes de colis (voyageur). Utilisé par activate/deactivate/changeRadius.
   void _dispatchForActiveRole() {
-    if (context.read<ActiveRoleCubit>().state == ActiveRole.traveler) {
+    final authState = context.read<AuthBloc>().state;
+    final isTraveler = authState is AuthAuthenticated
+        ? authState.user.isTraveler
+        : authState is AuthProfileUpdated
+            ? authState.user.isTraveler
+            : false;
+    if (isTraveler) {
       _dispatchPackageRequestSearch();
     } else {
       _dispatchSearch();
@@ -640,8 +644,12 @@ class _MapSenderViewState extends State<_MapSenderView> {
 
   @override
   Widget build(BuildContext context) {
-    final activeRole = context.watch<ActiveRoleCubit>().state;
-    final authState = context.read<AuthBloc>().state;
+    final authState = context.watch<AuthBloc>().state;
+    final isTraveler = authState is AuthAuthenticated
+        ? authState.user.isTraveler
+        : authState is AuthProfileUpdated
+            ? authState.user.isTraveler
+            : false;
     final currentUserId =
         authState is AuthAuthenticated ? authState.user.id : null;
     return Scaffold(
@@ -668,8 +676,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
               Positioned.fill(
                 child: AnnouncementMapView(
                   announcements:
-                      activeRole == ActiveRole.sender ? announcements : const [],
-                  extraMarkers: activeRole == ActiveRole.traveler
+                      !isTraveler ? announcements : const [],
+                  extraMarkers: isTraveler
                       ? _packageRequestMarkers
                       : const {},
                   isNearMeActive: _isNearMeActive,
@@ -701,20 +709,18 @@ class _MapSenderViewState extends State<_MapSenderView> {
                       children: [
                         Row(
                           children: [
-                            const RoleModePill(),
-                            const SizedBox(width: DonySpacing.sm),
                             Expanded(
                               child: _CorridorBar(
                                 key: const Key('corridor-bar'),
-                                label: activeRole == ActiveRole.traveler
+                                label: isTraveler
                                     ? (_prDeparture != null
                                         ? '$_prDeparture → $_prArrival'
                                         : 'Tous les corridors')
                                     : (_allCorridors ? 'Tous les corridors' : _corridor.label),
-                                activeFilterCount: activeRole == ActiveRole.traveler
+                                activeFilterCount: isTraveler
                                     ? _prActiveFilterCount
                                     : _activeFilterCount,
-                                onTap: () => activeRole == ActiveRole.traveler
+                                onTap: () => isTraveler
                                     ? _showPrFilterSheet(context)
                                     : _showFilterSheet(context),
                               ),
@@ -724,7 +730,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                           ],
                         ),
                         const SizedBox(height: DonySpacing.xs),
-                        if (activeRole == ActiveRole.sender)
+                        if (!isTraveler)
                           _HomeFilterChipsRow(
                             datePreset: _datePreset,
                             customDate: _customDate,
@@ -830,7 +836,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                     scrollCtrl,
                     announcements,
                     MediaQuery.of(context).padding.bottom,
-                    activeRole,
+                    isTraveler,
                     currentUserId: currentUserId,
                   ),
                 )
@@ -843,7 +849,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                     child: SizedBox(
                       height: (MediaQuery.of(context).size.height * 0.40)
                           .clamp(360.0, 450.0),
-                      child: activeRole == ActiveRole.traveler
+                      child: isTraveler
                           ? NearMePackageRequestCarousel(
                               items: prState.results,
                               userPosition: _userPosition != null
@@ -987,7 +993,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
     ScrollController scrollCtrl,
     List<AnnouncementModel> announcements,
     double bottomPad,
-    ActiveRole activeRole, {
+    bool isTraveler, {
     String? currentUserId,
   }) {
     final tt = Theme.of(ctx).textTheme;
@@ -1033,7 +1039,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        activeRole == ActiveRole.sender
+                        !isTraveler
                             ? 'VOYAGEURS DISPONIBLES'
                             : 'DEMANDES D\'ENVOI',
                         style: tt.labelSmall?.copyWith(
@@ -1043,7 +1049,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        activeRole == ActiveRole.sender
+                        !isTraveler
                             ? _isNearMeActive
                                 ? '$count voyageur${count > 1 ? 's' : ''} à proximité'
                                 : _allCorridors
@@ -1057,7 +1063,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                     ],
                   ),
                 ),
-                if (activeRole == ActiveRole.sender && count > 0)
+                if (!isTraveler && count > 0)
                   GestureDetector(
                     onTap: () => _showFilterSheet(ctx),
                     child: Text(
@@ -1078,13 +1084,13 @@ class _MapSenderViewState extends State<_MapSenderView> {
               slivers: [
                 SliverToBoxAdapter(
                   child: RoleGuidanceBanner(
-                    role: activeRole,
+                    isTraveler: isTraveler,
                     hiveService: getIt<HiveService>(),
                   ),
                 ),
-                if (activeRole == ActiveRole.sender && _sheetSize > 0.20)
+                if (!isTraveler && _sheetSize > 0.20)
                   const SliverToBoxAdapter(child: _SenderHeroCard()),
-                if (activeRole == ActiveRole.traveler)
+                if (isTraveler)
                   BlocBuilder<PackageRequestSearchBloc,
                       PackageRequestSearchState>(
                     builder: (ctx, prState) {

@@ -5,7 +5,6 @@ import 'package:dony/app/router.dart';
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/widgets/analytics_consent_gate.dart';
-import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/settings/bloc/app_preferences_bloc.dart';
@@ -133,9 +132,6 @@ class _DonyAppState extends State<DonyApp> {
             };
             return MultiBlocProvider(
               providers: [
-                BlocProvider<ActiveRoleCubit>(
-                  create: (_) => getIt<ActiveRoleCubit>(),
-                ),
                 BlocProvider<AuthBloc>(
                   create: (_) => getIt<AuthBloc>(),
                 ),
@@ -167,7 +163,6 @@ class _DonyAppState extends State<DonyApp> {
               child: BlocListener<AuthBloc, AuthState>(
                 listener: (context, state) {
                   if (state is AuthAuthenticated) {
-                    context.read<ActiveRoleCubit>().syncWithRoles(state.user.roles);
                     // Réconciliation de la préférence contactKycOnly depuis le backend
                     // vers le cache Hive local (utile en cas de changement sur un autre appareil).
                     unawaited(
@@ -177,8 +172,6 @@ class _DonyAppState extends State<DonyApp> {
                               .put(HiveService.kContactKycOnly, v))
                           .catchError((_) {}),
                     );
-                  } else if (state is AuthProfileUpdated) {
-                    context.read<ActiveRoleCubit>().syncWithRoles(state.user.roles);
                   }
                 },
                 child: AnnotatedRegion<SystemUiOverlayStyle>(
