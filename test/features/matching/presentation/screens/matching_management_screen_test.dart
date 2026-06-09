@@ -2,30 +2,34 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/features/auth/bloc/active_role_cubit.dart';
-import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
-import 'package:dony/features/package_request/bloc/negotiation_filter_cubit.dart';
-import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
-import 'package:dony/features/payments/bloc/payment_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
+import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/matching_management_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/secondary_activity_entry.dart';
+import 'package:dony/features/package_request/bloc/negotiation_filter_cubit.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
+import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
 import 'package:dony/features/package_request/data/negotiation_repository.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/envoyer_hub_screen.dart';
+import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class _MockActiveRoleCubit extends MockCubit<ActiveRole>
-    implements ActiveRoleCubit {}
+class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {}
 
 class _MockAnnouncementBloc
     extends MockBloc<AnnouncementEvent, AnnouncementState>
@@ -49,7 +53,21 @@ class _MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
 
 class _MockAnalytics extends Mock implements AnalyticsService {}
 
+UserModel _makeUser({
+  bool isTraveler = false,
+  bool isProAccount = false,
+}) {
+  return UserModel(
+    id: 'u1',
+    roles: [if (isTraveler) 'TRAVELER' else 'SENDER'],
+    kycStatus: 'APPROVED',
+    status: 'ACTIVE',
+    isProAccount: isProAccount,
+  );
+}
+
 void main() {
+  late _MockAuthBloc authBloc;
   late _MockAnnouncementBloc announcementBloc;
   late _MockBidBloc bidBloc;
   late _MockPackageRequestBloc packageBloc;
@@ -59,6 +77,7 @@ void main() {
   late _MockAnalytics analytics;
 
   setUp(() {
+    authBloc = _MockAuthBloc();
     announcementBloc = _MockAnnouncementBloc();
     bidBloc = _MockBidBloc();
     packageBloc = _MockPackageRequestBloc();
@@ -66,6 +85,7 @@ void main() {
     negoRepo = _MockNegotiationRepository();
     paymentBloc = _MockPaymentBloc();
     analytics = _MockAnalytics();
+
     when(() => paymentBloc.state).thenReturn(PaymentInitial());
     when(() => paymentBloc.stream)
         .thenAnswer((_) => const Stream<PaymentState>.empty());
@@ -73,7 +93,6 @@ void main() {
         .thenAnswer((_) async {});
     when(() => analytics.logEvent(any(), properties: any(named: 'properties')))
         .thenAnswer((_) async {});
-
     when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
     when(() => announcementBloc.stream)
         .thenAnswer((_) => const Stream<AnnouncementState>.empty());
@@ -107,7 +126,6 @@ void main() {
     getIt.registerFactory<NegotiationListBloc>(() => negoListBloc);
     getIt.registerLazySingleton<NegotiationRepository>(() => negoRepo);
 
-    // Dépendances tirées par les onglets du nouveau EnvoyerHubScreen.
     if (getIt.isRegistered<AnalyticsService>()) {
       getIt.unregister<AnalyticsService>();
     }
@@ -164,17 +182,17 @@ void main() {
     }
   });
 
-  Widget wrap(ActiveRole role) {
-    final cubit = _MockActiveRoleCubit();
-    when(() => cubit.state).thenReturn(role);
-    when(() => cubit.stream)
-        .thenAnswer((_) => const Stream<ActiveRole>.empty());
+  Widget wrap(UserModel? user) {
+    final state = user != null
+        ? AuthAuthenticated(user)
+        : const AuthInitial();
+    when(() => authBloc.state).thenReturn(state);
+    when(() => authBloc.stream)
+        .thenAnswer((_) => const Stream<AuthState>.empty());
     return MaterialApp(
       home: MultiBlocProvider(
         providers: [
-          BlocProvider<ActiveRoleCubit>.value(value: cubit),
-          // Fourni globalement par app.dart en prod ; requis ici car l'onglet
-          // Envois (ShipmentListBody) écoute PaymentBloc.
+          BlocProvider<AuthBloc>.value(value: authBloc),
           BlocProvider<PaymentBloc>.value(value: paymentBloc),
         ],
         child: const MatchingManagementScreen(),
@@ -182,25 +200,51 @@ void main() {
     );
   }
 
-  group('MatchingManagementScreen dispatch rôle-aware', () {
-    testWidgets('sender → EnvoyerHubScreen rendu', (tester) async {
-      await tester.pumpWidget(wrap(ActiveRole.sender));
-      // pas de pumpAndSettle : l'onglet Envois affiche un spinner (BidInitial)
-      // qui ne se stabilise jamais ; un pump suffit pour monter le hub.
+  group('MatchingManagementScreen — composition par profil (Phase 2)', () {
+    testWidgets('pur expéditeur → EnvoyerHubScreen, aucune entrée secondaire',
+        (tester) async {
+      await tester.pumpWidget(wrap(_makeUser(isTraveler: false)));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.byType(EnvoyerHubScreen), findsOneWidget);
       expect(find.byType(AnnouncementListScreen), findsNothing);
+      expect(find.byType(SecondaryActivityEntry), findsNothing);
     });
 
-    testWidgets('traveler → AnnouncementListScreen rendu', (tester) async {
-      await tester.pumpWidget(wrap(ActiveRole.traveler));
-      // `pumpAndSettle` évité — AnnouncementListScreen démarre un
-      // auto-refresh qui ne se résout jamais en test. Le widget cible est
-      // accessible dès le premier pump.
+    testWidgets(
+        'voyageur occasionnel → EnvoyerHubScreen + entrée "Mes trajets"',
+        (tester) async {
+      await tester
+          .pumpWidget(wrap(_makeUser(isTraveler: true, isProAccount: false)));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byType(EnvoyerHubScreen), findsOneWidget);
+      expect(find.byType(AnnouncementListScreen), findsNothing);
+      expect(find.byType(SecondaryActivityEntry), findsOneWidget);
+      expect(find.text('Mes trajets'), findsOneWidget);
+    });
+
+    testWidgets(
+        'voyageur pro → AnnouncementListScreen (écran primaire trajets)',
+        (tester) async {
+      // AnnouncementInitial → spinner ; on vérifie juste le type d'écran.
+      // Le rendering de SecondaryActivityEntry dans AnnouncementListScreen
+      // est couvert par secondary_activity_entry_test.dart.
+      await tester
+          .pumpWidget(wrap(_makeUser(isTraveler: true, isProAccount: true)));
       await tester.pump();
       expect(find.byType(AnnouncementListScreen), findsOneWidget);
       expect(find.byType(EnvoyerHubScreen), findsNothing);
+    });
+
+    testWidgets('utilisateur non authentifié → EnvoyerHubScreen (senderOnly)',
+        (tester) async {
+      await tester.pumpWidget(wrap(null));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byType(EnvoyerHubScreen), findsOneWidget);
+      expect(find.byType(AnnouncementListScreen), findsNothing);
+      expect(find.byType(SecondaryActivityEntry), findsNothing);
     });
   });
 }
