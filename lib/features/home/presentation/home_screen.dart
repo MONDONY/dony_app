@@ -12,7 +12,6 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/city/data/city_repository.dart';
 import 'package:dony/features/home/presentation/home_map_focus.dart';
-import 'package:dony/features/home/presentation/widgets/home_focus_filter.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
 import 'package:dony/features/matching/bloc/announcement_state.dart';
@@ -760,13 +759,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
                           children: [
                             Row(
                               children: [
-                                if (isTraveler) ...[
-                                  HomeFocusFilter(
-                                    focus: _mapFocus,
-                                    onChanged: _onFocusChanged,
-                                  ),
-                                  const SizedBox(width: DonySpacing.sm),
-                                ],
                                 Expanded(
                                   child: _CorridorBar(
                                     key: const Key('corridor-bar'),
@@ -790,8 +782,31 @@ class _MapSenderViewState extends State<_MapSenderView> {
                               ],
                             ),
                             const SizedBox(height: DonySpacing.xs),
-                            if (!showParcelControls)
-                              _HomeFilterChipsRow(
+                            Row(
+                              children: [
+                                if (isTraveler) ...[
+                                  _SmallChip(
+                                    label: 'Tout',
+                                    isActive: _mapFocus == HomeMapFocus.all,
+                                    onTap: () => _onFocusChanged(HomeMapFocus.all),
+                                  ),
+                                  const SizedBox(width: DonySpacing.xs),
+                                  _SmallChip(
+                                    label: '📦 Colis',
+                                    isActive: _mapFocus == HomeMapFocus.parcels,
+                                    onTap: () => _onFocusChanged(HomeMapFocus.parcels),
+                                  ),
+                                  const SizedBox(width: DonySpacing.xs),
+                                  _SmallChip(
+                                    label: '✈️ Trajets',
+                                    isActive: _mapFocus == HomeMapFocus.trips,
+                                    onTap: () => _onFocusChanged(HomeMapFocus.trips),
+                                  ),
+                                  const SizedBox(width: DonySpacing.xs),
+                                ],
+                                Expanded(
+                                  child: !showParcelControls
+                                      ? _HomeFilterChipsRow(
                                 datePreset: _datePreset,
                                 customDate: _customDate,
                                 kiloProOnly: _kiloProOnly,
@@ -815,64 +830,66 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                   _dispatchSearch();
                                 },
                               )
-                            else
-                              _PackageRequestFilterChipsRow(
-                                dateFrom: _prDateFrom,
-                                dateTo: _prDateTo,
-                                maxWeight: _prMaxWeight,
-                                parcelSize: _prParcelSize,
-                                onDateTap: () async {
-                                  final picked = await showDateRangePicker(
-                                    context: context,
-                                    firstDate: DateTime.now(),
-                                    lastDate: DateTime.now().add(
-                                      const Duration(days: 365),
+                                  : _PackageRequestFilterChipsRow(
+                                      dateFrom: _prDateFrom,
+                                      dateTo: _prDateTo,
+                                      maxWeight: _prMaxWeight,
+                                      parcelSize: _prParcelSize,
+                                      onDateTap: () async {
+                                        final picked = await showDateRangePicker(
+                                          context: context,
+                                          firstDate: DateTime.now(),
+                                          lastDate: DateTime.now().add(
+                                            const Duration(days: 365),
+                                          ),
+                                          initialDateRange:
+                                              _prDateFrom != null && _prDateTo != null
+                                              ? DateTimeRange(
+                                                  start: _prDateFrom!,
+                                                  end: _prDateTo!,
+                                                )
+                                              : null,
+                                          locale: const Locale('fr'),
+                                          builder: (ctx, child) => Theme(
+                                            data: Theme.of(ctx),
+                                            child: child!,
+                                          ),
+                                        );
+                                        if (picked != null) {
+                                          setState(() {
+                                            _prDateFrom = picked.start;
+                                            _prDateTo = picked.end;
+                                          });
+                                          _dispatchPackageRequestSearch();
+                                        }
+                                      },
+                                      onWeightTap: () async {
+                                        final result = await _showMaxWeightSheet(
+                                          context,
+                                        );
+                                        if (result != null) {
+                                          setState(() => _prMaxWeight = result);
+                                          _dispatchPackageRequestSearch();
+                                        }
+                                      },
+                                      onSizeTap: () async {
+                                        final result = await _showParcelSizeSheet(
+                                          context,
+                                        );
+                                        if (result != null) {
+                                          setState(
+                                            () => _prParcelSize =
+                                                result == _prParcelSize
+                                                ? null
+                                                : result,
+                                          );
+                                          _dispatchPackageRequestSearch();
+                                        }
+                                      },
                                     ),
-                                    initialDateRange:
-                                        _prDateFrom != null && _prDateTo != null
-                                        ? DateTimeRange(
-                                            start: _prDateFrom!,
-                                            end: _prDateTo!,
-                                          )
-                                        : null,
-                                    locale: const Locale('fr'),
-                                    builder: (ctx, child) => Theme(
-                                      data: Theme.of(ctx),
-                                      child: child!,
-                                    ),
-                                  );
-                                  if (picked != null) {
-                                    setState(() {
-                                      _prDateFrom = picked.start;
-                                      _prDateTo = picked.end;
-                                    });
-                                    _dispatchPackageRequestSearch();
-                                  }
-                                },
-                                onWeightTap: () async {
-                                  final result = await _showMaxWeightSheet(
-                                    context,
-                                  );
-                                  if (result != null) {
-                                    setState(() => _prMaxWeight = result);
-                                    _dispatchPackageRequestSearch();
-                                  }
-                                },
-                                onSizeTap: () async {
-                                  final result = await _showParcelSizeSheet(
-                                    context,
-                                  );
-                                  if (result != null) {
-                                    setState(
-                                      () => _prParcelSize =
-                                          result == _prParcelSize
-                                          ? null
-                                          : result,
-                                    );
-                                    _dispatchPackageRequestSearch();
-                                  }
-                                },
-                              ),
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                       ),
