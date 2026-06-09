@@ -6,3 +6,11 @@
 // Les tests de comportement rôle-aware sont désormais couverts par :
 //   - test/features/profile/presentation/profile_screen_test.dart
 //   - test/features/matching/presentation/screens/matching_management_screen_test.dart
+
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  // Tests supprimés — RoleModePill n'existe plus (Phase 4 modèle additif).
+  // Ce fichier est conservé uniquement pour éviter des références fantômes.
+  test('RoleModePill supprimé en Phase 4 — aucun test', () {});
+}
