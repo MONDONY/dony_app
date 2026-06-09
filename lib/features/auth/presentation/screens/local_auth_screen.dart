@@ -157,6 +157,7 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
           final bottom = MediaQuery.paddingOf(context).bottom;
 
           return SafeArea(
+            bottom: false,
             child: LayoutBuilder(
               builder: (context, constraints) {
                 // LayoutBuilder donne la hauteur RÉELLE après SafeArea — fiable.

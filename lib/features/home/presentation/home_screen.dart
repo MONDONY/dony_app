@@ -694,6 +694,8 @@ class _MapSenderViewState extends State<_MapSenderView> {
     final isTraveler = _isTraveler;
     final vis = homeMapVisibility(isTraveler: isTraveler, focus: _mapFocus);
     final showParcelControls = isTraveler && _mapFocus == HomeMapFocus.parcels;
+    final showBothTypes =
+        !showParcelControls && isTraveler && _mapFocus == HomeMapFocus.all;
     final authState = context.watch<AuthBloc>().state;
     final currentUserId = authState is AuthAuthenticated
         ? authState.user.id
@@ -1006,7 +1008,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         child: SizedBox(
                           height: (MediaQuery.of(context).size.height * 0.40)
                               .clamp(360.0, 450.0),
-                          child: showParcelControls
+                          child: (showParcelControls || showBothTypes)
                               ? NearMePackageRequestCarousel(
                                       items: prState.results,
                                       userPosition: _userPosition != null
