@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -26,6 +27,7 @@ import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
@@ -190,6 +192,52 @@ void main() {
     );
   }
 
+  /// Variante avec GoRouter — permet de tester les callbacks de navigation
+  /// (onShowTrips, onSendParcel) et l'état [AuthProfileUpdated].
+  Widget wrapWithRouter(
+    UserModel user, {
+    AuthState? authState,
+  }) {
+    final authBloc = _MockAuthBloc();
+    final roleCubit = _MockActiveRoleCubit();
+    final state = authState ?? AuthAuthenticated(user);
+    when(() => authBloc.state).thenReturn(state);
+    when(() => authBloc.stream)
+        .thenAnswer((_) => const Stream<AuthState>.empty());
+    when(() => roleCubit.state).thenReturn(ActiveRole.sender);
+    when(() => roleCubit.stream)
+        .thenAnswer((_) => const Stream<ActiveRole>.empty());
+
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (ctx, _) => MultiBlocProvider(
+            providers: [
+              BlocProvider<AuthBloc>.value(value: authBloc),
+              BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
+              BlocProvider<PaymentBloc>.value(value: paymentBloc),
+            ],
+            child: const MatchingManagementScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/announcements/trips',
+          builder: (ctx, _) => const Scaffold(body: Text('Trips')),
+        ),
+        GoRoute(
+          path: '/announcements/send',
+          builder: (ctx, _) => const Scaffold(body: Text('Send')),
+        ),
+      ],
+    );
+    return MaterialApp.router(
+      routerConfig: router,
+      theme: AppTheme.light,
+    );
+  }
+
   group('MatchingManagementScreen — modèle additif (Phase 1)', () {
     testWidgets('pur expéditeur → EnvoyerHubScreen, sans bouton Mes trajets',
         (tester) async {
@@ -246,6 +294,57 @@ void main() {
       await tester.pumpWidget(wrap(_makeUser()));
       await tester.pump();
       expect(find.byType(EnvoyerHubScreen), findsOneWidget);
+    });
+  });
+
+  group('MatchingManagementScreen — couverture callbacks & états', () {
+    testWidgets(
+        'AuthProfileUpdated → même layout que AuthAuthenticated (expéditeur)',
+        (tester) async {
+      final user = _makeUser();
+      await tester.pumpWidget(
+        wrapWithRouter(user, authState: AuthProfileUpdated(user)),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byType(EnvoyerHubScreen), findsOneWidget);
+      expect(find.byType(AnnouncementListScreen), findsNothing);
+    });
+
+    testWidgets(
+        'voyageur occasionnel — taper Mes trajets navigue vers /announcements/trips',
+        (tester) async {
+      await tester.pumpWidget(
+        wrapWithRouter(_makeUser(roles: const ['SENDER', 'TRAVELER'])),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      // Vérifier que le bouton est visible
+      expect(find.text('Mes trajets'), findsOneWidget);
+      // Taper le bouton — déclenche le callback (analytics + push)
+      await tester.tap(find.text('Mes trajets'));
+      await tester.pumpAndSettle();
+      // Après navigation, la page /announcements/trips est affichée
+      expect(find.text('Trips'), findsOneWidget);
+    });
+
+    testWidgets(
+        'voyageur PRO — taper Envoyer navigue vers /announcements/send',
+        (tester) async {
+      await tester.pumpWidget(
+        wrapWithRouter(
+          _makeUser(roles: const ['SENDER', 'TRAVELER'], isProAccount: true),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      // Vérifier que le bouton est visible
+      expect(find.byKey(const Key('send-parcel-btn')), findsOneWidget);
+      // Taper le bouton — déclenche le callback (analytics + push)
+      await tester.tap(find.byKey(const Key('send-parcel-btn')));
+      await tester.pumpAndSettle();
+      // Après navigation, la page /announcements/send est affichée
+      expect(find.text('Send'), findsOneWidget);
     });
   });
 }
