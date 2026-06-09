@@ -108,6 +108,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
   bool _allCorridors = true;
 
   bool _isNearMeActive = false;
+  bool _nearMeShowList = false;
   double? _nearMeRadiusKm;
   LatLng? _userPosition;
   // True between the FAB tap and the position being acquired (FAB spinner).
@@ -350,11 +351,24 @@ class _MapSenderViewState extends State<_MapSenderView> {
   void _deactivateNearMe() {
     setState(() {
       _isNearMeActive = false;
+      _nearMeShowList = false;
       _nearMeRadiusKm = null;
       _userPosition = null;
       _selectedAnnouncementId = null;
     });
     _dispatchForActiveRole();
+  }
+
+  void _openNearMeList() {
+    setState(() => _nearMeShowList = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_sheetController.isAttached) return;
+      _sheetController.animateTo(
+        1.0,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+    });
   }
 
   // Ajuste le rayon SANS couper le filtre : rouvre le slider pré-rempli au rayon
@@ -982,12 +996,11 @@ class _MapSenderViewState extends State<_MapSenderView> {
                   ),
 
                   // ── Liste ou Carousel selon le mode Près de moi ───────────────
-                  if (!_isNearMeActive)
+                  if (!_isNearMeActive || _nearMeShowList)
                     DraggableScrollableSheet(
                       controller: _sheetController,
                       initialChildSize: 0.20,
                       minChildSize: 0.15,
-                      maxChildSize: 1.0,
                       snap: true,
                       snapSizes: const [0.20, 0.45, 1.0],
                       builder: (ctx, scrollCtrl) => _buildSheet(
@@ -1008,7 +1021,95 @@ class _MapSenderViewState extends State<_MapSenderView> {
                         child: SizedBox(
                           height: (MediaQuery.of(context).size.height * 0.40)
                               .clamp(360.0, 450.0),
-                          child: (showParcelControls || showBothTypes)
+                          child: showBothTypes
+                              ? DefaultTabController(
+                                  length: 2,
+                                  child: Column(
+                                    children: [
+                                      TabBar(
+                                        tabs: [
+                                          Tab(
+                                            text:
+                                                '📦 ${prState.results.length} colis',
+                                          ),
+                                          Tab(text: '✈️ ${announcements.length} trajets'),
+                                        ],
+                                      ),
+                                      Expanded(
+                                        child: TabBarView(
+                                          children: [
+                                            NearMePackageRequestCarousel(
+                                              items: prState.results,
+                                              userPosition: _userPosition !=
+                                                      null
+                                                  ? (
+                                                      lat: _userPosition!
+                                                          .latitude,
+                                                      lng: _userPosition!
+                                                          .longitude,
+                                                    )
+                                                  : null,
+                                              currentUserId: currentUserId,
+                                              selectedRequestId:
+                                                  _selectedAnnouncementId,
+                                              onCardChanged: (id) => setState(
+                                                () => _selectedAnnouncementId =
+                                                    id,
+                                              ),
+                                              onSeeAll: _openNearMeList,
+                                              onTapCard: (it) =>
+                                                  PackageRequestPreviewBottomSheet.show(
+                                                    context,
+                                                    item: it,
+                                                    isOwnRequest:
+                                                        currentUserId != null &&
+                                                        it.sender.id ==
+                                                            currentUserId,
+                                                  ),
+                                              onMakeOffer: (it) =>
+                                                  currentUserId == null ||
+                                                      it.sender.id !=
+                                                          currentUserId
+                                                  ? PackageRequestPreviewBottomSheet.show(
+                                                      context,
+                                                      item: it,
+                                                    )
+                                                  : null,
+                                            ),
+                                            NearMeCarousel(
+                                              announcements: announcements,
+                                              userPosition: _userPosition !=
+                                                      null
+                                                  ? (
+                                                      lat: _userPosition!
+                                                          .latitude,
+                                                      lng: _userPosition!
+                                                          .longitude,
+                                                    )
+                                                  : null,
+                                              selectedAnnouncementId:
+                                                  _selectedAnnouncementId,
+                                              onCardChanged: (id) => setState(
+                                                () => _selectedAnnouncementId =
+                                                    id,
+                                              ),
+                                              onSeeAll: _openNearMeList,
+                                              onTapCard: (a) =>
+                                                  _onTravelerCardTap(
+                                                    context,
+                                                    a,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ).animate().fadeIn(duration: 250.ms).slideY(
+                                  begin: 0.1,
+                                  curve: Curves.easeOutCubic,
+                                )
+                              : showParcelControls
                               ? NearMePackageRequestCarousel(
                                       items: prState.results,
                                       userPosition: _userPosition != null
