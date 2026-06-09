@@ -180,9 +180,21 @@ class MarkerBitmapFactory {
 
     const shadowSpread = 4.0;
     const shadowOffY = 2.0;
+    const emojiSize = 14.0;
+    const emojiGap = 1.0;
+    final emojiTp = prefix.isNotEmpty
+        ? (TextPainter(
+            text: TextSpan(
+              text: prefix,
+              style: const TextStyle(fontSize: emojiSize, color: Colors.black),
+            ),
+            textDirection: TextDirection.ltr,
+          )..layout())
+        : null;
+    final extraH = emojiTp != null ? emojiGap + emojiTp.height : 0.0;
 
     final canvasW = pillW + shadowSpread * 2 + badgeR;
-    final canvasH = shadowSpread + badgeR + pillH + _kTailH;
+    final canvasH = shadowSpread + badgeR + pillH + _kTailH + extraH;
 
     const mainX = shadowSpread;
     const mainY = shadowSpread + badgeR;
@@ -235,29 +247,6 @@ class MarkerBitmapFactory {
     canvas.drawRRect(pillRect,
         Paint()..color = palette.fill..style = PaintingStyle.fill);
 
-    // Emoji watermark
-    if (prefix.isNotEmpty) {
-      final emojiTp = TextPainter(
-        text: TextSpan(
-          text: prefix,
-          style: const TextStyle(fontSize: 13, color: Colors.black),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      canvas.saveLayer(
-        Rect.fromLTWH(mainX, mainY, pillW, pillH),
-        Paint()..color = Colors.white.withValues(alpha: 0.55),
-      );
-      emojiTp.paint(
-        canvas,
-        Offset(
-          mainX + (pillW - emojiTp.width) / 2,
-          mainY + (pillH - emojiTp.height) / 2,
-        ),
-      );
-      canvas.restore();
-    }
-
     // Border
     canvas.drawRRect(pillRect,
         Paint()..color = palette.border..style = PaintingStyle.stroke..strokeWidth = 1);
@@ -265,10 +254,11 @@ class MarkerBitmapFactory {
     // Tail
     final tailCx = mainX + pillW / 2;
     final tailTopY = mainY + pillH;
+    final tailTipY = mainY + pillH + _kTailH;
     final tailPath = Path()
       ..moveTo(tailCx - _kTailW / 2, tailTopY)
       ..lineTo(tailCx + _kTailW / 2, tailTopY)
-      ..lineTo(tailCx, canvasH)
+      ..lineTo(tailCx, tailTipY)
       ..close();
     canvas.drawPath(tailPath,
         Paint()..color = palette.fill..style = PaintingStyle.fill);
@@ -285,23 +275,14 @@ class MarkerBitmapFactory {
     tp.paint(canvas,
         const Offset(mainX + paddingH + dotSectionW + dotGap, mainY + paddingV));
 
-    // ── Count badge (blue circle at top-right corner of main pill) ────────
+    // ── Count badge ────────────────────────────────────────────────────────
     final badgeCx = mainX + pillW;
-    const badgeCy = mainY; // top edge of pill = badge center
+    const badgeCy = mainY;
 
-    canvas.drawCircle(
-      Offset(badgeCx, badgeCy),
-      badgeR,
-      Paint()..color = DonyColors.blue500,
-    );
-    canvas.drawCircle(
-      Offset(badgeCx, badgeCy),
-      badgeR,
-      Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5,
-    );
+    canvas.drawCircle(Offset(badgeCx, badgeCy), badgeR,
+        Paint()..color = DonyColors.blue500);
+    canvas.drawCircle(Offset(badgeCx, badgeCy), badgeR,
+        Paint()..color = Colors.white..style = PaintingStyle.stroke..strokeWidth = 1.5);
 
     final badgeText = count > 99 ? '99' : '$count';
     final badgeTp = TextPainter(
@@ -319,6 +300,17 @@ class MarkerBitmapFactory {
       canvas,
       Offset(badgeCx - badgeTp.width / 2, badgeCy - badgeTp.height / 2),
     );
+
+    // Emoji below tail tip
+    if (emojiTp != null) {
+      emojiTp.paint(
+        canvas,
+        Offset(
+          mainX + (pillW - emojiTp.width) / 2,
+          tailTipY + emojiGap,
+        ),
+      );
+    }
 
     final picture = recorder.endRecording();
     final img = await picture.toImage(canvasW.ceil(), canvasH.ceil());
@@ -368,8 +360,21 @@ class MarkerBitmapFactory {
 
     const shadowSpread = 4.0;
     const shadowOffY = 2.0;
+    const emojiSize = 14.0;
+    const emojiGap = 1.0;
+    final emojiTp = prefix.isNotEmpty
+        ? (TextPainter(
+            text: TextSpan(
+              text: prefix,
+              style: const TextStyle(fontSize: emojiSize, color: Colors.black),
+            ),
+            textDirection: TextDirection.ltr,
+          )..layout())
+        : null;
+    final extraH = emojiTp != null ? emojiGap + emojiTp.height : 0.0;
+
     final canvasW = pillW + shadowSpread * 2;
-    final canvasH = shadowSpread + pillH + _kTailH;
+    final canvasH = shadowSpread + pillH + _kTailH + extraH;
     const offsetX = shadowSpread;
     const offsetY = shadowSpread;
 
@@ -414,29 +419,6 @@ class MarkerBitmapFactory {
         ..style = PaintingStyle.fill,
     );
 
-    // Emoji watermark — centered in pill, semi-transparent
-    if (prefix.isNotEmpty) {
-      final emojiTp = TextPainter(
-        text: TextSpan(
-          text: prefix,
-          style: const TextStyle(fontSize: 13, color: Colors.black),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      canvas.saveLayer(
-        Rect.fromLTWH(offsetX, offsetY, pillW, pillH),
-        Paint()..color = Colors.white.withValues(alpha: 0.55),
-      );
-      emojiTp.paint(
-        canvas,
-        Offset(
-          offsetX + (pillW - emojiTp.width) / 2,
-          offsetY + (pillH - emojiTp.height) / 2,
-        ),
-      );
-      canvas.restore();
-    }
-
     // Pill border
     canvas.drawRRect(
       pillRect,
@@ -449,10 +431,11 @@ class MarkerBitmapFactory {
     // Tail
     final tailCenterX = offsetX + pillW / 2;
     final tailTopY = offsetY + pillH;
+    final tailTipY = offsetY + pillH + _kTailH;
     final tailPath = Path()
       ..moveTo(tailCenterX - _kTailW / 2, tailTopY)
       ..lineTo(tailCenterX + _kTailW / 2, tailTopY)
-      ..lineTo(tailCenterX, canvasH)
+      ..lineTo(tailCenterX, tailTipY)
       ..close();
     canvas.drawPath(tailPath, Paint()..color = palette.fill..style = PaintingStyle.fill);
 
@@ -466,6 +449,17 @@ class MarkerBitmapFactory {
 
     // Price text
     tp.paint(canvas, const Offset(offsetX + paddingH + dotSectionW + dotGap, offsetY + paddingV));
+
+    // Emoji below tail tip — centered under pill
+    if (emojiTp != null) {
+      emojiTp.paint(
+        canvas,
+        Offset(
+          offsetX + (pillW - emojiTp.width) / 2,
+          tailTipY + emojiGap,
+        ),
+      );
+    }
 
     final picture = recorder.endRecording();
     final img = await picture.toImage(canvasW.ceil(), canvasH.ceil());
