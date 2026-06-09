@@ -181,10 +181,9 @@ class _DonyBottomNav extends StatelessWidget {
         const tab1Icon = Icons.bolt_rounded;
         const tab1IconOutlined = Icons.bolt_outlined;
 
-        // Tab 2 — Suivi (libellé fixe, icône role-aware)
-        final tab2Icon = isTraveler
-            ? Icons.qr_code_scanner_rounded
-            : Icons.track_changes_rounded;
+        // Tab 2 — Suivi (libellé + icône figés ; contenu adapté au profil
+        // dans SuiviScreen — voir spec Phase 3)
+        const tab2Icon = Icons.local_shipping_rounded;
 
         return ClipRect(
           child: BackdropFilter(
@@ -222,7 +221,7 @@ class _DonyBottomNav extends StatelessWidget {
                   onTap: () => onTap(1),
                 ),
               ),
-              // 2 — Suivi (QR scan pour voyageur, recherche pour expéditeur)
+              // 2 — Suivi (toujours in-shell ; SuiviScreen adapte le contenu au profil)
               Expanded(
                 child: _NavItem(
                   icon: tab2Icon,
@@ -230,14 +229,7 @@ class _DonyBottomNav extends StatelessWidget {
                   label: 'Suivi',
                   index: 2,
                   currentIndex: currentIndex,
-                  onTap: () {
-                    if (isTraveler) {
-                      onTap(2);
-                    } else {
-                      // Expéditeur : recherche de suivi en plein écran (hors shell, comportement intentionnel)
-                      context.push('/tracking/search');
-                    }
-                  },
+                  onTap: () => onTap(2),
                 ),
               ),
               // 3 — Messages
