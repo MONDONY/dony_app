@@ -77,6 +77,10 @@ abstract final class AnalyticsEvents {
   // Home map focus
   static const homeMapFocusChanged = 'home_map_focus_changed';
 
+  // Annonces tab navigation (Phase 1 — modèle additif)
+  static const annoncesTripsOpened = 'annonces_trips_opened';
+  static const annoncesSendOpened  = 'annonces_send_opened';
+
   // Errors (BlocObserver)
   static const blocError = 'bloc_error';
 }
