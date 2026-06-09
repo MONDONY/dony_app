@@ -26,8 +26,8 @@ class MatchingManagementScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final authState = context.watch<AuthBloc>().state;
     final UserModel? user = switch (authState) {
-      AuthAuthenticated s => s.user,
-      AuthProfileUpdated s => s.user,
+      final AuthAuthenticated s => s.user,
+      final AuthProfileUpdated s => s.user,
       _ => null,
     };
     final layout = annoncesLayoutFor(
