@@ -1868,7 +1868,7 @@ class _SmallChip extends StatelessWidget {
         curve: Curves.easeInOut,
         padding: const EdgeInsets.symmetric(
           horizontal: DonySpacing.base,
-          vertical: DonySpacing.xs,
+          vertical: DonySpacing.sm,
         ),
         decoration: BoxDecoration(
           color: isActive ? cs.primary : cs.surface,
@@ -1887,14 +1887,14 @@ class _SmallChip extends StatelessWidget {
             if (icon != null) ...[
               Icon(
                 icon,
-                size: 13,
+                size: 15,
                 color: isActive ? Colors.white : cs.onSurfaceVariant,
               ),
               const SizedBox(width: DonySpacing.xxs),
             ],
             Text(
               label,
-              style: tt.labelSmall?.copyWith(
+              style: tt.labelMedium?.copyWith(
                 color: isActive ? Colors.white : cs.onSurface,
                 fontWeight: FontWeight.w600,
               ),
