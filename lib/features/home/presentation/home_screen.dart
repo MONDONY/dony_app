@@ -789,13 +789,21 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                         _SmallChip(
                                           label: '📦 Colis',
                                           isActive: _mapFocus == HomeMapFocus.parcels,
-                                          onTap: () => _onFocusChanged(HomeMapFocus.parcels),
+                                          onTap: () => _onFocusChanged(
+                                            _mapFocus == HomeMapFocus.parcels
+                                                ? HomeMapFocus.all
+                                                : HomeMapFocus.parcels,
+                                          ),
                                         ),
                                         const SizedBox(width: DonySpacing.xs),
                                         _SmallChip(
                                           label: '✈️ Trajets',
                                           isActive: _mapFocus == HomeMapFocus.trips,
-                                          onTap: () => _onFocusChanged(HomeMapFocus.trips),
+                                          onTap: () => _onFocusChanged(
+                                            _mapFocus == HomeMapFocus.trips
+                                                ? HomeMapFocus.all
+                                                : HomeMapFocus.trips,
+                                          ),
                                         ),
                                         const SizedBox(width: DonySpacing.xs),
                                       ],
@@ -812,6 +820,28 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                     onRatingTap: _showRatingSheet,
                                     onWeightTap: _showWeightSheet,
                                     onPriceTap: _showPriceSheet,
+                                    onDateClear: () {
+                                      setState(() {
+                                        _datePreset = _DatePreset.none;
+                                        _customDate = null;
+                                      });
+                                      _dispatchSearch();
+                                    },
+                                    onRatingClear: () {
+                                      setState(() => _minRating = null);
+                                      _dispatchSearch();
+                                    },
+                                    onWeightClear: () {
+                                      setState(() {
+                                        _weightMin = null;
+                                        _weightMax = null;
+                                      });
+                                      _dispatchSearch();
+                                    },
+                                    onPriceClear: () {
+                                      setState(() => _maxPricePerKg = null);
+                                      _dispatchSearch();
+                                    },
                                     onKiloProToggle: () {
                                       setState(() => _kiloProOnly = !_kiloProOnly);
                                       _dispatchSearch();
@@ -829,13 +859,21 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                         _SmallChip(
                                           label: '📦 Colis',
                                           isActive: _mapFocus == HomeMapFocus.parcels,
-                                          onTap: () => _onFocusChanged(HomeMapFocus.parcels),
+                                          onTap: () => _onFocusChanged(
+                                            _mapFocus == HomeMapFocus.parcels
+                                                ? HomeMapFocus.all
+                                                : HomeMapFocus.parcels,
+                                          ),
                                         ),
                                         const SizedBox(width: DonySpacing.xs),
                                         _SmallChip(
                                           label: '✈️ Trajets',
                                           isActive: _mapFocus == HomeMapFocus.trips,
-                                          onTap: () => _onFocusChanged(HomeMapFocus.trips),
+                                          onTap: () => _onFocusChanged(
+                                            _mapFocus == HomeMapFocus.trips
+                                                ? HomeMapFocus.all
+                                                : HomeMapFocus.trips,
+                                          ),
                                         ),
                                         const SizedBox(width: DonySpacing.xs),
                                       ],
@@ -894,6 +932,21 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                         );
                                         _dispatchPackageRequestSearch();
                                       }
+                                    },
+                                    onDateClear: () {
+                                      setState(() {
+                                        _prDateFrom = null;
+                                        _prDateTo = null;
+                                      });
+                                      _dispatchPackageRequestSearch();
+                                    },
+                                    onWeightClear: () {
+                                      setState(() => _prMaxWeight = null);
+                                      _dispatchPackageRequestSearch();
+                                    },
+                                    onSizeClear: () {
+                                      setState(() => _prParcelSize = null);
+                                      _dispatchPackageRequestSearch();
                                     },
                                   ),
                           ],
@@ -1734,6 +1787,10 @@ class _HomeFilterChipsRow extends StatelessWidget {
     required this.onPriceTap,
     required this.onKiloProToggle,
     required this.onAllCorridorsToggle,
+    required this.onDateClear,
+    required this.onRatingClear,
+    required this.onWeightClear,
+    required this.onPriceClear,
     this.minRating,
     this.weightMin,
     this.weightMax,
@@ -1755,6 +1812,10 @@ class _HomeFilterChipsRow extends StatelessWidget {
   final VoidCallback onPriceTap;
   final VoidCallback onKiloProToggle;
   final VoidCallback onAllCorridorsToggle;
+  final VoidCallback onDateClear;
+  final VoidCallback onRatingClear;
+  final VoidCallback onWeightClear;
+  final VoidCallback onPriceClear;
   final List<Widget> leadingChildren;
 
   String get _dateLabel {
@@ -1801,28 +1862,28 @@ class _HomeFilterChipsRow extends StatelessWidget {
             label: _dateLabel,
             isActive: datePreset != _DatePreset.none,
             icon: Icons.calendar_today_rounded,
-            onTap: onDateTap,
+            onTap: datePreset != _DatePreset.none ? onDateClear : onDateTap,
           ),
           const SizedBox(width: DonySpacing.xs),
           _SmallChip(
             label: _ratingLabel,
             isActive: minRating != null,
             icon: Icons.star_rounded,
-            onTap: onRatingTap,
+            onTap: minRating != null ? onRatingClear : onRatingTap,
           ),
           const SizedBox(width: DonySpacing.xs),
           _SmallChip(
             label: _weightLabel,
             isActive: weightMin != null || weightMax != null,
             icon: Icons.fitness_center_rounded,
-            onTap: onWeightTap,
+            onTap: (weightMin != null || weightMax != null) ? onWeightClear : onWeightTap,
           ),
           const SizedBox(width: DonySpacing.xs),
           _SmallChip(
             label: _priceLabel,
             isActive: maxPricePerKg != null,
             icon: Icons.euro_rounded,
-            onTap: onPriceTap,
+            onTap: maxPricePerKg != null ? onPriceClear : onPriceTap,
           ),
           const SizedBox(width: DonySpacing.xs),
           _SmallChip(
@@ -2736,6 +2797,9 @@ class _PackageRequestFilterChipsRow extends StatelessWidget {
     required this.onDateTap,
     required this.onWeightTap,
     required this.onSizeTap,
+    required this.onDateClear,
+    required this.onWeightClear,
+    required this.onSizeClear,
     this.dateFrom,
     this.dateTo,
     this.maxWeight,
@@ -2750,6 +2814,9 @@ class _PackageRequestFilterChipsRow extends StatelessWidget {
   final VoidCallback onDateTap;
   final VoidCallback onWeightTap;
   final VoidCallback onSizeTap;
+  final VoidCallback onDateClear;
+  final VoidCallback onWeightClear;
+  final VoidCallback onSizeClear;
   final List<Widget> leadingChildren;
 
   String get _dateLabel {
@@ -2776,21 +2843,21 @@ class _PackageRequestFilterChipsRow extends StatelessWidget {
             label: _dateLabel,
             isActive: dateFrom != null,
             icon: Icons.calendar_today_rounded,
-            onTap: onDateTap,
+            onTap: dateFrom != null ? onDateClear : onDateTap,
           ),
           const SizedBox(width: DonySpacing.xs),
           _SmallChip(
             label: _weightLabel,
             isActive: maxWeight != null,
             icon: Icons.fitness_center_rounded,
-            onTap: onWeightTap,
+            onTap: maxWeight != null ? onWeightClear : onWeightTap,
           ),
           const SizedBox(width: DonySpacing.xs),
           _SmallChip(
             label: _sizeLabel,
             isActive: parcelSize != null,
             icon: Icons.inventory_2_outlined,
-            onTap: onSizeTap,
+            onTap: parcelSize != null ? onSizeClear : onSizeTap,
           ),
         ],
       ),
