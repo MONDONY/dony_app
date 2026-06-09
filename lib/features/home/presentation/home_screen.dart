@@ -1364,8 +1364,59 @@ class _MapSenderViewState extends State<_MapSenderView> {
                           final pairedCount = minLen * 2;
                           final tripsLonger = count >= parcels.length;
 
+                          final showCarousel =
+                              _isNearMeActive &&
+                              _userPosition != null &&
+                              parcels.isNotEmpty;
+
                           return SliverMainAxisGroup(
                             slivers: [
+                              if (showCarousel)
+                                SliverToBoxAdapter(
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      DonySpacing.base,
+                                      DonySpacing.sm,
+                                      DonySpacing.base,
+                                      DonySpacing.xs,
+                                    ),
+                                    child: SizedBox(
+                                      height: 232,
+                                      child: NearMePackageRequestCarousel(
+                                        items: parcels,
+                                        currentUserId: currentUserId,
+                                        userPosition: (
+                                          lat: _userPosition!.latitude,
+                                          lng: _userPosition!.longitude,
+                                        ),
+                                        onSeeAll: () =>
+                                            _sheetController.animateTo(
+                                              1.0,
+                                              duration: const Duration(
+                                                milliseconds: 280,
+                                              ),
+                                              curve: Curves.easeOutCubic,
+                                            ),
+                                        onTapCard: (it) =>
+                                            PackageRequestPreviewBottomSheet.show(
+                                              context,
+                                              item: it,
+                                              isOwnRequest:
+                                                  currentUserId != null &&
+                                                  it.sender.id == currentUserId,
+                                            ),
+                                        onMakeOffer: (it) =>
+                                            currentUserId == null ||
+                                                it.sender.id != currentUserId
+                                            ? PackageRequestPreviewBottomSheet.show(
+                                                context,
+                                                item: it,
+                                              )
+                                            : null,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               SliverPadding(
                                 padding: EdgeInsets.fromLTRB(
                                   DonySpacing.base,
