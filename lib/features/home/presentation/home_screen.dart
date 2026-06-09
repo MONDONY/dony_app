@@ -787,12 +787,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                     leadingChildren: [
                                       if (isTraveler) ...[
                                         _SmallChip(
-                                          label: 'Tout',
-                                          isActive: _mapFocus == HomeMapFocus.all,
-                                          onTap: () => _onFocusChanged(HomeMapFocus.all),
-                                        ),
-                                        const SizedBox(width: DonySpacing.xs),
-                                        _SmallChip(
                                           label: '📦 Colis',
                                           isActive: _mapFocus == HomeMapFocus.parcels,
                                           onTap: () => _onFocusChanged(HomeMapFocus.parcels),
@@ -832,12 +826,6 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                 : _PackageRequestFilterChipsRow(
                                     leadingChildren: [
                                       if (isTraveler) ...[
-                                        _SmallChip(
-                                          label: 'Tout',
-                                          isActive: _mapFocus == HomeMapFocus.all,
-                                          onTap: () => _onFocusChanged(HomeMapFocus.all),
-                                        ),
-                                        const SizedBox(width: DonySpacing.xs),
                                         _SmallChip(
                                           label: '📦 Colis',
                                           isActive: _mapFocus == HomeMapFocus.parcels,
