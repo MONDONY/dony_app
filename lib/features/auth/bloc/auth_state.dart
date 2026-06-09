@@ -33,10 +33,10 @@ class AuthOtpSent extends AuthState {
   });
 
   AuthOtpSent copyWith({int? secondsLeft}) => AuthOtpSent(
-        verificationId: verificationId,
-        phoneNumber: phoneNumber,
-        secondsLeft: secondsLeft ?? this.secondsLeft,
-      );
+    verificationId: verificationId,
+    phoneNumber: phoneNumber,
+    secondsLeft: secondsLeft ?? this.secondsLeft,
+  );
 
   @override
   List<Object?> get props => [verificationId, phoneNumber, secondsLeft];

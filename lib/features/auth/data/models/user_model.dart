@@ -40,34 +40,35 @@ class UserModel extends Equatable {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-        id: json['id'] as String,
-        phoneNumber: json['phoneNumber'] as String?,
-        email: json['email'] as String?,
-        firstName: json['firstName'] as String?,
-        lastName: json['lastName'] as String?,
-        birthDate: json['birthDate'] != null
-            ? DateTime.tryParse(json['birthDate'] as String)
-            : null,
-        city: json['city'] as String?,
-        roles: List<String>.from(json['roles'] as List? ?? []),
-        kycStatus: json['kycStatus'] as String? ?? 'NOT_STARTED',
-        status: json['status'] as String? ?? 'ACTIVE',
-        totalTrips: (json['totalTrips'] as num?)?.toInt() ?? 0,
-        totalShipments: (json['totalShipments'] as num?)?.toInt() ?? 0,
-        isProAccount: json['isProAccount'] as bool? ?? false,
-        companyName: json['companyName'] as String?,
-        siret: json['siret'] as String?,
-        stripeAccountStatus:
-            json['stripeAccountStatus'] as String? ?? 'NOT_CREATED',
-        deletionRequestedAt: json['deletionRequestedAt'] != null
-            ? DateTime.tryParse(json['deletionRequestedAt'] as String)
-            : null,
-      );
+    id: json['id'] as String,
+    phoneNumber: json['phoneNumber'] as String?,
+    email: json['email'] as String?,
+    firstName: json['firstName'] as String?,
+    lastName: json['lastName'] as String?,
+    birthDate: json['birthDate'] != null
+        ? DateTime.tryParse(json['birthDate'] as String)
+        : null,
+    city: json['city'] as String?,
+    roles: List<String>.from(json['roles'] as List? ?? []),
+    kycStatus: json['kycStatus'] as String? ?? 'NOT_STARTED',
+    status: json['status'] as String? ?? 'ACTIVE',
+    totalTrips: (json['totalTrips'] as num?)?.toInt() ?? 0,
+    totalShipments: (json['totalShipments'] as num?)?.toInt() ?? 0,
+    isProAccount: json['isProAccount'] as bool? ?? false,
+    companyName: json['companyName'] as String?,
+    siret: json['siret'] as String?,
+    stripeAccountStatus:
+        json['stripeAccountStatus'] as String? ?? 'NOT_CREATED',
+    deletionRequestedAt: json['deletionRequestedAt'] != null
+        ? DateTime.tryParse(json['deletionRequestedAt'] as String)
+        : null,
+  );
 
   String get displayName {
-    final parts = [firstName, lastName]
-        .where((p) => p != null && p.isNotEmpty)
-        .join(' ');
+    final parts = [
+      firstName,
+      lastName,
+    ].where((p) => p != null && p.isNotEmpty).join(' ');
     if (parts.isNotEmpty) return parts;
     if (phoneNumber != null && phoneNumber!.isNotEmpty) return phoneNumber!;
     if (email != null && email!.isNotEmpty) return email!;
@@ -126,22 +127,22 @@ class UserModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        phoneNumber,
-        email,
-        firstName,
-        lastName,
-        birthDate,
-        city,
-        roles,
-        kycStatus,
-        status,
-        totalTrips,
-        totalShipments,
-        isProAccount,
-        companyName,
-        siret,
-        stripeAccountStatus,
-        deletionRequestedAt,
-      ];
+    id,
+    phoneNumber,
+    email,
+    firstName,
+    lastName,
+    birthDate,
+    city,
+    roles,
+    kycStatus,
+    status,
+    totalTrips,
+    totalShipments,
+    isProAccount,
+    companyName,
+    siret,
+    stripeAccountStatus,
+    deletionRequestedAt,
+  ];
 }

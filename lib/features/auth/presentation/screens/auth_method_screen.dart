@@ -43,24 +43,33 @@ class AuthMethodScreen extends StatelessWidget {
           child: DonyLayout.constrained(
             context,
             SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(h, DonySpacing.xxl, h, DonySpacing.xl + bottom),
+              padding: EdgeInsets.fromLTRB(
+                h,
+                DonySpacing.xxl,
+                h,
+                DonySpacing.xl + bottom,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Center(
-                    child: const DonyHeroAvatar(emoji: '🦋'),
-                  ).animate().fadeIn(duration: 300.ms).scaleXY(begin: 0.85, curve: Curves.easeOutBack),
+                  Center(child: const DonyHeroAvatar(emoji: '🦋'))
+                      .animate()
+                      .fadeIn(duration: 300.ms)
+                      .scaleXY(begin: 0.85, curve: Curves.easeOutBack),
                   const SizedBox(height: DonySpacing.md),
                   Center(child: _SecureBadge()),
                   const SizedBox(height: DonySpacing.xl),
                   Text(
-                    'Connecte-toi',
-                    style: tt.displayLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.8,
-                    ),
-                    textAlign: TextAlign.center,
-                  ).animate().fadeIn(delay: 60.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                        'Connecte-toi',
+                        style: tt.displayLarge?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.8,
+                        ),
+                        textAlign: TextAlign.center,
+                      )
+                      .animate()
+                      .fadeIn(delay: 60.ms)
+                      .slideY(begin: 0.04, curve: Curves.easeOutCubic),
                   const SizedBox(height: DonySpacing.sm),
                   Text(
                     'Choisis le mode que tu préfères.\nNous protégeons toutes tes données.',
@@ -72,29 +81,44 @@ class AuthMethodScreen extends StatelessWidget {
                   ).animate().fadeIn(delay: 100.ms),
                   const SizedBox(height: DonySpacing.xxl),
                   _PhoneCta(onTap: () => context.push('/auth/phone'))
-                      .animate().fadeIn(delay: 140.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                      .animate()
+                      .fadeIn(delay: 140.ms)
+                      .slideY(begin: 0.04, curve: Curves.easeOutCubic),
                   const SizedBox(height: DonySpacing.md),
                   _OrDivider(),
                   const SizedBox(height: DonySpacing.md),
                   if (_showAppleButton) ...[
                     _SocialCta(
-                      icon: Icons.apple,
-                      iconColor: cs.onSurface,
-                      label: 'Continuer avec Apple',
-                      onTap: () => context.read<AuthBloc>().add(const AuthAppleSignInRequested()),
-                    ).animate().fadeIn(delay: 180.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                          icon: Icons.apple,
+                          iconColor: cs.onSurface,
+                          label: 'Continuer avec Apple',
+                          onTap: () => context.read<AuthBloc>().add(
+                            const AuthAppleSignInRequested(),
+                          ),
+                        )
+                        .animate()
+                        .fadeIn(delay: 180.ms)
+                        .slideY(begin: 0.04, curve: Curves.easeOutCubic),
                     const SizedBox(height: DonySpacing.sm),
                   ],
                   _GoogleCta(
-                    onTap: () => context.read<AuthBloc>().add(const AuthGoogleSignInRequested()),
-                  ).animate().fadeIn(delay: 220.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                        onTap: () => context.read<AuthBloc>().add(
+                          const AuthGoogleSignInRequested(),
+                        ),
+                      )
+                      .animate()
+                      .fadeIn(delay: 220.ms)
+                      .slideY(begin: 0.04, curve: Curves.easeOutCubic),
                   const SizedBox(height: DonySpacing.sm),
                   _SocialCta(
-                    icon: Icons.email_outlined,
-                    iconColor: cs.onSurfaceVariant,
-                    label: 'Continuer avec mon email',
-                    onTap: () => context.push('/auth/email'),
-                  ).animate().fadeIn(delay: 260.ms).slideY(begin: 0.04, curve: Curves.easeOutCubic),
+                        icon: Icons.email_outlined,
+                        iconColor: cs.onSurfaceVariant,
+                        label: 'Continuer avec mon email',
+                        onTap: () => context.push('/auth/email'),
+                      )
+                      .animate()
+                      .fadeIn(delay: 260.ms)
+                      .slideY(begin: 0.04, curve: Curves.easeOutCubic),
                   const SizedBox(height: DonySpacing.xl),
                   _CguFooter(),
                 ],
@@ -113,7 +137,10 @@ class _SecureBadge extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md, vertical: 5),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.md,
+        vertical: 5,
+      ),
       decoration: BoxDecoration(
         color: cs.primaryContainer,
         borderRadius: BorderRadius.circular(DonyRadius.full),
@@ -234,7 +261,7 @@ class _GoogleLogoPainter extends CustomPainter {
     final r = size.width / 2;
 
     final sectors = [
-      (0.0, 0.5236, const Color(0xFF4285F4)),   // blue
+      (0.0, 0.5236, const Color(0xFF4285F4)), // blue
       (0.5236, 1.0472, const Color(0xFFEA4335)), // red top-right
       (1.0472, 2.6180, const Color(0xFFFBBC05)), // yellow
       (2.6180, 3.6652, const Color(0xFF34A853)), // green
@@ -242,20 +269,23 @@ class _GoogleLogoPainter extends CustomPainter {
     ];
 
     for (final (start, end, color) in sectors) {
-      final paint = Paint()..color = color..style = PaintingStyle.fill;
+      final paint = Paint()
+        ..color = color
+        ..style = PaintingStyle.fill;
       final path = Path()
         ..moveTo(cx, cy)
-        ..arcTo(Rect.fromCircle(center: Offset(cx, cy), radius: r), start, end - start, false)
+        ..arcTo(
+          Rect.fromCircle(center: Offset(cx, cy), radius: r),
+          start,
+          end - start,
+          false,
+        )
         ..close();
       canvas.drawPath(path, paint);
     }
 
     // White inner circle
-    canvas.drawCircle(
-      Offset(cx, cy),
-      r * 0.6,
-      Paint()..color = Colors.white,
-    );
+    canvas.drawCircle(Offset(cx, cy), r * 0.6, Paint()..color = Colors.white);
 
     // Blue right notch (Google "G" opening)
     final notchPaint = Paint()..color = const Color(0xFF4285F4);
@@ -263,11 +293,7 @@ class _GoogleLogoPainter extends CustomPainter {
       Rect.fromLTWH(cx, cy - r * 0.12, r * 0.95, r * 0.24),
       notchPaint,
     );
-    canvas.drawCircle(
-      Offset(cx + r * 0.95, cy),
-      r * 0.12,
-      notchPaint,
-    );
+    canvas.drawCircle(Offset(cx + r * 0.95, cy), r * 0.12, notchPaint);
   }
 
   @override
@@ -279,21 +305,23 @@ class _OrDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    return Row(children: [
-      Expanded(child: Divider(color: cs.outline, height: 1)),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
-        child: Text(
-          'OU',
-          style: tt.labelSmall?.copyWith(
-            color: cs.onSurfaceVariant,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.8,
+    return Row(
+      children: [
+        Expanded(child: Divider(color: cs.outline, height: 1)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: DonySpacing.md),
+          child: Text(
+            'OU',
+            style: tt.labelSmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.8,
+            ),
           ),
         ),
-      ),
-      Expanded(child: Divider(color: cs.outline, height: 1)),
-    ]);
+        Expanded(child: Divider(color: cs.outline, height: 1)),
+      ],
+    );
   }
 }
 

@@ -33,10 +33,9 @@ class ShipmentsHistoryScreen extends StatelessWidget {
             );
           }
           if (state is BidListLoaded) {
-            final delivered = state.bids
-                .where((b) => b.status == 'DELIVERED')
-                .toList()
-              ..sort((a, b) => (b.updatedAt).compareTo(a.updatedAt));
+            final delivered =
+                state.bids.where((b) => b.status == 'DELIVERED').toList()
+                  ..sort((a, b) => (b.updatedAt).compareTo(a.updatedAt));
 
             if (delivered.isEmpty) {
               return const DonyEmptyState(
@@ -47,7 +46,10 @@ class ShipmentsHistoryScreen extends StatelessWidget {
             }
             return _DeliveredList(bids: delivered);
           }
-          return const DonyEmptyState(type: DonyEmptyStateType.loading, title: '');
+          return const DonyEmptyState(
+            type: DonyEmptyStateType.loading,
+            title: '',
+          );
         },
       ),
     );
@@ -93,9 +95,10 @@ class _DeliveryCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     final travelerName = bid.travelerName ?? 'Voyageur';
-    final route = [bid.departureCity, bid.arrivalCity]
-        .where((c) => c != null)
-        .join(' → ');
+    final route = [
+      bid.departureCity,
+      bid.arrivalCity,
+    ].where((c) => c != null).join(' → ');
     final weight = (bid.weightKg ?? 0) > 0 ? '${bid.weightKg} kg' : null;
     final description = bid.description;
     final price = bid.pricePerKg != null
@@ -124,16 +127,24 @@ class _DeliveryCard extends StatelessWidget {
                     children: [
                       Text(
                         travelerName,
-                        style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                        style: tt.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       if (bid.travelerAverageRating != null)
                         Row(
                           children: [
-                            Icon(Icons.star_rounded, size: 14, color: cs.tertiary),
+                            Icon(
+                              Icons.star_rounded,
+                              size: 14,
+                              color: cs.tertiary,
+                            ),
                             const SizedBox(width: 2),
                             Text(
                               bid.travelerAverageRating!.toStringAsFixed(1),
-                              style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+                              style: tt.labelSmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
                             ),
                           ],
                         ),
@@ -152,7 +163,10 @@ class _DeliveryCard extends StatelessWidget {
                 children: [
                   Icon(Icons.route_rounded, size: 16, color: cs.primary),
                   const SizedBox(width: DonySpacing.xs),
-                  Text(route, style: tt.bodySmall?.copyWith(color: cs.onSurface)),
+                  Text(
+                    route,
+                    style: tt.bodySmall?.copyWith(color: cs.onSurface),
+                  ),
                 ],
               ),
             ],
@@ -211,9 +225,7 @@ class _ShimmerList extends StatelessWidget {
               color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
               borderRadius: BorderRadius.circular(DonyRadius.card),
             ),
-          )
-              .animate()
-              .fadeIn(delay: (i * 60).ms, duration: 300.ms),
+          ).animate().fadeIn(delay: (i * 60).ms, duration: 300.ms),
         ),
       ),
     );

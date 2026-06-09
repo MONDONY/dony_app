@@ -31,7 +31,9 @@ class ComingSoonBottomSheet extends StatelessWidget {
       isScrollControlled: true,
       useRootNavigator: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(DonyRadius.sheet)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(DonyRadius.sheet),
+        ),
       ),
       builder: (_) => ComingSoonBottomSheet(
         title: title,
@@ -110,8 +112,11 @@ class ComingSoonBottomSheet extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.schedule_rounded,
-                      color: cs.onSurfaceVariant, size: 18),
+                  Icon(
+                    Icons.schedule_rounded,
+                    color: cs.onSurfaceVariant,
+                    size: 18,
+                  ),
                   const SizedBox(width: DonySpacing.sm),
                   Expanded(
                     child: Text(

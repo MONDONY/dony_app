@@ -29,7 +29,11 @@ class _BecomeATravelerScreenState extends State<BecomeATravelerScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      unawaited(getIt<AnalyticsService>().logEvent(AnalyticsEvents.becomeTravelerStarted));
+      unawaited(
+        getIt<AnalyticsService>().logEvent(
+          AnalyticsEvents.becomeTravelerStarted,
+        ),
+      );
     });
   }
 
@@ -98,69 +102,76 @@ class _BecomeATravelerScreenState extends State<BecomeATravelerScreen> {
                           const _HeroSection(),
                           const SizedBox(height: DonySpacing.xxl),
                           _StepCard(
-                            stepNumber: 1,
-                            icon: Icons.badge_rounded,
-                            title: 'Identité vérifiée',
-                            subtitle:
-                                "Pièce d'identité et liveness check via Stripe Identity.",
-                            status: _kycStepStatus(kycStatus),
-                            ctaLabel: kycStatus == 'REJECTED'
-                                ? 'Réessayer la vérification'
-                                : 'Vérifier mon identité',
-                            showCta: !kycVerified && kycStatus != 'PENDING',
-                            onCta: () async {
-                              await KycOnboardingBottomSheet.show(context);
-                              if (context.mounted) {
-                                context
-                                    .read<AuthBloc>()
-                                    .add(const AuthCheckRequested());
-                              }
-                            },
-                          )
+                                stepNumber: 1,
+                                icon: Icons.badge_rounded,
+                                title: 'Identité vérifiée',
+                                subtitle:
+                                    "Pièce d'identité et liveness check via Stripe Identity.",
+                                status: _kycStepStatus(kycStatus),
+                                ctaLabel: kycStatus == 'REJECTED'
+                                    ? 'Réessayer la vérification'
+                                    : 'Vérifier mon identité',
+                                showCta: !kycVerified && kycStatus != 'PENDING',
+                                onCta: () async {
+                                  await KycOnboardingBottomSheet.show(context);
+                                  if (context.mounted) {
+                                    context.read<AuthBloc>().add(
+                                      const AuthCheckRequested(),
+                                    );
+                                  }
+                                },
+                              )
                               .animate()
                               .fadeIn(delay: 80.ms)
                               .slideY(begin: 0.04, curve: Curves.easeOutCubic),
                           const SizedBox(height: DonySpacing.md),
                           _StepCard(
-                            stepNumber: 2,
-                            icon: Icons.account_balance_rounded,
-                            title: 'Compte bancaire connecté',
-                            subtitle:
-                                'Recevez vos paiements automatiquement après chaque livraison.',
-                            status: _stripeStepStatus(stripeStatus),
-                            ctaLabel: stripeStatus == 'REJECTED' ||
-                                    stripeStatus == 'DISABLED'
-                                ? 'Contacter le support'
-                                : 'Connecter mon compte',
-                            showCta: !stripeComplete,
-                            onCta: stripeStatus == 'REJECTED' ||
-                                    stripeStatus == 'DISABLED'
-                                ? () => context.push('/profile/help/contact')
-                                : () async {
-                                    await context.push('/payments/onboarding');
-                                    if (context.mounted) {
-                                      context
-                                          .read<AuthBloc>()
-                                          .add(const AuthCheckRequested());
-                                    }
-                                  },
-                          )
+                                stepNumber: 2,
+                                icon: Icons.account_balance_rounded,
+                                title: 'Compte bancaire connecté',
+                                subtitle:
+                                    'Recevez vos paiements automatiquement après chaque livraison.',
+                                status: _stripeStepStatus(stripeStatus),
+                                ctaLabel:
+                                    stripeStatus == 'REJECTED' ||
+                                        stripeStatus == 'DISABLED'
+                                    ? 'Contacter le support'
+                                    : 'Connecter mon compte',
+                                showCta: !stripeComplete,
+                                onCta:
+                                    stripeStatus == 'REJECTED' ||
+                                        stripeStatus == 'DISABLED'
+                                    ? () =>
+                                          context.push('/profile/help/contact')
+                                    : () async {
+                                        await context.push(
+                                          '/payments/onboarding',
+                                        );
+                                        if (context.mounted) {
+                                          context.read<AuthBloc>().add(
+                                            const AuthCheckRequested(),
+                                          );
+                                        }
+                                      },
+                              )
                               .animate()
                               .fadeIn(delay: 140.ms)
                               .slideY(begin: 0.04, curve: Curves.easeOutCubic),
                           const SizedBox(height: DonySpacing.xxl),
                           if (isTraveler) ...[
                             DonyButton(
-                              label: 'Désactiver mon compte voyageur',
-                              isLoading: isActivating,
-                              onPressed: isActivating
-                                  ? null
-                                  : () => context
-                                      .read<TravelerUpgradeBloc>()
-                                      .add(const TravelerUpgradeDeactivateRequested()),
-                              icon: Icons.flight_land_rounded,
-                              variant: DonyButtonVariant.ghost,
-                            )
+                                  label: 'Désactiver mon compte voyageur',
+                                  isLoading: isActivating,
+                                  onPressed: isActivating
+                                      ? null
+                                      : () => context
+                                            .read<TravelerUpgradeBloc>()
+                                            .add(
+                                              const TravelerUpgradeDeactivateRequested(),
+                                            ),
+                                  icon: Icons.flight_land_rounded,
+                                  variant: DonyButtonVariant.ghost,
+                                )
                                 .animate()
                                 .fadeIn(delay: 200.ms)
                                 .scale(
@@ -170,27 +181,27 @@ class _BecomeATravelerScreenState extends State<BecomeATravelerScreen> {
                             const SizedBox(height: DonySpacing.md),
                             Text(
                               'Votre vérification KYC et votre compte bancaire resteront actifs pour une réactivation future.',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
+                              style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                                   ),
                               textAlign: TextAlign.center,
                             ).animate().fadeIn(delay: 240.ms),
                           ] else if (canActivate) ...[
                             DonyButton(
-                              label: 'Activer mon compte voyageur',
-                              isLoading: isActivating,
-                              onPressed: isActivating
-                                  ? null
-                                  : () => context
-                                      .read<TravelerUpgradeBloc>()
-                                      .add(const TravelerUpgradeActivateRequested()),
-                              icon: Icons.flight_takeoff_rounded,
-                            )
+                                  label: 'Activer mon compte voyageur',
+                                  isLoading: isActivating,
+                                  onPressed: isActivating
+                                      ? null
+                                      : () => context
+                                            .read<TravelerUpgradeBloc>()
+                                            .add(
+                                              const TravelerUpgradeActivateRequested(),
+                                            ),
+                                  icon: Icons.flight_takeoff_rounded,
+                                )
                                 .animate()
                                 .fadeIn(delay: 200.ms)
                                 .scale(
@@ -200,13 +211,11 @@ class _BecomeATravelerScreenState extends State<BecomeATravelerScreen> {
                             const SizedBox(height: DonySpacing.md),
                             Text(
                               "En activant, vous acceptez les conditions d'utilisation dony pour les voyageurs.",
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
+                              style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                                   ),
                               textAlign: TextAlign.center,
                             ).animate().fadeIn(delay: 240.ms),
@@ -324,8 +333,11 @@ class _StepCard extends StatelessWidget {
       case _StepStatus.done:
         stepColor = cs.success;
         stepBg = cs.successLight;
-        statusWidget =
-            Icon(Icons.check_circle_rounded, color: cs.success, size: 20);
+        statusWidget = Icon(
+          Icons.check_circle_rounded,
+          color: cs.success,
+          size: 20,
+        );
       case _StepStatus.pending:
         stepColor = cs.warning;
         stepBg = cs.warningLight;
@@ -353,8 +365,11 @@ class _StepCard extends StatelessWidget {
       case _StepStatus.rejected:
         stepColor = cs.error;
         stepBg = cs.errorContainer.withValues(alpha: 0.3);
-        statusWidget =
-            Icon(Icons.warning_amber_rounded, color: cs.error, size: 20);
+        statusWidget = Icon(
+          Icons.warning_amber_rounded,
+          color: cs.error,
+          size: 20,
+        );
       case _StepStatus.todo:
         stepColor = cs.onSurfaceVariant;
         stepBg = cs.surfaceContainerHighest;
@@ -384,8 +399,9 @@ class _StepCard extends StatelessWidget {
                   children: [
                     Text(
                       'Étape $stepNumber — $title',
-                      style:
-                          tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                      style: tt.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: DonySpacing.xxs),
                     Text(

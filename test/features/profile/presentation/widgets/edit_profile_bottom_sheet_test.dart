@@ -103,7 +103,9 @@ void main() {
 
   // ── Test 2 : pré-remplit les champs depuis AuthAuthenticated ──────────────
 
-  testWidgets('pré-remplit les champs depuis AuthAuthenticated', (tester) async {
+  testWidgets('pré-remplit les champs depuis AuthAuthenticated', (
+    tester,
+  ) async {
     whenListen<AuthState>(
       mockAuthBloc,
       const Stream.empty(),
@@ -115,9 +117,10 @@ void main() {
 
     // Check that TextFormField controllers contain pre-filled values
     // via the EditableText nodes in the widget tree
-    final editableTexts = tester.widgetList<EditableText>(
-      find.byType(EditableText),
-    ).map((e) => e.controller.text).toList();
+    final editableTexts = tester
+        .widgetList<EditableText>(find.byType(EditableText))
+        .map((e) => e.controller.text)
+        .toList();
 
     expect(editableTexts, contains('Ibrahima'));
     expect(editableTexts, contains('Diallo'));
@@ -130,8 +133,9 @@ void main() {
 
   // ── Test 3 : dispatche AuthUpdateProfileRequested au tap sur Enregistrer ──
 
-  testWidgets('dispatche AuthUpdateProfileRequested au tap sur Enregistrer',
-      (tester) async {
+  testWidgets('dispatche AuthUpdateProfileRequested au tap sur Enregistrer', (
+    tester,
+  ) async {
     whenListen<AuthState>(
       mockAuthBloc,
       const Stream.empty(),
@@ -157,8 +161,9 @@ void main() {
     await tester.tap(find.text('Enregistrer'), warnIfMissed: false);
     await tester.pump();
 
-    verify(() => mockAuthBloc.add(any(that: isA<AuthUpdateProfileRequested>())))
-        .called(1);
+    verify(
+      () => mockAuthBloc.add(any(that: isA<AuthUpdateProfileRequested>())),
+    ).called(1);
   });
 
   // ── Test 4 : désactive le bouton pendant AuthLoading ─────────────────────
@@ -180,7 +185,12 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     final filledButton = tester.widget<InkWell>(
-      find.descendant(of: find.byType(DonyButton), matching: find.byType(InkWell)).first,
+      find
+          .descendant(
+            of: find.byType(DonyButton),
+            matching: find.byType(InkWell),
+          )
+          .first,
     );
     expect(filledButton.onTap, isNull);
   });

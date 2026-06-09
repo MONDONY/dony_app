@@ -73,7 +73,14 @@ class AuthUpdateProfileRequested extends AuthEvent {
   });
 
   @override
-  List<Object?> get props => [firstName, lastName, email, birthDate, city, phoneNumber];
+  List<Object?> get props => [
+    firstName,
+    lastName,
+    email,
+    birthDate,
+    city,
+    phoneNumber,
+  ];
 }
 
 class OnboardingCompleted extends AuthEvent {
@@ -138,7 +145,10 @@ class AuthAddPhoneFromProfileRequested extends AuthEvent {
 class AuthAddEmailFromProfileRequested extends AuthEvent {
   final String email;
   final String code;
-  const AuthAddEmailFromProfileRequested({required this.email, required this.code});
+  const AuthAddEmailFromProfileRequested({
+    required this.email,
+    required this.code,
+  });
   @override
   List<Object?> get props => [email, code];
 }

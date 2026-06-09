@@ -164,7 +164,10 @@ class _FaqSection extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                DonySpacing.base, DonySpacing.base, DonySpacing.base, DonySpacing.sm,
+                DonySpacing.base,
+                DonySpacing.base,
+                DonySpacing.base,
+                DonySpacing.sm,
               ),
               child: Row(
                 children: [
@@ -209,36 +212,40 @@ class _FaqTile extends StatelessWidget {
     return Material(
       type: MaterialType.transparency,
       child: Theme(
-      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-      child: ExpansionTile(
-        tilePadding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.base,
-          vertical: DonySpacing.xs,
-        ),
-        childrenPadding: const EdgeInsets.fromLTRB(
-          DonySpacing.base, 0, DonySpacing.base, DonySpacing.base,
-        ),
-        expandedCrossAxisAlignment: CrossAxisAlignment.start,
-        iconColor: cs.primary,
-        collapsedIconColor: cs.onSurfaceVariant,
-        title: Text(
-          item.q,
-          style: tt.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: cs.onSurface,
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(
+            horizontal: DonySpacing.base,
+            vertical: DonySpacing.xs,
           ),
-        ),
-        children: [
-          Text(
-            item.a,
-            style: tt.bodySmall?.copyWith(
-              color: cs.onSurfaceVariant,
-              height: 1.6,
+          childrenPadding: const EdgeInsets.fromLTRB(
+            DonySpacing.base,
+            0,
+            DonySpacing.base,
+            DonySpacing.base,
+          ),
+          expandedCrossAxisAlignment: CrossAxisAlignment.start,
+          iconColor: cs.primary,
+          collapsedIconColor: cs.onSurfaceVariant,
+          title: Text(
+            item.q,
+            style: tt.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: cs.onSurface,
             ),
           ),
-        ],
+          children: [
+            Text(
+              item.a,
+              style: tt.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                height: 1.6,
+              ),
+            ),
+          ],
+        ),
       ),
-    ));
+    );
   }
 }
 

@@ -32,12 +32,17 @@ class AddressLabelChips extends StatelessWidget {
           },
           child: Container(
             padding: const EdgeInsets.symmetric(
-                horizontal: DonySpacing.md, vertical: DonySpacing.sm),
+              horizontal: DonySpacing.md,
+              vertical: DonySpacing.sm,
+            ),
             decoration: BoxDecoration(
-              color: selected ? accentColor.withValues(alpha: 0.12) : cs.surface,
+              color: selected
+                  ? accentColor.withValues(alpha: 0.12)
+                  : cs.surface,
               borderRadius: BorderRadius.circular(DonyRadius.xl),
               border: Border.all(
-                  color: selected ? Colors.transparent : cs.outline),
+                color: selected ? Colors.transparent : cs.outline,
+              ),
             ),
             child: Text(
               label,

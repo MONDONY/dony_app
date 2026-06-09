@@ -172,8 +172,12 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerFactory<NotificationBloc>(
     () => NotificationBloc(getIt<NotificationRepository>()),
   );
-  getIt.registerLazySingleton<EnvoisRefreshNotifier>(() => EnvoisRefreshNotifier());
-  getIt.registerLazySingleton<PendingSearchNotifier>(() => PendingSearchNotifier());
+  getIt.registerLazySingleton<EnvoisRefreshNotifier>(
+    () => EnvoisRefreshNotifier(),
+  );
+  getIt.registerLazySingleton<PendingSearchNotifier>(
+    () => PendingSearchNotifier(),
+  );
   getIt.registerLazySingleton<SavedTripsService>(
     () => SavedTripsService(getIt<HiveService>()),
   );
@@ -275,11 +279,13 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => CommissionMethodBloc(getIt<CommissionMethodRepository>()),
   );
   getIt.registerFactory<BidAcceptanceBloc>(
-    () => BidAcceptanceBloc(getIt<BidRepository>(), Stripe.instance, getIt<AnalyticsService>()),
+    () => BidAcceptanceBloc(
+      getIt<BidRepository>(),
+      Stripe.instance,
+      getIt<AnalyticsService>(),
+    ),
   );
-  getIt.registerFactory<BidListFilterCubit>(
-    () => BidListFilterCubit(),
-  );
+  getIt.registerFactory<BidListFilterCubit>(() => BidListFilterCubit());
 
   // Payments
   getIt.registerLazySingleton<PaymentRemoteDatasource>(
@@ -311,7 +317,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => CancellationRepository(getIt<CancellationRemoteDatasource>()),
   );
   getIt.registerFactory<CancellationBloc>(
-    () => CancellationBloc(getIt<CancellationRepository>(), getIt<AnalyticsService>()),
+    () => CancellationBloc(
+      getIt<CancellationRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
 
   // Messaging
@@ -377,9 +386,7 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerFactory<ProStatsBloc>(
     () => ProStatsBloc(getIt<ProStatsRepository>()),
   );
-  getIt.registerFactory<SupportContactBloc>(
-    () => SupportContactBloc(),
-  );
+  getIt.registerFactory<SupportContactBloc>(() => SupportContactBloc());
 
   // Settings — Account Deletion
   getIt.registerLazySingleton<AccountDeletionRepository>(
@@ -442,7 +449,10 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     () => BusinessPrefsRepository(getIt<BusinessPrefsRemoteDatasource>()),
   );
   getIt.registerLazySingleton<BusinessPrefsBloc>(
-    () => BusinessPrefsBloc(getIt<BusinessPrefsRepository>(), getIt<HiveService>().userPrefs),
+    () => BusinessPrefsBloc(
+      getIt<BusinessPrefsRepository>(),
+      getIt<HiveService>().userPrefs,
+    ),
     dispose: (b) => b.close(),
   );
 
@@ -494,7 +504,11 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     dispose: (s) => s.dispose(),
   );
   getIt.registerFactory<TrackingBloc>(
-    () => TrackingBloc(getIt<TrackingRepository>(), getIt<OfflineSyncService>(), getIt<AnalyticsService>()),
+    () => TrackingBloc(
+      getIt<TrackingRepository>(),
+      getIt<OfflineSyncService>(),
+      getIt<AnalyticsService>(),
+    ),
   );
 
   // City autocomplete
@@ -606,14 +620,20 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
     ),
   );
   getIt.registerFactory<PackageRequestSearchBloc>(
-    () => PackageRequestSearchBloc(getIt<PackageRequestRepository>(), getIt<AnalyticsService>()),
+    () => PackageRequestSearchBloc(
+      getIt<PackageRequestRepository>(),
+      getIt<AnalyticsService>(),
+    ),
   );
   getIt.registerLazySingleton<PackageRequestBloc>(
     () => PackageRequestBloc(getIt<PackageRequestRepository>()),
     dispose: (b) => b.close(),
   );
   getIt.registerFactory<NegotiationBloc>(
-    () => NegotiationBloc(getIt<NegotiationRepository>(), analytics: getIt<AnalyticsService>()),
+    () => NegotiationBloc(
+      getIt<NegotiationRepository>(),
+      analytics: getIt<AnalyticsService>(),
+    ),
   );
   getIt.registerLazySingleton<NegotiationListBloc>(
     () => NegotiationListBloc(getIt<NegotiationRepository>()),
@@ -622,12 +642,8 @@ Future<void> setupDependencies({required String apiBaseUrl}) async {
   getIt.registerFactory<CompleteDetailsBloc>(
     () => CompleteDetailsBloc(getIt<PackageRequestRepository>()),
   );
-  getIt.registerFactory<RequestFilterCubit>(
-    () => RequestFilterCubit(),
-  );
-  getIt.registerFactory<NegotiationFilterCubit>(
-    () => NegotiationFilterCubit(),
-  );
+  getIt.registerFactory<RequestFilterCubit>(() => RequestFilterCubit());
+  getIt.registerFactory<NegotiationFilterCubit>(() => NegotiationFilterCubit());
 
   // Stripe account status (global singleton)
   getIt.registerLazySingleton<StripeAccountDatasource>(

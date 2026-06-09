@@ -50,10 +50,12 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     final dialCode = state is AuthInitial ? state.dialCode : '+33';
     String local = _phoneController.text.trim();
     if (local.startsWith('0')) local = local.substring(1);
-    unawaited(getIt<AnalyticsService>().logEvent(
-      AnalyticsEvents.signupStarted,
-      properties: {'method': 'phone'},
-    ));
+    unawaited(
+      getIt<AnalyticsService>().logEvent(
+        AnalyticsEvents.signupStarted,
+        properties: {'method': 'phone'},
+      ),
+    );
     context.read<AuthBloc>().add(AuthSendOtpRequested('$dialCode$local'));
   }
 
@@ -62,34 +64,39 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     DonyBottomSheet.show<void>(
       context,
       title: 'Indicatif pays',
-      child: Builder(builder: (innerContext) {
-        final currentState = authBloc.state;
-        final selectedCode =
-            currentState is AuthInitial ? currentState.dialCode : '+33';
-        final cs = Theme.of(innerContext).colorScheme;
-        final tt = Theme.of(innerContext).textTheme;
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: _codes
-              .map((c) => Material(
+      child: Builder(
+        builder: (innerContext) {
+          final currentState = authBloc.state;
+          final selectedCode = currentState is AuthInitial
+              ? currentState.dialCode
+              : '+33';
+          final cs = Theme.of(innerContext).colorScheme;
+          final tt = Theme.of(innerContext).textTheme;
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: _codes
+                .map(
+                  (c) => Material(
                     type: MaterialType.transparency,
                     child: ListTile(
-                      leading:
-                          Text(c.$2, style: const TextStyle(fontSize: 22)),
+                      leading: Text(c.$2, style: const TextStyle(fontSize: 22)),
                       title: Text('${c.$3} (${c.$1})', style: tt.titleMedium),
                       trailing: selectedCode == c.$1
                           ? Icon(Icons.check_rounded, color: cs.primary)
                           : null,
                       onTap: () {
-                        authBloc
-                            .add(AuthDialCodeChanged(code: c.$1, flag: c.$2));
+                        authBloc.add(
+                          AuthDialCodeChanged(code: c.$1, flag: c.$2),
+                        );
                         innerContext.pop();
                       },
                     ),
-                  ))
-              .toList(),
-        );
-      }),
+                  ),
+                )
+                .toList(),
+          );
+        },
+      ),
     );
   }
 
@@ -105,19 +112,20 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         },
         listener: (context, state) {
           if (state is AuthOtpSent) {
-            context.push('/auth/otp', extra: {
-              'fromProfile': widget.fromProfile,
-              'contact': state.phoneNumber,
-            });
+            context.push(
+              '/auth/otp',
+              extra: {
+                'fromProfile': widget.fromProfile,
+                'contact': state.phoneNumber,
+              },
+            );
           } else if (state is AuthError) {
             ErrorPresenter.show(context, state.error);
           }
         },
         builder: (context, state) {
-          final dialCode =
-              state is AuthInitial ? state.dialCode : '+33';
-          final dialFlag =
-              state is AuthInitial ? state.dialFlag : '🇫🇷';
+          final dialCode = state is AuthInitial ? state.dialCode : '+33';
+          final dialFlag = state is AuthInitial ? state.dialFlag : '🇫🇷';
           final isLoading = state is AuthLoading;
           final cs = Theme.of(context).colorScheme;
           final tt = Theme.of(context).textTheme;
@@ -132,27 +140,40 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // ── Top bar ────────────────────────────────────
-                  if (!widget.fromProfile) Padding(
-                    padding: EdgeInsets.fromLTRB(h, DonySpacing.md, h, 0),
-                    child: Row(children: [
-                      DonyBackCircle(onTap: () => context.pop()),
-                      const Spacer(),
-                      const DonyStepPill(current: 1, total: 3, label: 'Téléphone'),
-                    ]),
-                  ),
+                  if (!widget.fromProfile)
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(h, DonySpacing.md, h, 0),
+                      child: Row(
+                        children: [
+                          DonyBackCircle(onTap: () => context.pop()),
+                          const Spacer(),
+                          const DonyStepPill(
+                            current: 1,
+                            total: 3,
+                            label: 'Téléphone',
+                          ),
+                        ],
+                      ),
+                    ),
 
                   // ── Scrollable content ─────────────────────────
                   Expanded(
                     child: SingleChildScrollView(
                       physics: const ClampingScrollPhysics(),
                       padding: EdgeInsets.fromLTRB(
-                          h, DonySpacing.xl, h, DonySpacing.xl),
+                        h,
+                        DonySpacing.xl,
+                        h,
+                        DonySpacing.xl,
+                      ),
                       child: DonyLayout.constrained(
                         context,
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Center(child: DonyHeroAvatar(emoji: '📱', size: 72)),
+                            Center(
+                              child: DonyHeroAvatar(emoji: '📱', size: 72),
+                            ),
                             const SizedBox(height: DonySpacing.xl),
                             Text(
                               'Ton numéro',
@@ -181,10 +202,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             // Phone input row
                             Container(
                               decoration: BoxDecoration(
-                                border: Border.all(
-                                    color: cs.outline),
-                                borderRadius:
-                                    BorderRadius.circular(DonyRadius.md),
+                                border: Border.all(color: cs.outline),
+                                borderRadius: BorderRadius.circular(
+                                  DonyRadius.md,
+                                ),
                                 color: cs.surface,
                               ),
                               child: Row(
@@ -193,24 +214,30 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                     onTap: _showCodePicker,
                                     child: Padding(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: DonySpacing.base,
-                                          vertical: DonySpacing.md),
+                                        horizontal: DonySpacing.base,
+                                        vertical: DonySpacing.md,
+                                      ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Text(dialFlag,
-                                              style: const TextStyle(
-                                                  fontSize: 20)),
+                                          Text(
+                                            dialFlag,
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                            ),
+                                          ),
+                                          const SizedBox(width: DonySpacing.sm),
+                                          Text(
+                                            dialCode,
+                                            style: tt.titleLarge?.copyWith(
+                                              color: cs.onSurface,
+                                            ),
+                                          ),
                                           const SizedBox(
-                                              width: DonySpacing.sm),
-                                          Text(dialCode,
-                                              style: tt.titleLarge?.copyWith(
-                                                  color: cs.onSurface)),
-                                          const SizedBox(
-                                              width: DonySpacing.xxs),
+                                            width: DonySpacing.xxs,
+                                          ),
                                           Icon(
-                                            Icons
-                                                .keyboard_arrow_down_rounded,
+                                            Icons.keyboard_arrow_down_rounded,
                                             size: 16,
                                             color: cs.onSurfaceVariant,
                                           ),
@@ -219,43 +246,47 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                     ),
                                   ),
                                   Container(
-                                      width: 1,
-                                      height: 28,
-                                      color: cs.outline),
+                                    width: 1,
+                                    height: 28,
+                                    color: cs.outline,
+                                  ),
                                   Expanded(
                                     child: TextFormField(
                                       controller: _phoneController,
                                       keyboardType: TextInputType.phone,
-                                      scrollPadding: const EdgeInsets.only(bottom: 120),
+                                      scrollPadding: const EdgeInsets.only(
+                                        bottom: 120,
+                                      ),
                                       inputFormatters: [
-                                        FilteringTextInputFormatter
-                                            .digitsOnly,
+                                        FilteringTextInputFormatter.digitsOnly,
                                       ],
                                       style: tt.titleLarge?.copyWith(
-                                          color: cs.onSurface),
+                                        color: cs.onSurface,
+                                      ),
                                       decoration: InputDecoration(
                                         hintText: '06 12 34 56 78',
                                         hintStyle: tt.bodyLarge?.copyWith(
-                                            color: cs.onSurfaceVariant),
+                                          color: cs.onSurfaceVariant,
+                                        ),
                                         border: InputBorder.none,
                                         enabledBorder: InputBorder.none,
                                         focusedBorder: InputBorder.none,
                                         errorBorder: InputBorder.none,
-                                        focusedErrorBorder:
-                                            InputBorder.none,
+                                        focusedErrorBorder: InputBorder.none,
                                         contentPadding:
                                             const EdgeInsets.symmetric(
-                                                horizontal: DonySpacing.base,
-                                                vertical: DonySpacing.md),
+                                              horizontal: DonySpacing.base,
+                                              vertical: DonySpacing.md,
+                                            ),
                                       ),
                                       validator: (v) {
                                         if (v == null || v.trim().isEmpty) {
                                           return 'Entrez votre numéro';
                                         }
-                                        final digits = v
-                                            .trim()
-                                            .replaceAll(
-                                                RegExp(r'[^0-9]'), '');
+                                        final digits = v.trim().replaceAll(
+                                          RegExp(r'[^0-9]'),
+                                          '',
+                                        );
                                         if (digits.length < 6) {
                                           return 'Numéro trop court';
                                         }
@@ -273,8 +304,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                 style: TextButton.styleFrom(
                                   foregroundColor: cs.primary,
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: DonySpacing.base,
-                                      vertical: DonySpacing.sm),
+                                    horizontal: DonySpacing.base,
+                                    vertical: DonySpacing.sm,
+                                  ),
                                 ),
                                 child: Text(
                                   'Continuer avec une adresse email',
@@ -301,7 +333,11 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                       border: Border(top: BorderSide(color: cs.outline)),
                     ),
                     padding: EdgeInsets.fromLTRB(
-                        h, DonySpacing.base, h, DonySpacing.base + bottom),
+                      h,
+                      DonySpacing.base,
+                      h,
+                      DonySpacing.base + bottom,
+                    ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -341,4 +377,3 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     );
   }
 }
-

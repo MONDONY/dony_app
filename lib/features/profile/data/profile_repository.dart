@@ -14,10 +14,7 @@ class ProfileRepository {
     try {
       await _client.dio.post(
         '/auth/me/upgrade-to-pro',
-        data: {
-          'companyName': companyName,
-          'siret': siret,
-        },
+        data: {'companyName': companyName, 'siret': siret},
       );
     } catch (e) {
       throw unwrapDioError(e);
@@ -35,8 +32,7 @@ class ProfileRepository {
   Future<ProfilePublicModel> getProfilePublic(String userId) async {
     try {
       final response = await _client.dio.get('/users/$userId/profile-public');
-      return ProfilePublicModel.fromJson(
-          response.data as Map<String, dynamic>);
+      return ProfilePublicModel.fromJson(response.data as Map<String, dynamic>);
     } catch (e) {
       throw unwrapDioError(e);
     }

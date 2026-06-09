@@ -7,25 +7,27 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('AddressSectionLabel renders uppercase text', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: Scaffold(body: AddressSectionLabel('Étiquette')),
-    ));
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: AddressSectionLabel('Étiquette'))),
+    );
     expect(find.text('ÉTIQUETTE'), findsOneWidget);
   });
 
   testWidgets('AddressLabelChips fills controller on tap', (tester) async {
     final controller = TextEditingController();
     var changed = false;
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: AddressLabelChips(
-          controller: controller,
-          chips: const ['Maison', 'Bureau'],
-          accentColor: Colors.blue,
-          onSelected: () => changed = true,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AddressLabelChips(
+            controller: controller,
+            chips: const ['Maison', 'Bureau'],
+            accentColor: Colors.blue,
+            onSelected: () => changed = true,
+          ),
         ),
       ),
-    ));
+    );
 
     await tester.tap(find.text('Bureau'));
     await tester.pump();
@@ -36,74 +38,91 @@ void main() {
   });
 
   testWidgets('AddressLocationStatus shows localized label', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: Scaffold(
-        body: AddressLocationStatus(state: AddressLocationState.localized),
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: AddressLocationStatus(state: AddressLocationState.localized),
+        ),
       ),
-    ));
+    );
     expect(find.text('Adresse localisée'), findsOneWidget);
   });
 
   testWidgets('AddressLocationStatus hidden renders nothing', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: Scaffold(
-        body: AddressLocationStatus(state: AddressLocationState.hidden),
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: AddressLocationStatus(state: AddressLocationState.hidden),
+        ),
       ),
-    ));
+    );
     expect(find.textContaining('localisée'), findsNothing);
   });
 
-  testWidgets('AddressLocationStatus manual shows correct label', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: Scaffold(
-        body: AddressLocationStatus(state: AddressLocationState.manual),
+  testWidgets('AddressLocationStatus manual shows correct label', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: AddressLocationStatus(state: AddressLocationState.manual),
+        ),
       ),
-    ));
+    );
     expect(find.textContaining('non localisée'), findsOneWidget);
   });
 
   group('AddressDefaultToggle', () {
     testWidgets('renders with value=false (not active)', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: AddressDefaultToggle(
-            value: false,
-            onChanged: (_) {},
-            activeColor: Colors.blue,
-            subtitle: 'Pré-remplie lors des prochaines demandes',
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AddressDefaultToggle(
+              value: false,
+              onChanged: (_) {},
+              activeColor: Colors.blue,
+              subtitle: 'Pré-remplie lors des prochaines demandes',
+            ),
           ),
         ),
-      ));
+      );
       expect(find.text('Adresse par défaut'), findsOneWidget);
-      expect(find.text('Pré-remplie lors des prochaines demandes'), findsOneWidget);
+      expect(
+        find.text('Pré-remplie lors des prochaines demandes'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('renders with value=true (active)', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: AddressDefaultToggle(
-            value: true,
-            onChanged: (_) {},
-            activeColor: Colors.blue,
-            subtitle: 'Sous-titre actif',
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AddressDefaultToggle(
+              value: true,
+              onChanged: (_) {},
+              activeColor: Colors.blue,
+              subtitle: 'Sous-titre actif',
+            ),
           ),
         ),
-      ));
+      );
       expect(find.text('Adresse par défaut'), findsOneWidget);
     });
 
     testWidgets('calls onChanged with !value on tap', (tester) async {
       bool? received;
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: AddressDefaultToggle(
-            value: false,
-            onChanged: (v) => received = v,
-            activeColor: Colors.blue,
-            subtitle: 'Test',
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AddressDefaultToggle(
+              value: false,
+              onChanged: (v) => received = v,
+              activeColor: Colors.blue,
+              subtitle: 'Test',
+            ),
           ),
         ),
-      ));
+      );
 
       // Tap the GestureDetector (the whole card)
       await tester.tap(find.byType(GestureDetector).first);
@@ -114,16 +133,18 @@ void main() {
 
     testWidgets('tapping Switch also calls onChanged', (tester) async {
       bool? received;
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: AddressDefaultToggle(
-            value: false,
-            onChanged: (v) => received = v,
-            activeColor: Colors.blue,
-            subtitle: 'Test',
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AddressDefaultToggle(
+              value: false,
+              onChanged: (v) => received = v,
+              activeColor: Colors.blue,
+              subtitle: 'Test',
+            ),
           ),
         ),
-      ));
+      );
 
       await tester.tap(find.byType(Switch));
       await tester.pump();
@@ -136,16 +157,18 @@ void main() {
     testWidgets('tapping a chip sets controller to that label', (tester) async {
       final controller = TextEditingController();
       var callCount = 0;
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: AddressLabelChips(
-            controller: controller,
-            chips: const ['Maison', 'Bureau', 'Boutique'],
-            accentColor: Colors.blue,
-            onSelected: () => callCount++,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AddressLabelChips(
+              controller: controller,
+              chips: const ['Maison', 'Bureau', 'Boutique'],
+              accentColor: Colors.blue,
+              onSelected: () => callCount++,
+            ),
           ),
         ),
-      ));
+      );
 
       await tester.tap(find.text('Boutique'));
       await tester.pump();
@@ -157,16 +180,18 @@ void main() {
 
     testWidgets('tapping a different chip switches selection', (tester) async {
       final controller = TextEditingController(text: 'Maison');
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: AddressLabelChips(
-            controller: controller,
-            chips: const ['Maison', 'Bureau'],
-            accentColor: Colors.blue,
-            onSelected: () {},
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AddressLabelChips(
+              controller: controller,
+              chips: const ['Maison', 'Bureau'],
+              accentColor: Colors.blue,
+              onSelected: () {},
+            ),
           ),
         ),
-      ));
+      );
 
       await tester.tap(find.text('Bureau'));
       await tester.pump();

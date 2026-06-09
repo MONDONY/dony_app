@@ -2,7 +2,6 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/storage/hive_service.dart';
-import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_event.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
@@ -45,9 +44,6 @@ class MockAnnouncementBloc
 
 class MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
-class MockActiveRoleCubit extends MockCubit<ActiveRole>
-    implements ActiveRoleCubit {}
-
 class MockHiveService extends Mock implements HiveService {}
 
 class MockPackageRequestSearchBloc
@@ -65,20 +61,20 @@ class _MockGeolocatorPlatform extends Mock
       LocationPermission.always;
 
   @override
-  Future<Position> getCurrentPosition(
-          {LocationSettings? locationSettings}) async =>
-      Position(
-        latitude: 48.8566,
-        longitude: 2.3522,
-        timestamp: DateTime.now(),
-        accuracy: 5,
-        altitude: 0,
-        altitudeAccuracy: 0,
-        heading: 0,
-        headingAccuracy: 0,
-        speed: 0,
-        speedAccuracy: 0,
-      );
+  Future<Position> getCurrentPosition({
+    LocationSettings? locationSettings,
+  }) async => Position(
+    latitude: 48.8566,
+    longitude: 2.3522,
+    timestamp: DateTime.now(),
+    accuracy: 5,
+    altitude: 0,
+    altitudeAccuracy: 0,
+    heading: 0,
+    headingAccuracy: 0,
+    speed: 0,
+    speedAccuracy: 0,
+  );
 }
 
 // Simule un utilisateur qui a déjà publié → banner masqué pour tester la liste principale
@@ -99,52 +95,53 @@ class _FakeBox extends Fake implements Box<dynamic> {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-UserModel _makeUser({List<String> roles = const ['ROLE_SENDER']}) => UserModel(
-      id: 'uid-1',
-      phoneNumber: '+33600000000',
-      firstName: 'Ibrahima',
-      lastName: 'Diallo',
-      roles: roles,
-      kycStatus: 'VERIFIED',
-      status: 'ACTIVE',
-    );
+UserModel _makeUser({bool isTraveler = false}) => UserModel(
+  id: 'uid-1',
+  phoneNumber: '+33600000000',
+  firstName: 'Ibrahima',
+  lastName: 'Diallo',
+  roles: isTraveler ? const ['TRAVELER', 'SENDER'] : const ['SENDER'],
+  kycStatus: 'VERIFIED',
+  status: 'ACTIVE',
+);
 
 AnnouncementModel _makeAnn({String id = 'a1'}) => AnnouncementModel(
-      id: id,
-      travelerId: 'traveler-1',
-      departureCity: 'Paris · CDG, ORY',
-      arrivalCity: 'Dakar · DKR',
-      departureDate: DateTime(2026, 6, 15),
-      availableKg: 10,
-      totalKg: 20,
-      pricePerKg: 7,
-      status: 'ACTIVE',
-      createdAt: DateTime(2026, 5, 1),
-      updatedAt: DateTime(2026, 5, 1),
-    );
+  id: id,
+  travelerId: 'traveler-1',
+  departureCity: 'Paris · CDG, ORY',
+  arrivalCity: 'Dakar · DKR',
+  departureDate: DateTime(2026, 6, 15),
+  availableKg: 10,
+  totalKg: 20,
+  pricePerKg: 7,
+  status: 'ACTIVE',
+  createdAt: DateTime(2026, 5, 1),
+  updatedAt: DateTime(2026, 5, 1),
+);
 
 Widget _buildHome({
   AnnouncementState? announcementState,
-  ActiveRole role = ActiveRole.sender,
+  bool isTraveler = false,
   UserModel? user,
   BidState? bidState,
   NotificationState? notificationState,
 }) {
   final announcementBloc = MockAnnouncementBloc();
   final authBloc = MockAuthBloc();
-  final roleCubit = MockActiveRoleCubit();
   final notifBloc = MockNotificationBloc();
   final bidBloc = MockBidBloc();
 
-  when(() => announcementBloc.state)
-      .thenReturn(announcementState ?? AnnouncementInitial());
+  when(
+    () => announcementBloc.state,
+  ).thenReturn(announcementState ?? AnnouncementInitial());
   when(() => announcementBloc.stream).thenAnswer((_) => const Stream.empty());
-  when(() => authBloc.state).thenReturn(AuthAuthenticated(user ?? _makeUser()));
+  when(
+    () => authBloc.state,
+  ).thenReturn(AuthAuthenticated(user ?? _makeUser(isTraveler: isTraveler)));
   when(() => authBloc.stream).thenAnswer((_) => const Stream.empty());
-  when(() => roleCubit.state).thenReturn(role);
-  when(() => roleCubit.stream).thenAnswer((_) => const Stream.empty());
-  when(() => notifBloc.state)
-      .thenReturn(notificationState ?? const NotificationInitial());
+  when(
+    () => notifBloc.state,
+  ).thenReturn(notificationState ?? const NotificationInitial());
   when(() => notifBloc.stream).thenAnswer((_) => const Stream.empty());
   when(() => bidBloc.state).thenReturn(bidState ?? BidInitial());
   when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
@@ -153,7 +150,6 @@ Widget _buildHome({
     providers: [
       BlocProvider<AnnouncementBloc>.value(value: announcementBloc),
       BlocProvider<AuthBloc>.value(value: authBloc),
-      BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
       BlocProvider<NotificationBloc>.value(value: notifBloc),
       BlocProvider<BidBloc>.value(value: bidBloc),
     ],
@@ -178,18 +174,21 @@ void main() {
     final hive = MockHiveService();
     final box = _FakeBox();
     when(() => hive.userPrefs).thenReturn(box);
-    when(() => hive.listenUserPrefs(keys: any(named: 'keys')))
-        .thenReturn(ValueNotifier<Box>(box));
+    when(
+      () => hive.listenUserPrefs(keys: any(named: 'keys')),
+    ).thenReturn(ValueNotifier<Box>(box));
     getIt.registerSingleton<HiveService>(hive);
 
     getIt.registerFactory<PackageRequestSearchBloc>(() {
       final mock = MockPackageRequestSearchBloc();
-      when(() => mock.state)
-          .thenReturn(const PackageRequestSearchState());
-      whenListen(mock,
-          Stream<PackageRequestSearchState>.fromIterable(
-              const [PackageRequestSearchState()]),
-          initialState: const PackageRequestSearchState());
+      when(() => mock.state).thenReturn(const PackageRequestSearchState());
+      whenListen(
+        mock,
+        Stream<PackageRequestSearchState>.fromIterable(const [
+          PackageRequestSearchState(),
+        ]),
+        initialState: const PackageRequestSearchState(),
+      );
       return mock;
     });
   });
@@ -204,8 +203,9 @@ void main() {
       expect(find.text('Tous les corridors'), findsWidgets);
     });
 
-    testWidgets('shows sender-specific filter chips when role is sender',
-        (tester) async {
+    testWidgets('shows sender-specific filter chips when role is sender', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildHome());
       await tester.pump(const Duration(milliseconds: 1000));
 
@@ -214,33 +214,39 @@ void main() {
       expect(find.text('Note'), findsOneWidget);
     });
 
-    testWidgets('shows TravelerCards when announcements loaded',
-        (tester) async {
-      await tester.pumpWidget(_buildHome(
-        announcementState: AnnouncementSearchLoaded(
-          [_makeAnn(), _makeAnn(id: 'a2')],
+    testWidgets('shows TravelerCards when announcements loaded', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildHome(
+          announcementState: AnnouncementSearchLoaded([
+            _makeAnn(),
+            _makeAnn(id: 'a2'),
+          ]),
         ),
-      ));
+      );
       await tester.pump(const Duration(milliseconds: 1000));
 
       expect(find.byType(TravelerCard), findsAtLeastNWidgets(1));
     });
 
-    testWidgets('shows empty message when search loaded with no results',
-        (tester) async {
-      await tester.pumpWidget(_buildHome(
-        announcementState: AnnouncementSearchLoaded(const []),
-      ));
+    testWidgets('shows empty message when search loaded with no results', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildHome(announcementState: AnnouncementSearchLoaded(const [])),
+      );
       await tester.pump(const Duration(milliseconds: 1000));
 
       expect(find.text('Aucun voyageur sur ce corridor'), findsOneWidget);
     });
 
-    testWidgets('shows DraggableScrollableSheet by default (regression)',
-        (tester) async {
-      await tester.pumpWidget(_buildHome(
-        announcementState: AnnouncementSearchLoaded([_makeAnn()]),
-      ));
+    testWidgets('shows DraggableScrollableSheet by default (regression)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildHome(announcementState: AnnouncementSearchLoaded([_makeAnn()])),
+      );
       await tester.pump(const Duration(milliseconds: 600));
 
       expect(find.byType(DraggableScrollableSheet), findsOneWidget);
@@ -248,32 +254,34 @@ void main() {
     });
 
     testWidgets(
-        'shows NearMeCarousel and hides sheet when near-me FAB activated',
-        (tester) async {
+      'shows NearMeCarousel and hides sheet when near-me FAB activated',
+      (tester) async {
+        GeolocatorPlatform.instance = _MockGeolocatorPlatform();
+
+        await tester.pumpWidget(
+          _buildHome(announcementState: AnnouncementSearchLoaded([_makeAnn()])),
+        );
+        await tester.pump();
+
+        await tester.tap(find.byKey(const Key('near-me-fab')));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Activer le filtre'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(NearMeCarousel), findsOneWidget);
+        expect(find.byType(DraggableScrollableSheet), findsNothing);
+      },
+    );
+
+    testWidgets('radius pill re-opens the slider without losing the filter', (
+      tester,
+    ) async {
       GeolocatorPlatform.instance = _MockGeolocatorPlatform();
 
-      await tester.pumpWidget(_buildHome(
-        announcementState: AnnouncementSearchLoaded([_makeAnn()]),
-      ));
-      await tester.pump();
-
-      await tester.tap(find.byKey(const Key('near-me-fab')));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Activer le filtre'));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(NearMeCarousel), findsOneWidget);
-      expect(find.byType(DraggableScrollableSheet), findsNothing);
-    });
-
-    testWidgets('radius pill re-opens the slider without losing the filter',
-        (tester) async {
-      GeolocatorPlatform.instance = _MockGeolocatorPlatform();
-
-      await tester.pumpWidget(_buildHome(
-        announcementState: AnnouncementSearchLoaded([_makeAnn()]),
-      ));
+      await tester.pumpWidget(
+        _buildHome(announcementState: AnnouncementSearchLoaded([_makeAnn()])),
+      );
       await tester.pump();
 
       // Activate near-me.
@@ -300,52 +308,64 @@ void main() {
     });
 
     testWidgets(
-        'traveler near-me dispatches the package-request search with a radius',
-        (tester) async {
-      registerFallbackValue(const SearchFiltersChanged());
-      GeolocatorPlatform.instance = _MockGeolocatorPlatform();
+      'traveler near-me dispatches the package-request search with a radius',
+      (tester) async {
+        registerFallbackValue(const SearchFiltersChanged());
+        GeolocatorPlatform.instance = _MockGeolocatorPlatform();
 
-      // Capture the exact PackageRequestSearchBloc instance HomeScreen creates,
-      // so we can assert it receives the radius-filtered search.
-      late MockPackageRequestSearchBloc prBloc;
-      getIt.unregister<PackageRequestSearchBloc>();
-      getIt.registerFactory<PackageRequestSearchBloc>(() {
-        prBloc = MockPackageRequestSearchBloc();
-        when(() => prBloc.state)
-            .thenReturn(const PackageRequestSearchState());
-        whenListen(
+        // Capture the exact PackageRequestSearchBloc instance HomeScreen creates,
+        // so we can assert it receives the radius-filtered search.
+        late MockPackageRequestSearchBloc prBloc;
+        getIt.unregister<PackageRequestSearchBloc>();
+        getIt.registerFactory<PackageRequestSearchBloc>(() {
+          prBloc = MockPackageRequestSearchBloc();
+          when(
+            () => prBloc.state,
+          ).thenReturn(const PackageRequestSearchState());
+          whenListen(
             prBloc,
-            Stream<PackageRequestSearchState>.fromIterable(
-                const [PackageRequestSearchState()]),
-            initialState: const PackageRequestSearchState());
-        return prBloc;
-      });
+            Stream<PackageRequestSearchState>.fromIterable(const [
+              PackageRequestSearchState(),
+            ]),
+            initialState: const PackageRequestSearchState(),
+          );
+          return prBloc;
+        });
 
-      await tester.pumpWidget(_buildHome(role: ActiveRole.traveler));
-      await tester.pump();
+        await tester.pumpWidget(_buildHome(isTraveler: true));
+        await tester.pump();
 
-      await tester.tap(find.byKey(const Key('near-me-fab')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Activer le filtre'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('near-me-fab')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Activer le filtre'));
+        await tester.pumpAndSettle();
 
-      // Traveler near-me drives the package-request search (radius applied),
-      // not the announcement search.
-      verify(() => prBloc.add(any(
-              that: isA<SearchFiltersChanged>()
-                  .having((e) => e.radiusKm, 'radiusKm', isNotNull))))
-          .called(1);
-    });
+        // Traveler near-me drives the package-request search (radius applied),
+        // not the announcement search.
+        verify(
+          () => prBloc.add(
+            any(
+              that: isA<SearchFiltersChanged>().having(
+                (e) => e.radiusKm,
+                'radiusKm',
+                isNotNull,
+              ),
+            ),
+          ),
+        ).called(1);
+      },
+    );
   });
 
   group('HomeScreen — Traveler view', () {
-    testWidgets('renders MapTravelerView when role is traveler',
-        (tester) async {
+    testWidgets('renders MapTravelerView when role is traveler', (
+      tester,
+    ) async {
       // Since the new MapTravelerView embeds GoogleMap + creates its own
       // PackageRequestSearchBloc via getIt, we just assert it builds without
       // throwing — the inner GoogleMap widget rendering needs a platform mock
       // not worth the cost in this widget test.
-      await tester.pumpWidget(_buildHome(role: ActiveRole.traveler));
+      await tester.pumpWidget(_buildHome(isTraveler: true));
       await tester.pump();
 
       // The traveler header text appears in the floating overlay.
@@ -357,28 +377,34 @@ void main() {
   });
 
   group('HomeScreen — _NotificationBell', () {
-    testWidgets('shows outlined bell icon when no unread notifications',
-        (tester) async {
-      await tester.pumpWidget(_buildHome(
-        notificationState: const NotificationLoaded(
-          notifications: [],
-          unreadCount: 0,
+    testWidgets('shows outlined bell icon when no unread notifications', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildHome(
+          notificationState: const NotificationLoaded(
+            notifications: [],
+            unreadCount: 0,
+          ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);
       expect(find.byIcon(Icons.notifications_rounded), findsNothing);
     });
 
-    testWidgets('shows filled bell icon and badge count when unread > 0',
-        (tester) async {
-      await tester.pumpWidget(_buildHome(
-        notificationState: const NotificationLoaded(
-          notifications: [],
-          unreadCount: 3,
+    testWidgets('shows filled bell icon and badge count when unread > 0', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildHome(
+          notificationState: const NotificationLoaded(
+            notifications: [],
+            unreadCount: 3,
+          ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.notifications_rounded), findsOneWidget);
@@ -392,24 +418,28 @@ void main() {
       );
     });
 
-    testWidgets('shows 99+ badge when unread count exceeds 99',
-        (tester) async {
-      await tester.pumpWidget(_buildHome(
-        notificationState: const NotificationLoaded(
-          notifications: [],
-          unreadCount: 150,
+    testWidgets('shows 99+ badge when unread count exceeds 99', (tester) async {
+      await tester.pumpWidget(
+        _buildHome(
+          notificationState: const NotificationLoaded(
+            notifications: [],
+            unreadCount: 150,
+          ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('99+'), findsOneWidget);
     });
 
-    testWidgets('shows outlined bell icon when notification state is initial',
-        (tester) async {
-      await tester.pumpWidget(_buildHome(
-        // notificationState non fourni → NotificationInitial par défaut
-      ));
+    testWidgets('shows outlined bell icon when notification state is initial', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildHome(
+          // notificationState non fourni → NotificationInitial par défaut
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);

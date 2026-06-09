@@ -11,7 +11,8 @@ class TravelerUpgradeBloc
     extends Bloc<TravelerUpgradeEvent, TravelerUpgradeState> {
   final TravelerUpgradeRepository _repository;
 
-  TravelerUpgradeBloc(this._repository) : super(const TravelerUpgradeInitial()) {
+  TravelerUpgradeBloc(this._repository)
+    : super(const TravelerUpgradeInitial()) {
     on<TravelerUpgradeActivateRequested>(_onActivate);
     on<TravelerUpgradeDeactivateRequested>(_onDeactivate);
   }

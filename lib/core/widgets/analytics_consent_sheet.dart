@@ -92,10 +92,7 @@ class _ConsentLine extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: tt.bodyMedium?.copyWith(
-              color: cs.onSurface,
-              height: 1.35,
-            ),
+            style: tt.bodyMedium?.copyWith(color: cs.onSurface, height: 1.35),
           ),
         ),
       ],

@@ -23,8 +23,8 @@ class MatchingManagementScreen extends StatelessWidget {
         final isTraveler = authState is AuthAuthenticated
             ? authState.user.isTraveler
             : authState is AuthProfileUpdated
-                ? authState.user.isTraveler
-                : false;
+            ? authState.user.isTraveler
+            : false;
 
         if (isTraveler) {
           return BlocProvider(

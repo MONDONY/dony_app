@@ -46,7 +46,9 @@ class _UpgradeToProViewState extends State<_UpgradeToProView> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      unawaited(getIt<AnalyticsService>().logEvent(AnalyticsEvents.upgradeToProStarted));
+      unawaited(
+        getIt<AnalyticsService>().logEvent(AnalyticsEvents.upgradeToProStarted),
+      );
     });
   }
 
@@ -64,11 +66,11 @@ class _UpgradeToProViewState extends State<_UpgradeToProView> {
     if (!confirmed || !context.mounted) return;
 
     context.read<UpgradeToProBloc>().add(
-          UpgradeToProSubmitted(
-            companyName: _companyNameCtrl.text.trim(),
-            siret: _siretCtrl.text.trim(),
-          ),
-        );
+      UpgradeToProSubmitted(
+        companyName: _companyNameCtrl.text.trim(),
+        siret: _siretCtrl.text.trim(),
+      ),
+    );
   }
 
   Future<bool> _showConfirmationDialog(BuildContext context) async {

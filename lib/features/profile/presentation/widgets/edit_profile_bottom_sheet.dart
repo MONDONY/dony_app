@@ -27,9 +27,7 @@ abstract final class EditProfileBottomSheet {
           );
         },
       ),
-      child: _EditProfileContent(
-        onSubmitReady: (fn) => submit = fn,
-      ),
+      child: _EditProfileContent(onSubmitReady: (fn) => submit = fn),
     );
   }
 }
@@ -98,13 +96,15 @@ class _EditProfileContentState extends State<_EditProfileContent> {
     final email = _emailCtrl.text.trim();
     final city = _cityCtrl.text.trim();
 
-    context.read<AuthBloc>().add(AuthUpdateProfileRequested(
-          firstName: firstName.isNotEmpty ? firstName : null,
-          lastName: lastName.isNotEmpty ? lastName : null,
-          email: email.isNotEmpty ? email : null,
-          birthDate: _birthDate,
-          city: city.isNotEmpty ? city : null,
-        ));
+    context.read<AuthBloc>().add(
+      AuthUpdateProfileRequested(
+        firstName: firstName.isNotEmpty ? firstName : null,
+        lastName: lastName.isNotEmpty ? lastName : null,
+        email: email.isNotEmpty ? email : null,
+        birthDate: _birthDate,
+        city: city.isNotEmpty ? city : null,
+      ),
+    );
   }
 
   @override
@@ -143,113 +143,130 @@ class _EditProfileContentState extends State<_EditProfileContent> {
         final isLoading = state is AuthLoading;
 
         return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Info banner
-              Container(
-                padding: const EdgeInsets.all(DonySpacing.md),
-                decoration: BoxDecoration(
-                  color: cs.primaryContainer,
-                  borderRadius: BorderRadius.circular(DonyRadius.md),
-                  border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline_rounded, color: cs.primary, size: 18),
-                    const SizedBox(width: DonySpacing.md),
-                    Expanded(
-                      child: Text(
-                        'Ces informations inspirent confiance aux autres membres de la communauté.',
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.primary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: DonySpacing.xxl),
-
-              // ── Section Identité ────────────────────────────────
-              const _SectionLabel(label: 'Identité'),
-              const SizedBox(height: DonySpacing.md),
-              DonyTextField(
-                controller: _firstNameCtrl,
-                label: 'Prénom',
-                prefixIcon: Icons.person_outline_rounded,
-                enabled: !isLoading,
-              ),
-              const SizedBox(height: DonySpacing.md),
-              DonyTextField(
-                controller: _lastNameCtrl,
-                label: 'Nom de famille',
-                prefixIcon: Icons.person_outline_rounded,
-                enabled: !isLoading,
-              ),
-              const SizedBox(height: DonySpacing.xxl),
-
-              // ── Section Contact ─────────────────────────────────
-              const _SectionLabel(label: 'Contact'),
-              const SizedBox(height: DonySpacing.md),
-              DonyTextField(
-                controller: _emailCtrl,
-                label: 'Email (optionnel)',
-                prefixIcon: Icons.email_outlined,
-                keyboardType: TextInputType.emailAddress,
-                enabled: !isLoading,
-              ),
-              const SizedBox(height: DonySpacing.xxl),
-
-              // ── Section Infos personnelles ──────────────────────
-              const _SectionLabel(label: 'Informations personnelles'),
-              const SizedBox(height: DonySpacing.md),
-              GestureDetector(
-                onTap: isLoading ? null : _pickBirthDate,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.base,
-                    vertical: DonySpacing.base,
-                  ),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Info banner
+                Container(
+                  padding: const EdgeInsets.all(DonySpacing.md),
                   decoration: BoxDecoration(
-                    color: cs.surface,
+                    color: cs.primaryContainer,
                     borderRadius: BorderRadius.circular(DonyRadius.md),
-                    border: Border.all(color: cs.outline),
+                    border: Border.all(
+                      color: cs.primary.withValues(alpha: 0.2),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.cake_outlined, color: cs.onSurfaceVariant, size: 20),
+                      Icon(
+                        Icons.info_outline_rounded,
+                        color: cs.primary,
+                        size: 18,
+                      ),
                       const SizedBox(width: DonySpacing.md),
                       Expanded(
                         child: Text(
-                          _birthDate != null
-                              ? DateFormat('dd/MM/yyyy').format(_birthDate!)
-                              : 'Date de naissance',
-                          style: tt.bodyLarge?.copyWith(
-                            color: _birthDate != null ? cs.onSurface : cs.onSurfaceVariant,
-                            fontWeight: _birthDate != null ? FontWeight.w500 : FontWeight.w400,
+                          'Ces informations inspirent confiance aux autres membres de la communauté.',
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.primary,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
-                      Icon(Icons.chevron_right_rounded, color: cs.onSurfaceVariant, size: 18),
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: DonySpacing.md),
-              DonyTextField(
-                controller: _cityCtrl,
-                label: "Ville / lieu d'habitation",
-                prefixIcon: Icons.location_city_outlined,
-                enabled: !isLoading,
-              ),
-              const SizedBox(height: DonySpacing.xl),
+                const SizedBox(height: DonySpacing.xxl),
 
-            ],
-          )
-              .animate()
-              .fadeIn(duration: 300.ms)
-              .slideY(begin: 0.04, curve: Curves.easeOutCubic);
+                // ── Section Identité ────────────────────────────────
+                const _SectionLabel(label: 'Identité'),
+                const SizedBox(height: DonySpacing.md),
+                DonyTextField(
+                  controller: _firstNameCtrl,
+                  label: 'Prénom',
+                  prefixIcon: Icons.person_outline_rounded,
+                  enabled: !isLoading,
+                ),
+                const SizedBox(height: DonySpacing.md),
+                DonyTextField(
+                  controller: _lastNameCtrl,
+                  label: 'Nom de famille',
+                  prefixIcon: Icons.person_outline_rounded,
+                  enabled: !isLoading,
+                ),
+                const SizedBox(height: DonySpacing.xxl),
+
+                // ── Section Contact ─────────────────────────────────
+                const _SectionLabel(label: 'Contact'),
+                const SizedBox(height: DonySpacing.md),
+                DonyTextField(
+                  controller: _emailCtrl,
+                  label: 'Email (optionnel)',
+                  prefixIcon: Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress,
+                  enabled: !isLoading,
+                ),
+                const SizedBox(height: DonySpacing.xxl),
+
+                // ── Section Infos personnelles ──────────────────────
+                const _SectionLabel(label: 'Informations personnelles'),
+                const SizedBox(height: DonySpacing.md),
+                GestureDetector(
+                  onTap: isLoading ? null : _pickBirthDate,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: DonySpacing.base,
+                      vertical: DonySpacing.base,
+                    ),
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      borderRadius: BorderRadius.circular(DonyRadius.md),
+                      border: Border.all(color: cs.outline),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.cake_outlined,
+                          color: cs.onSurfaceVariant,
+                          size: 20,
+                        ),
+                        const SizedBox(width: DonySpacing.md),
+                        Expanded(
+                          child: Text(
+                            _birthDate != null
+                                ? DateFormat('dd/MM/yyyy').format(_birthDate!)
+                                : 'Date de naissance',
+                            style: tt.bodyLarge?.copyWith(
+                              color: _birthDate != null
+                                  ? cs.onSurface
+                                  : cs.onSurfaceVariant,
+                              fontWeight: _birthDate != null
+                                  ? FontWeight.w500
+                                  : FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: cs.onSurfaceVariant,
+                          size: 18,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: DonySpacing.md),
+                DonyTextField(
+                  controller: _cityCtrl,
+                  label: "Ville / lieu d'habitation",
+                  prefixIcon: Icons.location_city_outlined,
+                  enabled: !isLoading,
+                ),
+                const SizedBox(height: DonySpacing.xl),
+              ],
+            )
+            .animate()
+            .fadeIn(duration: 300.ms)
+            .slideY(begin: 0.04, curve: Curves.easeOutCubic);
       },
     );
   }

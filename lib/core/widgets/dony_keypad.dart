@@ -39,7 +39,10 @@ class DonyKeypad extends StatelessWidget {
             _KeypadKey(
               onTap: () => onDigit('0'),
               enabled: enabled,
-              child: const Text('0', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500)),
+              child: const Text(
+                '0',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
+              ),
             ),
             const SizedBox(width: 12),
             _KeypadKey(
@@ -62,7 +65,10 @@ class DonyKeypad extends StatelessWidget {
           _KeypadKey(
             onTap: () => onDigit(digits[i]),
             enabled: enabled,
-            child: Text(digits[i], style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w500)),
+            child: Text(
+              digits[i],
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
+            ),
           ),
         ],
       ],
@@ -71,7 +77,11 @@ class DonyKeypad extends StatelessWidget {
 }
 
 class _KeypadKey extends StatelessWidget {
-  const _KeypadKey({required this.child, required this.onTap, this.enabled = true});
+  const _KeypadKey({
+    required this.child,
+    required this.onTap,
+    this.enabled = true,
+  });
 
   final Widget child;
   final VoidCallback? onTap;

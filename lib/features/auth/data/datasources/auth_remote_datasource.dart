@@ -7,9 +7,7 @@ class AuthRemoteDatasource {
 
   AuthRemoteDatasource(this._apiClient);
 
-  Future<UserModel> register({
-    required String phoneNumber,
-  }) async {
+  Future<UserModel> register({required String phoneNumber}) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/auth/register',
       data: {'phoneNumber': phoneNumber},
@@ -64,9 +62,7 @@ class AuthRemoteDatasource {
     return response.data!['customToken'] as String;
   }
 
-  Future<UserModel> registerWithEmail({
-    required String email,
-  }) async {
+  Future<UserModel> registerWithEmail({required String email}) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       '/auth/register',
       data: {'email': email},

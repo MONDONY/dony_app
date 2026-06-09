@@ -16,7 +16,8 @@ class ProStatsCard extends StatelessWidget {
   static Widget withBloc() {
     return BlocProvider(
       create: (_) =>
-          ProStatsBloc(getIt<ProStatsRepository>())..add(ProStatsLoadRequested()),
+          ProStatsBloc(getIt<ProStatsRepository>())
+            ..add(ProStatsLoadRequested()),
       child: const ProStatsCard(),
     );
   }
@@ -62,11 +63,13 @@ class _CardShell extends StatelessWidget {
 
     // Couleurs du dégradé adaptées au mode
     final gradientStart = isDark
-        ? DonyColors.proBg1   // bleu nuit profond
-        : DonyColors.ink800;  // ink800
+        ? DonyColors
+              .proBg1 // bleu nuit profond
+        : DonyColors.ink800; // ink800
     final gradientEnd = isDark
-        ? DonyColors.proBg2   // presque noir bleu
-        : DonyColors.proBg3;  // bleu saphir
+        ? DonyColors
+              .proBg2 // presque noir bleu
+        : DonyColors.proBg3; // bleu saphir
 
     // Opacité du fond glass selon brightness
     final bgAlpha = isDark ? 0.75 : 0.88;
@@ -122,8 +125,11 @@ class _LoadedContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
-    final currencyFmt =
-        NumberFormat.currency(locale: 'fr_FR', symbol: '€', decimalDigits: 2);
+    final currencyFmt = NumberFormat.currency(
+      locale: 'fr_FR',
+      symbol: '€',
+      decimalDigits: 2,
+    );
     final now = DateTime.now();
     final monthLabel = DateFormat('MMMM', 'fr_FR').format(now);
 
@@ -226,8 +232,11 @@ class _ErrorContent extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
     return Row(
       children: [
-        Icon(Icons.wifi_off_rounded,
-            color: Colors.white.withValues(alpha: 0.5), size: 18),
+        Icon(
+          Icons.wifi_off_rounded,
+          color: Colors.white.withValues(alpha: 0.5),
+          size: 18,
+        ),
         const SizedBox(width: DonySpacing.sm),
         Expanded(
           child: Text(
@@ -267,7 +276,9 @@ class _StatPill extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: Container(
           padding: const EdgeInsets.symmetric(
-              horizontal: DonySpacing.md, vertical: DonySpacing.sm),
+            horizontal: DonySpacing.md,
+            vertical: DonySpacing.sm,
+          ),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(DonyRadius.xl),
@@ -281,12 +292,15 @@ class _StatPill extends StatelessWidget {
               Text(
                 value,
                 style: tt.titleSmall!.copyWith(
-                    color: Colors.white, fontWeight: FontWeight.w700),
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               Text(
                 label,
-                style: tt.labelSmall!
-                    .copyWith(color: Colors.white.withValues(alpha: 0.65)),
+                style: tt.labelSmall!.copyWith(
+                  color: Colors.white.withValues(alpha: 0.65),
+                ),
               ),
             ],
           ),
@@ -303,7 +317,9 @@ class _ProBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-          horizontal: DonySpacing.sm, vertical: DonySpacing.xxs),
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xxs,
+      ),
       decoration: BoxDecoration(
         color: DonyColors.terra500.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(DonyRadius.full),
@@ -318,10 +334,10 @@ class _ProBadge extends StatelessWidget {
       child: Text(
         'PRO',
         style: Theme.of(context).textTheme.labelSmall!.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.0,
-            ),
+          color: Colors.white,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.0,
+        ),
       ),
     );
   }

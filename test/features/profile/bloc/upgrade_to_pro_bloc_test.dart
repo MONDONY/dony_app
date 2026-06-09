@@ -40,10 +40,7 @@ void main() {
         return bloc;
       },
       act: (b) => b.add(tEvent),
-      expect: () => [
-        isA<UpgradeToProLoading>(),
-        isA<UpgradeToProSuccess>(),
-      ],
+      expect: () => [isA<UpgradeToProLoading>(), isA<UpgradeToProSuccess>()],
       verify: (_) {
         verify(
           () => mockRepo.upgradeToPro(

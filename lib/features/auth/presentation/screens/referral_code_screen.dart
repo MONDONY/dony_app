@@ -20,9 +20,7 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
   @override
   void initState() {
     super.initState();
-    _ctrl.addListener(
-      () => _isNotEmpty.value = _ctrl.text.trim().isNotEmpty,
-    );
+    _ctrl.addListener(() => _isNotEmpty.value = _ctrl.text.trim().isNotEmpty);
   }
 
   @override
@@ -108,9 +106,7 @@ class _FormView extends StatelessWidget {
           child: DonyStepPill(current: 4, total: 4, label: 'Parrainage'),
         ),
         const Spacer(flex: 2),
-        const DonyMascotteAnimated(
-          type: DonyMascotteType.joyeux,
-        ),
+        const DonyMascotteAnimated(type: DonyMascotteType.joyeux),
         const SizedBox(height: DonySpacing.lg),
         Text(
           'Tu as été invité par un ami ?',
@@ -171,13 +167,11 @@ class _SuccessView extends StatelessWidget {
           type: DonyMascotteType.joyeux,
           size: DonyMascotteSize.lg,
           withGlow: true,
-        )
-            .animate()
-            .scale(
-              duration: 400.ms,
-              curve: Curves.elasticOut,
-              begin: const Offset(0.5, 0.5),
-            ),
+        ).animate().scale(
+          duration: 400.ms,
+          curve: Curves.elasticOut,
+          begin: const Offset(0.5, 0.5),
+        ),
         const SizedBox(height: DonySpacing.lg),
         Text(
           'Code appliqué !',

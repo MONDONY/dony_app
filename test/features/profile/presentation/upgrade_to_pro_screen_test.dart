@@ -22,8 +22,7 @@ class MockUpgradeToProBloc
 
 class MockProfileRepository extends Mock implements ProfileRepository {}
 
-class MockAuthBloc extends MockBloc<AuthEvent, AuthState>
-    implements AuthBloc {}
+class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
 /// Duration long enough to let all flutter_animate delays complete.
 /// The screen has delays up to 260ms.
@@ -43,10 +42,7 @@ Widget _wrap(MockProfileRepository repo, MockAuthBloc authBloc) {
     child: MaterialApp.router(
       routerConfig: GoRouter(
         routes: [
-          GoRoute(
-            path: '/',
-            builder: (_, __) => const UpgradeToProScreen(),
-          ),
+          GoRoute(path: '/', builder: (_, __) => const UpgradeToProScreen()),
           GoRoute(
             path: '/profile',
             builder: (_, __) => const Scaffold(body: Text('Profile')),
@@ -88,8 +84,9 @@ void main() {
       mockBloc = MockUpgradeToProBloc();
     });
 
-    testWidgets('button is disabled when BLoC is in UpgradeToProLoading',
-        (tester) async {
+    testWidgets('button is disabled when BLoC is in UpgradeToProLoading', (
+      tester,
+    ) async {
       whenListen<UpgradeToProState>(
         mockBloc,
         Stream.value(UpgradeToProLoading()),
@@ -102,21 +99,22 @@ void main() {
             value: mockBloc,
             // Inject the BLoC externally via a thin wrapper
             child: Builder(
-              builder: (ctx) => BlocBuilder<UpgradeToProBloc, UpgradeToProState>(
-                builder: (context, state) {
-                  final isLoading = state is UpgradeToProLoading;
-                  return Scaffold(
-                    body: Column(
-                      children: [
-                        FilledButton(
-                          onPressed: isLoading ? null : () {},
-                          child: const Text('Activer le compte PRO'),
+              builder: (ctx) =>
+                  BlocBuilder<UpgradeToProBloc, UpgradeToProState>(
+                    builder: (context, state) {
+                      final isLoading = state is UpgradeToProLoading;
+                      return Scaffold(
+                        body: Column(
+                          children: [
+                            FilledButton(
+                              onPressed: isLoading ? null : () {},
+                              child: const Text('Activer le compte PRO'),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                      );
+                    },
+                  ),
             ),
           ),
         ),
@@ -144,8 +142,9 @@ void main() {
       );
     });
 
-    testWidgets('renders form with companyName and siret fields',
-        (tester) async {
+    testWidgets('renders form with companyName and siret fields', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(mockRepo, mockAuthBloc));
       await tester.pump(_kSettle);
 
@@ -155,8 +154,9 @@ void main() {
       expect(find.text('Activer le compte PRO'), findsOneWidget);
     });
 
-    testWidgets('shows validation errors when submitting empty form',
-        (tester) async {
+    testWidgets('shows validation errors when submitting empty form', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(mockRepo, mockAuthBloc));
       await tester.pump(_kSettle);
 
@@ -165,15 +165,13 @@ void main() {
       await tester.tap(_submitBtn);
       await tester.pumpAndSettle();
 
-      expect(
-        find.text("Le nom de l'entreprise est requis"),
-        findsOneWidget,
-      );
+      expect(find.text("Le nom de l'entreprise est requis"), findsOneWidget);
       expect(find.text('Le numéro SIRET est requis'), findsOneWidget);
     });
 
-    testWidgets('shows SIRET validation error for wrong length',
-        (tester) async {
+    testWidgets('shows SIRET validation error for wrong length', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(mockRepo, mockAuthBloc));
       await tester.pump(_kSettle);
 
@@ -197,8 +195,9 @@ void main() {
       );
     });
 
-    testWidgets('shows confirmation dialog on valid form submission',
-        (tester) async {
+    testWidgets('shows confirmation dialog on valid form submission', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(mockRepo, mockAuthBloc));
       await tester.pump(_kSettle);
 
@@ -219,12 +218,15 @@ void main() {
       expect(find.text('Confirmer le passage en PRO'), findsOneWidget);
     });
 
-    testWidgets('calls upgradeToPro and shows success snackbar on confirm',
-        (tester) async {
-      when(() => mockRepo.upgradeToPro(
-            companyName: any(named: 'companyName'),
-            siret: any(named: 'siret'),
-          )).thenAnswer((_) async {});
+    testWidgets('calls upgradeToPro and shows success snackbar on confirm', (
+      tester,
+    ) async {
+      when(
+        () => mockRepo.upgradeToPro(
+          companyName: any(named: 'companyName'),
+          siret: any(named: 'siret'),
+        ),
+      ).thenAnswer((_) async {});
 
       await tester.pumpWidget(_wrap(mockRepo, mockAuthBloc));
       await tester.pump(_kSettle);
@@ -247,16 +249,19 @@ void main() {
       await tester.tap(find.text('Confirmer'));
       await tester.pumpAndSettle();
 
-      verify(() => mockRepo.upgradeToPro(
-            companyName: 'Ma Société SAS',
-            siret: '12345678901234',
-          )).called(1);
+      verify(
+        () => mockRepo.upgradeToPro(
+          companyName: 'Ma Société SAS',
+          siret: '12345678901234',
+        ),
+      ).called(1);
 
       expect(find.text('Compte PRO activé'), findsOneWidget);
     });
 
-    testWidgets('does NOT call upgradeToPro when dialog is cancelled',
-        (tester) async {
+    testWidgets('does NOT call upgradeToPro when dialog is cancelled', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(mockRepo, mockAuthBloc));
       await tester.pump(_kSettle);
 
@@ -278,18 +283,23 @@ void main() {
       await tester.tap(find.text('Annuler'));
       await tester.pumpAndSettle();
 
-      verifyNever(() => mockRepo.upgradeToPro(
-            companyName: any(named: 'companyName'),
-            siret: any(named: 'siret'),
-          ));
+      verifyNever(
+        () => mockRepo.upgradeToPro(
+          companyName: any(named: 'companyName'),
+          siret: any(named: 'siret'),
+        ),
+      );
     });
 
-    testWidgets('shows error banner when upgradeToPro throws generic error',
-        (tester) async {
-      when(() => mockRepo.upgradeToPro(
-            companyName: any(named: 'companyName'),
-            siret: any(named: 'siret'),
-          )).thenThrow(Exception('Network timeout'));
+    testWidgets('shows error banner when upgradeToPro throws generic error', (
+      tester,
+    ) async {
+      when(
+        () => mockRepo.upgradeToPro(
+          companyName: any(named: 'companyName'),
+          siret: any(named: 'siret'),
+        ),
+      ).thenThrow(Exception('Network timeout'));
 
       await tester.pumpWidget(_wrap(mockRepo, mockAuthBloc));
       await tester.pump(_kSettle);
@@ -317,37 +327,43 @@ void main() {
       );
     });
 
-    testWidgets('shows generic error message when upgradeToPro throws AppException with code 409',
-        (tester) async {
-      when(() => mockRepo.upgradeToPro(
+    testWidgets(
+      'shows generic error message when upgradeToPro throws AppException with code 409',
+      (tester) async {
+        when(
+          () => mockRepo.upgradeToPro(
             companyName: any(named: 'companyName'),
             siret: any(named: 'siret'),
-          )).thenThrow(const NetworkException('Conflict', code: '409'));
+          ),
+        ).thenThrow(const NetworkException('Conflict', code: '409'));
 
-      await tester.pumpWidget(_wrap(mockRepo, mockAuthBloc));
-      await tester.pump(_kSettle);
+        await tester.pumpWidget(_wrap(mockRepo, mockAuthBloc));
+        await tester.pump(_kSettle);
 
-      await tester.enterText(
-        find.byType(TextFormField).at(0),
-        'Ma Société SAS',
-      );
-      await tester.enterText(
-        find.byType(TextFormField).at(1),
-        '12345678901234',
-      );
-      await tester.pump(_kSettle);
+        await tester.enterText(
+          find.byType(TextFormField).at(0),
+          'Ma Société SAS',
+        );
+        await tester.enterText(
+          find.byType(TextFormField).at(1),
+          '12345678901234',
+        );
+        await tester.pump(_kSettle);
 
-      await tester.ensureVisible(_submitBtn);
-      await tester.tap(_submitBtn);
-      await tester.pumpAndSettle();
+        await tester.ensureVisible(_submitBtn);
+        await tester.tap(_submitBtn);
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Confirmer'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Confirmer'));
+        await tester.pumpAndSettle();
 
-      expect(
-        find.text('Une erreur est survenue. Vérifie ta connexion et réessaie.'),
-        findsOneWidget,
-      );
-    });
+        expect(
+          find.text(
+            'Une erreur est survenue. Vérifie ta connexion et réessaie.',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
   });
 }

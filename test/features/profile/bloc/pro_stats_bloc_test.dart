@@ -9,17 +9,17 @@ import 'package:mocktail/mocktail.dart';
 class MockProStatsRepository extends Mock implements ProStatsRepository {}
 
 ProStatsModel get kStats => const ProStatsModel(
-      monthlyRevenue: 1250.0,
-      totalRevenue: 8400.0,
-      monthlyTrips: 3,
-      monthlyParcelsDelivered: 12,
-      acceptanceRate: 0.92,
-      averageRating: 4.7,
-      topDestinations: [
-        DestinationStatModel(from: 'Paris', to: 'Dakar', count: 2),
-        DestinationStatModel(from: 'Lyon', to: 'Abidjan', count: 1),
-      ],
-    );
+  monthlyRevenue: 1250.0,
+  totalRevenue: 8400.0,
+  monthlyTrips: 3,
+  monthlyParcelsDelivered: 12,
+  acceptanceRate: 0.92,
+  averageRating: 4.7,
+  topDestinations: [
+    DestinationStatModel(from: 'Paris', to: 'Dakar', count: 2),
+    DestinationStatModel(from: 'Lyon', to: 'Abidjan', count: 1),
+  ],
+);
 
 void main() {
   late MockProStatsRepository mockRepo;
@@ -46,34 +46,37 @@ void main() {
       act: (bloc) => bloc.add(ProStatsLoadRequested()),
       expect: () => [
         isA<ProStatsLoading>(),
-        predicate<ProStatsState>((s) =>
-            s is ProStatsLoaded &&
-            s.stats.monthlyRevenue == 1250.0 &&
-            s.stats.monthlyTrips == 3 &&
-            s.stats.topDestinations.length == 2),
+        predicate<ProStatsState>(
+          (s) =>
+              s is ProStatsLoaded &&
+              s.stats.monthlyRevenue == 1250.0 &&
+              s.stats.monthlyTrips == 3 &&
+              s.stats.topDestinations.length == 2,
+        ),
       ],
     );
 
     blocTest<ProStatsBloc, ProStatsState>(
       'AppException → [Loading, Error avec message métier]',
       build: () {
-        when(() => mockRepo.fetchStats())
-            .thenThrow(const NetworkException('Erreur réseau'));
+        when(
+          () => mockRepo.fetchStats(),
+        ).thenThrow(const NetworkException('Erreur réseau'));
         return buildBloc();
       },
       act: (bloc) => bloc.add(ProStatsLoadRequested()),
       expect: () => [
         isA<ProStatsLoading>(),
-        predicate<ProStatsState>((s) =>
-            s is ProStatsError && s.error.message == 'Erreur réseau'),
+        predicate<ProStatsState>(
+          (s) => s is ProStatsError && s.error.message == 'Erreur réseau',
+        ),
       ],
     );
 
     blocTest<ProStatsBloc, ProStatsState>(
       'erreur inconnue → [Loading, Error générique]',
       build: () {
-        when(() => mockRepo.fetchStats())
-            .thenThrow(Exception('Unknown error'));
+        when(() => mockRepo.fetchStats()).thenThrow(Exception('Unknown error'));
         return buildBloc();
       },
       act: (bloc) => bloc.add(ProStatsLoadRequested()),

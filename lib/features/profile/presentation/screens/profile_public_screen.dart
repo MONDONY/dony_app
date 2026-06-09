@@ -16,19 +16,18 @@ class ProfilePublicScreen extends StatelessWidget {
 
   final String? userId;
 
-  String get _effectiveUserId =>
-      userId?.isNotEmpty == true
-          ? userId!
-          : FirebaseAuth.instance.currentUser?.uid ?? '';
+  String get _effectiveUserId => userId?.isNotEmpty == true
+      ? userId!
+      : FirebaseAuth.instance.currentUser?.uid ?? '';
 
   @override
   Widget build(BuildContext context) {
     // Dispatch event if bloc hasn't started yet
     final state = context.read<ProfilePublicBloc>().state;
     if (state is ProfilePublicInitial) {
-      context
-          .read<ProfilePublicBloc>()
-          .add(ProfilePublicRequested(_effectiveUserId));
+      context.read<ProfilePublicBloc>().add(
+        ProfilePublicRequested(_effectiveUserId),
+      );
     }
 
     return DonyPageScaffold(
@@ -42,9 +41,9 @@ class ProfilePublicScreen extends StatelessWidget {
           if (state is ProfilePublicError) {
             return _ErrorView(
               message: state.message,
-              onRetry: () => context
-                  .read<ProfilePublicBloc>()
-                  .add(ProfilePublicRequested(_effectiveUserId)),
+              onRetry: () => context.read<ProfilePublicBloc>().add(
+                ProfilePublicRequested(_effectiveUserId),
+              ),
             );
           }
           if (state is ProfilePublicLoaded) {
@@ -85,10 +84,7 @@ class _ErrorView extends StatelessWidget {
 // ─── Loaded view ─────────────────────────────────────────────────────────────
 
 class _LoadedView extends StatelessWidget {
-  const _LoadedView({
-    required this.profile,
-    required this.recentRatings,
-  });
+  const _LoadedView({required this.profile, required this.recentRatings});
 
   final ProfilePublicModel profile;
   final RatingSummary recentRatings;
@@ -99,18 +95,19 @@ class _LoadedView extends StatelessWidget {
       slivers: [
         // Hero card
         SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              DonySpacing.lg,
-              DonySpacing.xl,
-              DonySpacing.lg,
-              DonySpacing.base,
-            ),
-            child: _HeroCard(profile: profile),
-          )
-              .animate()
-              .fadeIn(duration: 300.ms)
-              .slideY(begin: 0.04, curve: Curves.easeOutCubic),
+          child:
+              Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      DonySpacing.lg,
+                      DonySpacing.xl,
+                      DonySpacing.lg,
+                      DonySpacing.base,
+                    ),
+                    child: _HeroCard(profile: profile),
+                  )
+                  .animate()
+                  .fadeIn(duration: 300.ms)
+                  .slideY(begin: 0.04, curve: Curves.easeOutCubic),
         ),
 
         // Stats row
@@ -606,11 +603,7 @@ class _ContactInfoSection extends StatelessWidget {
 }
 
 class _InfoChip extends StatelessWidget {
-  const _InfoChip({
-    required this.icon,
-    required this.label,
-    required this.cs,
-  });
+  const _InfoChip({required this.icon, required this.label, required this.cs});
 
   final IconData icon;
   final String label;

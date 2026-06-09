@@ -7,12 +7,21 @@ class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
 
   static const _features = [
-    (Icons.verified_user_outlined, 'Vérifié',
-        'KYC + selfie animé pour chaque profil'),
-    (Icons.qr_code_2_outlined, 'Tracé',
-        'QR scanné à chaque étape, jusqu\'à la remise'),
-    (Icons.lock_outline_rounded, 'Garanti',
-        'Paiement bloqué, libéré seulement à l\'arrivée'),
+    (
+      Icons.verified_user_outlined,
+      'Vérifié',
+      'KYC + selfie animé pour chaque profil',
+    ),
+    (
+      Icons.qr_code_2_outlined,
+      'Tracé',
+      'QR scanné à chaque étape, jusqu\'à la remise',
+    ),
+    (
+      Icons.lock_outline_rounded,
+      'Garanti',
+      'Paiement bloqué, libéré seulement à l\'arrivée',
+    ),
   ];
 
   void _proceed(BuildContext context) {
@@ -36,7 +45,12 @@ class OnboardingScreen extends StatelessWidget {
               Expanded(
                 child: SingleChildScrollView(
                   physics: const ClampingScrollPhysics(),
-                  padding: EdgeInsets.fromLTRB(h, DonySpacing.xxl, h, DonySpacing.xl),
+                  padding: EdgeInsets.fromLTRB(
+                    h,
+                    DonySpacing.xxl,
+                    h,
+                    DonySpacing.xl,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -50,13 +64,13 @@ class OnboardingScreen extends StatelessWidget {
 
                       // Headline
                       Text(
-                        'Envoyez un colis',
-                        style: tt.displayLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: cs.onSurface,
-                          letterSpacing: -0.8,
-                        ),
-                      )
+                            'Envoyez un colis',
+                            style: tt.displayLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: cs.onSurface,
+                              letterSpacing: -0.8,
+                            ),
+                          )
                           .animate()
                           .fadeIn(duration: 300.ms)
                           .slideY(begin: 0.04, curve: Curves.easeOutCubic),
@@ -65,24 +79,26 @@ class OnboardingScreen extends StatelessWidget {
 
                       // Tagline "chez vous, autrement."
                       Text.rich(
-                        TextSpan(children: [
-                          TextSpan(
-                            text: 'chez vous',
-                            style: DonyTypography.caveat(
-                              fontSize: 28,
-                              color: cs.primary,
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: 'chez vous',
+                                  style: DonyTypography.caveat(
+                                    fontSize: 28,
+                                    color: cs.primary,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: ', autrement.',
+                                  style: tt.displayLarge?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    color: cs.onSurface,
+                                    letterSpacing: -0.8,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          TextSpan(
-                            text: ', autrement.',
-                            style: tt.displayLarge?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: cs.onSurface,
-                              letterSpacing: -0.8,
-                            ),
-                          ),
-                        ]),
-                      )
+                          )
                           .animate()
                           .fadeIn(delay: 60.ms)
                           .slideY(begin: 0.04, curve: Curves.easeOutCubic),
@@ -100,20 +116,26 @@ class OnboardingScreen extends StatelessWidget {
                       const SizedBox(height: DonySpacing.xl),
 
                       // Feature cards
-                      ..._features.asMap().entries.map((e) => Padding(
-                            padding:
-                                const EdgeInsets.only(bottom: DonySpacing.sm),
-                            child: _FeatureCard(
-                              icon: e.value.$1,
-                              title: e.value.$2,
-                              subtitle: e.value.$3,
-                            )
-                                .animate()
-                                .fadeIn(
+                      ..._features.asMap().entries.map(
+                        (e) => Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: DonySpacing.sm,
+                          ),
+                          child:
+                              _FeatureCard(
+                                    icon: e.value.$1,
+                                    title: e.value.$2,
+                                    subtitle: e.value.$3,
+                                  )
+                                  .animate()
+                                  .fadeIn(
                                     delay: Duration(
-                                        milliseconds: 140 + e.key * 60))
-                                .slideX(begin: 0.03),
-                          )),
+                                      milliseconds: 140 + e.key * 60,
+                                    ),
+                                  )
+                                  .slideX(begin: 0.03),
+                        ),
+                      ),
 
                       const SizedBox(height: DonySpacing.lg),
                     ],
@@ -122,9 +144,7 @@ class OnboardingScreen extends StatelessWidget {
               ),
 
               // ── Pinned CTA ─────────────────────────────────────────────
-              _OnboardingFooter(
-                onProceed: () => _proceed(context),
-              ),
+              _OnboardingFooter(onProceed: () => _proceed(context)),
             ],
           ),
         ),
@@ -210,14 +230,19 @@ class _OnboardingFooter extends StatelessWidget {
         color: Theme.of(context).scaffoldBackgroundColor,
         border: Border(top: BorderSide(color: cs.outline)),
       ),
-      padding: EdgeInsets.fromLTRB(h, DonySpacing.base, h, DonySpacing.md + bottom),
+      padding: EdgeInsets.fromLTRB(
+        h,
+        DonySpacing.base,
+        h,
+        DonySpacing.md + bottom,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          DonyButton(
-            label: 'Commencer',
-            onPressed: onProceed,
-          ).animate().fadeIn(delay: 320.ms).slideY(begin: 0.05, curve: Curves.easeOutCubic),
+          DonyButton(label: 'Commencer', onPressed: onProceed)
+              .animate()
+              .fadeIn(delay: 320.ms)
+              .slideY(begin: 0.05, curve: Curves.easeOutCubic),
 
           const SizedBox(height: DonySpacing.md),
 

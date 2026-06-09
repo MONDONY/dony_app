@@ -32,7 +32,9 @@ class UpgradeProBottomSheet extends StatefulWidget {
           : 'Badge Pro · Volume + · Priorité de matching',
       wrapper: (child) => MultiBlocProvider(
         providers: [
-          BlocProvider(create: (_) => UpgradeToProBloc(getIt<ProfileRepository>())),
+          BlocProvider(
+            create: (_) => UpgradeToProBloc(getIt<ProfileRepository>()),
+          ),
           BlocProvider.value(value: authBloc),
         ],
         child: child,
@@ -107,10 +109,9 @@ class _UpgradeProBottomSheetState extends State<UpgradeProBottomSheet> {
       );
       return;
     }
-    context.read<UpgradeToProBloc>().add(UpgradeToProSubmitted(
-          companyName: company,
-          siret: siret,
-        ));
+    context.read<UpgradeToProBloc>().add(
+      UpgradeToProSubmitted(companyName: company, siret: siret),
+    );
   }
 
   Future<void> _confirmDowngradeSubmit() async {
@@ -197,9 +198,7 @@ class _ProActiveView extends StatelessWidget {
           decoration: BoxDecoration(
             color: cs.successLight,
             borderRadius: BorderRadius.circular(DonyRadius.md),
-            border: Border.all(
-              color: cs.success.withValues(alpha: 0.3),
-            ),
+            border: Border.all(color: cs.success.withValues(alpha: 0.3)),
           ),
           child: Row(
             children: [
@@ -229,9 +228,7 @@ class _ProActiveView extends StatelessWidget {
                     ),
                     Text(
                       'Vous bénéficiez de tous les avantages PRO',
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -419,8 +416,8 @@ class _UpgradeFormView extends StatelessWidget {
           DonyStatusBanner(
             type: DonyStatusBannerType.error,
             message: ErrorPresenter.resolve(
-                    (state as UpgradeToProError).error)
-                .message,
+              (state as UpgradeToProError).error,
+            ).message,
           ),
           const SizedBox(height: DonySpacing.md),
         ],
@@ -457,9 +454,9 @@ class _ProChip extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: cs.primary,
-                  fontWeight: FontWeight.w700,
-                ),
+              color: cs.primary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),

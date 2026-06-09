@@ -44,7 +44,9 @@ void main() {
       build: () => bloc,
       act: (b) => b.add(const SupportMessageChanged('Un message détaillé')),
       expect: () => [
-        predicate<SupportContactState>((s) => s.message == 'Un message détaillé'),
+        predicate<SupportContactState>(
+          (s) => s.message == 'Un message détaillé',
+        ),
       ],
     );
   });
@@ -59,7 +61,11 @@ void main() {
       bloc
         ..add(const SupportCategorySelected('Paiement'))
         ..add(const SupportSubjectChanged('Pb'))
-        ..add(const SupportMessageChanged('Un message suffisamment long pour valider le formulaire'));
+        ..add(
+          const SupportMessageChanged(
+            'Un message suffisamment long pour valider le formulaire',
+          ),
+        );
       expect(bloc.state.isValid, isFalse);
     });
 
@@ -77,7 +83,11 @@ void main() {
       act: (b) => b
         ..add(const SupportCategorySelected('Paiement'))
         ..add(const SupportSubjectChanged('Problème remboursement'))
-        ..add(const SupportMessageChanged('Je n\'ai pas été remboursé suite à l\'annulation de ma commande.')),
+        ..add(
+          const SupportMessageChanged(
+            'Je n\'ai pas été remboursé suite à l\'annulation de ma commande.',
+          ),
+        ),
       verify: (b) => expect(b.state.isValid, isTrue),
     );
   });
@@ -90,7 +100,11 @@ void main() {
         b
           ..add(const SupportCategorySelected('Bug technique'))
           ..add(const SupportSubjectChanged('Problème connexion app'))
-          ..add(const SupportMessageChanged('L\'application plante au démarrage depuis la mise à jour.'));
+          ..add(
+            const SupportMessageChanged(
+              'L\'application plante au démarrage depuis la mise à jour.',
+            ),
+          );
         b.add(const SupportSubmitRequested());
       },
       verify: (b) =>

@@ -10,12 +10,12 @@ class MockTravelerUpgradeRepository extends Mock
     implements TravelerUpgradeRepository {}
 
 UserModel _fakeUser() => const UserModel(
-      id: 'user-123',
-      kycStatus: 'VERIFIED',
-      stripeAccountStatus: 'ONBOARDING_COMPLETE',
-      status: 'ACTIVE',
-      roles: ['SENDER', 'TRAVELER'],
-    );
+  id: 'user-123',
+  kycStatus: 'VERIFIED',
+  stripeAccountStatus: 'ONBOARDING_COMPLETE',
+  status: 'ACTIVE',
+  roles: ['SENDER', 'TRAVELER'],
+);
 
 void main() {
   late MockTravelerUpgradeRepository mockRepo;
@@ -33,8 +33,9 @@ void main() {
   blocTest<TravelerUpgradeBloc, TravelerUpgradeState>(
     'émet [Loading, Success] quand l\'activation réussit',
     build: () {
-      when(() => mockRepo.activateTravelerRole())
-          .thenAnswer((_) async => _fakeUser());
+      when(
+        () => mockRepo.activateTravelerRole(),
+      ).thenAnswer((_) async => _fakeUser());
       return TravelerUpgradeBloc(mockRepo);
     },
     act: (bloc) => bloc.add(const TravelerUpgradeActivateRequested()),
@@ -50,9 +51,9 @@ void main() {
   blocTest<TravelerUpgradeBloc, TravelerUpgradeState>(
     'émet [Loading, Error] avec ConflictException quand les prérequis KYC/Stripe manquent',
     build: () {
-      when(() => mockRepo.activateTravelerRole()).thenThrow(
-        const ConflictException('KYC ou Stripe non complété'),
-      );
+      when(
+        () => mockRepo.activateTravelerRole(),
+      ).thenThrow(const ConflictException('KYC ou Stripe non complété'));
       return TravelerUpgradeBloc(mockRepo);
     },
     act: (bloc) => bloc.add(const TravelerUpgradeActivateRequested()),
@@ -70,9 +71,9 @@ void main() {
   blocTest<TravelerUpgradeBloc, TravelerUpgradeState>(
     'émet [Loading, Error] avec NetworkException pour toute erreur réseau',
     build: () {
-      when(() => mockRepo.activateTravelerRole()).thenThrow(
-        const NetworkException('Erreur réseau'),
-      );
+      when(
+        () => mockRepo.activateTravelerRole(),
+      ).thenThrow(const NetworkException('Erreur réseau'));
       return TravelerUpgradeBloc(mockRepo);
     },
     act: (bloc) => bloc.add(const TravelerUpgradeActivateRequested()),
@@ -111,8 +112,9 @@ void main() {
   blocTest<TravelerUpgradeBloc, TravelerUpgradeState>(
     'émet [Loading, Deactivated] quand la désactivation réussit',
     build: () {
-      when(() => mockRepo.deactivateTravelerRole())
-          .thenAnswer((_) async => _fakeUser());
+      when(
+        () => mockRepo.deactivateTravelerRole(),
+      ).thenAnswer((_) async => _fakeUser());
       return TravelerUpgradeBloc(mockRepo);
     },
     act: (bloc) => bloc.add(const TravelerUpgradeDeactivateRequested()),
@@ -128,9 +130,9 @@ void main() {
   blocTest<TravelerUpgradeBloc, TravelerUpgradeState>(
     'émet [Loading, Error] quand la désactivation échoue',
     build: () {
-      when(() => mockRepo.deactivateTravelerRole()).thenThrow(
-        const NetworkException('Erreur réseau'),
-      );
+      when(
+        () => mockRepo.deactivateTravelerRole(),
+      ).thenThrow(const NetworkException('Erreur réseau'));
       return TravelerUpgradeBloc(mockRepo);
     },
     act: (bloc) => bloc.add(const TravelerUpgradeDeactivateRequested()),

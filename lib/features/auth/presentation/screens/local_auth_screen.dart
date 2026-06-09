@@ -12,7 +12,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-
 class LocalAuthScreen extends StatefulWidget {
   /// Mode vérification : l'écran est `push`é pour confirmer l'identité avant
   /// une action sensible (paiement) et doit renvoyer un résultat booléen via
@@ -165,9 +164,15 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
 
                 final double lockSize = isCompact ? 60 : 80;
                 final double logoSize = isCompact ? 48 : 69;
-                final double vGapSm  = isCompact ? DonySpacing.xs : DonySpacing.xl;
-                final double vGapLg  = isCompact ? DonySpacing.sm : DonySpacing.xxl;
-                final double bottomH = isCompact ? DonySpacing.sm : DonySpacing.xxl;
+                final double vGapSm = isCompact
+                    ? DonySpacing.xs
+                    : DonySpacing.xl;
+                final double vGapLg = isCompact
+                    ? DonySpacing.sm
+                    : DonySpacing.xxl;
+                final double bottomH = isCompact
+                    ? DonySpacing.sm
+                    : DonySpacing.xxl;
 
                 return DonyLayout.constrained(
                   context,
@@ -180,14 +185,17 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
                             alignment: Alignment.centerRight,
                             child: TextButton.icon(
                               onPressed: _switchAccount,
-                              icon: const Icon(Icons.swap_horiz_rounded,
-                                  size: 18),
+                              icon: const Icon(
+                                Icons.swap_horiz_rounded,
+                                size: 18,
+                              ),
                               label: const Text('Autre compte'),
                               style: TextButton.styleFrom(
                                 foregroundColor: cs.primary,
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: DonySpacing.md,
-                                    vertical: DonySpacing.sm),
+                                  horizontal: DonySpacing.md,
+                                  vertical: DonySpacing.sm,
+                                ),
                               ),
                             ),
                           ),
@@ -214,16 +222,17 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
                             onDigit: _onDigit,
                             onDelete: _onDelete,
                             onBiometric: state.biometricAvailable
-                                ? () => context
-                                    .read<LocalAuthBloc>()
-                                    .add(const LocalAuthBiometricRequested())
+                                ? () => context.read<LocalAuthBloc>().add(
+                                    const LocalAuthBiometricRequested(),
+                                  )
                                 : null,
                           ),
                         if (state is LocalAuthLocked)
                           DonyKeypad(
-                              onDigit: _onDigit,
-                              onDelete: _onDelete,
-                              enabled: false),
+                            onDigit: _onDigit,
+                            onDelete: _onDelete,
+                            enabled: false,
+                          ),
                         if (state is LocalAuthChecking)
                           CircularProgressIndicator(color: cs.primary),
                         SizedBox(height: bottomH + bottom),
@@ -239,7 +248,11 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
     );
   }
 
-  Widget _buildLockIcon(LocalAuthState state, ColorScheme cs, {double size = 80}) {
+  Widget _buildLockIcon(
+    LocalAuthState state,
+    ColorScheme cs, {
+    double size = 80,
+  }) {
     final isLocked = state is LocalAuthLocked;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -273,7 +286,8 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
   }
 
   Widget _buildPinDots(LocalAuthState state, ColorScheme cs) {
-    final isError = state is LocalAuthPinRequired && state.attemptsLeft < 3 && _pin.isEmpty;
+    final isError =
+        state is LocalAuthPinRequired && state.attemptsLeft < 3 && _pin.isEmpty;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(_pinLength, (i) {
@@ -288,8 +302,8 @@ class _LocalAuthScreenState extends State<LocalAuthScreen> {
             color: isError
                 ? cs.error
                 : filled
-                    ? cs.primary
-                    : cs.outline,
+                ? cs.primary
+                : cs.outline,
             border: Border.all(
               color: filled ? cs.primary : cs.outline,
               width: 1.5,

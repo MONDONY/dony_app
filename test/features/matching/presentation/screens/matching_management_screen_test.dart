@@ -2,7 +2,10 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/di/envois_refresh_notifier.dart';
 import 'package:dony/core/di/injection.dart';
 import 'package:dony/core/services/analytics_service.dart';
-import 'package:dony/features/auth/bloc/active_role_cubit.dart';
+import 'package:dony/features/auth/bloc/auth_bloc.dart';
+import 'package:dony/features/auth/bloc/auth_event.dart';
+import 'package:dony/features/auth/bloc/auth_state.dart';
+import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
 import 'package:dony/features/package_request/bloc/negotiation_filter_cubit.dart';
 import 'package:dony/features/package_request/bloc/request_filter_cubit.dart';
@@ -24,8 +27,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class _MockActiveRoleCubit extends MockCubit<ActiveRole>
-    implements ActiveRoleCubit {}
+class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {}
 
 class _MockAnnouncementBloc
     extends MockBloc<AnnouncementEvent, AnnouncementState>
@@ -41,15 +44,23 @@ class _MockNegotiationListBloc
     extends MockBloc<NegotiationListEvent, NegotiationListState>
     implements NegotiationListBloc {}
 
-class _MockNegotiationRepository extends Mock implements NegotiationRepository {
-}
+class _MockNegotiationRepository extends Mock
+    implements NegotiationRepository {}
 
 class _MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
     implements PaymentBloc {}
 
 class _MockAnalytics extends Mock implements AnalyticsService {}
 
+UserModel _userWith({required bool isTraveler}) => UserModel(
+  id: 'user-1',
+  kycStatus: 'NOT_STARTED',
+  status: 'ACTIVE',
+  roles: isTraveler ? const ['SENDER', 'TRAVELER'] : const ['SENDER'],
+);
+
 void main() {
+  late _MockAuthBloc authBloc;
   late _MockAnnouncementBloc announcementBloc;
   late _MockBidBloc bidBloc;
   late _MockPackageRequestBloc packageBloc;
@@ -59,6 +70,7 @@ void main() {
   late _MockAnalytics analytics;
 
   setUp(() {
+    authBloc = _MockAuthBloc();
     announcementBloc = _MockAnnouncementBloc();
     bidBloc = _MockBidBloc();
     packageBloc = _MockPackageRequestBloc();
@@ -67,25 +79,32 @@ void main() {
     paymentBloc = _MockPaymentBloc();
     analytics = _MockAnalytics();
     when(() => paymentBloc.state).thenReturn(PaymentInitial());
-    when(() => paymentBloc.stream)
-        .thenAnswer((_) => const Stream<PaymentState>.empty());
-    when(() => analytics.logScreen(any(), properties: any(named: 'properties')))
-        .thenAnswer((_) async {});
-    when(() => analytics.logEvent(any(), properties: any(named: 'properties')))
-        .thenAnswer((_) async {});
+    when(
+      () => paymentBloc.stream,
+    ).thenAnswer((_) => const Stream<PaymentState>.empty());
+    when(
+      () => analytics.logScreen(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
+    when(
+      () => analytics.logEvent(any(), properties: any(named: 'properties')),
+    ).thenAnswer((_) async {});
 
     when(() => announcementBloc.state).thenReturn(AnnouncementInitial());
-    when(() => announcementBloc.stream)
-        .thenAnswer((_) => const Stream<AnnouncementState>.empty());
+    when(
+      () => announcementBloc.stream,
+    ).thenAnswer((_) => const Stream<AnnouncementState>.empty());
     when(() => bidBloc.state).thenReturn(BidInitial());
-    when(() => bidBloc.stream)
-        .thenAnswer((_) => const Stream<BidState>.empty());
+    when(
+      () => bidBloc.stream,
+    ).thenAnswer((_) => const Stream<BidState>.empty());
     when(() => packageBloc.state).thenReturn(PackageRequestState());
-    when(() => packageBloc.stream)
-        .thenAnswer((_) => const Stream<PackageRequestState>.empty());
+    when(
+      () => packageBloc.stream,
+    ).thenAnswer((_) => const Stream<PackageRequestState>.empty());
     when(() => negoListBloc.state).thenReturn(NegotiationListState());
-    when(() => negoListBloc.stream)
-        .thenAnswer((_) => const Stream<NegotiationListState>.empty());
+    when(
+      () => negoListBloc.stream,
+    ).thenAnswer((_) => const Stream<NegotiationListState>.empty());
     when(() => negoRepo.findMine()).thenAnswer((_) async => []);
 
     if (getIt.isRegistered<AnnouncementBloc>()) {
@@ -125,12 +144,15 @@ void main() {
     }
     getIt.registerLazySingleton<AnalyticsService>(() => analytics);
     getIt.registerFactory<ShipmentFilterCubit>(
-        () => ShipmentFilterCubit(analytics));
+      () => ShipmentFilterCubit(analytics),
+    );
     getIt.registerFactory<RequestFilterCubit>(() => RequestFilterCubit());
     getIt.registerFactory<NegotiationFilterCubit>(
-        () => NegotiationFilterCubit());
+      () => NegotiationFilterCubit(),
+    );
     getIt.registerLazySingleton<EnvoisRefreshNotifier>(
-        () => EnvoisRefreshNotifier());
+      () => EnvoisRefreshNotifier(),
+    );
   });
 
   tearDown(() {
@@ -164,15 +186,16 @@ void main() {
     }
   });
 
-  Widget wrap(ActiveRole role) {
-    final cubit = _MockActiveRoleCubit();
-    when(() => cubit.state).thenReturn(role);
-    when(() => cubit.stream)
-        .thenAnswer((_) => const Stream<ActiveRole>.empty());
+  Widget wrap({required bool isTraveler}) {
+    whenListen<AuthState>(
+      authBloc,
+      const Stream.empty(),
+      initialState: AuthAuthenticated(_userWith(isTraveler: isTraveler)),
+    );
     return MaterialApp(
       home: MultiBlocProvider(
         providers: [
-          BlocProvider<ActiveRoleCubit>.value(value: cubit),
+          BlocProvider<AuthBloc>.value(value: authBloc),
           // Fourni globalement par app.dart en prod ; requis ici car l'onglet
           // Envois (ShipmentListBody) écoute PaymentBloc.
           BlocProvider<PaymentBloc>.value(value: paymentBloc),
@@ -182,9 +205,11 @@ void main() {
     );
   }
 
-  group('MatchingManagementScreen dispatch rôle-aware', () {
-    testWidgets('sender → EnvoyerHubScreen rendu', (tester) async {
-      await tester.pumpWidget(wrap(ActiveRole.sender));
+  group('MatchingManagementScreen dispatch capacité-aware', () {
+    testWidgets('sender (isTraveler=false) → EnvoyerHubScreen rendu', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrap(isTraveler: false));
       // pas de pumpAndSettle : l'onglet Envois affiche un spinner (BidInitial)
       // qui ne se stabilise jamais ; un pump suffit pour monter le hub.
       await tester.pump();
@@ -193,8 +218,10 @@ void main() {
       expect(find.byType(AnnouncementListScreen), findsNothing);
     });
 
-    testWidgets('traveler → AnnouncementListScreen rendu', (tester) async {
-      await tester.pumpWidget(wrap(ActiveRole.traveler));
+    testWidgets('traveler (isTraveler=true) → AnnouncementListScreen rendu', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrap(isTraveler: true));
       // `pumpAndSettle` évité — AnnouncementListScreen démarre un
       // auto-refresh qui ne se résout jamais en test. Le widget cible est
       // accessible dès le premier pump.

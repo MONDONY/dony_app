@@ -171,8 +171,9 @@ final appRouter = GoRouter(
   redirect: (context, state) {
     final user = FirebaseAuth.instance.currentUser;
     final isAuthenticated = user != null;
-    final isPublic =
-        _publicRoutes.any((r) => state.matchedLocation.startsWith(r));
+    final isPublic = _publicRoutes.any(
+      (r) => state.matchedLocation.startsWith(r),
+    );
     if (!isAuthenticated && !isPublic) {
       return '/auth/method';
     }
@@ -190,10 +191,7 @@ final appRouter = GoRouter(
   },
   routes: [
     // ── Auth (hors shell) ─────────────────────────────────────────────────
-    GoRoute(
-      path: '/splash',
-      builder: (context, state) => const SplashScreen(),
-    ),
+    GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
     GoRoute(
       path: '/onboarding',
       builder: (context, state) => const OnboardingScreen(),
@@ -245,7 +243,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/auth/referral-code',
       builder: (context, state) => BlocProvider(
-        create: (_) => ReferralBloc(getIt<ReferralRepository>(), getIt<AnalyticsService>()),
+        create: (_) => ReferralBloc(
+          getIt<ReferralRepository>(),
+          getIt<AnalyticsService>(),
+        ),
         child: const ReferralCodeScreen(),
       ),
     ),
@@ -270,7 +271,8 @@ final appRouter = GoRouter(
         }
         final uri = Uri.tryParse(raw);
         final host = uri?.host ?? '';
-        final isStripe = uri?.scheme == 'https' &&
+        final isStripe =
+            uri?.scheme == 'https' &&
             (host == 'verify.stripe.com' || host.endsWith('.stripe.com'));
         if (!isStripe) {
           return const KycStatusScreen();
@@ -411,8 +413,9 @@ final appRouter = GoRouter(
           providers: [
             BlocProvider(create: (_) => getIt<AnnouncementBloc>()),
             BlocProvider(
-              create: (_) => getIt<CommissionMethodBloc>()
-                ..add(CommissionMethodLoadRequested()),
+              create: (_) =>
+                  getIt<CommissionMethodBloc>()
+                    ..add(CommissionMethodLoadRequested()),
             ),
             BlocProvider(
               create: (_) =>
@@ -449,8 +452,9 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/trip-templates/edit',
       builder: (context, state) {
-        final template =
-            state.extra is TripTemplate ? state.extra as TripTemplate : null;
+        final template = state.extra is TripTemplate
+            ? state.extra as TripTemplate
+            : null;
         return BlocProvider(
           create: (_) => getIt<TripTemplateBloc>(),
           child: TripTemplateEditScreen(template: template),
@@ -472,8 +476,8 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/payments/commission-method',
       builder: (context, state) => BlocProvider(
-        create: (_) => getIt<CommissionMethodBloc>()
-          ..add(CommissionMethodLoadRequested()),
+        create: (_) =>
+            getIt<CommissionMethodBloc>()..add(CommissionMethodLoadRequested()),
         child: const CommissionMethodScreen(),
       ),
     ),
@@ -492,8 +496,9 @@ final appRouter = GoRouter(
           providers: [
             BlocProvider(create: (_) => getIt<PaymentBloc>()),
             BlocProvider(
-              create: (_) => getIt<ConfigBloc>()
-                ..add(const ConfigCommissionRateRequested()),
+              create: (_) =>
+                  getIt<ConfigBloc>()
+                    ..add(const ConfigCommissionRateRequested()),
             ),
           ],
           child: PaymentScreen(bid: bid),
@@ -516,9 +521,7 @@ final appRouter = GoRouter(
       path: '/payments/wallet/topup/amount',
       builder: (context, state) => BlocProvider(
         create: (_) => getIt<WalletBloc>(),
-        child: WalletTopupAmountScreen(
-          paymentMethod: state.extra as String,
-        ),
+        child: WalletTopupAmountScreen(paymentMethod: state.extra as String),
       ),
     ),
 
@@ -548,13 +551,11 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/disputes',
-      builder: (context, state) =>
-          const _PlaceholderScreen(title: 'Litiges'),
+      builder: (context, state) => const _PlaceholderScreen(title: 'Litiges'),
     ),
     GoRoute(
       path: '/admin',
-      builder: (context, state) =>
-          const _PlaceholderScreen(title: 'Admin'),
+      builder: (context, state) => const _PlaceholderScreen(title: 'Admin'),
     ),
 
     // ── Messagerie — archives (hors shell) ───────────────────────────────
@@ -652,10 +653,13 @@ final appRouter = GoRouter(
       builder: (context, state) => MultiBlocProvider(
         providers: [
           BlocProvider(
-            create: (_) => getIt<PickupAddressBloc>()..add(const PickupAddressLoaded()),
+            create: (_) =>
+                getIt<PickupAddressBloc>()..add(const PickupAddressLoaded()),
           ),
           BlocProvider(
-            create: (_) => getIt<DeliveryAddressBloc>()..add(const DeliveryAddressLoaded()),
+            create: (_) =>
+                getIt<DeliveryAddressBloc>()
+                  ..add(const DeliveryAddressLoaded()),
           ),
         ],
         child: const PickupAddressesScreen(),
@@ -664,16 +668,16 @@ final appRouter = GoRouter(
         GoRoute(
           path: 'new',
           builder: (context, state) => BlocProvider(
-            create: (_) => getIt<PickupAddressBloc>()
-              ..add(const PickupAddressLoaded()),
+            create: (_) =>
+                getIt<PickupAddressBloc>()..add(const PickupAddressLoaded()),
             child: const PickupAddressEditScreen(),
           ),
         ),
         GoRoute(
           path: ':id',
           builder: (context, state) => BlocProvider(
-            create: (_) => getIt<PickupAddressBloc>()
-              ..add(const PickupAddressLoaded()),
+            create: (_) =>
+                getIt<PickupAddressBloc>()..add(const PickupAddressLoaded()),
             child: PickupAddressEditScreen(
               addressId: state.pathParameters['id'],
             ),
@@ -682,14 +686,18 @@ final appRouter = GoRouter(
         GoRoute(
           path: 'delivery/new',
           builder: (context, state) => BlocProvider(
-            create: (_) => getIt<DeliveryAddressBloc>()..add(const DeliveryAddressLoaded()),
+            create: (_) =>
+                getIt<DeliveryAddressBloc>()
+                  ..add(const DeliveryAddressLoaded()),
             child: const DeliveryAddressEditScreen(),
           ),
         ),
         GoRoute(
           path: 'delivery/:id',
           builder: (context, state) => BlocProvider(
-            create: (_) => getIt<DeliveryAddressBloc>()..add(const DeliveryAddressLoaded()),
+            create: (_) =>
+                getIt<DeliveryAddressBloc>()
+                  ..add(const DeliveryAddressLoaded()),
             child: DeliveryAddressEditScreen(
               addressId: state.pathParameters['id'],
             ),
@@ -702,27 +710,22 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/profile/recipients',
       builder: (context, state) => BlocProvider(
-        create: (_) =>
-            getIt<RecipientBloc>()..add(const RecipientLoaded()),
+        create: (_) => getIt<RecipientBloc>()..add(const RecipientLoaded()),
         child: const RecipientsScreen(),
       ),
       routes: [
         GoRoute(
           path: 'new',
           builder: (context, state) => BlocProvider(
-            create: (_) =>
-                getIt<RecipientBloc>()..add(const RecipientLoaded()),
+            create: (_) => getIt<RecipientBloc>()..add(const RecipientLoaded()),
             child: const RecipientEditScreen(),
           ),
         ),
         GoRoute(
           path: ':id',
           builder: (context, state) => BlocProvider(
-            create: (_) =>
-                getIt<RecipientBloc>()..add(const RecipientLoaded()),
-            child: RecipientEditScreen(
-              recipientId: state.pathParameters['id'],
-            ),
+            create: (_) => getIt<RecipientBloc>()..add(const RecipientLoaded()),
+            child: RecipientEditScreen(recipientId: state.pathParameters['id']),
           ),
         ),
       ],
@@ -736,12 +739,11 @@ final appRouter = GoRouter(
         return MultiBlocProvider(
           providers: [
             BlocProvider(
-              create: (_) => getIt<ProfilePublicBloc>()
-                ..add(ProfilePublicRequested(id)),
+              create: (_) =>
+                  getIt<ProfilePublicBloc>()..add(ProfilePublicRequested(id)),
             ),
             BlocProvider(
-              create: (_) => getIt<TravelerHubBloc>()
-                ..add(LoadTravelerHub(id)),
+              create: (_) => getIt<TravelerHubBloc>()..add(LoadTravelerHub(id)),
             ),
           ],
           child: TravelerProfileHubScreen(travelerId: id),
@@ -777,7 +779,8 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/profile/price-grid',
       builder: (context, state) => BlocProvider(
-        create: (_) => getIt<PriceGridBloc>()..add(const PriceGridLoadRequested()),
+        create: (_) =>
+            getIt<PriceGridBloc>()..add(const PriceGridLoadRequested()),
         child: const PriceGridScreen(),
       ),
     ),
@@ -806,8 +809,9 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final userId = state.extra as String?;
         return BlocProvider(
-          create: (_) => getIt<ProfilePublicBloc>()
-            ..add(ProfilePublicRequested(userId ?? '')),
+          create: (_) =>
+              getIt<ProfilePublicBloc>()
+                ..add(ProfilePublicRequested(userId ?? '')),
           child: ProfilePublicScreen(userId: userId),
         );
       },
@@ -830,15 +834,15 @@ final appRouter = GoRouter(
           routes: [
             GoRoute(
               path: 'change-pin',
-              builder: (context, state) => ChangePinScreen(
-                authService: getIt<LocalAuthService>(),
-              ),
+              builder: (context, state) =>
+                  ChangePinScreen(authService: getIt<LocalAuthService>()),
             ),
             GoRoute(
               path: 'devices',
               builder: (context, state) => BlocProvider(
-                create: (_) => getIt<ConnectedDevicesBloc>()
-                  ..add(const DevicesLoadRequested()),
+                create: (_) =>
+                    getIt<ConnectedDevicesBloc>()
+                      ..add(const DevicesLoadRequested()),
                 child: const ConnectedDevicesScreen(),
               ),
             ),
@@ -847,16 +851,18 @@ final appRouter = GoRouter(
         GoRoute(
           path: 'privacy',
           builder: (context, state) => BlocProvider(
-            create: (_) => getIt<PrivacySettingsBloc>()
-              ..add(const PrivacySettingsLoadRequested()),
+            create: (_) =>
+                getIt<PrivacySettingsBloc>()
+                  ..add(const PrivacySettingsLoadRequested()),
             child: const PrivacySettingsScreen(),
           ),
           routes: [
             GoRoute(
               path: 'blocked-users',
               builder: (context, state) => BlocProvider(
-                create: (_) => getIt<BlockedUsersBloc>()
-                  ..add(const BlockedUsersLoadRequested()),
+                create: (_) =>
+                    getIt<BlockedUsersBloc>()
+                      ..add(const BlockedUsersLoadRequested()),
                 child: const BlockedUsersScreen(),
               ),
             ),
@@ -975,8 +981,10 @@ final appRouter = GoRouter(
                 providers: [
                   BlocProvider(create: (_) => getIt<AccountDeletionBloc>()),
                   BlocProvider(
-                    create: (_) => ReferralBloc(getIt<ReferralRepository>(), getIt<AnalyticsService>())
-                      ..add(const ReferralLoadRequested()),
+                    create: (_) => ReferralBloc(
+                      getIt<ReferralRepository>(),
+                      getIt<AnalyticsService>(),
+                    )..add(const ReferralLoadRequested()),
                   ),
                 ],
                 child: const ProfileScreen(),
@@ -1011,7 +1019,8 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/package-requests/:id/public',
       builder: (_, state) => PackageRequestPublicDetailScreen(
-          requestId: state.pathParameters['id']!),
+        requestId: state.pathParameters['id']!,
+      ),
     ),
     GoRoute(
       path: '/package-requests/:id/complete-details',
@@ -1031,8 +1040,8 @@ final appRouter = GoRouter(
         final userId = authState is AuthAuthenticated
             ? authState.user.id
             : authState is AuthProfileUpdated
-                ? authState.user.id
-                : '';
+            ? authState.user.id
+            : '';
         return NegotiationThreadScreen(
           threadId: state.pathParameters['id']!,
           viewerUserId: userId,
@@ -1053,7 +1062,6 @@ final appRouter = GoRouter(
   ],
 );
 
-
 class _PlaceholderScreen extends StatelessWidget {
   const _PlaceholderScreen({required this.title});
 
@@ -1061,7 +1069,7 @@ class _PlaceholderScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text(title)),
-        body: Center(child: Text(title)),
-      );
+    appBar: AppBar(title: Text(title)),
+    body: Center(child: Text(title)),
+  );
 }

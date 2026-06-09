@@ -41,7 +41,8 @@ class ProfilePublicModel {
       averageRating: (json['averageRating'] as num?)?.toDouble() ?? 0.0,
       ratingCount: json['ratingCount'] as int? ?? 0,
       memberSince: json['memberSince'] as String? ?? '',
-      badges: (json['badges'] as List<dynamic>?)
+      badges:
+          (json['badges'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],

@@ -48,23 +48,22 @@ final _ratingSummary = RatingSummary(
 );
 
 Widget _wrap(ProfilePublicBloc bloc) => BlocProvider<ProfilePublicBloc>.value(
-      value: bloc,
-      child: MaterialApp.router(
-        routerConfig: GoRouter(
-          routes: [
-            GoRoute(
-              path: '/',
-              builder: (_, __) =>
-                  const ProfilePublicScreen(userId: 'user-1'),
-            ),
-            GoRoute(
-              path: '/profile/reviews',
-              builder: (_, __) => const Scaffold(body: Text('Reviews')),
-            ),
-          ],
+  value: bloc,
+  child: MaterialApp.router(
+    routerConfig: GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, __) => const ProfilePublicScreen(userId: 'user-1'),
         ),
-      ),
-    );
+        GoRoute(
+          path: '/profile/reviews',
+          builder: (_, __) => const Scaffold(body: Text('Reviews')),
+        ),
+      ],
+    ),
+  ),
+);
 
 void main() {
   late MockProfilePublicBloc bloc;
@@ -99,10 +98,7 @@ void main() {
   // 3. Affiche le displayName
   testWidgets('shows displayName when loaded', (tester) async {
     when(() => bloc.state).thenReturn(
-      ProfilePublicLoaded(
-        profile: _profile,
-        recentRatings: _ratingSummary,
-      ),
+      ProfilePublicLoaded(profile: _profile, recentRatings: _ratingSummary),
     );
 
     await tester.pumpWidget(_wrap(bloc));
@@ -114,10 +110,7 @@ void main() {
   // 4. Affiche le badge KYC
   testWidgets('shows KYC badge when verified', (tester) async {
     when(() => bloc.state).thenReturn(
-      ProfilePublicLoaded(
-        profile: _profile,
-        recentRatings: _ratingSummary,
-      ),
+      ProfilePublicLoaded(profile: _profile, recentRatings: _ratingSummary),
     );
 
     await tester.pumpWidget(_wrap(bloc));
@@ -128,8 +121,9 @@ void main() {
 
   // 5. Affiche "Réessayer" en cas d'erreur
   testWidgets('shows retry button on error', (tester) async {
-    when(() => bloc.state)
-        .thenReturn(const ProfilePublicError(message: 'Serveur indisponible'));
+    when(
+      () => bloc.state,
+    ).thenReturn(const ProfilePublicError(message: 'Serveur indisponible'));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
@@ -138,8 +132,9 @@ void main() {
   });
 
   testWidgets('retry button dispatches ProfilePublicRequested', (tester) async {
-    when(() => bloc.state)
-        .thenReturn(const ProfilePublicError(message: 'Serveur indisponible'));
+    when(
+      () => bloc.state,
+    ).thenReturn(const ProfilePublicError(message: 'Serveur indisponible'));
 
     await tester.pumpWidget(_wrap(bloc));
     await tester.pump(const Duration(milliseconds: 600));
