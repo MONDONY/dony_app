@@ -166,14 +166,11 @@ class _DonyBottomNav extends StatelessWidget {
       builder: (context, activeRole) {
         final isTraveler = activeRole == ActiveRole.traveler;
 
-        // Tab 1 — Envoyer (sender) ou Trajets (traveler)
-        final tab1Label = isTraveler ? 'Trajets' : 'Envoyer';
-        final tab1Icon = isTraveler
-            ? Icons.send_rounded
-            : Icons.arrow_circle_right_rounded;
-        final tab1IconOutlined = isTraveler
-            ? Icons.send_outlined
-            : Icons.arrow_circle_right_outlined;
+        // Tab 1 — Annonces (libellé+icône figés ; le contenu s'adapte au profil
+        // dans MatchingManagementScreen — Phase 2)
+        const tab1Label = 'Annonces';
+        const tab1Icon = Icons.article_rounded;
+        const tab1IconOutlined = Icons.article_outlined;
 
         // Tab 2 — Suivi (libellé fixe, icône role-aware)
         final tab2Icon = isTraveler

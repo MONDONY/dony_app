@@ -8,6 +8,7 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_required_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/presentation/widgets/secondary_activity_entry.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/presentation/screens/shipment_list_screen.dart';
@@ -390,87 +391,66 @@ class _EnvoyerHeader extends StatelessWidget {
         DonySpacing.lg,
         DonySpacing.sm,
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Envoyer',
-            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  color: kTextPrimary,
-                  height: 1.1,
-                  letterSpacing: -0.5,
+          Row(
+            children: [
+              Text(
+                'Envoyer',
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: kTextPrimary,
+                      height: 1.1,
+                      letterSpacing: -0.5,
+                    ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: onNew,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DonySpacing.md,
+                    vertical: 9,
+                  ),
+                  decoration: BoxDecoration(
+                    color: DonyColors.primary,
+                    borderRadius: BorderRadius.circular(DonyRadius.full),
+                    boxShadow: [
+                      BoxShadow(
+                        color: DonyColors.primary.withValues(alpha: 0.30),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.add_rounded, color: Colors.white, size: 15),
+                      const SizedBox(width: 5),
+                      Text(
+                        'Nouveau',
+                        style: Theme.of(context).textTheme.labelMedium!.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                    ],
+                  ),
                 ),
+              ),
+            ],
           ),
-          const Spacer(),
           if (onShowTrips != null) ...[
-            GestureDetector(
-              onTap: onShowTrips,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.md,
-                  vertical: 9,
-                ),
-                decoration: BoxDecoration(
-                  color: DonyColors.primary.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(DonyRadius.full),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.flight_rounded,
-                      color: DonyColors.primary,
-                      size: 15,
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      'Mes trajets',
-                      style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                            color: DonyColors.primary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
+            const SizedBox(height: DonySpacing.sm),
+            SecondaryActivityEntry(
+              icon: Icons.flight_takeoff_rounded,
+              label: 'Mes trajets',
+              onTap: onShowTrips!,
             ),
-            const SizedBox(width: DonySpacing.sm),
           ],
-          GestureDetector(
-            onTap: onNew,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: DonySpacing.md,
-                vertical: 9,
-              ),
-              decoration: BoxDecoration(
-                color: DonyColors.primary,
-                borderRadius: BorderRadius.circular(DonyRadius.full),
-                boxShadow: [
-                  BoxShadow(
-                    color: DonyColors.primary.withValues(alpha: 0.30),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.add_rounded, color: Colors.white, size: 15),
-                  const SizedBox(width: 5),
-                  Text(
-                    'Nouveau',
-                    style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-          ),
         ],
       ),
     );
