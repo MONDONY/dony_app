@@ -1484,7 +1484,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                       DonySpacing.xs,
                                     ),
                                     child: SizedBox(
-                                      height: 232,
+                                      height: 300,
                                       child: NearMePackageRequestCarousel(
                                         items: parcels,
                                         currentUserId: currentUserId,
@@ -1670,7 +1670,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                   DonySpacing.xs,
                                 ),
                                 child: SizedBox(
-                                  height: 232,
+                                  height: 300,
                                   child: NearMePackageRequestCarousel(
                                     items: prState.results,
                                     currentUserId: currentUserId,

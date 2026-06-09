@@ -151,7 +151,9 @@ class _NearMePackageRequestCarouselState
               borderRadius: BorderRadius.circular(DonyRadius.xl),
             ),
             child: Text(
-              'Voir les ${widget.items.length} demandes',
+              widget.items.length == 1
+                  ? 'Voir la demande'
+                  : 'Voir les ${widget.items.length} demandes',
               style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
