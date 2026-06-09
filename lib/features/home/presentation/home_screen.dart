@@ -666,6 +666,7 @@ class _MapSenderViewState extends State<_MapSenderView> {
         pricePerKg: price,
         dotColor: DonyColors.terra500,
         brightness: Theme.of(context).brightness,
+        prefix: '📦',
       );
       markers.add(
         Marker(

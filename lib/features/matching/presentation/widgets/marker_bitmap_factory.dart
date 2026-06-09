@@ -79,12 +79,14 @@ class MarkerBitmapFactory {
     Color dotColor = Colors.transparent,
     bool isSelected = false,
     Brightness brightness = Brightness.light,
+    String prefix = '',
   }) async {
     final key = _PricePillKey(
       priceCents: (pricePerKg * 100).round(),
       colorValue: dotColor.toARGB32(),
       isSelected: isSelected,
       isDark: brightness == Brightness.dark,
+      prefix: prefix,
     );
     final cached = _pillCache[key];
     if (cached != null) {
@@ -95,6 +97,7 @@ class MarkerBitmapFactory {
       dotColor: dotColor,
       isSelected: isSelected,
       brightness: brightness,
+      prefix: prefix,
     );
     _pillCache[key] = bitmap;
     return bitmap;
@@ -108,6 +111,7 @@ class MarkerBitmapFactory {
     Color dotColor = Colors.transparent,
     bool isSelected = false,
     Brightness brightness = Brightness.light,
+    String prefix = '',
   }) async {
     final key = _StackedPillKey(
       priceCents: (pricePerKg * 100).round(),
@@ -115,6 +119,7 @@ class MarkerBitmapFactory {
       colorValue: dotColor.toARGB32(),
       isSelected: isSelected,
       isDark: brightness == Brightness.dark,
+      prefix: prefix,
     );
     final cached = _stackedPillCache[key];
     if (cached != null) {
@@ -126,6 +131,7 @@ class MarkerBitmapFactory {
       dotColor: dotColor,
       isSelected: isSelected,
       brightness: brightness,
+      prefix: prefix,
     );
     _stackedPillCache[key] = bitmap;
     return bitmap;
@@ -137,13 +143,15 @@ class MarkerBitmapFactory {
     required Color dotColor,
     required bool isSelected,
     required Brightness brightness,
+    String prefix = '',
   }) async {
     final palette = _pillPalette(brightness);
-    final label = pricePerKg <= 0
+    final price = pricePerKg <= 0
         ? 'Grille'
         : pricePerKg == pricePerKg.roundToDouble()
             ? '${pricePerKg.toInt()}€'
             : '${pricePerKg.toStringAsFixed(1)}€';
+    final label = prefix.isEmpty ? price : '$prefix $price';
 
     const fontSize = 12.0;
     const paddingH = 8.0;
@@ -325,13 +333,15 @@ class MarkerBitmapFactory {
     required Color dotColor,
     required bool isSelected,
     required Brightness brightness,
+    String prefix = '',
   }) async {
     final palette = _pillPalette(brightness);
-    final label = pricePerKg <= 0
+    final price = pricePerKg <= 0
         ? 'Grille'
         : pricePerKg == pricePerKg.roundToDouble()
             ? '${pricePerKg.toInt()}€'
             : '${pricePerKg.toStringAsFixed(1)}€';
+    final label = prefix.isEmpty ? price : '$prefix $price';
 
     const fontSize = 12.0;
     const paddingH = 8.0;
@@ -566,12 +576,14 @@ class _PricePillKey {
     required this.colorValue,
     required this.isSelected,
     required this.isDark,
+    required this.prefix,
   });
 
   final int priceCents;
   final int colorValue;
   final bool isSelected;
   final bool isDark;
+  final String prefix;
 
   @override
   bool operator ==(Object other) =>
@@ -580,10 +592,11 @@ class _PricePillKey {
           priceCents == other.priceCents &&
           colorValue == other.colorValue &&
           isSelected == other.isSelected &&
-          isDark == other.isDark;
+          isDark == other.isDark &&
+          prefix == other.prefix;
 
   @override
-  int get hashCode => Object.hash(priceCents, colorValue, isSelected, isDark);
+  int get hashCode => Object.hash(priceCents, colorValue, isSelected, isDark, prefix);
 }
 
 class _StackedPillKey {
@@ -593,6 +606,7 @@ class _StackedPillKey {
     required this.colorValue,
     required this.isSelected,
     required this.isDark,
+    required this.prefix,
   });
 
   final int priceCents;
@@ -600,6 +614,7 @@ class _StackedPillKey {
   final int colorValue;
   final bool isSelected;
   final bool isDark;
+  final String prefix;
 
   @override
   bool operator ==(Object other) =>
@@ -609,8 +624,9 @@ class _StackedPillKey {
           count == other.count &&
           colorValue == other.colorValue &&
           isSelected == other.isSelected &&
-          isDark == other.isDark;
+          isDark == other.isDark &&
+          prefix == other.prefix;
 
   @override
-  int get hashCode => Object.hash(priceCents, count, colorValue, isSelected, isDark);
+  int get hashCode => Object.hash(priceCents, count, colorValue, isSelected, isDark, prefix);
 }
