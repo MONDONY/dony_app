@@ -246,7 +246,7 @@ class MarkerBitmapFactory {
       )..layout();
       canvas.saveLayer(
         Rect.fromLTWH(mainX, mainY, pillW, pillH),
-        Paint()..color = Colors.black.withValues(alpha: 0.16),
+        Paint()..color = Colors.white.withValues(alpha: 0.55),
       );
       emojiTp.paint(
         canvas,
@@ -425,7 +425,7 @@ class MarkerBitmapFactory {
       )..layout();
       canvas.saveLayer(
         Rect.fromLTWH(offsetX, offsetY, pillW, pillH),
-        Paint()..color = Colors.black.withValues(alpha: 0.16),
+        Paint()..color = Colors.white.withValues(alpha: 0.55),
       );
       emojiTp.paint(
         canvas,
