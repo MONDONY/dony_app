@@ -2,6 +2,7 @@ import 'package:dony/features/matching/data/datasources/announcement_remote_data
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 export 'package:dony/features/matching/data/models/transport_mode.dart';
 
 class AnnouncementRepository {
@@ -50,6 +51,10 @@ class AnnouncementRepository {
   Future<({List<AnnouncementModel> announcements, int totalElements})>
       getMyAnnouncements({int page = 0}) async {
     return _remoteDatasource.getMyAnnouncements(page: page);
+  }
+
+  Future<TripsSummaryModel> getTripsSummary() async {
+    return _remoteDatasource.getTripsSummary();
   }
 
   Future<AnnouncementModel> getAnnouncementDetail(String id) async {

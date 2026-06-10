@@ -2,6 +2,7 @@ import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:intl/intl.dart';
 export 'package:dony/features/matching/data/models/transport_mode.dart';
 
@@ -65,6 +66,11 @@ class AnnouncementRemoteDatasource {
         .toList();
     final totalElements = (data['totalElements'] as num?)?.toInt() ?? announcements.length;
     return (announcements: announcements, totalElements: totalElements);
+  }
+
+  Future<TripsSummaryModel> getTripsSummary() async {
+    final response = await _apiClient.dio.get('/travelers/me/trips-summary');
+    return TripsSummaryModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<AnnouncementModel> getAnnouncementDetail(String id) async {
