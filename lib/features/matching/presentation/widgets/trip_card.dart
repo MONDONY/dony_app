@@ -240,17 +240,20 @@ class _ActiveCardContent extends StatelessWidget {
 
           const SizedBox(height: DonySpacing.md),
 
-          // ── Progress bar ──
-          _KgProgressBar(progress: progress),
+          // ── Progress bar (hidden for KG_FREE) ──
+          if (!announcement.isKgFree) ...[
+            _KgProgressBar(progress: progress),
 
-          const SizedBox(height: DonySpacing.xs),
+            const SizedBox(height: DonySpacing.xs),
 
-          Text(
-            '${kg(soldKg)} vendus sur ${kg(totalKg)}',
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-          ),
+            Text(
+              '${kg(soldKg)} vendus sur ${kg(totalKg)}',
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
 
-          const SizedBox(height: DonySpacing.md),
+            const SizedBox(height: DonySpacing.md),
+          ] else
+            const SizedBox(height: DonySpacing.md),
 
           // ── Divider ──
           Divider(height: 1, thickness: 1, color: cs.outline),
@@ -270,7 +273,9 @@ class _ActiveCardContent extends StatelessWidget {
                   ),
                   const SizedBox(width: DonySpacing.xs),
                   Text(
-                    '${kg(availableKg)} disponibles',
+                    announcement.isKgFree
+                        ? 'Kg libre'
+                        : '${kg(availableKg)} disponibles',
                     style: tt.titleSmall?.copyWith(
                       color: cs.onSurface,
                       fontWeight: FontWeight.w600,
@@ -348,13 +353,13 @@ class _PastCardContent extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      '${kg(soldKg)} vendus',
+                      announcement.isKgFree ? 'Kg libre' : '${kg(soldKg)} vendus',
                       style: tt.bodySmall?.copyWith(
                         color: cs.onSurfaceVariant,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    if (isCompleted && soldKg > 0) ...[
+                    if (!announcement.isKgFree && isCompleted && soldKg > 0) ...[
                       Text(
                         ' · ',
                         style: tt.bodySmall?.copyWith(

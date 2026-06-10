@@ -260,7 +260,9 @@ class _TravelerAnnouncementContent extends StatelessWidget {
         const SizedBox(height: DonySpacing.sm),
         _InfoRow(
           icon: Icons.inventory_2_outlined,
-          label: '${announcement.availableKg.toStringAsFixed(0)} kg disponibles',
+          label: announcement.isKgFree
+              ? 'Kg libre'
+              : '${announcement.availableKg.toStringAsFixed(0)} kg disponibles',
         ),
         const SizedBox(height: DonySpacing.sm),
         _InfoRow(

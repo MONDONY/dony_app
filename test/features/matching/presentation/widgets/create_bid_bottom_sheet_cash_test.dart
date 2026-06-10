@@ -63,6 +63,25 @@ AnnouncementModel _announcement({bool cashEnabled = false}) {
   );
 }
 
+AnnouncementModel _kgFreeAnnouncement() {
+  // KG_FREE: availableKg=1 but capacityUnit=KG_FREE → must NOT block
+  return AnnouncementModel(
+    id: 'ann-kgfree',
+    travelerId: 'trav-1',
+    departureCity: 'Paris',
+    arrivalCity: 'Dakar',
+    departureDate: DateTime(2026, 8, 15),
+    availableKg: 1,
+    totalKg: 1,
+    pricePerKg: 8,
+    status: 'ACTIVE',
+    capacityUnit: 'KG_FREE',
+    createdAt: DateTime(2026, 1, 1),
+    updatedAt: DateTime(2026, 1, 1),
+    acceptedPaymentMethods: const {BidPaymentMethod.stripe},
+  );
+}
+
 AnnouncementModel _mixedGridOnlyAnnouncement() {
   return AnnouncementModel(
     id: 'ann-grid-only',
@@ -734,6 +753,35 @@ void main() {
 
       // Still showing the "no selection" state.
       expect(find.text('Choisir mes articles'), findsOneWidget);
+    });
+  });
+
+  // ── 7b. KG_FREE — capacité non bloquée ───────────────────────────────────
+
+  group('KG_FREE — pas de blocage capacité', () {
+    testWidgets(
+        'annonce KG_FREE (availableKg=1) → PAS de "Aucune capacité disponible"',
+        (tester) async {
+      await _openSheet(tester, _kgFreeAnnouncement());
+
+      expect(find.text('Aucune capacité disponible'), findsNothing);
+    });
+
+    testWidgets(
+        'annonce KG_FREE → le slider poids est visible',
+        (tester) async {
+      await _openSheet(tester, _kgFreeAnnouncement());
+
+      // Weight slider should be rendered (KG_FREE uses the generous cap)
+      expect(find.byType(Slider), findsOneWidget);
+    });
+
+    testWidgets(
+        'annonce KG_FREE → formulaire ouvre normalement (titre visible)',
+        (tester) async {
+      await _openSheet(tester, _kgFreeAnnouncement());
+
+      expect(find.text('Envoyer un colis'), findsOneWidget);
     });
   });
 

@@ -24,6 +24,10 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+/// Cap généreuse pour les trajets KG_FREE (capacité non bornée).
+/// L'expéditeur peut choisir jusqu'à cette valeur sans être bloqué.
+const _kKgFreeMaxBidKg = 30.0;
+
 const _contentCategories = [
   'Vêtements',
   'Médicaments',
@@ -199,7 +203,9 @@ class _CreateBidContentState extends State<_CreateBidContent> {
   final _mmPhoneCtrl = TextEditingController();
   final _mmCountryNotifier = ValueNotifier<String?>('CI');
 
-  double get _maxKg => widget.announcement.availableKg;
+  double get _maxKg => widget.announcement.isKgFree
+      ? _kKgFreeMaxBidKg
+      : widget.announcement.availableKg;
   double get _pricePerKg => widget.announcement.pricePerKg;
 
   /// Articles sélectionnés au format attendu par l'API (`null` si aucun).
@@ -250,11 +256,10 @@ class _CreateBidContentState extends State<_CreateBidContent> {
   void initState() {
     super.initState();
     final hasKgPricing = widget.announcement.pricePerKg > 0;
+    final cap = _maxKg;
     _weightNotifier = ValueNotifier<double>(
       hasKgPricing
-          ? (widget.announcement.availableKg >= 5
-              ? 5
-              : widget.announcement.availableKg)
+          ? (widget.announcement.isKgFree ? 5.0.clamp(1.0, cap) : (cap >= 5 ? 5 : cap))
           : 0.0,
     );
 
