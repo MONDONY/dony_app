@@ -768,12 +768,15 @@ void main() {
     });
 
     testWidgets(
-        'annonce KG_FREE → le slider poids est visible',
+        'annonce KG_FREE → saisie libre (stepper) au lieu du slider',
         (tester) async {
       await _openSheet(tester, _kgFreeAnnouncement());
 
-      // Weight slider should be rendered (KG_FREE uses the generous cap)
-      expect(find.byType(Slider), findsOneWidget);
+      // Kilo libre : capacité non bornée → stepper/saisie, pas de slider.
+      expect(find.byType(Slider), findsNothing);
+      expect(find.byKey(const Key('weight-increment')), findsOneWidget);
+      expect(find.byKey(const Key('weight-decrement')), findsOneWidget);
+      expect(find.byKey(const Key('weight-field')), findsOneWidget);
     });
 
     testWidgets(
