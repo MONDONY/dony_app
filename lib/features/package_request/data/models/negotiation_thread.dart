@@ -27,6 +27,7 @@ class NegotiationThread extends Equatable {
     this.travelerAnnouncementId,
     required this.travelerTravelDate,
     required this.travelerAvailableKg,
+    this.travelerCapacityUnit,
     required this.status,
     required this.currentPriceEur,
     required this.roundsCount,
@@ -60,6 +61,7 @@ class NegotiationThread extends Equatable {
   final String? travelerAnnouncementId;
   final DateTime travelerTravelDate;
   final double travelerAvailableKg;
+  final String? travelerCapacityUnit;    // "SUITCASE_23KG" | "KG_FREE" | ...
   final NegotiationThreadStatus status;
   final double currentPriceEur;
   final int roundsCount;
@@ -89,6 +91,8 @@ class NegotiationThread extends Equatable {
   // Trajet lié — inclus quand le back-end embed le résumé du trajet voyageur
   final LinkedTripSummary? linkedTrip;
 
+  bool get isTravelerKgFree => travelerCapacityUnit == 'KG_FREE';
+
   factory NegotiationThread.fromJson(Map<String, dynamic> json) => NegotiationThread(
         id: json['id'] as String,
         packageRequestId: json['packageRequestId'] as String,
@@ -96,6 +100,7 @@ class NegotiationThread extends Equatable {
         travelerAnnouncementId: json['travelerAnnouncementId'] as String?,
         travelerTravelDate: DateTime.parse(json['travelerTravelDate'] as String),
         travelerAvailableKg: (json['travelerAvailableKg'] as num).toDouble(),
+        travelerCapacityUnit: json['travelerCapacityUnit'] as String?,
         status: NegotiationThreadStatus.fromJson(json['status'] as String),
         currentPriceEur: (json['currentPriceEur'] as num).toDouble(),
         roundsCount: json['roundsCount'] as int,
@@ -130,7 +135,7 @@ class NegotiationThread extends Equatable {
   @override
   List<Object?> get props => [
         id, packageRequestId, travelerId, travelerAnnouncementId,
-        travelerTravelDate, travelerAvailableKg,
+        travelerTravelDate, travelerAvailableKg, travelerCapacityUnit,
         status, currentPriceEur, roundsCount, lastActivityAt, createdAt,
         messages, grossPriceEur, paymentMethod, paymentIntentClientSecret,
         travelerName, travelerRating, travelerTripsCount, travelerPhotoUrl,

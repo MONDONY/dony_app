@@ -120,4 +120,27 @@ void main() {
     expect(t.grossPriceEur, isNull);
     expect(t.paymentMethod, isNull);
   });
+
+  test('fromJson parses travelerCapacityUnit and isTravelerKgFree for KG_FREE',
+      () {
+    final t = NegotiationThread.fromJson(
+      _baseJson(overrides: {'travelerCapacityUnit': 'KG_FREE'}),
+    );
+    expect(t.travelerCapacityUnit, 'KG_FREE');
+    expect(t.isTravelerKgFree, isTrue);
+  });
+
+  test('isTravelerKgFree is false for SUITCASE_23KG', () {
+    final t = NegotiationThread.fromJson(
+      _baseJson(overrides: {'travelerCapacityUnit': 'SUITCASE_23KG'}),
+    );
+    expect(t.travelerCapacityUnit, 'SUITCASE_23KG');
+    expect(t.isTravelerKgFree, isFalse);
+  });
+
+  test('isTravelerKgFree is false when travelerCapacityUnit absent (null)', () {
+    final t = NegotiationThread.fromJson(_baseJson());
+    expect(t.travelerCapacityUnit, isNull);
+    expect(t.isTravelerKgFree, isFalse);
+  });
 }

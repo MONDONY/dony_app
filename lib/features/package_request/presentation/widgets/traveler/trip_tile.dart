@@ -87,7 +87,9 @@ class TripTile extends StatelessWidget {
                                   ),
                             ),
                             Text(
-                              '${announcement.availableKg} kg dispo · ${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
+                              announcement.isKgFree
+                                  ? 'Kg libre · ${announcement.pricePerKg.toStringAsFixed(0)} €/kg'
+                                  : '${announcement.availableKg} kg dispo · ${announcement.pricePerKg.toStringAsFixed(0)} €/kg',
                               style: Theme.of(context)
                                   .textTheme
                                   .bodyMedium!

@@ -346,7 +346,9 @@ class _LinkTripScreenState extends State<LinkTripScreen> {
                           defaultLabel: 'Sélectionner un trajet',
                           confirmedLabel: 'Confirmer ce trajet',
                           selectedSummary: selectedTrip != null
-                              ? '${DateFormat('EEE d MMM', 'fr').format(selectedTrip.departureDate)} · ${selectedTrip.availableKg} kg dispo'
+                              ? (selectedTrip.isKgFree
+                                  ? '${DateFormat('EEE d MMM', 'fr').format(selectedTrip.departureDate)} · Kg libre'
+                                  : '${DateFormat('EEE d MMM', 'fr').format(selectedTrip.departureDate)} · ${selectedTrip.availableKg} kg dispo')
                               : null,
                           selectedCount: selectedTrip != null ? '1 trajet' : null,
                           onConfirm: selectedTrip != null ? _confirmTrip : null,

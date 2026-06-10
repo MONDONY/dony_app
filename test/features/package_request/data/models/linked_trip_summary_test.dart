@@ -55,6 +55,41 @@ void main() {
       expect(model.availableKg, 0);
     });
 
+    test('fromJson parses capacityUnit and isKgFree is true for KG_FREE', () {
+      final model = LinkedTripSummary.fromJson({
+        'announcementId': 'ann-kgfree',
+        'departureCity': 'Paris',
+        'arrivalCity': 'Dakar',
+        'availableKg': 1,
+        'capacityUnit': 'KG_FREE',
+      });
+      expect(model.capacityUnit, 'KG_FREE');
+      expect(model.isKgFree, isTrue);
+    });
+
+    test('isKgFree is false when capacityUnit is SUITCASE_23KG', () {
+      final model = LinkedTripSummary.fromJson({
+        'announcementId': 'ann-suitcase',
+        'departureCity': 'Paris',
+        'arrivalCity': 'Dakar',
+        'availableKg': 23,
+        'capacityUnit': 'SUITCASE_23KG',
+      });
+      expect(model.capacityUnit, 'SUITCASE_23KG');
+      expect(model.isKgFree, isFalse);
+    });
+
+    test('isKgFree is false when capacityUnit is absent (null)', () {
+      final model = LinkedTripSummary.fromJson({
+        'announcementId': 'ann-null',
+        'departureCity': 'Paris',
+        'arrivalCity': 'Dakar',
+        'availableKg': 10,
+      });
+      expect(model.capacityUnit, isNull);
+      expect(model.isKgFree, isFalse);
+    });
+
     test('Equatable: equal when all props match', () {
       final a = LinkedTripSummary.fromJson({
         'announcementId': 'ann-1',
