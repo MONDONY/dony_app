@@ -260,8 +260,8 @@ void main() {
         'voyageur pro → AnnouncementListScreen (écran primaire trajets)',
         (tester) async {
       // AnnouncementInitial → spinner ; on vérifie juste le type d'écran.
-      // Le rendering de SecondaryActivityEntry dans AnnouncementListScreen
-      // est couvert par secondary_activity_entry_test.dart.
+      // L'accès « Envoyer » depuis AnnouncementListScreen passe désormais par
+      // un HeaderPill (couvert par announcement_list_screen_test.dart).
       await tester
           .pumpWidget(wrap(_makeUser(isTraveler: true, isProAccount: true)));
       await tester.pump();
