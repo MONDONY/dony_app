@@ -166,9 +166,9 @@ class _DonyBottomNav extends StatelessWidget {
       builder: (context, activeRole) {
         final isTraveler = activeRole == ActiveRole.traveler;
 
-        // Tab 1 — Annonces (libellé+icône figés ; le contenu s'adapte au profil
+        // Tab 1 — Activités (libellé+icône figés ; le contenu s'adapte au profil
         // dans MatchingManagementScreen — Phase 2)
-        const tab1Label = 'Annonces';
+        const tab1Label = 'Activités';
         const tab1Icon = Icons.article_rounded;
         const tab1IconOutlined = Icons.article_outlined;
 
