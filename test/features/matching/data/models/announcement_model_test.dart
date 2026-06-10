@@ -165,6 +165,33 @@ void main() {
     });
   });
 
+  group('AnnouncementModel bid counts', () {
+    test('parses pendingBidCount / confirmedParcelCount from JSON', () {
+      final json = baseAnnouncementJson()
+        ..['pendingBidCount'] = 3
+        ..['confirmedParcelCount'] = 2;
+      final model = AnnouncementModel.fromJson(json);
+
+      expect(model.pendingBidCount, 3);
+      expect(model.confirmedParcelCount, 2);
+    });
+
+    test('defaults both counts to 0 when absent', () {
+      final model = AnnouncementModel.fromJson(baseAnnouncementJson());
+      expect(model.pendingBidCount, 0);
+      expect(model.confirmedParcelCount, 0);
+    });
+
+    test('round-trips bid counts through toJson', () {
+      final json = baseAnnouncementJson()
+        ..['pendingBidCount'] = 5
+        ..['confirmedParcelCount'] = 1;
+      final out = AnnouncementModel.fromJson(json).toJson();
+      expect(out['pendingBidCount'], 5);
+      expect(out['confirmedParcelCount'], 1);
+    });
+  });
+
   group('AnnouncementModel surplus capacity', () {
     test('parses reservedKg / surplusEligible / surplusPublished from JSON', () {
       final json = baseAnnouncementJson()

@@ -112,6 +112,16 @@ class AnnouncementModel {
   final TransportMode? transportMode;
   final String status;
   final int? bidsCount;
+
+  /// Nombre de demandes (bids) en attente d'acceptation pour ce trajet.
+  /// Exposé par `GET /announcements/my`. `0` si absent (ex: endpoint search).
+  @JsonKey(defaultValue: 0)
+  final int pendingBidCount;
+
+  /// Nombre de demandes (bids) acceptées / colis confirmés pour ce trajet.
+  /// Exposé par `GET /announcements/my`. `0` si absent.
+  @JsonKey(defaultValue: 0)
+  final int confirmedParcelCount;
   final TravelerProfile? traveler;
   final String? description;
   final List<String>? acceptedContentTypes;
@@ -156,6 +166,8 @@ class AnnouncementModel {
     this.transportMode,
     required this.status,
     this.bidsCount,
+    this.pendingBidCount = 0,
+    this.confirmedParcelCount = 0,
     this.traveler,
     this.description,
     this.acceptedContentTypes,

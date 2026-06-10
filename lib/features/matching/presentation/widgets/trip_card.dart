@@ -200,6 +200,44 @@ class _ActiveCardContent extends StatelessWidget {
   final String Function(double) kg;
   final String Function(double) price;
 
+  /// Builds the optional « demandes » stats row (acceptées / en attente).
+  /// Returns an empty list when both counts are 0 so the card stays clean and
+  /// no extra spacing is emitted; otherwise prepends its own top spacing and
+  /// the chip row (the trailing rhythm is handled by the caller's SizedBox).
+  List<Widget> _buildBidStatsRow(ColorScheme cs) {
+    final accepted = announcement.confirmedParcelCount;
+    final pending = announcement.pendingBidCount;
+    if (accepted <= 0 && pending <= 0) {
+      return const [];
+    }
+
+    String plural(int n, String one, String many) => n == 1 ? one : many;
+
+    return [
+      const SizedBox(height: DonySpacing.sm),
+      Wrap(
+        spacing: DonySpacing.xs,
+        runSpacing: DonySpacing.xs,
+        children: [
+          if (accepted > 0)
+            _BidStatChip(
+              icon: Icons.check_circle_rounded,
+              fg: cs.success,
+              bg: cs.successLight,
+              label: '$accepted ${plural(accepted, 'acceptée', 'acceptées')}',
+            ),
+          if (pending > 0)
+            _BidStatChip(
+              icon: Icons.schedule_rounded,
+              fg: cs.warning,
+              bg: cs.warningLight,
+              label: '$pending en attente',
+            ),
+        ],
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -232,6 +270,11 @@ class _ActiveCardContent extends StatelessWidget {
             dateLabel,
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
+
+          // ── Demandes stats row (acceptées / en attente) ──
+          // Rendered only when at least one count > 0 — keeps demand-free
+          // cards visually clean. Emits its own trailing spacing.
+          ..._buildBidStatsRow(cs),
 
           const SizedBox(height: DonySpacing.md),
 
@@ -483,6 +526,55 @@ class _StatusBadge extends StatelessWidget {
             badge.label,
             style: tt.labelMedium?.copyWith(
               color: badge.fg,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// _BidStatChip — compact informational chip (acceptées / en attente)
+// Non-interactive: no onTap, no 44px touch target required.
+// ─────────────────────────────────────────────────────────────
+
+class _BidStatChip extends StatelessWidget {
+  const _BidStatChip({
+    required this.icon,
+    required this.fg,
+    required this.bg,
+    required this.label,
+  });
+
+  final IconData icon;
+  final Color fg;
+  final Color bg;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DonySpacing.sm,
+        vertical: DonySpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(DonyRadius.full),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: fg),
+          const SizedBox(width: DonySpacing.xs),
+          Text(
+            label,
+            style: tt.labelSmall?.copyWith(
+              color: fg,
               fontWeight: FontWeight.w600,
             ),
           ),

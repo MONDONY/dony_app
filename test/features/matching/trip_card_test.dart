@@ -9,6 +9,8 @@ AnnouncementModel _announcement({
   double totalKg = 20,
   double availableKg = 13,
   String? capacityUnit,
+  int pendingBidCount = 0,
+  int confirmedParcelCount = 0,
 }) {
   return AnnouncementModel.fromJson({
     'id': 'a1',
@@ -22,6 +24,8 @@ AnnouncementModel _announcement({
     'pricePerKg': 8.0,
     'status': status,
     if (capacityUnit != null) 'capacityUnit': capacityUnit,
+    'pendingBidCount': pendingBidCount,
+    'confirmedParcelCount': confirmedParcelCount,
     'createdAt': '2024-01-01T00:00:00Z',
     'updatedAt': '2024-01-01T00:00:00Z',
   });
@@ -107,6 +111,66 @@ void main() {
     expect(find.textContaining('vendus'), findsNothing);
     // Should show "Kg libre" instead
     expect(find.text('Kg libre'), findsOneWidget);
+  });
+
+  // ── Demandes stats row ───────────────────────────────────────────────────
+
+  testWidgets(
+      'trajet actif : affiche les chips acceptées + en attente (pluriel)',
+      (tester) async {
+    await tester.pumpWidget(_wrap(TripCard(
+      announcement: _announcement(confirmedParcelCount: 2, pendingBidCount: 3),
+      onTap: () {},
+      index: 0,
+    )));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('2 acceptées'), findsOneWidget);
+    expect(find.text('3 en attente'), findsOneWidget);
+  });
+
+  testWidgets('trajet actif : aucun chip quand les deux compteurs sont à 0',
+      (tester) async {
+    await tester.pumpWidget(_wrap(TripCard(
+      announcement: _announcement(),
+      onTap: () {},
+      index: 0,
+    )));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.textContaining('acceptée'), findsNothing);
+    expect(find.textContaining('en attente'), findsNothing);
+  });
+
+  testWidgets('trajet actif : singulier "1 acceptée" (pas "acceptées")',
+      (tester) async {
+    await tester.pumpWidget(_wrap(TripCard(
+      announcement: _announcement(confirmedParcelCount: 1),
+      onTap: () {},
+      index: 0,
+    )));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('1 acceptée'), findsOneWidget);
+    expect(find.text('1 acceptées'), findsNothing);
+  });
+
+  testWidgets('trajet terminé : la ligne de stats est absente même si compteurs > 0',
+      (tester) async {
+    await tester.pumpWidget(_wrap(TripCard(
+      announcement: _announcement(
+        status: 'COMPLETED',
+        availableKg: 0,
+        confirmedParcelCount: 2,
+        pendingBidCount: 3,
+      ),
+      onTap: () {},
+      index: 0,
+    )));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.textContaining('acceptée'), findsNothing);
+    expect(find.textContaining('en attente'), findsNothing);
   });
 
   testWidgets('onTap déclenché', (tester) async {
