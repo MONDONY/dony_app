@@ -7,6 +7,8 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
+import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
+import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/presentation/annonces_layout.dart';
 import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/envoyer_hub_screen.dart';
@@ -47,9 +49,13 @@ class MatchingManagementScreen extends StatelessWidget {
             context.push('/announcements/trips');
           },
         ),
-      AnnoncesLayout.proTraveler => BlocProvider(
+      AnnoncesLayout.proTraveler => MultiBlocProvider(
           key: const ValueKey('pro_view'),
-          create: (_) => getIt<AnnouncementBloc>(),
+          providers: [
+            BlocProvider(create: (_) => getIt<AnnouncementBloc>()),
+            BlocProvider(create: (_) => getIt<TripsSummaryCubit>()),
+            BlocProvider(create: (_) => getIt<TripFilterCubit>()),
+          ],
           child: AnnouncementListScreen(
             onSendParcel: () {
               unawaited(getIt<AnalyticsService>()

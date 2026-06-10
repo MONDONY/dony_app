@@ -13,6 +13,10 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/bloc/shipment_filter_cubit.dart';
+import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
+import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
+import 'package:dony/features/matching/data/models/trips_summary_model.dart';
+import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/matching_management_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/secondary_activity_entry.dart';
@@ -53,6 +57,9 @@ class _MockPaymentBloc extends MockBloc<PaymentEvent, PaymentState>
 
 class _MockAnalytics extends Mock implements AnalyticsService {}
 
+class _MockAnnouncementRepository extends Mock
+    implements AnnouncementRepository {}
+
 UserModel _makeUser({
   bool isTraveler = false,
   bool isProAccount = false,
@@ -75,6 +82,7 @@ void main() {
   late _MockNegotiationRepository negoRepo;
   late _MockPaymentBloc paymentBloc;
   late _MockAnalytics analytics;
+  late _MockAnnouncementRepository announcementRepo;
 
   setUp(() {
     authBloc = _MockAuthBloc();
@@ -85,6 +93,7 @@ void main() {
     negoRepo = _MockNegotiationRepository();
     paymentBloc = _MockPaymentBloc();
     analytics = _MockAnalytics();
+    announcementRepo = _MockAnnouncementRepository();
 
     when(() => paymentBloc.state).thenReturn(PaymentInitial());
     when(() => paymentBloc.stream)
@@ -106,6 +115,10 @@ void main() {
     when(() => negoListBloc.stream)
         .thenAnswer((_) => const Stream<NegotiationListState>.empty());
     when(() => negoRepo.findMine()).thenAnswer((_) async => []);
+    when(() => announcementRepo.getTripsSummary()).thenAnswer(
+      (_) async => const TripsSummaryModel(
+          activeTrips: 0, kgSoldThisMonth: 0, revenueThisMonth: 0),
+    );
 
     if (getIt.isRegistered<AnnouncementBloc>()) {
       getIt.unregister<AnnouncementBloc>();
@@ -149,6 +162,18 @@ void main() {
         () => NegotiationFilterCubit());
     getIt.registerLazySingleton<EnvoisRefreshNotifier>(
         () => EnvoisRefreshNotifier());
+
+    // New cubits required by AnnouncementListScreen (Task 9)
+    if (getIt.isRegistered<TripsSummaryCubit>()) {
+      getIt.unregister<TripsSummaryCubit>();
+    }
+    if (getIt.isRegistered<TripFilterCubit>()) {
+      getIt.unregister<TripFilterCubit>();
+    }
+    getIt.registerFactory<TripsSummaryCubit>(
+        () => TripsSummaryCubit(announcementRepo));
+    getIt.registerFactory<TripFilterCubit>(
+        () => TripFilterCubit(analytics));
   });
 
   tearDown(() {
@@ -179,6 +204,12 @@ void main() {
     }
     if (getIt.isRegistered<EnvoisRefreshNotifier>()) {
       getIt.unregister<EnvoisRefreshNotifier>();
+    }
+    if (getIt.isRegistered<TripsSummaryCubit>()) {
+      getIt.unregister<TripsSummaryCubit>();
+    }
+    if (getIt.isRegistered<TripFilterCubit>()) {
+      getIt.unregister<TripFilterCubit>();
     }
   });
 
