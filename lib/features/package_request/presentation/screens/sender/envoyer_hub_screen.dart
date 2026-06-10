@@ -8,15 +8,14 @@ import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/kyc/presentation/widgets/kyc_required_bottom_sheet.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
-import 'package:dony/features/matching/presentation/widgets/secondary_activity_entry.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/presentation/screens/shipment_list_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
-import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
 import 'package:flutter/material.dart';
@@ -357,9 +356,11 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
               Expanded(
                 child: TabBarView(
                   controller: _controller,
-                  children: const [
-                    ShipmentListBody(),
-                    MyPackageRequestsBody(),
+                  children: [
+                    ShipmentListBody(
+                      onSwitchToDemandes: () => _controller.animateTo(1),
+                    ),
+                    const MyPackageRequestsBody(),
                   ],
                 ),
               ),
@@ -378,12 +379,13 @@ class _EnvoyerHeader extends StatelessWidget {
 
   final VoidCallback onNew;
 
-  /// Si non nul, affiche un bouton secondaire « Mes trajets » pour les
-  /// voyageurs occasionnels (modèle additif Phase 1).
+  /// Si non nul, affiche la pill « Mes trajets » pour les voyageurs
+  /// occasionnels (modèle additif Phase 1).
   final VoidCallback? onShowTrips;
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         DonySpacing.lg,
@@ -391,73 +393,37 @@ class _EnvoyerHeader extends StatelessWidget {
         DonySpacing.lg,
         DonySpacing.sm,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Text(
-                'Envoyer',
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      color: kTextPrimary,
-                      height: 1.1,
-                      letterSpacing: -0.5,
-                    ),
-              ),
-              const Spacer(),
-              GestureDetector(
-                onTap: onNew,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: DonySpacing.md,
-                    vertical: 9,
-                  ),
-                  decoration: BoxDecoration(
-                    color: DonyColors.primary,
-                    borderRadius: BorderRadius.circular(DonyRadius.full),
-                    boxShadow: [
-                      BoxShadow(
-                        color: DonyColors.primary.withValues(alpha: 0.30),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.add_rounded, color: Colors.white, size: 15),
-                      const SizedBox(width: 5),
-                      Text(
-                        'Nouveau',
-                        style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                            ),
-                      ),
-                    ],
-                  ),
+          Text(
+            'Envoyer',
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  color: cs.onSurface,
+                  height: 1.1,
                 ),
-              ),
-            ],
           ),
+          const Spacer(),
           if (onShowTrips != null) ...[
-            const SizedBox(height: DonySpacing.sm),
-            SecondaryActivityEntry(
-              icon: Icons.flight_takeoff_rounded,
+            HeaderPill(
+              key: const Key('show-trips-pill'),
               label: 'Mes trajets',
+              icon: Icons.flight_takeoff_rounded,
+              style: HeaderPillStyle.soft,
               onTap: onShowTrips!,
             ),
+            const SizedBox(width: DonySpacing.xs),
           ],
+          HeaderPill(
+            label: '+ Nouveau',
+            onTap: onNew,
+          ),
         ],
       ),
     );
   }
 }
 
-// ── Segmented control ─────────────────────────────────────────────────────────
+// ── Segmented control (sliding capsule) ──────────────────────────────────────
 
 class _EnvoyerSegmented extends StatelessWidget {
   const _EnvoyerSegmented({
@@ -497,22 +463,10 @@ class _EnvoyerSegmented extends StatelessWidget {
                 DonySpacing.lg,
                 DonySpacing.sm,
               ),
-              child: Row(
-                children: [
-                  _Seg(
-                    label: 'Envois',
-                    badge: badgeForIndex(0, envoisRaw),
-                    active: controller.index == 0,
-                    onTap: () => controller.animateTo(0),
-                  ),
-                  const SizedBox(width: DonySpacing.xs),
-                  _Seg(
-                    label: 'Demandes',
-                    badge: negoBadge,
-                    active: controller.index == 1,
-                    onTap: () => controller.animateTo(1),
-                  ),
-                ],
+              child: _SlidingSegmented(
+                controller: controller,
+                envoisBadge: badgeForIndex(0, envoisRaw),
+                negoBadge: negoBadge,
               ),
             ),
           );
@@ -522,8 +476,89 @@ class _EnvoyerSegmented extends StatelessWidget {
   }
 }
 
-class _Seg extends StatelessWidget {
-  const _Seg({
+/// Sliding capsule segmented control — two equal tabs with an animated white
+/// capsule that slides between Envois (left) and Demandes (right).
+class _SlidingSegmented extends StatelessWidget {
+  const _SlidingSegmented({
+    required this.controller,
+    required this.envoisBadge,
+    required this.negoBadge,
+  });
+
+  final TabController controller;
+  final int envoisBadge;
+  final int negoBadge;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isRight = controller.index == 1;
+
+    return Container(
+      height: 40,
+      decoration: BoxDecoration(
+        color: DonyColors.neutral100,
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+      ),
+      padding: const EdgeInsets.all(3),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final capsuleWidth = constraints.maxWidth / 2;
+          return Stack(
+            children: [
+              // Sliding white capsule
+              AnimatedAlign(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOutCubic,
+                alignment: isRight
+                    ? Alignment.centerRight
+                    : Alignment.centerLeft,
+                child: Container(
+                  width: capsuleWidth,
+                  decoration: BoxDecoration(
+                    color: cs.surface,
+                    borderRadius: BorderRadius.circular(DonyRadius.md - 2),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: DonyColors.shadow,
+                        blurRadius: 4,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Labels row (on top of capsule)
+              Row(
+                children: [
+                  Expanded(
+                    child: _SegLabel(
+                      label: 'Envois',
+                      badge: envoisBadge,
+                      active: !isRight,
+                      onTap: () => controller.animateTo(0),
+                    ),
+                  ),
+                  Expanded(
+                    child: _SegLabel(
+                      label: 'Demandes',
+                      badge: negoBadge,
+                      active: isRight,
+                      onTap: () => controller.animateTo(1),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _SegLabel extends StatelessWidget {
+  const _SegLabel({
     required this.label,
     required this.badge,
     required this.active,
@@ -531,9 +566,6 @@ class _Seg extends StatelessWidget {
   });
 
   final String label;
-
-  /// Nombre d'éléments demandant une action immédiate (badge rouge).
-  /// Masqué quand l'onglet est actif (l'utilisateur est déjà là).
   final int badge;
   final bool active;
   final VoidCallback onTap;
@@ -541,72 +573,60 @@ class _Seg extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    // badge est déjà 0 quand l'onglet est actif (calculé par badgeFor dans le parent).
     final showBadge = badge > 0;
 
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
-              decoration: BoxDecoration(
-                color: active ? DonyColors.primary : cs.surface,
-                borderRadius: BorderRadius.circular(DonyRadius.full),
-                border: Border.all(
-                  color: active ? DonyColors.primary : cs.outlineVariant,
-                ),
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Center(
+            child: AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                color: active ? cs.onSurface : cs.onSurfaceVariant,
               ),
-              child: Center(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: active ? Colors.white : cs.onSurfaceVariant,
+              child: Text(label),
+            ),
+          ),
+          if (showBadge)
+            Positioned(
+              top: -2,
+              right: 8,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: Container(
+                  key: ValueKey(badge),
+                  constraints: const BoxConstraints(minWidth: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: DonyColors.danger500,
+                    borderRadius: BorderRadius.circular(DonyRadius.full),
+                    border: Border.all(
+                      color: DonyColors.neutral100,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Text(
+                    badge > 99 ? '99+' : '$badge',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      height: 1,
+                    ),
                   ),
                 ),
               ),
             ),
-            if (showBadge)
-              Positioned(
-                top: -6,
-                right: -4,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  child: Container(
-                    key: ValueKey(badge),
-                    constraints: const BoxConstraints(minWidth: 18),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 5,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: DonyColors.danger500,
-                      borderRadius: BorderRadius.circular(DonyRadius.full),
-                      border: Border.all(
-                        color: const Color(0xFFF0F2F6),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Text(
-                      badge > 99 ? '99+' : '$badge',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        height: 1,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }

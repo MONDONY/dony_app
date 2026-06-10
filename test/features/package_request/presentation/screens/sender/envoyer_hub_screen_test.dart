@@ -19,6 +19,7 @@ import 'package:dony/features/package_request/data/models/content_category.dart'
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/package_request.dart';
 import 'package:dony/features/package_request/data/models/parcel_size.dart';
+import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/envoyer_hub_screen.dart';
 import 'package:dony/features/payments/bloc/payment_bloc.dart';
 import 'package:flutter/material.dart';
@@ -214,8 +215,11 @@ void main() {
       await tester.pumpWidget(wrap());
       await tester.pump(const Duration(milliseconds: 400));
 
-      // ShipmentListBody shows this search hint when loaded
-      expect(find.text('Ville, destinataire, voyageur…'), findsOneWidget);
+      // ShipmentListBody is shown (Envois tab active) — when bid list is empty
+      // the new DonyEmptyState displays "Aucun envoi pour l'instant".
+      // The Demandes hint ('Ville, catégorie…') is NOT visible yet.
+      expect(find.textContaining('Aucun envoi'), findsOneWidget);
+      expect(find.text('Ville, catégorie…'), findsNothing);
     });
 
     testWidgets(
@@ -273,11 +277,77 @@ void main() {
       expect(find.text('2'), findsNothing);
     });
 
-    testWidgets('le bouton "+ Nouveau" est présent', (tester) async {
+    testWidgets('le bouton "+ Nouveau" est présent (HeaderPill)', (tester) async {
       await tester.pumpWidget(wrap());
       await tester.pump(const Duration(milliseconds: 400));
 
-      expect(find.text('Nouveau'), findsOneWidget);
+      expect(find.text('+ Nouveau'), findsOneWidget);
+    });
+
+    testWidgets(
+        'HeaderPill "Mes trajets" absent quand onShowTrips == null',
+        (tester) async {
+      await tester.pumpWidget(wrap());
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byKey(const Key('show-trips-pill')), findsNothing);
+    });
+
+    testWidgets(
+        'HeaderPill "Mes trajets" présent quand onShowTrips != null',
+        (tester) async {
+      final authBloc = _MockAuthBloc();
+      when(() => authBloc.state).thenReturn(
+        AuthAuthenticated(
+          UserModel(
+            id: 'u1',
+            roles: const ['SENDER'],
+            kycStatus: 'VERIFIED',
+            status: 'ACTIVE',
+          ),
+        ),
+      );
+      when(() => authBloc.stream)
+          .thenAnswer((_) => const Stream<AuthState>.empty());
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MultiBlocProvider(
+            providers: [
+              BlocProvider<AuthBloc>.value(value: authBloc),
+              BlocProvider<PaymentBloc>.value(value: paymentBloc),
+            ],
+            child: EnvoyerHubScreen(onShowTrips: () {}),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byKey(const Key('show-trips-pill')), findsOneWidget);
+    });
+
+    testWidgets(
+        'sliding capsule segmented control présent avec labels Envois et Demandes',
+        (tester) async {
+      await tester.pumpWidget(wrap());
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // Both segment labels visible
+      expect(find.textContaining('Envois'), findsWidgets);
+      expect(find.textContaining('Demandes'), findsWidgets);
+    });
+
+    testWidgets(
+        'tapper Demandes déplace le segment et affiche le contenu Demandes',
+        (tester) async {
+      await tester.pumpWidget(wrap());
+      await tester.pump(const Duration(milliseconds: 400));
+
+      await tester.tap(find.textContaining('Demandes').first);
+      await tester.pumpAndSettle();
+
+      // After switching to Demandes tab, should show demandes search hint
+      expect(find.text('Ville, catégorie…'), findsOneWidget);
     });
   });
 }

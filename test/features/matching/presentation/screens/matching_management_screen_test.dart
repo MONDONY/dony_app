@@ -19,7 +19,6 @@ import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:dony/features/matching/data/repositories/announcement_repository.dart';
 import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
 import 'package:dony/features/matching/presentation/screens/matching_management_screen.dart';
-import 'package:dony/features/matching/presentation/widgets/secondary_activity_entry.dart';
 import 'package:dony/features/package_request/bloc/negotiation_filter_cubit.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
@@ -232,18 +231,19 @@ void main() {
   }
 
   group('MatchingManagementScreen — composition par profil (Phase 2)', () {
-    testWidgets('pur expéditeur → EnvoyerHubScreen, aucune entrée secondaire',
+    testWidgets('pur expéditeur → EnvoyerHubScreen, aucune pill "Mes trajets"',
         (tester) async {
       await tester.pumpWidget(wrap(_makeUser(isTraveler: false)));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.byType(EnvoyerHubScreen), findsOneWidget);
       expect(find.byType(AnnouncementListScreen), findsNothing);
-      expect(find.byType(SecondaryActivityEntry), findsNothing);
+      // No "Mes trajets" pill for a pure sender
+      expect(find.byKey(const Key('show-trips-pill')), findsNothing);
     });
 
     testWidgets(
-        'voyageur occasionnel → EnvoyerHubScreen + entrée "Mes trajets"',
+        'voyageur occasionnel → EnvoyerHubScreen + pill "Mes trajets"',
         (tester) async {
       await tester
           .pumpWidget(wrap(_makeUser(isTraveler: true, isProAccount: false)));
@@ -251,7 +251,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.byType(EnvoyerHubScreen), findsOneWidget);
       expect(find.byType(AnnouncementListScreen), findsNothing);
-      expect(find.byType(SecondaryActivityEntry), findsOneWidget);
+      // SecondaryActivityEntry replaced by HeaderPill (show-trips-pill key)
+      expect(find.byKey(const Key('show-trips-pill')), findsOneWidget);
       expect(find.text('Mes trajets'), findsOneWidget);
     });
 
@@ -275,7 +276,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.byType(EnvoyerHubScreen), findsOneWidget);
       expect(find.byType(AnnouncementListScreen), findsNothing);
-      expect(find.byType(SecondaryActivityEntry), findsNothing);
+      // No "Mes trajets" pill for unauthenticated user
+      expect(find.byKey(const Key('show-trips-pill')), findsNothing);
     });
   });
 }

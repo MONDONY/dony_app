@@ -188,10 +188,10 @@ void main() {
       expect(find.textContaining('Négos'), findsNothing);
     });
 
-    testWidgets('rend le bouton Publier (icône +)', (tester) async {
+    testWidgets('rend le bouton "+ Nouveau" (HeaderPill)', (tester) async {
       await tester.pumpWidget(wrap());
       await tester.pump(const Duration(milliseconds: 400));
-      expect(find.byIcon(Icons.add_rounded), findsWidgets);
+      expect(find.text('+ Nouveau'), findsOneWidget);
     });
 
     testWidgets(
@@ -200,7 +200,7 @@ void main() {
       await tester.pumpWidget(wrap(kycStatus: 'NOT_STARTED'));
       await tester.pump(const Duration(milliseconds: 400));
 
-      await tester.tap(find.byIcon(Icons.add_rounded).last);
+      await tester.tap(find.text('+ Nouveau'));
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.text('Vérification requise'), findsOneWidget);
@@ -214,7 +214,7 @@ void main() {
       await tester.pumpWidget(wrap(kycStatus: 'REJECTED'));
       await tester.pump(const Duration(milliseconds: 400));
 
-      await tester.tap(find.byIcon(Icons.add_rounded).last);
+      await tester.tap(find.text('+ Nouveau'));
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.text('Vérification requise'), findsOneWidget);
@@ -227,7 +227,7 @@ void main() {
       await tester.pumpWidget(wrap(kycStatus: 'PENDING'));
       await tester.pump(const Duration(milliseconds: 400));
 
-      await tester.tap(find.byIcon(Icons.add_rounded).last);
+      await tester.tap(find.text('+ Nouveau'));
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.text('Vérification requise'), findsOneWidget);
@@ -240,7 +240,7 @@ void main() {
       await tester.pumpWidget(wrap(kycStatus: 'VERIFIED'));
       await tester.pump(const Duration(milliseconds: 400));
 
-      await tester.tap(find.byIcon(Icons.add_rounded).last);
+      await tester.tap(find.text('+ Nouveau'));
       // Ne pas pumpAndSettle : le wizard (VERIFIED path) tente de résoudre
       // CitySearchBloc non enregistré dans ce test.
       expect(find.text('Vérification requise'), findsNothing);
@@ -274,7 +274,7 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 400));
 
-      await tester.tap(find.byIcon(Icons.add_rounded).last);
+      await tester.tap(find.text('+ Nouveau'));
       expect(find.text('Vérification requise'), findsNothing);
     });
   });
