@@ -14,6 +14,7 @@ import 'package:dony/features/matching/presentation/widgets/create_announcement_
 import 'package:dony/features/matching/presentation/widgets/trip_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 // ── Status sort priority ──────────────────────────────────────────────────────
 
@@ -51,12 +52,17 @@ class AnnouncementListScreen extends StatefulWidget {
   const AnnouncementListScreen({
     super.key,
     this.onSendParcel,
+    this.showBackButton = false,
   });
 
   /// Si non nul, un bouton secondaire « Envoyer » apparaît dans l'en-tête,
   /// permettant au voyageur PRO d'accéder au flux expéditeur depuis Mes Trajets
   /// (modèle additif Phase 1).
   final VoidCallback? onSendParcel;
+
+  /// Affiche un bouton retour dans l'en-tête quand l'écran est ouvert via
+  /// `context.push` (depuis le hub Envoyer), et non comme racine d'onglet.
+  final bool showBackButton;
 
   @override
   State<AnnouncementListScreen> createState() => _AnnouncementListScreenState();
@@ -125,6 +131,7 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
       appBar: _HeaderBar(
         onSendParcel: widget.onSendParcel,
         onCreateTrip: _createTrip,
+        showBackButton: widget.showBackButton,
         hPad: hPad,
         tt: tt,
         cs: cs,
@@ -359,6 +366,7 @@ class _HeaderBar extends StatelessWidget implements PreferredSizeWidget {
   const _HeaderBar({
     required this.onSendParcel,
     required this.onCreateTrip,
+    required this.showBackButton,
     required this.hPad,
     required this.tt,
     required this.cs,
@@ -366,6 +374,7 @@ class _HeaderBar extends StatelessWidget implements PreferredSizeWidget {
 
   final VoidCallback? onSendParcel;
   final VoidCallback onCreateTrip;
+  final bool showBackButton;
   final double hPad;
   final TextTheme tt;
   final ColorScheme cs;
@@ -389,12 +398,33 @@ class _HeaderBar extends StatelessWidget implements PreferredSizeWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Mes trajets',
-                      style: tt.displaySmall?.copyWith(
-                        color: cs.onSurface,
-                        fontWeight: FontWeight.w800,
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (showBackButton)
+                          IconButton(
+                            key: const Key('activites-back'),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 40,
+                              minHeight: 40,
+                            ),
+                            icon: Icon(
+                              Icons.arrow_back_ios_new_rounded,
+                              size: 20,
+                              color: cs.primary,
+                            ),
+                            tooltip: 'Retour',
+                            onPressed: () => context.pop(),
+                          ),
+                        Text(
+                          'Mes trajets',
+                          style: tt.displaySmall?.copyWith(
+                            color: cs.onSurface,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
                     ),
                     Row(
                       mainAxisSize: MainAxisSize.min,

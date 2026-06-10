@@ -20,17 +20,23 @@ import 'package:dony/features/package_request/presentation/screens/sender/create
 import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class EnvoyerHubScreen extends StatefulWidget {
   const EnvoyerHubScreen({
     super.key,
     this.onShowTrips,
+    this.showBackButton = false,
   });
 
   /// Si non nul, un bouton « Mes trajets » apparaît dans le header du hub,
   /// permettant au voyageur occasionnel d'accéder à ses trajets depuis la vue
   /// expéditeur (modèle additif Phase 1).
   final VoidCallback? onShowTrips;
+
+  /// Affiche un bouton retour dans le header quand l'écran est ouvert via
+  /// `context.push` (depuis Mes trajets), et non comme racine d'onglet.
+  final bool showBackButton;
 
   @override
   State<EnvoyerHubScreen> createState() => _EnvoyerHubScreenState();
@@ -55,7 +61,10 @@ class _EnvoyerHubScreenState extends State<EnvoyerHubScreen> {
         ),
         BlocProvider.value(value: getIt<NegotiationListBloc>()),
       ],
-      child: _EnvoyerTabsView(onShowTrips: widget.onShowTrips),
+      child: _EnvoyerTabsView(
+        onShowTrips: widget.onShowTrips,
+        showBackButton: widget.showBackButton,
+      ),
     );
   }
 }
@@ -63,9 +72,10 @@ class _EnvoyerHubScreenState extends State<EnvoyerHubScreen> {
 // ── Tabbed view ───────────────────────────────────────────────────────────────
 
 class _EnvoyerTabsView extends StatefulWidget {
-  const _EnvoyerTabsView({this.onShowTrips});
+  const _EnvoyerTabsView({this.onShowTrips, this.showBackButton = false});
 
   final VoidCallback? onShowTrips;
+  final bool showBackButton;
 
   @override
   State<_EnvoyerTabsView> createState() => _EnvoyerTabsViewState();
@@ -347,7 +357,11 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
           bottom: false,
           child: Column(
             children: [
-              _EnvoyerHeader(onNew: _onNew, onShowTrips: widget.onShowTrips),
+              _EnvoyerHeader(
+                onNew: _onNew,
+                onShowTrips: widget.onShowTrips,
+                showBackButton: widget.showBackButton,
+              ),
               _EnvoyerSegmented(
                 controller: _controller,
                 badgeForIndex: badgeFor,
@@ -375,13 +389,20 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
 // ── Header ────────────────────────────────────────────────────────────────────
 
 class _EnvoyerHeader extends StatelessWidget {
-  const _EnvoyerHeader({required this.onNew, this.onShowTrips});
+  const _EnvoyerHeader({
+    required this.onNew,
+    this.onShowTrips,
+    this.showBackButton = false,
+  });
 
   final VoidCallback onNew;
 
   /// Si non nul, affiche la pill « Mes trajets » pour les voyageurs
   /// occasionnels (modèle additif Phase 1).
   final VoidCallback? onShowTrips;
+
+  /// Affiche un bouton retour quand le hub est ouvert via `context.push`.
+  final bool showBackButton;
 
   @override
   Widget build(BuildContext context) {
@@ -395,6 +416,19 @@ class _EnvoyerHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
+          if (showBackButton)
+            IconButton(
+              key: const Key('envoyer-back'),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+              icon: Icon(
+                Icons.arrow_back_ios_new_rounded,
+                size: 20,
+                color: cs.primary,
+              ),
+              tooltip: 'Retour',
+              onPressed: () => context.pop(),
+            ),
           Text(
             'Envoyer',
             style: Theme.of(context).textTheme.displaySmall?.copyWith(

@@ -439,14 +439,14 @@ final appRouter = GoRouter(
           BlocProvider(create: (_) => getIt<TripsSummaryCubit>()),
           BlocProvider(create: (_) => getIt<TripFilterCubit>()),
         ],
-        child: const AnnouncementListScreen(),
+        child: const AnnouncementListScreen(showBackButton: true),
       ),
     ),
 
     // ── Envoyer un colis (voyageur PRO, hors shell) ──────────────────────────
     GoRoute(
       path: '/announcements/send',
-      builder: (context, state) => const EnvoyerHubScreen(),
+      builder: (context, state) => const EnvoyerHubScreen(showBackButton: true),
     ),
 
     // ── Modèles de trajet (hors shell) ───────────────────────────────────

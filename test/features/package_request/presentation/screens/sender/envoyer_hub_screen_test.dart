@@ -172,7 +172,7 @@ void main() {
     _unregisterIfPresent<EnvoisRefreshNotifier>();
   });
 
-  Widget wrap({String kycStatus = 'VERIFIED'}) {
+  Widget wrap({String kycStatus = 'VERIFIED', bool showBackButton = false}) {
     final authBloc = _MockAuthBloc();
     when(() => authBloc.state).thenReturn(
       AuthAuthenticated(
@@ -193,7 +193,7 @@ void main() {
           BlocProvider<AuthBloc>.value(value: authBloc),
           BlocProvider<PaymentBloc>.value(value: paymentBloc),
         ],
-        child: const EnvoyerHubScreen(),
+        child: EnvoyerHubScreen(showBackButton: showBackButton),
       ),
     );
   }
@@ -387,6 +387,28 @@ void main() {
       await tester.pump();
 
       expect(called, isTrue);
+    });
+  });
+
+  // ── Back button regression tests ─────────────────────────────────────────────
+
+  group('EnvoyerHubScreen — back button (showBackButton)', () {
+    testWidgets(
+        'back button absent when showBackButton is false (default)',
+        (tester) async {
+      await tester.pumpWidget(wrap());
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byKey(const Key('envoyer-back')), findsNothing);
+    });
+
+    testWidgets(
+        'back button present when showBackButton is true',
+        (tester) async {
+      await tester.pumpWidget(wrap(showBackButton: true));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byKey(const Key('envoyer-back')), findsOneWidget);
     });
   });
 

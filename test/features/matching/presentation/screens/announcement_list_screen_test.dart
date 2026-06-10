@@ -69,6 +69,7 @@ Future<void> _pump(
   WidgetTester tester,
   MockAnnouncementBloc bloc, {
   VoidCallback? onSendParcel,
+  bool showBackButton = false,
 }) async {
   tester.view.physicalSize = const Size(800, 1400);
   tester.view.devicePixelRatio = 1.0;
@@ -102,7 +103,10 @@ Future<void> _pump(
             BlocProvider<TripsSummaryCubit>.value(value: summaryCubit),
             BlocProvider<TripFilterCubit>.value(value: filterCubit),
           ],
-          child: AnnouncementListScreen(onSendParcel: onSendParcel),
+          child: AnnouncementListScreen(
+            onSendParcel: onSendParcel,
+            showBackButton: showBackButton,
+          ),
         ),
       ),
       GoRoute(
@@ -214,6 +218,34 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.byKey(const Key('send-parcel-btn')), findsOneWidget);
+    });
+  });
+
+  // ── Back button regression tests ────────────────────────────────────────────
+
+  group('AnnouncementListScreen — back button (showBackButton)', () {
+    testWidgets(
+        'back button absent when showBackButton is false (default)',
+        (tester) async {
+      when(() => bloc.state).thenReturn(AnnouncementListLoaded([]));
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await _pump(tester, bloc);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byKey(const Key('activites-back')), findsNothing);
+    });
+
+    testWidgets(
+        'back button present when showBackButton is true',
+        (tester) async {
+      when(() => bloc.state).thenReturn(AnnouncementListLoaded([]));
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await _pump(tester, bloc, showBackButton: true);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byKey(const Key('activites-back')), findsOneWidget);
     });
   });
 
