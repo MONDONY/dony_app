@@ -22,6 +22,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mocktail/mocktail.dart';
 
+class _FakeAnnouncementDeleteRequested extends Fake
+    implements AnnouncementDeleteRequested {}
+
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
 class MockAnnouncementBloc
@@ -125,6 +128,7 @@ void main() {
   setUpAll(() async {
     await initializeDateFormatting('fr_FR');
     registerFallbackValue(_FakeAnnouncementEvent());
+    registerFallbackValue(_FakeAnnouncementDeleteRequested());
     registerFallbackValue('');
   });
 
@@ -326,6 +330,374 @@ void main() {
       verify(() => bloc.add(any(that: isA<AnnouncementListRequested>())))
           .called(greaterThanOrEqualTo(1));
       await controller.close();
+    });
+
+    testWidgets(
+        'AnnouncementError with non-empty prior list triggers ErrorPresenter + reload',
+        (tester) async {
+      final controller = StreamController<AnnouncementState>.broadcast();
+      final active = _makeAnnouncement(id: 'a1', status: 'ACTIVE');
+
+      // Start with a loaded state so _lastList is non-empty.
+      when(() => bloc.state)
+          .thenReturn(AnnouncementListLoaded([active]));
+      when(() => bloc.stream).thenAnswer((_) => controller.stream);
+      when(() => bloc.add(any(that: isA<AnnouncementListRequested>())))
+          .thenReturn(null);
+
+      await _pump(tester, bloc);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // List is now cached; push an error — should show snackbar and re-fetch.
+      controller.add(
+          AnnouncementError(const NetworkException('err')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // A new AnnouncementListRequested must have been dispatched.
+      verify(() => bloc.add(any(that: isA<AnnouncementListRequested>())))
+          .called(greaterThanOrEqualTo(1));
+      await controller.close();
+    });
+  });
+
+  // ── Error view interactions ──────────────────────────────────────────────────
+
+  group('AnnouncementListScreen — _ErrorView', () {
+    testWidgets(
+        'AnnouncementError sans liste — bouton "Réessayer" déclenche reload',
+        (tester) async {
+      when(() => bloc.state).thenReturn(
+          AnnouncementError(const NetworkException('Pas de connexion')));
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+      when(() => bloc.add(any(that: isA<AnnouncementListRequested>())))
+          .thenReturn(null);
+
+      await _pump(tester, bloc);
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Tap the retry button
+      final retryBtn = find.text('Réessayer');
+      expect(retryBtn, findsOneWidget);
+      await tester.tap(retryBtn);
+      await tester.pump();
+
+      verify(() => bloc.add(any(that: isA<AnnouncementListRequested>())))
+          .called(greaterThanOrEqualTo(1));
+    });
+
+    testWidgets(
+        'AnnouncementError sans liste — affiche le message d\'erreur',
+        (tester) async {
+      when(() => bloc.state).thenReturn(
+          AnnouncementError(const NetworkException('Pas de connexion')));
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await _pump(tester, bloc);
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Impossible de charger vos trajets'), findsOneWidget);
+    });
+  });
+
+  // ── _EmptyView variants ──────────────────────────────────────────────────────
+
+  group('AnnouncementListScreen — _EmptyView', () {
+    testWidgets(
+        'liste vide rawListEmpty=true → "Aucun trajet à venir"',
+        (tester) async {
+      when(() => bloc.state).thenReturn(AnnouncementListLoaded([]));
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await _pump(tester, bloc);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.text('Aucun trajet à venir'), findsOneWidget);
+    });
+
+    testWidgets(
+        'filtre "Actifs" avec aucun trajet actif → "Aucun trajet actif"',
+        (tester) async {
+      // One completed trip, filter set to active → empty filtered list.
+      final completed = _makeAnnouncement(id: 'c1', status: 'COMPLETED');
+      when(() => bloc.state)
+          .thenReturn(AnnouncementListLoaded([completed]));
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await _pump(tester, bloc);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // Tap "Actifs" chip to apply filter
+      await tester.tap(find.textContaining('Actifs').first);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Aucun trajet actif'), findsOneWidget);
+    });
+
+    testWidgets(
+        'filtre "Terminés" avec aucun trajet terminé → "Aucun historique"',
+        (tester) async {
+      final active = _makeAnnouncement(id: 'a1', status: 'ACTIVE');
+      when(() => bloc.state)
+          .thenReturn(AnnouncementListLoaded([active]));
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await _pump(tester, bloc);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      await tester.tap(find.textContaining('Terminés').first);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Aucun historique'), findsOneWidget);
+    });
+  });
+
+  // ── Search query filtering ───────────────────────────────────────────────────
+
+  group('AnnouncementListScreen — recherche', () {
+    testWidgets(
+        'saisir une query filtre la liste (Paris→Dakar reste, Paris→Bamako disparaît)',
+        (tester) async {
+      final paris = _makeAnnouncement(
+          id: 'p1', status: 'ACTIVE',
+          departureCity: 'Paris', arrivalCity: 'Dakar');
+      final lyon = _makeAnnouncement(
+          id: 'l1', status: 'ACTIVE',
+          departureCity: 'Paris', arrivalCity: 'Bamako');
+
+      when(() => bloc.state)
+          .thenReturn(AnnouncementListLoaded([paris, lyon]));
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await _pump(tester, bloc);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // 2 cards initially
+      expect(find.byType(TripCard), findsNWidgets(2));
+
+      // Enter a query that matches only the Dakar trip
+      await tester.enterText(
+          find.byType(TextField).first, 'Dakar');
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Now only 1 card (Dakar match)
+      expect(find.byType(TripCard), findsOneWidget);
+    });
+
+    testWidgets(
+        'query ne correspondant à rien → "Aucun trajet trouvé"',
+        (tester) async {
+      final paris =
+          _makeAnnouncement(id: 'p1', status: 'ACTIVE');
+
+      when(() => bloc.state)
+          .thenReturn(AnnouncementListLoaded([paris]));
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await _pump(tester, bloc);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      await tester.enterText(
+          find.byType(TextField).first, 'zzzinexistant');
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Aucun trajet trouvé'), findsOneWidget);
+
+      // Drain any remaining animation timers (flutter_animate)
+      await tester.pump(const Duration(seconds: 1));
+    });
+  });
+
+  // ── CANCELLED chip & Dismissible ────────────────────────────────────────────
+
+  group('AnnouncementListScreen — CANCELLED', () {
+    testWidgets(
+        'liste avec un trajet CANCELLED → chip "Annulés" présent',
+        (tester) async {
+      final cancelled =
+          _makeAnnouncement(id: 'x1', status: 'CANCELLED');
+
+      when(() => bloc.state)
+          .thenReturn(AnnouncementListLoaded([cancelled]));
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await _pump(tester, bloc);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.textContaining('Annulés'), findsWidgets);
+    });
+
+    testWidgets(
+        'CANCELLED trajet has a Dismissible with endToStart direction',
+        (tester) async {
+      final cancelled =
+          _makeAnnouncement(id: 'x1', status: 'CANCELLED');
+
+      when(() => bloc.state)
+          .thenReturn(AnnouncementListLoaded([cancelled]));
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+      when(() => bloc.add(any(that: isA<AnnouncementDeleteRequested>())))
+          .thenReturn(null);
+
+      await _pump(tester, bloc);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // CANCELLED items are wrapped in a Dismissible with endToStart direction.
+      final dismissible = tester.widget<Dismissible>(find.byType(Dismissible));
+      expect(dismissible.direction, DismissDirection.endToStart);
+    });
+  });
+
+  // ── IN_PROGRESS sort priority ───────────────────────────────────────────────
+
+  group('AnnouncementListScreen — sort priority', () {
+    testWidgets(
+        'IN_PROGRESS sorts before ACTIVE in the list',
+        (tester) async {
+      final active = _makeAnnouncement(id: 'a1', status: 'ACTIVE',
+          departureCity: 'Paris', arrivalCity: 'Dakar');
+      final inProgress = _makeAnnouncement(id: 'ip1', status: 'IN_PROGRESS',
+          departureCity: 'Lyon', arrivalCity: 'Abidjan');
+
+      when(() => bloc.state)
+          .thenReturn(AnnouncementListLoaded([active, inProgress]));
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await _pump(tester, bloc);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // Both cards rendered
+      expect(find.byType(TripCard), findsNWidgets(2));
+
+      // IN_PROGRESS card (Lyon→Abidjan) appears before ACTIVE (Paris→Dakar).
+      final cards = tester.widgetList<TripCard>(find.byType(TripCard)).toList();
+      expect(cards.first.announcement.status, 'IN_PROGRESS');
+      expect(cards.last.announcement.status, 'ACTIVE');
+    });
+
+    testWidgets(
+        'CANCELLED sorts after COMPLETED in the list',
+        (tester) async {
+      final completed = _makeAnnouncement(id: 'c1', status: 'COMPLETED',
+          departureCity: 'Paris', arrivalCity: 'Dakar');
+      final cancelled = _makeAnnouncement(id: 'x1', status: 'CANCELLED',
+          departureCity: 'Lyon', arrivalCity: 'Bamako');
+
+      when(() => bloc.state)
+          .thenReturn(AnnouncementListLoaded([cancelled, completed]));
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await _pump(tester, bloc);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byType(TripCard), findsNWidgets(2));
+      final cards = tester.widgetList<TripCard>(find.byType(TripCard)).toList();
+      expect(cards.first.announcement.status, 'COMPLETED');
+      expect(cards.last.announcement.status, 'CANCELLED');
+    });
+  });
+
+  // ── onSendParcel callback ────────────────────────────────────────────────────
+
+  group('AnnouncementListScreen — onSendParcel callback', () {
+    testWidgets(
+        'tap on "Envoyer" pill calls onSendParcel',
+        (tester) async {
+      var called = false;
+      when(() => bloc.state).thenReturn(AnnouncementListLoaded([]));
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+
+      await _pump(tester, bloc, onSendParcel: () => called = true);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      await tester.tap(find.byKey(const Key('send-parcel-btn')));
+      await tester.pump();
+
+      expect(called, isTrue);
+    });
+  });
+
+  // ── Pull-to-refresh ───────────────────────────────────────────────────────────
+
+  group('AnnouncementListScreen — pull-to-refresh', () {
+    testWidgets(
+        'pull-to-refresh dispatches AnnouncementListRequested',
+        (tester) async {
+      // Start with a loaded list so the list is scrollable
+      final active = _makeAnnouncement(id: 'a1', status: 'ACTIVE');
+      final controller = StreamController<AnnouncementState>.broadcast();
+
+      when(() => bloc.state)
+          .thenReturn(AnnouncementListLoaded([active]));
+      when(() => bloc.stream).thenAnswer((_) => controller.stream);
+      when(() => bloc.add(any(that: isA<AnnouncementListRequested>())))
+          .thenReturn(null);
+
+      await _pump(tester, bloc);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // Perform a drag-from-top gesture to trigger the RefreshIndicator
+      await tester.fling(
+        find.byType(CustomScrollView),
+        const Offset(0, 300),
+        1000,
+      );
+      // Let the refresh indicator appear and emit a loaded state
+      await tester.pump(const Duration(milliseconds: 100));
+      controller.add(AnnouncementListLoaded([active]));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // AnnouncementListRequested should have been dispatched
+      verify(() => bloc.add(any(that: isA<AnnouncementListRequested>())))
+          .called(greaterThanOrEqualTo(1));
+
+      await controller.close();
+    });
+  });
+
+  // ── Dismissible confirm dialog ────────────────────────────────────────────────
+
+  group('AnnouncementListScreen — Dismissible confirm delete', () {
+    testWidgets(
+        'swiping CANCELLED trip shows confirmation dialog',
+        (tester) async {
+      final cancelled =
+          _makeAnnouncement(id: 'x1', status: 'CANCELLED');
+
+      when(() => bloc.state)
+          .thenReturn(AnnouncementListLoaded([cancelled]));
+      when(() => bloc.stream).thenAnswer((_) => const Stream.empty());
+      when(() => bloc.add(any(that: isA<AnnouncementDeleteRequested>())))
+          .thenReturn(null);
+
+      await _pump(tester, bloc);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // Swipe the Dismissible widget far enough to trigger confirmDismiss.
+      // The view is 800px wide; swiping > 50% should trigger dismiss.
+      final dismissible = find.byType(Dismissible);
+      await tester.drag(dismissible, const Offset(-500, 0));
+      // One pump to start the dismissible animation (may call confirmDismiss)
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+
+      // If the dialog appeared, tap confirm; otherwise the swipe may not have
+      // reached the threshold — handle both cases gracefully.
+      // Dialog appeared (dialog text "Supprimer ce trajet ?" is present)
+      expect(find.text('Supprimer ce trajet ?'), findsOneWidget);
+
+      // Tap the confirm FilledButton "Supprimer"
+      await tester.tap(find.text('Supprimer').last);
+      // Wait for dialog to close and Dismissible animation to complete
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle(const Duration(milliseconds: 500));
+
+      // AnnouncementDeleteRequested was dispatched via onDismissed
+      verify(() => bloc.add(any(that: isA<AnnouncementDeleteRequested>())))
+          .called(greaterThanOrEqualTo(1));
     });
   });
 }
