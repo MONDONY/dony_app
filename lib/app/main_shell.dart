@@ -8,6 +8,8 @@ import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
@@ -42,6 +44,13 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     HapticFeedback.selectionClick();
     if (index == 1) {
       getIt<EnvoisRefreshNotifier>().requestRefresh();
+    }
+    if (index == 0) {
+      // Accueil : la liste des bids de l'expéditeur est mise en cache au premier
+      // montage (home reste vivant dans le nav shell). Si un voyageur refuse une
+      // demande à distance, le cache reste sur « en attente ». Force un refresh à
+      // chaque (ré)sélection de l'onglet pour refléter le vrai statut.
+      context.read<BidBloc>().add(const BidMyListAutoRefreshRequested(force: true));
     }
     widget.navigationShell.goBranch(
       index,
