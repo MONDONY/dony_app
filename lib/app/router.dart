@@ -24,6 +24,8 @@ import 'package:dony/features/kyc/presentation/screens/kyc_status_screen.dart';
 import 'package:dony/features/kyc/presentation/screens/kyc_webview_screen.dart';
 import 'package:dony/features/matching/bloc/announcement_bloc.dart';
 import 'package:dony/features/matching/bloc/announcement_event.dart';
+import 'package:dony/features/matching/bloc/trip_filter_cubit.dart';
+import 'package:dony/features/matching/bloc/trips_summary_cubit.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/presentation/screens/announcement_list_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/envoyer_hub_screen.dart';
@@ -428,9 +430,15 @@ final appRouter = GoRouter(
     // ── Mes trajets (voyageur occasionnel, hors shell) ──────────────────────
     GoRoute(
       path: '/announcements/trips',
-      builder: (context, state) => BlocProvider(
-        create: (_) =>
-            getIt<AnnouncementBloc>()..add(AnnouncementListRequested()),
+      builder: (context, state) => MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) =>
+                getIt<AnnouncementBloc>()..add(AnnouncementListRequested()),
+          ),
+          BlocProvider(create: (_) => getIt<TripsSummaryCubit>()),
+          BlocProvider(create: (_) => getIt<TripFilterCubit>()),
+        ],
         child: const AnnouncementListScreen(),
       ),
     ),
