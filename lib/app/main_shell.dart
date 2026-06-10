@@ -169,8 +169,8 @@ class _DonyBottomNav extends StatelessWidget {
         // Tab 1 — Activités (libellé+icône figés ; le contenu s'adapte au profil
         // dans MatchingManagementScreen — Phase 2)
         const tab1Label = 'Activités';
-        const tab1Icon = Icons.article_rounded;
-        const tab1IconOutlined = Icons.article_outlined;
+        const tab1Icon = Icons.swap_horiz_rounded;
+        const tab1IconOutlined = Icons.swap_horiz_rounded;
 
         // Tab 2 — Suivi (libellé fixe, icône role-aware)
         final tab2Icon = isTraveler
