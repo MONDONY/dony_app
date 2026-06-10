@@ -242,7 +242,8 @@ void main() {
     );
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
-      'kgFree conserve la valeur existante (ex. 23 d\'une valise)',
+      'kgFree préserve un availableKg déjà saisi (valeur ignorée par le backend, '
+      'mais conservée pour ne pas perdre la saisie sur un retour en mode exact)',
       build: () => AnnouncementFormBloc(),
       seed: () => const AnnouncementFormState(availableKg: 23),
       act: (b) => b.add(const CapacityUnitChanged(CapacityUnit.kgFree)),
@@ -251,6 +252,26 @@ void main() {
             .having((s) => s.capacityUnit, 'unit', CapacityUnit.kgFree)
             .having((s) => s.availableKg, 'kg', 23.0),
       ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'kgFree + autres champs requis → isFormValid true SANS AvailableKgChanged',
+      build: () => AnnouncementFormBloc(),
+      act: (b) {
+        b.add(const DepartureCityChanged('Paris'));
+        b.add(const ArrivalCityChanged('Dakar'));
+        b.add(DepartureDateChanged(DateTime.now().add(const Duration(days: 7))));
+        b.add(const PriceChanged(10.0));
+        // Sélectionner kgFree → doit fixer availableKg=1.0 automatiquement
+        b.add(const CapacityUnitChanged(CapacityUnit.kgFree));
+        // Pas de AvailableKgChanged ici — l'utilisateur ne saisit rien
+      },
+      verify: (b) {
+        expect(b.state.availableKg, 1.0,
+            reason: 'kgFree must auto-set sentinel 1.0');
+        expect(b.state.isFormValid, isTrue,
+            reason: 'form must be valid without manual kg input for kgFree');
+      },
     );
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(

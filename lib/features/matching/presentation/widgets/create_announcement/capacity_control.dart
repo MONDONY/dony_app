@@ -45,10 +45,10 @@ class _CapacityControlState extends State<CapacityControl> {
     return BlocConsumer<AnnouncementFormBloc, AnnouncementFormState>(
       listenWhen: (prev, curr) => prev.capacityUnit != curr.capacityUnit,
       listener: (context, state) {
-        // Modes avec saisie de poids (Personnalisé + Kg libre) : pré-remplir le
-        // champ avec la valeur courante du bloc (ou vider si null/invalide).
-        if (state.capacityUnit == CapacityUnit.custom ||
-            state.capacityUnit == CapacityUnit.kgFree) {
+        // Mode Personnalisé uniquement : pré-remplir le champ avec la valeur
+        // courante du bloc (ou vider si null/invalide).
+        // kgFree n'a plus de champ de saisie — pas de sync nécessaire.
+        if (state.capacityUnit == CapacityUnit.custom) {
           final kg = state.availableKg;
           final text = kg != null && kg >= 1 ? kg.toInt().toString() : '';
           if (_customKgController.text != text) {
@@ -93,10 +93,9 @@ class _CapacityControlState extends State<CapacityControl> {
       case CapacityUnit.suitcase32kg:
         return _SuitcaseStepperCard(state: state);
       case CapacityUnit.kgFree:
-        return _CustomKgCard(
-          controller: _customKgController,
-          helperText: 'Tarification au kilo · indiquez le poids disponible',
-        );
+        // Capacité illimitée — pas de saisie de poids. La valeur sentinelle
+        // (1.0) est fixée automatiquement par le BLoC.
+        return const _KgFreeInfoCard();
       case CapacityUnit.custom:
         return _CustomKgCard(controller: _customKgController);
     }
@@ -239,14 +238,65 @@ class _StepperButton extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Carte Kg libre — info statique, pas de saisie
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _KgFreeInfoCard extends StatelessWidget {
+  const _KgFreeInfoCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Container(
+      padding: const EdgeInsets.all(DonySpacing.base),
+      decoration: BoxDecoration(
+        color: cs.primary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(DonyRadius.card),
+        border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.all_inclusive_rounded,
+            color: cs.primary,
+            size: DonySpacing.xl,
+          ),
+          const SizedBox(width: DonySpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Capacité illimitée',
+                  style: tt.titleMedium?.copyWith(color: cs.primary),
+                ),
+                const SizedBox(height: DonySpacing.xs),
+                Text(
+                  'Vendu au kilo · l\'expéditeur choisit son poids',
+                  style: tt.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Carte personnalisé — saisie libre
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _CustomKgCard extends StatelessWidget {
-  const _CustomKgCard({required this.controller, this.helperText});
+  const _CustomKgCard({required this.controller});
 
   final TextEditingController controller;
-  final String? helperText;
 
   @override
   Widget build(BuildContext context) {
@@ -279,7 +329,7 @@ class _CustomKgCard extends StatelessWidget {
           ),
           const SizedBox(height: DonySpacing.xs),
           Text(
-            helperText ?? 'Indiquez la capacité totale que vous offrez',
+            'Indiquez la capacité totale que vous offrez',
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],

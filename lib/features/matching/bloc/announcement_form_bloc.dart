@@ -89,9 +89,11 @@ class AnnouncementFormBloc
           availableKgGetter: () => event.unit.maxKg,
         ));
       case CapacityUnit.kgFree:
-        // « Kg libre » : tarification au kilo, mais le voyageur indique tout de
-        // même un poids disponible (le backend exige availableKg ≥ 1). On
-        // conserve la valeur courante plutôt que de la remettre à zéro.
+        // « Kg libre » : capacité illimitée, vendue au kilo. availableKg n'a pas
+        // de sens ici — le backend exige >= 1 (@DecimalMin 1.0) mais ignore la
+        // valeur pour KG_FREE. On garde la valeur courante (ou 1 par défaut)
+        // pour rester soumettable sans saisie ET ne pas perdre un kg déjà saisi
+        // si l'utilisateur revient en mode « exact ». L'UI ne montre pas de champ.
         emit(state.copyWith(
           capacityUnit: event.unit,
           availableKgGetter: () => state.availableKg ?? 1.0,

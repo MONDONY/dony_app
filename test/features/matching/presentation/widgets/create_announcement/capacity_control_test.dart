@@ -66,17 +66,43 @@ void main() {
     // ── Mode kgFree ─────────────────────────────────────────────────────────
 
     testWidgets(
-        'Kg libre → champ de saisie de poids visible (option b — pas de Slider)',
+        'Kg libre → PAS de champ de saisie kg — carte info "Capacité illimitée" affichée',
         (tester) async {
       await tester.pumpWidget(_host());
       await tester.tap(find.text('Kg libre'));
       await tester.pump();
-      // Option b : le voyageur saisit un poids — un champ kg est affiché,
-      // avec la mention « tarification au kilo ». Plus de carte « Sans limite ».
-      expect(find.byType(TextFormField), findsOneWidget);
-      expect(find.textContaining('Tarification au kilo'), findsOneWidget);
-      expect(find.textContaining('Sans limite'), findsNothing);
+      // Aucun champ de saisie de poids pour kgFree
+      expect(find.byType(TextField), findsNothing,
+          reason: 'kgFree ne doit PAS afficher de TextField');
+      // Carte info présente
+      expect(find.textContaining('Capacité illimitée'), findsOneWidget,
+          reason: 'kgFree doit afficher une carte info "Capacité illimitée"');
       expect(find.byType(Slider), findsNothing);
+    });
+
+    testWidgets(
+        'Kg libre → le sous-titre "Vendu au kilo" est affiché',
+        (tester) async {
+      await tester.pumpWidget(_host());
+      await tester.tap(find.text('Kg libre'));
+      await tester.pump();
+      expect(find.textContaining('kilo'), findsOneWidget,
+          reason: 'kgFree doit mentionner la tarification au kilo');
+    });
+
+    testWidgets(
+        'Kg libre → le BLoC reçoit availableKg=1.0 automatiquement (pas de AvailableKgChanged)',
+        (tester) async {
+      final bloc = AnnouncementFormBloc();
+      addTearDown(bloc.close);
+
+      await tester.pumpWidget(_hostWithBloc(bloc));
+      await tester.tap(find.text('Kg libre'));
+      await tester.pump();
+
+      expect(bloc.state.capacityUnit, CapacityUnit.kgFree);
+      expect(bloc.state.availableKg, 1.0,
+          reason: 'kgFree doit auto-fixer la valeur sentinelle 1.0');
     });
 
     // ── Mode Personnalisé — champ de saisie libre ────────────────────────────
@@ -162,6 +188,18 @@ void main() {
         find.textContaining('capacité totale'),
         findsOneWidget,
       );
+    });
+
+    testWidgets(
+        'Personnalisé (KG_EXACT) → champ "Capacité (kg)" toujours présent (régression)',
+        (tester) async {
+      await tester.pumpWidget(_host());
+      await tester.tap(find.text('Personnalisé'));
+      await tester.pump();
+      // Le TextField doit toujours être présent pour le mode exact
+      expect(find.byType(TextField), findsAtLeastNWidgets(1),
+          reason:
+              'le mode Personnalisé doit conserver son champ de saisie kg');
     });
 
     // ── Mode preset valise — compteur ± ─────────────────────────────────────
