@@ -15,7 +15,6 @@ import 'package:dony/features/auth/data/models/user_model.dart';
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
-import 'package:dony/features/matching/data/models/bid_checkout_response_model.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
 import 'package:dony/features/matching/presentation/screens/shipment_list_screen.dart';
 import 'package:dony/features/matching/presentation/widgets/shipment_card.dart';
@@ -1189,9 +1188,6 @@ void main() {
     await tester.pumpAndSettle();
 
     // PAYMENT_ESCROWED (priorité 3) doit être avant AWAITING_PAYMENT (priorité 2)
-    final enAttenteWidgets = tester.widgetList<Text>(
-      find.text('EN ATTENTE'),
-    );
     // Both show EN ATTENTE; verify by checking card positions
     final enAttentePositions = tester
         .widgetList<Text>(find.text('EN ATTENTE'))
