@@ -57,7 +57,7 @@ class _EnvoyerHubScreenState extends State<EnvoyerHubScreen> {
         BlocProvider.value(value: getIt<PackageRequestBloc>()),
         BlocProvider(
           create: (_) =>
-              getIt<BidBloc>()..add(const BidMyListAutoRefreshRequested()),
+              getIt<BidBloc>()..add(const BidMyListAutoRefreshRequested(force: true)),
         ),
         BlocProvider.value(value: getIt<NegotiationListBloc>()),
       ],
@@ -262,14 +262,18 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
     }
     final index = _controller.index;
     unawaited(getIt<AnalyticsService>().logScreen(_screens[index]));
-    // Refresh uniquement si les données sont périmées (> 60 s).
+    // Refresh forcé (silencieux) si les données ont > 60 s : reflète un statut
+    // changé hors de l'app (ex. trajet annulé par le voyageur) que le TTL
+    // d'auto-refresh du bloc masquerait sinon jusqu'à 3 min.
     switch (index) {
       case 0:
         final bidState = context.read<BidBloc>().state;
         final bidFetchedAt =
             bidState is BidListLoaded ? bidState.fetchedAt : DateTime(2000);
         if (_isStale(bidFetchedAt)) {
-          context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
+          context
+              .read<BidBloc>()
+              .add(const BidMyListAutoRefreshRequested(force: true));
         }
       case 1:
         // Onglet Demandes : rafraîchir les demandes ET les négos (les offres

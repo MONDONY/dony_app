@@ -889,7 +889,7 @@ void main() {
       await tester.pump();
 
       verify(
-        () => bidBloc.add(const BidMyListAutoRefreshRequested()),
+        () => bidBloc.add(const BidMyListAutoRefreshRequested(force: true)),
       ).called(greaterThanOrEqualTo(1));
     },
   );

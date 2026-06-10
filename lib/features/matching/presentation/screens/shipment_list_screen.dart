@@ -83,12 +83,17 @@ class _ShipmentListContentState extends State<_ShipmentListContent> {
     super.initState();
     _refreshNotifier = getIt<EnvoisRefreshNotifier>();
     _refreshNotifier.addListener(_onTabRefreshRequested);
-    context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
+    // force: refetch silencieux à chaque ouverture de la liste pour refléter
+    // un statut changé hors de l'app (ex. trajet annulé par le voyageur), que
+    // le TTL d'auto-refresh masquerait sinon jusqu'à 3 min.
+    context.read<BidBloc>().add(const BidMyListAutoRefreshRequested(force: true));
   }
 
   void _onTabRefreshRequested() {
     if (mounted) {
-      context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
+      context
+          .read<BidBloc>()
+          .add(const BidMyListAutoRefreshRequested(force: true));
     }
   }
 

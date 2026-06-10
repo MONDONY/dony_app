@@ -252,10 +252,11 @@ void main() {
       verify(() => negoListBloc.add(const NegotiationListRefreshRequested()))
           .called(1);
 
-      // → retour onglet Envois (index 0) : BidMyListAutoRefreshRequested envoyé
+      // → retour onglet Envois (index 0) : BidMyListAutoRefreshRequested(force) envoyé
       await tester.tap(find.textContaining('Envois').first);
       await tester.pumpAndSettle();
-      verify(() => bidBloc.add(const BidMyListAutoRefreshRequested())).called(greaterThanOrEqualTo(1));
+      verify(() => bidBloc.add(const BidMyListAutoRefreshRequested(force: true)))
+          .called(greaterThanOrEqualTo(1));
     });
 
     testWidgets(
