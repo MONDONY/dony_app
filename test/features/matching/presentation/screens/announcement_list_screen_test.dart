@@ -365,7 +365,7 @@ void main() {
     });
 
     testWidgets(
-        'AnnouncementError with non-empty prior list triggers ErrorPresenter + reload',
+        'AnnouncementError with non-empty prior list shows error WITHOUT re-fetch (no infinite retry loop)',
         (tester) async {
       final controller = StreamController<AnnouncementState>.broadcast();
       final active = _makeAnnouncement(id: 'a1', status: 'ACTIVE');
@@ -380,16 +380,24 @@ void main() {
       await _pump(tester, bloc);
       await tester.pump(const Duration(milliseconds: 400));
 
-      // List is now cached; push an error — should show snackbar and re-fetch.
+      // didChangeDependencies dispatches the initial fetch — consume it so
+      // the verifyNever below only covers what happens after the error.
+      verify(() => bloc.add(any(that: isA<AnnouncementListRequested>())))
+          .called(1);
+
+      // List is now cached; push an error — the listener must only surface
+      // the error and must NOT dispatch a new AnnouncementListRequested,
+      // otherwise a failing server loops forever (error → fetch → error…).
       controller.add(
           AnnouncementError(const NetworkException('err')));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
 
-      // A new AnnouncementListRequested must have been dispatched.
-      verify(() => bloc.add(any(that: isA<AnnouncementListRequested>())))
-          .called(greaterThanOrEqualTo(1));
+      verifyNever(() => bloc.add(any(that: isA<AnnouncementListRequested>())));
+
       await controller.close();
+      // Drain the error snackbar timers before the test ends.
+      await tester.pump(const Duration(seconds: 5));
     });
   });
 

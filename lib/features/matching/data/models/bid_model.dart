@@ -26,6 +26,7 @@ enum CommissionStatus {
   @JsonValue('CHARGED') charged,
   @JsonValue('FAILED') failed,
   @JsonValue('REFUNDED') refunded,
+  @JsonValue('REFUND_FAILED') refundFailed,
 }
 
 enum BidPricingMode {

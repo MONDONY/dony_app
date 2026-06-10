@@ -45,6 +45,8 @@ class MockAnnouncementBloc
 
 class MockBidBloc extends MockBloc<BidEvent, BidState> implements BidBloc {}
 
+class _FakeBidEvent extends Fake implements BidEvent {}
+
 class MockActiveRoleCubit extends MockCubit<ActiveRole>
     implements ActiveRoleCubit {}
 
@@ -129,12 +131,13 @@ Widget _buildHome({
   UserModel? user,
   BidState? bidState,
   NotificationState? notificationState,
+  MockBidBloc? bidBloc,
 }) {
   final announcementBloc = MockAnnouncementBloc();
   final authBloc = MockAuthBloc();
   final roleCubit = MockActiveRoleCubit();
   final notifBloc = MockNotificationBloc();
-  final bidBloc = MockBidBloc();
+  final effectiveBidBloc = bidBloc ?? MockBidBloc();
 
   when(
     () => announcementBloc.state,
@@ -148,8 +151,8 @@ Widget _buildHome({
     () => notifBloc.state,
   ).thenReturn(notificationState ?? const NotificationInitial());
   when(() => notifBloc.stream).thenAnswer((_) => const Stream.empty());
-  when(() => bidBloc.state).thenReturn(bidState ?? BidInitial());
-  when(() => bidBloc.stream).thenAnswer((_) => const Stream.empty());
+  when(() => effectiveBidBloc.state).thenReturn(bidState ?? BidInitial());
+  when(() => effectiveBidBloc.stream).thenAnswer((_) => const Stream.empty());
 
   return MultiBlocProvider(
     providers: [
@@ -157,7 +160,7 @@ Widget _buildHome({
       BlocProvider<AuthBloc>.value(value: authBloc),
       BlocProvider<ActiveRoleCubit>.value(value: roleCubit),
       BlocProvider<NotificationBloc>.value(value: notifBloc),
-      BlocProvider<BidBloc>.value(value: bidBloc),
+      BlocProvider<BidBloc>.value(value: effectiveBidBloc),
     ],
     child: MaterialApp(
       theme: AppTheme.light,
@@ -176,6 +179,8 @@ Widget _buildHome({
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 void main() {
+  setUpAll(() => registerFallbackValue(_FakeBidEvent()));
+
   setUp(() {
     final hive = MockHiveService();
     final box = _FakeBox();
@@ -208,6 +213,21 @@ void main() {
 
       expect(find.text('Tous les corridors'), findsWidgets);
     });
+
+    testWidgets(
+      'régression : initState dispatche BidMyListAutoRefreshRequested '
+      '(jamais BidMyListRequested qui écraserait l\'état partagé)',
+      (tester) async {
+        final bidBloc = MockBidBloc();
+        await tester.pumpWidget(_buildHome(bidBloc: bidBloc));
+        await tester.pump(const Duration(milliseconds: 1000));
+
+        verify(
+          () => bidBloc.add(any(that: isA<BidMyListAutoRefreshRequested>())),
+        ).called(1);
+        verifyNever(() => bidBloc.add(any(that: isA<BidMyListRequested>())));
+      },
+    );
 
     testWidgets('shows sender-specific filter chips when role is sender', (
       tester,

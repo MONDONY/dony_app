@@ -229,8 +229,10 @@ class _MapSenderViewState extends State<_MapSenderView> {
       _loadPopularCorridors();
       // Charger la liste des bids de l'expéditeur pour pouvoir indiquer sur
       // chaque carte de trajet s'il a déjà une demande active dessus.
-      // Le BidBloc cache la liste, c'est silencieux si déjà chargée récemment.
-      context.read<BidBloc>().add(BidMyListRequested());
+      // AutoRefresh (non forcé) : silencieux si la liste est déjà en cache et
+      // fraîche — BidMyListRequested émettrait BidLoading et écraserait l'état
+      // partagé à chaque retour sur l'accueil.
+      context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
     });
   }
 

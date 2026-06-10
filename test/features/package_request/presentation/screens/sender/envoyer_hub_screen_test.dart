@@ -626,6 +626,55 @@ void main() {
     });
 
     testWidgets(
+        'régression : première offre reçue (liste vide → 1 thread) → snackbar (onglet Envois)',
+        (tester) async {
+      final negoStreamController =
+          StreamController<NegotiationListState>.broadcast();
+      when(() => negoListBloc.state).thenReturn(NegotiationListState());
+      when(() => negoListBloc.stream)
+          .thenAnswer((_) => negoStreamController.stream);
+
+      await tester.pumpWidget(wrap());
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // Premier chargement : liste vide. _prevNegoState n'est plus null mais
+      // ses threads sont vides — l'ancienne garde `prev.threads.isEmpty`
+      // supprimait à tort la notification de la toute première offre.
+      negoStreamController.add(NegotiationListState(
+        status: NegotiationListStatus.loaded,
+        threads: const [],
+      ));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // Première offre reçue : transition liste vide → 1 thread.
+      final firstOffer = NegotiationThread(
+        id: 't-first',
+        packageRequestId: 'pr-1',
+        travelerId: 'traveler-001',
+        travelerName: 'Aïssatou',
+        currentPriceEur: 15,
+        grossPriceEur: 17,
+        roundsCount: 1,
+        travelerAvailableKg: 10,
+        travelerTravelDate: DateTime(2026, 8, 1),
+        lastActivityAt: DateTime(2026, 6, 1),
+        createdAt: DateTime(2026, 6, 1),
+        status: NegotiationThreadStatus.open,
+        messages: const [],
+      );
+      negoStreamController.add(NegotiationListState(
+        status: NegotiationListStatus.loaded,
+        threads: [firstOffer],
+      ));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // La snackbar « X t'a fait une offre » doit s'afficher sur l'onglet Envois.
+      expect(find.textContaining('Aïssatou'), findsWidgets);
+
+      await negoStreamController.close();
+    });
+
+    testWidgets(
         'counter-proposal detected → snackbar (roundsCount increased, status open)',
         (tester) async {
       final negoStreamController = StreamController<NegotiationListState>.broadcast();

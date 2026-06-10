@@ -142,8 +142,10 @@ class _AnnouncementListScreenState extends State<AnnouncementListScreen> {
           if (state is AnnouncementDeleted) {
             context.read<AnnouncementBloc>().add(AnnouncementListRequested());
           } else if (state is AnnouncementError && _lastList.isNotEmpty) {
+            // Pas de re-fetch automatique ici : si le serveur reste en erreur,
+            // relancer AnnouncementListRequested depuis ce listener boucle à
+            // l'infini (error → fetch → error…). Le pull-to-refresh suffit.
             ErrorPresenter.show(context, state.error);
-            context.read<AnnouncementBloc>().add(AnnouncementListRequested());
           }
         },
         builder: (context, state) {

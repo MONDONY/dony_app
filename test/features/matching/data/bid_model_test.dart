@@ -137,6 +137,21 @@ void main() {
     });
   });
 
+  group('BidModel.commissionStatus', () {
+    test('parses REFUND_FAILED without throwing', () {
+      final model = BidModel.fromJson({
+        ..._minimalJson,
+        'commissionStatus': 'REFUND_FAILED',
+      });
+      expect(model.commissionStatus, CommissionStatus.refundFailed);
+    });
+
+    test('null commissionStatus stays null', () {
+      final model = BidModel.fromJson(_minimalJson);
+      expect(model.commissionStatus, isNull);
+    });
+  });
+
   group('BidModel.skeleton', () {
     test('creates skeleton with given id', () {
       final s = BidModel.skeleton('bid-deep');

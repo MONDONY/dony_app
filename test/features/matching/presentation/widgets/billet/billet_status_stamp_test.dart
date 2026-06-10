@@ -31,6 +31,21 @@ void main() {
     expect(find.text('En attente'), findsOneWidget);
   });
 
+  testWidgets('NO_SHOW → libellé "Absent"', (tester) async {
+    await _pump(tester, 'NO_SHOW');
+    expect(find.text('Absent'), findsOneWidget);
+  });
+
+  testWidgets('PARCEL_REFUSED → libellé "Colis refusé"', (tester) async {
+    await _pump(tester, 'PARCEL_REFUSED');
+    expect(find.text('Colis refusé'), findsOneWidget);
+  });
+
+  testWidgets('EXPIRED → libellé "Expiré"', (tester) async {
+    await _pump(tester, 'EXPIRED');
+    expect(find.text('Expiré'), findsOneWidget);
+  });
+
   testWidgets('statut inconnu → libellé brut', (tester) async {
     await _pump(tester, 'WEIRD');
     expect(find.text('WEIRD'), findsOneWidget);

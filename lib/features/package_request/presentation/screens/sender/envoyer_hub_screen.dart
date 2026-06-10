@@ -188,8 +188,10 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
     final prev = _prevNegoState;
     _prevNegoState = next;
 
-    // Pas de notification au premier chargement.
-    if (prev == null || prev.threads.isEmpty) {
+    // Pas de notification au premier chargement (prev == null). Ne pas tester
+    // prev.threads.isEmpty : cela supprimait la notification de la toute
+    // première offre reçue (transition liste vide → 1 thread).
+    if (prev == null) {
       return;
     }
     // On est sur l'onglet Demandes : l'utilisateur voit déjà les changements.
