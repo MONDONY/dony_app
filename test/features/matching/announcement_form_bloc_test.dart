@@ -116,6 +116,44 @@ void main() {
     );
 
     blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'DepartureCityChanged(countryCode: US) stocke departureCountryCode',
+      build: () => AnnouncementFormBloc(),
+      act: (b) =>
+          b.add(const DepartureCityChanged('New York', countryCode: 'US')),
+      expect: () => [
+        predicate<AnnouncementFormState>(
+          (s) =>
+              s.departureCity == 'New York' && s.departureCountryCode == 'US',
+          'departureCity=New York, departureCountryCode=US',
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'ArrivalCityChanged(countryCode: JP) stocke arrivalCountryCode',
+      build: () => AnnouncementFormBloc(),
+      act: (b) => b.add(const ArrivalCityChanged('Tokyo', countryCode: 'JP')),
+      expect: () => [
+        predicate<AnnouncementFormState>(
+          (s) => s.arrivalCity == 'Tokyo' && s.arrivalCountryCode == 'JP',
+          'arrivalCity=Tokyo, arrivalCountryCode=JP',
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
+      'DepartureCityChanged sans countryCode laisse departureCountryCode null',
+      build: () => AnnouncementFormBloc(),
+      act: (b) => b.add(const DepartureCityChanged('Paris')),
+      expect: () => [
+        predicate<AnnouncementFormState>(
+          (s) => s.departureCity == 'Paris' && s.departureCountryCode == null,
+          'departureCountryCode stays null',
+        ),
+      ],
+    );
+
+    blocTest<AnnouncementFormBloc, AnnouncementFormState>(
       'CapacityUnitChanged met à jour capacityUnit',
       build: () => AnnouncementFormBloc(),
       act: (b) => b.add(const CapacityUnitChanged(CapacityUnit.suitcase32kg)),

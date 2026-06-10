@@ -15,20 +15,22 @@ abstract class AnnouncementFormEvent extends Equatable {
 
 class DepartureCityChanged extends AnnouncementFormEvent {
   final String city;
+  final String? countryCode;
 
-  const DepartureCityChanged(this.city);
+  const DepartureCityChanged(this.city, {this.countryCode});
 
   @override
-  List<Object?> get props => [city];
+  List<Object?> get props => [city, countryCode];
 }
 
 class ArrivalCityChanged extends AnnouncementFormEvent {
   final String city;
+  final String? countryCode;
 
-  const ArrivalCityChanged(this.city);
+  const ArrivalCityChanged(this.city, {this.countryCode});
 
   @override
-  List<Object?> get props => [city];
+  List<Object?> get props => [city, countryCode];
 }
 
 class DepartureDateChanged extends AnnouncementFormEvent {

@@ -250,6 +250,43 @@ void main() {
     });
   });
 
+  group('AnnouncementModel country codes & flags', () {
+    test('parses departure/arrival country codes and flags from JSON', () {
+      final json = baseAnnouncementJson()
+        ..['departureCountryCode'] = 'FR'
+        ..['arrivalCountryCode'] = 'US'
+        ..['departureFlag'] = '🇫🇷'
+        ..['arrivalFlag'] = '🇺🇸';
+      final model = AnnouncementModel.fromJson(json);
+
+      expect(model.departureCountryCode, 'FR');
+      expect(model.arrivalCountryCode, 'US');
+      expect(model.departureFlag, '🇫🇷');
+      expect(model.arrivalFlag, '🇺🇸');
+    });
+
+    test('country codes and flags are null when absent', () {
+      final model = AnnouncementModel.fromJson(baseAnnouncementJson());
+      expect(model.departureCountryCode, isNull);
+      expect(model.arrivalCountryCode, isNull);
+      expect(model.departureFlag, isNull);
+      expect(model.arrivalFlag, isNull);
+    });
+
+    test('round-trips country codes and flags through toJson', () {
+      final json = baseAnnouncementJson()
+        ..['departureCountryCode'] = 'SN'
+        ..['arrivalCountryCode'] = 'CI'
+        ..['departureFlag'] = '🇸🇳'
+        ..['arrivalFlag'] = '🇨🇮';
+      final out = AnnouncementModel.fromJson(json).toJson();
+      expect(out['departureCountryCode'], 'SN');
+      expect(out['arrivalCountryCode'], 'CI');
+      expect(out['departureFlag'], '🇸🇳');
+      expect(out['arrivalFlag'], '🇨🇮');
+    });
+  });
+
   group('AnnouncementModel with priceGridItems', () {
     test('deserializes priceGridItems from JSON', () {
       final json = baseAnnouncementJson()

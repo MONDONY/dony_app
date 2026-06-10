@@ -114,8 +114,12 @@ class TripCard extends StatelessWidget {
     final soldKg = (totalKg - availableKg).clamp(0, totalKg).toDouble();
     final progress = totalKg > 0 ? (soldKg / totalKg).clamp(0.0, 1.0) : 0.0;
 
-    final depFlag = cityFlag(announcement.departureCity);
-    final arrFlag = cityFlag(announcement.arrivalCity);
+    // Préfère le drapeau résolu par le backend (n'importe quel pays), retombe
+    // sur la map hardcodée locale, puis null (point bleu via _FlagEndpoint).
+    final depFlag =
+        announcement.departureFlag ?? cityFlag(announcement.departureCity);
+    final arrFlag =
+        announcement.arrivalFlag ?? cityFlag(announcement.arrivalCity);
 
     Widget card = GestureDetector(
       onTap: onTap,

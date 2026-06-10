@@ -14,6 +14,8 @@ class AnnouncementRemoteDatasource {
   Future<AnnouncementModel> createAnnouncement({
     required String departureCity,
     required String arrivalCity,
+    String? departureCountryCode,
+    String? arrivalCountryCode,
     required DateTime departureDate,
     String? departureTime,
     String? arrivalTime,
@@ -34,6 +36,10 @@ class AnnouncementRemoteDatasource {
       data: {
         'departureCity': departureCity,
         'arrivalCity': arrivalCity,
+        if (departureCountryCode != null)
+          'departureCountryCode': departureCountryCode,
+        if (arrivalCountryCode != null)
+          'arrivalCountryCode': arrivalCountryCode,
         'departureDate': DateFormat('yyyy-MM-dd').format(departureDate),
         if (departureTime != null) 'departureTime': departureTime,
         if (arrivalTime != null) 'arrivalTime': arrivalTime,
@@ -155,6 +161,8 @@ class AnnouncementRemoteDatasource {
     required String id,
     required String departureCity,
     required String arrivalCity,
+    String? departureCountryCode,
+    String? arrivalCountryCode,
     required DateTime departureDate,
     String? departureTime,
     String? arrivalTime,
@@ -175,6 +183,10 @@ class AnnouncementRemoteDatasource {
       data: {
         'departureCity': departureCity,
         'arrivalCity': arrivalCity,
+        if (departureCountryCode != null)
+          'departureCountryCode': departureCountryCode,
+        if (arrivalCountryCode != null)
+          'arrivalCountryCode': arrivalCountryCode,
         'departureDate': DateFormat('yyyy-MM-dd').format(departureDate),
         if (departureTime != null) 'departureTime': departureTime,
         if (arrivalTime != null) 'arrivalTime': arrivalTime,

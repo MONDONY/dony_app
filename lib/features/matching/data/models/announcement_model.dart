@@ -93,6 +93,14 @@ class AnnouncementModel {
   final String travelerId;
   final String departureCity;
   final String arrivalCity;
+
+  /// Code pays ISO-2 (ex: "US") du départ / arrivée. Fourni par le backend.
+  final String? departureCountryCode;
+  final String? arrivalCountryCode;
+
+  /// Drapeau emoji (ex: "🇺🇸") résolu par le backend depuis le code pays.
+  final String? departureFlag;
+  final String? arrivalFlag;
   final DateTime departureDate;
   // "HH:mm" format, null if not set
   final String? departureTime;
@@ -154,6 +162,10 @@ class AnnouncementModel {
     required this.travelerId,
     required this.departureCity,
     required this.arrivalCity,
+    this.departureCountryCode,
+    this.arrivalCountryCode,
+    this.departureFlag,
+    this.arrivalFlag,
     required this.departureDate,
     this.departureTime,
     this.arrivalTime,

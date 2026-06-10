@@ -11,12 +11,18 @@ AnnouncementModel _announcement({
   String? capacityUnit,
   int pendingBidCount = 0,
   int confirmedParcelCount = 0,
+  String departureCity = 'Paris',
+  String arrivalCity = 'Dakar',
+  String? departureFlag,
+  String? arrivalFlag,
 }) {
   return AnnouncementModel.fromJson({
     'id': 'a1',
     'travelerId': 't1',
-    'departureCity': 'Paris',
-    'arrivalCity': 'Dakar',
+    'departureCity': departureCity,
+    'arrivalCity': arrivalCity,
+    if (departureFlag != null) 'departureFlag': departureFlag,
+    if (arrivalFlag != null) 'arrivalFlag': arrivalFlag,
     'departureDate':
         DateTime.now().add(const Duration(days: 3)).toIso8601String(),
     'totalKg': totalKg,
@@ -52,6 +58,45 @@ void main() {
     expect(find.textContaining('13 kg'), findsWidgets);
     expect(find.textContaining('8 €'), findsOneWidget);
     expect(find.text('Actif'), findsOneWidget);
+  });
+
+  testWidgets('utilise le drapeau backend pour une ville hors map (New York)',
+      (tester) async {
+    await tester.pumpWidget(_wrap(TripCard(
+      announcement: _announcement(
+        departureCity: 'New York',
+        arrivalCity: 'Tokyo',
+        departureFlag: '🇺🇸',
+        arrivalFlag: '🇯🇵',
+      ),
+      onTap: () {},
+      index: 0,
+    )));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('🇺🇸'), findsOneWidget);
+    expect(find.text('🇯🇵'), findsOneWidget);
+  });
+
+  testWidgets('le drapeau backend prime sur la map hardcodée des villes',
+      (tester) async {
+    // Paris est dans la map → 🇫🇷, mais le backend renvoie 🇺🇸 : on doit
+    // afficher la valeur backend, pas celle de la map.
+    await tester.pumpWidget(_wrap(TripCard(
+      announcement: _announcement(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureFlag: '🇺🇸',
+      ),
+      onTap: () {},
+      index: 0,
+    )));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('🇺🇸'), findsOneWidget);
+    expect(find.text('🇫🇷'), findsNothing);
+    // Pas de flag backend pour l'arrivée → fallback map → 🇸🇳
+    expect(find.text('🇸🇳'), findsOneWidget);
   });
 
   testWidgets('carte terminée : footer condensé, pas de progression',

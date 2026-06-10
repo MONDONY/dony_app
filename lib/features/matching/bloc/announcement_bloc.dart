@@ -40,6 +40,8 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
       final announcement = await _repository.createAnnouncement(
         departureCity: event.departureCity,
         arrivalCity: event.arrivalCity,
+        departureCountryCode: event.departureCountryCode,
+        arrivalCountryCode: event.arrivalCountryCode,
         departureDate: event.departureDate,
         departureTime: event.departureTime,
         arrivalTime: event.arrivalTime,
@@ -215,6 +217,8 @@ class AnnouncementBloc extends Bloc<AnnouncementEvent, AnnouncementState> {
         id: event.id,
         departureCity: event.departureCity,
         arrivalCity: event.arrivalCity,
+        departureCountryCode: event.departureCountryCode,
+        arrivalCountryCode: event.arrivalCountryCode,
         departureDate: event.departureDate,
         departureTime: event.departureTime,
         arrivalTime: event.arrivalTime,

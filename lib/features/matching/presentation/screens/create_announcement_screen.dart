@@ -53,6 +53,10 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   final _formKey = GlobalKey<FormState>();
   final _departureCityNotifier = ValueNotifier<String?>(null);
   final _arrivalCityNotifier = ValueNotifier<String?>(null);
+  // Code pays ISO-2 capturé lors de la sélection ville (null en édition d'une
+  // annonce ancienne sans code — le backend retombe alors sur le nom de ville).
+  final _departureCountryCodeNotifier = ValueNotifier<String?>(null);
+  final _arrivalCountryCodeNotifier = ValueNotifier<String?>(null);
   final _departureDateNotifier = ValueNotifier<DateTime?>(null);
   final _departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
   final _arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
@@ -95,6 +99,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       final a = widget.announcement!;
       _departureCityNotifier.value = a.departureCity;
       _arrivalCityNotifier.value = a.arrivalCity;
+      _departureCountryCodeNotifier.value = a.departureCountryCode;
+      _arrivalCountryCodeNotifier.value = a.arrivalCountryCode;
       _departureDateNotifier.value = a.departureDate;
       _availableKgNotifier.value = a.availableKg;
 
@@ -159,6 +165,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     _refusedCtrl.dispose();
     _departureCityNotifier.dispose();
     _arrivalCityNotifier.dispose();
+    _departureCountryCodeNotifier.dispose();
+    _arrivalCountryCodeNotifier.dispose();
     _departureDateNotifier.dispose();
     _departureTimeNotifier.dispose();
     _arrivalTimeNotifier.dispose();
@@ -326,6 +334,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
             id: widget.announcement!.id,
             departureCity: departureCity,
             arrivalCity: arrivalCity,
+            departureCountryCode: _departureCountryCodeNotifier.value,
+            arrivalCountryCode: _arrivalCountryCodeNotifier.value,
             departureDate: departureDate,
             departureTime: departureTime,
             arrivalTime: arrivalTime,
@@ -343,6 +353,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       context.read<AnnouncementBloc>().add(AnnouncementCreateRequested(
             departureCity: departureCity,
             arrivalCity: arrivalCity,
+            departureCountryCode: _departureCountryCodeNotifier.value,
+            arrivalCountryCode: _arrivalCountryCodeNotifier.value,
             departureDate: departureDate,
             departureTime: departureTime,
             arrivalTime: arrivalTime,
@@ -627,6 +639,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                         initialValue: _departureCityNotifier.value,
                         onSelected: (CityModel city) {
                           _departureCityNotifier.value = city.name;
+                          _departureCountryCodeNotifier.value = city.countryCode;
                         },
                       ),
                     ),
@@ -657,6 +670,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                         initialValue: _arrivalCityNotifier.value,
                         onSelected: (CityModel city) {
                           _arrivalCityNotifier.value = city.name;
+                          _arrivalCountryCodeNotifier.value = city.countryCode;
                         },
                       ),
                     ),

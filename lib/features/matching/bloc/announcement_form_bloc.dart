@@ -37,14 +37,20 @@ class AnnouncementFormBloc
     DepartureCityChanged event,
     Emitter<AnnouncementFormState> emit,
   ) {
-    emit(state.copyWith(departureCity: event.city));
+    emit(state.copyWith(
+      departureCity: event.city,
+      departureCountryCode: event.countryCode,
+    ));
   }
 
   void _onArrivalCityChanged(
     ArrivalCityChanged event,
     Emitter<AnnouncementFormState> emit,
   ) {
-    emit(state.copyWith(arrivalCity: event.city));
+    emit(state.copyWith(
+      arrivalCity: event.city,
+      arrivalCountryCode: event.countryCode,
+    ));
   }
 
   void _onDepartureDateChanged(

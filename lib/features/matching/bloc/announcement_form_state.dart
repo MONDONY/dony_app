@@ -53,6 +53,11 @@ extension CapacityUnitWire on CapacityUnit {
 class AnnouncementFormState extends Equatable {
   final String? departureCity;
   final String? arrivalCity;
+
+  /// Code pays ISO-2 (ex: "US") du départ / arrivée, capturé depuis le
+  /// `CityModel.countryCode` lors de la sélection ville. Envoyé au backend.
+  final String? departureCountryCode;
+  final String? arrivalCountryCode;
   final DateTime? departureDate;
   final double? pricePerKg;
   final double? availableKg;
@@ -76,6 +81,8 @@ class AnnouncementFormState extends Equatable {
   const AnnouncementFormState({
     this.departureCity,
     this.arrivalCity,
+    this.departureCountryCode,
+    this.arrivalCountryCode,
     this.departureDate,
     this.pricePerKg,
     this.availableKg,
@@ -128,6 +135,8 @@ class AnnouncementFormState extends Equatable {
   AnnouncementFormState copyWith({
     String? departureCity,
     String? arrivalCity,
+    String? departureCountryCode,
+    String? arrivalCountryCode,
     DateTime? departureDate,
     double? pricePerKg,
     double? Function()? pricePerKgGetter,
@@ -148,6 +157,9 @@ class AnnouncementFormState extends Equatable {
     return AnnouncementFormState(
       departureCity: departureCity ?? this.departureCity,
       arrivalCity: arrivalCity ?? this.arrivalCity,
+      departureCountryCode:
+          departureCountryCode ?? this.departureCountryCode,
+      arrivalCountryCode: arrivalCountryCode ?? this.arrivalCountryCode,
       departureDate: departureDate ?? this.departureDate,
       pricePerKg: pricePerKgGetter != null
           ? pricePerKgGetter()
@@ -176,6 +188,8 @@ class AnnouncementFormState extends Equatable {
   List<Object?> get props => [
         departureCity,
         arrivalCity,
+        departureCountryCode,
+        arrivalCountryCode,
         departureDate,
         pricePerKg,
         availableKg,

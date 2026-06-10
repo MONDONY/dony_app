@@ -340,6 +340,10 @@ class _CreateAnnouncementContentState
   final _formKey = GlobalKey<FormState>();
   final _departureCityNotifier = ValueNotifier<String?>(null);
   final _arrivalCityNotifier = ValueNotifier<String?>(null);
+  // Code pays ISO-2 capturé lors de la sélection ville. Synchronisé vers le
+  // form bloc via _syncCityToFormBloc et lu au submit depuis l'état du bloc.
+  final _departureCountryCodeNotifier = ValueNotifier<String?>(null);
+  final _arrivalCountryCodeNotifier = ValueNotifier<String?>(null);
   final _departureDateNotifier = ValueNotifier<DateTime?>(null);
   final _departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
   final _arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
@@ -406,6 +410,8 @@ class _CreateAnnouncementContentState
       final a = widget.announcement!;
       _departureCityNotifier.value = a.departureCity;
       _arrivalCityNotifier.value = a.arrivalCity;
+      _departureCountryCodeNotifier.value = a.departureCountryCode;
+      _arrivalCountryCodeNotifier.value = a.arrivalCountryCode;
       _departureDateNotifier.value = a.departureDate;
       _availableKgNotifier.value = a.availableKg;
 
@@ -482,6 +488,14 @@ class _CreateAnnouncementContentState
         // Indispensable quand la section prix est masquée (lockPrice) — sinon
         // le submit enverrait pricePerKg = 0 et écraserait le prix du trajet.
         _syncPriceToFormBloc();
+
+        // Seed la ville + le code pays dans le form bloc depuis les notifiers
+        // pré-remplis (lignes 411-414) : le listener _syncCityToFormBloc n'a pas
+        // pu se déclencher (valeurs posées avant son attache, l.515-516). Sans ce
+        // sync explicite, éditer une annonce SANS re-sélectionner la ville
+        // submitterait departureCountryCode/arrivalCountryCode = null (asymétrie
+        // vs le nom de ville qui, lui, est préservé). Edit-mode uniquement.
+        _syncCityToFormBloc();
       });
     }
     widget.onSubmitReady?.call(_submit);
@@ -560,10 +574,16 @@ class _CreateAnnouncementContentState
     if (!mounted) return;
     final formBloc = context.read<AnnouncementFormBloc>();
     if (_departureCityNotifier.value != null) {
-      formBloc.add(DepartureCityChanged(_departureCityNotifier.value!));
+      formBloc.add(DepartureCityChanged(
+        _departureCityNotifier.value!,
+        countryCode: _departureCountryCodeNotifier.value,
+      ));
     }
     if (_arrivalCityNotifier.value != null) {
-      formBloc.add(ArrivalCityChanged(_arrivalCityNotifier.value!));
+      formBloc.add(ArrivalCityChanged(
+        _arrivalCityNotifier.value!,
+        countryCode: _arrivalCountryCodeNotifier.value,
+      ));
     }
   }
 
@@ -677,6 +697,8 @@ class _CreateAnnouncementContentState
     _customPriceNotifier.dispose();
     _departureCityNotifier.dispose();
     _arrivalCityNotifier.dispose();
+    _departureCountryCodeNotifier.dispose();
+    _arrivalCountryCodeNotifier.dispose();
     _departureDateNotifier.dispose();
     _departureTimeNotifier.dispose();
     _arrivalTimeNotifier.dispose();
@@ -785,6 +807,8 @@ class _CreateAnnouncementContentState
             id: widget.announcement!.id,
             departureCity: departureCity,
             arrivalCity: arrivalCity,
+            departureCountryCode: formBlocState.departureCountryCode,
+            arrivalCountryCode: formBlocState.arrivalCountryCode,
             departureDate: departureDate,
             departureTime: departureTime,
             arrivalTime: arrivalTime,
@@ -804,6 +828,8 @@ class _CreateAnnouncementContentState
       context.read<AnnouncementBloc>().add(AnnouncementCreateRequested(
             departureCity: departureCity,
             arrivalCity: arrivalCity,
+            departureCountryCode: formBlocState.departureCountryCode,
+            arrivalCountryCode: formBlocState.arrivalCountryCode,
             departureDate: departureDate,
             departureTime: departureTime,
             arrivalTime: arrivalTime,
@@ -1056,6 +1082,8 @@ class _CreateAnnouncementContentState
       TrajetStep(
         departureCityNotifier: _departureCityNotifier,
         arrivalCityNotifier: _arrivalCityNotifier,
+        departureCountryCodeNotifier: _departureCountryCodeNotifier,
+        arrivalCountryCodeNotifier: _arrivalCountryCodeNotifier,
         departureDateNotifier: _departureDateNotifier,
         departureTimeNotifier: _departureTimeNotifier,
         arrivalTimeNotifier: _arrivalTimeNotifier,
