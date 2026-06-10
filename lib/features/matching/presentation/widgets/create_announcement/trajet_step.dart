@@ -26,6 +26,11 @@ import 'package:intl/intl.dart';
 class TrajetStep extends StatelessWidget {
   final ValueNotifier<String?> departureCityNotifier;
   final ValueNotifier<String?> arrivalCityNotifier;
+
+  /// Codes pays ISO-2 capturés lors de la sélection ville (optionnels — null
+  /// dans les contextes/tests qui ne les passent pas, sans effet de bord).
+  final ValueNotifier<String?>? departureCountryCodeNotifier;
+  final ValueNotifier<String?>? arrivalCountryCodeNotifier;
   final ValueNotifier<DateTime?> departureDateNotifier;
   final ValueNotifier<TimeOfDay?> departureTimeNotifier;
   final ValueNotifier<TimeOfDay?> arrivalTimeNotifier;
@@ -53,6 +58,8 @@ class TrajetStep extends StatelessWidget {
     super.key,
     required this.departureCityNotifier,
     required this.arrivalCityNotifier,
+    this.departureCountryCodeNotifier,
+    this.arrivalCountryCodeNotifier,
     required this.departureDateNotifier,
     required this.departureTimeNotifier,
     required this.arrivalTimeNotifier,
@@ -219,6 +226,9 @@ class TrajetStep extends StatelessWidget {
                         ),
                         requiredLabel: true,
                         onSelected: (CityModel city) {
+                          // Code pays d'abord : le listener du city notifier
+                          // (sync vers le form bloc) lit la valeur courante.
+                          departureCountryCodeNotifier?.value = city.countryCode;
                           departureCityNotifier.value = city.name;
                         },
                       ),
@@ -282,6 +292,7 @@ class TrajetStep extends StatelessWidget {
                         ),
                         requiredLabel: true,
                         onSelected: (CityModel city) {
+                          arrivalCountryCodeNotifier?.value = city.countryCode;
                           arrivalCityNotifier.value = city.name;
                         },
                       ),

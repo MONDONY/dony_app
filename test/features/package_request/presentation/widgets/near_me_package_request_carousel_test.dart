@@ -79,7 +79,8 @@ void main() {
         onSeeAll: () => called = true,
       )));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Voir les 1 demandes'));
+      // Pour une seule demande, le widget affiche le libellé singulier.
+      await tester.tap(find.text('Voir la demande'));
       await tester.pumpAndSettle();
       expect(called, isTrue);
     });

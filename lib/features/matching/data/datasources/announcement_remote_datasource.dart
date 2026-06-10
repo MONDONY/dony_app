@@ -2,6 +2,7 @@ import 'package:dony/core/network/api_client.dart';
 import 'package:dony/features/matching/data/models/address_data.dart';
 import 'package:dony/features/matching/data/models/announcement_model.dart';
 import 'package:dony/features/matching/data/models/transport_mode.dart';
+import 'package:dony/features/matching/data/models/trips_summary_model.dart';
 import 'package:intl/intl.dart';
 export 'package:dony/features/matching/data/models/transport_mode.dart';
 
@@ -13,6 +14,8 @@ class AnnouncementRemoteDatasource {
   Future<AnnouncementModel> createAnnouncement({
     required String departureCity,
     required String arrivalCity,
+    String? departureCountryCode,
+    String? arrivalCountryCode,
     required DateTime departureDate,
     String? departureTime,
     String? arrivalTime,
@@ -33,6 +36,10 @@ class AnnouncementRemoteDatasource {
       data: {
         'departureCity': departureCity,
         'arrivalCity': arrivalCity,
+        if (departureCountryCode != null)
+          'departureCountryCode': departureCountryCode,
+        if (arrivalCountryCode != null)
+          'arrivalCountryCode': arrivalCountryCode,
         'departureDate': DateFormat('yyyy-MM-dd').format(departureDate),
         if (departureTime != null) 'departureTime': departureTime,
         if (arrivalTime != null) 'arrivalTime': arrivalTime,
@@ -65,6 +72,11 @@ class AnnouncementRemoteDatasource {
         .toList();
     final totalElements = (data['totalElements'] as num?)?.toInt() ?? announcements.length;
     return (announcements: announcements, totalElements: totalElements);
+  }
+
+  Future<TripsSummaryModel> getTripsSummary() async {
+    final response = await _apiClient.dio.get('/travelers/me/trips-summary');
+    return TripsSummaryModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<AnnouncementModel> getAnnouncementDetail(String id) async {
@@ -149,6 +161,8 @@ class AnnouncementRemoteDatasource {
     required String id,
     required String departureCity,
     required String arrivalCity,
+    String? departureCountryCode,
+    String? arrivalCountryCode,
     required DateTime departureDate,
     String? departureTime,
     String? arrivalTime,
@@ -169,6 +183,10 @@ class AnnouncementRemoteDatasource {
       data: {
         'departureCity': departureCity,
         'arrivalCity': arrivalCity,
+        if (departureCountryCode != null)
+          'departureCountryCode': departureCountryCode,
+        if (arrivalCountryCode != null)
+          'arrivalCountryCode': arrivalCountryCode,
         'departureDate': DateFormat('yyyy-MM-dd').format(departureDate),
         if (departureTime != null) 'departureTime': departureTime,
         if (arrivalTime != null) 'arrivalTime': arrivalTime,

@@ -250,11 +250,10 @@ class _CreateBidContentState extends State<_CreateBidContent> {
   void initState() {
     super.initState();
     final hasKgPricing = widget.announcement.pricePerKg > 0;
+    final cap = _maxKg;
     _weightNotifier = ValueNotifier<double>(
       hasKgPricing
-          ? (widget.announcement.availableKg >= 5
-              ? 5
-              : widget.announcement.availableKg)
+          ? (widget.announcement.isKgFree ? 5.0 : (cap >= 5 ? 5 : cap))
           : 0.0,
     );
 
@@ -740,6 +739,7 @@ class _CreateBidContentState extends State<_CreateBidContent> {
                 weightKg: weightKg,
                 maxKg: _maxKg,
                 isMixed: hasGridPricing,
+                isKgFree: widget.announcement.isKgFree,
                 onChanged: (v) => _weightNotifier.value = v,
               ).animate().fadeIn(duration: 250.ms),
               const SizedBox(height: DonySpacing.xxl),
@@ -1152,12 +1152,13 @@ class _SectionLabel extends StatelessWidget {
 
 // ── Weight section with slider ────────────────────────────────────────────────
 
-class _WeightSection extends StatelessWidget {
+class _WeightSection extends StatefulWidget {
   const _WeightSection({
     required this.weightKg,
     required this.maxKg,
     required this.onChanged,
     this.isMixed = false,
+    this.isKgFree = false,
   });
 
   final double weightKg;
@@ -1165,10 +1166,198 @@ class _WeightSection extends StatelessWidget {
   final ValueChanged<double> onChanged;
   final bool isMixed;
 
+  /// Trajet « kilo libre » : capacité non bornée → saisie/stepper sans maximum.
+  final bool isKgFree;
+
+  @override
+  State<_WeightSection> createState() => _WeightSectionState();
+}
+
+class _WeightSectionState extends State<_WeightSection> {
+  TextEditingController? _kgCtrl;
+  FocusNode? _kgFocus;
+
+  double get _min => widget.isMixed ? 0.0 : 1.0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isKgFree) {
+      _kgCtrl = TextEditingController(text: widget.weightKg.toStringAsFixed(0));
+      _kgFocus = FocusNode()..addListener(_onFocusChanged);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _WeightSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Garde le champ synchronisé quand la valeur change via les steppers,
+    // sans interférer pendant une saisie en cours. Tant que le champ a le
+    // focus, on laisse l'utilisateur saisir librement (y compris vider le
+    // champ pour retaper un nombre) : aucune réécriture pendant l'édition.
+    final ctrl = _kgCtrl;
+    if (ctrl != null && !(_kgFocus?.hasFocus ?? false)) {
+      final current = double.tryParse(ctrl.text.trim());
+      if (current == null || current != widget.weightKg) {
+        final text = widget.weightKg.toStringAsFixed(0);
+        ctrl.value = TextEditingValue(
+          text: text,
+          selection: TextSelection.collapsed(offset: text.length),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _kgFocus?.removeListener(_onFocusChanged);
+    _kgFocus?.dispose();
+    _kgCtrl?.dispose();
+    super.dispose();
+  }
+
+  void _setWeight(double value) {
+    final clamped = value < _min ? _min : value;
+    widget.onChanged(clamped);
+  }
+
+  /// À la perte de focus, un champ vide/invalide retombe au minimum et le
+  /// texte est resynchronisé avec la valeur réelle (sans plafond haut).
+  void _onFocusChanged() {
+    if (_kgFocus?.hasFocus ?? false) {
+      return;
+    }
+    final ctrl = _kgCtrl;
+    if (ctrl == null) {
+      return;
+    }
+    final parsed = double.tryParse(ctrl.text.trim());
+    final value = parsed == null ? _min : (parsed < _min ? _min : parsed);
+    if (value != widget.weightKg) {
+      widget.onChanged(value);
+    }
+    final text = value.toStringAsFixed(0);
+    if (ctrl.text != text) {
+      ctrl.value = TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
+    }
+  }
+
+  void _onFieldChanged(String raw) {
+    final trimmed = raw.trim();
+    // Champ vidé / saisie transitoire → on ne coerce pas et on ne pousse rien
+    // au parent : l'utilisateur peut vider le champ pour retaper « 42 ». La
+    // coercition au minimum est différée à la perte de focus (_onFocusChanged).
+    if (trimmed.isEmpty) {
+      return;
+    }
+    final parsed = double.tryParse(trimmed);
+    if (parsed == null) {
+      return;
+    }
+    // Pas de plafond haut ; on borne uniquement le minimum.
+    final value = parsed < _min ? _min : parsed;
+    widget.onChanged(value);
+  }
+
   @override
   Widget build(BuildContext context) {
+    return widget.isKgFree ? _buildKgFree(context) : _buildSlider(context);
+  }
+
+  // ── Kilo libre : saisie + steppers, sans maximum ────────────────────────────
+
+  Widget _buildKgFree(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final weightKg = widget.weightKg;
+    final canDecrement = weightKg > _min;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.isMixed ? 'Poids du colis (optionnel)' : 'Poids du colis',
+          style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: DonySpacing.xxs),
+        Text(
+          'Kilo libre — choisissez votre poids',
+          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: DonySpacing.md),
+        Row(
+          children: [
+            _StepperButton(
+              key: const Key('weight-decrement'),
+              icon: Icons.remove_rounded,
+              onPressed: canDecrement
+                  ? () => _setWeight(weightKg - 1)
+                  : null,
+            ),
+            const SizedBox(width: DonySpacing.base),
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IntrinsicWidth(
+                    child: TextField(
+                      key: const Key('weight-field'),
+                      controller: _kgCtrl,
+                      focusNode: _kgFocus,
+                      onChanged: _onFieldChanged,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                      ],
+                      textAlign: TextAlign.center,
+                      style: tt.displayLarge?.copyWith(color: cs.onSurface),
+                      cursorColor: cs.primary,
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: DonySpacing.xs),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: DonySpacing.sm),
+                    child: Text(
+                      'kg',
+                      style: tt.headlineMedium
+                          ?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: DonySpacing.base),
+            _StepperButton(
+              key: const Key('weight-increment'),
+              icon: Icons.add_rounded,
+              onPressed: () => _setWeight(weightKg + 1),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // ── Trajet borné : slider sur la capacité restante (inchangé) ────────────────
+
+  Widget _buildSlider(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    final isMixed = widget.isMixed;
+    final maxKg = widget.maxKg;
+    final weightKg = widget.weightKg;
+    final onChanged = widget.onChanged;
     final sliderMin = isMixed ? 0.0 : 1.0;
 
     if (maxKg <= sliderMin) {
@@ -1256,6 +1445,46 @@ class _WeightSection extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+// ── Stepper button (kilo libre) ──────────────────────────────────────────────
+
+class _StepperButton extends StatelessWidget {
+  const _StepperButton({
+    super.key,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final enabled = onPressed != null;
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      child: Material(
+        color: enabled ? cs.primaryContainer : cs.surfaceContainerLow,
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: Icon(
+              icon,
+              size: 22,
+              color: enabled ? cs.primary : cs.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

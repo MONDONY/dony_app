@@ -70,6 +70,9 @@ abstract final class AnalyticsEvents {
   // Envois
   static const shipmentFilterApplied = 'shipment_filter_applied';
 
+  // Trajets (Mes trajets)
+  static const tripFilterApplied = 'trip_filter_applied';
+
   // Onglet « Envoyer » — noms d'écran (logScreen par onglet)
   static const envoyerEnvoisScreen = 'envoyer_envois';
   static const envoyerDemandesScreen = 'envoyer_demandes';

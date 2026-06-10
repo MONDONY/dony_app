@@ -1515,10 +1515,20 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                         onTap: isOwn
                                             ? null
                                             : existingBid != null
-                                            ? () => context.push(
-                                                '/bids/${existingBid.id}',
-                                                extra: existingBid,
-                                              )
+                                            ? () async {
+                                                await context.push(
+                                                  '/bids/${existingBid.id}',
+                                                  extra: existingBid,
+                                                );
+                                                if (!mounted) {
+                                                  return;
+                                                }
+                                                context.read<BidBloc>().add(
+                                                  const BidMyListAutoRefreshRequested(
+                                                    force: true,
+                                                  ),
+                                                );
+                                              }
                                             : () =>
                                                   showTravelerAnnouncementSheet(
                                                     context,
@@ -1728,10 +1738,20 @@ class _MapSenderViewState extends State<_MapSenderView> {
                                   onTap: isOwn
                                       ? null
                                       : existingBid != null
-                                      ? () => context.push(
-                                          '/bids/${existingBid.id}',
-                                          extra: existingBid,
-                                        )
+                                      ? () async {
+                                          await context.push(
+                                            '/bids/${existingBid.id}',
+                                            extra: existingBid,
+                                          );
+                                          if (!context.mounted) {
+                                            return;
+                                          }
+                                          context.read<BidBloc>().add(
+                                            const BidMyListAutoRefreshRequested(
+                                              force: true,
+                                            ),
+                                          );
+                                        }
                                       : () => showTravelerAnnouncementSheet(
                                           context,
                                           announcement: a,

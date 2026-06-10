@@ -11,26 +11,32 @@ import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/bloc/bid_state.dart';
 import 'package:dony/features/matching/presentation/screens/shipment_list_screen.dart';
+import 'package:dony/features/matching/presentation/widgets/activity_header_widgets.dart';
 import 'package:dony/features/package_request/bloc/negotiation_list_bloc.dart';
 import 'package:dony/features/package_request/bloc/package_request_bloc.dart';
 import 'package:dony/features/package_request/data/models/negotiation_thread.dart';
 import 'package:dony/features/package_request/data/models/price_display.dart';
-import 'package:dony/features/package_request/presentation/_theme.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/create_wizard/package_request_create_screen.dart';
 import 'package:dony/features/package_request/presentation/screens/sender/my_package_requests_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class EnvoyerHubScreen extends StatefulWidget {
   const EnvoyerHubScreen({
     super.key,
     this.onShowTrips,
+    this.showBackButton = false,
   });
 
   /// Si non nul, un bouton « Mes trajets » apparaît dans le header du hub,
   /// permettant au voyageur occasionnel d'accéder à ses trajets depuis la vue
   /// expéditeur (modèle additif Phase 1).
   final VoidCallback? onShowTrips;
+
+  /// Affiche un bouton retour dans le header quand l'écran est ouvert via
+  /// `context.push` (depuis Mes trajets), et non comme racine d'onglet.
+  final bool showBackButton;
 
   @override
   State<EnvoyerHubScreen> createState() => _EnvoyerHubScreenState();
@@ -51,11 +57,14 @@ class _EnvoyerHubScreenState extends State<EnvoyerHubScreen> {
         BlocProvider.value(value: getIt<PackageRequestBloc>()),
         BlocProvider(
           create: (_) =>
-              getIt<BidBloc>()..add(const BidMyListAutoRefreshRequested()),
+              getIt<BidBloc>()..add(const BidMyListAutoRefreshRequested(force: true)),
         ),
         BlocProvider.value(value: getIt<NegotiationListBloc>()),
       ],
-      child: _EnvoyerTabsView(onShowTrips: widget.onShowTrips),
+      child: _EnvoyerTabsView(
+        onShowTrips: widget.onShowTrips,
+        showBackButton: widget.showBackButton,
+      ),
     );
   }
 }
@@ -63,9 +72,10 @@ class _EnvoyerHubScreenState extends State<EnvoyerHubScreen> {
 // ── Tabbed view ───────────────────────────────────────────────────────────────
 
 class _EnvoyerTabsView extends StatefulWidget {
-  const _EnvoyerTabsView({this.onShowTrips});
+  const _EnvoyerTabsView({this.onShowTrips, this.showBackButton = false});
 
   final VoidCallback? onShowTrips;
+  final bool showBackButton;
 
   @override
   State<_EnvoyerTabsView> createState() => _EnvoyerTabsViewState();
@@ -252,14 +262,18 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
     }
     final index = _controller.index;
     unawaited(getIt<AnalyticsService>().logScreen(_screens[index]));
-    // Refresh uniquement si les données sont périmées (> 60 s).
+    // Refresh forcé (silencieux) si les données ont > 60 s : reflète un statut
+    // changé hors de l'app (ex. trajet annulé par le voyageur) que le TTL
+    // d'auto-refresh du bloc masquerait sinon jusqu'à 3 min.
     switch (index) {
       case 0:
         final bidState = context.read<BidBloc>().state;
         final bidFetchedAt =
             bidState is BidListLoaded ? bidState.fetchedAt : DateTime(2000);
         if (_isStale(bidFetchedAt)) {
-          context.read<BidBloc>().add(const BidMyListAutoRefreshRequested());
+          context
+              .read<BidBloc>()
+              .add(const BidMyListAutoRefreshRequested(force: true));
         }
       case 1:
         // Onglet Demandes : rafraîchir les demandes ET les négos (les offres
@@ -347,7 +361,11 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
           bottom: false,
           child: Column(
             children: [
-              _EnvoyerHeader(onNew: _onNew, onShowTrips: widget.onShowTrips),
+              _EnvoyerHeader(
+                onNew: _onNew,
+                onShowTrips: widget.onShowTrips,
+                showBackButton: widget.showBackButton,
+              ),
               _EnvoyerSegmented(
                 controller: _controller,
                 badgeForIndex: badgeFor,
@@ -356,9 +374,11 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
               Expanded(
                 child: TabBarView(
                   controller: _controller,
-                  children: const [
-                    ShipmentListBody(),
-                    MyPackageRequestsBody(),
+                  children: [
+                    ShipmentListBody(
+                      onSwitchToDemandes: () => _controller.animateTo(1),
+                    ),
+                    const MyPackageRequestsBody(),
                   ],
                 ),
               ),
@@ -373,16 +393,24 @@ class _EnvoyerTabsViewState extends State<_EnvoyerTabsView>
 // ── Header ────────────────────────────────────────────────────────────────────
 
 class _EnvoyerHeader extends StatelessWidget {
-  const _EnvoyerHeader({required this.onNew, this.onShowTrips});
+  const _EnvoyerHeader({
+    required this.onNew,
+    this.onShowTrips,
+    this.showBackButton = false,
+  });
 
   final VoidCallback onNew;
 
-  /// Si non nul, affiche un bouton secondaire « Mes trajets » pour les
-  /// voyageurs occasionnels (modèle additif Phase 1).
+  /// Si non nul, affiche la pill « Mes trajets » pour les voyageurs
+  /// occasionnels (modèle additif Phase 1).
   final VoidCallback? onShowTrips;
+
+  /// Affiche un bouton retour quand le hub est ouvert via `context.push`.
+  final bool showBackButton;
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         DonySpacing.lg,
@@ -392,84 +420,40 @@ class _EnvoyerHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
+          if (showBackButton)
+            IconButton(
+              key: const Key('envoyer-back'),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+              icon: Icon(
+                Icons.arrow_back_ios_new_rounded,
+                size: 20,
+                color: cs.primary,
+              ),
+              tooltip: 'Retour',
+              onPressed: () => context.pop(),
+            ),
           Text(
             'Envoyer',
-            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  color: kTextPrimary,
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  color: cs.onSurface,
                   height: 1.1,
-                  letterSpacing: -0.5,
                 ),
           ),
           const Spacer(),
           if (onShowTrips != null) ...[
-            GestureDetector(
-              onTap: onShowTrips,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: DonySpacing.md,
-                  vertical: 9,
-                ),
-                decoration: BoxDecoration(
-                  color: DonyColors.primary.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(DonyRadius.full),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.flight_rounded,
-                      color: DonyColors.primary,
-                      size: 15,
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      'Mes trajets',
-                      style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                            color: DonyColors.primary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
+            HeaderPill(
+              key: const Key('show-trips-pill'),
+              label: 'Mes trajets',
+              icon: Icons.flight_takeoff_rounded,
+              style: HeaderPillStyle.soft,
+              onTap: onShowTrips!,
             ),
-            const SizedBox(width: DonySpacing.sm),
+            const SizedBox(width: DonySpacing.xs),
           ],
-          GestureDetector(
+          HeaderPill(
+            label: '+ Nouveau',
             onTap: onNew,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: DonySpacing.md,
-                vertical: 9,
-              ),
-              decoration: BoxDecoration(
-                color: DonyColors.primary,
-                borderRadius: BorderRadius.circular(DonyRadius.full),
-                boxShadow: [
-                  BoxShadow(
-                    color: DonyColors.primary.withValues(alpha: 0.30),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.add_rounded, color: Colors.white, size: 15),
-                  const SizedBox(width: 5),
-                  Text(
-                    'Nouveau',
-                    style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-                ],
-              ),
-            ),
           ),
         ],
       ),
@@ -477,7 +461,7 @@ class _EnvoyerHeader extends StatelessWidget {
   }
 }
 
-// ── Segmented control ─────────────────────────────────────────────────────────
+// ── Segmented control (sliding capsule) ──────────────────────────────────────
 
 class _EnvoyerSegmented extends StatelessWidget {
   const _EnvoyerSegmented({
@@ -517,22 +501,10 @@ class _EnvoyerSegmented extends StatelessWidget {
                 DonySpacing.lg,
                 DonySpacing.sm,
               ),
-              child: Row(
-                children: [
-                  _Seg(
-                    label: 'Envois',
-                    badge: badgeForIndex(0, envoisRaw),
-                    active: controller.index == 0,
-                    onTap: () => controller.animateTo(0),
-                  ),
-                  const SizedBox(width: DonySpacing.xs),
-                  _Seg(
-                    label: 'Demandes',
-                    badge: negoBadge,
-                    active: controller.index == 1,
-                    onTap: () => controller.animateTo(1),
-                  ),
-                ],
+              child: _SlidingSegmented(
+                controller: controller,
+                envoisBadge: badgeForIndex(0, envoisRaw),
+                negoBadge: negoBadge,
               ),
             ),
           );
@@ -542,8 +514,89 @@ class _EnvoyerSegmented extends StatelessWidget {
   }
 }
 
-class _Seg extends StatelessWidget {
-  const _Seg({
+/// Sliding capsule segmented control — two equal tabs with an animated white
+/// capsule that slides between Envois (left) and Demandes (right).
+class _SlidingSegmented extends StatelessWidget {
+  const _SlidingSegmented({
+    required this.controller,
+    required this.envoisBadge,
+    required this.negoBadge,
+  });
+
+  final TabController controller;
+  final int envoisBadge;
+  final int negoBadge;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isRight = controller.index == 1;
+
+    return Container(
+      height: 40,
+      decoration: BoxDecoration(
+        color: DonyColors.neutral100,
+        borderRadius: BorderRadius.circular(DonyRadius.md),
+      ),
+      padding: const EdgeInsets.all(3),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final capsuleWidth = constraints.maxWidth / 2;
+          return Stack(
+            children: [
+              // Sliding white capsule
+              AnimatedAlign(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOutCubic,
+                alignment: isRight
+                    ? Alignment.centerRight
+                    : Alignment.centerLeft,
+                child: Container(
+                  width: capsuleWidth,
+                  decoration: BoxDecoration(
+                    color: cs.surface,
+                    borderRadius: BorderRadius.circular(DonyRadius.md - 2),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: DonyColors.shadow,
+                        blurRadius: 4,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Labels row (on top of capsule)
+              Row(
+                children: [
+                  Expanded(
+                    child: _SegLabel(
+                      label: 'Envois',
+                      badge: envoisBadge,
+                      active: !isRight,
+                      onTap: () => controller.animateTo(0),
+                    ),
+                  ),
+                  Expanded(
+                    child: _SegLabel(
+                      label: 'Demandes',
+                      badge: negoBadge,
+                      active: isRight,
+                      onTap: () => controller.animateTo(1),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _SegLabel extends StatelessWidget {
+  const _SegLabel({
     required this.label,
     required this.badge,
     required this.active,
@@ -551,9 +604,6 @@ class _Seg extends StatelessWidget {
   });
 
   final String label;
-
-  /// Nombre d'éléments demandant une action immédiate (badge rouge).
-  /// Masqué quand l'onglet est actif (l'utilisateur est déjà là).
   final int badge;
   final bool active;
   final VoidCallback onTap;
@@ -561,72 +611,60 @@ class _Seg extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    // badge est déjà 0 quand l'onglet est actif (calculé par badgeFor dans le parent).
     final showBadge = badge > 0;
 
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              padding: const EdgeInsets.symmetric(vertical: DonySpacing.sm),
-              decoration: BoxDecoration(
-                color: active ? DonyColors.primary : cs.surface,
-                borderRadius: BorderRadius.circular(DonyRadius.full),
-                border: Border.all(
-                  color: active ? DonyColors.primary : cs.outlineVariant,
-                ),
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Center(
+            child: AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                color: active ? cs.onSurface : cs.onSurfaceVariant,
               ),
-              child: Center(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: active ? Colors.white : cs.onSurfaceVariant,
+              child: Text(label),
+            ),
+          ),
+          if (showBadge)
+            Positioned(
+              top: -2,
+              right: 8,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: Container(
+                  key: ValueKey(badge),
+                  constraints: const BoxConstraints(minWidth: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: DonyColors.danger500,
+                    borderRadius: BorderRadius.circular(DonyRadius.full),
+                    border: Border.all(
+                      color: DonyColors.neutral100,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Text(
+                    badge > 99 ? '99+' : '$badge',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      height: 1,
+                    ),
                   ),
                 ),
               ),
             ),
-            if (showBadge)
-              Positioned(
-                top: -6,
-                right: -4,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  child: Container(
-                    key: ValueKey(badge),
-                    constraints: const BoxConstraints(minWidth: 18),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 5,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: DonyColors.danger500,
-                      borderRadius: BorderRadius.circular(DonyRadius.full),
-                      border: Border.all(
-                        color: const Color(0xFFF0F2F6),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Text(
-                      badge > 99 ? '99+' : '$badge',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        height: 1,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }

@@ -317,7 +317,9 @@ class _NegoCard extends StatelessWidget {
     if (dep != null && arr != null) {
       return '$dep → $arr';
     }
-    return '${thread.travelerAvailableKg.toStringAsFixed(0)} kg dispo';
+    return thread.isTravelerKgFree
+        ? 'Kg libre'
+        : '${thread.travelerAvailableKg.toStringAsFixed(0)} kg dispo';
   }
 
   @override

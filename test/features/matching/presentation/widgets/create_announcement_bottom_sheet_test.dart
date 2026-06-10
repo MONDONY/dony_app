@@ -578,7 +578,7 @@ void main() {
 
   group('CreateAnnouncementBottomSheet — édition (mode KG_FREE + MIXED)', () {
     testWidgets(
-        'affiche le mode KG_FREE (texte helper) à l\'étape capacité pour une annonce KG_FREE',
+        'affiche la carte info « kilo libre » (sans champ) à l\'étape capacité pour une annonce KG_FREE',
         (tester) async {
       tester.view.physicalSize = const Size(800, 2400);
       tester.view.devicePixelRatio = 1.0;
@@ -603,11 +603,9 @@ void main() {
       await tester.pump(_settle);
 
       // Le postFrameCallback a dispatché CapacityUnitChanged(kgFree)
-      // → CapacityControl doit afficher le helper de la carte KG libre
-      expect(
-        find.textContaining('Tarification au kilo'),
-        findsOneWidget,
-      );
+      // → CapacityControl affiche la carte info « kilo libre » (sans champ de saisie)
+      expect(find.text('Capacité illimitée'), findsOneWidget);
+      expect(find.textContaining('Vendu au kilo'), findsOneWidget);
     });
   });
 }

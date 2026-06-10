@@ -7,6 +7,8 @@ abstract class AnnouncementEvent {}
 class AnnouncementCreateRequested extends AnnouncementEvent {
   final String departureCity;
   final String arrivalCity;
+  final String? departureCountryCode;
+  final String? arrivalCountryCode;
   final DateTime departureDate;
   final String? departureTime;
   final String? arrivalTime;
@@ -25,6 +27,8 @@ class AnnouncementCreateRequested extends AnnouncementEvent {
   AnnouncementCreateRequested({
     required this.departureCity,
     required this.arrivalCity,
+    this.departureCountryCode,
+    this.arrivalCountryCode,
     required this.departureDate,
     this.departureTime,
     this.arrivalTime,
@@ -113,6 +117,8 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
   final String id;
   final String departureCity;
   final String arrivalCity;
+  final String? departureCountryCode;
+  final String? arrivalCountryCode;
   final DateTime departureDate;
   final String? departureTime;
   final String? arrivalTime;
@@ -132,6 +138,8 @@ class AnnouncementUpdateRequested extends AnnouncementEvent {
     required this.id,
     required this.departureCity,
     required this.arrivalCity,
+    this.departureCountryCode,
+    this.arrivalCountryCode,
     required this.departureDate,
     this.departureTime,
     this.arrivalTime,

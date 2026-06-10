@@ -8,6 +8,8 @@ import 'package:dony/features/auth/bloc/active_role_cubit.dart';
 import 'package:dony/features/auth/bloc/auth_bloc.dart';
 import 'package:dony/features/auth/bloc/auth_state.dart';
 import 'package:dony/features/auth/data/models/user_model.dart';
+import 'package:dony/features/matching/bloc/bid_bloc.dart';
+import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/messaging/data/firestore_chat_repository.dart';
 import 'package:dony/features/notifications/bloc/notification_bloc.dart';
 import 'package:dony/features/notifications/bloc/notification_event.dart';
@@ -42,6 +44,13 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     HapticFeedback.selectionClick();
     if (index == 1) {
       getIt<EnvoisRefreshNotifier>().requestRefresh();
+    }
+    if (index == 0) {
+      // Accueil : la liste des bids de l'expéditeur est mise en cache au premier
+      // montage (home reste vivant dans le nav shell). Si un voyageur refuse une
+      // demande à distance, le cache reste sur « en attente ». Force un refresh à
+      // chaque (ré)sélection de l'onglet pour refléter le vrai statut.
+      context.read<BidBloc>().add(const BidMyListAutoRefreshRequested(force: true));
     }
     widget.navigationShell.goBranch(
       index,
@@ -166,14 +175,11 @@ class _DonyBottomNav extends StatelessWidget {
       builder: (context, activeRole) {
         final isTraveler = activeRole == ActiveRole.traveler;
 
-        // Tab 1 — Envoyer (sender) ou Trajets (traveler)
-        final tab1Label = isTraveler ? 'Trajets' : 'Envoyer';
-        final tab1Icon = isTraveler
-            ? Icons.send_rounded
-            : Icons.arrow_circle_right_rounded;
-        final tab1IconOutlined = isTraveler
-            ? Icons.send_outlined
-            : Icons.arrow_circle_right_outlined;
+        // Tab 1 — Activités (libellé+icône figés ; le contenu s'adapte au profil
+        // dans MatchingManagementScreen — Phase 2)
+        const tab1Label = 'Activités';
+        const tab1Icon = Icons.bolt_rounded;
+        const tab1IconOutlined = Icons.bolt_outlined;
 
         // Tab 2 — Suivi (libellé fixe, icône role-aware)
         final tab2Icon = isTraveler

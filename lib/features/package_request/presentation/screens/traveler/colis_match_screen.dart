@@ -239,8 +239,9 @@ class _CapacityBanner extends StatelessWidget {
           const SizedBox(width: DonySpacing.xs + 2),
           Text.rich(TextSpan(children: [
             TextSpan(
-              text:
-                  '${announcement.availableKg.toStringAsFixed(1)} kg restants',
+              text: announcement.isKgFree
+                  ? 'Kg libre'
+                  : '${announcement.availableKg.toStringAsFixed(1)} kg restants',
               style: tt.bodySmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: cs.primary,

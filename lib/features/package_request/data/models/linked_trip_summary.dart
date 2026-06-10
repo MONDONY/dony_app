@@ -11,6 +11,7 @@ class LinkedTripSummary extends Equatable {
     this.pickupAddressLabel,
     this.deliveryAddressLabel,
     required this.availableKg,
+    this.capacityUnit,
     this.description,
   });
 
@@ -23,7 +24,10 @@ class LinkedTripSummary extends Equatable {
   final String? pickupAddressLabel;
   final String? deliveryAddressLabel;
   final int availableKg;
+  final String? capacityUnit;    // "SUITCASE_23KG" | "KG_FREE" | ...
   final String? description;
+
+  bool get isKgFree => capacityUnit == 'KG_FREE';
 
   factory LinkedTripSummary.fromJson(Map<String, dynamic> json) =>
       LinkedTripSummary(
@@ -36,6 +40,7 @@ class LinkedTripSummary extends Equatable {
         pickupAddressLabel: json['pickupAddressLabel'] as String?,
         deliveryAddressLabel: json['deliveryAddressLabel'] as String?,
         availableKg: (json['availableKg'] as num?)?.toInt() ?? 0,
+        capacityUnit: json['capacityUnit'] as String?,
         description: json['description'] as String?,
       );
 
@@ -44,6 +49,6 @@ class LinkedTripSummary extends Equatable {
         announcementId, departureCity, arrivalCity,
         departureDate, departureTime, transportMode,
         pickupAddressLabel, deliveryAddressLabel,
-        availableKg, description,
+        availableKg, capacityUnit, description,
       ];
 }

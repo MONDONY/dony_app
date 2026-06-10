@@ -207,7 +207,7 @@ class TripDetailBottomSheet extends StatelessWidget {
         _InfoRow(
           icon: '⚖️',
           label: 'Poids disponible',
-          value: '${trip.availableKg} kg',
+          value: trip.isKgFree ? 'Kg libre' : '${trip.availableKg} kg',
         ),
         if (trip.pickupAddressLabel != null)
           _InfoRow(

@@ -10,6 +10,7 @@ import 'package:intl/date_symbol_data_local.dart';
 
 AnnouncementModel _trip({
   Set<BidPaymentMethod> payments = const {BidPaymentMethod.stripe},
+  String? capacityUnit,
 }) {
   return AnnouncementModel(
     id: 'ann-1',
@@ -22,6 +23,7 @@ AnnouncementModel _trip({
     pricePerKg: 7,
     status: 'ACTIVE',
     transportMode: TransportMode.plane,
+    capacityUnit: capacityUnit,
     pickupAddress: AddressData(label: 'Paris', lat: 48.86, lng: 2.35),
     deliveryAddress: AddressData(label: 'Dakar', lat: 14.74, lng: -17.49),
     createdAt: DateTime(2026, 1, 1),
@@ -63,6 +65,19 @@ void main() {
     )));
     await tester.pumpAndSettle();
     expect(find.text('Liquide activé'), findsOneWidget);
+  });
+
+  testWidgets('affiche « Kg libre » pour un trajet KG_FREE', (tester) async {
+    await tester.pumpWidget(_harness(TripTile(
+      announcement: _trip(capacityUnit: 'KG_FREE'),
+      index: 0,
+      isSelected: false,
+      onTap: () {},
+      onModify: () {},
+    )));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Kg libre'), findsOneWidget);
+    expect(find.textContaining('kg dispo'), findsNothing);
   });
 
   testWidgets('tap sur Modifier déclenche onModify', (tester) async {
