@@ -30,7 +30,6 @@ import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.
 import 'package:dony/features/matching/presentation/widgets/colis_card.dart';
 import 'package:dony/features/matching/presentation/widgets/destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/expediteur_card.dart';
-import 'package:dony/features/matching/presentation/widgets/handover_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:dony/features/matching/presentation/widgets/sender_profile_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/suivi_button.dart';
@@ -310,11 +309,9 @@ class _BidDetailViewState extends State<_BidDetailView> {
                   _bid = state.bid;
                   DonySnackbar.show(
                     context,
-                    message:
-                        'Demande acceptée ! Définissez maintenant la fenêtre de remise.',
+                    message: 'Demande acceptée !',
                     type: DonySnackbarType.success,
                   );
-                  HandoverBottomSheet.show(context, bid: _bid);
                 } else if (state is BidRejected) {
                   _bid = state.bid;
                   DonySnackbar.show(context, message: 'Demande refusée.');
