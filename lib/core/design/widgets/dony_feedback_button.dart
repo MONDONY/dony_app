@@ -43,6 +43,23 @@ class DonyFeedbackButton extends StatelessWidget {
     _analyticsResolver = resolver;
   }
 
+  /// Remet le resolver à null entre les tests pour éviter la pollution d'état.
+  @visibleForTesting
+  static void resetAnalyticsResolver() => _analyticsResolver = null;
+
+  /// Retourne le chemin GoRouter courant, ou `'unknown'` si le contexte n'est
+  /// pas hébergé dans un GoRouter (ex : tests unitaires plain MaterialApp).
+  ///
+  /// Extrait ici pour être testable indépendamment.
+  @visibleForTesting
+  static String resolveRoute(BuildContext context) {
+    try {
+      return GoRouterState.of(context).uri.path;
+    } catch (_) {
+      return 'unknown';
+    }
+  }
+
   // ── Screen capture ────────────────────────────────────────────────────────
 
   Future<Uint8List?> _captureScreen() async {
@@ -66,12 +83,9 @@ class DonyFeedbackButton extends StatelessWidget {
   // ── Sentry submission ─────────────────────────────────────────────────────
 
   Future<void> _submitToSentry(BuildContext context, String message) async {
-    String route;
-    try {
-      route = GoRouterState.of(context).uri.path;
-    } catch (_) {
-      route = 'unknown';
-    }
+    // IMPORTANT : lire la route AVANT le premier `await` — le contexte ne peut
+    // pas être utilisé de façon sûre après une suspension asynchrone.
+    final route = resolveRoute(context);
 
     final bytes = await _captureScreen();
 
@@ -291,6 +305,11 @@ class _FeedbackSubmitButtonState extends State<_FeedbackSubmitButton> {
       if (mounted) {
         Navigator.of(context, rootNavigator: true).pop();
       }
+      // Intentionnellement SANS garde `mounted` : le ScaffoldMessengerState
+      // a été capturé AVANT l'ouverture du sheet (dans `_openSheet`) et
+      // appartient au scaffold parent, qui reste monté après le pop du sheet.
+      // Déplacer cet appel dans le bloc `if (mounted)` ci-dessus ferait
+      // échouer le snackbar une fois le sheet dépilé.
       formState.scaffoldMessenger?.showSnackBar(
         const SnackBar(
           content: Text('Merci ! Votre rapport a bien été envoyé.'),
