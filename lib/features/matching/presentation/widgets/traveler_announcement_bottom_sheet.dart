@@ -278,9 +278,8 @@ class _TravelerAnnouncementContent extends StatelessWidget {
           const SizedBox(height: DonySpacing.sm),
           _InfoRow(
             icon: Icons.schedule_rounded,
-            label:
-                'Remise : ${DateFormat('EEE d MMM, HH:mm', 'fr').format(announcement.handoverWindowStart!.toLocal())}'
-                ' → ${DateFormat('HH:mm', 'fr').format(announcement.handoverWindowEnd!.toLocal())}',
+            label: 'Remise : '
+                '${_handoverRangeLabel(announcement.handoverWindowStart!.toLocal(), announcement.handoverWindowEnd!.toLocal())}',
           ),
         ],
 
@@ -337,6 +336,20 @@ class _TravelerAnnouncementContent extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Formate la plage de remise. Même jour → « date heure → heure » ;
+/// jours différents → « date heure → date heure » (la date de fin est affichée
+/// quand elle diffère, car la fenêtre peut s'étaler sur plusieurs jours).
+String _handoverRangeLabel(DateTime start, DateTime end) {
+  final sameDay = start.year == end.year &&
+      start.month == end.month &&
+      start.day == end.day;
+  final startStr = DateFormat('EEE d MMM, HH:mm', 'fr').format(start);
+  final endStr = sameDay
+      ? DateFormat('HH:mm', 'fr').format(end)
+      : DateFormat('EEE d MMM, HH:mm', 'fr').format(end);
+  return '$startStr → $endStr';
 }
 
 class _InfoRow extends StatelessWidget {

@@ -405,9 +405,8 @@ class _AnnouncementDetailContent extends StatelessWidget {
           _LieuRow(
             icon: Icons.schedule_rounded,
             label: 'CRÉNEAU',
-            address:
-                '${DateFormat('EEE d MMM, HH:mm', 'fr').format(a.handoverWindowStart!.toLocal())}'
-                ' → ${DateFormat('HH:mm', 'fr').format(a.handoverWindowEnd!.toLocal())}',
+            address: _handoverRangeLabel(
+                a.handoverWindowStart!.toLocal(), a.handoverWindowEnd!.toLocal()),
           ).animate().fadeIn(delay: 110.ms),
           const SizedBox(height: DonySpacing.md),
         ],
@@ -699,6 +698,19 @@ class _InfoPill extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Formate la plage de remise. Même jour → « date heure → heure » ;
+/// jours différents → « date heure → date heure ».
+String _handoverRangeLabel(DateTime start, DateTime end) {
+  final sameDay = start.year == end.year &&
+      start.month == end.month &&
+      start.day == end.day;
+  final startStr = DateFormat('EEE d MMM, HH:mm', 'fr').format(start);
+  final endStr = sameDay
+      ? DateFormat('HH:mm', 'fr').format(end)
+      : DateFormat('EEE d MMM, HH:mm', 'fr').format(end);
+  return '$startStr → $endStr';
 }
 
 class _LieuRow extends StatelessWidget {
