@@ -13,6 +13,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+/// Height shared by [EscrowBadge], [DonyButton], and the loading placeholder —
+/// keeps the bar at a fixed size to avoid layout shifts when the payment state
+/// resolves.
+const double _kBarItemHeight = 52.0;
+
 /// Barre sticky bas d'écran portant l'action primaire du statut (vue expéditeur).
 ///
 /// Remplacera [SenderActionBar] côté sender au branchement (task 7).
@@ -37,6 +42,16 @@ class SenderStickyBar extends StatelessWidget {
   ///
   /// The caller can hide the bar entirely when this returns false (e.g. when
   /// the hero already handles the PENDING_CONFIRMATION actions).
+  ///
+  /// **Contract — superset gate:**
+  /// This method is intentionally based on [bid] alone and ignores
+  /// [paymentLoaded]/[existingPayment]. The bar can render without a primary
+  /// action button in two valid cases:
+  ///   1. PENDING/ACCEPTED + stripe + paid → [EscrowBadge] only (no button).
+  ///   2. PENDING/ACCEPTED + stripe + loading → placeholder skeleton (no button yet).
+  ///
+  /// Do NOT "synchronise" this gate with [_buildAction]: it is a *superset*
+  /// of what [_buildAction] ultimately renders, and that is by design.
   static bool hasAction(BidModel bid) {
     if (bid.cancellationNoShowStatus == 'PENDING_CONFIRMATION') {
       return false;
@@ -124,7 +139,8 @@ class SenderStickyBar extends StatelessWidget {
         !paymentLoaded) {
       final cs = Theme.of(context).colorScheme;
       return Container(
-        height: 52,
+        // _kBarItemHeight — évite tout layout shift au resolve
+        height: _kBarItemHeight,
         decoration: BoxDecoration(
           color: cs.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(DonyRadius.lg),
@@ -157,7 +173,7 @@ class SenderStickyBar extends StatelessWidget {
       );
     }
 
-    // 3. By status
+    // 4. By status
     if (status == 'ACCEPTED') {
       return DonyButton(
         label: 'Afficher le QR de remise',
