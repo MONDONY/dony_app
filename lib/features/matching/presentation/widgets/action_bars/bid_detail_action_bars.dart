@@ -4,6 +4,7 @@ import 'package:dony/features/matching/bloc/bid_acceptance_event.dart' as ace;
 import 'package:dony/features/matching/bloc/bid_bloc.dart';
 import 'package:dony/features/matching/bloc/bid_event.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/quick_actions_row.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_bloc.dart';
 import 'package:dony/features/messaging/bloc/open/conversation_open_event.dart';
 import 'package:dony/features/payments/data/models/payment_model.dart';
@@ -11,6 +12,17 @@ import 'package:dony/features/payments/data/models/payment_status.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+/// Ouvre le sheet d'options expéditeur (signaler / contacter / partager /
+/// annuler / supprimer).
+void showSenderOptionsSheet(BuildContext context, BidModel bid) {
+  showModalBottomSheet<void>(
+    context: context,
+    useRootNavigator: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => _SenderOptionsSheet(bid: bid, outerContext: context),
+  );
+}
 
 // ── Traveler PENDING bar ──────────────────────────────────────────────────────
 
@@ -252,14 +264,8 @@ class SenderActionBar extends StatelessWidget {
     this.paymentLoaded = false,
   });
 
-  void _openOptions(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _SenderOptionsSheet(bid: bid, outerContext: context),
-    );
-  }
+  void _openOptions(BuildContext context) =>
+      showSenderOptionsSheet(context, bid);
 
   /// Whether the sender pays dony online (escrow). Only [BidPaymentMethod.stripe]
   /// involves an in-app sender payment. Cash / Wave / Orange Money are settled in
@@ -435,7 +441,11 @@ class EscrowBadge extends StatelessWidget {
   final PaymentModel payment;
   final String bidStatus;
 
-  const EscrowBadge({super.key, required this.payment, required this.bidStatus});
+  const EscrowBadge({
+    super.key,
+    required this.payment,
+    required this.bidStatus,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -480,7 +490,11 @@ class EscrowBadge extends StatelessWidget {
         cs.onSurfaceVariant,
         'Remboursé — $amount €',
       ),
-      PaymentStatus.failed => (Icons.error_outline_rounded, cs.error, 'Paiement échoué'),
+      PaymentStatus.failed => (
+        Icons.error_outline_rounded,
+        cs.error,
+        'Paiement échoué',
+      ),
       _ when bidStatus == 'PENDING' => (
         Icons.lock_clock_rounded,
         cs.warning,
@@ -598,6 +612,20 @@ class _SenderOptionsSheet extends StatelessWidget {
             },
           ),
           const SizedBox(height: DonySpacing.sm),
+          if (bid.trackingToken != null) ...[
+            _OptionTile(
+              icon: Icons.share_rounded,
+              iconColor: cs.primary,
+              iconBg: cs.primaryContainer,
+              label: 'Partager le suivi',
+              subtitle: 'Envoyer le lien de suivi au destinataire',
+              onTap: () {
+                context.pop();
+                shareTrackingLink(bid);
+              },
+            ),
+            const SizedBox(height: DonySpacing.sm),
+          ],
           if (bid.status == 'PENDING') ...[
             _OptionTile(
               icon: Icons.block_rounded,

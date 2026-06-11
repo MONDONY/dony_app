@@ -50,17 +50,19 @@ void main() {
   });
 
   testWidgets(
-    'sender + HANDED_OVER sans confirmationCode → placeholder en transit',
+    'sender + HANDED_OVER → bouton QR du colis',
     (tester) async {
       await _pump(tester, _bid(status: 'HANDED_OVER'), true);
-      expect(find.text('Colis en route'), findsOneWidget);
+      expect(find.byIcon(Icons.qr_code_2_rounded), findsOneWidget);
+      expect(find.textContaining('QR du colis'), findsOneWidget);
     },
   );
 
   testWidgets(
-    'sender + IN_TRANSIT sans confirmationCode → placeholder en transit',
+    'sender + IN_TRANSIT sans confirmationCode → bouton QR + placeholder en transit',
     (tester) async {
       await _pump(tester, _bid(status: 'IN_TRANSIT'), true);
+      expect(find.byIcon(Icons.qr_code_2_rounded), findsOneWidget);
       expect(find.text('Colis en route'), findsOneWidget);
     },
   );

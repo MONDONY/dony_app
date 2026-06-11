@@ -382,8 +382,11 @@ void main() {
           authBloc: authBloc,
         );
 
-        // Le label du bouton "Signaler l'absence" identifie la section.
-        expect(find.text("Signaler l'absence"), findsOneWidget);
+        // Le hero "Fenêtre de remise dépassée" porte le bouton de signalement.
+        expect(
+          find.textContaining("Signaler l'absence du voyageur"),
+          findsOneWidget,
+        );
         // Le titre n'apparaît que dans la bottom sheet (pas encore ouverte).
         expect(find.text(kTitle), findsNothing);
       },
@@ -411,7 +414,10 @@ void main() {
           authBloc: authBloc,
         );
 
-        expect(find.text("Signaler l'absence"), findsNothing);
+        expect(
+          find.textContaining("Signaler l'absence du voyageur"),
+          findsNothing,
+        );
       },
     );
 
@@ -434,7 +440,10 @@ void main() {
           authBloc: authBloc,
         );
 
-        expect(find.text("Signaler l'absence"), findsNothing);
+        expect(
+          find.textContaining("Signaler l'absence du voyageur"),
+          findsNothing,
+        );
       },
     );
   });

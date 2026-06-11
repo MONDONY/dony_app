@@ -1,9 +1,9 @@
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
+import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/talon_retrait_code_view.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/talon_tracking_strip.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/talon_traveler_action_view.dart';
-import 'package:dony/features/tracking/presentation/widgets/qr_code_card.dart';
 import 'package:flutter/material.dart';
 
 /// Zone action + bande de suivi du talon bas du billet de colis.
@@ -13,9 +13,10 @@ import 'package:flutter/material.dart';
 /// Si [bid.trackingNumber] est non-null, la [TalonTrackingStrip] est
 /// toujours ajoutée en bas, quelle que soit l'action.
 ///
-/// NOTE : les cases [QrCodeCard] et [TalonRetraitCodeView] consomment des
-/// BLoCs ambiants (TrackingBloc / BidBloc) fournis par l'écran parent.
-/// Ce widget n'injecte aucun [BlocProvider].
+/// NOTE : les cases [_QrTalonButton] (ouvre la [QrSheet]) et
+/// [TalonRetraitCodeView] consomment des BLoCs ambiants (TrackingBloc /
+/// BidBloc) fournis par l'écran parent. Ce widget n'injecte aucun
+/// [BlocProvider].
 class BilletTalon extends StatelessWidget {
   final BidModel bid;
   final bool isSender;
@@ -54,18 +55,37 @@ class BilletTalon extends StatelessWidget {
     // ── Sender dispatch ───────────────────────────────────────────────────────
     if (isSender) {
       return switch (status) {
-        'PENDING' => const _PendingPlaceholder(),
-        'ACCEPTED' => QrCodeCard(bidId: bid.id),
-        'HANDED_OVER' ||
-        'IN_TRANSIT' when bid.confirmationCode != null => TalonRetraitCodeView(
-          bidId: bid.id,
-          initialCode: bid.confirmationCode!,
-          refreshCount: bid.confirmationCodeRefreshCount,
-          refreshWindowStart: bid.confirmationCodeRefreshWindowStart,
+        'PENDING' ||
+        'AWAITING_PAYMENT' ||
+        'PAYMENT_ESCROWED' => const _PendingPlaceholder(),
+        'ACCEPTED' || 'HANDED_OVER' => _QrTalonButton(bid: bid),
+        'IN_TRANSIT' when bid.confirmationCode != null => IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: _QrTalonButton(bid: bid, compact: true)),
+              const SizedBox(width: DonySpacing.sm),
+              Expanded(
+                child: TalonRetraitCodeView(
+                  bidId: bid.id,
+                  initialCode: bid.confirmationCode!,
+                  refreshCount: bid.confirmationCodeRefreshCount,
+                  refreshWindowStart: bid.confirmationCodeRefreshWindowStart,
+                ),
+              ),
+            ],
+          ),
         ),
-        'HANDED_OVER' || 'IN_TRANSIT' =>
-          // confirmationCode is null — render a neutral waiting indicator
-          const _InTransitWaitingPlaceholder(),
+        'IN_TRANSIT' => IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: _QrTalonButton(bid: bid, compact: true)),
+              const SizedBox(width: DonySpacing.sm),
+              const Expanded(child: _InTransitWaitingPlaceholder()),
+            ],
+          ),
+        ),
         'COMPLETED' || 'DELIVERED' => const _DoneBlock(),
         'REJECTED' || 'CANCELLED' => const _TerminalBlock(),
         _ => const SizedBox.shrink(),
@@ -93,6 +113,41 @@ class BilletTalon extends StatelessWidget {
 }
 
 // ── Inline helper widgets ─────────────────────────────────────────────────────
+
+/// sender / ACCEPTED · HANDED_OVER · IN_TRANSIT — bouton d'ouverture de la
+/// [QrSheet] (QR du colis à présenter ou à coller).
+///
+/// En mode [compact] (côté IN_TRANSIT, à côté du code retrait), le label est
+/// raccourci pour tenir dans une largeur contrainte ([Expanded]).
+class _QrTalonButton extends StatelessWidget {
+  final BidModel bid;
+  final bool compact;
+
+  const _QrTalonButton({required this.bid, this.compact = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return OutlinedButton.icon(
+      onPressed: () => QrSheet.show(context, bidId: bid.id, status: bid.status),
+      icon: Icon(Icons.qr_code_2_rounded, size: 20, color: cs.primary),
+      label: Text(
+        compact
+            ? 'QR du colis'
+            : 'QR du colis — à présenter ou coller sur le colis',
+        textAlign: TextAlign.center,
+      ),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: cs.primary,
+        side: BorderSide(color: cs.primary),
+        padding: const EdgeInsets.symmetric(vertical: DonySpacing.md),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DonyRadius.md),
+        ),
+      ),
+    );
+  }
+}
 
 /// sender / PENDING — Hourglass + "En attente de confirmation du voyageur".
 class _PendingPlaceholder extends StatelessWidget {
@@ -200,7 +255,9 @@ class _TravelerDecisionSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
 
-    final weight = bid.weightKg != null ? '${bid.weightKg!.toStringAsFixed(1)} kg' : '—';
+    final weight = bid.weightKg != null
+        ? '${bid.weightKg!.toStringAsFixed(1)} kg'
+        : '—';
     final value = bid.declaredValueEur != null
         ? '${bid.declaredValueEur!.toStringAsFixed(0)} €'
         : '—';
