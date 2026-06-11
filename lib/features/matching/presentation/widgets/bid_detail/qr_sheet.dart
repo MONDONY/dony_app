@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dony/core/design/design_system.dart';
+import 'package:dony/core/di/get_it_safe.dart';
 import 'package:dony/core/error/error_presenter.dart';
 import 'package:dony/core/services/analytics_events.dart';
 import 'package:dony/core/services/analytics_service.dart';
@@ -18,19 +19,6 @@ import 'package:get_it/get_it.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 import 'package:share_plus/share_plus.dart';
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-/// GetIt lookup that tolerates missing registrations. Returns `null` if
-/// [T] is not registered, making analytics best-effort in contexts that
-/// don't wire up the full DI graph (tests, preview widgets, etc.).
-T? getItSafe<T extends Object>() {
-  try {
-    return GetIt.instance<T>();
-  } catch (_) {
-    return null;
-  }
-}
 
 // ── QrSheet ───────────────────────────────────────────────────────────────────
 
@@ -226,6 +214,7 @@ class _QrSheetStickyBottom extends StatelessWidget {
       unawaited(
         getItSafe<AnalyticsService>()?.logEvent(
           AnalyticsEvents.bidQrDownloaded,
+          properties: {'action': 'save'},
         ),
       );
       if (context.mounted) {
@@ -244,7 +233,12 @@ class _QrSheetStickyBottom extends StatelessWidget {
         );
       }
     } finally {
-      saving.value = false;
+      // Guard against use-after-dispose: the notifier is disposed when the
+      // sheet closes; if the user dismissed while this await was in flight
+      // the context is no longer mounted.
+      if (context.mounted) {
+        saving.value = false;
+      }
     }
   }
 
@@ -256,16 +250,20 @@ class _QrSheetStickyBottom extends StatelessWidget {
         '${dir.path}/qr_dony_${DateTime.now().millisecondsSinceEpoch}.png',
       );
       await file.writeAsBytes(imageBytes);
-      await Share.shareXFiles(
+      final result = await Share.shareXFiles(
         [XFile(file.path, mimeType: 'image/png')],
         subject: 'QR du colis Dony',
         text: 'QR à présenter ou à coller sur le colis.',
       );
-      unawaited(
-        getItSafe<AnalyticsService>()?.logEvent(
-          AnalyticsEvents.bidQrDownloaded,
-        ),
-      );
+      // Only log if the user actually shared (not dismissed)
+      if (result.status != ShareResultStatus.dismissed) {
+        unawaited(
+          getItSafe<AnalyticsService>()?.logEvent(
+            AnalyticsEvents.bidQrDownloaded,
+            properties: {'action': 'share'},
+          ),
+        );
+      }
     } catch (e) {
       if (context.mounted) {
         DonySnackbar.show(
@@ -275,7 +273,12 @@ class _QrSheetStickyBottom extends StatelessWidget {
         );
       }
     } finally {
-      sharing.value = false;
+      // Guard against use-after-dispose: the notifier is disposed when the
+      // sheet closes; if the user dismissed while this await was in flight
+      // the context is no longer mounted.
+      if (context.mounted) {
+        sharing.value = false;
+      }
     }
   }
 }

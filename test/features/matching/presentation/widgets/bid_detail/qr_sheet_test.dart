@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dony/core/design/theme/app_theme.dart';
+import 'package:dony/core/error/app_exception.dart';
 import 'package:dony/features/matching/presentation/widgets/bid_detail/qr_sheet.dart';
 import 'package:dony/features/tracking/bloc/tracking_bloc.dart';
 import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/qr_code_model.dart';
-import 'package:dony/core/error/app_exception.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -78,7 +78,7 @@ void main() {
     'état TrackingQrLoaded → Image + texte imprimer + boutons Enregistrer et Partager',
     (tester) async {
       final bloc = _MockTrackingBloc();
-      final qr = QrCodeModel(
+      const qr = QrCodeModel(
         bidId: 'bid-1',
         scanUrl: 'https://dony.app/track/bid-1',
         qrCodeBase64: _tinyPngB64,
@@ -126,6 +126,48 @@ void main() {
       verify(
         () => bloc.add(any(that: isA<TrackingQrCodeRequested>())),
       ).called(2);
+    },
+  );
+
+  // ── Test 4: No use-after-dispose when sheet is dismissed during handler ───────
+
+  testWidgets(
+    'fermeture du sheet pendant le handler Partager → aucune exception use-after-dispose',
+    (tester) async {
+      final bloc = _MockTrackingBloc();
+      const qr = QrCodeModel(
+        bidId: 'bid-1',
+        scanUrl: 'https://dony.app/track/bid-1',
+        qrCodeBase64: _tinyPngB64,
+      );
+      whenListen<TrackingState>(
+        bloc,
+        Stream<TrackingState>.fromIterable([TrackingQrLoaded(qr)]),
+        initialState: TrackingQrLoaded(qr),
+      );
+
+      await tester.pumpWidget(_host(bloc));
+      await tester.tap(find.text('Open'));
+      // Use bounded pumps to avoid infinite animation loops (CircularProgressIndicator).
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // Tap 'Partager' — the handler awaits Share.shareXFiles which throws
+      // MissingPluginException in the test environment. The catch block runs,
+      // then the finally tries to write sharing.value. If not guarded this
+      // would hit the disposed notifier.
+      await tester.tap(find.text('Partager'));
+      await tester.pump();
+
+      // Dismiss the sheet before the handler's finally runs. Tapping the
+      // barrier (outside the bottom sheet) closes it.
+      await tester.tapAt(const Offset(200, 100));
+      // Pump through the close animation with bounded duration.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // No FlutterError / use-after-dispose exception must surface.
+      expect(tester.takeException(), isNull);
     },
   );
 }
