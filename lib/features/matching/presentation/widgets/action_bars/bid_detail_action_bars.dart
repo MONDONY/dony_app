@@ -326,7 +326,7 @@ class SenderActionBar extends StatelessWidget {
                       ),
                     )
                   : existingPayment != null
-                  ? _EscrowBadge(
+                  ? EscrowBadge(
                       payment: existingPayment!,
                       bidStatus: bid.status,
                     )
@@ -431,11 +431,11 @@ class TravelerRejectedBar extends StatelessWidget {
 
 // ── Private helpers ───────────────────────────────────────────────────────────
 
-class _EscrowBadge extends StatelessWidget {
+class EscrowBadge extends StatelessWidget {
   final PaymentModel payment;
   final String bidStatus;
 
-  const _EscrowBadge({required this.payment, required this.bidStatus});
+  const EscrowBadge({super.key, required this.payment, required this.bidStatus});
 
   @override
   Widget build(BuildContext context) {
