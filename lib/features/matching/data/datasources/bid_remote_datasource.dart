@@ -147,23 +147,6 @@ class BidRemoteDatasource {
     await _apiClient.dio.delete('/bids/$bidId/traveler');
   }
 
-  Future<BidModel> setHandover({
-    required String bidId,
-    required String location,
-    required DateTime windowStart,
-    required DateTime windowEnd,
-  }) async {
-    final response = await _apiClient.dio.put(
-      '/bids/$bidId/handover',
-      data: {
-        'location': location,
-        'windowStart': windowStart.toUtc().toIso8601String(),
-        'windowEnd': windowEnd.toUtc().toIso8601String(),
-      },
-    );
-    return BidModel.fromJson(response.data as Map<String, dynamic>);
-  }
-
   Future<BidModel> confirmPresence(String bidId) async {
     final response = await _apiClient.dio.put('/bids/$bidId/confirm-presence');
     return BidModel.fromJson(response.data as Map<String, dynamic>);

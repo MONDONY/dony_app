@@ -157,6 +157,11 @@ class AnnouncementModel {
   /// Le surplus a déjà été ouvert au public (action définitive, non répétable).
   final bool surplusPublished;
 
+  /// Fenêtre de remise du trajet (créneau pendant lequel l'expéditeur remet le
+  /// colis). Définie à la création ; null pour les anciennes annonces.
+  final DateTime? handoverWindowStart;
+  final DateTime? handoverWindowEnd;
+
   const AnnouncementModel({
     required this.id,
     required this.travelerId,
@@ -193,6 +198,8 @@ class AnnouncementModel {
     this.reservedKg = 0,
     this.surplusEligible = false,
     this.surplusPublished = false,
+    this.handoverWindowStart,
+    this.handoverWindowEnd,
   });
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) =>

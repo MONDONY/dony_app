@@ -16,8 +16,31 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
 
   WalletBloc(this._repository, this._analytics) : super(WalletInitial()) {
     on<WalletLoadRequested>(_onLoad);
+    on<WalletRefreshRequested>(_onRefresh);
+    on<WalletRefreshAfterTopupRequested>(_onRefreshAfterTopup);
     on<WalletTopupRequested>(_onTopup);
   }
+
+  Future<void> _onRefresh(
+    WalletRefreshRequested event,
+    Emitter<WalletState> emit,
+  ) async {
+    // Pas de WalletLoading : on garde la liste affichée pendant le pull-to-refresh.
+    try {
+      final wallet = await _repository.getBalance();
+      if (emit.isDone) return;
+      emit(WalletLoaded(wallet));
+    } catch (e) {
+      if (emit.isDone) return;
+      emit(WalletError(unwrapDioError(e).message));
+    }
+  }
+
+  // Polling post-recharge : le crédit Stripe arrive via webhook (asynchrone),
+  // souvent 1-3 s après la fermeture de la PaymentSheet. On retente jusqu'à ce
+  // que le solde augmente, sur ~10 s.
+  static const _pollAttempts = 6;
+  static const _pollInterval = Duration(seconds: 2);
 
   Future<void> _onLoad(
     WalletLoadRequested event,
@@ -29,6 +52,30 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
       emit(WalletLoaded(wallet));
     } catch (e) {
       emit(WalletError(unwrapDioError(e).message));
+    }
+  }
+
+  Future<void> _onRefreshAfterTopup(
+    WalletRefreshAfterTopupRequested event,
+    Emitter<WalletState> emit,
+  ) async {
+    // Pas de WalletLoading ici : on garde le solde courant affiché pendant le
+    // polling pour éviter un flicker, on met à jour dès qu'une réponse arrive.
+    for (var attempt = 0; attempt < _pollAttempts; attempt++) {
+      try {
+        final wallet = await _repository.getBalance();
+        if (emit.isDone) return;
+        emit(WalletLoaded(wallet));
+        // Crédit arrivé (solde augmenté) → inutile de continuer à poller.
+        if (wallet.balance > event.previousBalance) return;
+      } catch (_) {
+        // Erreur transitoire pendant le polling : on garde l'affichage courant
+        // et on retentera au tick suivant.
+      }
+      if (attempt < _pollAttempts - 1) {
+        await Future.delayed(_pollInterval);
+        if (emit.isDone) return;
+      }
     }
   }
 

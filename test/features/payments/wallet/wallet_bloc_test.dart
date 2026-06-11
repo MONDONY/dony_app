@@ -97,4 +97,64 @@ void main() {
       expect: () => [isA<WalletLoading>(), isA<WalletError>()],
     );
   });
+
+  group('WalletRefreshRequested — pull-to-refresh', () {
+    final wallet = WalletModel(balance: 75, currency: 'EUR', transactions: []);
+
+    blocTest<WalletBloc, WalletState>(
+      'émet WalletLoaded SANS WalletLoading (pas de flicker)',
+      build: () {
+        when(() => repo.getBalance()).thenAnswer((_) async => wallet);
+        return bloc;
+      },
+      act: (b) => b.add(WalletRefreshRequested()),
+      expect: () => [isA<WalletLoaded>()],
+    );
+
+    blocTest<WalletBloc, WalletState>(
+      'émet WalletError sur échec',
+      build: () {
+        when(() => repo.getBalance()).thenThrow(Exception('network error'));
+        return bloc;
+      },
+      act: (b) => b.add(WalletRefreshRequested()),
+      expect: () => [isA<WalletError>()],
+    );
+  });
+
+  group('WalletRefreshAfterTopupRequested — polling post-recharge', () {
+    blocTest<WalletBloc, WalletState>(
+      's\'arrête dès que le solde dépasse le précédent (1 seul fetch)',
+      build: () {
+        when(() => repo.getBalance()).thenAnswer((_) async =>
+            WalletModel(balance: 60, currency: 'EUR', transactions: []));
+        return bloc;
+      },
+      act: (b) => b.add(WalletRefreshAfterTopupRequested(50)),
+      // Pas de WalletLoading (on garde le solde affiché) ; un seul WalletLoaded.
+      expect: () => [isA<WalletLoaded>()],
+      verify: (_) => verify(() => repo.getBalance()).called(1),
+    );
+
+    blocTest<WalletBloc, WalletState>(
+      'continue de poller tant que le solde n\'a pas augmenté',
+      build: () {
+        var call = 0;
+        when(() => repo.getBalance()).thenAnswer((_) async {
+          call++;
+          return WalletModel(
+            balance: call >= 2 ? 60 : 50,
+            currency: 'EUR',
+            transactions: [],
+          );
+        });
+        return bloc;
+      },
+      act: (b) => b.add(WalletRefreshAfterTopupRequested(50)),
+      wait: const Duration(seconds: 3),
+      // 1er fetch = 50 (inchangé) → 2e fetch = 60 (crédit arrivé) → stop.
+      expect: () => [isA<WalletLoaded>(), isA<WalletLoaded>()],
+      verify: (_) => verify(() => repo.getBalance()).called(2),
+    );
+  });
 }

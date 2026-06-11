@@ -561,4 +561,65 @@ void main() {
       expect(find.byType(ColisBillet), findsOneWidget);
     });
   });
+
+  // ── Task 10 : ConfirmPresenceBar (fenêtre de remise depuis l'annonce) ──────────
+
+  group('ConfirmPresenceBar (handoverWindowStart depuis annonce)', () {
+    testWidgets(
+      'voyageur + ACCEPTED + dans la fenêtre de remise → Confirmer ma présence visible',
+      (tester) async {
+        final authBloc = _MockAuthBloc();
+        when(
+          () => authBloc.state,
+        ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => Stream<AuthState>.empty());
+
+        // Fenêtre qui commence dans 1 h (< 4 h → condition satisfaite) et
+        // se termine dans 2 h (dans le futur → DateTime.now().isBefore()).
+        final now = DateTime.now();
+        final bid = BidModel(
+          id: 'bid-window',
+          announcementId: 'ann-window',
+          senderId: _kSenderId,
+          weightKg: 3,
+          status: 'ACCEPTED',
+          createdAt: now,
+          updatedAt: now,
+          paymentMethod: BidPaymentMethod.stripe,
+          handoverWindowStart: now.add(const Duration(hours: 1)),
+          handoverWindowEnd: now.add(const Duration(hours: 2)),
+        );
+
+        await _pump(tester, bid: bid, authBloc: authBloc);
+
+        expect(find.text('Confirmer ma présence'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'voyageur + ACCEPTED + handoverWindowStart null → Confirmer ma présence absent',
+      (tester) async {
+        final authBloc = _MockAuthBloc();
+        when(
+          () => authBloc.state,
+        ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => Stream<AuthState>.empty());
+
+        await _pump(
+          tester,
+          bid: _makeBid(
+            paymentMethod: BidPaymentMethod.stripe,
+            handoverWindowEnd: DateTime.now().add(const Duration(hours: 2)),
+          ),
+          authBloc: authBloc,
+        );
+
+        expect(find.text('Confirmer ma présence'), findsNothing);
+      },
+    );
+  });
 }

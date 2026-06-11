@@ -22,7 +22,6 @@ class BidBloc extends Bloc<BidEvent, BidState> {
     on<BidDetailRequested>(_onDetailRequested);
     on<BidAcceptRequested>(_onAcceptRequested);
     on<BidRejectRequested>(_onRejectRequested);
-    on<BidHandoverRequested>(_onHandoverRequested);
     on<BidConfirmPresenceRequested>(_onConfirmPresenceRequested);
     on<BidMyListRequested>(_onMyListRequested);
     on<BidMyListAutoRefreshRequested>(_onMyListAutoRefreshRequested);
@@ -166,24 +165,6 @@ class BidBloc extends Bloc<BidEvent, BidState> {
         AnalyticsEvents.bidRejected,
         properties: {'bid_id': bid.id},
       ));
-    } catch (e) {
-      emit(BidError(unwrapDioError(e)));
-    }
-  }
-
-  Future<void> _onHandoverRequested(
-    BidHandoverRequested event,
-    Emitter<BidState> emit,
-  ) async {
-    emit(BidLoading());
-    try {
-      final bid = await _repository.setHandover(
-        bidId: event.bidId,
-        location: event.location,
-        windowStart: event.windowStart,
-        windowEnd: event.windowEnd,
-      );
-      emit(BidHandoverSet(bid));
     } catch (e) {
       emit(BidError(unwrapDioError(e)));
     }

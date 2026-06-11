@@ -52,6 +52,8 @@ void main() {
           availableKg: any(named: 'availableKg'),
           pricePerKg: any(named: 'pricePerKg'),
           transportMode: any(named: 'transportMode'),
+          handoverWindowStart: any(named: 'handoverWindowStart'),
+          handoverWindowEnd: any(named: 'handoverWindowEnd'),
         )).thenAnswer((_) async => _ann());
 
     final result = await repo.createAnnouncement(
@@ -63,6 +65,8 @@ void main() {
       availableKg: 10.0,
       pricePerKg: 12.0,
       transportMode: TransportMode.plane,
+      handoverWindowStart: DateTime(2026, 6, 14, 16),
+      handoverWindowEnd: DateTime(2026, 6, 14, 18),
     );
     expect(result.id, 'ann-1');
   });
@@ -80,6 +84,8 @@ void main() {
           availableKg: any(named: 'availableKg'),
           pricePerKg: any(named: 'pricePerKg'),
           transportMode: any(named: 'transportMode'),
+          handoverWindowStart: any(named: 'handoverWindowStart'),
+          handoverWindowEnd: any(named: 'handoverWindowEnd'),
         )).thenAnswer((inv) async {
       capturedMode =
           inv.namedArguments[const Symbol('transportMode')] as TransportMode;
@@ -95,6 +101,8 @@ void main() {
       availableKg: 10.0,
       pricePerKg: 12.0,
       transportMode: TransportMode.train,
+      handoverWindowStart: DateTime(2026, 6, 14, 16),
+      handoverWindowEnd: DateTime(2026, 6, 14, 18),
     );
 
     expect(capturedMode, TransportMode.train);
@@ -172,6 +180,8 @@ void main() {
           availableKg: any(named: 'availableKg'),
           pricePerKg: any(named: 'pricePerKg'),
           transportMode: any(named: 'transportMode'),
+          handoverWindowStart: any(named: 'handoverWindowStart'),
+          handoverWindowEnd: any(named: 'handoverWindowEnd'),
         )).thenAnswer((_) async => _ann());
 
     final result = await repo.updateAnnouncement(
@@ -184,6 +194,8 @@ void main() {
       availableKg: 10.0,
       pricePerKg: 12.0,
       transportMode: TransportMode.car,
+      handoverWindowStart: DateTime(2026, 6, 14, 16),
+      handoverWindowEnd: DateTime(2026, 6, 14, 18),
     );
     expect(result.id, 'ann-1');
   });
@@ -202,6 +214,8 @@ void main() {
           availableKg: any(named: 'availableKg'),
           pricePerKg: any(named: 'pricePerKg'),
           transportMode: any(named: 'transportMode'),
+          handoverWindowStart: any(named: 'handoverWindowStart'),
+          handoverWindowEnd: any(named: 'handoverWindowEnd'),
         )).thenAnswer((inv) async {
       capturedMode =
           inv.namedArguments[const Symbol('transportMode')] as TransportMode;
@@ -218,6 +232,8 @@ void main() {
       availableKg: 10.0,
       pricePerKg: 12.0,
       transportMode: TransportMode.bus,
+      handoverWindowStart: DateTime(2026, 6, 14, 16),
+      handoverWindowEnd: DateTime(2026, 6, 14, 18),
     );
 
     expect(capturedMode, TransportMode.bus);
