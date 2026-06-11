@@ -66,6 +66,10 @@ abstract final class QrSheet {
           .catchError((_) {}),
     );
 
+    // ValueNotifiers pour l'état loading des boutons (pas de setState)
+    final saving = ValueNotifier<bool>(false);
+    final sharing = ValueNotifier<bool>(false);
+
     await DonyBottomSheet.show<void>(
       context,
       title: 'QR du colis',
@@ -75,22 +79,27 @@ abstract final class QrSheet {
               ..add(TrackingQrCodeRequested(bidId)),
         child: child,
       ),
-      child: _QrSheetBody(bidId: bidId),
+      child: const _QrSheetBody(),
+      stickyBottom: _QrSheetStickyBottom(
+        bidId: bidId,
+        saving: saving,
+        sharing: sharing,
+      ),
     ).whenComplete(() {
       // Réinitialise la luminosité à la fermeture — best-effort
       try {
         ScreenBrightness.instance.resetApplicationScreenBrightness();
       } catch (_) {}
+      saving.dispose();
+      sharing.dispose();
     });
   }
 }
 
-// ── Body ──────────────────────────────────────────────────────────────────────
+// ── Body (contenu pur — aucun DonyButton) ─────────────────────────────────────
 
 class _QrSheetBody extends StatelessWidget {
-  const _QrSheetBody({required this.bidId});
-
-  final String bidId;
+  const _QrSheetBody();
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +117,7 @@ class _QrSheetBody extends StatelessWidget {
         }
 
         if (state is TrackingQrError) {
-          return _QrErrorView(bidId: bidId, state: state);
+          return _QrErrorView(state: state);
         }
 
         if (state is TrackingQrLoaded) {
@@ -127,12 +136,155 @@ class _QrSheetBody extends StatelessWidget {
   }
 }
 
-// ── Error view ────────────────────────────────────────────────────────────────
+// ── StickyBottom — boutons selon l'état BLoC ──────────────────────────────────
 
-class _QrErrorView extends StatelessWidget {
-  const _QrErrorView({required this.bidId, required this.state});
+class _QrSheetStickyBottom extends StatelessWidget {
+  const _QrSheetStickyBottom({
+    required this.bidId,
+    required this.saving,
+    required this.sharing,
+  });
 
   final String bidId;
+  final ValueNotifier<bool> saving;
+  final ValueNotifier<bool> sharing;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<TrackingBloc, TrackingState>(
+      builder: (context, state) {
+        if (state is TrackingQrError) {
+          return DonyButton(
+            label: 'Réessayer',
+            variant: DonyButtonVariant.secondary,
+            onPressed: () {
+              context
+                  .read<TrackingBloc>()
+                  .add(TrackingQrCodeRequested(bidId));
+            },
+          );
+        }
+
+        if (state is TrackingQrLoaded) {
+          final imageBytes = base64Decode(state.qrCode.qrCodeBase64);
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Save button
+              ValueListenableBuilder<bool>(
+                valueListenable: saving,
+                builder: (context, isSaving, _) {
+                  return ValueListenableBuilder<bool>(
+                    valueListenable: sharing,
+                    builder: (context, isSharing, _) {
+                      return DonyButton(
+                        label: 'Enregistrer',
+                        icon: Icons.download_rounded,
+                        isLoading: isSaving,
+                        onPressed: (isSaving || isSharing)
+                            ? null
+                            : () => _saveToGallery(context, imageBytes),
+                      );
+                    },
+                  );
+                },
+              ),
+              const SizedBox(height: DonySpacing.sm),
+              // Share button
+              ValueListenableBuilder<bool>(
+                valueListenable: saving,
+                builder: (context, isSaving, _) {
+                  return ValueListenableBuilder<bool>(
+                    valueListenable: sharing,
+                    builder: (context, isSharing, _) {
+                      return DonyButton(
+                        label: 'Partager',
+                        variant: DonyButtonVariant.secondary,
+                        icon: Icons.share_rounded,
+                        isLoading: isSharing,
+                        onPressed: (isSaving || isSharing)
+                            ? null
+                            : () => _shareQrCode(context, imageBytes),
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
+          );
+        }
+
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
+  Future<void> _saveToGallery(BuildContext context, Uint8List imageBytes) async {
+    saving.value = true;
+    try {
+      await Gal.putImageBytes(imageBytes, name: 'qr_dony.png');
+      unawaited(
+        getItSafe<AnalyticsService>()?.logEvent(
+          AnalyticsEvents.bidQrDownloaded,
+        ),
+      );
+      if (context.mounted) {
+        DonySnackbar.show(
+          context,
+          message: 'QR code enregistré dans votre galerie',
+          type: DonySnackbarType.success,
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        DonySnackbar.show(
+          context,
+          message: 'Impossible d\'enregistrer l\'image',
+          type: DonySnackbarType.error,
+        );
+      }
+    } finally {
+      saving.value = false;
+    }
+  }
+
+  Future<void> _shareQrCode(BuildContext context, Uint8List imageBytes) async {
+    sharing.value = true;
+    try {
+      final dir = await getTemporaryDirectory();
+      final file = File(
+        '${dir.path}/qr_dony_${DateTime.now().millisecondsSinceEpoch}.png',
+      );
+      await file.writeAsBytes(imageBytes);
+      await Share.shareXFiles(
+        [XFile(file.path, mimeType: 'image/png')],
+        subject: 'QR du colis Dony',
+        text: 'QR à présenter ou à coller sur le colis.',
+      );
+      unawaited(
+        getItSafe<AnalyticsService>()?.logEvent(
+          AnalyticsEvents.bidQrDownloaded,
+        ),
+      );
+    } catch (e) {
+      if (context.mounted) {
+        DonySnackbar.show(
+          context,
+          message: 'Impossible de partager le QR code',
+          type: DonySnackbarType.error,
+        );
+      }
+    } finally {
+      sharing.value = false;
+    }
+  }
+}
+
+// ── Error view (contenu pur — aucun DonyButton) ───────────────────────────────
+
+class _QrErrorView extends StatelessWidget {
+  const _QrErrorView({required this.state});
+
   final TrackingQrError state;
 
   @override
@@ -153,43 +305,24 @@ class _QrErrorView extends StatelessWidget {
             style: tt.bodyMedium?.copyWith(color: cs.error),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: DonySpacing.xl),
-          DonyButton(
-            label: 'Réessayer',
-            variant: DonyButtonVariant.secondary,
-            onPressed: () {
-              context
-                  .read<TrackingBloc>()
-                  .add(TrackingQrCodeRequested(bidId));
-            },
-          ),
         ],
       ),
     );
   }
 }
 
-// ── Loaded view ───────────────────────────────────────────────────────────────
+// ── Loaded view (contenu pur — aucun DonyButton) ──────────────────────────────
 
-class _QrLoadedView extends StatefulWidget {
+class _QrLoadedView extends StatelessWidget {
   const _QrLoadedView({required this.state});
 
   final TrackingQrLoaded state;
 
   @override
-  State<_QrLoadedView> createState() => _QrLoadedViewState();
-}
-
-class _QrLoadedViewState extends State<_QrLoadedView> {
-  bool _saving = false;
-  bool _sharing = false;
-
-  @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final Uint8List imageBytes =
-        base64Decode(widget.state.qrCode.qrCodeBase64);
+    final Uint8List imageBytes = base64Decode(state.qrCode.qrCodeBase64);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -228,95 +361,8 @@ class _QrLoadedViewState extends State<_QrLoadedView> {
           ),
         ),
 
-        const SizedBox(height: DonySpacing.xl),
-
-        // Save button
-        DonyButton(
-          label: 'Enregistrer',
-          icon: Icons.download_rounded,
-          isLoading: _saving,
-          onPressed:
-              (_saving || _sharing) ? null : () => _saveToGallery(imageBytes),
-        ),
-
-        const SizedBox(height: DonySpacing.sm),
-
-        // Share button
-        DonyButton(
-          label: 'Partager',
-          variant: DonyButtonVariant.secondary,
-          icon: Icons.share_rounded,
-          isLoading: _sharing,
-          onPressed:
-              (_saving || _sharing) ? null : () => _shareQrCode(imageBytes),
-        ),
-
         const SizedBox(height: DonySpacing.base),
       ],
     );
-  }
-
-  Future<void> _saveToGallery(Uint8List imageBytes) async {
-    setState(() => _saving = true);
-    try {
-      await Gal.putImageBytes(imageBytes, name: 'qr_dony.png');
-      unawaited(
-        getItSafe<AnalyticsService>()?.logEvent(
-          AnalyticsEvents.bidQrDownloaded,
-        ),
-      );
-      if (mounted) {
-        DonySnackbar.show(
-          context,
-          message: 'QR code enregistré dans votre galerie',
-          type: DonySnackbarType.success,
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        DonySnackbar.show(
-          context,
-          message: 'Impossible d\'enregistrer l\'image',
-          type: DonySnackbarType.error,
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _saving = false);
-      }
-    }
-  }
-
-  Future<void> _shareQrCode(Uint8List imageBytes) async {
-    setState(() => _sharing = true);
-    try {
-      final dir = await getTemporaryDirectory();
-      final file = File(
-        '${dir.path}/qr_dony_${DateTime.now().millisecondsSinceEpoch}.png',
-      );
-      await file.writeAsBytes(imageBytes);
-      await Share.shareXFiles(
-        [XFile(file.path, mimeType: 'image/png')],
-        subject: 'QR du colis Dony',
-        text: 'QR à présenter ou à coller sur le colis.',
-      );
-      unawaited(
-        getItSafe<AnalyticsService>()?.logEvent(
-          AnalyticsEvents.bidQrDownloaded,
-        ),
-      );
-    } catch (e) {
-      if (mounted) {
-        DonySnackbar.show(
-          context,
-          message: 'Impossible de partager le QR code',
-          type: DonySnackbarType.error,
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _sharing = false);
-      }
-    }
   }
 }
