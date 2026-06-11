@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dony/core/design/design_system.dart';
 import 'package:dony/core/pricing/dony_pricing.dart';
 import 'package:dony/features/matching/data/models/bid_model.dart';
@@ -46,9 +48,9 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
       return '—';
     }
     try {
-      return DateFormat('EEE dd MMM yyyy', 'fr').format(d);
+      return DateFormat('EEE dd MMM yyyy', 'fr').format(d.toLocal());
     } catch (_) {
-      return DateFormat('dd/MM/yyyy').format(d);
+      return DateFormat('dd/MM/yyyy').format(d.toLocal());
     }
   }
 
@@ -240,7 +242,7 @@ class _TrackingUrlRow extends StatelessWidget {
           tooltip: 'Copier le lien',
           color: cs.primary,
           onPressed: () {
-            Clipboard.setData(ClipboardData(text: url));
+            unawaited(Clipboard.setData(ClipboardData(text: url)));
             DonySnackbar.show(
               context,
               message: 'Lien copié',
