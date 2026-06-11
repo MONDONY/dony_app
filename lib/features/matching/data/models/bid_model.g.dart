@@ -154,6 +154,7 @@ const _$CommissionStatusEnumMap = {
   CommissionStatus.charged: 'CHARGED',
   CommissionStatus.failed: 'FAILED',
   CommissionStatus.refunded: 'REFUNDED',
+  CommissionStatus.refundFailed: 'REFUND_FAILED',
 };
 
 const _$BidPricingModeEnumMap = {

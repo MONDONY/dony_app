@@ -98,6 +98,8 @@ final _kgFreeAnnouncement = AnnouncementModel(
   capacityUnit: 'KG_FREE',
   pricingMode: 'MIXED',
   transportMode: TransportMode.plane,
+  handoverWindowStart: DateTime(2026, 8, 14, 16),
+  handoverWindowEnd: DateTime(2026, 8, 14, 18),
 );
 
 /// Annonce complète utilisée pour tester la navigation entre étapes en mode
@@ -295,6 +297,23 @@ Future<void> _fillStep0AndContinue(
   await tester.tap(find.byKey(const Key('departureDateField')));
   await tester.pumpAndSettle();
   await tester.tap(find.text('OK'));
+  await tester.pumpAndSettle();
+
+  // Fenêtre de remise : début puis fin. Le picker propose la date du lendemain
+  // (= la date de départ) et des heures par défaut 16:00 / 18:00 → accepter via
+  // OK suffit à produire une fenêtre valide de 2 h, requise pour « Continuer ».
+  await tester.tap(find.byKey(const Key('sheet-handover-start-row')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('OK')); // date
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('OK')); // heure (16:00)
+  await tester.pumpAndSettle();
+
+  await tester.tap(find.byKey(const Key('sheet-handover-end-row')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('OK')); // date
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('OK')); // heure (18:00)
   await tester.pumpAndSettle();
 
   // "Continuer" est désormais actif.

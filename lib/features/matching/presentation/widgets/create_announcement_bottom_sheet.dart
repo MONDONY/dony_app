@@ -32,6 +32,7 @@ import 'package:dony/features/trip_templates/data/models/trip_template.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 // ─── Public entry point ───────────────────────────────────────────────────────
 
@@ -347,6 +348,8 @@ class _CreateAnnouncementContentState
   final _departureDateNotifier = ValueNotifier<DateTime?>(null);
   final _departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
   final _arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+  final _handoverStartNotifier = ValueNotifier<DateTime?>(null);
+  final _handoverEndNotifier = ValueNotifier<DateTime?>(null);
   final _pickupAddressNotifier = ValueNotifier<AddressData?>(null);
   final _deliveryAddressNotifier = ValueNotifier<AddressData?>(null);
   AddressData? get _pickupAddress => _pickupAddressNotifier.value;
@@ -413,6 +416,8 @@ class _CreateAnnouncementContentState
       _departureCountryCodeNotifier.value = a.departureCountryCode;
       _arrivalCountryCodeNotifier.value = a.arrivalCountryCode;
       _departureDateNotifier.value = a.departureDate;
+      _handoverStartNotifier.value = widget.announcement?.handoverWindowStart;
+      _handoverEndNotifier.value = widget.announcement?.handoverWindowEnd;
       _availableKgNotifier.value = a.availableKg;
 
       if (a.departureTime != null) {
@@ -517,6 +522,9 @@ class _CreateAnnouncementContentState
     _departureCityNotifier.addListener(_updateCanContinue);
     _arrivalCityNotifier.addListener(_updateCanContinue);
     _departureDateNotifier.addListener(_updateCanContinue);
+    _departureTimeNotifier.addListener(_updateCanContinue);
+    _handoverStartNotifier.addListener(_updateCanContinue);
+    _handoverEndNotifier.addListener(_updateCanContinue);
     _updateCanContinue(); // état initial (pré-remplissage en mode édition)
 
     // Sync form fields to AnnouncementFormBloc for preview and validation
@@ -539,7 +547,10 @@ class _CreateAnnouncementContentState
     widget.canContinueNotifier?.value =
         _departureCityNotifier.value != null &&
         _arrivalCityNotifier.value != null &&
-        _departureDateNotifier.value != null;
+        _departureDateNotifier.value != null &&
+        _handoverStartNotifier.value != null &&
+        _handoverEndNotifier.value != null &&
+        _handoverWindowError() == null;
   }
 
   void _updateCanContinueStep1() {
@@ -567,7 +578,42 @@ class _CreateAnnouncementContentState
       _showError('Remplis tous les champs obligatoires');
       return false;
     }
+    if (_handoverStartNotifier.value == null ||
+        _handoverEndNotifier.value == null) {
+      _showError('Choisis la fenêtre de remise du colis');
+      return false;
+    }
+    final handoverErr = _handoverWindowError();
+    if (handoverErr != null) {
+      _showError(handoverErr);
+      return false;
+    }
     return true;
+  }
+
+  /// Raison pour laquelle la fenêtre de remise saisie est invalide, ou null si
+  /// elle est correcte (ou pas encore renseignée). Affichée en direct sous le
+  /// picker, utilisée pour bloquer le passage à l'étape suivante.
+  String? _handoverWindowError() {
+    final start = _handoverStartNotifier.value;
+    final end = _handoverEndNotifier.value;
+    if (start == null || end == null) return null;
+    if (!end.isAfter(start)) {
+      return 'La fin de la fenêtre doit être après le début.';
+    }
+    final date = _departureDateNotifier.value;
+    if (date != null) {
+      final t = _departureTimeNotifier.value;
+      final bound = t != null
+          ? DateTime(date.year, date.month, date.day, t.hour, t.minute)
+          : DateTime(date.year, date.month, date.day, 23, 59);
+      if (end.isAfter(bound)) {
+        return t != null
+            ? 'La fenêtre doit se terminer avant le départ (${_formatTime(t)}).'
+            : 'La fenêtre doit se terminer le jour du départ au plus tard.';
+      }
+    }
+    return null;
   }
 
   void _syncCityToFormBloc() {
@@ -670,6 +716,9 @@ class _CreateAnnouncementContentState
     _departureCityNotifier.removeListener(_updateCanContinue);
     _arrivalCityNotifier.removeListener(_updateCanContinue);
     _departureDateNotifier.removeListener(_updateCanContinue);
+    _departureTimeNotifier.removeListener(_updateCanContinue);
+    _handoverStartNotifier.removeListener(_updateCanContinue);
+    _handoverEndNotifier.removeListener(_updateCanContinue);
     _departureCityNotifier.removeListener(_syncCityToFormBloc);
     _arrivalCityNotifier.removeListener(_syncCityToFormBloc);
     _departureDateNotifier.removeListener(_syncDateToFormBloc);
@@ -702,6 +751,8 @@ class _CreateAnnouncementContentState
     _departureDateNotifier.dispose();
     _departureTimeNotifier.dispose();
     _arrivalTimeNotifier.dispose();
+    _handoverStartNotifier.dispose();
+    _handoverEndNotifier.dispose();
     _availableKgNotifier.dispose();
     _priceOptionNotifier.dispose();
     _selectedContentNotifier.dispose();
@@ -802,6 +853,25 @@ class _CreateAnnouncementContentState
     final pricingModeWire = formBlocState.pricingMode == PricingMode.mixed ? 'MIXED' : 'KG';
     final pricePerKgToSubmit = formBlocState.pricePerKg ?? 0.0;
 
+    final handoverStart = _handoverStartNotifier.value;
+    final handoverEnd = _handoverEndNotifier.value;
+    if (handoverStart == null || handoverEnd == null) {
+      _showError('Fenêtre de remise obligatoire');
+      return;
+    }
+    if (!handoverEnd.isAfter(handoverStart)) {
+      _showError('La fin de la fenêtre doit être après le début');
+      return;
+    }
+    final departureBound = departureTimeVal != null
+        ? DateTime(departureDate.year, departureDate.month, departureDate.day,
+            departureTimeVal.hour, departureTimeVal.minute)
+        : DateTime(departureDate.year, departureDate.month, departureDate.day, 23, 59);
+    if (handoverEnd.isAfter(departureBound)) {
+      _showError('La fenêtre de remise doit se terminer avant le départ');
+      return;
+    }
+
     if (_isEdit) {
       context.read<AnnouncementBloc>().add(AnnouncementUpdateRequested(
             id: widget.announcement!.id,
@@ -823,6 +893,8 @@ class _CreateAnnouncementContentState
             acceptedPaymentMethods: paymentMethods,
             capacityUnit: capacityUnitWire,
             pricingMode: pricingModeWire,
+            handoverWindowStart: handoverStart,
+            handoverWindowEnd: handoverEnd,
           ));
     } else {
       context.read<AnnouncementBloc>().add(AnnouncementCreateRequested(
@@ -844,6 +916,8 @@ class _CreateAnnouncementContentState
             acceptedPaymentMethods: paymentMethods,
             capacityUnit: capacityUnitWire,
             pricingMode: pricingModeWire,
+            handoverWindowStart: handoverStart,
+            handoverWindowEnd: handoverEnd,
           ));
     }
   }
@@ -919,6 +993,49 @@ class _CreateAnnouncementContentState
     if (picked != null) {
       _arrivalTimeNotifier.value = picked;
     }
+  }
+
+  Future<DateTime?> _pickDateTime(
+    DateTime? initial, {
+    TimeOfDay defaultTime = const TimeOfDay(hour: 18, minute: 0),
+  }) async {
+    final cs = Theme.of(context).colorScheme;
+    final date = await showDatePicker(
+      context: context,
+      initialDate: initial ?? DateTime.now().add(const Duration(days: 1)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(colorScheme: ColorScheme.light(primary: cs.primary)),
+        child: child!,
+      ),
+    );
+    if (date == null || !mounted) return null;
+    final time = await showTimePicker(
+      context: context,
+      initialTime:
+          initial != null ? TimeOfDay.fromDateTime(initial) : defaultTime,
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(colorScheme: ColorScheme.light(primary: cs.primary)),
+        child: child!,
+      ),
+    );
+    if (time == null) return null;
+    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
+  }
+
+  Future<void> _selectHandoverStart() async {
+    // Défaut 16:00 : avec la fin par défaut à 18:00, accepter les deux propose
+    // d'emblée une fenêtre de remise valide de 2 h.
+    final picked = await _pickDateTime(_handoverStartNotifier.value,
+        defaultTime: const TimeOfDay(hour: 16, minute: 0));
+    if (picked != null) _handoverStartNotifier.value = picked;
+  }
+
+  Future<void> _selectHandoverEnd() async {
+    final picked = await _pickDateTime(_handoverEndNotifier.value,
+        defaultTime: const TimeOfDay(hour: 18, minute: 0));
+    if (picked != null) _handoverEndNotifier.value = picked;
   }
 
   @override
@@ -1096,6 +1213,84 @@ class _CreateAnnouncementContentState
         // dans la fenêtre de tolérance.
         lockCorridor: widget.lockCorridorAndDate || _isLocked,
         lockDate: widget.lockCorridorAndDate,
+      ),
+      const SizedBox(height: DonySpacing.lg),
+      const CaSectionLabel(label: 'FENÊTRE DE REMISE', icon: Icons.schedule_rounded),
+      const SizedBox(height: DonySpacing.xs),
+      CaSectionCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ValueListenableBuilder<DateTime?>(
+              valueListenable: _handoverStartNotifier,
+              builder: (context, dt, _) => ListTile(
+                key: const Key('sheet-handover-start-row'),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.base,
+                ),
+                leading: Icon(Icons.schedule_rounded, size: 20,
+                    color: Theme.of(context).colorScheme.primary),
+                title: const Text('Début de remise'),
+                trailing: Text(dt != null
+                    ? DateFormat('dd/MM HH:mm', 'fr').format(dt) : 'Choisir'),
+                onTap: _selectHandoverStart,
+              ),
+            ),
+            const CaRowDivider(),
+            ValueListenableBuilder<DateTime?>(
+              valueListenable: _handoverEndNotifier,
+              builder: (context, dt, _) => ListTile(
+                key: const Key('sheet-handover-end-row'),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: DonySpacing.base,
+                ),
+                leading: Icon(Icons.schedule_rounded, size: 20,
+                    color: Theme.of(context).colorScheme.primary),
+                title: const Text('Fin de remise'),
+                trailing: Text(dt != null
+                    ? DateFormat('dd/MM HH:mm', 'fr').format(dt) : 'Choisir'),
+                onTap: _selectHandoverEnd,
+              ),
+            ),
+            AnimatedBuilder(
+              animation: Listenable.merge([
+                _handoverStartNotifier,
+                _handoverEndNotifier,
+                _departureDateNotifier,
+                _departureTimeNotifier,
+              ]),
+              builder: (context, _) {
+                final err = _handoverWindowError();
+                if (err == null) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    DonySpacing.base,
+                    DonySpacing.xs,
+                    DonySpacing.base,
+                    DonySpacing.sm,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.error_outline_rounded,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.error),
+                      const SizedBox(width: DonySpacing.xs),
+                      Expanded(
+                        child: Text(
+                          err,
+                          key: const Key('sheet-handover-error'),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.error),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     ];
   }

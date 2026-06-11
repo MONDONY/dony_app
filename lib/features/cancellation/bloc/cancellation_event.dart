@@ -17,6 +17,11 @@ class NoShowReportRequested extends CancellationEvent {
   NoShowReportRequested(this.bidId);
 }
 
+class TravelerNoShowReportRequested extends CancellationEvent {
+  final String bidId;
+  TravelerNoShowReportRequested(this.bidId);
+}
+
 class NoShowContestRequested extends CancellationEvent {
   final String bidId;
   NoShowContestRequested(this.bidId);

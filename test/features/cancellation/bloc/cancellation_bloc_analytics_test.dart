@@ -48,6 +48,30 @@ void main() {
     )).called(1);
   });
 
+  test('no_show_reported_by_sender fires on TravelerNoShowReportRequested success', () async {
+    when(() => repo.reportTravelerNoShow(any())).thenAnswer((_) async {});
+
+    final bloc = makeBloc();
+    bloc.add(TravelerNoShowReportRequested('bid-1'));
+    await bloc.stream.firstWhere((s) => s is NoShowReported);
+    await Future<void>.delayed(Duration.zero);
+
+    verify(() => backend.capture(AnalyticsEvents.noShowReportedBySender, any()))
+        .called(1);
+  });
+
+  test('no_show_reported_by_traveler fires on NoShowReportRequested success', () async {
+    when(() => repo.reportNoShow(any())).thenAnswer((_) async {});
+
+    final bloc = makeBloc();
+    bloc.add(NoShowReportRequested('bid-1'));
+    await bloc.stream.firstWhere((s) => s is NoShowReported);
+    await Future<void>.delayed(Duration.zero);
+
+    verify(() => backend.capture(AnalyticsEvents.noShowReportedByTraveler, any()))
+        .called(1);
+  });
+
   test('no event when disabled', () async {
     when(() => repo.cancelTrip(announcementId: any(named: 'announcementId'), reason: any(named: 'reason')))
         .thenAnswer((_) async => _fakeCancellation);

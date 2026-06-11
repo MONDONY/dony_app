@@ -9,6 +9,7 @@ import 'package:dony/features/package_request/presentation/widgets/thread/thread
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockNegotiationBloc
@@ -25,6 +26,7 @@ NegotiationThread _thread({
   bool canAccept = false,
   bool canCounter = true,
   PaymentMethod? paymentMethod,
+  String? materializedBidId,
 }) {
   final messages = <NegotiationMessage>[
     NegotiationMessage(
@@ -51,6 +53,7 @@ NegotiationThread _thread({
     createdAt: DateTime(2026, 5, 11, 9),
     messages: messages,
     paymentMethod: paymentMethod,
+    materializedBidId: materializedBidId,
   );
 }
 
@@ -77,6 +80,41 @@ void main() {
           ),
         ),
       );
+
+  // Variante avec GoRouter pour vérifier la navigation vers /bids/:bidId.
+  String? lastPushedLocation;
+  Widget wrapRouter(NegotiationThread thread, String viewerUserId) {
+    lastPushedLocation = null;
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, __) => BlocProvider<NegotiationBloc>.value(
+            value: bloc,
+            child: Scaffold(
+              body: ThreadStateCtaBar(
+                thread: thread,
+                viewerUserId: viewerUserId,
+                actionInProgress: false,
+              ),
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/bids/:bidId',
+          builder: (context, state) {
+            lastPushedLocation = state.uri.toString();
+            return const Scaffold(body: Text('Bid detail'));
+          },
+        ),
+      ],
+    );
+    return MaterialApp.router(
+      theme: AppTheme.light,
+      routerConfig: router,
+    );
+  }
 
   group('ThreadStateCtaBar matrix', () {
     testWidgets(
@@ -224,6 +262,47 @@ void main() {
       expect(
           find.text('Le paiement se fait en espèces à la remise du colis.'),
           findsOneWidget);
+    });
+
+    testWidgets(
+        'ACCEPTED · materializedBidId présent → bouton "Voir mon envoi" visible',
+        (tester) async {
+      await tester.pumpWidget(wrap(
+        _thread(
+          status: NegotiationThreadStatus.accepted,
+          materializedBidId: 'bid-123',
+        ),
+        _viewerSender,
+      ));
+      expect(find.byType(ThreadStateBanner), findsOneWidget);
+      expect(find.text('Voir mon envoi'), findsOneWidget);
+    });
+
+    testWidgets(
+        'ACCEPTED · materializedBidId absent → bouton "Voir mon envoi" caché',
+        (tester) async {
+      await tester.pumpWidget(wrap(
+        _thread(status: NegotiationThreadStatus.accepted),
+        _viewerSender,
+      ));
+      expect(find.byType(ThreadStateBanner), findsOneWidget);
+      expect(find.text('Voir mon envoi'), findsNothing);
+    });
+
+    testWidgets(
+        'ACCEPTED · tap "Voir mon envoi" → navigue vers /bids/{id}',
+        (tester) async {
+      await tester.pumpWidget(wrapRouter(
+        _thread(
+          status: NegotiationThreadStatus.accepted,
+          materializedBidId: 'bid-123',
+        ),
+        _viewerSender,
+      ));
+      await tester.tap(find.text('Voir mon envoi'));
+      await tester.pumpAndSettle();
+      expect(lastPushedLocation, '/bids/bid-123');
+      expect(find.text('Bid detail'), findsOneWidget);
     });
 
     testWidgets('REJECTED → rien (SizedBox.shrink)', (tester) async {

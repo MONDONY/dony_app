@@ -61,6 +61,8 @@ void main() {
         availableKg: 10.0,
         pricePerKg: 12.0,
         transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       );
 
       expect(result.id, 'ann-001');
@@ -82,6 +84,8 @@ void main() {
         availableKg: 10.0,
         pricePerKg: 12.0,
         transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       );
 
       expect(result.id, 'ann-001');
@@ -105,6 +109,8 @@ void main() {
         availableKg: 10.0,
         pricePerKg: 12.0,
         transportMode: TransportMode.train,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       );
 
       expect(capturedData, isNotNull);
@@ -131,6 +137,8 @@ void main() {
         transportMode: TransportMode.plane,
         departureCountryCode: 'US',
         arrivalCountryCode: 'SN',
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       );
 
       expect(capturedData, isNotNull);
@@ -156,6 +164,8 @@ void main() {
         availableKg: 10.0,
         pricePerKg: 12.0,
         transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       );
 
       expect(capturedData, isNotNull);
@@ -301,6 +311,8 @@ void main() {
         availableKg: 10.0,
         pricePerKg: 12.0,
         transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       );
 
       expect(result.id, 'ann-001');
@@ -323,6 +335,8 @@ void main() {
         availableKg: 10.0,
         pricePerKg: 12.0,
         transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       );
 
       expect(result.id, 'ann-001');
@@ -348,6 +362,8 @@ void main() {
         availableKg: 10.0,
         pricePerKg: 12.0,
         transportMode: TransportMode.boat,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       );
 
       expect(capturedData, isNotNull);
@@ -376,6 +392,8 @@ void main() {
         transportMode: TransportMode.plane,
         departureCountryCode: 'US',
         arrivalCountryCode: 'SN',
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       );
 
       expect(capturedData, isNotNull);
@@ -403,6 +421,8 @@ void main() {
         availableKg: 10.0,
         pricePerKg: 12.0,
         transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       );
 
       expect(capturedData, isNotNull);

@@ -84,6 +84,12 @@ AnnouncementModel _$AnnouncementModelFromJson(
   reservedKg: (json['reservedKg'] as num?)?.toDouble() ?? 0,
   surplusEligible: json['surplusEligible'] as bool? ?? false,
   surplusPublished: json['surplusPublished'] as bool? ?? false,
+  handoverWindowStart: json['handoverWindowStart'] == null
+      ? null
+      : DateTime.parse(json['handoverWindowStart'] as String),
+  handoverWindowEnd: json['handoverWindowEnd'] == null
+      ? null
+      : DateTime.parse(json['handoverWindowEnd'] as String),
 );
 
 Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
@@ -125,6 +131,8 @@ Map<String, dynamic> _$AnnouncementModelToJson(AnnouncementModel instance) =>
       'reservedKg': instance.reservedKg,
       'surplusEligible': instance.surplusEligible,
       'surplusPublished': instance.surplusPublished,
+      'handoverWindowStart': instance.handoverWindowStart?.toIso8601String(),
+      'handoverWindowEnd': instance.handoverWindowEnd?.toIso8601String(),
     };
 
 const _$BidPaymentMethodEnumMap = {

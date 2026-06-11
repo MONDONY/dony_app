@@ -20,6 +20,11 @@ class BilletStatusStamp extends StatelessWidget {
       'COMPLETED' || 'DELIVERED' => (cs.success, 'Livré'),
       'REJECTED' => (cs.error, 'Refusé'),
       'CANCELLED' => (cs.onSurfaceVariant, 'Annulé'),
+      // Statuts terminaux back-end (BidStatus) — libellés alignés sur
+      // bid_list_screen / shipment_status_filter_sheet.
+      'NO_SHOW' => (cs.warning, 'Absent'),
+      'PARCEL_REFUSED' => (cs.error, 'Colis refusé'),
+      'EXPIRED' => (cs.onSurfaceVariant, 'Expiré'),
       _ => (cs.onSurfaceVariant, status),
     };
 

@@ -208,6 +208,55 @@ void main() {
     );
   });
 
+  // ── TravelerNoShowReportRequested ──────────────────────────────────────────
+
+  group('TravelerNoShowReportRequested', () {
+    blocTest<CancellationBloc, CancellationState>(
+      'emits [Loading, NoShowReported] and calls reportTravelerNoShow on success',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.reportTravelerNoShow('bid-1'))
+            .thenAnswer((_) async {});
+      },
+      act: (b) => b.add(TravelerNoShowReportRequested('bid-1')),
+      expect: () => [
+        isA<CancellationLoading>(),
+        isA<NoShowReported>(),
+      ],
+      verify: (_) {
+        verify(() => mockRepo.reportTravelerNoShow('bid-1')).called(1);
+      },
+    );
+
+    blocTest<CancellationBloc, CancellationState>(
+      'emits [Loading, Error] on DioException',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.reportTravelerNoShow(any()))
+            .thenThrow(DioException(requestOptions: RequestOptions()));
+      },
+      act: (b) => b.add(TravelerNoShowReportRequested('bid-x')),
+      expect: () => [
+        isA<CancellationLoading>(),
+        isA<CancellationError>(),
+      ],
+    );
+
+    blocTest<CancellationBloc, CancellationState>(
+      'emits [Loading, Error] on generic exception',
+      build: buildBloc,
+      setUp: () {
+        when(() => mockRepo.reportTravelerNoShow(any()))
+            .thenThrow(Exception('network error'));
+      },
+      act: (b) => b.add(TravelerNoShowReportRequested('bid-x')),
+      expect: () => [
+        isA<CancellationLoading>(),
+        isA<CancellationError>(),
+      ],
+    );
+  });
+
   // ── NoShowContestRequested ─────────────────────────────────────────────────
 
   group('NoShowContestRequested', () {

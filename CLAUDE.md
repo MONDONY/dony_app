@@ -321,6 +321,8 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `rating_submitted` | RatingBloc._onSubmit()/_onTravelerSubmit() |
 | `cancellation_initiated` | CancellationBloc._onTripCancellationRequested() |
 | `rematch_accepted` | *(à implémenter)* |
+| `no_show_reported_by_sender` | CancellationBloc._onTravelerNoShowReport() — expéditeur signale le voyageur absent |
+| `no_show_reported_by_traveler` | CancellationBloc._onNoShowReport() — voyageur signale l'expéditeur absent |
 | `become_traveler_started` | BecomeTravelerScreen.initState |
 | `upgrade_to_pro_started` | UpgradeToProScreen.initState |
 | `referral_shared` | ReferralBloc._onShared() |

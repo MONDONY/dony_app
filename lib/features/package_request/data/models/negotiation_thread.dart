@@ -53,6 +53,7 @@ class NegotiationThread extends Equatable {
     this.canCounter = false,
     this.roundsRemaining = 0,
     this.linkedTrip,
+    this.materializedBidId,
   });
 
   final String id;
@@ -90,6 +91,10 @@ class NegotiationThread extends Equatable {
 
   // Trajet lié — inclus quand le back-end embed le résumé du trajet voyageur
   final LinkedTripSummary? linkedTrip;
+
+  // Id du bid matérialisé — présent quand la négociation est acceptée (back V10).
+  // Sert d'entrée vers le détail de l'envoi (/bids/{id}).
+  final String? materializedBidId;
 
   bool get isTravelerKgFree => travelerCapacityUnit == 'KG_FREE';
 
@@ -130,6 +135,7 @@ class NegotiationThread extends Equatable {
         linkedTrip: json['linkedTrip'] != null
             ? LinkedTripSummary.fromJson(json['linkedTrip'] as Map<String, dynamic>)
             : null,
+        materializedBidId: json['materializedBidId'] as String?,
       );
 
   @override
@@ -141,6 +147,6 @@ class NegotiationThread extends Equatable {
         travelerName, travelerRating, travelerTripsCount, travelerPhotoUrl,
         departureCity, arrivalCity, weightKg, senderName,
         isMyTurn, canAccept, canCounter, roundsRemaining,
-        linkedTrip,
+        linkedTrip, materializedBidId,
       ];
 }
