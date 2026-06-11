@@ -97,19 +97,6 @@ class BidRepository {
   Future<void> dismissBidAsTraveler(String bidId) =>
       _datasource.dismissBidAsTraveler(bidId);
 
-  Future<BidModel> setHandover({
-    required String bidId,
-    required String location,
-    required DateTime windowStart,
-    required DateTime windowEnd,
-  }) =>
-      _datasource.setHandover(
-        bidId: bidId,
-        location: location,
-        windowStart: windowStart,
-        windowEnd: windowEnd,
-      );
-
   Future<BidModel> confirmPresence(String bidId) =>
       _datasource.confirmPresence(bidId);
 

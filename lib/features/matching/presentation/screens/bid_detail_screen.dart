@@ -30,7 +30,6 @@ import 'package:dony/features/matching/presentation/widgets/cancellation_dialog.
 import 'package:dony/features/matching/presentation/widgets/colis_card.dart';
 import 'package:dony/features/matching/presentation/widgets/destinataire_card.dart';
 import 'package:dony/features/matching/presentation/widgets/expediteur_card.dart';
-import 'package:dony/features/matching/presentation/widgets/handover_bottom_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/billet/colis_billet.dart';
 import 'package:dony/features/matching/presentation/widgets/sender_profile_sheet.dart';
 import 'package:dony/features/matching/presentation/widgets/suivi_button.dart';
@@ -310,11 +309,9 @@ class _BidDetailViewState extends State<_BidDetailView> {
                   _bid = state.bid;
                   DonySnackbar.show(
                     context,
-                    message:
-                        'Demande acceptée ! Définissez maintenant la fenêtre de remise.',
+                    message: 'Demande acceptée !',
                     type: DonySnackbarType.success,
                   );
-                  HandoverBottomSheet.show(context, bid: _bid);
                 } else if (state is BidRejected) {
                   _bid = state.bid;
                   DonySnackbar.show(context, message: 'Demande refusée.');
@@ -576,20 +573,17 @@ class _BidDetailViewState extends State<_BidDetailView> {
                                       const _RatingDoneCard(),
                                     ],
 
-                                    // No-show contestation banner (sender, CASH, PENDING_CONFIRMATION)
+                                    // No-show contestation banner (sender, CASH + Stripe, PENDING_CONFIRMATION)
                                     if (isSender &&
-                                        _bid.paymentMethod ==
-                                            BidPaymentMethod.cash &&
                                         _bid.cancellationNoShowStatus ==
                                             'PENDING_CONFIRMATION') ...[
                                       const SizedBox(height: DonySpacing.xl),
                                       _NoShowContestationBanner(bid: _bid),
                                     ],
 
-                                    // No-show button (traveler, CASH bid, ACCEPTED, past handover window)
+                                    // "Expéditeur absent" (traveler) — CASH + Stripe, ACCEPTED,
+                                    // past handover window. Disappears once handed over (status != ACCEPTED).
                                     if (!isSender &&
-                                        _bid.paymentMethod ==
-                                            BidPaymentMethod.cash &&
                                         _bid.status == 'ACCEPTED' &&
                                         _bid.handoverWindowEnd != null &&
                                         DateTime.now().isAfter(
@@ -597,6 +591,18 @@ class _BidDetailViewState extends State<_BidDetailView> {
                                         )) ...[
                                       const SizedBox(height: DonySpacing.xl),
                                       _NoShowSection(bid: _bid),
+                                    ],
+
+                                    // "Voyageur absent" (sender) — CASH + Stripe, ACCEPTED, window passed.
+                                    // Disappears once handed over (HANDED_OVER+ : status != ACCEPTED).
+                                    if (isSender &&
+                                        _bid.status == 'ACCEPTED' &&
+                                        _bid.handoverWindowEnd != null &&
+                                        DateTime.now().isAfter(
+                                          _bid.handoverWindowEnd!,
+                                        )) ...[
+                                      const SizedBox(height: DonySpacing.xl),
+                                      _TravelerNoShowSection(bid: _bid),
                                     ],
 
                                     // Cancel section (traveler only, ACCEPTED / HANDED_OVER / IN_TRANSIT)
@@ -1190,5 +1196,86 @@ class _NoShowSection extends StatelessWidget {
       return;
     }
     context.read<CancellationBloc>().add(NoShowReportRequested(bid.id));
+  }
+}
+
+// ── Traveler no-show section (sender, CASH + Stripe, ACCEPTED, past window) ────
+// Le sender signale que le VOYAGEUR ne s'est pas présenté au point de remise.
+// Miroir de [_NoShowSection] : même CancellationBloc, même feedback/refresh géré
+// centralement par le BlocListener<CancellationBloc> de _BidDetailView
+// (NoShowReported → snackbar + BidDetailRequested ; CancellationError → erreur).
+
+class _TravelerNoShowSection extends StatelessWidget {
+  final BidModel bid;
+  const _TravelerNoShowSection({required this.bid});
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+    return BlocBuilder<CancellationBloc, CancellationState>(
+      builder: (context, state) {
+        final isLoading = state is CancellationLoading;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'ABSENCE VOYAGEUR',
+              style: tt.labelMedium?.copyWith(
+                color: cs.onSurfaceVariant,
+                letterSpacing: 0.8,
+              ),
+            ),
+            const SizedBox(height: DonySpacing.md),
+            DonyButton(
+              label: "Signaler l'absence",
+              icon: Icons.person_off_rounded,
+              variant: DonyButtonVariant.ghost,
+              isLoading: isLoading,
+              onPressed: isLoading ? null : () => _confirmNoShow(context),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _confirmNoShow(BuildContext context) async {
+    final confirmed = await DonyBottomSheet.show<bool>(
+      context,
+      title: "Le voyageur ne s'est pas présenté ?",
+      stickyBottom: Builder(
+        builder: (ctx) => DonyButton(
+          label: "Signaler l'absence",
+          icon: Icons.person_off_rounded,
+          onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(true),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: DonySpacing.base),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Le voyageur ne s'est pas présenté au point de remise.",
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: DonySpacing.md),
+            Text(
+              'Le voyageur aura 48 h pour contester. '
+              'Sans réponse de sa part, le bid sera annulé.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) {
+      return;
+    }
+    context.read<CancellationBloc>().add(TravelerNoShowReportRequested(bid.id));
   }
 }

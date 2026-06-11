@@ -30,6 +30,8 @@ class AnnouncementRemoteDatasource {
     List<String> acceptedPaymentMethods = const ['STRIPE'],
     String? capacityUnit,
     String pricingMode = 'KG',
+    required DateTime handoverWindowStart,
+    required DateTime handoverWindowEnd,
   }) async {
     final response = await _apiClient.dio.post(
       '/announcements',
@@ -54,6 +56,8 @@ class AnnouncementRemoteDatasource {
         'acceptedPaymentMethods': acceptedPaymentMethods,
         if (capacityUnit != null) 'capacityUnit': capacityUnit,
         'pricingMode': pricingMode,
+        'handoverWindowStart': handoverWindowStart.toUtc().toIso8601String(),
+        'handoverWindowEnd': handoverWindowEnd.toUtc().toIso8601String(),
       },
     );
 
@@ -177,6 +181,8 @@ class AnnouncementRemoteDatasource {
     List<String> acceptedPaymentMethods = const ['STRIPE'],
     String? capacityUnit,
     String pricingMode = 'KG',
+    required DateTime handoverWindowStart,
+    required DateTime handoverWindowEnd,
   }) async {
     final response = await _apiClient.dio.put(
       '/announcements/$id',
@@ -201,6 +207,8 @@ class AnnouncementRemoteDatasource {
         'acceptedPaymentMethods': acceptedPaymentMethods,
         if (capacityUnit != null) 'capacityUnit': capacityUnit,
         'pricingMode': pricingMode,
+        'handoverWindowStart': handoverWindowStart.toUtc().toIso8601String(),
+        'handoverWindowEnd': handoverWindowEnd.toUtc().toIso8601String(),
       },
     );
 

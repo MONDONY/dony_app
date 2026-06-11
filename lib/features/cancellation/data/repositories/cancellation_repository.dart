@@ -18,6 +18,9 @@ class CancellationRepository {
   Future<void> reportNoShow(String bidId) =>
       _datasource.reportNoShow(bidId);
 
+  Future<void> reportTravelerNoShow(String bidId) =>
+      _datasource.reportTravelerNoShow(bidId);
+
   Future<void> contestNoShow(String bidId) =>
       _datasource.contestNoShow(bidId);
 }

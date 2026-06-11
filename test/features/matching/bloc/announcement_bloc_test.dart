@@ -96,6 +96,8 @@ void main() {
               availableKg: any(named: 'availableKg'),
               pricePerKg: any(named: 'pricePerKg'),
               transportMode: any(named: 'transportMode'),
+              handoverWindowStart: any(named: 'handoverWindowStart'),
+              handoverWindowEnd: any(named: 'handoverWindowEnd'),
             )).thenAnswer((_) async => ann);
         return buildBloc();
       },
@@ -108,6 +110,8 @@ void main() {
         availableKg: 20.0,
         pricePerKg: 5.0,
         transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       )),
       expect: () => [
         isA<AnnouncementLoading>(),
@@ -130,6 +134,8 @@ void main() {
               availableKg: any(named: 'availableKg'),
               pricePerKg: any(named: 'pricePerKg'),
               transportMode: any(named: 'transportMode'),
+              handoverWindowStart: any(named: 'handoverWindowStart'),
+              handoverWindowEnd: any(named: 'handoverWindowEnd'),
             )).thenThrow(Exception('Server error'));
         return buildBloc();
       },
@@ -142,6 +148,8 @@ void main() {
         availableKg: 20.0,
         pricePerKg: 5.0,
         transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       )),
       expect: () => [
         isA<AnnouncementLoading>(),
@@ -169,6 +177,8 @@ void main() {
               availableKg: any(named: 'availableKg'),
               pricePerKg: any(named: 'pricePerKg'),
               transportMode: any(named: 'transportMode'),
+              handoverWindowStart: any(named: 'handoverWindowStart'),
+              handoverWindowEnd: any(named: 'handoverWindowEnd'),
             )).thenThrow(DioException(
               requestOptions: RequestOptions(path: '/announcements'),
               error: ForbiddenException(
@@ -187,6 +197,8 @@ void main() {
         availableKg: 20.0,
         pricePerKg: 5.0,
         transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       )),
       expect: () => [
         isA<AnnouncementLoading>(),
@@ -212,6 +224,8 @@ void main() {
               availableKg: any(named: 'availableKg'),
               pricePerKg: any(named: 'pricePerKg'),
               transportMode: any(named: 'transportMode'),
+              handoverWindowStart: any(named: 'handoverWindowStart'),
+              handoverWindowEnd: any(named: 'handoverWindowEnd'),
             )).thenThrow(ForbiddenException(
                 'Vous avez atteint votre quota mensuel', 'pro-limit-reached'));
         return buildBloc();
@@ -225,6 +239,8 @@ void main() {
         availableKg: 20.0,
         pricePerKg: 5.0,
         transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       )),
       expect: () => [
         isA<AnnouncementLoading>(),
@@ -251,6 +267,8 @@ void main() {
               availableKg: any(named: 'availableKg'),
               pricePerKg: any(named: 'pricePerKg'),
               transportMode: any(named: 'transportMode'),
+              handoverWindowStart: any(named: 'handoverWindowStart'),
+              handoverWindowEnd: any(named: 'handoverWindowEnd'),
             )).thenAnswer((_) async {
           // Délai → le 1er event reste en AnnouncementLoading le temps que les
           // 2 suivants soient dépilés et rejetés par la garde.
@@ -269,6 +287,8 @@ void main() {
           availableKg: 20.0,
           pricePerKg: 5.0,
           transportMode: TransportMode.plane,
+          handoverWindowStart: DateTime(2026, 6, 14, 16),
+          handoverWindowEnd: DateTime(2026, 6, 14, 18),
         );
         bloc.add(event);
         bloc.add(event);
@@ -292,6 +312,8 @@ void main() {
               availableKg: any(named: 'availableKg'),
               pricePerKg: any(named: 'pricePerKg'),
               transportMode: any(named: 'transportMode'),
+              handoverWindowStart: any(named: 'handoverWindowStart'),
+              handoverWindowEnd: any(named: 'handoverWindowEnd'),
             )).called(1);
       },
     );
@@ -310,6 +332,8 @@ void main() {
               availableKg: any(named: 'availableKg'),
               pricePerKg: any(named: 'pricePerKg'),
               transportMode: any(named: 'transportMode'),
+              handoverWindowStart: any(named: 'handoverWindowStart'),
+              handoverWindowEnd: any(named: 'handoverWindowEnd'),
             )).thenThrow(ForbiddenException('Accès refusé', 'account-banned'));
         return buildBloc();
       },
@@ -322,6 +346,8 @@ void main() {
         availableKg: 20.0,
         pricePerKg: 5.0,
         transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       )),
       expect: () => [
         isA<AnnouncementLoading>(),
@@ -787,6 +813,8 @@ void main() {
               availableKg: any(named: 'availableKg'),
               pricePerKg: any(named: 'pricePerKg'),
               transportMode: any(named: 'transportMode'),
+              handoverWindowStart: any(named: 'handoverWindowStart'),
+              handoverWindowEnd: any(named: 'handoverWindowEnd'),
             )).thenAnswer((_) async => updated);
         return buildBloc();
       },
@@ -800,6 +828,8 @@ void main() {
         availableKg: 25.0,
         pricePerKg: 6.0,
         transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       )),
       expect: () => [
         isA<AnnouncementLoading>(),
@@ -822,6 +852,8 @@ void main() {
               availableKg: any(named: 'availableKg'),
               pricePerKg: any(named: 'pricePerKg'),
               transportMode: any(named: 'transportMode'),
+              handoverWindowStart: any(named: 'handoverWindowStart'),
+              handoverWindowEnd: any(named: 'handoverWindowEnd'),
             )).thenThrow(DioException(
           requestOptions: RequestOptions(path: '/announcements/ann-001'),
           response: Response(
@@ -841,6 +873,8 @@ void main() {
         availableKg: 25.0,
         pricePerKg: 6.0,
         transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       )),
       expect: () => [
         isA<AnnouncementLoading>(),
@@ -864,6 +898,8 @@ void main() {
               availableKg: any(named: 'availableKg'),
               pricePerKg: any(named: 'pricePerKg'),
               transportMode: any(named: 'transportMode'),
+              handoverWindowStart: any(named: 'handoverWindowStart'),
+              handoverWindowEnd: any(named: 'handoverWindowEnd'),
             )).thenThrow(Exception('Server error'));
         return buildBloc();
       },
@@ -877,11 +913,118 @@ void main() {
         availableKg: 25.0,
         pricePerKg: 6.0,
         transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
       )),
       expect: () => [
         isA<AnnouncementLoading>(),
         isA<AnnouncementError>(),
       ],
+    );
+  });
+
+  // ─── Handover window forwarding ──────────────────────────────────────────────
+
+  group('Handover window forwarding', () {
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'createAnnouncement reçoit handoverWindowStart/End depuis l\'event',
+      build: () {
+        when(() => mockRepo.createAnnouncement(
+              departureCity: any(named: 'departureCity'),
+              arrivalCity: any(named: 'arrivalCity'),
+              departureDate: any(named: 'departureDate'),
+              departureTime: any(named: 'departureTime'),
+              arrivalTime: any(named: 'arrivalTime'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
+              availableKg: any(named: 'availableKg'),
+              pricePerKg: any(named: 'pricePerKg'),
+              transportMode: any(named: 'transportMode'),
+              handoverWindowStart: any(named: 'handoverWindowStart'),
+              handoverWindowEnd: any(named: 'handoverWindowEnd'),
+            )).thenAnswer((_) async => buildAnnouncement());
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementCreateRequested(
+        departureCity: 'Paris',
+        arrivalCity: 'Dakar',
+        departureDate: DateTime.now().add(const Duration(days: 10)),
+        pickupAddress: kTestPickupAddress,
+        deliveryAddress: kTestDeliveryAddress,
+        availableKg: 20.0,
+        pricePerKg: 5.0,
+        transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
+      )),
+      verify: (_) {
+        verify(() => mockRepo.createAnnouncement(
+              departureCity: any(named: 'departureCity'),
+              arrivalCity: any(named: 'arrivalCity'),
+              departureDate: any(named: 'departureDate'),
+              departureTime: any(named: 'departureTime'),
+              arrivalTime: any(named: 'arrivalTime'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
+              availableKg: any(named: 'availableKg'),
+              pricePerKg: any(named: 'pricePerKg'),
+              transportMode: any(named: 'transportMode'),
+              handoverWindowStart: DateTime(2026, 6, 14, 16),
+              handoverWindowEnd: DateTime(2026, 6, 14, 18),
+            )).called(1);
+      },
+    );
+
+    blocTest<AnnouncementBloc, AnnouncementState>(
+      'updateAnnouncement reçoit handoverWindowStart/End depuis l\'event',
+      build: () {
+        when(() => mockRepo.updateAnnouncement(
+              id: any(named: 'id'),
+              departureCity: any(named: 'departureCity'),
+              arrivalCity: any(named: 'arrivalCity'),
+              departureDate: any(named: 'departureDate'),
+              departureTime: any(named: 'departureTime'),
+              arrivalTime: any(named: 'arrivalTime'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
+              availableKg: any(named: 'availableKg'),
+              pricePerKg: any(named: 'pricePerKg'),
+              transportMode: any(named: 'transportMode'),
+              handoverWindowStart: any(named: 'handoverWindowStart'),
+              handoverWindowEnd: any(named: 'handoverWindowEnd'),
+            )).thenAnswer((_) async => buildAnnouncement());
+        return buildBloc();
+      },
+      act: (bloc) => bloc.add(AnnouncementUpdateRequested(
+        id: 'ann-001',
+        departureCity: 'Lyon',
+        arrivalCity: 'Abidjan',
+        departureDate: DateTime.now().add(const Duration(days: 15)),
+        pickupAddress: kTestPickupAddress,
+        deliveryAddress: kTestDeliveryAddress,
+        availableKg: 25.0,
+        pricePerKg: 6.0,
+        transportMode: TransportMode.plane,
+        handoverWindowStart: DateTime(2026, 6, 14, 16),
+        handoverWindowEnd: DateTime(2026, 6, 14, 18),
+      )),
+      verify: (_) {
+        verify(() => mockRepo.updateAnnouncement(
+              id: any(named: 'id'),
+              departureCity: any(named: 'departureCity'),
+              arrivalCity: any(named: 'arrivalCity'),
+              departureDate: any(named: 'departureDate'),
+              departureTime: any(named: 'departureTime'),
+              arrivalTime: any(named: 'arrivalTime'),
+              pickupAddress: any(named: 'pickupAddress'),
+              deliveryAddress: any(named: 'deliveryAddress'),
+              availableKg: any(named: 'availableKg'),
+              pricePerKg: any(named: 'pricePerKg'),
+              transportMode: any(named: 'transportMode'),
+              handoverWindowStart: DateTime(2026, 6, 14, 16),
+              handoverWindowEnd: DateTime(2026, 6, 14, 18),
+            )).called(1);
+      },
     );
   });
 

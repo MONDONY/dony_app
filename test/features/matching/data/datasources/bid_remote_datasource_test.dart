@@ -215,27 +215,6 @@ void main() {
     });
   });
 
-  // ── setHandover ──────────────────────────────────────────────────────────────
-
-  group('setHandover', () {
-    test('returns BidModel with handover set', () async {
-      final withHandover = {..._bidJson, 'handoverLocation': 'Gare du Nord'};
-      when(() => mockDio.put('/bids/bid-001/handover',
-              data: any(named: 'data')))
-          .thenAnswer((_) async =>
-              _ok(withHandover, '/bids/bid-001/handover'));
-
-      final result = await datasource.setHandover(
-        bidId: 'bid-001',
-        location: 'Gare du Nord',
-        windowStart: DateTime(2024, 6, 1, 10),
-        windowEnd: DateTime(2024, 6, 1, 12),
-      );
-
-      expect(result.handoverLocation, 'Gare du Nord');
-    });
-  });
-
   // ── confirmPresence ──────────────────────────────────────────────────────────
 
   group('confirmPresence', () {

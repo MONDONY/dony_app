@@ -53,8 +53,10 @@ abstract final class AnalyticsEvents {
   static const ratingSubmitted = 'rating_submitted';
 
   // Cancellations
-  static const cancellationInitiated = 'cancellation_initiated';
-  static const rematchAccepted       = 'rematch_accepted';
+  static const cancellationInitiated   = 'cancellation_initiated';
+  static const rematchAccepted         = 'rematch_accepted';
+  static const noShowReportedBySender  = 'no_show_reported_by_sender';
+  static const noShowReportedByTraveler = 'no_show_reported_by_traveler';
 
   // Profile
   static const becomeTravelerStarted = 'become_traveler_started';

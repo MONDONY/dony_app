@@ -323,8 +323,45 @@ void main() {
       },
     );
 
+    // Régression : le flux no-show est désormais bidirectionnel (CASH + Stripe).
+    // Le voyageur peut signaler l'absence de l'expéditeur même en Stripe.
     testWidgets(
-      'expéditeur + cash + ACCEPTED + handoverWindowEnd passé → bouton absent',
+      'voyageur + STRIPE + ACCEPTED + handoverWindowEnd passé → bouton visible',
+      (tester) async {
+        final authBloc = _MockAuthBloc();
+        when(
+          () => authBloc.state,
+        ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => Stream<AuthState>.empty());
+
+        await _pump(
+          tester,
+          bid: _makeBid(
+            paymentMethod: BidPaymentMethod.stripe,
+            handoverWindowEnd: DateTime.now().subtract(
+              const Duration(hours: 1),
+            ),
+          ),
+          authBloc: authBloc,
+        );
+
+        expect(
+          find.textContaining("L'expéditeur n'est pas venu"),
+          findsOneWidget,
+        );
+      },
+    );
+  });
+
+  // ── Task 12 : Bouton "Voyageur absent" (expéditeur signale le voyageur) ───────
+
+  group('Section no-show voyageur (expéditeur, CASH + Stripe, ACCEPTED)', () {
+    const kTitle = "Le voyageur ne s'est pas présenté ?";
+
+    testWidgets(
+      'expéditeur + ACCEPTED + handoverWindowEnd passé → section visible',
       (tester) async {
         final authBloc = _MockAuthBloc();
         when(
@@ -337,6 +374,7 @@ void main() {
         await _pump(
           tester,
           bid: _makeBid(
+            paymentMethod: BidPaymentMethod.stripe,
             handoverWindowEnd: DateTime.now().subtract(
               const Duration(hours: 1),
             ),
@@ -344,10 +382,59 @@ void main() {
           authBloc: authBloc,
         );
 
-        expect(
-          find.textContaining("L'expéditeur n'est pas venu"),
-          findsNothing,
+        // Le label du bouton "Signaler l'absence" identifie la section.
+        expect(find.text("Signaler l'absence"), findsOneWidget);
+        // Le titre n'apparaît que dans la bottom sheet (pas encore ouverte).
+        expect(find.text(kTitle), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'expéditeur + HANDED_OVER → section absente (disparaît à la remise)',
+      (tester) async {
+        final authBloc = _MockAuthBloc();
+        when(
+          () => authBloc.state,
+        ).thenReturn(AuthAuthenticated(_user(_kSenderId)));
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => Stream<AuthState>.empty());
+
+        await _pump(
+          tester,
+          bid: _makeBid(
+            status: 'HANDED_OVER',
+            handoverWindowEnd: DateTime.now().subtract(
+              const Duration(hours: 1),
+            ),
+          ),
+          authBloc: authBloc,
         );
+
+        expect(find.text("Signaler l'absence"), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'expéditeur + ACCEPTED + handoverWindowEnd futur → section absente',
+      (tester) async {
+        final authBloc = _MockAuthBloc();
+        when(
+          () => authBloc.state,
+        ).thenReturn(AuthAuthenticated(_user(_kSenderId)));
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => Stream<AuthState>.empty());
+
+        await _pump(
+          tester,
+          bid: _makeBid(
+            handoverWindowEnd: DateTime.now().add(const Duration(hours: 2)),
+          ),
+          authBloc: authBloc,
+        );
+
+        expect(find.text("Signaler l'absence"), findsNothing);
       },
     );
   });
@@ -473,5 +560,66 @@ void main() {
       );
       expect(find.byType(ColisBillet), findsOneWidget);
     });
+  });
+
+  // ── Task 10 : ConfirmPresenceBar (fenêtre de remise depuis l'annonce) ──────────
+
+  group('ConfirmPresenceBar (handoverWindowStart depuis annonce)', () {
+    testWidgets(
+      'voyageur + ACCEPTED + dans la fenêtre de remise → Confirmer ma présence visible',
+      (tester) async {
+        final authBloc = _MockAuthBloc();
+        when(
+          () => authBloc.state,
+        ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => Stream<AuthState>.empty());
+
+        // Fenêtre qui commence dans 1 h (< 4 h → condition satisfaite) et
+        // se termine dans 2 h (dans le futur → DateTime.now().isBefore()).
+        final now = DateTime.now();
+        final bid = BidModel(
+          id: 'bid-window',
+          announcementId: 'ann-window',
+          senderId: _kSenderId,
+          weightKg: 3,
+          status: 'ACCEPTED',
+          createdAt: now,
+          updatedAt: now,
+          paymentMethod: BidPaymentMethod.stripe,
+          handoverWindowStart: now.add(const Duration(hours: 1)),
+          handoverWindowEnd: now.add(const Duration(hours: 2)),
+        );
+
+        await _pump(tester, bid: bid, authBloc: authBloc);
+
+        expect(find.text('Confirmer ma présence'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'voyageur + ACCEPTED + handoverWindowStart null → Confirmer ma présence absent',
+      (tester) async {
+        final authBloc = _MockAuthBloc();
+        when(
+          () => authBloc.state,
+        ).thenReturn(AuthAuthenticated(_user(_kTravelerId)));
+        when(
+          () => authBloc.stream,
+        ).thenAnswer((_) => Stream<AuthState>.empty());
+
+        await _pump(
+          tester,
+          bid: _makeBid(
+            paymentMethod: BidPaymentMethod.stripe,
+            handoverWindowEnd: DateTime.now().add(const Duration(hours: 2)),
+          ),
+          authBloc: authBloc,
+        );
+
+        expect(find.text('Confirmer ma présence'), findsNothing);
+      },
+    );
   });
 }

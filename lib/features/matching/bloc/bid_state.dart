@@ -76,11 +76,6 @@ class BidRejected extends BidState {
   BidRejected(this.bid);
 }
 
-class BidHandoverSet extends BidState {
-  final BidModel bid;
-  BidHandoverSet(this.bid);
-}
-
 class BidPresenceConfirmed extends BidState {
   final BidModel bid;
   BidPresenceConfirmed(this.bid);

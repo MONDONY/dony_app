@@ -16,6 +16,7 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
     on<CancellationTripRequested>(_onTripCancellationRequested);
     on<RematchSuggestionsRequested>(_onRematchRequested);
     on<NoShowReportRequested>(_onNoShowReport);
+    on<TravelerNoShowReportRequested>(_onTravelerNoShowReport);
     on<NoShowContestRequested>(_onNoShowContest);
   }
 
@@ -60,6 +61,21 @@ class CancellationBloc extends Bloc<CancellationEvent, CancellationState> {
     try {
       await _repository.reportNoShow(event.bidId);
       emit(NoShowReported());
+      unawaited(_analytics.logEvent(AnalyticsEvents.noShowReportedByTraveler));
+    } catch (e) {
+      emit(CancellationError(unwrapDioError(e)));
+    }
+  }
+
+  Future<void> _onTravelerNoShowReport(
+    TravelerNoShowReportRequested event,
+    Emitter<CancellationState> emit,
+  ) async {
+    emit(CancellationLoading());
+    try {
+      await _repository.reportTravelerNoShow(event.bidId);
+      emit(NoShowReported());
+      unawaited(_analytics.logEvent(AnalyticsEvents.noShowReportedBySender));
     } catch (e) {
       emit(CancellationError(unwrapDioError(e)));
     }
