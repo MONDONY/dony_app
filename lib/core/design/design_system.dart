@@ -45,6 +45,8 @@ export 'package:dony/core/design/widgets/dony_snackbar.dart';
 export 'package:dony/core/design/widgets/dony_status_banner.dart';
 export 'package:dony/core/design/widgets/dony_step_indicator.dart';
 export 'package:dony/core/design/widgets/dony_text_field.dart';
+// Feedback
+export 'package:dony/core/design/widgets/dony_feedback_button.dart';
 // Domain cards
 export 'package:dony/core/design/widgets/dony_trip_card.dart';
 export 'package:dony/core/design/widgets/dony_user_card.dart';
