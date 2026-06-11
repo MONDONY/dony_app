@@ -278,21 +278,19 @@ class _HeroHeader extends StatelessWidget {
                     icon: Icons.add_rounded,
                     label: 'Recharger',
                     onTap: () async {
+                      // Solde avant la recharge : sert de référence au polling
+                      // post-recharge (on s'arrête dès qu'il augmente).
+                      final previousBalance = balance;
                       final ok = await context
                           .push<bool>('/payments/wallet/topup/method');
                       if (ok != true || !context.mounted) {
                         return;
                       }
-                      final bloc = context.read<WalletBloc>();
-                      // Recharge immédiate + une seconde différée : le crédit
-                      // Stripe arrive de façon asynchrone via webhook, donc le
-                      // solde peut n'être à jour qu'après un court instant.
-                      bloc.add(WalletLoadRequested());
-                      Future.delayed(const Duration(seconds: 3), () {
-                        if (!bloc.isClosed) {
-                          bloc.add(WalletLoadRequested());
-                        }
-                      });
+                      // Le crédit Stripe arrive de façon asynchrone via webhook :
+                      // on poll le solde jusqu'à ce qu'il dépasse l'ancien.
+                      context.read<WalletBloc>().add(
+                            WalletRefreshAfterTopupRequested(previousBalance),
+                          );
                     },
                   ),
                   const SizedBox(width: DonySpacing.sm),
