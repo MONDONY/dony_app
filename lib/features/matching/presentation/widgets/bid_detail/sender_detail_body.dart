@@ -21,10 +21,30 @@ import 'package:flutter_animate/flutter_animate.dart';
 ///   - [CancellationBloc] (via [SenderHeroCard]),
 ///   - [ConversationOpenBloc] (via [VoyageurContactCard]),
 ///   - [TrackingBloc] / [BidBloc] (via le talon QR du billet).
-class SenderDetailBody extends StatelessWidget {
+///
+/// ## Animations
+/// Le stagger d'entrée (fadeIn + slideY décalé de 60 ms × index) est joué
+/// **une seule fois** grâce au flag [_SenderDetailBodyState._playEntrance].
+/// Les rebuilds suivants (polling toutes les 10 s du parent) rendent les
+/// cartes sans re-déclencher l'animation — flag passé à `false` après la
+/// durée totale du stagger, sans `setState` (pas de rebuild superflu).
+class SenderDetailBody extends StatefulWidget {
   final BidModel bid;
 
   const SenderDetailBody({super.key, required this.bid});
+
+  @override
+  State<SenderDetailBody> createState() => _SenderDetailBodyState();
+}
+
+class _SenderDetailBodyState extends State<SenderDetailBody> {
+  /// `true` uniquement lors du premier build : déclenche le stagger d'entrée.
+  ///
+  /// Passé à `false` après la durée totale du stagger (sans [setState] pour
+  /// ne pas provoquer un rebuild parasite). Le prochain rebuild naturel du
+  /// parent (polling 10 s → BidDetailLoaded) lira ce flag à `false` et
+  /// affichera les cartes directement, sans rejouer l'animation.
+  bool _playEntrance = true;
 
   /// Statuts où le voyageur est connu (carte voyageur affichée).
   static const _voyageurStatuses = <String>{
@@ -39,38 +59,66 @@ class SenderDetailBody extends StatelessWidget {
   static const _suiviStatuses = _voyageurStatuses;
 
   @override
+  void initState() {
+    super.initState();
+    // Durée totale = délai max (60 ms × 7 pour 8 enfants, index 0–7)
+    // + durée fadeIn (300 ms) + marge (50 ms).
+    // Après ce délai, le flag est mis à false SANS setState : on ne veut pas
+    // déclencher un rebuild ici, juste que le prochain rebuild (polling parent)
+    // saute le stagger.
+    const total = Duration(milliseconds: 60 * 7 + 300 + 50);
+    Future.delayed(total, () {
+      _playEntrance = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final h = DonyLayout.hPadding(context);
-    final status = bid.status;
+    final status = widget.bid.status;
 
     final children = <Widget>[
-      ColisBillet(bid: bid, isSender: true),
-      SenderHeroCard(bid: bid),
-      if (_voyageurStatuses.contains(status)) VoyageurContactCard(bid: bid),
-      ColisDestinataireCard(bid: bid),
-      PaiementCard(bid: bid),
-      if (_suiviStatuses.contains(status)) QuickActionsRow(bid: bid),
-      DetailsAccordion(bid: bid),
-      if (status == 'COMPLETED' && bid.senderHasRated) const RatingDoneBadge(),
+      // index 0 — ColisBillet possède déjà son propre .animate().fadeIn().slideY()
+      // en interne (colis_billet.dart:53). On ne lui applique PAS le stagger ici
+      // pour éviter une double animation (fade × fade + slide × slide).
+      ColisBillet(bid: widget.bid, isSender: true),
+      SenderHeroCard(bid: widget.bid),
+      if (_voyageurStatuses.contains(status))
+        VoyageurContactCard(bid: widget.bid),
+      ColisDestinataireCard(bid: widget.bid),
+      PaiementCard(bid: widget.bid),
+      if (_suiviStatuses.contains(status)) QuickActionsRow(bid: widget.bid),
+      DetailsAccordion(bid: widget.bid),
+      if (status == 'COMPLETED' && widget.bid.senderHasRated)
+        const RatingDoneBadge(),
     ];
 
-    // Stagger d'entrée : chaque enfant entre en fondu + glissement, décalé de
-    // 60 ms × index. Séparés par un espace vertical constant.
+    // Stagger d'entrée : joué une seule fois (flag _playEntrance).
+    // index 0 (ColisBillet) est exclu du stagger car il anime déjà en interne.
+    // Les autres enfants entrent en fondu + glissement, décalés de 60 ms × i.
     final staggered = <Widget>[];
     for (var i = 0; i < children.length; i++) {
       if (i > 0) {
         staggered.add(const SizedBox(height: DonySpacing.base));
       }
-      staggered.add(
-        children[i]
-            .animate()
-            .fadeIn(duration: 300.ms, delay: (60 * i).ms)
-            .slideY(
-              begin: 0.04,
-              curve: Curves.easeOutCubic,
-              delay: (60 * i).ms,
-            ),
-      );
+
+      // ColisBillet (index 0) : pas de stagger — son animation interne suffit.
+      // Autres cartes : stagger uniquement lors du premier affichage.
+      final child = children[i];
+      if (_playEntrance && i > 0) {
+        staggered.add(
+          child
+              .animate()
+              .fadeIn(duration: 300.ms, delay: (60 * i).ms)
+              .slideY(
+                begin: 0.04,
+                curve: Curves.easeOutCubic,
+                delay: (60 * i).ms,
+              ),
+        );
+      } else {
+        staggered.add(child);
+      }
     }
 
     return SingleChildScrollView(
