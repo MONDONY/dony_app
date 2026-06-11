@@ -273,6 +273,17 @@ class _TravelerAnnouncementContent extends StatelessWidget {
           labelStyle: TextStyle(color: cs.primary, fontWeight: FontWeight.w700),
         ),
 
+        if (announcement.handoverWindowStart != null &&
+            announcement.handoverWindowEnd != null) ...[
+          const SizedBox(height: DonySpacing.sm),
+          _InfoRow(
+            icon: Icons.schedule_rounded,
+            label:
+                'Remise : ${DateFormat('EEE d MMM, HH:mm', 'fr').format(announcement.handoverWindowStart!.toLocal())}'
+                ' → ${DateFormat('HH:mm', 'fr').format(announcement.handoverWindowEnd!.toLocal())}',
+          ),
+        ],
+
         if (announcement.pricingMode == 'MIXED' && announcement.priceGridItems.isNotEmpty) ...[
           const SizedBox(height: DonySpacing.lg),
           Text('Tarif par article', style: tt.labelMedium?.copyWith(color: cs.onSurfaceVariant)),
