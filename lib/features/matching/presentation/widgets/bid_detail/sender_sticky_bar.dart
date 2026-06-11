@@ -116,7 +116,33 @@ class SenderStickyBar extends StatelessWidget {
 
     final status = bid.status;
 
-    // 2. Needs payment: (PENDING || ACCEPTED) && stripe && paymentLoaded && not yet paid
+    // 2. Stripe payment loading placeholder: show a skeleton while the payment
+    //    status is being fetched so there is no layout shift when it resolves.
+    //    Only applies to stripe (cash has no online sender payment).
+    if ((status == 'PENDING' || status == 'ACCEPTED') &&
+        bid.paymentMethod == BidPaymentMethod.stripe &&
+        !paymentLoaded) {
+      final cs = Theme.of(context).colorScheme;
+      return Container(
+        height: 52,
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(DonyRadius.lg),
+        ),
+        child: Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: cs.onSurfaceVariant,
+            ),
+          ),
+        ),
+      );
+    }
+
+    // 3. Needs payment: (PENDING || ACCEPTED) && stripe && paymentLoaded && not yet paid
     final needsPayment = (status == 'PENDING' || status == 'ACCEPTED') &&
         bid.paymentMethod == BidPaymentMethod.stripe &&
         paymentLoaded &&

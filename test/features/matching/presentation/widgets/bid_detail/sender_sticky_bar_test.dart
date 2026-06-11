@@ -189,6 +189,36 @@ void main() {
     },
   );
 
+  // Test 8: PENDING stripe paymentLoaded=false → placeholder loading, aucun DonyButton
+  testWidgets(
+    '8. PENDING stripe paymentLoaded=false → CircularProgressIndicator, aucun DonyButton',
+    (tester) async {
+      final bloc = _MockBidBloc();
+      whenListen<BidState>(bloc, const Stream.empty(), initialState: BidInitial());
+
+      await tester.pumpWidget(
+        _host(
+          bloc,
+          _bid(status: 'PENDING', paymentMethod: BidPaymentMethod.stripe),
+          paymentLoaded: false,
+        ),
+      );
+      // Use pump() instead of pumpAndSettle() — CircularProgressIndicator
+      // animates indefinitely and would cause pumpAndSettle to time out.
+      await tester.pump();
+
+      // Placeholder must be visible
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+      // No action button should be rendered
+      expect(find.text('Payer mon envoi'), findsNothing);
+      expect(find.text('Afficher le QR de remise'), findsNothing);
+      expect(find.text('Suivi du colis'), findsNothing);
+      expect(find.text('Noter le voyageur'), findsNothing);
+      expect(find.text('Supprimer cette demande'), findsNothing);
+    },
+  );
+
   // Test 7: CANCELLED → 'Supprimer cette demande', tap → dialog → 'Supprimer' → BidDeleteRequested
   testWidgets(
     '7. CANCELLED → "Supprimer cette demande", tap → dialog → "Supprimer" → BidDeleteRequested dispatched once',

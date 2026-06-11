@@ -499,7 +499,7 @@ class EscrowBadge extends StatelessWidget {
 /// Informational pill shown to the sender when the deal is settled in person
 /// (cash / Wave / Orange Money). There is no online sender payment: dony's
 /// commission is collected from the traveler server-side. Styled like
-/// [_EscrowBadge] but with a warning tone.
+/// [EscrowBadge] but with a warning tone.
 class _CashBadge extends StatelessWidget {
   const _CashBadge();
 
