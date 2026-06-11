@@ -60,6 +60,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   final _departureDateNotifier = ValueNotifier<DateTime?>(null);
   final _departureTimeNotifier = ValueNotifier<TimeOfDay?>(null);
   final _arrivalTimeNotifier = ValueNotifier<TimeOfDay?>(null);
+  final _handoverStartNotifier = ValueNotifier<DateTime?>(null);
+  final _handoverEndNotifier = ValueNotifier<DateTime?>(null);
   AddressData? _pickupAddress;
   AddressData? _deliveryAddress;
   late final ValueNotifier<double> _availableKgNotifier;
@@ -102,6 +104,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       _departureCountryCodeNotifier.value = a.departureCountryCode;
       _arrivalCountryCodeNotifier.value = a.arrivalCountryCode;
       _departureDateNotifier.value = a.departureDate;
+      _handoverStartNotifier.value = widget.announcement?.handoverWindowStart;
+      _handoverEndNotifier.value = widget.announcement?.handoverWindowEnd;
       _availableKgNotifier.value = a.availableKg;
 
       if (a.departureTime != null) {
@@ -170,6 +174,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     _departureDateNotifier.dispose();
     _departureTimeNotifier.dispose();
     _arrivalTimeNotifier.dispose();
+    _handoverStartNotifier.dispose();
+    _handoverEndNotifier.dispose();
     _availableKgNotifier.dispose();
     _priceOptionNotifier.dispose();
     _selectedContentNotifier.dispose();
@@ -312,6 +318,25 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       return;
     }
 
+    final handoverStart = _handoverStartNotifier.value;
+    final handoverEnd = _handoverEndNotifier.value;
+    if (handoverStart == null || handoverEnd == null) {
+      _showError('Fenêtre de remise obligatoire');
+      return;
+    }
+    if (!handoverEnd.isAfter(handoverStart)) {
+      _showError('La fin de la fenêtre doit être après le début');
+      return;
+    }
+    final departureBound = departureTimeVal != null
+        ? DateTime(departureDate.year, departureDate.month, departureDate.day,
+            departureTimeVal.hour, departureTimeVal.minute)
+        : DateTime(departureDate.year, departureDate.month, departureDate.day, 23, 59);
+    if (handoverEnd.isAfter(departureBound)) {
+      _showError('La fenêtre de remise doit se terminer avant le départ');
+      return;
+    }
+
     final departureTime =
         departureTimeVal != null ? _formatTime(departureTimeVal) : null;
     final arrivalTime =
@@ -328,10 +353,6 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
 
     final transportMode = _transportModeNotifier.value!;
     final paymentMethods = ['STRIPE', if (_cashEnabledNotifier.value) 'CASH'];
-
-    // TODO(Task 7): remplacer par le vrai créneau saisi via le picker
-    final handoverStart = DateTime.now();
-    final handoverEnd = handoverStart.add(const Duration(hours: 2));
 
     if (_isEdit) {
       context.read<AnnouncementBloc>().add(AnnouncementUpdateRequested(
@@ -443,6 +464,43 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     if (picked != null) {
       _arrivalTimeNotifier.value = picked;
     }
+  }
+
+  Future<DateTime?> _pickDateTime(DateTime? initial) async {
+    final cs = Theme.of(context).colorScheme;
+    final date = await showDatePicker(
+      context: context,
+      initialDate: initial ?? DateTime.now().add(const Duration(days: 1)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(colorScheme: ColorScheme.light(primary: cs.primary)),
+        child: child!,
+      ),
+    );
+    if (date == null || !mounted) return null;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: initial != null
+          ? TimeOfDay.fromDateTime(initial)
+          : const TimeOfDay(hour: 18, minute: 0),
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(colorScheme: ColorScheme.light(primary: cs.primary)),
+        child: child!,
+      ),
+    );
+    if (time == null) return null;
+    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
+  }
+
+  Future<void> _selectHandoverStart() async {
+    final picked = await _pickDateTime(_handoverStartNotifier.value);
+    if (picked != null) _handoverStartNotifier.value = picked;
+  }
+
+  Future<void> _selectHandoverEnd() async {
+    final picked = await _pickDateTime(_handoverEndNotifier.value);
+    if (picked != null) _handoverEndNotifier.value = picked;
   }
 
   String _formatCorridorDateTime() {
@@ -703,6 +761,54 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                             builder: (context, date, _) => _DateRow(
                               date: date,
                               onTap: _selectDate,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: DonySpacing.sm),
+                    _SectionCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: DonySpacing.xs,
+                              left: DonySpacing.base,
+                              top: DonySpacing.sm,
+                            ),
+                            child: Text('Fenêtre de remise du colis',
+                                style: Theme.of(context).textTheme.labelMedium),
+                          ),
+                          ValueListenableBuilder<DateTime?>(
+                            valueListenable: _handoverStartNotifier,
+                            builder: (context, dt, _) => ListTile(
+                              key: const Key('handover-start-row'),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: DonySpacing.base,
+                              ),
+                              leading: Icon(Icons.schedule_rounded, size: 20,
+                                  color: Theme.of(context).colorScheme.primary),
+                              title: const Text('Début'),
+                              trailing: Text(dt != null
+                                  ? DateFormat('dd/MM HH:mm', 'fr').format(dt) : 'Choisir'),
+                              onTap: _selectHandoverStart,
+                            ),
+                          ),
+                          const _RowDivider(),
+                          ValueListenableBuilder<DateTime?>(
+                            valueListenable: _handoverEndNotifier,
+                            builder: (context, dt, _) => ListTile(
+                              key: const Key('handover-end-row'),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: DonySpacing.base,
+                              ),
+                              leading: Icon(Icons.schedule_rounded, size: 20,
+                                  color: Theme.of(context).colorScheme.primary),
+                              title: const Text('Fin'),
+                              trailing: Text(dt != null
+                                  ? DateFormat('dd/MM HH:mm', 'fr').format(dt) : 'Choisir'),
+                              onTap: _selectHandoverEnd,
                             ),
                           ),
                         ],

@@ -100,6 +100,8 @@ final _testAnnouncement = AnnouncementModel(
   createdAt: DateTime(2026, 1, 1),
   updatedAt: DateTime(2026, 1, 1),
   acceptedPaymentMethods: const {BidPaymentMethod.stripe},
+  handoverWindowStart: DateTime(2027, 8, 15, 14, 0),
+  handoverWindowEnd: DateTime(2027, 8, 15, 16, 0),
 );
 
 // ── Builder ───────────────────────────────────────────────────────────────────
