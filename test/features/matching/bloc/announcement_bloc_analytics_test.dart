@@ -80,6 +80,8 @@ void main() {
       acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
       capacityUnit: any(named: 'capacityUnit'),
       pricingMode: any(named: 'pricingMode'),
+      handoverWindowStart: any(named: 'handoverWindowStart'),
+      handoverWindowEnd: any(named: 'handoverWindowEnd'),
     )).thenAnswer((_) async => fakeAnnouncement());
 
     final bloc = makeBloc();
@@ -92,6 +94,8 @@ void main() {
       availableKg: 10.0,
       pricePerKg: 15.0,
       transportMode: TransportMode.plane,
+      handoverWindowStart: DateTime(2026, 6, 14, 16),
+      handoverWindowEnd: DateTime(2026, 6, 14, 18),
     ));
     await bloc.stream.firstWhere((s) => s is AnnouncementCreated);
     await Future<void>.delayed(Duration.zero);
@@ -142,6 +146,8 @@ void main() {
       acceptedPaymentMethods: any(named: 'acceptedPaymentMethods'),
       capacityUnit: any(named: 'capacityUnit'),
       pricingMode: any(named: 'pricingMode'),
+      handoverWindowStart: any(named: 'handoverWindowStart'),
+      handoverWindowEnd: any(named: 'handoverWindowEnd'),
     )).thenAnswer((_) async => fakeAnnouncement());
 
     final bloc = makeBloc(enabled: false);
@@ -154,6 +160,8 @@ void main() {
       availableKg: 10.0,
       pricePerKg: 15.0,
       transportMode: TransportMode.plane,
+      handoverWindowStart: DateTime(2026, 6, 14, 16),
+      handoverWindowEnd: DateTime(2026, 6, 14, 18),
     ));
     await bloc.stream.firstWhere((s) => s is AnnouncementCreated);
     await Future<void>.delayed(Duration.zero);

@@ -329,6 +329,10 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     final transportMode = _transportModeNotifier.value!;
     final paymentMethods = ['STRIPE', if (_cashEnabledNotifier.value) 'CASH'];
 
+    // TODO(Task 7): remplacer par le vrai créneau saisi via le picker
+    final handoverStart = DateTime.now();
+    final handoverEnd = handoverStart.add(const Duration(hours: 2));
+
     if (_isEdit) {
       context.read<AnnouncementBloc>().add(AnnouncementUpdateRequested(
             id: widget.announcement!.id,
@@ -348,6 +352,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
             acceptedContentTypes: allAccepted,
             refusedTypes: refused,
             acceptedPaymentMethods: paymentMethods,
+            handoverWindowStart: handoverStart,
+            handoverWindowEnd: handoverEnd,
           ));
     } else {
       context.read<AnnouncementBloc>().add(AnnouncementCreateRequested(
@@ -367,6 +373,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
             acceptedContentTypes: allAccepted,
             refusedTypes: refused,
             acceptedPaymentMethods: paymentMethods,
+            handoverWindowStart: handoverStart,
+            handoverWindowEnd: handoverEnd,
           ));
     }
   }

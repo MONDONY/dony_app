@@ -29,6 +29,8 @@ class AnnouncementRepository {
     List<String> acceptedPaymentMethods = const ['STRIPE'],
     String? capacityUnit,
     String pricingMode = 'KG',
+    required DateTime handoverWindowStart,
+    required DateTime handoverWindowEnd,
   }) async {
     return _remoteDatasource.createAnnouncement(
       departureCity: departureCity,
@@ -49,6 +51,8 @@ class AnnouncementRepository {
       acceptedPaymentMethods: acceptedPaymentMethods,
       capacityUnit: capacityUnit,
       pricingMode: pricingMode,
+      handoverWindowStart: handoverWindowStart,
+      handoverWindowEnd: handoverWindowEnd,
     );
   }
 
@@ -145,6 +149,8 @@ class AnnouncementRepository {
     List<String> acceptedPaymentMethods = const ['STRIPE'],
     String? capacityUnit,
     String pricingMode = 'KG',
+    required DateTime handoverWindowStart,
+    required DateTime handoverWindowEnd,
   }) async {
     return _remoteDatasource.updateAnnouncement(
       id: id,
@@ -166,6 +172,8 @@ class AnnouncementRepository {
       acceptedPaymentMethods: acceptedPaymentMethods,
       capacityUnit: capacityUnit,
       pricingMode: pricingMode,
+      handoverWindowStart: handoverWindowStart,
+      handoverWindowEnd: handoverWindowEnd,
     );
   }
 }

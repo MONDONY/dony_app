@@ -186,6 +186,8 @@ void main() {
       availableKg: 0,
       pricePerKg: 0,
       transportMode: TransportMode.plane,
+      handoverWindowStart: DateTime(2026, 6, 14, 16),
+      handoverWindowEnd: DateTime(2026, 6, 14, 18),
     ));
     registerFallbackValue(AnnouncementCreateRequested(
       departureCity: '',
@@ -196,6 +198,8 @@ void main() {
       availableKg: 0,
       pricePerKg: 0,
       transportMode: TransportMode.plane,
+      handoverWindowStart: DateTime(2026, 6, 14, 16),
+      handoverWindowEnd: DateTime(2026, 6, 14, 18),
     ));
 
     cityRepo = MockCityRepository();
