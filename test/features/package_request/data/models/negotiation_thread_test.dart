@@ -143,4 +143,17 @@ void main() {
     expect(t.travelerCapacityUnit, isNull);
     expect(t.isTravelerKgFree, isFalse);
   });
+
+  test('fromJson parses materializedBidId when present', () {
+    final t = NegotiationThread.fromJson(_baseJson(overrides: {
+      'status': 'ACCEPTED',
+      'materializedBidId': 'bid-123',
+    }));
+    expect(t.materializedBidId, 'bid-123');
+  });
+
+  test('fromJson returns null materializedBidId when absent', () {
+    final t = NegotiationThread.fromJson(_baseJson());
+    expect(t.materializedBidId, isNull);
+  });
 }
