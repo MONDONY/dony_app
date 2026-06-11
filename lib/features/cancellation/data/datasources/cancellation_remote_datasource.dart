@@ -28,6 +28,10 @@ class CancellationRemoteDatasource {
     await _apiClient.dio.post('/cancellations/bids/$bidId/report-noshow');
   }
 
+  Future<void> reportTravelerNoShow(String bidId) async {
+    await _apiClient.dio.post('/cancellations/bids/$bidId/report-traveler-noshow');
+  }
+
   Future<void> contestNoShow(String bidId) async {
     await _apiClient.dio.post('/cancellations/bids/$bidId/contest-noshow');
   }
