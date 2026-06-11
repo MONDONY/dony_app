@@ -4,6 +4,11 @@ sealed class WalletEvent {}
 
 class WalletLoadRequested extends WalletEvent {}
 
+/// Recharge silencieuse du solde (pull-to-refresh) : ne passe PAS par
+/// WalletLoading pour éviter de masquer la liste pendant le rafraîchissement —
+/// le RefreshIndicator affiche déjà son propre indicateur.
+class WalletRefreshRequested extends WalletEvent {}
+
 /// Après une recharge : poller le solde jusqu'à ce qu'il dépasse
 /// [previousBalance] (le crédit Stripe arrive de façon asynchrone via webhook),
 /// ou jusqu'à épuisement des tentatives. Évite que l'écran reste sur l'ancien

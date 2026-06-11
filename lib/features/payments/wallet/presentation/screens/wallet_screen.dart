@@ -117,8 +117,19 @@ class _LoadedView extends StatelessWidget {
   Widget build(BuildContext context) {
     final transactions = wallet.transactions as List<WalletTransactionModel>;
 
-    return CustomScrollView(
-      slivers: [
+    return RefreshIndicator(
+      color: Theme.of(context).colorScheme.primary,
+      onRefresh: () async {
+        final bloc = context.read<WalletBloc>();
+        bloc.add(WalletRefreshRequested());
+        // Attend la fin du rafraîchissement (succès ou erreur) pour masquer
+        // l'indicateur de pull-to-refresh.
+        await bloc.stream
+            .firstWhere((s) => s is WalletLoaded || s is WalletError);
+      },
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
         // ── Hero SliverAppBar ──────────────────────────────────────────────
         SliverAppBar(
           expandedHeight: 220,
@@ -212,7 +223,8 @@ class _LoadedView extends StatelessWidget {
             child: SizedBox(height: DonySpacing.huge),
           ),
         ],
-      ],
+        ],
+      ),
     );
   }
 }

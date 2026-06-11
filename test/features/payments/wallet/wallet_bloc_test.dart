@@ -98,6 +98,30 @@ void main() {
     );
   });
 
+  group('WalletRefreshRequested — pull-to-refresh', () {
+    final wallet = WalletModel(balance: 75, currency: 'EUR', transactions: []);
+
+    blocTest<WalletBloc, WalletState>(
+      'émet WalletLoaded SANS WalletLoading (pas de flicker)',
+      build: () {
+        when(() => repo.getBalance()).thenAnswer((_) async => wallet);
+        return bloc;
+      },
+      act: (b) => b.add(WalletRefreshRequested()),
+      expect: () => [isA<WalletLoaded>()],
+    );
+
+    blocTest<WalletBloc, WalletState>(
+      'émet WalletError sur échec',
+      build: () {
+        when(() => repo.getBalance()).thenThrow(Exception('network error'));
+        return bloc;
+      },
+      act: (b) => b.add(WalletRefreshRequested()),
+      expect: () => [isA<WalletError>()],
+    );
+  });
+
   group('WalletRefreshAfterTopupRequested — polling post-recharge', () {
     blocTest<WalletBloc, WalletState>(
       's\'arrête dès que le solde dépasse le précédent (1 seul fetch)',

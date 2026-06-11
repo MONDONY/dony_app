@@ -16,8 +16,24 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
 
   WalletBloc(this._repository, this._analytics) : super(WalletInitial()) {
     on<WalletLoadRequested>(_onLoad);
+    on<WalletRefreshRequested>(_onRefresh);
     on<WalletRefreshAfterTopupRequested>(_onRefreshAfterTopup);
     on<WalletTopupRequested>(_onTopup);
+  }
+
+  Future<void> _onRefresh(
+    WalletRefreshRequested event,
+    Emitter<WalletState> emit,
+  ) async {
+    // Pas de WalletLoading : on garde la liste affichée pendant le pull-to-refresh.
+    try {
+      final wallet = await _repository.getBalance();
+      if (emit.isDone) return;
+      emit(WalletLoaded(wallet));
+    } catch (e) {
+      if (emit.isDone) return;
+      emit(WalletError(unwrapDioError(e).message));
+    }
   }
 
   // Polling post-recharge : le crédit Stripe arrive via webhook (asynchrone),
