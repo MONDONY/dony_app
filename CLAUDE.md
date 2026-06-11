@@ -333,6 +333,11 @@ Le consentement n'est PAS qu'un flag Hive local. **Backend = source de vérité,
 | `envoyer_envois` / `envoyer_demandes` | EnvoyerHubScreen `logScreen` au changement d'onglet (Envois / Demandes) |
 | `firm_price_taken` | NegotiationBloc._onStart() — voyageur prend un prix ferme |
 | `payment_method_selected` | NegotiationBloc._onSubmitTrip()/_onCreateDedicatedTrip() — mode de paiement sélectionné au trip-linking |
+| `bid_qr_sheet_opened` | QrSheet ouverte depuis le détail d'envoi (propriété `status`) |
+| `bid_qr_downloaded` | Tap « Enregistrer » ou « Partager » dans la QrSheet |
+| `traveler_call_initiated` | Tap 📞 sur la carte voyageur (propriété `status`) |
+| `tracking_link_shared` | Partage de l'URL de suivi (app bar ou carte) |
+| `screen_feedback_submitted` | Envoi du rapport 🐞 DonyFeedbackButton (propriété `route`) |
 | `bloc_error` | AnalyticsBlocObserver.onError() — global |
 
 ---
