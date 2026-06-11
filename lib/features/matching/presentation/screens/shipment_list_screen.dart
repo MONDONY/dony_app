@@ -229,7 +229,7 @@ class _ShipmentListContentState extends State<_ShipmentListContent> {
 /// Quick-preset chips for the shipment list.
 List<StatusChipData<Set<String>>> _buildChips(ColorScheme cs) => [
   const StatusChipData(label: 'Tous', value: <String>{}),
-  StatusChipData(label: 'En transit', value: kEnvoisEnCours, dotColor: cs.info),
+  StatusChipData(label: 'En cours', value: kEnvoisEnCours, dotColor: cs.info),
   StatusChipData(
     label: 'En attente',
     value: kEnvoisAVenir,

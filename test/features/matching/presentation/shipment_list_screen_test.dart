@@ -245,7 +245,7 @@ void main() {
     expect(find.text('Rechercher un trajet'), findsOneWidget);
   });
 
-  testWidgets('puce rapide « En transit » filtre les bids ACCEPTED/HANDED_OVER/IN_TRANSIT',
+  testWidgets('puce rapide « En cours » filtre les bids ACCEPTED/HANDED_OVER/IN_TRANSIT',
       (tester) async {
     final bids = [
       _bid('ACCEPTED', 'Dakar'),
@@ -259,7 +259,7 @@ void main() {
     await tester.pumpWidget(subject());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('En transit'));
+    await tester.tap(find.text('En cours'));
     await tester.pumpAndSettle();
 
     expect(find.text('Dakar'), findsOneWidget);
@@ -280,7 +280,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Filter first
-    await tester.tap(find.text('En transit'));
+    await tester.tap(find.text('En cours'));
     await tester.pumpAndSettle();
     // Reset
     await tester.tap(find.text('Tous'));
@@ -547,7 +547,7 @@ void main() {
 
     // All four chip labels present
     expect(find.text('Tous'), findsOneWidget);
-    expect(find.text('En transit'), findsOneWidget);
+    expect(find.text('En cours'), findsOneWidget);
     expect(find.text('En attente'), findsOneWidget);
     expect(find.text('Livrés'), findsOneWidget);
   });
