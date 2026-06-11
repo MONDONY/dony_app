@@ -46,17 +46,15 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
   /// affichera les cartes directement, sans rejouer l'animation.
   bool _playEntrance = true;
 
-  /// Statuts où le voyageur est connu (carte voyageur affichée).
-  static const _voyageurStatuses = <String>{
+  /// Statuts où le voyageur est connu (carte voyageur affichée)
+  /// et où le suivi est disponible (actions rapides affichées).
+  static const _activeStatuses = <String>{
     'ACCEPTED',
     'HANDED_OVER',
     'IN_TRANSIT',
     'COMPLETED',
     'DELIVERED',
   };
-
-  /// Statuts où le suivi est disponible (actions rapides affichées).
-  static const _suiviStatuses = _voyageurStatuses;
 
   @override
   void initState() {
@@ -83,11 +81,11 @@ class _SenderDetailBodyState extends State<SenderDetailBody> {
       // pour éviter une double animation (fade × fade + slide × slide).
       ColisBillet(bid: widget.bid, isSender: true),
       SenderHeroCard(bid: widget.bid),
-      if (_voyageurStatuses.contains(status))
+      if (_activeStatuses.contains(status))
         VoyageurContactCard(bid: widget.bid),
       ColisDestinataireCard(bid: widget.bid),
       PaiementCard(bid: widget.bid),
-      if (_suiviStatuses.contains(status)) QuickActionsRow(bid: widget.bid),
+      if (_activeStatuses.contains(status)) QuickActionsRow(bid: widget.bid),
       DetailsAccordion(bid: widget.bid),
       if (status == 'COMPLETED' && widget.bid.senderHasRated)
         const RatingDoneBadge(),

@@ -64,7 +64,6 @@ class SenderHeroCard extends StatelessWidget {
         variant: content.variant,
         title: content.title,
         subtitle: content.subtitle,
-        footer: content.footer,
       ),
     );
   }
@@ -77,17 +76,11 @@ class _HeroContent {
     required this.variant,
     required this.title,
     required this.subtitle,
-    Widget? footer,
-  }) : _footer = footer;
+  });
 
   final SenderHeroVariant variant;
   final String title;
   final String subtitle;
-  final Widget? _footer;
-
-  // footer is intentionally stored as a private field; callers access it
-  // indirectly through _HeroShell, which reads it via the public getter below.
-  Widget? get footer => _footer;
 }
 
 // ── Status mapping ────────────────────────────────────────────────────────────

@@ -566,7 +566,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
                                           const SizedBox(
                                             height: DonySpacing.base,
                                           ),
-                                          const _RatingDoneCard(),
+                                          const RatingDoneBadge(),
                                         ],
 
                                         // "Expéditeur absent" (traveler) — CASH + Stripe, ACCEPTED,
@@ -647,42 +647,6 @@ class _BidDetailViewState extends State<_BidDetailView> {
         ), // BlocListener<RatingBloc>
       ), // BlocListener<CancellationBloc>
     ); // BlocListener<BidAcceptanceBloc>
-  }
-}
-
-// ── Rating done card ──────────────────────────────────────────────────────────
-
-class _RatingDoneCard extends StatelessWidget {
-  const _RatingDoneCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DonySpacing.base,
-        vertical: DonySpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: cs.primaryContainer,
-        borderRadius: BorderRadius.circular(DonyRadius.card),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.check_circle_rounded, size: 16, color: cs.primary),
-          const SizedBox(width: DonySpacing.xs),
-          Text(
-            'Évaluation envoyée',
-            style: tt.bodyMedium?.copyWith(
-              color: cs.primary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 
