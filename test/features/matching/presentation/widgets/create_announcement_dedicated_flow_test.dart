@@ -428,6 +428,22 @@ void main() {
       await tester.pump(_settle);
       await _openSheet(tester);
 
+      // Fenêtre de remise requise pour activer « Continuer ». Le picker propose
+      // le lendemain à 16:00 / 18:00 (avant la date de départ verrouillée) →
+      // accepter via OK suffit à produire une fenêtre valide.
+      await tester.tap(find.byKey(const Key('sheet-handover-start-row')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK')); // date
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK')); // heure (16:00)
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('sheet-handover-end-row')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK')); // date
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK')); // heure (18:00)
+      await tester.pumpAndSettle();
+
       await tester.tap(find.text('Continuer'));
       await tester.pump(_settle);
       await tester.pump(_settle);

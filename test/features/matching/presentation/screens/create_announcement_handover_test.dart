@@ -303,4 +303,38 @@ void main() {
       expect(find.text('Choisir'), findsNothing);
     },
   );
+
+  // ── 5. Fenêtre incorrecte : message inline + bouton désactivé ──────────────
+
+  testWidgets(
+    'handover_invalid: fenêtre incorrecte affiche le message inline et désactive le bouton',
+    (tester) async {
+      when(() => bloc.add(any())).thenReturn(null);
+
+      // Fin AVANT début → fenêtre invalide.
+      final start = DateTime(2026, 8, 20, 18, 0);
+      final end = DateTime(2026, 8, 20, 16, 0);
+      await _pumpScreen(
+        tester,
+        bloc,
+        announcement: _editAnnouncement(handoverStart: start, handoverEnd: end),
+        commissionBloc: commissionBloc,
+      );
+
+      // Message inline visible avec la raison directe.
+      expect(find.byKey(const Key('handover-error')), findsOneWidget);
+      expect(
+        find.text('La fin de la fenêtre doit être après le début.'),
+        findsOneWidget,
+      );
+
+      // Bouton "Publier" désactivé → impossible de continuer.
+      final btn = tester.widget<DonyButton>(
+          find.byKey(const Key('create-announcement-submit')));
+      expect(btn.onPressed, isNull);
+
+      // Aucun dispatch.
+      verifyNever(() => bloc.add(any(that: isA<AnnouncementUpdateRequested>())));
+    },
+  );
 }
