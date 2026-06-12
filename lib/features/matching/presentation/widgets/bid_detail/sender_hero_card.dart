@@ -245,12 +245,19 @@ class _HeroShell extends StatelessWidget {
     required this.variant,
     required this.title,
     required this.subtitle,
+    this.countdownWidget,
     this.footer,
   });
 
   final SenderHeroVariant variant;
   final String title;
   final String subtitle;
+
+  /// Optional widget rendered below [subtitle] with tighter spacing.
+  /// Used for the contestation countdown so its digits render with tabular
+  /// figures without affecting the rest of the subtitle text.
+  final Widget? countdownWidget;
+
   final Widget? footer;
 
   List<Color> _gradientColors(BuildContext context) {
@@ -304,6 +311,10 @@ class _HeroShell extends StatelessWidget {
               height: 1.45,
             ),
           ),
+          if (countdownWidget != null) ...[
+            const SizedBox(height: DonySpacing.xs),
+            countdownWidget!,
+          ],
           if (footer != null) ...[
             const SizedBox(height: DonySpacing.base),
             footer!,
@@ -483,10 +494,18 @@ class _ContestationHeroState extends State<_ContestationHero> {
   Widget build(BuildContext context) {
     final timeLeft = _timeLeft;
 
-    final subtitleParts = [
-      "Il indique que vous n'étiez pas présent au point de remise.",
-      if (timeLeft.isNotEmpty) '⏱ Temps pour contester : $timeLeft',
-    ];
+    const white = Color(0xFFFFFFFF);
+
+    final countdownWidget = timeLeft.isNotEmpty
+        ? Text(
+            '⏱ Temps pour contester : $timeLeft',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: white.withValues(alpha: 0.85),
+              height: 1.45,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          )
+        : null;
 
     return BlocBuilder<CancellationBloc, CancellationState>(
       builder: (context, state) {
@@ -494,7 +513,8 @@ class _ContestationHeroState extends State<_ContestationHero> {
         return _HeroShell(
           variant: SenderHeroVariant.alert,
           title: '⚠ Absence signalée par le voyageur',
-          subtitle: subtitleParts.join('\n'),
+          subtitle: "Il indique que vous n'étiez pas présent au point de remise.",
+          countdownWidget: countdownWidget,
           footer: Row(
             children: [
               Expanded(

@@ -179,7 +179,7 @@ class SenderStickyBar extends StatelessWidget {
         label: 'Afficher le QR de remise',
         icon: Icons.qr_code_2_rounded,
         onPressed: () {
-          HapticFeedback.lightImpact();
+          // Haptic is handled by QrSheet.show internally — do not duplicate it.
           QrSheet.show(context, bidId: bid.id, status: bid.status);
         },
       );

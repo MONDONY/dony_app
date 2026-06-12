@@ -87,6 +87,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
   bool _skeletonLoading = false;
   Timer? _refreshTimer;
 
+  final _screenBoundaryKey = GlobalKey();
   final _existingPaymentNotifier = ValueNotifier<PaymentModel?>(null);
   final _paymentLoadedNotifier = ValueNotifier<bool>(false);
 
@@ -431,7 +432,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
                       }
                     },
                     actions: [
-                      const DonyFeedbackButton(),
+                      DonyFeedbackButton(repaintBoundaryKey: _screenBoundaryKey),
                       if (_bid.trackingToken != null)
                         IconButton(
                           icon: Icon(Icons.share_rounded, color: cs.onSurface),
@@ -450,13 +451,15 @@ class _BidDetailViewState extends State<_BidDetailView> {
                         ),
                     ],
                   ),
-                  body: _skeletonLoading
-                      ? Center(
-                          child: CircularProgressIndicator(color: cs.primary),
-                        )
-                      : isSender
-                      ? SenderDetailBody(bid: _bid)
-                      : Builder(
+                  body: RepaintBoundary(
+                    key: _screenBoundaryKey,
+                    child: _skeletonLoading
+                        ? Center(
+                            child: CircularProgressIndicator(color: cs.primary),
+                          )
+                        : isSender
+                        ? SenderDetailBody(bid: _bid)
+                        : Builder(
                           builder: (context) {
                             final h = DonyLayout.hPadding(context);
                             return SingleChildScrollView(
@@ -606,6 +609,7 @@ class _BidDetailViewState extends State<_BidDetailView> {
                             );
                           },
                         ),
+                  ),
                   bottomNavigationBar: isSender
                       ? (SenderStickyBar.hasAction(_bid)
                             ? ListenableBuilder(
