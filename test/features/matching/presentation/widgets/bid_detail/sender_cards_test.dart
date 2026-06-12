@@ -474,6 +474,41 @@ void main() {
 
       // Disclaimer
       expect(find.textContaining('Disclaimer'), findsOneWidget);
+
+      // ACCEPTED + voyageurConfirmed=true → « Oui ✓ »
+      expect(find.text('Oui ✓'), findsOneWidget);
+    });
+
+    testWidgets('ACCEPTED + présence non confirmée → "Non encore"',
+        (tester) async {
+      final bid = _bid(
+        status: 'ACCEPTED',
+        handoverLocation: 'CDG',
+        voyageurConfirmed: false,
+      );
+      await tester.pumpWidget(_hostAccordion(bid));
+      await tester.tap(find.textContaining('Plus de détails'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Présence confirmée'), findsOneWidget);
+      expect(find.text('Non encore'), findsOneWidget);
+    });
+
+    testWidgets('HANDED_OVER → "Colis remis ✓" (pas de "Non encore" trompeur)',
+        (tester) async {
+      final bid = _bid(
+        status: 'HANDED_OVER',
+        handoverLocation: 'CDG',
+        voyageurConfirmed: false,
+      );
+      await tester.pumpWidget(_hostAccordion(bid));
+      await tester.tap(find.textContaining('Plus de détails'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Colis remis ✓'), findsOneWidget);
+      expect(find.text('Non encore'), findsNothing);
     });
   });
 

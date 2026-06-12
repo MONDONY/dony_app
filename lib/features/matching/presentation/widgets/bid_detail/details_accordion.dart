@@ -9,6 +9,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+/// Statuts pour lesquels le colis a déjà été remis au voyageur : la « présence »
+/// y est implicite, on n'affiche donc plus « Non encore ».
+const _kRemisStatuses = <String>{
+  'HANDED_OVER',
+  'IN_TRANSIT',
+  'COMPLETED',
+  'DELIVERED',
+};
+
 /// Accordéon « Plus de détails » — contient 4 sections :
 ///   1. FENÊTRE DE REMISE
 ///   2. TRAJET
@@ -143,9 +152,16 @@ class _DetailsAccordionState extends State<DetailsAccordion> {
                           ),
                         ],
                         const SizedBox(height: DonySpacing.sm),
+                        // « Présence confirmée » n'est pertinent qu'avant la
+                        // remise (phase ACCEPTED). Une fois le colis remis, on
+                        // affiche l'état réel plutôt qu'un trompeur « Non encore ».
                         InfoRow(
-                          label: 'Présence confirmée',
-                          value: bid.voyageurConfirmed ? 'Oui ✓' : 'Non encore',
+                          label: _kRemisStatuses.contains(bid.status)
+                              ? 'Remise'
+                              : 'Présence confirmée',
+                          value: _kRemisStatuses.contains(bid.status)
+                              ? 'Colis remis ✓'
+                              : (bid.voyageurConfirmed ? 'Oui ✓' : 'Non encore'),
                         ),
                         const SizedBox(height: DonySpacing.md),
                         Divider(color: cs.outline, height: 1),
