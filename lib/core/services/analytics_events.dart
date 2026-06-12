@@ -91,6 +91,7 @@ abstract final class AnalyticsEvents {
   static const bidQrDownloaded        = 'bid_qr_downloaded';
   static const bidRetraitCodeOpened   = 'bid_retrait_code_opened';
   static const travelerCallInitiated  = 'traveler_call_initiated';
+  static const senderCallInitiated    = 'sender_call_initiated';
   static const trackingLinkShared     = 'tracking_link_shared';
   static const screenFeedbackSubmitted = 'screen_feedback_submitted';
 
