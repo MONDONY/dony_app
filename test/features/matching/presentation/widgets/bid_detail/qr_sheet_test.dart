@@ -213,6 +213,7 @@ void main() {
         if (call.method == 'putImageBytes') return null;
         return null;
       });
+      addTearDown(() => messenger.setMockMethodCallHandler(galChannel, null));
 
       final bloc = _MockTrackingBloc();
       const qr = QrCodeModel(
@@ -237,8 +238,6 @@ void main() {
         find.textContaining('enregistré dans votre galerie'),
         findsOneWidget,
       );
-
-      messenger.setMockMethodCallHandler(galChannel, null);
     },
   );
 
@@ -261,6 +260,7 @@ void main() {
         }
         return null;
       });
+      addTearDown(() => messenger.setMockMethodCallHandler(galChannel, null));
 
       final bloc = _MockTrackingBloc();
       const qr = QrCodeModel(
@@ -282,8 +282,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining("Impossible d'enregistrer"), findsOneWidget);
-
-      messenger.setMockMethodCallHandler(galChannel, null);
     },
   );
 
@@ -295,6 +293,7 @@ void main() {
       // Replace the FFI-based path provider with a fake that returns /tmp
       final originalPathProvider = PathProviderPlatform.instance;
       PathProviderPlatform.instance = _FakePathProvider();
+      addTearDown(() => PathProviderPlatform.instance = originalPathProvider);
 
       final messenger =
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -305,6 +304,7 @@ void main() {
         if (call.method == 'shareFiles') return '';
         return null;
       });
+      addTearDown(() => messenger.setMockMethodCallHandler(shareChannel, null));
 
       final bloc = _MockTrackingBloc();
       const qr = QrCodeModel(
@@ -342,9 +342,6 @@ void main() {
         find.textContaining('Impossible de partager'),
         findsNothing,
       );
-
-      PathProviderPlatform.instance = originalPathProvider;
-      messenger.setMockMethodCallHandler(shareChannel, null);
     },
   );
 
@@ -355,6 +352,7 @@ void main() {
     (tester) async {
       final originalPathProvider = PathProviderPlatform.instance;
       PathProviderPlatform.instance = _FakePathProvider();
+      addTearDown(() => PathProviderPlatform.instance = originalPathProvider);
 
       final messenger =
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -365,6 +363,7 @@ void main() {
         if (call.method == 'shareFiles') return 'com.some.app';
         return null;
       });
+      addTearDown(() => messenger.setMockMethodCallHandler(shareChannel, null));
 
       final bloc = _MockTrackingBloc();
       const qr = QrCodeModel(
@@ -398,9 +397,6 @@ void main() {
         find.textContaining('Impossible de partager'),
         findsNothing,
       );
-
-      PathProviderPlatform.instance = originalPathProvider;
-      messenger.setMockMethodCallHandler(shareChannel, null);
     },
   );
 
