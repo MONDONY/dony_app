@@ -9,13 +9,22 @@ import 'package:dony/features/tracking/bloc/tracking_event.dart';
 import 'package:dony/features/tracking/bloc/tracking_state.dart';
 import 'package:dony/features/tracking/data/models/qr_code_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 
 // ── Mock ──────────────────────────────────────────────────────────────────────
 
 class _MockTrackingBloc extends MockBloc<TrackingEvent, TrackingState>
     implements TrackingBloc {}
+
+// ── Fake PathProvider (replaces FFI-based path_provider_foundation) ───────────
+
+class _FakePathProvider extends PathProviderPlatform {
+  @override
+  Future<String?> getTemporaryPath() async => '/tmp';
+}
 
 // ── Tiny PNG fixture (1×1 px) ─────────────────────────────────────────────────
 
@@ -167,6 +176,262 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
 
       // No FlutterError / use-after-dispose exception must surface.
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  // ── Test 5: Initial/unknown state → fallback spinner ─────────────────────────
+
+  testWidgets('état TrackingInitial → fallback spinner visible', (tester) async {
+    final bloc = _MockTrackingBloc();
+    whenListen<TrackingState>(
+      bloc,
+      Stream<TrackingState>.fromIterable([TrackingInitial()]),
+      initialState: TrackingInitial(),
+    );
+
+    await tester.pumpWidget(_host(bloc));
+    await tester.tap(find.text('Open'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
+
+  // ── Test 6: tap 'Enregistrer' → Gal success → snackbar ───────────────────────
+
+  testWidgets(
+    'état TrackingQrLoaded → tap "Enregistrer" → Gal succès → snackbar galerie',
+    (tester) async {
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+
+      // Gal calls requestAccess then putImageBytes — mock both
+      const galChannel = MethodChannel('gal');
+      messenger.setMockMethodCallHandler(galChannel, (call) async {
+        if (call.method == 'requestAccess') return true;
+        if (call.method == 'putImageBytes') return null;
+        return null;
+      });
+
+      final bloc = _MockTrackingBloc();
+      const qr = QrCodeModel(
+        bidId: 'bid-1',
+        scanUrl: 'https://dony.app/track/bid-1',
+        qrCodeBase64: _tinyPngB64,
+      );
+      whenListen<TrackingState>(
+        bloc,
+        Stream<TrackingState>.fromIterable([TrackingQrLoaded(qr)]),
+        initialState: TrackingQrLoaded(qr),
+      );
+
+      await tester.pumpWidget(_host(bloc));
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Enregistrer'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('enregistré dans votre galerie'),
+        findsOneWidget,
+      );
+
+      messenger.setMockMethodCallHandler(galChannel, null);
+    },
+  );
+
+  // ── Test 7: tap 'Enregistrer' → Gal failure → snackbar erreur ────────────────
+
+  testWidgets(
+    'état TrackingQrLoaded → tap "Enregistrer" → Gal erreur → snackbar erreur',
+    (tester) async {
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+
+      const galChannel = MethodChannel('gal');
+      messenger.setMockMethodCallHandler(galChannel, (call) async {
+        if (call.method == 'requestAccess') return false;
+        if (call.method == 'putImageBytes') {
+          throw PlatformException(
+            code: 'ACCESS_DENIED',
+            message: 'No permission',
+          );
+        }
+        return null;
+      });
+
+      final bloc = _MockTrackingBloc();
+      const qr = QrCodeModel(
+        bidId: 'bid-1',
+        scanUrl: 'https://dony.app/track/bid-1',
+        qrCodeBase64: _tinyPngB64,
+      );
+      whenListen<TrackingState>(
+        bloc,
+        Stream<TrackingState>.fromIterable([TrackingQrLoaded(qr)]),
+        initialState: TrackingQrLoaded(qr),
+      );
+
+      await tester.pumpWidget(_host(bloc));
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Enregistrer'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining("Impossible d'enregistrer"), findsOneWidget);
+
+      messenger.setMockMethodCallHandler(galChannel, null);
+    },
+  );
+
+  // ── Test 8: tap 'Partager' → share status dismissed → aucune erreur ──────────
+
+  testWidgets(
+    'état TrackingQrLoaded → tap "Partager" → share dismissed → aucune erreur',
+    (tester) async {
+      // Replace the FFI-based path provider with a fake that returns /tmp
+      final originalPathProvider = PathProviderPlatform.instance;
+      PathProviderPlatform.instance = _FakePathProvider();
+
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+
+      // Mock share_plus — '' = dismissed
+      const shareChannel = MethodChannel('dev.fluttercommunity.plus/share');
+      messenger.setMockMethodCallHandler(shareChannel, (call) async {
+        if (call.method == 'shareFiles') return '';
+        return null;
+      });
+
+      final bloc = _MockTrackingBloc();
+      const qr = QrCodeModel(
+        bidId: 'bid-1',
+        scanUrl: 'https://dony.app/track/bid-1',
+        qrCodeBase64: _tinyPngB64,
+      );
+      whenListen<TrackingState>(
+        bloc,
+        Stream<TrackingState>.fromIterable([TrackingQrLoaded(qr)]),
+        initialState: TrackingQrLoaded(qr),
+      );
+
+      await tester.pumpWidget(_host(bloc));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // Open the sheet and wait for it to render
+      await tester.tap(find.text('Open'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // runAsync drives the complete async chain (file write + channel mock)
+      // in real time, then pump drives widget rebuilds.
+      await tester.runAsync(() async {
+        await tester.tap(find.text('Partager'));
+        // Wait for the async handler to fully complete
+        await Future<void>.delayed(const Duration(seconds: 1));
+      });
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // dismissed path: no error snackbar
+      expect(
+        find.textContaining('Impossible de partager'),
+        findsNothing,
+      );
+
+      PathProviderPlatform.instance = originalPathProvider;
+      messenger.setMockMethodCallHandler(shareChannel, null);
+    },
+  );
+
+  // ── Test 9: tap 'Partager' → share success → analytics branch ────────────────
+
+  testWidgets(
+    'état TrackingQrLoaded → tap "Partager" → share success → pas de snackbar erreur',
+    (tester) async {
+      final originalPathProvider = PathProviderPlatform.instance;
+      PathProviderPlatform.instance = _FakePathProvider();
+
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+
+      // Return a non-empty/non-unavailable string → ShareResultStatus.success
+      const shareChannel = MethodChannel('dev.fluttercommunity.plus/share');
+      messenger.setMockMethodCallHandler(shareChannel, (call) async {
+        if (call.method == 'shareFiles') return 'com.some.app';
+        return null;
+      });
+
+      final bloc = _MockTrackingBloc();
+      const qr = QrCodeModel(
+        bidId: 'bid-1',
+        scanUrl: 'https://dony.app/track/bid-1',
+        qrCodeBase64: _tinyPngB64,
+      );
+      whenListen<TrackingState>(
+        bloc,
+        Stream<TrackingState>.fromIterable([TrackingQrLoaded(qr)]),
+        initialState: TrackingQrLoaded(qr),
+      );
+
+      await tester.pumpWidget(_host(bloc));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      await tester.tap(find.text('Open'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      await tester.runAsync(() async {
+        await tester.tap(find.text('Partager'));
+        await Future<void>.delayed(const Duration(seconds: 1));
+      });
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // success path: no error snackbar
+      expect(
+        find.textContaining('Impossible de partager'),
+        findsNothing,
+      );
+
+      PathProviderPlatform.instance = originalPathProvider;
+      messenger.setMockMethodCallHandler(shareChannel, null);
+    },
+  );
+
+  // ── Test 10: sheet dismissed → whenComplete disposes notifiers ────────────────
+
+  testWidgets(
+    'fermeture du sheet → whenComplete dispose les ValueNotifiers sans erreur',
+    (tester) async {
+      final bloc = _MockTrackingBloc();
+      const qr = QrCodeModel(
+        bidId: 'bid-1',
+        scanUrl: 'https://dony.app/track/bid-1',
+        qrCodeBase64: _tinyPngB64,
+      );
+      whenListen<TrackingState>(
+        bloc,
+        Stream<TrackingState>.fromIterable([TrackingQrLoaded(qr)]),
+        initialState: TrackingQrLoaded(qr),
+      );
+
+      await tester.pumpWidget(_host(bloc));
+      await tester.tap(find.text('Open'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // Dismiss the sheet by tapping the barrier
+      await tester.tapAt(const Offset(200, 100));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // whenComplete ran: no use-after-dispose exception
       expect(tester.takeException(), isNull);
     },
   );
